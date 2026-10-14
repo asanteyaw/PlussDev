@@ -36,12 +36,12 @@ accessor.
 ## Returns
 
 `pluss::pl::Studio`
-    A figure with one pane containing a single filled area trace of the bound thread's
+    A figure with one pane containing a single filled area trace of the bound slate's
     values.
 
 ## Examples
 
-Example 1. No companion thread: falls back to a plain case index.
+Example 1. No companion slate: falls back to a plain case index.
 
 ```cpp
 using namespace pluss::table;
@@ -55,7 +55,7 @@ chart.show();
 
 ![Output of Example 1](img/area-1.svg)
 
-Example 2. An explicit companion thread as the x-axis.
+Example 2. An explicit companion slate as the x-axis.
 
 ```cpp
 auto month = Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr"}));

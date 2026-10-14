@@ -46,7 +46,7 @@ them.
     (No-argument overload) Whether the frame's case labels are structured.
 
 `Slate`
-    (Value-taking overloads) A boolean thread, one entry per row, displayed
+    (Value-taking overloads) A boolean slate, one entry per row, displayed
     against the case labels, `display_name` `"has"`.
 
 ## Examples

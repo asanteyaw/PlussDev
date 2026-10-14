@@ -1,0 +1,178 @@
+# Optima 2: Reading Results and Watching a Run
+
+A solver run can end in many ways, and only one of them means "here is your answer". This chapter is about telling them apart: which exit flag was returned and what each one promises, how the stall category narrows down a failure, what every field of the structured report means, how to watch a run as it happens, how to stop it early, and how to read the Lagrange multipliers. After it you can write code that trusts a result only when it should, and that explains a failure when it does not.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+Four independent pieces of information come back from every call. Keep them separate.
+
+- **The exit flag** (`result.exit_flag`) is the verdict, one of nine values. It is the thing to branch on.
+- **`result.converged`** is a convenience: it is true exactly when the exit flag is `Converged`. It is not true merely because the solver stopped.
+- **The stall category** (`result.output.stall_category`) names the kind of difficulty behind a stop that was not a success. It narrows a failure down; it never changes the verdict.
+- **The message** (`result.message`) is human-readable text for logs. Its wording can change between versions. Never branch on it.
+
+Whatever the verdict, `result.params` always holds a point: the last iterate, or, for some stops, the best feasible point the run found. It is only a solution when the flag says so.
+
+## The nine exit flags
+
+| Flag | Value | What it promises | What `result.params` holds |
+|---|---|---|---|
+| `Converged` | 1 | Constraint violation and first-order optimality are within tolerance, or the iterate is a stationary feasible point. | The solution. |
+| `MaxIterations` | 0 | The iteration budget was spent first. | The last iterate; `best_feasible` may be better. |
+| `Stopped` | -1 | Your progress hook returned `true`. | The point at which you stopped. |
+| `NoFeasiblePoint` | -2 | The interior method could not find a strictly feasible region to start from. | The start, nudged inward. |
+| `ObjectiveTargetReached` | -3 | A feasible point at or below `objective_limit` was found. | That point. |
+| `NonFiniteEvaluation` | -4 | The objective, gradient, a constraint or a Jacobian was not a finite number. | The point at which the non-finite value appeared. |
+| `InvalidProblem` | -5 | A callback broke its contract (wrong result shape, a thrown error). | The start. |
+| `NoProgress` | -6 | The line search, the recovery step or the step to the boundary could not make progress. | The last iterate. |
+| `ConstraintStationary` | -7 | The constraint violation stopped decreasing at a point that is still infeasible. | The last iterate, infeasible. |
+
+Only the first row is a success. `ObjectiveTargetReached` is a success you asked for, but it does not claim optimality, which is why `converged` is false for it.
+
+## The four algorithms side by side
+
+Choosing an algorithm is the subject of the next chapter. For now, the first program shows that all four share one result type, so every report in this chapter works the same for each. It also shows how little they differ in what they return on an easy problem, and how much in the work they do to get there.
+
+@@example Numerical/optimization/guide/optima/21_four_algorithms.cpp@@
+
+All four agree on the answer, the corner `(1.5, 0.8)`, and all four exit with `Converged`. They differ in effort: the merit method needs two iterations and three evaluations because it handles bounds by projection, while sequential QP and the working-set method need a single iteration, because their first quadratic subproblem already identifies the corner, and the interior method takes five iterations and eight evaluations, since a barrier method approaches a bound from inside. `output.algorithm` carries each method's label.
+
+## A guided tour
+
+### Program 2: the flags that mean a healthy run
+
+Four flags describe a run that behaved as designed: it finished, it ran out of its budget, you stopped it, or it reached a target you set. This program triggers each one and prints the flag, the `converged` convenience, and the iteration count.
+
+@@example Numerical/optimization/guide/optima/22_exit_success_and_limits.cpp@@
+
+Only the first run is `converged`. The second spent its single allowed iteration, so the flag is `MaxIterations` and the iterate is not a solution. The third stopped because the hook returned `true` on its second call; `Stopped` always means the caller asked. The fourth ended at iteration zero because the start already satisfied `objective_limit = 100`. A feasible point at or below the limit ends the run at once with `ObjectiveTargetReached`.
+
+### Program 3: the five failure flags
+
+Five flags mean the solver could not deliver. Each is triggered here by a specific condition, and the result still carries the last point reached so you can inspect it.
+
+@@example Numerical/optimization/guide/optima/23_exit_failures.cpp@@
+
+The impossible inequality `x0^2 + x1^2 + 1 <= 0` produces two different verdicts depending on the method. The interior method, which needs a strictly feasible region to start from, returns `NoFeasiblePoint`. Sequential QP tries to recover and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method: the equality residual can no longer be reduced (the gradient of its squared norm vanishes), so no step can restore feasibility, and the violation stays at `1`. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.
+
+### Program 4: the ten stall categories
+
+The exit flag is coarse. The stall category says what went wrong underneath. There are ten, and this program triggers each. The scenario text describes the cause, and the line below it shows the category name and the flag it came with.
+
+@@example Numerical/optimization/guide/optima/24_stall_categories.cpp@@
+
+| Category | What it means |
+|---|---|
+| `none` | The run ended healthily. |
+| `user-stop` | The progress hook asked to stop. |
+| `invalid-callback-contract` | A callback returned the wrong shape or threw. |
+| `nonfinite-callback-region` | A callback returned `NaN` or infinity. |
+| `search-direction-collapse` | The line search could not find an acceptable step. |
+| `boundary-limited` | No step was possible toward a bound or the linearized constraints. |
+| `infeasible-stationary` | The constraint violation is at a stationary point that is still infeasible. |
+| `complementarity-stagnation` | The interior method hit its budget with the barrier complementarity still large against stationarity. |
+| `feasibility-failure` | The feasibility phase could not reduce the violation. |
+| `recovery-failure` | The restoration or recovery step failed. |
+| `iteration-limit` | The iteration budget was spent. |
+
+`boundary-limited` needs an unusual setting to appear: here the interior method's `fraction_to_boundary = 0` forbids any step toward a constraint boundary. It is the category to look for when a run on a boxed problem refuses to move.
+
+### Program 5: every field of the report
+
+`result.output` is the structured report. This program prints each field of one solve so you can match it against the table below.
+
+@@example Numerical/optimization/guide/optima/25_output_fields.cpp@@
+
+| Field | Meaning |
+|---|---|
+| `algorithm` | The method's label: `merit-method`, `sqp`, `working-set` or `internal-protocol`. |
+| `iterations`, `function_evaluations` | Major iterations and the number of objective evaluations. The second is far larger when line searches or recovery steps run. |
+| `constraint_violation` | The largest violation of any constraint at the returned point. |
+| `first_order_optimality` | How far the returned point is from satisfying the optimality conditions. For sequential QP and the working-set method it is the largest component of the Lagrangian gradient at the returned point, using the multiplier estimate in `result.multipliers`. |
+| `step_size`, `line_search_fraction` | The fraction of the full step the last iteration accepted. |
+| `backend_parameter` | The method's own control parameter: the penalty weight for the QP methods and the merit method, the barrier parameter for the interior method. It stayed at `10`, its starting value, because the penalty is raised only when constraints stay violated. |
+| `complementarity` | The complementarity residual; meaningful for the interior method, zero otherwise. |
+| `krylov_iterations` | Iterations spent in the iterative linear solver, when it is used. |
+| `best_feasible_available`, `returned_best_feasible` | Whether a feasible checkpoint was recorded, and whether the answer in `params` is that checkpoint. |
+| `best_feasible_value`, `best_feasible_constraint_violation`, `best_feasible_first_order_optimality` | The checkpoint's objective value, violation and stationarity. Infinity when no checkpoint exists. |
+| `multiplier_max_norm`, `active_multiplier_count` | The largest multiplier magnitude, and how many constraints are active. |
+| `detail_message` | The expanded message, including the stall diagnostic for a failed run. |
+| `stall_category`, `stall_measure`, `stall_reference` | The stall category, the quantity that triggered it, and the threshold it was compared with. |
+
+The solve is a success: `first_order_optimality` is `1e-8`, so the returned point satisfies the optimality conditions to high accuracy in only nine evaluations. `multiplier_max_norm` is `3.2426`, the multiplier of the one active constraint.
+
+## Watching a run
+
+### Program 6: printing progress
+
+`reports::trace` turns any output stream into a progress hook that prints one line per iteration. `reports::iter` is the short form. `ProgressTracePreset` switches each part of a line on or off.
+
+@@example Numerical/optimization/guide/optima/26_progress_trace.cpp@@
+
+The default trace prints a start line, one line per iteration, and a final line, each with the objective, violation, stationarity, backend parameter, step and message. `reports::iter` drops the start and final lines, the Krylov count and the message, and takes the number of decimals. The custom preset does the same with four decimals. Notice the two lines that repeat at the end of the first trace: the last iteration is reported once as an iteration and once as `done`.
+
+Read a trace by watching two columns. A run that is working shows `viol` falling to zero and `stationarity` falling at the end. Here both fall by orders of magnitude on every iteration, `viol` from `0.125` to `0.0035` to `3e-06` to zero and `stationarity` from `1` to `0.019` to `0.002` to `2e-06`: the signature of a quadratic-model method closing in on a solution. A trace that instead jumps back up, or stalls, is the signal to look at the stall category.
+
+### Program 7: writing your own hook
+
+A hook is any function from a snapshot to a bool. The snapshot carries the stage, the current point, the full evaluation, and the work counters. This program records the objective at every iteration and stops the run as soon as the point is feasible and good enough.
+
+@@example Numerical/optimization/guide/optima/27_custom_hook.cpp@@
+
+The hook sees `start` once, `iter` for each iteration, and `done` once. It returned `true` at iteration 4, the first time the iterate was feasible and below `10.55`. The run ended with `Stopped`, the point it returned is the feasible one, and the `done` snapshot fires even when the hook ends the run. A hook can read `s.params` to log the point, or `s.evaluation.gradient` for the gradient, so it doubles as a monitor.
+
+### Program 8: which hook runs
+
+You can set one hook on `OptimaOptions::progress_hook` and have it apply to whichever algorithm you choose, or set a hook on one algorithm's own options. When both are set the specific one wins.
+
+@@example Numerical/optimization/guide/optima/31_hook_precedence.cpp@@
+
+With only the general hook set it received all four snapshots. After adding a sequential QP hook, the specific hook received them and the general one received none. Choosing a different algorithm falls back to the general hook, because the sequential QP hook belongs to a method that is not running.
+
+## Best feasible points and multipliers
+
+### Program 9: the best feasible checkpoint
+
+A run that ends without converging may have visited a better point than its last. The solver keeps the best feasible point it saw. `result.best_feasible` holds it and `output.best_feasible_*` summarizes it. `returned_best_feasible` tells you whether the answer in `params` is the checkpoint or the final iterate.
+
+@@example Numerical/optimization/guide/optima/28_best_feasible.cpp@@
+
+Sequential QP was stopped after three iterations, so the flag is `MaxIterations` and `converged` is false. The returned answer is excellent in value (`10.5147`) but infeasible by `3e-06`, just over the default tolerance, because this method approaches feasibility from outside. The only feasible point it ever visited is the starting point, `(0, 0)` with objective `18`, so that is the checkpoint, and the answer in `params` is not that checkpoint (`false`). Here the checkpoint is feasible but far worse, which shows the trade-off: neither is automatically the one to use. A program that wants a usable point from a run that did not converge should read `best_feasible`, and check its violation, rather than `params`.
+
+### Program 10: reading the multipliers
+
+A Lagrange multiplier measures how hard a constraint pushes on the answer. For an inequality it is the first-order price: relaxing the limit by one unit lowers the objective by about that amount. The result carries six multiplier groups, one per constraint family. This program uses three problems whose multipliers can be worked out by hand and checks each.
+
+@@example Numerical/optimization/guide/optima/29_multipliers.cpp@@
+
+The bound problem has gradient `(-2, -1)` at its answer, so the upper multipliers are `(2, 1)` and the lower group is empty because no lower bound was set. The linear inequality has multiplier `2`, the price of tightening `x0 + x1 <= 4`. The nonlinear equality has multiplier `3.2426`, which equals `(3 - 1/sqrt 2) * sqrt 2`, the gradient magnitude divided by the constraint-gradient magnitude. A family the problem does not use has an empty multiplier series; an inactive constraint has multiplier zero.
+
+### Program 11: the one-line and many-line summaries
+
+Two ready-made reports describe a finished run. `compact_summary` (also reachable as `print_summary`) is one line for logs. `detailed_summary` is one field per line.
+
+@@example Numerical/optimization/guide/optima/30_summaries.cpp@@
+
+Both print the same facts. The compact form is the one to put in a log line; the detailed form is for a terminal, and its field names match the `output` table above.
+
+## Decisions
+
+- **What to branch on.** Branch on `exit_flag`. Use `converged` as a shorthand for "the flag is `Converged`". Treat the message as text for people.
+- **What to do after a failure.** If the flag is `MaxIterations` or `Stopped`, read `output.best_feasible_available`; the checkpoint may be a usable answer. If it is `NoProgress`, `NoFeasiblePoint` or `ConstraintStationary`, suspect the problem (infeasible constraints, a bad start) before the solver settings.
+- **How much progress output.** `reports::iter` for a watched run. A custom hook for a monitor, a stop rule, or a record. Nothing for production.
+
+## Pitfalls
+
+### Using the answer without checking the flag
+
+The result always holds a point. After a failure that point is just wherever the solver ended. Using it as if it were a solution is the most common mistake in code that calls a solver.
+
+@@example Numerical/optimization/guide/optima/32_pitfall_unchecked_answer.cpp@@
+
+The impossible problem returns the start point, `[0, 0]`, which looks like a perfectly good answer. Only the flag (`-6`) and the violation (`1`) reveal that it is not. Check the flag before reading `params`.
+
+## Where next
+
+The next chapter compares the four algorithms: which problems each one handles well, where each one fails, and how to choose between them.

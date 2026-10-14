@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,8 +49,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the elementwise absolute value of a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread — strips the sign,
-leaving magnitude. Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p>
+<p>Returns the elementwise absolute value of a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate — strips the sign,
+leaving magnitude. Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -59,7 +59,7 @@ leaving magnitude. Requires the thread to be <code class="docutils literal notra
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding each element’s
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding each element’s
 absolute value.</p>
 </section>
 <section id="examples">
@@ -81,7 +81,7 @@ absolute value.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">abs</span><span class="p">();</span>
@@ -101,7 +101,7 @@ ptype: Series
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell on input stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> on output.</p></li>
 </ul>
 </section>

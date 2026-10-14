@@ -13,11 +13,11 @@ Slate::csmin() const -> SlateValue
 
 ## What It Does
 
-Returns the **case label** of the row holding the smallest value in the thread
+Returns the **case label** of the row holding the smallest value in the slate
 — not the value itself. `"cs"` stands for case: this is the "which row" answer
 (like `idxmin` elsewhere), scanning every valid entry, comparing by the same
 rule [`arrange()`](arrange.md) uses, and returning
-[`caselbl()`](label.md) at the winning row's position. If the thread has no
+[`caselbl()`](label.md) at the winning row's position. If the slate has no
 explicit case labels, that's the default `0`-based position; if it does (via
 [`label().set(...)`](label.md) or the `caselbl()` mutator), it's that label's
 own value.
@@ -26,7 +26,7 @@ Ties keep the **first** occurrence — if two rows tie for the smallest value,
 the earlier row's label is returned, not the later one. Works on every payload
 kind (comparison is delegated to the same generic row-comparison logic
 `arrange()` uses). Missing entries are skipped when scanning; an empty
-thread, or one where every entry is missing, throws.
+slate, or one where every entry is missing, throws.
 
 See [`Slate::sum`'s note on printing a `SlateValue`](sum.md) — the examples
 below use `.to_int()` (default integer labels) or `.to_str()` (explicit `Note`
@@ -40,7 +40,7 @@ labels) instead of streaming the `SlateValue` directly.
 
 `SlateValue`
     A scalar holding the case label of the minimum-valued row — an `Int64`
-    position by default, or whatever payload kind the thread's own case labels
+    position by default, or whatever payload kind the slate's own case labels
     use if explicit labels are set.
 
 ## Examples
@@ -122,7 +122,7 @@ Position `1` (stored value `1.0`, which would otherwise be the overall
 smallest) is missing and skipped entirely — the minimum among the *observed*
 rows is `5.0` at position `0`.
 
-Example 5. An empty or entirely-missing thread throws.
+Example 5. An empty or entirely-missing slate throws.
 
 ```cpp
 auto all_missing = Slate(
@@ -149,7 +149,7 @@ Slate::csmin on an all-null Slate
 - Ties keep the first occurrence.
 - Works on every payload kind, since row comparison is delegated to the same
   logic [`arrange()`](arrange.md) uses.
-- An empty thread throws `"Slate::csmin on an empty Slate"`; a thread with no
+- An empty slate throws `"Slate::csmin on an empty Slate"`; a slate with no
   observed values throws `"Slate::csmin on an all-null Slate"`.
 
 ## See Also

@@ -12,7 +12,7 @@ SlateLabelAccessor::diff(const Slate& other) const -> Slate
 
 ## What It Does
 
-Treats the bound thread's case labels and `other` as two sets of values, and
+Treats the bound slate's case labels and `other` as two sets of values, and
 returns the case-label values present in the case labels but **absent** from
 `other` — deduplicated, in the case labels' own first-occurrence order.
 

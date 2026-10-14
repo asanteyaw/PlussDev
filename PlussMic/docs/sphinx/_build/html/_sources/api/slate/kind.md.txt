@@ -13,7 +13,7 @@ Slate::kind() const -> SlateKind
 
 ## What It Does
 
-Returns the `SlateKind` enum value identifying which payload family a thread
+Returns the `SlateKind` enum value identifying which payload family a slate
 currently stores: `Series` (numeric/bool), `Note` (text), `Timeline`, or
 `TimeIndex`. This is the typed enum form; [`ptype()`](ptype.md) returns the same
 information as a human-readable string (`"Series"`, `"Note"`, `"Timeline"`,
@@ -78,7 +78,7 @@ Slate::upper: expected Note payload
 
 ## Notes
 
-- Calling `kind()` on an undefined thread throws `"Slate: undefined handle"`.
+- Calling `kind()` on an undefined slate throws `"Slate: undefined handle"`.
 - Every method restricted to one payload family checks `kind()` first and throws a
   method-specific message when it doesn't match.
 

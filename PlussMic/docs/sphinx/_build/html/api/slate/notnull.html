@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,8 +49,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, marking <code class="docutils literal notranslate"><span class="pre">true</span></code>
-wherever the source thread is valid (not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>) and <code class="docutils literal notranslate"><span class="pre">false</span></code> wherever it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code> —
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, marking <code class="docutils literal notranslate"><span class="pre">true</span></code>
+wherever the source slate is valid (not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>) and <code class="docutils literal notranslate"><span class="pre">false</span></code> wherever it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code> —
 the exact logical inverse of <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>. Works on every payload kind,
 with the same validity-mask-only semantics (and the same <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
 internal-validity folding) described on that page.</p>
@@ -62,7 +62,7 @@ internal-validity folding) described on that page.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -96,7 +96,7 @@ ptype: Series
 <ul class="simple">
 <li><p>The exact logical inverse of <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>; see that page for the
 validity-mask-only semantics and the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> nuance.</p></li>
-<li><p>A thread with no validity mask at all reports <code class="docutils literal notranslate"><span class="pre">true</span></code> at every position.</p></li>
+<li><p>A slate with no validity mask at all reports <code class="docutils literal notranslate"><span class="pre">true</span></code> at every position.</p></li>
 </ul>
 </section>
 <section id="see-also">

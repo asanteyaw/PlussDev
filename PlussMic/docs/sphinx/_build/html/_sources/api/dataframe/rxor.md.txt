@@ -80,8 +80,8 @@ feature — same result as [`left.lxor(mask)`](lxor.md).
 
 ```cpp
 auto mask = Slate(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
-auto out_thread = left.rxor(mask);
-std::cout << out_thread;
+auto out_slate = left.rxor(mask);
+std::cout << out_slate;
 ```
 
 ### Output

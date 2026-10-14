@@ -13,8 +13,8 @@ A Slate has four important pieces of state:
 - an optional display name.
 
 The payload family controls which operations are legal. Numeric arithmetic is
-for `Series` threads. Text cleaning is for `Note` threads. Calendar extraction
-is for `Timeline` and `TimeIndex` threads. Missingness is tracked separately
+for `Series` slates. Text cleaning is for `Note` slates. Calendar extraction
+is for `Timeline` and `TimeIndex` slates. Missingness is tracked separately
 through the validity mask, so a row can have a stored payload value and still
 display as `NA`.
 
@@ -34,19 +34,19 @@ enum class SlateKind {
 Use the family-specific accessors only after you know the kind:
 
 ```cpp
-if (thread.kind() == pluss::table::SlateKind::Series) {
-  const auto& values = thread.as_series();
+if (slate.kind() == pluss::table::SlateKind::Series) {
+  const auto& values = slate.as_series();
 }
 
-if (thread.kind() == pluss::table::SlateKind::Note) {
-  const auto& text = thread.as_note();
+if (slate.kind() == pluss::table::SlateKind::Note) {
+  const auto& text = slate.as_note();
 }
 ```
 
 Calling the wrong accessor is an error. For example, `as_series()` is only valid
 for a `Series` payload.
 
-## Construct threads
+## Construct slates
 
 Numeric values normally enter a Slate through `pluss::make_series`:
 
@@ -83,25 +83,25 @@ and null-aware operations treat that row as missing.
 Use these methods when writing generic code:
 
 ```cpp
-thread.defined();
-thread.unique();
-thread.size();
-thread.kind();
-thread.dtype();
-thread.isnull();
-thread.notnull();
+slate.defined();
+slate.unique();
+slate.size();
+slate.kind();
+slate.dtype();
+slate.isnull();
+slate.notnull();
 ```
 
 `dtype()` reports the payload dtype, such as `float64` or `utf8`. It does
-not tell you whether the thread has missing values. Use `isnull()` or
+not tell you whether the slate has missing values. Use `isnull()` or
 `notnull()` for that.
 
 Display and debug methods:
 
 ```cpp
-thread.info();
-thread.show();
-std::cout << thread.to_string() << '\n';
+slate.info();
+slate.show();
+std::cout << slate.to_string() << '\n';
 ```
 
 `to_string()` is useful in tests, examples, and documentation because it uses
@@ -162,15 +162,15 @@ A Slate is one-dimensional, so row-space operations work directly on element
 positions:
 
 ```cpp
-thread.head(5);
-thread.tail(5);
-thread.view(10, 20);
-thread.slice(10, 20);
-thread.take(std::vector<std::int64_t>{0, 3, 8});
-thread.shift(1);
-thread.arrange(true, true);
-thread.dropnull();
-thread.distinct(true);
+slate.head(5);
+slate.tail(5);
+slate.view(10, 20);
+slate.slice(10, 20);
+slate.take(std::vector<std::int64_t>{0, 3, 8});
+slate.shift(1);
+slate.arrange(true, true);
+slate.dropnull();
+slate.distinct(true);
 ```
 
 `head`, `tail`, and `view` return `SlateView`, which can auto-render. `slice`,
@@ -192,18 +192,18 @@ missing values. A Slate with a validity mask uses `true` for present and
 Common methods:
 
 ```cpp
-auto missing = thread.isnull();
-auto present = thread.notnull();
-auto complete = thread.dropnull();
-auto forward = thread.ffill();
-auto backward = thread.bfill();
+auto missing = slate.isnull();
+auto present = slate.notnull();
+auto complete = slate.dropnull();
+auto forward = slate.ffill();
+auto backward = slate.bfill();
 ```
 
 Numeric checks are separate:
 
 ```cpp
-auto nan = thread.isnan();
-auto finite = thread.isfinite();
+auto nan = slate.isnan();
+auto finite = slate.isfinite();
 ```
 
 `isnan()` checks floating-point NaN in a Series payload. `isnull()` checks the
@@ -290,57 +290,57 @@ that order.
 
 ## Numeric operations
 
-Series-backed Threads support arithmetic, comparisons, math transforms, rolling
+Series-backed Slates support arithmetic, comparisons, math transforms, rolling
 windows, and scalar reductions.
 
 Arithmetic can be written through methods or operators:
 
 ```cpp
-auto plus_two = thread + 2.0;
-auto doubled = thread * 2.0;
+auto plus_two = slate + 2.0;
+auto doubled = slate * 2.0;
 auto ratio = numerator / denominator;
-auto remainder = thread % 2.0;
+auto remainder = slate % 2.0;
 ```
 
-Comparison operators return boolean Series-backed Threads:
+Comparison operators return boolean Series-backed Slates:
 
 ```cpp
-auto positive = thread > 0.0;
-auto in_limit = thread <= 100.0;
+auto positive = slate > 0.0;
+auto in_limit = slate <= 100.0;
 auto same = left == right;
 ```
 
 Named numeric transforms:
 
 ```cpp
-auto absolute = thread.abs();
-auto clipped = thread.clip(0.0, 100.0);
-auto logged = thread.log();
-auto exponentiated = thread.exp();
+auto absolute = slate.abs();
+auto clipped = slate.clip(0.0, 100.0);
+auto logged = slate.log();
+auto exponentiated = slate.exp();
 ```
 
 Reductions return scalar `Series` values, not raw C++ scalars:
 
 ```cpp
-double mean = thread.mean().item<double>();
-double total = thread.sum().item<double>();
-double sd = thread.std(false).item<double>();
+double mean = slate.mean().item<double>();
+double total = slate.sum().item<double>();
+double sd = slate.std(false).item<double>();
 ```
 
 Available reductions include:
 
 ```cpp
-thread.sum();
-thread.count();
-thread.any();
-thread.all();
-thread.mean();
-thread.median();
-thread.min();
-thread.max();
-thread.var();
-thread.std();
-thread.corr(other);
+slate.sum();
+slate.count();
+slate.any();
+slate.all();
+slate.mean();
+slate.median();
+slate.min();
+slate.max();
+slate.var();
+slate.std();
+slate.corr(other);
 ```
 
 `corr` accepts a method:
@@ -356,15 +356,15 @@ double kendall = x.corr(y, pluss::table::SlateCorrMethod::KendallTau);
 Use `compare` when the comparison operator is data-driven:
 
 ```cpp
-auto gt_zero = thread.compare(0.0, pluss::table::SlateBinaryCompareOp::Gt);
-auto le_other = thread.compare(other, pluss::table::SlateBinaryCompareOp::Le);
+auto gt_zero = slate.compare(0.0, pluss::table::SlateBinaryCompareOp::Gt);
+auto le_other = slate.compare(other, pluss::table::SlateBinaryCompareOp::Le);
 ```
 
 Use `between` for interval checks:
 
 ```cpp
-auto inclusive = thread.between(10.0, 20.0, true);
-auto half_open = thread.between(10.0, 20.0, true, false);
+auto inclusive = slate.between(10.0, 20.0, true);
+auto half_open = slate.between(10.0, 20.0, true, false);
 auto text_band = text.between("a", "m", true);
 ```
 
@@ -377,10 +377,10 @@ in C++.
 Use `window` for simple rolling aggregations over numeric Series payloads:
 
 ```cpp
-auto rolling_sum = thread.window(3, pluss::table::SlateWindowOp::RollingSum, 1);
-auto rolling_mean = thread.window(3, pluss::table::SlateWindowOp::RollingMean, 2);
-auto rolling_min = thread.window(5, pluss::table::SlateWindowOp::RollingMin, 3);
-auto rolling_max = thread.window(5, pluss::table::SlateWindowOp::RollingMax, 3);
+auto rolling_sum = slate.window(3, pluss::table::SlateWindowOp::RollingSum, 1);
+auto rolling_mean = slate.window(3, pluss::table::SlateWindowOp::RollingMean, 2);
+auto rolling_min = slate.window(5, pluss::table::SlateWindowOp::RollingMin, 3);
+auto rolling_max = slate.window(5, pluss::table::SlateWindowOp::RollingMax, 3);
 ```
 
 The arguments are:
@@ -395,7 +395,7 @@ prints as `NA`.
 
 ## Slate time-series accessor
 
-`thread.ts()` is for one numeric value stream. It does not need a separate
+`slate.ts()` is for one numeric value stream. It does not need a separate
 date feature for operations such as returns, lag, lead, rolling mean, or
 expanding statistics.
 
@@ -417,7 +417,7 @@ value features against an explicit time feature.
 Use `cast` to change payload family:
 
 ```cpp
-auto as_note = thread.cast(pluss::table::SlateCastTarget::Note);
+auto as_note = slate.cast(pluss::table::SlateCastTarget::Note);
 auto as_series = text.cast(pluss::table::SlateCastTarget::Series,
                            pluss::codem::ScalarType::Float64);
 auto as_time = date_text.cast(pluss::table::SlateCastTarget::Timeline);
@@ -446,7 +446,7 @@ Parsing failures become invalid rows where supported by the implementation.
 
 ## Text operations
 
-Note-backed Threads support text cleaning:
+Note-backed Slates support text cleaning:
 
 ```cpp
 auto lowered = text.lower();
@@ -560,7 +560,7 @@ auto hours = dates.tl().hour();
 auto weekdays = dates.tl().weekday_name();
 ```
 
-These return Threads so they can be inserted back into a DataFrame:
+These return Slates so they can be inserted back into a DataFrame:
 
 ```cpp
 df.set("year") = df.features("timestamp").tl().year();
@@ -579,7 +579,7 @@ Display metadata is useful for presentation, but it should not be treated as
 schema truth.
 
 ```cpp
-auto named = thread.name("balance");
+auto named = slate.name("balance");
 auto labeled = named.with_display_labels(labels);
 
 named.show();
@@ -594,16 +594,16 @@ presentation metadata.
 Slate transforms are functional by default:
 
 ```cpp
-auto filled = thread.fillnull(0.0);
-auto clipped = thread.clip(0.0, 1.0);
-auto shifted = thread.shift(1);
+auto filled = slate.fillnull(0.0);
+auto clipped = slate.clip(0.0, 1.0);
+auto shifted = slate.shift(1);
 ```
 
 The original Slate is unchanged unless you use a mutating method with a
 trailing underscore:
 
 ```cpp
-thread.fillnull_(0.0);
+slate.fillnull_(0.0);
 ```
 
 Use mutating methods when mutation is intentional and local. Use functional

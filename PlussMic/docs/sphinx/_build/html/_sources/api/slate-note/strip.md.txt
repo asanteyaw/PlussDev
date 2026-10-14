@@ -13,8 +13,8 @@ SlateNoteAccessor::strip(std::string_view chars) const -> Slate
 
 ## What It Does
 
-Trims characters from both ends of the bound thread's cells — a direct forward
-to [`Slate::strip()`](../thread/strip.md). Requires the bound thread to be
+Trims characters from both ends of the bound slate's cells — a direct forward
+to [`Slate::strip()`](../slate/strip.md). Requires the bound slate to be
 `Note`-kind. Two distinct trimming policies:
 
 - **No-argument overload**: trims the classic ASCII whitespace set (space, tab,
@@ -33,7 +33,7 @@ The set of characters to strip from each cell's edges. Order doesn't matter.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, with each cell's
+    A new `Note`-kind slate, same length as the bound slate, with each cell's
     text trimmed.
 
 ## Examples
@@ -81,8 +81,8 @@ ptype: Note
 character still gets stripped, one character at a time, stopping the instant a
 character outside the `chars` set is reached.
 
-Example 3. A non-`Note` thread throws — the same message
-[`Slate::strip()`](../thread/strip.md) produces directly.
+Example 3. A non-`Note` slate throws — the same message
+[`Slate::strip()`](../slate/strip.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -103,7 +103,7 @@ Slate::strip is only valid for Note payload
 ## Notes
 
 - `SlateNoteAccessor::strip()` is a one-line forward to
-  [`Slate::strip()`](../thread/strip.md) — identical behavior and throws.
+  [`Slate::strip()`](../slate/strip.md) — identical behavior and throws.
 - The `chars` overload's set-membership semantics apply to
   [`lstrip()`](lstrip.md) and [`rstrip()`](rstrip.md) identically — one-sided
   versions of everything shown here.
@@ -111,7 +111,7 @@ Slate::strip is only valid for Note payload
 
 ## See Also
 
-- [`Slate::strip`](../thread/strip.md): the direct, non-accessor form this
+- [`Slate::strip`](../slate/strip.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateNoteAccessor::lstrip`](lstrip.md) /
   [`SlateNoteAccessor::rstrip`](rstrip.md): the one-sided equivalents.

@@ -13,7 +13,7 @@ Slate::mode(bool drop_nulls = true) const -> Slate
 
 ## What It Does
 
-Returns every value tied for the **most frequently observed** in the thread —
+Returns every value tied for the **most frequently observed** in the slate —
 not just one. If several values are equally the most common, `mode()` returns
 all of them, in ascending order (alphabetical for `Note`, chronological for
 `Timeline`/`TimeIndex`), rather than picking one arbitrarily. Works on numeric
@@ -28,7 +28,7 @@ at all:
   "missing" turns out to be the single most frequent "value," a `NULL` entry
   is included in the result (appended after every tied real-value mode).
 
-Throws if there are no values to consider at all (an empty thread, or one that
+Throws if there are no values to consider at all (an empty slate, or one that
 is entirely missing while `drop_nulls = true`).
 
 ## Parameters
@@ -40,7 +40,7 @@ is entirely missing while `drop_nulls = true`).
 ## Returns
 
 `Slate`
-    A new thread holding every value tied for most frequent, in ascending
+    A new slate holding every value tied for most frequent, in ascending
     order. Length `1` if there's a single mode, longer if there's a tie.
 
 ## Examples
@@ -85,7 +85,7 @@ ptype: Series
 Both `10.0` and `20.0` occur twice; `30.0` occurs once and doesn't qualify.
 
 Example 3. `drop_nulls = true` (the default) excludes missing entries from
-candidacy, even when they're the single most common "value" in the thread.
+candidacy, even when they're the single most common "value" in the slate.
 
 ```cpp
 auto mostly_missing = Slate(
@@ -126,7 +126,7 @@ ptype: Series
 Now missing (three occurrences) beats `10.0`'s two, so the sole mode is
 `NULL`.
 
-Example 5. `Note`-kind threads work the same way, alphabetically ordered on
+Example 5. `Note`-kind slates work the same way, alphabetically ordered on
 ties.
 
 ```cpp
@@ -169,7 +169,7 @@ Slate::mode: no values
 - With `drop_nulls = false`, a `NULL` entry appears in the result (after every
   tied real-value mode) if missing is itself the single most frequent
   "value."
-- Throws `"Slate::mode: no values"` for an empty thread, or one with nothing
+- Throws `"Slate::mode: no values"` for an empty slate, or one with nothing
   left to consider.
 - For a numeric `Series` payload, restricted to numeric dtypes — a non-numeric
   `Series` throws `"Slate::mode: expected a real numeric Series Slate"`.
@@ -178,7 +178,7 @@ Slate::mode: no values
 
 - [`Slate::freq`](freq.md): the full frequency breakdown this method's
   "most frequent" answer is drawn from.
-- [`Slate::describe`](describe.md): for `Note`-kind threads, reports the
+- [`Slate::describe`](describe.md): for `Note`-kind slates, reports the
   single most frequent value (`top`) and its count (`freq`) — `mode()` returns
   every tied top value, `describe()` only the first alphabetically.
 - [`Slate::median`](median.md): the middle value, a different measure of

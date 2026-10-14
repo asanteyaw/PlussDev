@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,10 +50,10 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the product of every observed (non-missing) value in a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>
-thread, as a scalar <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> — the multiplicative counterpart to
+slate, as a scalar <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> — the multiplicative counterpart to
 <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>. Missing entries are excluded before the product is computed,
 not treated as <code class="docutils literal notranslate"><span class="pre">1</span></code>. Restricted to <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; every other kind throws. A
-thread whose every entry is missing (or that is empty) also throws.</p>
+slate whose every entry is missing (or that is empty) also throws.</p>
 <p>See <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::sum</span></code>’s note on printing a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code></span></a> — streaming the
 result directly prints its diagnostic form, not a bare number; use <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code>
 (as every example below does) for a clean scalar.</p>
@@ -100,7 +100,7 @@ A scalar wrapping the product, in the source <code class="docutils literal notra
 </div>
 <p>Only <code class="docutils literal notranslate"><span class="pre">2.0</span></code> and <code class="docutils literal notranslate"><span class="pre">4.0</span></code> (the two observed entries) participate — <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">4</span> <span class="pre">=</span> <span class="pre">8</span></code>, not
 <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">3</span> <span class="pre">*</span> <span class="pre">4</span> <span class="pre">=</span> <span class="pre">24</span></code>.</p>
-<p>Example 3. A thread with no observed values throws.</p>
+<p>Example 3. A slate with no observed values throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">all_missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
@@ -139,7 +139,7 @@ A scalar wrapping the product, in the source <code class="docutils literal notra
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Missing entries are excluded before multiplying — never treated as <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p>An empty thread, or one where every entry is missing, throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::prod</span> <span class="pre">on</span> <span class="pre">an</span> <span class="pre">empty</span> <span class="pre">(all-null)</span> <span class="pre">selection&quot;</span></code>.</p></li>
+<li><p>An empty slate, or one where every entry is missing, throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::prod</span> <span class="pre">on</span> <span class="pre">an</span> <span class="pre">empty</span> <span class="pre">(all-null)</span> <span class="pre">selection&quot;</span></code>.</p></li>
 <li><p>Restricted to <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::prod</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
 </ul>
 </section>

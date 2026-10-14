@@ -34,7 +34,7 @@ auto review = orders.case_study().take({2, 0, 2})
 ```
 
 The [DataFrameCaseStudyAccessor API Reference](../../dataframe_case_study_accessor_api_reference)
-teaches every terminal separately, including overloads, duplicate-label behavior,
+covers every terminal separately, including overloads, duplicate-label behavior,
 negative positions, inclusive versus half-open bounds, mask alignment, structured
 case levels, and failures.
 

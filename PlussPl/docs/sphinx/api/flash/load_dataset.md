@@ -96,21 +96,21 @@ Related pages:
 ## Curated Dataset Family
 
 As of **Thursday, August 13, 2026**, `load_dataset` recognizes and loads 13 persisted
-teaching datasets:
+sample datasets:
 
 - `tips` — 240 rows, 9 columns. Restaurant-style mixed numeric/categorical data.
-- `flights` — 144 rows, 8 columns. Seasonal airline time-series teaching data.
+- `flights` — 144 rows, 8 columns. Seasonal airline time-series sample data.
 - `petals` — 150 rows, 8 columns. Compact class-labelled measurement data.
 - `exams` — 180 rows, 10 columns. Assessment and grade-policy demonstrations.
 - `retail_daily` — 3,650 rows, 11 columns. Daily retail panel with promotions and seasonality.
 - `weather_hourly` — 120,000 rows, 12 columns. Large hourly temporal dataset for long-run demos.
-- `factor_blocks` — 5,000 rows, 14 columns. Correlated numeric blocks for matrix-style teaching.
+- `factor_blocks` — 5,000 rows, 14 columns. Correlated numeric blocks for matrix-style analysis.
 - `sensor64` — 1,024 rows, 64 columns. High-dimensional sensor frame.
-- `options_chain` — 4,000 rows, 17 columns. Financial temporals plus option-surface teaching fields.
+- `options_chain` — 4,000 rows, 17 columns. Financial temporals plus option-surface fields.
 - `customer_funnel` — 5,000 rows, 11 columns. Lifecycle and funnel-style mixed data.
-- `commute_modes` — 3,000 rows, 11 columns. Mobility/categorical teaching data.
+- `commute_modes` — 3,000 rows, 11 columns. Mobility/categorical sample data.
 - `regimes` — 3,000 rows, 10 columns. Regime-labelled time-series data.
-- `quality_batches` — 2,000 rows, 13 columns. Industrial quality-control teaching data.
+- `quality_batches` — 2,000 rows, 13 columns. Industrial quality-control sample data.
 
 ## Examples
 
@@ -187,7 +187,7 @@ Output:
 load_dataset("does_not_exist") has_value=0
 ```
 
-Example 4. Plot a compact teaching view from `weather_hourly` by reusing the loaded
+Example 4. Plot a compact sample view from `weather_hourly` by reusing the loaded
 temporal axis as a continuous plotting coordinate.
 
 ```cpp
@@ -216,7 +216,7 @@ Output plot:
 
 ![Output of Example 4](../../_static/plots/methods/load_dataset_weather_hourly.svg)
 
-Example 5. Plot a compact option-surface teaching slice from `options_chain`.
+Example 5. Plot a compact option-surface slice from `options_chain`.
 
 ```cpp
 using namespace pluss::pl;
@@ -252,7 +252,7 @@ Output plot:
   - installed/share-style flash dataset roots
   - project-local dataset roots while developing in-tree
 - Date-only temporal tokens such as `YYYY-MM-DD` are normalized to midnight UTC during
-  load so curated temporal teaching datasets remain ergonomic.
+  load so curated temporal sample datasets remain ergonomic.
 - Missing temporal values are stored as `Timeline::kNaT` internally and are also
   tracked through `temporal_validity`.
 - `Dataset::continuous(name)` is the plotting-oriented accessor:
@@ -260,7 +260,7 @@ Output plot:
   - temporal features are converted to numeric axis values
   - invalid entries are surfaced as `NaN` in the returned numeric series
 - Name lookups are linear over the grouped `Note` name vectors. That is fine for
-  curated teaching datasets and modest-width plotting frames.
+  curated sample datasets and modest-width plotting frames.
 - When PlussMic is available, [`flash::Dataset::from_frame`](dataset_from_frame.md) and
   [`flash::Dataset::frame`](dataset_frame.md) provide DataFrame interop on top of this
   same `Dataset` structure.

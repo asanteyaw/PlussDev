@@ -13,7 +13,7 @@ Slate::log() const -> Slate
 
 ## What It Does
 
-Applies the elementwise natural logarithm (`ln`). Requires the thread to be
+Applies the elementwise natural logarithm (`ln`). Requires the slate to be
 `Series`-kind. A non-floating scalar type (integer, bool) is promoted to `Float64`
 before the logarithm is computed — `log()` never throws on integer input purely for
 being integer.
@@ -28,7 +28,7 @@ Standard IEEE-754 domain behavior applies: `log(0.0)` produces `-Inf`, and
 ## Returns
 
 `Slate`
-    A new `Series`-kind thread, same length as `*this`, holding the natural log of
+    A new `Series`-kind slate, same length as `*this`, holding the natural log of
     each element (promoted to a floating scalar type if the input was integral).
 
 ## Examples
@@ -71,7 +71,7 @@ std::cout << out2;
 ptype: Series
 ```
 
-Example 3. A non-`Series` thread throws.
+Example 3. A non-`Series` slate throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -90,7 +90,7 @@ Slate::log is only valid for Series payload
 
 ## Notes
 
-- Requires the calling thread to be `Series`-kind.
+- Requires the calling slate to be `Series`-kind.
 - Integer/bool input is promoted to `Float64` automatically before computing.
 - `log(0.0)` yields `-Inf`; `log(negative)` yields `NaN` — neither throws. Check
   with [`isfinite()`](isfinite.md) / [`isnan()`](isnan.md) afterward if that matters.

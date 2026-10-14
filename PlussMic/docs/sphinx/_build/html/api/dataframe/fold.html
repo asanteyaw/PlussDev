@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -61,7 +61,7 @@ hook for a callback that returns a whole <code class="docutils literal notransla
 <p>The callback to run. It receives the current frame by <code class="docutils literal notranslate"><span class="pre">const</span></code> reference and must
 return a defined <code class="docutils literal notranslate"><span class="pre">Slate</span></code>. Throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::fold:</span> <span class="pre">callback</span> <span class="pre">is</span> <span class="pre">empty&quot;</span></code> if <code class="docutils literal notranslate"><span class="pre">fn</span></code> holds
 no target, and <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::fold:</span> <span class="pre">callback</span> <span class="pre">returned</span> <span class="pre">undefined&quot;</span></code> if it returns an
-undefined thread.</p>
+undefined slate.</p>
 <p><strong>shape</strong> (<code class="docutils literal notranslate"><span class="pre">ResultShape</span></code>, default <code class="docutils literal notranslate"><span class="pre">ResultShape::Reduce</span></code>)</p>
 <p>Governs what size the returned <code class="docutils literal notranslate"><span class="pre">Slate</span></code> is checked against:</p>
 <ul class="simple">
@@ -121,7 +121,7 @@ o3  1150
 ptype: Series
 </pre></div>
 </div>
-<p>The callback multiplies two feature threads elementwise, producing one value per case
+<p>The callback multiplies two feature slates elementwise, producing one value per case
 — <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">1200</span> <span class="pre">=</span> <span class="pre">2400</span></code>, <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">*</span> <span class="pre">45.5</span> <span class="pre">=</span> <span class="pre">227.5</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">*</span> <span class="pre">1150</span> <span class="pre">=</span> <span class="pre">1150</span></code> — which satisfies
 <code class="docutils literal notranslate"><span class="pre">Preserve</span></code>’s “exactly <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> entries” requirement (<code class="docutils literal notranslate"><span class="pre">3</span></code> rows in, <code class="docutils literal notranslate"><span class="pre">3</span></code> values out).
 Each case keeps the case label carried by <code class="docutils literal notranslate"><span class="pre">features(&quot;units&quot;)</span></code> (<code class="docutils literal notranslate"><span class="pre">o1</span></code>, <code class="docutils literal notranslate"><span class="pre">o2</span></code>, <code class="docutils literal notranslate"><span class="pre">o3</span></code>).</p>

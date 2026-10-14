@@ -31,7 +31,7 @@ produces an empty (not erroring) result. Internally implemented as
 ## Returns
 
 `Slate`
-    A new thread over positions `[start, stop)`, clamped into range.
+    A new slate over positions `[start, stop)`, clamped into range.
 
 ## Examples
 

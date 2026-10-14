@@ -12,7 +12,7 @@ SlateLabelAccessor::distinct(bool dropnull = true) const -> Slate
 
 ## What It Does
 
-Returns the bound thread's unique case-label values, in first-occurrence
+Returns the bound slate's unique case-label values, in first-occurrence
 order. With `dropnull = false`, a single `NULL` is kept (at the position of
 its first occurrence) if any case label is null; with the default
 `dropnull = true`, `NULL` is excluded entirely.

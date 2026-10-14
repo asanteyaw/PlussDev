@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -60,7 +60,7 @@ operands <em>disagree</em> — a useful “exactly one of these flags is set” 
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code> (same feature names in order, same case count, matched
-positionally) or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code> (one boolean thread applied identically to every
+positionally) or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code> (one boolean slate applied identically to every
 feature). See <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a> for the full breakdown.</p>
 </section>
 <section id="returns">
@@ -106,8 +106,8 @@ reports <code class="docutils literal notranslate"><span class="pre">true</span>
 <p>Example 2. XOR a frame against a single shared <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, applied identically to every
 feature.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">lxor</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_slate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">lxor</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_slate</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>

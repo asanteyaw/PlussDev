@@ -13,8 +13,8 @@ Slate::abs() const -> Slate
 
 ## What It Does
 
-Returns the elementwise absolute value of a `Series`-kind thread — strips the sign,
-leaving magnitude. Requires the thread to be `Series`-kind.
+Returns the elementwise absolute value of a `Series`-kind slate — strips the sign,
+leaving magnitude. Requires the slate to be `Series`-kind.
 
 ## Parameters
 
@@ -23,7 +23,7 @@ leaving magnitude. Requires the thread to be `Series`-kind.
 ## Returns
 
 `Slate`
-    A new `Series`-kind thread, same length as `*this`, holding each element's
+    A new `Series`-kind slate, same length as `*this`, holding each element's
     absolute value.
 
 ## Examples
@@ -48,7 +48,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. A non-`Series` thread throws.
+Example 2. A non-`Series` slate throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -67,7 +67,7 @@ Slate::abs is only valid for Series payload
 
 ## Notes
 
-- Requires the calling thread to be `Series`-kind.
+- Requires the calling slate to be `Series`-kind.
 - A `NULL` cell on input stays `NULL` on output.
 
 ## See Also

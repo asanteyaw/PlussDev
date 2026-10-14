@@ -14,9 +14,9 @@ Slate::partition(std::string_view separator,
 
 ## What It Does
 
-Splits every cell of a `Note` (string) thread at the *first* occurrence of a literal
+Splits every cell of a `Note` (string) slate at the *first* occurrence of a literal
 `separator`, always producing exactly **three** output columns: the text before the
-separator, the separator itself, and the text after it. Requires the thread to be
+separator, the separator itself, and the text after it. Requires the slate to be
 `Note`-kind. It's a narrower, simpler cousin of [`split()`](split.md) — always
 literal (no regex), always stops at the first match, and always exactly three columns
 regardless of the input.
@@ -135,7 +135,7 @@ try {
 Slate::partition: separator cannot be empty
 ```
 
-Example 4. A non-`Note` thread throws.
+Example 4. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -155,7 +155,7 @@ Slate::partition: expected Note payload
 
 ## Notes
 
-- Requires the calling thread to be `Note`-kind.
+- Requires the calling slate to be `Note`-kind.
 - Always literal (no regex mode) and always stops at the *first* occurrence — for a
   regex-aware or multi-way split, use [`split()`](split.md).
 - Always produces exactly three output columns, regardless of the input.

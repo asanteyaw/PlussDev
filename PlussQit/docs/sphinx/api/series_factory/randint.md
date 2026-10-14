@@ -35,7 +35,7 @@ This is the discrete counterpart to [`rand_btw()`](rand_btw.md):
 - `rand_btw(lo, hi, ...)` draws floating values in `[lo, hi)`
 - `randint(lo, hi, ...)` draws integer values in `{lo, ..., hi - 1}`
 
-So the most important rule to teach up front is that `hi` is excluded.
+So the most important rule to know up front is that `hi` is excluded.
 
 ## Parameters
 

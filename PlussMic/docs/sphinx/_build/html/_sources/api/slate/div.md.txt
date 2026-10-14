@@ -18,8 +18,8 @@ Elementwise division, following [`add()`](add.md)'s shared mechanics (positional
 matching, length-mismatch throw, no `Note`-payload support). `div()` delegates to the
 underlying `Series` library's own `div()` algebra, which is a distinct code path from
 [`truediv()`](truediv.md) (which always promotes to floating point via
-`true_divide()`). For the `Float64`-typed threads used throughout this reference, the
-two produce identical results; the distinction can matter for integer-typed threads,
+`true_divide()`). For the `Float64`-typed slates used throughout this reference, the
+two produce identical results; the distinction can matter for integer-typed slates,
 where `div()`'s exact type-preservation behavior comes from outside this repository
 and isn't asserted here — prefer [`truediv()`](truediv.md) when you specifically want
 guaranteed floating-point division regardless of input type.
@@ -33,7 +33,7 @@ The divisor(s). For the `Slate` overload, must be the same length as `*this`.
 ## Returns
 
 `Slate`
-    A new thread, same length as `*this`, holding the elementwise quotient.
+    A new slate, same length as `*this`, holding the elementwise quotient.
 
 ## Examples
 
@@ -57,7 +57,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Divide two threads positionally.
+Example 2. Divide two slates positionally.
 
 ```cpp
 auto splits = Slate(pluss::make_series({4.0, 8.0, 9.0}));
@@ -76,7 +76,7 @@ ptype: Series
 ```
 
 `30 / 9` doesn't divide evenly — the result is displayed to 10 significant digits
-(`3.333333333`), the same formatting every numeric thread uses.
+(`3.333333333`), the same formatting every numeric slate uses.
 
 ## Notes
 

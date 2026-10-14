@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-// Whole-frame, thread-wise
+// Whole-frame, slate-wise
 DataFrame::transform(const std::function<Slate(const Slate&)>& fn) const -> DataFrame
 DataFrame::transform(const std::function<Slate(const Slate&)>& fn, Axis axis) const -> DataFrame  // axis must be Axis::Feature
 
@@ -25,7 +25,7 @@ DataFrame::transform(const std::function<DataFrame(const DataFrame&)>& fn, Axis 
 Rewrites feature values by applying a user-supplied function, in several shapes
 depending on which overload you reach for:
 
-- **Whole-frame, thread-wise** (`transform(fn)`): applies `fn` to *every* feature's
+- **Whole-frame, slate-wise** (`transform(fn)`): applies `fn` to *every* feature's
   `Slate` independently, replacing each with `fn`'s result. The `Axis` overload is
   the same thing spelled out explicitly — it requires `Axis::Feature` and throws
   otherwise, pointing you at the row-wise `DataFrame`-callback overload for
@@ -89,7 +89,7 @@ other).
 
 ## Examples
 
-Example 1. Rewrite every feature with the same thread-level function.
+Example 1. Rewrite every feature with the same slate-level function.
 
 ```cpp
 using namespace pluss::table;

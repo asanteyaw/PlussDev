@@ -13,7 +13,7 @@ Slate::align(const Slate& target_labels, const AlignOptions& options = {}) const
 
 ## What It Does
 
-Realigns one thread's values to a target label order — the typed, single-column
+Realigns one slate's values to a target label order — the typed, single-column
 alignment surface behind many higher-level `DataFrame` operations. Use it when you're
 working with one extracted column directly and need to reorder or relabel it against
 another label vector before comparison, arithmetic, export, or manual reconstruction.
@@ -35,7 +35,7 @@ struct AlignOptions {
 `target_labels`' interpretation depends entirely on `options.align`: under `Caselbl`, it's
 the desired case-axis order; under `Feature`, the desired feature-label order; under `Pos`
 (the default), it's only checked for length compatibility — no label matching happens at
-all, and the thread's own current values and visible labels pass through unchanged.
+all, and the slate's own current values and visible labels pass through unchanged.
 
 ```{important} Unmatched target labels become NULL unless fill is set
 Under `Caselbl`/`Feature` alignment, a `target_labels` entry with no corresponding source
@@ -46,20 +46,20 @@ numeric scalar if you'd rather those gaps came back filled instead. See Examples
 ## Parameters
 
 **target_labels** (`const Slate&`)
-    The target label vector defining the output order — typically a `Note`-kind thread
+    The target label vector defining the output order — typically a `Note`-kind slate
     of label strings (a bare `pluss::Note` also works, thanks to `Slate`'s implicit
     constructor from `Note`). Under `AlignBy::Pos`, only its length matters.
 
 **options** (`const AlignOptions&`)
     `align` selects the matching rule (see above); `fill`, if set, supplies a numeric
-    scalar for target labels that have no match in the source thread. `AlignBy::Both` is
+    scalar for target labels that have no match in the source slate. `AlignBy::Both` is
     rejected — it's a `DataFrame`-only concept (aligning both the case axis and the
     feature axis at once), which has no meaning for a single `Slate`.
 
 ## Returns
 
 `Slate`
-    A new thread reordered/relabeled per `options.align`, the same length as
+    A new slate reordered/relabeled per `options.align`, the same length as
     `target_labels`.
 
 ## Examples
@@ -111,14 +111,14 @@ d  0
 ptype: Series
 ```
 
-Example 3. Align a one-value-per-feature thread by feature label — useful when a thread
+Example 3. Align a one-value-per-feature slate by feature label — useful when a slate
 represents, e.g., one aggregate per column and you need it in a specific column order.
 
 ```cpp
-auto feature_thread = Slate(pluss::make_series({1.5, 2.5}))
+auto feature_slate = Slate(pluss::make_series({1.5, 2.5}))
                           .label().set(pluss::make_note({"A2", "A1"}));
 
-auto out = feature_thread.align(
+auto out = feature_slate.align(
     pluss::make_note({"A1", "A2"}),
     AlignOptions{.align = AlignBy::Feature}
 );
@@ -134,7 +134,7 @@ ptype: Series
 ```
 
 Example 4. `AlignBy::Pos` performs no label-based remapping at all — it only validates
-length compatibility, and the thread's own values and visible labels pass through
+length compatibility, and the slate's own values and visible labels pass through
 unchanged even though `target_labels` here holds entirely different label text.
 
 ```cpp
@@ -161,9 +161,9 @@ Example 5. `AlignBy::Both` is a `DataFrame`-only concept and throws when request
 `Slate`.
 
 ```cpp
-auto thread = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto slate = Slate(pluss::make_series({10.0, 20.0, 30.0}));
 try {
-  auto out = thread.align(pluss::make_note({"a", "b", "c"}), AlignOptions{.align = AlignBy::Both});
+  auto out = slate.align(pluss::make_note({"a", "b", "c"}), AlignOptions{.align = AlignBy::Both});
 } catch (const std::exception& e) {
   std::cout << e.what();
 }
@@ -182,7 +182,7 @@ Slate::align: AlignBy::Both is only valid for DataFrame-to-DataFrame alignment
 - Unmatched target labels become `NULL` unless `options.fill` is set — see the important
   callout above.
 - `AlignBy::Pos` does not broadcast or remap by label at all; it expects a compatible
-  length and preserves the thread's current value order and visible labels untouched.
+  length and preserves the slate's current value order and visible labels untouched.
 
 ## See Also
 

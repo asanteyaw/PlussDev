@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Enters the casting accessor — <code class="docutils literal notranslate"><span class="pre">cast()</span></code> itself performs no conversion; it binds the
-current thread (and, optionally, a <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code> policy) and hands back a
+current slate (and, optionally, a <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code> policy) and hands back a
 <code class="docutils literal notranslate"><span class="pre">SlateCastAccessor</span></code> whose four methods each convert to one target payload family:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SlateCastAccessor</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
@@ -62,8 +62,8 @@ current thread (and, optionally, a <code class="docutils literal notranslate"><s
 <span class="p">};</span>
 </pre></div>
 </div>
-<p>Calling the target that matches the source thread’s own <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind()</span></code></span></a> is always a
-cheap identity — <code class="docutils literal notranslate"><span class="pre">Slate(...).cast().series()</span></code> on an already-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread just
+<p>Calling the target that matches the source slate’s own <a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind()</span></code></span></a> is always a
+cheap identity — <code class="docutils literal notranslate"><span class="pre">Slate(...).cast().series()</span></code> on an already-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate just
 returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged (subject to <code class="docutils literal notranslate"><span class="pre">options.series_dtype</span></code>, if you’re also asking for a
 different numeric dtype). Converting <em>between</em> kinds follows these rules:</p>
 <ul class="simple">
@@ -112,7 +112,7 @@ sides of this.</p>
 ## Returns
 
 `SlateCastAccessor`
-    A lightweight accessor bound to the current thread (and `options`, if given). Each of
+    A lightweight accessor bound to the current slate (and `options`, if given). Each of
     its four methods performs one conversion and returns a `Slate`.
 
 ## Examples
@@ -201,7 +201,7 @@ ptype: Timeline
 </div>
 <p>Setting <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">ParseInvalid::Null</span></code> avoids the throw and marks the unparseable row
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> instead.</p>
-<p>Example 5. Cast a numeric thread to text with <code class="docutils literal notranslate"><span class="pre">note()</span></code>.</p>
+<p>Example 5. Cast a numeric slate to text with <code class="docutils literal notranslate"><span class="pre">note()</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">amounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">cast</span><span class="p">().</span><span class="n">note</span><span class="p">();</span>
@@ -226,7 +226,7 @@ happens in <code class="docutils literal notranslate"><span class="pre">.series(
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateCastOptions::invalid</span></code> only actually affects the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> targets —
 see the important callout above. <code class="docutils literal notranslate"><span class="pre">astype()</span></code>, which delegates to <code class="docutils literal notranslate"><span class="pre">cast().series()</span></code>
 internally, inherits this same “always null on unparseable text” behavior.</p></li>
-<li><p>Converting to a thread’s own current kind is a cheap identity (subject to
+<li><p>Converting to a slate’s own current kind is a cheap identity (subject to
 <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code>, if a different numeric dtype is also requested).</p></li>
 </ul>
 </section>

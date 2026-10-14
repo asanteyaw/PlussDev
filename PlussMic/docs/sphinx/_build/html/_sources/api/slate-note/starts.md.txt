@@ -12,9 +12,9 @@ SlateNoteAccessor::starts(std::string_view prefix) const -> Slate
 
 ## What It Does
 
-Checks the bound thread's cells for a literal, case-sensitive prefix match,
+Checks the bound slate's cells for a literal, case-sensitive prefix match,
 replacing each cell with a `Bool` — a direct forward to
-[`Slate::starts()`](../thread/starts.md). Requires the bound thread to be
+[`Slate::starts()`](../slate/starts.md). Requires the bound slate to be
 `Note`-kind. Always a plain, case-sensitive, literal check — no regex mode; use
 [`matches()`](matches.md) with a start-anchored pattern for anything more
 flexible.
@@ -29,12 +29,12 @@ matches every non-null cell.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread, holding
+    A new `Bool`-typed `Series` slate, same length as the bound slate, holding
     the elementwise prefix check.
 
 ## Examples
 
-Example 1. Check a text thread for a literal prefix.
+Example 1. Check a text slate for a literal prefix.
 
 ```cpp
 using namespace pluss::table;
@@ -56,8 +56,8 @@ ptype: Series
 
 Row `1` (`"sku-1002"`) doesn't match — the comparison is case-sensitive.
 
-Example 2. A non-`Note` thread throws — the same message
-[`Slate::starts()`](../thread/starts.md) produces directly.
+Example 2. A non-`Note` slate throws — the same message
+[`Slate::starts()`](../slate/starts.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -78,7 +78,7 @@ Slate::starts: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::starts()` is a one-line forward to
-  [`Slate::starts()`](../thread/starts.md) — identical behavior and throws.
+  [`Slate::starts()`](../slate/starts.md) — identical behavior and throws.
 - Case-sensitive, literal comparison only — no regex mode. Normalize with
   [`lower()`](lower.md)/[`casefold()`](casefold.md) first, or use
   [`matches()`](matches.md), for anything more flexible.
@@ -87,7 +87,7 @@ Slate::starts: expected Note payload
 
 ## See Also
 
-- [`Slate::starts`](../thread/starts.md): the direct, non-accessor form this
+- [`Slate::starts`](../slate/starts.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateNoteAccessor::ends`](ends.md): the same check anchored at the end
   instead of the start.

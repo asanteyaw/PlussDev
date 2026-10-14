@@ -27,7 +27,7 @@ So `classic`, `lymph`, and `ice` are not families. They are frameworks.
 - Function pages should contain signature, summary, parameters, returns, examples, and see-also.
 - Framework pages should contain short prose plus family tables, not raw file dumps.
 - Family pages should contain short prose plus object tables, not raw file dumps.
-- Public docs should use only `classic`, `nets`, `nlp`; never teach `nodej`, `nodek`, `nodeb`.
+- Public docs should use only `classic`, `nets`, `nlp`; never present `nodej`, `nodek`, `nodeb`.
 
 ## Recommended Shape
 

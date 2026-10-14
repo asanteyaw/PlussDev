@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,14 +49,14 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to every case label individually and reattaches the results as
-the bound thread’s new case labels — a direct forward to
-<code class="docutils literal notranslate"><span class="pre">Slate::caselbl(Slate::caselbl().map(fn))</span></code>. The thread’s own values are
+the bound slate’s new case labels — a direct forward to
+<code class="docutils literal notranslate"><span class="pre">Slate::caselbl(Slate::caselbl().map(fn))</span></code>. The slate’s own values are
 untouched; only the case-label companion sequence changes.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Always reachable — unlike DataFrameLabelAccessor::map
 <code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::map</span></code> throws on a structured (multi-level) frame,
-since there’s no single flat thread to map over. A <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s case labels
+since there’s no single flat slate to map over. A <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s case labels
 are always a single flat sequence, so <code class="docutils literal notranslate"><span class="pre">SlateLabelAccessor::map</span></code> never has
 that concern.</p>
 </div>
@@ -70,7 +70,7 @@ and returning its replacement.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with case labels
+A new slate, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with case labels
 replaced by <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s output.</p>
 </section>
 <section id="examples">
@@ -109,7 +109,7 @@ r4!  90
 ptype: Series
 </pre></div>
 </div>
-<p>Each case label is transformed by appending <code class="docutils literal notranslate"><span class="pre">&quot;!&quot;</span></code>; the thread’s own <code class="docutils literal notranslate"><span class="pre">sales</span></code>-
+<p>Each case label is transformed by appending <code class="docutils literal notranslate"><span class="pre">&quot;!&quot;</span></code>; the slate’s own <code class="docutils literal notranslate"><span class="pre">sales</span></code>-
 style values are exactly as they were.</p>
 </section>
 </section>
@@ -118,13 +118,13 @@ style values are exactly as they were.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> must return a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> of a kind consistent with the rest of the
 output (a length-1 <code class="docutils literal notranslate"><span class="pre">Slate</span></code> wrapped in <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>, as constructed above).</p></li>
-<li><p>Only the case labels change — the bound thread’s own values are untouched.</p></li>
+<li><p>Only the case labels change — the bound slate’s own values are untouched.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateLabelAccessor::values</span></code></span></a>: pull the raw label thread if a
+<li><p><a class="reference internal" href="values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateLabelAccessor::values</span></code></span></a>: pull the raw label slate if a
 transform outside <code class="docutils literal notranslate"><span class="pre">map(...)</span></code> is needed.</p></li>
 <li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateLabelAccessor::set</span></code></span></a>: the underlying mechanism this method
 applies its result through.</p></li>

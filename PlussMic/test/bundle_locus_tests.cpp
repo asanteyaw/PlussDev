@@ -8,6 +8,7 @@
 #include <thread>
 #include <unistd.h>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <random>
 #include <stdexcept>
@@ -90,14 +91,14 @@ Locus make_shop() {
 void test_construction_and_selection() {
   const auto shop = make_shop();
   expect(shop.defined() && !shop.empty(), "a built Locus is defined and non-empty");
-  expect(shop.ntables() == 3 && shop.size() == 3, "ntables/size should count catalogs");
+  expect(shop.ntables() == 3, "ntables should count catalogs");
   expect(shop.nrelationships() == 0, "a new Locus has no links");
   expect(shop.shape() == std::make_pair<std::int64_t, std::int64_t>(3, 0), "shape is {tables, links}");
-  expect(shop.names() == std::vector<std::string>({"customers", "orders", "items"}),
-         "names keep construction order");
+  expect(shop.keys() == std::vector<std::string>({"customers", "orders", "items"}),
+         "keys keep construction order");
   expect(shop.has("orders") && !shop.has("nope"), "has() looks catalogs up by name");
   expect(shop.catalog("orders").nkeys() == 3, "catalog(name) returns the member");
-  expect(shop.catalog(-1).has("sku") && shop.dloc(0).has("name"), "catalog(index) supports negatives, dloc aliases it");
+  expect(shop.catalog(-1).has("sku") && shop.catalog(0).has("name"), "catalog(index) supports negatives");
   expect(shop.get("items").has_value() && !shop.get("nope").has_value(), "get() is the non-throwing lookup");
   expect_throw([&] { (void)shop.catalog("nope"); }, "unknown catalog name should throw");
   expect_throw([&] { (void)shop.catalog(3); }, "out-of-range catalog index should throw");
@@ -108,9 +109,9 @@ void test_construction_and_selection() {
   expect_throw([&] { Locus l({{"a", shop.catalog("orders")}, {"a", shop.catalog("items")}}); (void)l; },
                "duplicate catalog names should throw");
 
-  expect(shop.head(2).names() == std::vector<std::string>({"customers", "orders"}), "head keeps the first tables");
-  expect(shop.tail(1).names() == std::vector<std::string>({"items"}), "tail keeps the last tables");
-  expect(shop.select({"items", "customers"}).names() == std::vector<std::string>({"items", "customers"}),
+  expect(shop.head(2).keys() == std::vector<std::string>({"customers", "orders"}), "head keeps the first tables");
+  expect(shop.tail(1).keys() == std::vector<std::string>({"items"}), "tail keeps the last tables");
+  expect(shop.select({"items", "customers"}).keys() == std::vector<std::string>({"items", "customers"}),
          "select reorders");
   expect_throw([&] { (void)shop.select({"customers", "nope"}); }, "select of an unknown name should throw");
 
@@ -720,6 +721,20 @@ void test_native_pull_rules() {
   const auto no_time = store.meta("events", []() { pluss::bundle::locus::TableMeta m; m.primary_key = {"event_id"}; return m; }());
   expect_throw([&] { (void)no_time.pull("customers").add(nx::sum("events.spend", "s").windowed(7, "d")).collect(); },
                "a window without a time_field should be rejected");
+  expect_throw(
+      [&] {
+        (void)store.pull("customers")
+            .add(nx::sum("events.spend", "s").windowed(std::numeric_limits<std::int64_t>::max(), "w"))
+            .collect();
+      },
+      "a window whose unit conversion overflows should be rejected");
+  expect_throw(
+      [&] {
+        (void)store.pull("customers")
+            .add(nx::sum("events.spend", "s").windowed(std::numeric_limits<std::int64_t>::max(), "s"))
+            .collect();
+      },
+      "a window outside the nanosecond timestamp range should be rejected");
 
   // Multi-hop: customers -> events -> (events' own link), aggregated through an intermediate table.
   auto chain = store;
@@ -769,6 +784,42 @@ void test_native_traverse_and_plans() {
   expect_throw([&] { (void)two.from("events").join("customers").collect(); },
                "several direct links without a named one should be rejected");
 
+  // Every matching mode is available through the immutable traversal builder.
+  const auto shop = make_linked_shop();
+  auto mode = [](JoinHow how) {
+    JoinSpec spec;
+    spec.how = how;
+    return spec;
+  };
+  expect(shop.from("orders").join("customers").collect().maxrows() == 3,
+         "the default traversal join is inner");
+  expect(shop.from("orders").join("customers", mode(JoinHow::Left)).collect().maxrows() == 4,
+         "a left traversal keeps every root record");
+  expect(shop.from("orders").join("customers", mode(JoinHow::Right)).collect().maxrows() == 4,
+         "a right traversal keeps every right record");
+  expect(shop.from("orders").join("customers", mode(JoinHow::Outer)).collect().maxrows() == 5,
+         "an outer traversal keeps both orphans");
+  expect(shop.from("orders").join("customers", mode(JoinHow::LeftOnly)).collect().maxrows() == 1,
+         "left-only returns root records without a partner");
+  expect(shop.from("orders").join("customers", mode(JoinHow::RightOnly)).collect().maxrows() == 1,
+         "right-only returns target records without a partner");
+  expect(make_shop().from("orders").join("customers", mode(JoinHow::Cross)).collect().maxrows() == 12,
+         "cross traversal produces the Cartesian product without a relationship");
+
+  const auto root = shop.from("orders");
+  expect(root.pick({"order_id"}).pick({"amount"}).collect().keys() == std::vector<std::string>({"amount"}),
+         "a later pick replaces the earlier pick");
+  expect(root.drop({"amount"}).drop({"cust_id"}).collect().has("amount"),
+         "a later drop replaces the earlier drop");
+  expect(root.pick({}).collect().defined() && root.pick({}).collect().nkeys() == 0,
+         "an empty pick produces a defined empty catalog");
+  expect(root.drop({}).collect().keys() == root.collect().keys(), "an empty drop is a no-op");
+  const auto unknown_pick = root.pick({"absent"});
+  expect_throw([&] { (void)unknown_pick.collect(); }, "unknown projected keys are checked at collection");
+  expect(root.via("orders").collect().keys() == root.collect().keys(), "a zero-hop path preserves the anchor");
+  expect(shop.from("items").via("customers", JoinHow::Cross).collect().maxrows() == 60,
+         "cross traversal uses the path to choose catalogs without binding relationship keys");
+
   // A native plan equals the aligned Nexus plan on rectangular data.
   const auto plan = store.plan("events", "regions", pluss::bundle::locus::JoinHow::Left);
   expect(plan.steps.size() == 2 && plan.root_table == "events", "plan() is the shortest path as join steps");
@@ -804,7 +855,7 @@ void test_workspace_ops_and_meta() {
   expect_throw([&] { (void)shop.rename("customers", "orders"); }, "rename onto an existing name should throw");
   expect_throw([&] { (void)shop.rename("customers", "customers"); }, "rename to the same name should throw");
 
-  expect(shop.drop({"items", "orders"}).names() == std::vector<std::string>({"customers"}),
+  expect(shop.drop({"items", "orders"}).keys() == std::vector<std::string>({"customers"}),
          "drop removes several catalogs");
   expect(shop.drop({"items"}).nrelationships() == 1, "drop removes the links touching it");
 
@@ -817,17 +868,17 @@ void test_workspace_ops_and_meta() {
   expect_throw([&] { (void)shop.apply("orders", Locus::CatalogFn{}); }, "an empty callback should throw");
   expect_throw([&] { (void)shop.apply("orders", [](const Catalog&) { return Catalog(); }); },
                "a callback returning an undefined Catalog should throw");
-  expect(shop.map_catalogs([](const Catalog& c) { return c.head(1); }).catalog("items").maxrows() == 1,
-         "map_catalogs applies to every catalog");
+  expect(shop.apply_all([](const Catalog& c) { return c.head(1); }).catalog("items").maxrows() == 1,
+         "apply_all applies to every catalog");
   expect(shop.flow([](const Locus& l) { return l.drop({"items"}); }).ntables() == 2, "flow threads the Locus through a function");
 
   // Archives: one catalog per depth slice.
   const pluss::kindle::Archive archive(std::vector<Catalog>{shop.catalog("orders"), shop.catalog("items")});
   const auto from_archive = Locus::from_archive(archive);
-  expect(from_archive.names() == std::vector<std::string>({"catalog_0", "catalog_1"}), "unlabelled archive slices get index names");
+  expect(from_archive.keys() == std::vector<std::string>({"catalog_0", "catalog_1"}), "unlabelled archive slices get index names");
   const pluss::kindle::Archive labelled(std::vector<Catalog>{shop.catalog("orders"), shop.catalog("items")},
                                         words({"o", "i"}));
-  expect(Locus::from_archive(labelled).names() == std::vector<std::string>({"o", "i"}), "text depth labels name the catalogs");
+  expect(Locus::from_archive(labelled).keys() == std::vector<std::string>({"o", "i"}), "text depth labels name the catalogs");
   expect(shop.inject(labelled).ntables() == 5, "inject(Archive) appends its slices");
 
   // Table metadata.
@@ -856,7 +907,6 @@ void test_integrity_and_reports() {
   const auto dups = shop.duplicates("orders", {"cust_id"});
   expect(has_key(dups, "cust_id"), "duplicates() returns the offending records");
   expect(values_of(dups, "order_id").size() >= 2, "both orders of customer 1 are reported");
-  expect(shop.detect_duplicates("orders", {"cust_id"}).maxrows() == dups.maxrows(), "detect_duplicates aliases duplicates");
 
   const auto left_orphans = shop.detect_orphans("orders->customers");
   expect(values_of(left_orphans, "order_id") == std::vector<double>({13.0}), "order 13 has no customer");
@@ -966,6 +1016,7 @@ void test_builders() {
   const auto prepared = shop.query().prepare("SELECT order_id FROM orders WHERE amount > {floor} ORDER BY order_id");
   expect(values_of(prepared.execute({{"floor", 6.0}}), "order_id").size() == 3, "prepared SQL binds parameters");
   expect(values_of(prepared.execute({{"floor", 11.0}}), "order_id").size() == 1, "prepared SQL re-runs with new parameters");
+  expect_throw([&] { (void)prepared.execute(); }, "prepared SQL rejects an unresolved value placeholder");
   expect_throw([&] { (void)shop.query().execute("SELEKT order_id FROM orders"); }, "bad SQL should throw");
 }
 
@@ -992,7 +1043,7 @@ void test_persistence() {
   expect(fs::exists(dir), "save writes a directory");
 
   const auto back = Locus::read(dir.string(), options);
-  expect(back.names() == shop.names(), "the saved catalogs come back by name");
+  expect(back.keys() == shop.keys(), "the saved catalogs come back by name");
   expect(back.nrelationships() == 2, "links survive the round trip");
   expect(back.has_table_meta("customers"), "table metadata survives the round trip");
   expect(back.has_store("by_customer"), "saved plans survive the round trip");
@@ -1032,7 +1083,7 @@ void test_persistence() {
     fs::remove_all(ndir);
     shop.nexus().save(ndir.string(), options);
     const auto nb = Locus::read(ndir.string(), options);
-    expect(nb.names() == shop.names() && nb.nrelationships() == 2, "Locus::read accepts a Nexus-written store");
+    expect(nb.keys() == shop.keys() && nb.nrelationships() == 2, "Locus::read accepts a Nexus-written store");
     fs::remove_all(ndir);
   }
 

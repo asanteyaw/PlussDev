@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -77,7 +77,7 @@ Must not be empty — see Example 5.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread of the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, built by concatenating each row’s callback
+A new slate of the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, built by concatenating each row’s callback
 result. <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows are preserved without invoking <code class="docutils literal notranslate"><span class="pre">fn</span></code>.</p>
 </section>
 <section id="examples">
@@ -101,7 +101,7 @@ result. <code class="docutils literal notranslate"><span class="pre">NULL</span>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Turn each text value into its own length, as a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread — the
+<p>Example 2. Turn each text value into its own length, as a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate — the
 callback can change payload kind entirely, as long as every row agrees on the new kind.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;chen&quot;</span><span class="p">}));</span>
 
@@ -163,10 +163,10 @@ ptype: Series
 </pre></div>
 </div>
 <p>Example 5. An empty (default-constructed) <code class="docutils literal notranslate"><span class="pre">std::function</span></code> throws immediately.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">SlateValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">SlateValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">empty_fn</span><span class="p">;</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">empty_fn</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slate</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">empty_fn</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
 <span class="p">}</span>
@@ -184,7 +184,7 @@ ptype: Series
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Runs row by row, calling <code class="docutils literal notranslate"><span class="pre">fn</span></code> once per <strong>valid</strong> row — this is meaningfully slower than a
-vectorized <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code> operation for large threads; prefer the vectorized surface
+vectorized <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code> operation for large slates; prefer the vectorized surface
 (arithmetic, <a class="reference internal" href="compare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">compare</span></code></span></a>, <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast</span></code></span></a>, text methods) when it covers what
 you need.</p></li>
 <li><p>Invalid rows never reach <code class="docutils literal notranslate"><span class="pre">fn</span></code> and are preserved as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, at whatever kind the valid rows
@@ -199,8 +199,8 @@ a pure alias for <code class="docutils literal notranslate"><span class="pre">ma
 <ul class="simple">
 <li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::transform</span></code></span></a>: dispatches to <code class="docutils literal notranslate"><span class="pre">map()</span></code> for the <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>-callback
 overload, and to <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold</span></code></span></a> for the <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-callback overload.</p></li>
-<li><p><a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::fold</span></code></span></a> / <a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::flow</span></code></span></a>: whole-thread (not per-row)
-functional transforms — call <code class="docutils literal notranslate"><span class="pre">fn</span></code> once with the entire thread instead of once per row.</p></li>
+<li><p><a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::fold</span></code></span></a> / <a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::flow</span></code></span></a>: whole-slate (not per-row)
+functional transforms — call <code class="docutils literal notranslate"><span class="pre">fn</span></code> once with the entire slate instead of once per row.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lxor.html">

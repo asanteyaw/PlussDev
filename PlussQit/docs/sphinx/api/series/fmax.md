@@ -46,8 +46,9 @@ modified. There is no public in-place `fmax_()` member.
 
 Sensitivity follows the value selected in the forward pass. The larger finite
 operand receives the upstream sensitivity and the smaller receives zero. A
-finite tie is symmetric, so each operand receives half. If exactly one operand
-is `NaN`, the numeric operand receives all of the sensitivity.
+finite tie goes entirely to the left operand (`self`), which is how libtorch
+routes it. If exactly one operand is `NaN`, the numeric operand receives all of
+the sensitivity.
 
 ## Examples
 
@@ -85,13 +86,14 @@ pluss::series::print(std::cout, b.sensitivity());
 
 ```text
 Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[0.0000, 0.5000, 1.0000, 0.0000]
+data=[0.0000, 1.0000, 1.0000, 0.0000]
 Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
-data=[1.0000, 0.5000, 0.0000, 1.0000]
+data=[1.0000, 0.0000, 0.0000, 1.0000]
 ```
 
-Read the columns vertically: `b` wins lane 0; lane 1 is tied; `a` is the only
-number in lane 2; and `b` is the only number in lane 3.
+Read the columns vertically: `b` wins lane 0; lane 1 is tied and the whole
+sensitivity goes to `a`; `a` is the only number in lane 2; and `b` is the only
+number in lane 3.
 
 ## Gotchas And Failure Modes
 

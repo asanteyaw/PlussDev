@@ -13,7 +13,7 @@ Slate::scan(ScanStatistic statistic, bool skip_nulls = true) const -> Slate
 
 ## What It Does
 
-Computes a **running** (cumulative) statistic down the thread — the value at
+Computes a **running** (cumulative) statistic down the slate — the value at
 each position reflects every observed entry up to and including it, not just
 that position alone. [`cumsum()`](cumsum.md), [`cumprod()`](cumprod.md),
 [`cummin()`](cummin.md), and [`cummax()`](cummax.md) are thin wrappers around
@@ -24,7 +24,7 @@ dtype throws.
 ```{note} the throw message always says "Slate::scan"
 `cumsum()`/`cumprod()`/`cummin()`/`cummax()` each delegate straight to
 `scan(...)`, passing the literal string `"Slate::scan"` as the error context —
-so calling any of the four wrapper methods on a non-numeric thread throws
+so calling any of the four wrapper methods on a non-numeric slate throws
 `"Slate::scan: expected a real numeric Series Slate"`, not a message naming
 the specific method you actually called.
 ```
@@ -62,7 +62,7 @@ happens to *that position's own* output value is then controlled separately by
 ## Returns
 
 `Slate`
-    A thread the same length as the source, holding the running statistic at
+    A slate the same length as the source, holding the running statistic at
     each position.
 
 ## Examples

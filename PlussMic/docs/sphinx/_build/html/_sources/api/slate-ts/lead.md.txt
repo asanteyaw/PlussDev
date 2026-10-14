@@ -12,10 +12,10 @@ TimeSeriesAccessor::lead(std::int64_t periods = 1) const -> Slate
 
 ## What It Does
 
-Shifts the bound thread `periods` positions backward: `out[i] = x[i + periods]` where
+Shifts the bound slate `periods` positions backward: `out[i] = x[i + periods]` where
 that index is in bounds, `NULL` otherwise. A negative `periods` delegates to
 [`lag()`](lag.md) with the sign flipped — `lead(-periods)` and `lag(periods)` are the
-same operation. Restricted to a numeric `Series` thread; anything else throws.
+same operation. Restricted to a numeric `Series` slate; anything else throws.
 
 ## Parameters
 
@@ -26,11 +26,11 @@ same operation. Restricted to a numeric `Series` thread; anything else throws.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, led by `periods` positions.
+    A new slate, same length as the bound source, led by `periods` positions.
 
 ## Examples
 
-Example 1. Lead a numeric thread by one position.
+Example 1. Lead a numeric slate by one position.
 
 ```cpp
 using namespace pluss::table;
@@ -56,7 +56,7 @@ Each position now shows the next position's value: position `0` shows position `
 successor, so it's `NULL` — the `NULL` lands at the opposite end from
 [`lag()`](lag.md).
 
-Example 2. A pre-existing missing entry in the source thread is honored, not just
+Example 2. A pre-existing missing entry in the source slate is honored, not just
 the `NULL`s the shift itself introduces.
 
 ```cpp
@@ -84,7 +84,7 @@ because position `1`'s `20.0` is masked-missing — the real number underneath t
 mask never surfaces. Positions `1` and `2` correctly pick up `30.0` and `40.0`
 from the real, valid positions `2` and `3`.
 
-Example 3. A non-numeric thread throws.
+Example 3. A non-numeric slate throws.
 
 ```cpp
 auto words = Slate(pluss::make_note({"a", "b"}));
@@ -105,16 +105,16 @@ TimeSeriesAccessor::lead: source must be Series
 
 - `lead(periods)` with a negative `periods` is exactly `lag(-periods)` — the two
   methods share one implementation, differing only in shift direction.
-- A pre-existing missing entry in the source thread is honored, not just the
+- A pre-existing missing entry in the source slate is honored, not just the
   `NULL`s the shift itself introduces — see Example 2.
-- Restricted to numeric `Series` payloads; a `Note`/`Timeline`/`TimeIndex` thread
+- Restricted to numeric `Series` payloads; a `Note`/`Timeline`/`TimeIndex` slate
   throws `"TimeSeriesAccessor::lead: source must be Series"`; a non-numeric `Series`
   throws `"TimeSeriesAccessor::lead: source Series must be numeric"`.
 
 ## See Also
 
 - [`TimeSeriesAccessor::lag`](lag.md): the mirror-image shift.
-- [`Slate::shift`](../thread/shift.md): the equivalent top-level operation (a negative
+- [`Slate::shift`](../slate/shift.md): the equivalent top-level operation (a negative
   `shift` argument corresponds to a lead) outside the `ts()` accessor.
 
 <div class="pluss-inline-prev-next">

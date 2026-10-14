@@ -28,7 +28,7 @@ Rewrites values across **every** feature on the frame wherever `bool_mask` is `t
 leaving every other row untouched — the whole-frame, mask-driven sibling of
 [`mask()`](mask.md) (which nulls out cells rather than replacing them with a chosen
 value). It applies independently to each column, via that column's own
-[`Slate::put()`](../thread/put.md): where `value` is itself a `Slate` rather than a
+[`Slate::put()`](../slate/put.md): where `value` is itself a `Slate` rather than a
 scalar, each masked row is replaced by **that same row's own value** in `value` — not
 one shared replacement broadcast to every masked cell.
 

@@ -2,30 +2,28 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/pathing.h>
 
 enum class RootResolve { WorkingDirectory, CallerFile };
 
-class PathContext {
-public:
-  explicit PathContext(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
-  static PathContext from_root(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
-  std::filesystem::path root_path() const;
-  void set_root_path(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
-};
+explicit PathContext::PathContext(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
+static PathContext PathContext::from_root(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
+std::filesystem::path PathContext::root_path() const;
+void PathContext::set_root_path(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
 
-class UrlContext {
-public:
-  explicit UrlContext(std::string root_url);
-  static UrlContext from_root(std::string root_url);
-  const std::string& root() const noexcept;
-  UrlRef file_path(std::string_view subpath) const;
-  std::vector<UrlRef> file_paths(std::initializer_list<std::string_view> subpaths) const;
-  std::unordered_map<std::string, UrlRef> file_path_map(
-      std::initializer_list<std::pair<std::string_view, std::string_view>> entries) const;
-};
+explicit UrlContext::UrlContext(std::string root_url);
+static UrlContext UrlContext::from_root(std::string root_url);
+const std::string& UrlContext::root() const noexcept;
+UrlRef UrlContext::file_path(std::string_view subpath) const;
+std::vector<UrlRef> UrlContext::file_paths(std::initializer_list<std::string_view> subpaths) const;
+std::unordered_map<std::string, UrlRef> UrlContext::file_path_map(
+    std::initializer_list<std::pair<std::string_view, std::string_view>> entries) const;
 ```
+
+## What It Does
 
 `PathContext` holds its own root, independent of the process-wide root the free functions (`root_path`, `file_path`, and the rest) read. Use it when two pieces of code need different roots at the same time, such as two datasets loaded from different projects in one program; building or changing a `PathContext` never touches the global root.
 

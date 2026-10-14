@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -59,7 +59,7 @@ at all — it’s always strict (use <a class="reference internal" href="le.html
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The string overload compares text, not numbers
-On a numeric thread, <code class="docutils literal notranslate"><span class="pre">lt(std::string_view)</span></code> stringifies each value and does a plain
+On a numeric slate, <code class="docutils literal notranslate"><span class="pre">lt(std::string_view)</span></code> stringifies each value and does a plain
 lexicographic string comparison against <code class="docutils literal notranslate"><span class="pre">other</span></code> — it does <strong>not</strong> parse <code class="docutils literal notranslate"><span class="pre">other</span></code> as a
 number. This can disagree sharply with numeric ordering: <code class="docutils literal notranslate"><span class="pre">&quot;10&quot;</span></code> sorts <em>before</em> <code class="docutils literal notranslate"><span class="pre">&quot;9&quot;</span></code>
 lexicographically (<code class="docutils literal notranslate"><span class="pre">'1'</span> <span class="pre">&lt;</span> <span class="pre">'9'</span></code> as the first character), even though <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">&gt;</span> <span class="pre">9</span></code>
@@ -74,7 +74,7 @@ numerically. Example 3 below shows this concretely.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise
 “less than” result.</p>
 </section>
 <section id="examples">
@@ -96,7 +96,7 @@ A new <code class="docutils literal notranslate"><span class="pre">Bool</span></
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Compare two threads positionally.</p>
+<p>Example 2. Compare two slates positionally.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">72.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">lt</span><span class="p">(</span><span class="n">targets</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
@@ -112,7 +112,7 @@ ptype: Series
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. The string-overload lexicographic gotcha on a numeric thread.</p>
+<p>Example 3. The string-overload lexicographic gotcha on a numeric slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">lexicographic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">lt</span><span class="p">(</span><span class="s">&quot;9&quot;</span><span class="p">);</span>

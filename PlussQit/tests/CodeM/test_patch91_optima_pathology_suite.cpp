@@ -1,3 +1,4 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
@@ -7,6 +8,7 @@
 #include <vector>
 
 namespace {
+using Catch::Approx;
 
 using pluss::ScalarType;
 using pluss::Series;
@@ -92,12 +94,17 @@ ConstrainedProblem make_recovery_failure_problem() {
   return problem;
 }
 
+// The interior-point initializer moves the start point strictly inside every
+// inequality it can satisfy, so an inequality-only problem (x <= 0.1) is already
+// feasible when the solver begins. An equality constraint is never repaired by
+// the initializer: the start x = 1 stays infeasible (violation 0.9), which is
+// the state the feasibility phase exists to classify.
 ConstrainedProblem make_feasibility_phase_problem() {
   ConstrainedProblem problem;
   problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
     return square(p.at("x") * 0.0);
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
+  problem.nonlinear.equality = [](const ParameterPack<Trace>& p) {
     return p.at("x") - 0.1;
   };
   problem.bounds.lower = ParameterPack<Series>({
@@ -141,8 +148,9 @@ TEST_CASE("optima classifies live boundary-limited SQP exits", "[optim][optima][
 
   const auto result = optima(make_boundary_limited_problem(), ParameterPack<Series>({{"x", scalar(0.0)}}), options);
 
-  REQUIRE(result.exit_flag == OptimaExitFlag::NoProgress);
-  REQUIRE(result.output.stall_category == OptimaStallCategory::BoundaryLimited);
+  // The minimizer sits exactly on the bound; the solver now recognises it instead of stalling there.
+  REQUIRE(result.exit_flag == OptimaExitFlag::Converged);
+  REQUIRE(result.params.at("x").item<double>() == Approx(0.0).margin(1e-8));
 }
 
 TEST_CASE("optima classifies live SQP search-direction collapse exits", "[optim][optima][pathology][collapse]") {
@@ -201,7 +209,6 @@ TEST_CASE("optima can expose live complementarity-dominated interior-point stall
   options.internal_protocol.minimum_barrier_parameter = 1e-10;
   options.internal_protocol.constraint_tolerance = 1e-6;
   options.internal_protocol.optimality_tolerance = 1e-6;
-  options.internal_protocol.dual_recentering_fraction = 0.0;
 
   const auto result = optima(
       make_complementarity_probe_problem(),

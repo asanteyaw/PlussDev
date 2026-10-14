@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Counts non-overlapping occurrences of <code class="docutils literal notranslate"><span class="pre">pattern</span></code> in each cell of the bound thread,
+<p>Counts non-overlapping occurrences of <code class="docutils literal notranslate"><span class="pre">pattern</span></code> in each cell of the bound slate,
 replacing each cell with an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> — the payload kind changes from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to
 <code class="docutils literal notranslate"><span class="pre">Series</span></code>, same as <a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">length()</span></code></span></a>.</p>
 <div class="admonition danger">
@@ -96,7 +96,7 @@ been found; <code class="docutils literal notranslate"><span class="pre">-1</spa
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>) thread, same length as the bound thread, holding
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>) slate, same length as the bound slate, holding
 each cell’s match count.</p>
 </section>
 <section id="examples">
@@ -185,11 +185,11 @@ callout above. This is the opposite default from <a class="reference internal" h
 single-argument overload, which defaults to literal mode.</p></li>
 <li><p>Matches are always non-overlapping: after a match, scanning resumes immediately
 past it.</p></li>
-<li><p>Changes the bound thread’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>).</p></li>
+<li><p>Changes the bound slate’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>).</p></li>
 <li><p>A null cell on input stays null on output.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> is part of <code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> but has no effect on <code class="docutils literal notranslate"><span class="pre">count()</span></code> — it’s
 only meaningful to <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a> and <a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">indicate()</span></code></span></a>.</p></li>
-<li><p>Requires the bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
+<li><p>Requires the bound slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
 </ul>
 </section>
 <section id="see-also">

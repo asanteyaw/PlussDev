@@ -103,8 +103,8 @@ built here via `Slate`'s explicit mask constructor and bridged in through
 auto raw_series = pluss::make_series({1.0, 2.0, 3.0});
 std::vector<bool> mask_values{true, false, true};
 auto mask_series = pluss::make_series(mask_values);
-pluss::table::Slate thread_with_nulls(raw_series, mask_series);
-auto stream = pluss::kindle::Stream::from_slate(thread_with_nulls);
+pluss::table::Slate slate_with_nulls(raw_series, mask_series);
+auto stream = pluss::kindle::Stream::from_slate(slate_with_nulls);
 auto slot = stream.scribbelize();
 std::cout << std::holds_alternative<std::monostate>(slot.at(0)) << "\n";
 std::cout << std::holds_alternative<std::monostate>(slot.at(1)) << "\n";

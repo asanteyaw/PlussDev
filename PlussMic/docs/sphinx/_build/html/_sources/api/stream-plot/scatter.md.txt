@@ -43,7 +43,7 @@ since `Stream` never contributes one. See Example 5.
 
 **x** (`const Stream&`, required)
     The companion stream for the horizontal axis. Must match the bound stream's size, or
-    the call throws `"Slate::plot: thread size mismatch"` — see Example 6.
+    the call throws `"Slate::plot: slate size mismatch"` — see Example 6.
 
 **hue** (`const Stream&`, optional)
     Optional companion stream splitting points into separate colored/labeled groups. Must
@@ -171,7 +171,7 @@ try {
 ### Output
 
 ```text
-Slate::plot: thread size mismatch
+Slate::plot: slate size mismatch
 ```
 
 ## Notes

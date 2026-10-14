@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,13 +48,13 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes the logarithmic period-over-period change of the bound thread:
+<p>Computes the logarithmic period-over-period change of the bound slate:
 <code class="docutils literal notranslate"><span class="pre">out[i]</span> <span class="pre">=</span> <span class="pre">ln(x[i]</span> <span class="pre">/</span> <span class="pre">base[i])</span></code>, where <code class="docutils literal notranslate"><span class="pre">base</span></code> is <code class="docutils literal notranslate"><span class="pre">x</span></code> shifted by <code class="docutils literal notranslate"><span class="pre">periods</span></code> (a lag when
 <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, a lead when <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>). A position is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> wherever <code class="docutils literal notranslate"><span class="pre">x[i]</span></code> or
 <code class="docutils literal notranslate"><span class="pre">base[i]</span></code> is missing or non-finite, <strong>or either value is not strictly positive</strong> —
 unlike <a class="reference internal" href="returns.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">returns()</span></code></span></a>, a zero or negative value anywhere in the
 comparison always yields <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, since the logarithm would otherwise be undefined.
-Restricted to a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread; anything else throws.</p>
+Restricted to a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate; anything else throws.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -66,12 +66,12 @@ a later one (a lead). Must not be <code class="docutils literal notranslate"><sp
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as the bound source, holding the period-over-period
+A new slate, same length as the bound source, holding the period-over-period
 log return.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute the one-period log return of a numeric thread.</p>
+<p>Example 1. Compute the one-period log return of a numeric slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -125,7 +125,7 @@ ptype: Series
 <code class="docutils literal notranslate"><span class="pre">20/-5</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">=</span> <span class="pre">-5</span></code>, both perfectly well-defined ratios. <code class="docutils literal notranslate"><span class="pre">log_returns()</span></code> instead
 requires <strong>both</strong> sides to be strictly positive; since every comparison here
 involves the negative <code class="docutils literal notranslate"><span class="pre">-5</span></code>, all three positions come back <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
-<p>Example 3. A pre-existing missing entry in the source thread propagates into
+<p>Example 3. A pre-existing missing entry in the source slate propagates into
 every log return that touches it.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}),</span>
@@ -180,11 +180,11 @@ produces <code class="docutils literal notranslate"><span class="pre">NULL</span
 returns equals the multi-period log return), which plain fractional
 <a class="reference internal" href="returns.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">returns()</span></code></span></a> are not — a common reason to prefer this method for
 compounding analysis.</p></li>
-<li><p>A pre-existing missing entry in the source thread is honored — it produces
+<li><p>A pre-existing missing entry in the source slate is honored — it produces
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in every log return that would otherwise reference it. See Example 3.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">periods</span></code> must not be <code class="docutils literal notranslate"><span class="pre">0</span></code>, or it throws
 <code class="docutils literal notranslate"><span class="pre">&quot;subsp::stats::ts::log_returns:</span> <span class="pre">periods</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">zero&quot;</span></code>.</p></li>
-<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> slate
 throws <code class="docutils literal notranslate"><span class="pre">&quot;TimeSeriesAccessor::log_returns:</span> <span class="pre">source</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Series&quot;</span></code>; a
 non-numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> throws
 <code class="docutils literal notranslate"><span class="pre">&quot;TimeSeriesAccessor::log_returns:</span> <span class="pre">source</span> <span class="pre">Series</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">numeric&quot;</span></code>.</p></li>

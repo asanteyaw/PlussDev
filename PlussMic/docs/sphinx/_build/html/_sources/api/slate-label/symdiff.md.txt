@@ -12,7 +12,7 @@ SlateLabelAccessor::symdiff(const Slate& other) const -> Slate
 
 ## What It Does
 
-Treats the bound thread's case labels and `other` as two sets of values, and
+Treats the bound slate's case labels and `other` as two sets of values, and
 returns the values present in **exactly one** of the two (the symmetric
 difference) — deduplicated, in this accessor's first-occurrence order
 followed by `other`'s.

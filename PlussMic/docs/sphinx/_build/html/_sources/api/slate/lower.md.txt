@@ -13,10 +13,10 @@ Slate::lower() const -> Slate
 
 ## What It Does
 
-Lowercases every character in a `Note` (string) thread's cells — the classic
+Lowercases every character in a `Note` (string) slate's cells — the classic
 normalization step before a case-insensitive comparison, a grouping key that
 shouldn't be split by casing accidents, or a lookup against a canonical lowercase
-reference list. Requires the thread to be `Note`-kind.
+reference list. Requires the slate to be `Note`-kind.
 
 ```{note} ASCII vs. Unicode case mapping
 On plain ASCII text, `lower()` behaves exactly as you'd expect: `A`-`Z` becomes
@@ -31,13 +31,13 @@ build links the optional Unicode backend (GNU libunistring).
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, with every character
+    A new `Note`-kind slate, same length as `*this`, with every character
     lowercased; non-alphabetic characters (digits, punctuation, whitespace) are left
     exactly as they were.
 
 ## Examples
 
-Example 1. Lowercase a text thread.
+Example 1. Lowercase a text slate.
 
 ```cpp
 using namespace pluss::table;
@@ -57,7 +57,7 @@ std::cout << out;
 ptype: Note
 ```
 
-Example 2. A non-`Note` thread throws.
+Example 2. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));

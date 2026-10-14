@@ -16,8 +16,8 @@ SlatePlotAccessor::bar(const Slate& x, const BarPlotOptions& options) const -> p
 
 ## What It Does
 
-Draws one bar per row for the bound thread's values, against an optional companion `x`
-thread — the single-series specialization of
+Draws one bar per row for the bound slate's values, against an optional companion `x`
+slate — the single-series specialization of
 [`DataFramePlotAccessor::bar`](../../api/dataframe-plot/bar.md). Same shape and naming
 rules as [`line()`](line.md).
 
@@ -37,11 +37,11 @@ rules as [`line()`](line.md).
 ## Returns
 
 `pluss::pl::Studio`
-    A figure with one pane containing a single bar trace of the bound thread's values.
+    A figure with one pane containing a single bar trace of the bound slate's values.
 
 ## Examples
 
-Example 1. No companion thread: falls back to a plain case index.
+Example 1. No companion slate: falls back to a plain case index.
 
 ```cpp
 using namespace pluss::table;
@@ -55,7 +55,7 @@ chart.show();
 
 ![Output of Example 1](img/bar-1.svg)
 
-Example 2. An explicit companion thread as the category axis.
+Example 2. An explicit companion slate as the category axis.
 
 ```cpp
 auto city = Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}));

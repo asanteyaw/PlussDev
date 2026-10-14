@@ -25,8 +25,8 @@ mechanics; this page covers what's specific to the `Stream` layer.
 
 ```{important} Stream has no name() — every chart is column-named "value"/"x"/"hue"
 `SlatePlotAccessor::line`'s naming rule names the wrapped column after the source
-`Slate`'s own `name()` if it has one, falling back to `"value"` (the bound thread) or
-`"x"` (a companion thread) otherwise. `Stream::to_slate()` never sets a name on the
+`Slate`'s own `name()` if it has one, falling back to `"value"` (the bound slate) or
+`"x"` (a companion slate) otherwise. `Stream::to_slate()` never sets a name on the
 `Slate` it produces — `Stream` has no `name()`/`named()` concept at all — so every
 `StreamPlotAccessor` chart's axis labels are **always** the generic fallback names: `"value"`
 for the bound stream, `"x"` for a companion stream (other methods on this accessor use
@@ -46,7 +46,7 @@ label, otherwise a plain case index. See Examples 1 and 2.
 
 **x** (`const Stream&`, optional)
     A companion stream used as the x-axis. Must be the same size as the bound stream — a
-    mismatched size throws `"Slate::plot: thread size mismatch"` (the message still refers
+    mismatched size throws `"Slate::plot: slate size mismatch"` (the message still refers
     to `Slate`, since that's where the size check actually runs after both streams
     convert). Omitted means the x-axis falls back to the bound stream's own label, or a
     plain case index if it has none — see the important callout above.
@@ -171,7 +171,7 @@ try {
 ### Output
 
 ```text
-Slate::plot: thread size mismatch
+Slate::plot: slate size mismatch
 ```
 
 ## Notes

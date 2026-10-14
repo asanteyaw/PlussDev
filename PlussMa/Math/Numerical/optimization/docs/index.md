@@ -11,6 +11,8 @@ Module boundary:
 ```{toctree}
 :maxdepth: 2
 
+optima_01_first_problems
+optima_02_reading_results
 optima_algorithms
 optimizer_surfaces
 optima_sequential_qp

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,14 +49,14 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Enters the dedicated time-series-<em>numerics</em> accessor for this thread — period-over-
+<p>Enters the dedicated time-series-<em>numerics</em> accessor for this slate — period-over-
 period returns, differencing, lag/lead, rolling and expanding windows, exponentially-
 weighted statistics, gap filling, resampling, and axis-aligned arithmetic, one method
 per operation. Unlike <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tl()</span></code></span></a> (which requires <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> payloads),
-<code class="docutils literal notranslate"><span class="pre">ts()</span></code> requires the thread to already be a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> — cast it first with
+<code class="docutils literal notranslate"><span class="pre">ts()</span></code> requires the slate to already be a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> — cast it first with
 <a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">astype()</span></code></span></a>/<a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a> if it isn’t.</p>
 <p>Unlike <a class="reference internal" href="../dataframe/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ts()</span></code></span></a>, this overload takes no options — there’s
-no <code class="docutils literal notranslate"><span class="pre">group</span></code>/<code class="docutils literal notranslate"><span class="pre">anchor</span></code> concept for a single thread outside a frame, and duration-based
+no <code class="docutils literal notranslate"><span class="pre">group</span></code>/<code class="docutils literal notranslate"><span class="pre">anchor</span></code> concept for a single slate outside a frame, and duration-based
 methods that need an explicit time axis (like the duration overload of <code class="docutils literal notranslate"><span class="pre">rolling()</span></code>)
 simply take that axis as a direct argument instead.</p>
 <p>This page previews the accessor’s most common entry points. Every one of its methods
@@ -72,13 +72,13 @@ left sidebar to jump straight to any method (<code class="docutils literal notra
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code>
-A lightweight accessor bound to this (numeric) thread. Every method on it returns a
+A lightweight accessor bound to this (numeric) slate. Every method on it returns a
 new <code class="docutils literal notranslate"><span class="pre">Slate</span></code> (or a <code class="docutils literal notranslate"><span class="pre">TimeSeriesResample</span></code>/<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> for the block/resample methods);
-the source thread is never mutated.</p>
+the source slate is never mutated.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute a lag and a period-over-period difference on a numeric thread.</p>
+<p>Example 1. Compute a lag and a period-over-period difference on a numeric slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -117,7 +117,7 @@ ptype: Series
 <p><code class="docutils literal notranslate"><span class="pre">.diff(1)</span></code> is <code class="docutils literal notranslate"><span class="pre">load[i]</span> <span class="pre">-</span> <span class="pre">load[i</span> <span class="pre">-</span> <span class="pre">1]</span></code>: position <code class="docutils literal notranslate"><span class="pre">1</span></code> is <code class="docutils literal notranslate"><span class="pre">20</span> <span class="pre">-</span> <span class="pre">10</span> <span class="pre">=</span> <span class="pre">10</span></code>, position <code class="docutils literal notranslate"><span class="pre">2</span></code> is
 <code class="docutils literal notranslate"><span class="pre">15</span> <span class="pre">-</span> <span class="pre">20</span> <span class="pre">=</span> <span class="pre">-5</span></code>, position <code class="docutils literal notranslate"><span class="pre">3</span></code> is <code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">-</span> <span class="pre">15</span> <span class="pre">=</span> <span class="pre">15</span></code>; position <code class="docutils literal notranslate"><span class="pre">0</span></code> has no prior position to
 subtract, so it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">ts()</span></code> on a non-numeric thread throws before the accessor’s methods can run.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">ts()</span></code> on a non-numeric slate throws before the accessor’s methods can run.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
@@ -133,15 +133,15 @@ subtract, so it’s <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 <p>The check happens lazily, on the first method call against the accessor — <code class="docutils literal notranslate"><span class="pre">ts()</span></code>
-itself never throws, since it just binds the thread without inspecting it.</p>
+itself never throws, since it just binds the slate without inspecting it.</p>
 </section>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The source thread must already be a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>; every accessor method throws
+<li><p>The source slate must already be a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>; every accessor method throws
 otherwise (<code class="docutils literal notranslate"><span class="pre">ts()</span></code> itself doesn’t validate eagerly).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.lag(periods)</span></code> on a numeric thread behaves identically to <a class="reference internal" href="shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shift(periods)</span></code></span></a>
+<li><p><code class="docutils literal notranslate"><span class="pre">.lag(periods)</span></code> on a numeric slate behaves identically to <a class="reference internal" href="shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shift(periods)</span></code></span></a>
 — both introduce <code class="docutils literal notranslate"><span class="pre">NULL</span></code> at the vacated end.</p></li>
 <li><p>No <code class="docutils literal notranslate"><span class="pre">options</span></code>/<code class="docutils literal notranslate"><span class="pre">TsOptions</span></code> parameter here, unlike <a class="reference internal" href="../dataframe/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ts()</span></code></span></a>
 — duration-aware methods take their time axis directly as an argument instead.</p></li>

@@ -1,5 +1,6 @@
 #pragma once
 #include "CodeM/core/Series.h"
+#include <cmath>
 #include <cstdint>
 #include <string_view>
 #include <vector>
@@ -26,6 +27,21 @@ class PlatformScope final {
  private:
   bool active_{false};
 };
+
+// dtype of the constant built for a scalar operand `v` combined with a tensor of dtype `tensor_dt`.
+// libtorch wraps a Python scalar as a 0-dim "wrapped number" that takes part in type promotion:
+// an integer/bool tensor combined with a floating scalar gives a floating result (default dtype
+// float32). The scalar here is a C++ double, so an integral value keeps the tensor's dtype (it
+// cannot be told apart from a Python int) while a fractional or non-finite value would be
+// truncated by an integer constant; those promote to float32 instead, and the ordinary binary-op
+// promotion then yields a floating result.
+inline ScalarType scalar_operand_dtype(ScalarType tensor_dt, double v) noexcept {
+  const bool integral_tensor =
+      tensor_dt == ScalarType::Bool || pluss::codem::dtype_of(tensor_dt).is_integral();
+  if (integral_tensor && (!std::isfinite(v) || std::trunc(v) != v))
+    return ScalarType::Float32;
+  return tensor_dt;
+}
 
 // Enforce same-platform semantics for tensor interop ops.
 void require_same_platform(const Series& a, const Series& b, std::string_view op);

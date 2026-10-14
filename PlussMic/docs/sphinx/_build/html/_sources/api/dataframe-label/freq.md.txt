@@ -39,7 +39,7 @@ Whether to exclude a null case label from the tally.
 
 ## Examples
 
-Example 1. Tally a case-label thread with one repeated value.
+Example 1. Tally a case-label slate with one repeated value.
 
 ```cpp
 using namespace pluss::table;

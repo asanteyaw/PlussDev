@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusQueryPrepared::execute &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nexus API Reference" href="../../nexus_api_reference.html" />
+    <link rel="prev" title="LocusQueryPrepared API Reference" href="../../locus_query_prepared_api_reference.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locusqueryprepared-execute">
+<h1>LocusQueryPrepared::execute<a class="headerlink" href="#locusqueryprepared-execute" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_query_prepared_api_reference.html"><span class="doc std std-doc">Back to LocusQueryPrepared API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">LocusQueryPrepared</span><span class="o">::</span><span class="n">execute</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">LocusQueryPrepared</span><span class="o">::</span><span class="n">execute</span><span class="p">(</span><span class="n">Params</span><span class="w"> </span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">LocusQueryPrepared</span><span class="o">::</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">    </span><span class="n">Params</span><span class="w"> </span><span class="n">params</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">identifier_params</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Params</span></code> is:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">variant</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">nullptr_t</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">execute()</span></code> materializes the statement template retained by <code class="docutils literal notranslate"><span class="pre">prepare()</span></code>. The
+no-argument overload is for templates with no placeholders or for placeholders
+already supplied through <code class="docutils literal notranslate"><span class="pre">Locus::query(options)</span></code>. The second overload merges
+runtime value bindings. The third merges value and identifier bindings.</p>
+<p>Runtime maps are copied into the captured options and replace defaults with the
+same key; defaults not mentioned by the call remain available. The prepared
+object itself is unchanged, so one instance can be executed repeatedly with
+different maps.</p>
+<p>Value and identifier placeholders are deliberately separate:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{name}</span></code> accepts <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, finite/non-finite <code class="docutils literal notranslate"><span class="pre">double</span></code>, or <code class="docutils literal notranslate"><span class="pre">std::string</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{&#64;name}</span></code> accepts a simple identifier such as a catalog or stream key and is emitted quoted.</p></li>
+<li><p>A string value is escaped as data, not inserted as SQL syntax.</p></li>
+<li><p>A non-finite <code class="docutils literal notranslate"><span class="pre">double</span></code> and <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> become SQL <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><strong>params</strong> (<code class="docutils literal notranslate"><span class="pre">Params</span></code>)</dt><dd><p>Runtime value bindings. Every supplied value is rendered according to its
+variant alternative. When <code class="docutils literal notranslate"><span class="pre">reject_unused_params</span></code> is enabled, extra keys fail.</p>
+</dd>
+<dt><strong>identifier_params</strong> (<code class="docutils literal notranslate"><span class="pre">std::unordered_map&lt;std::string,</span> <span class="pre">std::string&gt;</span></code>)</dt><dd><p>Runtime table or stream identifiers. Values are validated as simple
+identifiers before being quoted; SQL fragments are rejected.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code></dt><dd><p>A newly materialized query result. Execution never mutates the prepared object
+or the source Locus.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The no-argument overload runs a template without placeholders.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT order_id FROM orders ORDER BY order_id DESC LIMIT 2&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">fixed</span><span class="p">.</span><span class="n">execute</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>order_id=[103, 102]
+</pre></div>
+</div>
+<p>Example 2. Reuse one value template without changing the prepared object.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT order_id FROM orders WHERE amount &gt;= {floor} ORDER BY order_id&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">threshold</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;floor&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}}),</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">threshold</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;floor&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">}}),</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>order_id=[100, 101, 103]
+order_id=[103]
+</pre></div>
+</div>
+<p>Example 3. One call can bind every value alternative. <code class="docutils literal notranslate"><span class="pre">true</span></code> participates as a
+SQL predicate, <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> supplies <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and the integer controls <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">kinds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT order_id FROM orders &quot;</span>
+<span class="w">    </span><span class="s">&quot;WHERE state = {state} AND amount &gt;= {floor} AND {enabled} &quot;</span>
+<span class="w">    </span><span class="s">&quot;AND {nothing} IS NULL ORDER BY order_id LIMIT {limit}&quot;</span><span class="p">);</span>
+<span class="n">SqlOptions</span><span class="o">::</span><span class="n">SqlParam</span><span class="w"> </span><span class="n">null_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">kinds</span><span class="p">.</span><span class="n">execute</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;state&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;paid&quot;</span><span class="p">)},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;floor&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;enabled&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;nothing&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">null_value</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;limit&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">3</span><span class="p">}},</span>
+<span class="p">}),</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>order_id=[100, 101]
+</pre></div>
+</div>
+<p>Example 4. Bind a projected stream name through the identifier map, not the
+value map.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">projected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT {@field} FROM orders ORDER BY order_id LIMIT 2&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">amounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">projected</span><span class="p">.</span><span class="n">execute</span><span class="p">({},</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;field&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">}});</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">amounts</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">amounts</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[amount] rows=2
+amount=[50, 75]
+</pre></div>
+</div>
+<p>Example 5. Runtime values override captured defaults only for that execution.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SqlOptions</span><span class="w"> </span><span class="n">defaults</span><span class="p">;</span>
+<span class="n">defaults</span><span class="p">.</span><span class="n">params</span><span class="p">[</span><span class="s">&quot;floor&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">80.0</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">inherited</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="n">defaults</span><span class="p">).</span><span class="n">prepare</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT order_id FROM orders WHERE amount &gt;= {floor} ORDER BY order_id&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">inherited</span><span class="p">.</span><span class="n">execute</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">inherited</span><span class="p">.</span><span class="n">execute</span><span class="p">({{</span><span class="s">&quot;floor&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}}),</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>order_id=[103]
+order_id=[100, 101, 103]
+</pre></div>
+</div>
+<p>Example 6. An unresolved value placeholder fails before SQL compilation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;missing&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">threshold</span><span class="p">.</span><span class="n">execute</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>missing: DataFrame::sql().execute: SQL params missing key &#39;floor&#39;
+</pre></div>
+</div>
+<p>Example 7. Identifier bindings reject SQL fragments rather than treating them as
+column names.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;identifier&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">projected</span><span class="p">.</span><span class="n">execute</span><span class="p">({},</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;field&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount; DROP TABLE orders&quot;</span><span class="p">}});</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>identifier: DataFrame::sql().execute: identifier param &#39;field&#39; has invalid character
+</pre></div>
+</div>
+</section>
+</section>
+<section id="validation-and-cost">
+<h2>Validation And Cost<a class="headerlink" href="#validation-and-cost" title="Link to this heading">¶</a></h2>
+<p>Binding validation precedes database execution. Each call copies the captured
+options, merges its maps, builds the transient SQL workspace, compiles the
+rendered statement, and allocates a result Catalog. The prepared object is safe
+to reuse sequentially; its source workspace is immutable, while external
+<code class="docutils literal notranslate"><span class="pre">SourceBinding</span></code> pointers remain the caller’s lifetime responsibility.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../locus_query_prepared_api_reference.html"><span class="label">Previous</span><span class="title">LocusQueryPrepared API Reference</span></a>
+  <a class="next-link" href="../../locus_query_prepared_api_reference.html"><span class="label">Next</span><span class="title">LocusQueryPrepared API Reference</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_query_prepared_api_reference.html">LocusQueryPrepared API Reference</a><ul>
+      <li>Previous: <a href="../../locus_query_prepared_api_reference.html" title="previous chapter">LocusQueryPrepared API Reference</a></li>
+      <li>Next: <a href="../../nexus_api_reference.html" title="next chapter">Nexus API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus-query-prepared/execute.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

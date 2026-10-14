@@ -163,8 +163,8 @@ against `84`, `final` checked against `88`.
 
 ```cpp
 auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
-auto out_thread = scores.eq(thresholds);
-std::cout << out_thread;
+auto out_slate = scores.eq(thresholds);
+std::cout << out_slate;
 ```
 
 ### Output

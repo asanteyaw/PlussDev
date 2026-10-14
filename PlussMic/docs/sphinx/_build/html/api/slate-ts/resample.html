@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Buckets the bound thread’s values into regular calendar/duration periods (like
+<p>Buckets the bound slate’s values into regular calendar/duration periods (like
 every day, every 6 hours, every week), keyed by an explicit <code class="docutils literal notranslate"><span class="pre">axis</span></code>, and
 aggregates each bucket with <code class="docutils literal notranslate"><span class="pre">op</span></code>. <code class="docutils literal notranslate"><span class="pre">freq</span></code> supports fixed units (<code class="docutils literal notranslate"><span class="pre">S</span></code>/<code class="docutils literal notranslate"><span class="pre">min</span></code>/<code class="docutils literal notranslate"><span class="pre">H</span></code>/<code class="docutils literal notranslate"><span class="pre">D</span></code>,
 optionally prefixed with a multiplier like <code class="docutils literal notranslate"><span class="pre">&quot;6H&quot;</span></code>), calendar-aware <code class="docutils literal notranslate"><span class="pre">W</span></code>
@@ -74,7 +74,7 @@ over the remaining real observations in that bucket.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
-The time axis (<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), same length as the bound thread,
+The time axis (<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), same length as the bound slate,
 supplying each position’s bucket membership.</p>
 <p><strong>freq</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>) / <strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::TimeIndex::ResampleOptions&amp;</span></code>)
 The bucket frequency. <code class="docutils literal notranslate"><span class="pre">options</span></code> additionally exposes <code class="docutils literal notranslate"><span class="pre">step</span></code>, <code class="docutils literal notranslate"><span class="pre">closed</span></code>
@@ -91,8 +91,8 @@ A frequency multiplier — for example <code class="docutils literal notranslate
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">TimeSeriesResample</span></code>
-A <code class="docutils literal notranslate"><span class="pre">{labels,</span> <span class="pre">values}</span></code> pair: <code class="docutils literal notranslate"><span class="pre">labels</span></code> is a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread of
-bucket boundaries, <code class="docutils literal notranslate"><span class="pre">values</span></code> is a <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread of the aggregated result,
+A <code class="docutils literal notranslate"><span class="pre">{labels,</span> <span class="pre">values}</span></code> pair: <code class="docutils literal notranslate"><span class="pre">labels</span></code> is a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> slate of
+bucket boundaries, <code class="docutils literal notranslate"><span class="pre">values</span></code> is a <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate of the aggregated result,
 one entry per bucket, in the same order.</p>
 </section>
 <section id="examples">

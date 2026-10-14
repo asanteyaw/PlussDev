@@ -116,7 +116,7 @@ entirely, leaving only `10` and `20`. With `dropnull = false`, a single
 
 ## Notes
 
-- This operates on the flat case-label thread as a whole, even on a structured
+- This operates on the flat case-label slate as a whole, even on a structured
   (multi-level) frame — it does not distinguish per level. Use
   [`levels()`](levels.md) for per-level distinct values.
 - The result carries no display labels of its own; it prints with a plain

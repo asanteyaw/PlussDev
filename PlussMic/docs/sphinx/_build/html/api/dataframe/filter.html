@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -58,7 +58,7 @@ for you, while <code class="docutils literal notranslate"><span class="pre">filt
 <code class="docutils literal notranslate"><span class="pre">Slate</span></code> produced by comparing a feature against a value or another feature (<code class="docutils literal notranslate"><span class="pre">df.get(&quot;units&quot;)</span> <span class="pre">&gt;=</span> <span class="pre">3</span></code>, for example).</p>
 <p>Reach for <code class="docutils literal notranslate"><span class="pre">filter()</span></code> when the mask is more naturally expressed in C++ than in a query
 string — built from a helper function, combined from several intermediate boolean
-threads with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">||</span></code>, or reused across several calls — and reach for <code class="docutils literal notranslate"><span class="pre">query()</span></code> when a
+slates with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">||</span></code>, or reused across several calls — and reach for <code class="docutils literal notranslate"><span class="pre">query()</span></code> when a
 single self-contained string predicate reads more clearly at the call site.</p>
 <p>Masks are usually built by comparing the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> returned from
 <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features(name)</span></code></span></a> against a scalar or another feature, for example
@@ -130,7 +130,7 @@ explicitly accounts for that (for example, by combining the comparison with
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">filter</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Composing boolean threads with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">||</span></code> reads naturally once a mask needs more than
+<p>Composing boolean slates with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">||</span></code> reads naturally once a mask needs more than
 one condition, and keeps the logic in ordinary C++ rather than a string that only gets
 checked at runtime.</p>
 </section>

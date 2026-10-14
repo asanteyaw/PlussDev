@@ -16,8 +16,8 @@ SlateNoteAccessor::replace(std::string_view from,
 ## What It Does
 
 Replaces occurrences of a substring or regex pattern *within* each cell's text —
-direct forwards to [`Slate::replace(from, to[, options])`](../thread/replace.md).
-Requires the bound thread to be `Note`-kind.
+direct forwards to [`Slate::replace(from, to[, options])`](../slate/replace.md).
+Requires the bound slate to be `Note`-kind.
 
 ```{danger} Only the text-substring overloads are exposed here
 `Slate::replace()` itself has 14 additional "whole-value" overloads (numeric,
@@ -57,7 +57,7 @@ cell; matches never overlap.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, with matching
+    A new `Note`-kind slate, same length as the bound slate, with matching
     text replaced.
 
 ## Examples
@@ -124,7 +124,7 @@ ptype: Note
 Row 2 has no `@` at all, so the pattern doesn't match and the text passes through
 unchanged.
 
-Example 4. A non-`Note` thread throws.
+Example 4. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -145,7 +145,7 @@ Slate::replace: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::replace()` forwards straight to
-  [`Slate::replace()`](../thread/replace.md)'s text-substring overloads —
+  [`Slate::replace()`](../slate/replace.md)'s text-substring overloads —
   identical behavior and throws.
 - Only the two text-substring overloads are exposed here; see the danger box
   above for the 14 whole-value overloads only reachable via `Slate::replace()`
@@ -155,7 +155,7 @@ Slate::replace: expected Note payload
 
 ## See Also
 
-- [`Slate::replace`](../thread/replace.md): the direct, non-accessor form —
+- [`Slate::replace`](../slate/replace.md): the direct, non-accessor form —
   also exposes the whole-value replacement overloads this accessor omits.
 - [`SlateNoteAccessor::has`](has.md): test for a substring/pattern without
   changing the text.

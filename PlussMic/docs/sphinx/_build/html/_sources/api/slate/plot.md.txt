@@ -16,14 +16,14 @@ Slate::plot(const DataFramePlotOptions& options) const -> SlatePlotAccessor
 
 Enters the single-series charting accessor bound to the current `Slate` — line, step,
 area, scatter, bar, histogram, box, violin, pie, and a handful of diagnostic plots, one
-chart kind per method. `plot()` itself draws nothing; it just binds the thread (and,
+chart kind per method. `plot()` itself draws nothing; it just binds the slate (and,
 optionally, shared chart-wide defaults, the same `DataFramePlotOptions` struct
 [`DataFrame::plot`](../dataframe/plot.md) takes) and hands back an accessor whose methods
 each return a `pluss::pl::Studio` — the same figure type every 2D and 3D `DataFrame` chart
 method returns.
 
-Every method on the returned accessor works by wrapping the bound thread (and, for
-two-thread overloads, a second companion thread) into a small one- or two-column
+Every method on the returned accessor works by wrapping the bound slate (and, for
+two-slate overloads, a second companion slate) into a small one- or two-column
 `DataFrame` and delegating straight into the matching method on
 [`DataFramePlotAccessor`](../../dataframe_plot_api_reference) — see the
 [SlatePlotAccessor API Reference](../../slate_plot_api_reference)'s important callout,
@@ -43,7 +43,7 @@ explicitly via a second `Slate` argument rather than a named feature string.
 ## Returns
 
 `SlatePlotAccessor`
-    An accessor bound to the current thread (and, if given, `options`). Each of its methods
+    An accessor bound to the current slate (and, if given, `options`). Each of its methods
     (`.line()`, `.scatter()`, `.bar()`, `.hist()`, and so on) builds and returns a
     `pluss::pl::Studio` figure, ready to further customize or save.
 
@@ -63,7 +63,7 @@ chart.save_svg("revenue_line.svg");
 
 `revenue.plot()` returns a `SlatePlotAccessor` bound to `revenue`; `.line()` draws
 `revenue`'s own values against the default numeric case index (since no companion `x`
-thread is given) and returns a `pluss::pl::Studio`, which `.save_svg(...)` then writes to
+slate is given) and returns a `pluss::pl::Studio`, which `.save_svg(...)` then writes to
 disk.
 
 Example 2. Share chart-wide options (figure size) across every chart drawn from one
@@ -81,7 +81,7 @@ chart.save_png("revenue_wide.png");
 
 ## Notes
 
-- `plot()` never touches or copies the thread's data beyond what the requested chart needs
+- `plot()` never touches or copies the slate's data beyond what the requested chart needs
   to draw — it is a lightweight accessor, not a materialized copy.
 - Every chart method returns a `pluss::pl::Studio`; that type's own methods (theming,
   sizing, legends, exporting) are documented in `PlussPl`'s reference, not here.

@@ -501,6 +501,20 @@ plussqit_codem_series_ordering_reference_demo/fast:
 .PHONY : plussqit_codem_series_ordering_reference_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_pair_metadata_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_pair_metadata_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_pair_metadata_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/build
+.PHONY : plussqit_codem_series_pair_metadata_reference_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_series_factory_core_reference_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_factory_core_reference_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_codem_series_factory_core_reference_demo.dir/rule
@@ -597,6 +611,62 @@ plussqit_codem_series_special_functions_ii_reference_demo: PlussQit/CMakeFiles/p
 plussqit_codem_series_special_functions_ii_reference_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/build
 .PHONY : plussqit_codem_series_special_functions_ii_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_special_views_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_special_views_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_special_views_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/build
+.PHONY : plussqit_codem_series_special_views_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_transform_activation_ii_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_transform_activation_ii_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_transform_activation_ii_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/build
+.PHONY : plussqit_codem_series_transform_activation_ii_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_transform_activation_iii_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_transform_activation_iii_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_transform_activation_iii_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/build
+.PHONY : plussqit_codem_series_transform_activation_iii_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_final_teachings_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_final_teachings_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_final_teachings_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/build
+.PHONY : plussqit_codem_series_final_teachings_reference_demo/fast
 
 # Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_series_complex_components_reference_demo.dir/rule:
@@ -1467,18 +1537,18 @@ plussqit_codeh_timeline_printing_2d_3d_demo/fast:
 .PHONY : plussqit_codeh_timeline_printing_2d_3d_demo/fast
 
 # Convenience name for target.
-PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/rule
-.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/rule
+PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/rule
 
 # Convenience name for target.
-plussqit_codeh_timeline_dataframe_timeindex_methods_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/rule
-.PHONY : plussqit_codeh_timeline_dataframe_timeindex_methods_demo
+plussqit_codeh_timeline_index_methods_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_index_methods_demo
 
 # fast build rule for target.
-plussqit_codeh_timeline_dataframe_timeindex_methods_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/build
-.PHONY : plussqit_codeh_timeline_dataframe_timeindex_methods_demo/fast
+plussqit_codeh_timeline_index_methods_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/build
+.PHONY : plussqit_codeh_timeline_index_methods_demo/fast
 
 # Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codeh_timeline_non_generated_and_factory_methods_demo.dir/rule:
@@ -1495,18 +1565,18 @@ plussqit_codeh_timeline_non_generated_and_factory_methods_demo/fast:
 .PHONY : plussqit_codeh_timeline_non_generated_and_factory_methods_demo/fast
 
 # Convenience name for target.
-PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/rule
-.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/rule
+PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/rule
 
 # Convenience name for target.
-plussqit_codeh_timeindex_docverify_demo: PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/rule
-.PHONY : plussqit_codeh_timeindex_docverify_demo
+plussqit_codeh_timeline_index_docverify_demo: PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/rule
+.PHONY : plussqit_codeh_timeline_index_docverify_demo
 
 # fast build rule for target.
-plussqit_codeh_timeindex_docverify_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build
-.PHONY : plussqit_codeh_timeindex_docverify_demo/fast
+plussqit_codeh_timeline_index_docverify_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/build
+.PHONY : plussqit_codeh_timeline_index_docverify_demo/fast
 
 # Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codeh_timeline_docverify_demo.dir/rule:
@@ -1775,6 +1845,34 @@ plussqit_codeh_duration_docverify_demo/fast:
 .PHONY : plussqit_codeh_duration_docverify_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_queue_docverify_demo: PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/rule
+.PHONY : plussqit_codeh_queue_docverify_demo
+
+# fast build rule for target.
+plussqit_codeh_queue_docverify_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/build
+.PHONY : plussqit_codeh_queue_docverify_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codeh_duration_factory_reference_demo: PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/rule
+.PHONY : plussqit_codeh_duration_factory_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_duration_factory_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/build
+.PHONY : plussqit_codeh_duration_factory_reference_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codeh_timeline_duration_interop_docverify_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codeh_timeline_duration_interop_docverify_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_codeh_timeline_duration_interop_docverify_demo.dir/rule
@@ -1928,6 +2026,20 @@ plussqit_codeh_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build
 .PHONY : plussqit_codeh_tests/fast
 
+# Convenience name for target.
+PlussQit/CMakeFiles/bench_ops.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/bench_ops.dir/rule
+.PHONY : PlussQit/CMakeFiles/bench_ops.dir/rule
+
+# Convenience name for target.
+bench_ops: PlussQit/CMakeFiles/bench_ops.dir/rule
+.PHONY : bench_ops
+
+# fast build rule for target.
+bench_ops/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/bench_ops.dir/build.make PlussQit/CMakeFiles/bench_ops.dir/build
+.PHONY : bench_ops/fast
+
 __/generated/CodeM/ops/ops_generated.o: __/generated/CodeM/ops/ops_generated.cpp.o
 .PHONY : __/generated/CodeM/ops/ops_generated.o
 
@@ -1951,6 +2063,30 @@ __/generated/CodeM/ops/ops_generated.s: __/generated/CodeM/ops/ops_generated.cpp
 __/generated/CodeM/ops/ops_generated.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/__/generated/CodeM/ops/ops_generated.cpp.s
 .PHONY : __/generated/CodeM/ops/ops_generated.cpp.s
+
+benchmarks/bench_ops.o: benchmarks/bench_ops.cpp.o
+.PHONY : benchmarks/bench_ops.o
+
+# target to build an object file
+benchmarks/bench_ops.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/bench_ops.dir/build.make PlussQit/CMakeFiles/bench_ops.dir/benchmarks/bench_ops.cpp.o
+.PHONY : benchmarks/bench_ops.cpp.o
+
+benchmarks/bench_ops.i: benchmarks/bench_ops.cpp.i
+.PHONY : benchmarks/bench_ops.i
+
+# target to preprocess a source file
+benchmarks/bench_ops.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/bench_ops.dir/build.make PlussQit/CMakeFiles/bench_ops.dir/benchmarks/bench_ops.cpp.i
+.PHONY : benchmarks/bench_ops.cpp.i
+
+benchmarks/bench_ops.s: benchmarks/bench_ops.cpp.s
+.PHONY : benchmarks/bench_ops.s
+
+# target to generate assembly for a file
+benchmarks/bench_ops.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/bench_ops.dir/build.make PlussQit/CMakeFiles/bench_ops.dir/benchmarks/bench_ops.cpp.s
+.PHONY : benchmarks/bench_ops.cpp.s
 
 examples/CodeH/duration_docverify_demo.o: examples/CodeH/duration_docverify_demo.cpp.o
 .PHONY : examples/CodeH/duration_docverify_demo.o
@@ -1976,29 +2112,53 @@ examples/CodeH/duration_docverify_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_duration_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_duration_docverify_demo.dir/examples/CodeH/duration_docverify_demo.cpp.s
 .PHONY : examples/CodeH/duration_docverify_demo.cpp.s
 
-examples/CodeH/timeindex_docverify_demo.o: examples/CodeH/timeindex_docverify_demo.cpp.o
-.PHONY : examples/CodeH/timeindex_docverify_demo.o
+examples/CodeH/duration_factory_reference_demo.o: examples/CodeH/duration_factory_reference_demo.cpp.o
+.PHONY : examples/CodeH/duration_factory_reference_demo.o
 
 # target to build an object file
-examples/CodeH/timeindex_docverify_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/examples/CodeH/timeindex_docverify_demo.cpp.o
-.PHONY : examples/CodeH/timeindex_docverify_demo.cpp.o
+examples/CodeH/duration_factory_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/examples/CodeH/duration_factory_reference_demo.cpp.o
+.PHONY : examples/CodeH/duration_factory_reference_demo.cpp.o
 
-examples/CodeH/timeindex_docverify_demo.i: examples/CodeH/timeindex_docverify_demo.cpp.i
-.PHONY : examples/CodeH/timeindex_docverify_demo.i
+examples/CodeH/duration_factory_reference_demo.i: examples/CodeH/duration_factory_reference_demo.cpp.i
+.PHONY : examples/CodeH/duration_factory_reference_demo.i
 
 # target to preprocess a source file
-examples/CodeH/timeindex_docverify_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/examples/CodeH/timeindex_docverify_demo.cpp.i
-.PHONY : examples/CodeH/timeindex_docverify_demo.cpp.i
+examples/CodeH/duration_factory_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/examples/CodeH/duration_factory_reference_demo.cpp.i
+.PHONY : examples/CodeH/duration_factory_reference_demo.cpp.i
 
-examples/CodeH/timeindex_docverify_demo.s: examples/CodeH/timeindex_docverify_demo.cpp.s
-.PHONY : examples/CodeH/timeindex_docverify_demo.s
+examples/CodeH/duration_factory_reference_demo.s: examples/CodeH/duration_factory_reference_demo.cpp.s
+.PHONY : examples/CodeH/duration_factory_reference_demo.s
 
 # target to generate assembly for a file
-examples/CodeH/timeindex_docverify_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/examples/CodeH/timeindex_docverify_demo.cpp.s
-.PHONY : examples/CodeH/timeindex_docverify_demo.cpp.s
+examples/CodeH/duration_factory_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/examples/CodeH/duration_factory_reference_demo.cpp.s
+.PHONY : examples/CodeH/duration_factory_reference_demo.cpp.s
+
+examples/CodeH/queue_docverify_demo.o: examples/CodeH/queue_docverify_demo.cpp.o
+.PHONY : examples/CodeH/queue_docverify_demo.o
+
+# target to build an object file
+examples/CodeH/queue_docverify_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/examples/CodeH/queue_docverify_demo.cpp.o
+.PHONY : examples/CodeH/queue_docverify_demo.cpp.o
+
+examples/CodeH/queue_docverify_demo.i: examples/CodeH/queue_docverify_demo.cpp.i
+.PHONY : examples/CodeH/queue_docverify_demo.i
+
+# target to preprocess a source file
+examples/CodeH/queue_docverify_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/examples/CodeH/queue_docverify_demo.cpp.i
+.PHONY : examples/CodeH/queue_docverify_demo.cpp.i
+
+examples/CodeH/queue_docverify_demo.s: examples/CodeH/queue_docverify_demo.cpp.s
+.PHONY : examples/CodeH/queue_docverify_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/queue_docverify_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/examples/CodeH/queue_docverify_demo.cpp.s
+.PHONY : examples/CodeH/queue_docverify_demo.cpp.s
 
 examples/CodeH/timeline_between_reference_demo.o: examples/CodeH/timeline_between_reference_demo.cpp.o
 .PHONY : examples/CodeH/timeline_between_reference_demo.o
@@ -2071,30 +2231,6 @@ examples/CodeH/timeline_calendar_predicates_reference_demo.s: examples/CodeH/tim
 examples/CodeH/timeline_calendar_predicates_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_predicates_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_calendar_predicates_reference_demo.dir/examples/CodeH/timeline_calendar_predicates_reference_demo.cpp.s
 .PHONY : examples/CodeH/timeline_calendar_predicates_reference_demo.cpp.s
-
-examples/CodeH/timeline_dataframe_timeindex_methods_demo.o: examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.o
-.PHONY : examples/CodeH/timeline_dataframe_timeindex_methods_demo.o
-
-# target to build an object file
-examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.o
-.PHONY : examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.o
-
-examples/CodeH/timeline_dataframe_timeindex_methods_demo.i: examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.i
-.PHONY : examples/CodeH/timeline_dataframe_timeindex_methods_demo.i
-
-# target to preprocess a source file
-examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.i
-.PHONY : examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.i
-
-examples/CodeH/timeline_dataframe_timeindex_methods_demo.s: examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.s
-.PHONY : examples/CodeH/timeline_dataframe_timeindex_methods_demo.s
-
-# target to generate assembly for a file
-examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.s
-.PHONY : examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp.s
 
 examples/CodeH/timeline_docverify_demo.o: examples/CodeH/timeline_docverify_demo.cpp.o
 .PHONY : examples/CodeH/timeline_docverify_demo.o
@@ -2215,6 +2351,54 @@ examples/CodeH/timeline_foundations_reference_demo.s: examples/CodeH/timeline_fo
 examples/CodeH/timeline_foundations_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_foundations_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_foundations_reference_demo.dir/examples/CodeH/timeline_foundations_reference_demo.cpp.s
 .PHONY : examples/CodeH/timeline_foundations_reference_demo.cpp.s
+
+examples/CodeH/timeline_index_docverify_demo.o: examples/CodeH/timeline_index_docverify_demo.cpp.o
+.PHONY : examples/CodeH/timeline_index_docverify_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_index_docverify_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/examples/CodeH/timeline_index_docverify_demo.cpp.o
+.PHONY : examples/CodeH/timeline_index_docverify_demo.cpp.o
+
+examples/CodeH/timeline_index_docverify_demo.i: examples/CodeH/timeline_index_docverify_demo.cpp.i
+.PHONY : examples/CodeH/timeline_index_docverify_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_index_docverify_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/examples/CodeH/timeline_index_docverify_demo.cpp.i
+.PHONY : examples/CodeH/timeline_index_docverify_demo.cpp.i
+
+examples/CodeH/timeline_index_docverify_demo.s: examples/CodeH/timeline_index_docverify_demo.cpp.s
+.PHONY : examples/CodeH/timeline_index_docverify_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_index_docverify_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/examples/CodeH/timeline_index_docverify_demo.cpp.s
+.PHONY : examples/CodeH/timeline_index_docverify_demo.cpp.s
+
+examples/CodeH/timeline_index_methods_demo.o: examples/CodeH/timeline_index_methods_demo.cpp.o
+.PHONY : examples/CodeH/timeline_index_methods_demo.o
+
+# target to build an object file
+examples/CodeH/timeline_index_methods_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/examples/CodeH/timeline_index_methods_demo.cpp.o
+.PHONY : examples/CodeH/timeline_index_methods_demo.cpp.o
+
+examples/CodeH/timeline_index_methods_demo.i: examples/CodeH/timeline_index_methods_demo.cpp.i
+.PHONY : examples/CodeH/timeline_index_methods_demo.i
+
+# target to preprocess a source file
+examples/CodeH/timeline_index_methods_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/examples/CodeH/timeline_index_methods_demo.cpp.i
+.PHONY : examples/CodeH/timeline_index_methods_demo.cpp.i
+
+examples/CodeH/timeline_index_methods_demo.s: examples/CodeH/timeline_index_methods_demo.cpp.s
+.PHONY : examples/CodeH/timeline_index_methods_demo.s
+
+# target to generate assembly for a file
+examples/CodeH/timeline_index_methods_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/examples/CodeH/timeline_index_methods_demo.cpp.s
+.PHONY : examples/CodeH/timeline_index_methods_demo.cpp.s
 
 examples/CodeH/timeline_non_generated_and_factory_methods_demo.o: examples/CodeH/timeline_non_generated_and_factory_methods_demo.cpp.o
 .PHONY : examples/CodeH/timeline_non_generated_and_factory_methods_demo.o
@@ -3128,6 +3312,30 @@ examples/CodeM/series_factory_core_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_factory_core_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_factory_core_reference_demo.dir/examples/CodeM/series_factory_core_reference_demo.cpp.s
 .PHONY : examples/CodeM/series_factory_core_reference_demo.cpp.s
 
+examples/CodeM/series_final_teachings_reference_demo.o: examples/CodeM/series_final_teachings_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_final_teachings_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_final_teachings_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/examples/CodeM/series_final_teachings_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_final_teachings_reference_demo.cpp.o
+
+examples/CodeM/series_final_teachings_reference_demo.i: examples/CodeM/series_final_teachings_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_final_teachings_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_final_teachings_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/examples/CodeM/series_final_teachings_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_final_teachings_reference_demo.cpp.i
+
+examples/CodeM/series_final_teachings_reference_demo.s: examples/CodeM/series_final_teachings_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_final_teachings_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_final_teachings_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/examples/CodeM/series_final_teachings_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_final_teachings_reference_demo.cpp.s
+
 examples/CodeM/series_introspection_reference_demo.o: examples/CodeM/series_introspection_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_introspection_reference_demo.o
 
@@ -3440,6 +3648,30 @@ examples/CodeM/series_ordering_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_ordering_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_ordering_reference_demo.dir/examples/CodeM/series_ordering_reference_demo.cpp.s
 .PHONY : examples/CodeM/series_ordering_reference_demo.cpp.s
 
+examples/CodeM/series_pair_metadata_reference_demo.o: examples/CodeM/series_pair_metadata_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_pair_metadata_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_pair_metadata_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/examples/CodeM/series_pair_metadata_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_pair_metadata_reference_demo.cpp.o
+
+examples/CodeM/series_pair_metadata_reference_demo.i: examples/CodeM/series_pair_metadata_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_pair_metadata_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_pair_metadata_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/examples/CodeM/series_pair_metadata_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_pair_metadata_reference_demo.cpp.i
+
+examples/CodeM/series_pair_metadata_reference_demo.s: examples/CodeM/series_pair_metadata_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_pair_metadata_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_pair_metadata_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/examples/CodeM/series_pair_metadata_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_pair_metadata_reference_demo.cpp.s
+
 examples/CodeM/series_random_sampling_reference_demo.o: examples/CodeM/series_random_sampling_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_random_sampling_reference_demo.o
 
@@ -3704,6 +3936,30 @@ examples/CodeM/series_special_functions_ii_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/examples/CodeM/series_special_functions_ii_reference_demo.cpp.s
 .PHONY : examples/CodeM/series_special_functions_ii_reference_demo.cpp.s
 
+examples/CodeM/series_special_views_reference_demo.o: examples/CodeM/series_special_views_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_special_views_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_special_views_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/examples/CodeM/series_special_views_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_special_views_reference_demo.cpp.o
+
+examples/CodeM/series_special_views_reference_demo.i: examples/CodeM/series_special_views_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_special_views_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_special_views_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/examples/CodeM/series_special_views_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_special_views_reference_demo.cpp.i
+
+examples/CodeM/series_special_views_reference_demo.s: examples/CodeM/series_special_views_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_special_views_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_special_views_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/examples/CodeM/series_special_views_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_special_views_reference_demo.cpp.s
+
 examples/CodeM/series_stat_accessor_reference_demo.o: examples/CodeM/series_stat_accessor_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_stat_accessor_reference_demo.o
 
@@ -3751,6 +4007,54 @@ examples/CodeM/series_stats_reference_demo.s: examples/CodeM/series_stats_refere
 examples/CodeM/series_stats_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_stats_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_stats_reference_demo.dir/examples/CodeM/series_stats_reference_demo.cpp.s
 .PHONY : examples/CodeM/series_stats_reference_demo.cpp.s
+
+examples/CodeM/series_transform_activation_ii_reference_demo.o: examples/CodeM/series_transform_activation_ii_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_transform_activation_ii_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_transform_activation_ii_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/examples/CodeM/series_transform_activation_ii_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_transform_activation_ii_reference_demo.cpp.o
+
+examples/CodeM/series_transform_activation_ii_reference_demo.i: examples/CodeM/series_transform_activation_ii_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_transform_activation_ii_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_transform_activation_ii_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/examples/CodeM/series_transform_activation_ii_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_transform_activation_ii_reference_demo.cpp.i
+
+examples/CodeM/series_transform_activation_ii_reference_demo.s: examples/CodeM/series_transform_activation_ii_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_transform_activation_ii_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_transform_activation_ii_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/examples/CodeM/series_transform_activation_ii_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_transform_activation_ii_reference_demo.cpp.s
+
+examples/CodeM/series_transform_activation_iii_reference_demo.o: examples/CodeM/series_transform_activation_iii_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_transform_activation_iii_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_transform_activation_iii_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/examples/CodeM/series_transform_activation_iii_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_transform_activation_iii_reference_demo.cpp.o
+
+examples/CodeM/series_transform_activation_iii_reference_demo.i: examples/CodeM/series_transform_activation_iii_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_transform_activation_iii_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_transform_activation_iii_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/examples/CodeM/series_transform_activation_iii_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_transform_activation_iii_reference_demo.cpp.i
+
+examples/CodeM/series_transform_activation_iii_reference_demo.s: examples/CodeM/series_transform_activation_iii_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_transform_activation_iii_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_transform_activation_iii_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/examples/CodeM/series_transform_activation_iii_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_transform_activation_iii_reference_demo.cpp.s
 
 examples/CodeM/series_transport_reference_demo.o: examples/CodeM/series_transport_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_transport_reference_demo.o
@@ -4784,30 +5088,6 @@ src/CodeH/core/Printing.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Printing.cpp.s
 .PHONY : src/CodeH/core/Printing.cpp.s
 
-src/CodeH/core/TimeIndex.o: src/CodeH/core/TimeIndex.cpp.o
-.PHONY : src/CodeH/core/TimeIndex.o
-
-# target to build an object file
-src/CodeH/core/TimeIndex.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeIndex.cpp.o
-.PHONY : src/CodeH/core/TimeIndex.cpp.o
-
-src/CodeH/core/TimeIndex.i: src/CodeH/core/TimeIndex.cpp.i
-.PHONY : src/CodeH/core/TimeIndex.i
-
-# target to preprocess a source file
-src/CodeH/core/TimeIndex.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeIndex.cpp.i
-.PHONY : src/CodeH/core/TimeIndex.cpp.i
-
-src/CodeH/core/TimeIndex.s: src/CodeH/core/TimeIndex.cpp.s
-.PHONY : src/CodeH/core/TimeIndex.s
-
-# target to generate assembly for a file
-src/CodeH/core/TimeIndex.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeIndex.cpp.s
-.PHONY : src/CodeH/core/TimeIndex.cpp.s
-
 src/CodeH/core/TimeZone.o: src/CodeH/core/TimeZone.cpp.o
 .PHONY : src/CodeH/core/TimeZone.o
 
@@ -4855,6 +5135,30 @@ src/CodeH/core/Timeline.s: src/CodeH/core/Timeline.cpp.s
 src/CodeH/core/Timeline.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Timeline.cpp.s
 .PHONY : src/CodeH/core/Timeline.cpp.s
+
+src/CodeH/core/TimelineIndexAccessor.o: src/CodeH/core/TimelineIndexAccessor.cpp.o
+.PHONY : src/CodeH/core/TimelineIndexAccessor.o
+
+# target to build an object file
+src/CodeH/core/TimelineIndexAccessor.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimelineIndexAccessor.cpp.o
+.PHONY : src/CodeH/core/TimelineIndexAccessor.cpp.o
+
+src/CodeH/core/TimelineIndexAccessor.i: src/CodeH/core/TimelineIndexAccessor.cpp.i
+.PHONY : src/CodeH/core/TimelineIndexAccessor.i
+
+# target to preprocess a source file
+src/CodeH/core/TimelineIndexAccessor.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimelineIndexAccessor.cpp.i
+.PHONY : src/CodeH/core/TimelineIndexAccessor.cpp.i
+
+src/CodeH/core/TimelineIndexAccessor.s: src/CodeH/core/TimelineIndexAccessor.cpp.s
+.PHONY : src/CodeH/core/TimelineIndexAccessor.s
+
+# target to generate assembly for a file
+src/CodeH/core/TimelineIndexAccessor.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh.dir/build.make PlussQit/CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimelineIndexAccessor.cpp.s
+.PHONY : src/CodeH/core/TimelineIndexAccessor.cpp.s
 
 src/CodeM/Traverse/Traverse.o: src/CodeM/Traverse/Traverse.cpp.o
 .PHONY : src/CodeM/Traverse/Traverse.o
@@ -6896,6 +7200,102 @@ tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s
 .PHONY : tests/CodeH/test_codeh_patch01_timeline_factory_extended.cpp.s
 
+tests/CodeH/test_duration_components.o: tests/CodeH/test_duration_components.cpp.o
+.PHONY : tests/CodeH/test_duration_components.o
+
+# target to build an object file
+tests/CodeH/test_duration_components.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_components.cpp.o
+.PHONY : tests/CodeH/test_duration_components.cpp.o
+
+tests/CodeH/test_duration_components.i: tests/CodeH/test_duration_components.cpp.i
+.PHONY : tests/CodeH/test_duration_components.i
+
+# target to preprocess a source file
+tests/CodeH/test_duration_components.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_components.cpp.i
+.PHONY : tests/CodeH/test_duration_components.cpp.i
+
+tests/CodeH/test_duration_components.s: tests/CodeH/test_duration_components.cpp.s
+.PHONY : tests/CodeH/test_duration_components.s
+
+# target to generate assembly for a file
+tests/CodeH/test_duration_components.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_components.cpp.s
+.PHONY : tests/CodeH/test_duration_components.cpp.s
+
+tests/CodeH/test_duration_factories.o: tests/CodeH/test_duration_factories.cpp.o
+.PHONY : tests/CodeH/test_duration_factories.o
+
+# target to build an object file
+tests/CodeH/test_duration_factories.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_factories.cpp.o
+.PHONY : tests/CodeH/test_duration_factories.cpp.o
+
+tests/CodeH/test_duration_factories.i: tests/CodeH/test_duration_factories.cpp.i
+.PHONY : tests/CodeH/test_duration_factories.i
+
+# target to preprocess a source file
+tests/CodeH/test_duration_factories.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_factories.cpp.i
+.PHONY : tests/CodeH/test_duration_factories.cpp.i
+
+tests/CodeH/test_duration_factories.s: tests/CodeH/test_duration_factories.cpp.s
+.PHONY : tests/CodeH/test_duration_factories.s
+
+# target to generate assembly for a file
+tests/CodeH/test_duration_factories.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_factories.cpp.s
+.PHONY : tests/CodeH/test_duration_factories.cpp.s
+
+tests/CodeH/test_duration_foundations.o: tests/CodeH/test_duration_foundations.cpp.o
+.PHONY : tests/CodeH/test_duration_foundations.o
+
+# target to build an object file
+tests/CodeH/test_duration_foundations.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_foundations.cpp.o
+.PHONY : tests/CodeH/test_duration_foundations.cpp.o
+
+tests/CodeH/test_duration_foundations.i: tests/CodeH/test_duration_foundations.cpp.i
+.PHONY : tests/CodeH/test_duration_foundations.i
+
+# target to preprocess a source file
+tests/CodeH/test_duration_foundations.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_foundations.cpp.i
+.PHONY : tests/CodeH/test_duration_foundations.cpp.i
+
+tests/CodeH/test_duration_foundations.s: tests/CodeH/test_duration_foundations.cpp.s
+.PHONY : tests/CodeH/test_duration_foundations.s
+
+# target to generate assembly for a file
+tests/CodeH/test_duration_foundations.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_foundations.cpp.s
+.PHONY : tests/CodeH/test_duration_foundations.cpp.s
+
+tests/CodeH/test_duration_remaining.o: tests/CodeH/test_duration_remaining.cpp.o
+.PHONY : tests/CodeH/test_duration_remaining.o
+
+# target to build an object file
+tests/CodeH/test_duration_remaining.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_remaining.cpp.o
+.PHONY : tests/CodeH/test_duration_remaining.cpp.o
+
+tests/CodeH/test_duration_remaining.i: tests/CodeH/test_duration_remaining.cpp.i
+.PHONY : tests/CodeH/test_duration_remaining.i
+
+# target to preprocess a source file
+tests/CodeH/test_duration_remaining.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_remaining.cpp.i
+.PHONY : tests/CodeH/test_duration_remaining.cpp.i
+
+tests/CodeH/test_duration_remaining.s: tests/CodeH/test_duration_remaining.cpp.s
+.PHONY : tests/CodeH/test_duration_remaining.s
+
+# target to generate assembly for a file
+tests/CodeH/test_duration_remaining.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_duration_remaining.cpp.s
+.PHONY : tests/CodeH/test_duration_remaining.cpp.s
+
 tests/CodeH/test_timeline_between.o: tests/CodeH/test_timeline_between.cpp.o
 .PHONY : tests/CodeH/test_timeline_between.o
 
@@ -7015,6 +7415,54 @@ tests/CodeH/test_timeline_foundations.s: tests/CodeH/test_timeline_foundations.c
 tests/CodeH/test_timeline_foundations.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_foundations.cpp.s
 .PHONY : tests/CodeH/test_timeline_foundations.cpp.s
+
+tests/CodeH/test_timeline_index_accessor.o: tests/CodeH/test_timeline_index_accessor.cpp.o
+.PHONY : tests/CodeH/test_timeline_index_accessor.o
+
+# target to build an object file
+tests/CodeH/test_timeline_index_accessor.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_index_accessor.cpp.o
+.PHONY : tests/CodeH/test_timeline_index_accessor.cpp.o
+
+tests/CodeH/test_timeline_index_accessor.i: tests/CodeH/test_timeline_index_accessor.cpp.i
+.PHONY : tests/CodeH/test_timeline_index_accessor.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_index_accessor.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_index_accessor.cpp.i
+.PHONY : tests/CodeH/test_timeline_index_accessor.cpp.i
+
+tests/CodeH/test_timeline_index_accessor.s: tests/CodeH/test_timeline_index_accessor.cpp.s
+.PHONY : tests/CodeH/test_timeline_index_accessor.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_index_accessor.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_index_accessor.cpp.s
+.PHONY : tests/CodeH/test_timeline_index_accessor.cpp.s
+
+tests/CodeH/test_timeline_index_resample_extrema.o: tests/CodeH/test_timeline_index_resample_extrema.cpp.o
+.PHONY : tests/CodeH/test_timeline_index_resample_extrema.o
+
+# target to build an object file
+tests/CodeH/test_timeline_index_resample_extrema.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_index_resample_extrema.cpp.o
+.PHONY : tests/CodeH/test_timeline_index_resample_extrema.cpp.o
+
+tests/CodeH/test_timeline_index_resample_extrema.i: tests/CodeH/test_timeline_index_resample_extrema.cpp.i
+.PHONY : tests/CodeH/test_timeline_index_resample_extrema.i
+
+# target to preprocess a source file
+tests/CodeH/test_timeline_index_resample_extrema.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_index_resample_extrema.cpp.i
+.PHONY : tests/CodeH/test_timeline_index_resample_extrema.cpp.i
+
+tests/CodeH/test_timeline_index_resample_extrema.s: tests/CodeH/test_timeline_index_resample_extrema.cpp.s
+.PHONY : tests/CodeH/test_timeline_index_resample_extrema.s
+
+# target to generate assembly for a file
+tests/CodeH/test_timeline_index_resample_extrema.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_tests.dir/tests/CodeH/test_timeline_index_resample_extrema.cpp.s
+.PHONY : tests/CodeH/test_timeline_index_resample_extrema.cpp.s
 
 tests/CodeH/test_timeline_ordering.o: tests/CodeH/test_timeline_ordering.cpp.o
 .PHONY : tests/CodeH/test_timeline_ordering.o
@@ -7303,6 +7751,30 @@ tests/CodeM/test_aux_dataloader.s: tests/CodeM/test_aux_dataloader.cpp.s
 tests/CodeM/test_aux_dataloader.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_aux_dataloader.cpp.s
 .PHONY : tests/CodeM/test_aux_dataloader.cpp.s
+
+tests/CodeM/test_aux_transmit.o: tests/CodeM/test_aux_transmit.cpp.o
+.PHONY : tests/CodeM/test_aux_transmit.o
+
+# target to build an object file
+tests/CodeM/test_aux_transmit.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_aux_transmit.cpp.o
+.PHONY : tests/CodeM/test_aux_transmit.cpp.o
+
+tests/CodeM/test_aux_transmit.i: tests/CodeM/test_aux_transmit.cpp.i
+.PHONY : tests/CodeM/test_aux_transmit.i
+
+# target to preprocess a source file
+tests/CodeM/test_aux_transmit.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_aux_transmit.cpp.i
+.PHONY : tests/CodeM/test_aux_transmit.cpp.i
+
+tests/CodeM/test_aux_transmit.s: tests/CodeM/test_aux_transmit.cpp.s
+.PHONY : tests/CodeM/test_aux_transmit.s
+
+# target to generate assembly for a file
+tests/CodeM/test_aux_transmit.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_aux_transmit.cpp.s
+.PHONY : tests/CodeM/test_aux_transmit.cpp.s
 
 tests/CodeM/test_codem_broadcast.o: tests/CodeM/test_codem_broadcast.cpp.o
 .PHONY : tests/CodeM/test_codem_broadcast.o
@@ -7615,6 +8087,30 @@ tests/CodeM/test_matmul.s: tests/CodeM/test_matmul.cpp.s
 tests/CodeM/test_matmul.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_matmul.cpp.s
 .PHONY : tests/CodeM/test_matmul.cpp.s
+
+tests/CodeM/test_matmul_batched_fold.o: tests/CodeM/test_matmul_batched_fold.cpp.o
+.PHONY : tests/CodeM/test_matmul_batched_fold.o
+
+# target to build an object file
+tests/CodeM/test_matmul_batched_fold.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_matmul_batched_fold.cpp.o
+.PHONY : tests/CodeM/test_matmul_batched_fold.cpp.o
+
+tests/CodeM/test_matmul_batched_fold.i: tests/CodeM/test_matmul_batched_fold.cpp.i
+.PHONY : tests/CodeM/test_matmul_batched_fold.i
+
+# target to preprocess a source file
+tests/CodeM/test_matmul_batched_fold.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_matmul_batched_fold.cpp.i
+.PHONY : tests/CodeM/test_matmul_batched_fold.cpp.i
+
+tests/CodeM/test_matmul_batched_fold.s: tests/CodeM/test_matmul_batched_fold.cpp.s
+.PHONY : tests/CodeM/test_matmul_batched_fold.s
+
+# target to generate assembly for a file
+tests/CodeM/test_matmul_batched_fold.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_matmul_batched_fold.cpp.s
+.PHONY : tests/CodeM/test_matmul_batched_fold.cpp.s
 
 tests/CodeM/test_max7d.o: tests/CodeM/test_max7d.cpp.o
 .PHONY : tests/CodeM/test_max7d.o
@@ -11738,6 +12234,30 @@ tests/CodeM/test_random_sampling_family.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_random_sampling_family.cpp.s
 .PHONY : tests/CodeM/test_random_sampling_family.cpp.s
 
+tests/CodeM/test_scalar_operand_semantics.o: tests/CodeM/test_scalar_operand_semantics.cpp.o
+.PHONY : tests/CodeM/test_scalar_operand_semantics.o
+
+# target to build an object file
+tests/CodeM/test_scalar_operand_semantics.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_scalar_operand_semantics.cpp.o
+.PHONY : tests/CodeM/test_scalar_operand_semantics.cpp.o
+
+tests/CodeM/test_scalar_operand_semantics.i: tests/CodeM/test_scalar_operand_semantics.cpp.i
+.PHONY : tests/CodeM/test_scalar_operand_semantics.i
+
+# target to preprocess a source file
+tests/CodeM/test_scalar_operand_semantics.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_scalar_operand_semantics.cpp.i
+.PHONY : tests/CodeM/test_scalar_operand_semantics.cpp.i
+
+tests/CodeM/test_scalar_operand_semantics.s: tests/CodeM/test_scalar_operand_semantics.cpp.s
+.PHONY : tests/CodeM/test_scalar_operand_semantics.s
+
+# target to generate assembly for a file
+tests/CodeM/test_scalar_operand_semantics.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_scalar_operand_semantics.cpp.s
+.PHONY : tests/CodeM/test_scalar_operand_semantics.cpp.s
+
 tests/CodeM/test_scatter_index_ii_family.o: tests/CodeM/test_scatter_index_ii_family.cpp.o
 .PHONY : tests/CodeM/test_scatter_index_ii_family.o
 
@@ -11786,6 +12306,54 @@ tests/CodeM/test_series_backward_manifest.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_backward_manifest.cpp.s
 .PHONY : tests/CodeM/test_series_backward_manifest.cpp.s
 
+tests/CodeM/test_series_default_undefined.o: tests/CodeM/test_series_default_undefined.cpp.o
+.PHONY : tests/CodeM/test_series_default_undefined.o
+
+# target to build an object file
+tests/CodeM/test_series_default_undefined.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_default_undefined.cpp.o
+.PHONY : tests/CodeM/test_series_default_undefined.cpp.o
+
+tests/CodeM/test_series_default_undefined.i: tests/CodeM/test_series_default_undefined.cpp.i
+.PHONY : tests/CodeM/test_series_default_undefined.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_default_undefined.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_default_undefined.cpp.i
+.PHONY : tests/CodeM/test_series_default_undefined.cpp.i
+
+tests/CodeM/test_series_default_undefined.s: tests/CodeM/test_series_default_undefined.cpp.s
+.PHONY : tests/CodeM/test_series_default_undefined.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_default_undefined.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_default_undefined.cpp.s
+.PHONY : tests/CodeM/test_series_default_undefined.cpp.s
+
+tests/CodeM/test_series_final_teachings.o: tests/CodeM/test_series_final_teachings.cpp.o
+.PHONY : tests/CodeM/test_series_final_teachings.o
+
+# target to build an object file
+tests/CodeM/test_series_final_teachings.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_final_teachings.cpp.o
+.PHONY : tests/CodeM/test_series_final_teachings.cpp.o
+
+tests/CodeM/test_series_final_teachings.i: tests/CodeM/test_series_final_teachings.cpp.i
+.PHONY : tests/CodeM/test_series_final_teachings.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_final_teachings.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_final_teachings.cpp.i
+.PHONY : tests/CodeM/test_series_final_teachings.cpp.i
+
+tests/CodeM/test_series_final_teachings.s: tests/CodeM/test_series_final_teachings.cpp.s
+.PHONY : tests/CodeM/test_series_final_teachings.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_final_teachings.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_final_teachings.cpp.s
+.PHONY : tests/CodeM/test_series_final_teachings.cpp.s
+
 tests/CodeM/test_series_routing_manifest.o: tests/CodeM/test_series_routing_manifest.cpp.o
 .PHONY : tests/CodeM/test_series_routing_manifest.o
 
@@ -11833,6 +12401,54 @@ tests/CodeM/test_series_source_public_api.s: tests/CodeM/test_series_source_publ
 tests/CodeM/test_series_source_public_api.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_source_public_api.cpp.s
 .PHONY : tests/CodeM/test_series_source_public_api.cpp.s
+
+tests/CodeM/test_series_transform_activation_ii.o: tests/CodeM/test_series_transform_activation_ii.cpp.o
+.PHONY : tests/CodeM/test_series_transform_activation_ii.o
+
+# target to build an object file
+tests/CodeM/test_series_transform_activation_ii.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_transform_activation_ii.cpp.o
+.PHONY : tests/CodeM/test_series_transform_activation_ii.cpp.o
+
+tests/CodeM/test_series_transform_activation_ii.i: tests/CodeM/test_series_transform_activation_ii.cpp.i
+.PHONY : tests/CodeM/test_series_transform_activation_ii.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_transform_activation_ii.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_transform_activation_ii.cpp.i
+.PHONY : tests/CodeM/test_series_transform_activation_ii.cpp.i
+
+tests/CodeM/test_series_transform_activation_ii.s: tests/CodeM/test_series_transform_activation_ii.cpp.s
+.PHONY : tests/CodeM/test_series_transform_activation_ii.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_transform_activation_ii.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_transform_activation_ii.cpp.s
+.PHONY : tests/CodeM/test_series_transform_activation_ii.cpp.s
+
+tests/CodeM/test_series_transform_activation_iii.o: tests/CodeM/test_series_transform_activation_iii.cpp.o
+.PHONY : tests/CodeM/test_series_transform_activation_iii.o
+
+# target to build an object file
+tests/CodeM/test_series_transform_activation_iii.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_transform_activation_iii.cpp.o
+.PHONY : tests/CodeM/test_series_transform_activation_iii.cpp.o
+
+tests/CodeM/test_series_transform_activation_iii.i: tests/CodeM/test_series_transform_activation_iii.cpp.i
+.PHONY : tests/CodeM/test_series_transform_activation_iii.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_transform_activation_iii.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_transform_activation_iii.cpp.i
+.PHONY : tests/CodeM/test_series_transform_activation_iii.cpp.i
+
+tests/CodeM/test_series_transform_activation_iii.s: tests/CodeM/test_series_transform_activation_iii.cpp.s
+.PHONY : tests/CodeM/test_series_transform_activation_iii.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_transform_activation_iii.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_transform_activation_iii.cpp.s
+.PHONY : tests/CodeM/test_series_transform_activation_iii.cpp.s
 
 tests/CodeM/test_shape_cat_stack_math.o: tests/CodeM/test_shape_cat_stack_math.cpp.o
 .PHONY : tests/CodeM/test_shape_cat_stack_math.o
@@ -12554,6 +13170,30 @@ tests/CodeN/test_coden_patch24_note_format.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch24_note_format.cpp.s
 .PHONY : tests/CodeN/test_coden_patch24_note_format.cpp.s
 
+tests/CodeN/test_coden_patch24_tex_tail.o: tests/CodeN/test_coden_patch24_tex_tail.cpp.o
+.PHONY : tests/CodeN/test_coden_patch24_tex_tail.o
+
+# target to build an object file
+tests/CodeN/test_coden_patch24_tex_tail.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch24_tex_tail.cpp.o
+.PHONY : tests/CodeN/test_coden_patch24_tex_tail.cpp.o
+
+tests/CodeN/test_coden_patch24_tex_tail.i: tests/CodeN/test_coden_patch24_tex_tail.cpp.i
+.PHONY : tests/CodeN/test_coden_patch24_tex_tail.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_patch24_tex_tail.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch24_tex_tail.cpp.i
+.PHONY : tests/CodeN/test_coden_patch24_tex_tail.cpp.i
+
+tests/CodeN/test_coden_patch24_tex_tail.s: tests/CodeN/test_coden_patch24_tex_tail.cpp.s
+.PHONY : tests/CodeN/test_coden_patch24_tex_tail.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_patch24_tex_tail.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_patch24_tex_tail.cpp.s
+.PHONY : tests/CodeN/test_coden_patch24_tex_tail.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -12570,19 +13210,22 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... plussqit_coden_closed_note_contract_check"
+	@echo "... bench_ops"
 	@echo "... plussqit_codeh"
 	@echo "... plussqit_codeh_duration_docverify_demo"
+	@echo "... plussqit_codeh_duration_factory_reference_demo"
+	@echo "... plussqit_codeh_queue_docverify_demo"
 	@echo "... plussqit_codeh_tests"
-	@echo "... plussqit_codeh_timeindex_docverify_demo"
 	@echo "... plussqit_codeh_timeline_between_reference_demo"
 	@echo "... plussqit_codeh_timeline_calendar_fields_reference_demo"
 	@echo "... plussqit_codeh_timeline_calendar_predicates_reference_demo"
-	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
 	@echo "... plussqit_codeh_timeline_docverify_demo"
 	@echo "... plussqit_codeh_timeline_duration_interop_docverify_demo"
 	@echo "... plussqit_codeh_timeline_extrema_reference_demo"
 	@echo "... plussqit_codeh_timeline_factory_reference_demo"
 	@echo "... plussqit_codeh_timeline_foundations_reference_demo"
+	@echo "... plussqit_codeh_timeline_index_docverify_demo"
+	@echo "... plussqit_codeh_timeline_index_methods_demo"
 	@echo "... plussqit_codeh_timeline_non_generated_and_factory_methods_demo"
 	@echo "... plussqit_codeh_timeline_operators_reference_demo"
 	@echo "... plussqit_codeh_timeline_ordering_reference_demo"
@@ -12626,6 +13269,7 @@ help:
 	@echo "... plussqit_codem_series_extract_index_take_reference_demo"
 	@echo "... plussqit_codem_series_extrema_norm_reference_demo"
 	@echo "... plussqit_codem_series_factory_core_reference_demo"
+	@echo "... plussqit_codem_series_final_teachings_reference_demo"
 	@echo "... plussqit_codem_series_introspection_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_decomposition_solve_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_determinant_reference_demo"
@@ -12639,6 +13283,7 @@ help:
 	@echo "... plussqit_codem_series_number_reference_demo"
 	@echo "... plussqit_codem_series_ordered_extrema_reference_demo"
 	@echo "... plussqit_codem_series_ordering_reference_demo"
+	@echo "... plussqit_codem_series_pair_metadata_reference_demo"
 	@echo "... plussqit_codem_series_random_sampling_reference_demo"
 	@echo "... plussqit_codem_series_read_index_reference_demo"
 	@echo "... plussqit_codem_series_rearrange_reference_demo"
@@ -12650,8 +13295,11 @@ help:
 	@echo "... plussqit_codem_series_setops_reference_demo"
 	@echo "... plussqit_codem_series_shape_reference_demo"
 	@echo "... plussqit_codem_series_special_functions_ii_reference_demo"
+	@echo "... plussqit_codem_series_special_views_reference_demo"
 	@echo "... plussqit_codem_series_stat_accessor_reference_demo"
 	@echo "... plussqit_codem_series_stats_reference_demo"
+	@echo "... plussqit_codem_series_transform_activation_ii_reference_demo"
+	@echo "... plussqit_codem_series_transform_activation_iii_reference_demo"
 	@echo "... plussqit_codem_series_transport_reference_demo"
 	@echo "... plussqit_codem_series_traverse_accessor_reference_demo"
 	@echo "... plussqit_codem_series_trig_reference_demo"
@@ -12696,12 +13344,18 @@ help:
 	@echo "... __/generated/CodeM/ops/ops_generated.o"
 	@echo "... __/generated/CodeM/ops/ops_generated.i"
 	@echo "... __/generated/CodeM/ops/ops_generated.s"
+	@echo "... benchmarks/bench_ops.o"
+	@echo "... benchmarks/bench_ops.i"
+	@echo "... benchmarks/bench_ops.s"
 	@echo "... examples/CodeH/duration_docverify_demo.o"
 	@echo "... examples/CodeH/duration_docverify_demo.i"
 	@echo "... examples/CodeH/duration_docverify_demo.s"
-	@echo "... examples/CodeH/timeindex_docverify_demo.o"
-	@echo "... examples/CodeH/timeindex_docverify_demo.i"
-	@echo "... examples/CodeH/timeindex_docverify_demo.s"
+	@echo "... examples/CodeH/duration_factory_reference_demo.o"
+	@echo "... examples/CodeH/duration_factory_reference_demo.i"
+	@echo "... examples/CodeH/duration_factory_reference_demo.s"
+	@echo "... examples/CodeH/queue_docverify_demo.o"
+	@echo "... examples/CodeH/queue_docverify_demo.i"
+	@echo "... examples/CodeH/queue_docverify_demo.s"
 	@echo "... examples/CodeH/timeline_between_reference_demo.o"
 	@echo "... examples/CodeH/timeline_between_reference_demo.i"
 	@echo "... examples/CodeH/timeline_between_reference_demo.s"
@@ -12711,9 +13365,6 @@ help:
 	@echo "... examples/CodeH/timeline_calendar_predicates_reference_demo.o"
 	@echo "... examples/CodeH/timeline_calendar_predicates_reference_demo.i"
 	@echo "... examples/CodeH/timeline_calendar_predicates_reference_demo.s"
-	@echo "... examples/CodeH/timeline_dataframe_timeindex_methods_demo.o"
-	@echo "... examples/CodeH/timeline_dataframe_timeindex_methods_demo.i"
-	@echo "... examples/CodeH/timeline_dataframe_timeindex_methods_demo.s"
 	@echo "... examples/CodeH/timeline_docverify_demo.o"
 	@echo "... examples/CodeH/timeline_docverify_demo.i"
 	@echo "... examples/CodeH/timeline_docverify_demo.s"
@@ -12729,6 +13380,12 @@ help:
 	@echo "... examples/CodeH/timeline_foundations_reference_demo.o"
 	@echo "... examples/CodeH/timeline_foundations_reference_demo.i"
 	@echo "... examples/CodeH/timeline_foundations_reference_demo.s"
+	@echo "... examples/CodeH/timeline_index_docverify_demo.o"
+	@echo "... examples/CodeH/timeline_index_docverify_demo.i"
+	@echo "... examples/CodeH/timeline_index_docverify_demo.s"
+	@echo "... examples/CodeH/timeline_index_methods_demo.o"
+	@echo "... examples/CodeH/timeline_index_methods_demo.i"
+	@echo "... examples/CodeH/timeline_index_methods_demo.s"
 	@echo "... examples/CodeH/timeline_non_generated_and_factory_methods_demo.o"
 	@echo "... examples/CodeH/timeline_non_generated_and_factory_methods_demo.i"
 	@echo "... examples/CodeH/timeline_non_generated_and_factory_methods_demo.s"
@@ -12843,6 +13500,9 @@ help:
 	@echo "... examples/CodeM/series_factory_core_reference_demo.o"
 	@echo "... examples/CodeM/series_factory_core_reference_demo.i"
 	@echo "... examples/CodeM/series_factory_core_reference_demo.s"
+	@echo "... examples/CodeM/series_final_teachings_reference_demo.o"
+	@echo "... examples/CodeM/series_final_teachings_reference_demo.i"
+	@echo "... examples/CodeM/series_final_teachings_reference_demo.s"
 	@echo "... examples/CodeM/series_introspection_reference_demo.o"
 	@echo "... examples/CodeM/series_introspection_reference_demo.i"
 	@echo "... examples/CodeM/series_introspection_reference_demo.s"
@@ -12882,6 +13542,9 @@ help:
 	@echo "... examples/CodeM/series_ordering_reference_demo.o"
 	@echo "... examples/CodeM/series_ordering_reference_demo.i"
 	@echo "... examples/CodeM/series_ordering_reference_demo.s"
+	@echo "... examples/CodeM/series_pair_metadata_reference_demo.o"
+	@echo "... examples/CodeM/series_pair_metadata_reference_demo.i"
+	@echo "... examples/CodeM/series_pair_metadata_reference_demo.s"
 	@echo "... examples/CodeM/series_random_sampling_reference_demo.o"
 	@echo "... examples/CodeM/series_random_sampling_reference_demo.i"
 	@echo "... examples/CodeM/series_random_sampling_reference_demo.s"
@@ -12915,12 +13578,21 @@ help:
 	@echo "... examples/CodeM/series_special_functions_ii_reference_demo.o"
 	@echo "... examples/CodeM/series_special_functions_ii_reference_demo.i"
 	@echo "... examples/CodeM/series_special_functions_ii_reference_demo.s"
+	@echo "... examples/CodeM/series_special_views_reference_demo.o"
+	@echo "... examples/CodeM/series_special_views_reference_demo.i"
+	@echo "... examples/CodeM/series_special_views_reference_demo.s"
 	@echo "... examples/CodeM/series_stat_accessor_reference_demo.o"
 	@echo "... examples/CodeM/series_stat_accessor_reference_demo.i"
 	@echo "... examples/CodeM/series_stat_accessor_reference_demo.s"
 	@echo "... examples/CodeM/series_stats_reference_demo.o"
 	@echo "... examples/CodeM/series_stats_reference_demo.i"
 	@echo "... examples/CodeM/series_stats_reference_demo.s"
+	@echo "... examples/CodeM/series_transform_activation_ii_reference_demo.o"
+	@echo "... examples/CodeM/series_transform_activation_ii_reference_demo.i"
+	@echo "... examples/CodeM/series_transform_activation_ii_reference_demo.s"
+	@echo "... examples/CodeM/series_transform_activation_iii_reference_demo.o"
+	@echo "... examples/CodeM/series_transform_activation_iii_reference_demo.i"
+	@echo "... examples/CodeM/series_transform_activation_iii_reference_demo.s"
 	@echo "... examples/CodeM/series_transport_reference_demo.o"
 	@echo "... examples/CodeM/series_transport_reference_demo.i"
 	@echo "... examples/CodeM/series_transport_reference_demo.s"
@@ -13050,15 +13722,15 @@ help:
 	@echo "... src/CodeH/core/Printing.o"
 	@echo "... src/CodeH/core/Printing.i"
 	@echo "... src/CodeH/core/Printing.s"
-	@echo "... src/CodeH/core/TimeIndex.o"
-	@echo "... src/CodeH/core/TimeIndex.i"
-	@echo "... src/CodeH/core/TimeIndex.s"
 	@echo "... src/CodeH/core/TimeZone.o"
 	@echo "... src/CodeH/core/TimeZone.i"
 	@echo "... src/CodeH/core/TimeZone.s"
 	@echo "... src/CodeH/core/Timeline.o"
 	@echo "... src/CodeH/core/Timeline.i"
 	@echo "... src/CodeH/core/Timeline.s"
+	@echo "... src/CodeH/core/TimelineIndexAccessor.o"
+	@echo "... src/CodeH/core/TimelineIndexAccessor.i"
+	@echo "... src/CodeH/core/TimelineIndexAccessor.s"
 	@echo "... src/CodeM/Traverse/Traverse.o"
 	@echo "... src/CodeM/Traverse/Traverse.i"
 	@echo "... src/CodeM/Traverse/Traverse.s"
@@ -13314,6 +13986,18 @@ help:
 	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.o"
 	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.i"
 	@echo "... tests/CodeH/test_codeh_patch01_timeline_factory_extended.s"
+	@echo "... tests/CodeH/test_duration_components.o"
+	@echo "... tests/CodeH/test_duration_components.i"
+	@echo "... tests/CodeH/test_duration_components.s"
+	@echo "... tests/CodeH/test_duration_factories.o"
+	@echo "... tests/CodeH/test_duration_factories.i"
+	@echo "... tests/CodeH/test_duration_factories.s"
+	@echo "... tests/CodeH/test_duration_foundations.o"
+	@echo "... tests/CodeH/test_duration_foundations.i"
+	@echo "... tests/CodeH/test_duration_foundations.s"
+	@echo "... tests/CodeH/test_duration_remaining.o"
+	@echo "... tests/CodeH/test_duration_remaining.i"
+	@echo "... tests/CodeH/test_duration_remaining.s"
 	@echo "... tests/CodeH/test_timeline_between.o"
 	@echo "... tests/CodeH/test_timeline_between.i"
 	@echo "... tests/CodeH/test_timeline_between.s"
@@ -13329,6 +14013,12 @@ help:
 	@echo "... tests/CodeH/test_timeline_foundations.o"
 	@echo "... tests/CodeH/test_timeline_foundations.i"
 	@echo "... tests/CodeH/test_timeline_foundations.s"
+	@echo "... tests/CodeH/test_timeline_index_accessor.o"
+	@echo "... tests/CodeH/test_timeline_index_accessor.i"
+	@echo "... tests/CodeH/test_timeline_index_accessor.s"
+	@echo "... tests/CodeH/test_timeline_index_resample_extrema.o"
+	@echo "... tests/CodeH/test_timeline_index_resample_extrema.i"
+	@echo "... tests/CodeH/test_timeline_index_resample_extrema.s"
 	@echo "... tests/CodeH/test_timeline_ordering.o"
 	@echo "... tests/CodeH/test_timeline_ordering.i"
 	@echo "... tests/CodeH/test_timeline_ordering.s"
@@ -13365,6 +14055,9 @@ help:
 	@echo "... tests/CodeM/test_aux_dataloader.o"
 	@echo "... tests/CodeM/test_aux_dataloader.i"
 	@echo "... tests/CodeM/test_aux_dataloader.s"
+	@echo "... tests/CodeM/test_aux_transmit.o"
+	@echo "... tests/CodeM/test_aux_transmit.i"
+	@echo "... tests/CodeM/test_aux_transmit.s"
 	@echo "... tests/CodeM/test_codem_broadcast.o"
 	@echo "... tests/CodeM/test_codem_broadcast.i"
 	@echo "... tests/CodeM/test_codem_broadcast.s"
@@ -13404,6 +14097,9 @@ help:
 	@echo "... tests/CodeM/test_matmul.o"
 	@echo "... tests/CodeM/test_matmul.i"
 	@echo "... tests/CodeM/test_matmul.s"
+	@echo "... tests/CodeM/test_matmul_batched_fold.o"
+	@echo "... tests/CodeM/test_matmul_batched_fold.i"
+	@echo "... tests/CodeM/test_matmul_batched_fold.s"
 	@echo "... tests/CodeM/test_max7d.o"
 	@echo "... tests/CodeM/test_max7d.i"
 	@echo "... tests/CodeM/test_max7d.s"
@@ -13884,18 +14580,33 @@ help:
 	@echo "... tests/CodeM/test_random_sampling_family.o"
 	@echo "... tests/CodeM/test_random_sampling_family.i"
 	@echo "... tests/CodeM/test_random_sampling_family.s"
+	@echo "... tests/CodeM/test_scalar_operand_semantics.o"
+	@echo "... tests/CodeM/test_scalar_operand_semantics.i"
+	@echo "... tests/CodeM/test_scalar_operand_semantics.s"
 	@echo "... tests/CodeM/test_scatter_index_ii_family.o"
 	@echo "... tests/CodeM/test_scatter_index_ii_family.i"
 	@echo "... tests/CodeM/test_scatter_index_ii_family.s"
 	@echo "... tests/CodeM/test_series_backward_manifest.o"
 	@echo "... tests/CodeM/test_series_backward_manifest.i"
 	@echo "... tests/CodeM/test_series_backward_manifest.s"
+	@echo "... tests/CodeM/test_series_default_undefined.o"
+	@echo "... tests/CodeM/test_series_default_undefined.i"
+	@echo "... tests/CodeM/test_series_default_undefined.s"
+	@echo "... tests/CodeM/test_series_final_teachings.o"
+	@echo "... tests/CodeM/test_series_final_teachings.i"
+	@echo "... tests/CodeM/test_series_final_teachings.s"
 	@echo "... tests/CodeM/test_series_routing_manifest.o"
 	@echo "... tests/CodeM/test_series_routing_manifest.i"
 	@echo "... tests/CodeM/test_series_routing_manifest.s"
 	@echo "... tests/CodeM/test_series_source_public_api.o"
 	@echo "... tests/CodeM/test_series_source_public_api.i"
 	@echo "... tests/CodeM/test_series_source_public_api.s"
+	@echo "... tests/CodeM/test_series_transform_activation_ii.o"
+	@echo "... tests/CodeM/test_series_transform_activation_ii.i"
+	@echo "... tests/CodeM/test_series_transform_activation_ii.s"
+	@echo "... tests/CodeM/test_series_transform_activation_iii.o"
+	@echo "... tests/CodeM/test_series_transform_activation_iii.i"
+	@echo "... tests/CodeM/test_series_transform_activation_iii.s"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.o"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.i"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.s"
@@ -13986,6 +14697,9 @@ help:
 	@echo "... tests/CodeN/test_coden_patch24_note_format.o"
 	@echo "... tests/CodeN/test_coden_patch24_note_format.i"
 	@echo "... tests/CodeN/test_coden_patch24_note_format.s"
+	@echo "... tests/CodeN/test_coden_patch24_tex_tail.o"
+	@echo "... tests/CodeN/test_coden_patch24_tex_tail.i"
+	@echo "... tests/CodeN/test_coden_patch24_tex_tail.s"
 .PHONY : help
 
 

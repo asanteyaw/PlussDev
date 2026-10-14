@@ -13,8 +13,8 @@ Slate::notnull() const -> Slate
 
 ## What It Does
 
-Returns a `Bool`-typed `Series` thread, same length as `*this`, marking `true`
-wherever the source thread is valid (not `NULL`) and `false` wherever it's `NULL` —
+Returns a `Bool`-typed `Series` slate, same length as `*this`, marking `true`
+wherever the source slate is valid (not `NULL`) and `false` wherever it's `NULL` —
 the exact logical inverse of [`isnull()`](isnull.md). Works on every payload kind,
 with the same validity-mask-only semantics (and the same `Timeline`/`TimeIndex`
 internal-validity folding) described on that page.
@@ -26,7 +26,7 @@ internal-validity folding) described on that page.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`.
+    A new `Bool`-typed `Series` slate, same length as `*this`.
 
 ## Examples
 
@@ -60,7 +60,7 @@ ptype: Series
 
 - The exact logical inverse of [`isnull()`](isnull.md); see that page for the
   validity-mask-only semantics and the `Timeline`/`TimeIndex` nuance.
-- A thread with no validity mask at all reports `true` at every position.
+- A slate with no validity mask at all reports `true` at every position.
 
 ## See Also
 

@@ -12,11 +12,11 @@ SlateLabelAccessor::range() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread's case labels with an explicit default integer
+Replaces the bound slate's case labels with an explicit default integer
 range (`0, 1, 2, ...`) — a direct forward to `Slate::rangelbl()`. Visually
-identical to a thread that never had case labels set at all, but — unlike
+identical to a slate that never had case labels set at all, but — unlike
 [`reset()`](reset.md) — [`has()`](has.md) reports `true` afterward, since
-`range()` actively attaches a labels thread rather than clearing one.
+`range()` actively attaches a labels slate rather than clearing one.
 
 ## Parameters
 
@@ -25,7 +25,7 @@ identical to a thread that never had case labels set at all, but — unlike
 ## Returns
 
 `Slate`
-    A new thread, holding the same values as `*this`, with an explicit
+    A new slate, holding the same values as `*this`, with an explicit
     default integer range as its case labels.
 
 ## Examples
@@ -71,14 +71,14 @@ ptype: Series
 true
 ```
 
-The display now looks like a thread with no case labels at all, but `has()`
-still reports `true` — `range()` actively attached a labels thread, it didn't
+The display now looks like a slate with no case labels at all, but `has()`
+still reports `true` — `range()` actively attached a labels slate, it didn't
 clear one. Contrast with [`reset()`](reset.md), which produces the same
 display but leaves `has()` `false`.
 
 ## Notes
 
-- Produces the same visible `0, 1, 2, ...` display as a never-labeled thread,
+- Produces the same visible `0, 1, 2, ...` display as a never-labeled slate,
   but [`has()`](has.md) reports `true` afterward — see
   [`reset()`](reset.md) for the version that leaves `has()` `false`.
 - Identical to calling `Slate::rangelbl()` directly.

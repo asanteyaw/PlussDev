@@ -13,7 +13,7 @@ Slate::bounded(const WindowBoundsFn& bounds, WindowStatistic statistic = WindowS
 
 ## What It Does
 
-Computes a window statistic over the thread using **custom, per-row window
+Computes a window statistic over the slate using **custom, per-row window
 boundaries** you supply — the general-purpose escape hatch behind
 [`weigh()`](weigh.md) and the fixed-width rolling window methods on
 [`Slate::ts()`](ts.md)'s `TimeSeriesAccessor` (`rolling()`, `expanding()`,
@@ -22,7 +22,7 @@ internally and delegate to the same machinery this method exposes directly).
 Reach for `bounded()` when a fixed rolling width isn't expressive enough and
 each output row needs its own, independently-computed window.
 
-`bounds` is called once, given the thread's `size()` and the active
+`bounds` is called once, given the slate's `size()` and the active
 `WindowOptions`, and must return a `{starts, ends}` pair of equal-length
 vectors — one `[start, end)` half-open interval per output row. Restricted to
 numeric `Series` payloads; every other kind or dtype throws.
@@ -48,7 +48,7 @@ numeric `Series` payloads; every other kind or dtype throws.
 ## Returns
 
 `Slate`
-    A new thread the same length as the source, holding the requested
+    A new slate the same length as the source, holding the requested
     statistic evaluated over each row's custom window.
 
 ## Examples
@@ -130,7 +130,7 @@ window: `15 = mean(10, 20)`, `25 = mean(20, 30)`, and so on.
 ## Notes
 
 - `bounds` must return `starts`/`ends` vectors the same length as the source
-  thread; each row's window is `[start, end)`, half-open.
+  slate; each row's window is `[start, end)`, half-open.
 - `centered` and `closure` in `options` have no effect here, since your
   `bounds` callback already fully controls each window's shape — they only
   matter for the fixed-width wrappers built on top of this method.

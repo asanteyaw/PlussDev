@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -76,7 +76,7 @@ more than once — the corresponding row is duplicated once per occurrence.</p>
 <p><strong>indices</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, second overload)</p>
 <p>The same case positions, supplied as a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind <code class="docutils literal notranslate"><span class="pre">Slate</span></code> instead of a
 <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>. Same negative-index and repetition rules apply. A non-numeric <code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::take:</span> <span class="pre">indices</span> <span class="pre">thread</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Series&quot;</span></code>.</p>
+throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::take:</span> <span class="pre">indices</span> <span class="pre">slate</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Series&quot;</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -181,7 +181,7 @@ when the indices are already wrapped in a <code class="docutils literal notransl
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::take: indices thread must be a Series
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::take: indices slate must be a Series
 </pre></div>
 </div>
 </section>
@@ -198,7 +198,7 @@ normalization) is a validation error, not silently clamped.</p></li>
 duplicated case label — useful for bootstrapped resampling or building a synthetic
 frame from an existing one’s rows.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-indices overload requires a numeric (<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind) <code class="docutils literal notranslate"><span class="pre">Slate</span></code>; a
-<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::take:</span> <span class="pre">indices</span> <span class="pre">thread</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Series&quot;</span></code> — see Example 4.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> slate throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::take:</span> <span class="pre">indices</span> <span class="pre">slate</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Series&quot;</span></code> — see Example 4.</p></li>
 </ul>
 </section>
 <section id="see-also">

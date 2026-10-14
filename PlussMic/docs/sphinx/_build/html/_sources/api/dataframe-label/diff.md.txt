@@ -34,7 +34,7 @@ case labels.
 
 ## Examples
 
-Example 1. Subtract a set of values from a case-label thread with a repeat.
+Example 1. Subtract a set of values from a case-label slate with a repeat.
 
 ```cpp
 using namespace pluss::table;

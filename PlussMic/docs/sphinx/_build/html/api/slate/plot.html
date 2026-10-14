@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,13 +52,13 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Enters the single-series charting accessor bound to the current <code class="docutils literal notranslate"><span class="pre">Slate</span></code> — line, step,
 area, scatter, bar, histogram, box, violin, pie, and a handful of diagnostic plots, one
-chart kind per method. <code class="docutils literal notranslate"><span class="pre">plot()</span></code> itself draws nothing; it just binds the thread (and,
+chart kind per method. <code class="docutils literal notranslate"><span class="pre">plot()</span></code> itself draws nothing; it just binds the slate (and,
 optionally, shared chart-wide defaults, the same <code class="docutils literal notranslate"><span class="pre">DataFramePlotOptions</span></code> struct
 <a class="reference internal" href="../dataframe/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::plot</span></code></span></a> takes) and hands back an accessor whose methods
 each return a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — the same figure type every 2D and 3D <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> chart
 method returns.</p>
-<p>Every method on the returned accessor works by wrapping the bound thread (and, for
-two-thread overloads, a second companion thread) into a small one- or two-column
+<p>Every method on the returned accessor works by wrapping the bound slate (and, for
+two-slate overloads, a second companion slate) into a small one- or two-column
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and delegating straight into the matching method on
 <a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor</span></code></span></a> — see the
 <a class="reference internal" href="../../slate_plot_api_reference.html"><span class="doc std std-doc">SlatePlotAccessor API Reference</span></a>’s important callout,
@@ -77,7 +77,7 @@ explicitly via a second <code class="docutils literal notranslate"><span class="
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor</span></code>
-An accessor bound to the current thread (and, if given, <code class="docutils literal notranslate"><span class="pre">options</span></code>). Each of its methods
+An accessor bound to the current slate (and, if given, <code class="docutils literal notranslate"><span class="pre">options</span></code>). Each of its methods
 (<code class="docutils literal notranslate"><span class="pre">.line()</span></code>, <code class="docutils literal notranslate"><span class="pre">.scatter()</span></code>, <code class="docutils literal notranslate"><span class="pre">.bar()</span></code>, <code class="docutils literal notranslate"><span class="pre">.hist()</span></code>, and so on) builds and returns a
 <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure, ready to further customize or save.</p>
 </section>
@@ -95,7 +95,7 @@ An accessor bound to the current thread (and, if given, <code class="docutils li
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">revenue.plot()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor</span></code> bound to <code class="docutils literal notranslate"><span class="pre">revenue</span></code>; <code class="docutils literal notranslate"><span class="pre">.line()</span></code> draws
 <code class="docutils literal notranslate"><span class="pre">revenue</span></code>’s own values against the default numeric case index (since no companion <code class="docutils literal notranslate"><span class="pre">x</span></code>
-thread is given) and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, which <code class="docutils literal notranslate"><span class="pre">.save_svg(...)</span></code> then writes to
+slate is given) and returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, which <code class="docutils literal notranslate"><span class="pre">.save_svg(...)</span></code> then writes to
 disk.</p>
 <p>Example 2. Share chart-wide options (figure size) across every chart drawn from one
 accessor.</p>
@@ -112,7 +112,7 @@ accessor.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot()</span></code> never touches or copies the thread’s data beyond what the requested chart needs
+<li><p><code class="docutils literal notranslate"><span class="pre">plot()</span></code> never touches or copies the slate’s data beyond what the requested chart needs
 to draw — it is a lightweight accessor, not a materialized copy.</p></li>
 <li><p>Every chart method returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>; that type’s own methods (theming,
 sizing, legends, exporting) are documented in <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s reference, not here.</p></li>

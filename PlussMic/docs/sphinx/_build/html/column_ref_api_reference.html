@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=e742a746"></script>
+    <script src="_static/api_nav.js?v=c8d94b85"></script>
     <script src="_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -60,7 +60,7 @@
 </section>
 <section id="what-it-does">
 <h4>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h4>
-<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> values from the referenced column as a thread.</p>
+<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> values from the referenced column as a slate.</p>
 </section>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
@@ -222,7 +222,7 @@ Value produced by this call.</p>
 </section>
 <section id="id14">
 <h4>What It Does<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h4>
-<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
+<p>Returns the referenced column as a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> object.</p>
 </section>
 <section id="id15">
 <h4>Parameters<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h4>
@@ -319,7 +319,7 @@ Value produced by this call.</p>
 <h4>Practical Behavior<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">value()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> wrapper over the first element of the referenced column.</p></li>
-<li><p>Use this when you need typed scalar extraction rather than a whole-column thread.</p></li>
+<li><p>Use this when you need typed scalar extraction rather than a whole-column slate.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#slate">

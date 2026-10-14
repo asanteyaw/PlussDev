@@ -12,7 +12,7 @@ SlateTimelineAccessor::second() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with its second-of-minute (`0`-`59`), as a numeric
+Replaces the bound slate with its second-of-minute (`0`-`59`), as a numeric
 `Series`.
 
 ## Parameters
@@ -22,7 +22,7 @@ Replaces the bound thread with its second-of-minute (`0`-`59`), as a numeric
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread,
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
     holding each row's second-of-minute.
 
 ## Examples
@@ -57,11 +57,11 @@ isn't exposed by any single `.tl()` field method; use [`fmt("%f")`](fmt.md) or
 
 ## Notes
 
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`.
-- Reads the local second relative to the thread's current timezone.
+- Reads the local second relative to the slate's current timezone.
 
 ## See Also
 

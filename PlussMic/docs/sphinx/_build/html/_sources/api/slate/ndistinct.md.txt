@@ -13,7 +13,7 @@ Slate::ndistinct(bool dropnull = true) const -> SlateValue
 
 ## What It Does
 
-Returns the number of distinct values in the thread, as a scalar
+Returns the number of distinct values in the slate, as a scalar
 `SlateValue`. This is exactly `distinct(dropnull).size()` wrapped as a scalar
 — the same grouping rule (each value's string form) and the same `dropnull`
 convention as [`distinct()`](distinct.md) apply here; only the return shape

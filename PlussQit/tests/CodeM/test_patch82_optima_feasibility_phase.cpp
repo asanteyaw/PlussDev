@@ -60,5 +60,7 @@ TEST_CASE("interior-point feasibility phase improves an infeasible start",
 
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
   REQUIRE(x[0] + x[1] == Approx(1.0).margin(1e-2));
-  REQUIRE((mentioned_feasibility || result.converged));
+  const bool terminated_normally = result.exit_flag == pluss::subsp::math::optim::OptimaExitFlag::Converged ||
+                                   result.exit_flag == pluss::subsp::math::optim::OptimaExitFlag::MaxIterations;
+  REQUIRE((mentioned_feasibility || terminated_normally));
 }

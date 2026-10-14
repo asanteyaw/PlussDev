@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Reorders (and, depending on <code class="docutils literal notranslate"><span class="pre">options.align</span></code>, relabels) the bound stream to
 match <code class="docutils literal notranslate"><span class="pre">target_labels</span></code>, following exactly the same <code class="docutils literal notranslate"><span class="pre">AlignBy</span></code>/<code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code>
-rules as <a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>:</p>
+rules as <a class="reference internal" href="../slate/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code></strong> (the default): <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> is used only for its
 <em>length</em> — the values and labels pass through positionally unchanged. See
@@ -67,7 +67,7 @@ is set.</p></li>
 <p>AlignBy::Both is rejected for a single Stream
 <code class="docutils literal notranslate"><span class="pre">AlignBy::Both</span></code> (matching by <em>both</em> case label and feature) is a
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-only concept — passing it here throws, the same as it would for
-a bare <a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a> call. Only <code class="docutils literal notranslate"><span class="pre">Pos</span></code> and <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>
+a bare <a class="reference internal" href="../slate/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a> call. Only <code class="docutils literal notranslate"><span class="pre">Pos</span></code> and <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>
 are meaningful for a single <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p>
 </div>
 </section>
@@ -196,7 +196,7 @@ type your target labels already exist as.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>: the underlying single-column
+<li><p><a class="reference internal" href="../slate/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>: the underlying single-column
 alignment semantics this accessor’s <code class="docutils literal notranslate"><span class="pre">align()</span></code> follows exactly.</p></li>
 <li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamLabelAccessor::set</span></code></span></a>: attach a label outright instead of
 reordering by an existing one.</p></li>

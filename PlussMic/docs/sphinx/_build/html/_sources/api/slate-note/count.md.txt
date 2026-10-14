@@ -13,7 +13,7 @@ SlateNoteAccessor::count(std::string_view pattern, const TextOptions& options) c
 
 ## What It Does
 
-Counts non-overlapping occurrences of `pattern` in each cell of the bound thread,
+Counts non-overlapping occurrences of `pattern` in each cell of the bound slate,
 replacing each cell with an `Int64` — the payload kind changes from `Note` to
 `Series`, same as [`length()`](length.md).
 
@@ -65,7 +65,7 @@ been found; `-1` means no cap.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread, holding
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate, holding
     each cell's match count.
 
 ## Examples
@@ -158,11 +158,11 @@ continuing and clamping the final number.
   single-argument overload, which defaults to literal mode.
 - Matches are always non-overlapping: after a match, scanning resumes immediately
   past it.
-- Changes the bound thread's payload kind from `Note` to `Series` (`Int64`).
+- Changes the bound slate's payload kind from `Note` to `Series` (`Int64`).
 - A null cell on input stays null on output.
 - `options.prefix` is part of `TextOptions` but has no effect on `count()` — it's
   only meaningful to [`split()`](split.md) and [`indicate()`](indicate.md).
-- Requires the bound thread to be `Note`-kind, or the call throws.
+- Requires the bound slate to be `Note`-kind, or the call throws.
 
 ## See Also
 

@@ -16,8 +16,8 @@ SlatePlotAccessor::scatter(const Slate& x, const Slate& hue, const ScatterPlotOp
 
 ## What It Does
 
-Draws one point per row at `(x, value)`, where `value` is the bound thread, optionally
-split into separate, distinctly colored/labeled point groups by a companion `hue` thread.
+Draws one point per row at `(x, value)`, where `value` is the bound slate, optionally
+split into separate, distinctly colored/labeled point groups by a companion `hue` slate.
 The single-series specialization of
 [`DataFramePlotAccessor::scatter`](../../api/dataframe-plot/scatter.md).
 
@@ -34,7 +34,7 @@ exact same fallback-naming pattern.
 ```{important} hue must be Note-, Timeline-, or TimeIndex-kind, same as the 2D accessor
 Because `scatter()` always delegates to
 [`DataFramePlotAccessor::scatter`](../../api/dataframe-plot/scatter.md)'s explicit
-`hue_feature` argument (never through `default_hue_feature`), a `hue` thread that resolves
+`hue_feature` argument (never through `default_hue_feature`), a `hue` slate that resolves
 to a plain numeric `Series` throws `"DataFrame::plot().scatter: hue feature 'hue' must be
 note-like or time-like"` — see that page's important callout for the full rule. If you want
 to color by a numeric value, bucket or cast it to text first.
@@ -43,11 +43,11 @@ to color by a numeric value, bucket or cast it to text first.
 ## Parameters
 
 **x** (`const Slate&`, required)
-    The companion thread for the horizontal axis. Must match the bound thread's size, or
-    the call throws `"Slate::plot: thread size mismatch"`.
+    The companion slate for the horizontal axis. Must match the bound slate's size, or
+    the call throws `"Slate::plot: slate size mismatch"`.
 
 **hue** (`const Slate&`, optional)
-    Optional companion thread splitting points into separate colored/labeled groups. Must
+    Optional companion slate splitting points into separate colored/labeled groups. Must
     be Note-, Timeline-, or TimeIndex-kind — see the important callout above.
 
 **options** (`ScatterPlotOptions`)
@@ -82,7 +82,7 @@ Every row becomes one point at `(midterm, final)`; no legend is shown since ther
 
 ![Output of Example 1](img/scatter-1.svg)
 
-Example 2. With a categorical hue thread.
+Example 2. With a categorical hue slate.
 
 ```cpp
 auto cohort = Slate(pluss::make_note({"Morning", "Evening", "Morning", "Evening", "Morning"}));
@@ -131,7 +131,7 @@ chart.show();
 
 ![Output of Example 4](img/scatter-4.svg)
 
-Example 5. `fit_line = true` together with a `hue` thread: one fit line per hue group,
+Example 5. `fit_line = true` together with a `hue` slate: one fit line per hue group,
 color-matched to its own group's points.
 
 ```cpp
@@ -148,7 +148,7 @@ chart.show();
 For fit shapes beyond a polynomial least-squares fit (robust regression, LOWESS, a
 bootstrap confidence interval), `ScatterPlotOptions` has no field for it — reach for
 `PlussPl`'s `pluss::pl::flash::regplot(pane, x, y, options)` directly on a pane you create
-yourself, passing each thread's values as a `pluss::Series` (via `thread.value()`, assigned
+yourself, passing each slate's values as a `pluss::Series` (via `slate.value()`, assigned
 to an explicit `pluss::Series` variable rather than `auto` — see Example 6).
 ```
 
@@ -180,8 +180,8 @@ the full `RegPlotOptions` field list.
 
 - No zero-argument overload — `x` is always required, unlike every other chart method on
   this accessor.
-- `hue` must resolve to a Note-, Timeline-, or TimeIndex-kind thread, or the call throws.
-- A mismatched-size `x` or `hue` throws `"Slate::plot: thread size mismatch"`.
+- `hue` must resolve to a Note-, Timeline-, or TimeIndex-kind slate, or the call throws.
+- A mismatched-size `x` or `hue` throws `"Slate::plot: slate size mismatch"`.
 - `fit_line = true` overlays a line of best fit — one per hue group when `hue` is given.
   For fit shapes beyond a polynomial least-squares fit, see the note above and Example 6
   for `PlussPl`'s `flash::regplot`/`flash::lmplot` instead.
@@ -194,7 +194,7 @@ the full `RegPlotOptions` field list.
   delegates to, including the full `hue_feature` type-requirement explanation and the
   fuller `flash::regplot` writeup in its Example 9.
 - [`SlatePlotAccessor::line`](line.md): connected points against an optional companion
-  thread, instead of an unconnected cloud against a required one.
+  slate, instead of an unconnected cloud against a required one.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pie.html">

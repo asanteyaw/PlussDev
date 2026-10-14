@@ -2,6 +2,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
+#include "pluss/subsp/math/covariance.h"
 #include "pluss/subsp/math/finance/filtering.h"
 #include "pluss/subsp/math/linalg.h"
 
@@ -76,10 +77,8 @@ Series force_obs_matrix_(const Series& y, const char* op) {
   return y;
 }
 
-Series stabilize_cov_(const Series& cov, double jitter, Config cfg) {
-  const Series sym = cov.add(cov.transpose(0, 1)).mul(0.5);
-  const std::int64_t n = sym.sizes()[0];
-  return sym.add(pluss::series::eye(n, cfg).mul(std::max(jitter, 0.0)));
+Series stabilize_cov_(const Series& cov, double jitter) {
+  return pluss::subsp::math::cov_jitter(cov, jitter);
 }
 
 Series row_index_(std::int64_t i, Platform platform) {
@@ -334,9 +333,9 @@ SsmForecastResult run_forecast_with_state_(std::int64_t horizon,
 
   for (std::int64_t h = 0; h < horizon; ++h) {
     x = ssm.A.matmul(x);
-    p = stabilize_cov_(ssm.A.matmul(p).matmul(ssm.A.transpose(0, 1)).add(ssm.Q), kTiny, ssm.out_cfg);
+    p = stabilize_cov_(ssm.A.matmul(p).matmul(ssm.A.transpose(0, 1)).add(ssm.Q), kTiny);
     const Series y = ssm.C.matmul(x);
-    const Series s = stabilize_cov_(ssm.C.matmul(p).matmul(ssm.C.transpose(0, 1)).add(ssm.R), kTiny, ssm.out_cfg);
+    const Series s = stabilize_cov_(ssm.C.matmul(p).matmul(ssm.C.transpose(0, 1)).add(ssm.R), kTiny);
 
     state_rows.push_back(x.reshape({1, ssm.n_state}));
     state_cov_rows.push_back(p.reshape({1, ssm.n_state, ssm.n_state}));
@@ -396,7 +395,7 @@ SsmSmoothResult Ssm::smooth(const Series& y,
     const Series ps_next = ps[static_cast<std::size_t>(t + 1)];
     const Series xs_t = xf_t.add(j.matmul(xs_next.sub(xp_next)));
     const Series ps_t =
-        stabilize_cov_(pf_t.add(j.matmul(ps_next.sub(pp_next)).matmul(j.transpose(0, 1))), kTiny, ssm.out_cfg);
+        stabilize_cov_(pf_t.add(j.matmul(ps_next.sub(pp_next)).matmul(j.transpose(0, 1))), kTiny);
 
     xs[static_cast<std::size_t>(t)] = xs_t;
     ps[static_cast<std::size_t>(t)] = ps_t;
@@ -454,7 +453,7 @@ SsmSimResult Ssm::simulate(std::int64_t num_observations,
   PLUSS_CHECK(num_paths > 0, "subsp::stats::ts::Ssm::simulate: num_paths must be > 0");
   const LoadedSsmModel ssm = load_model_(model, cfg, op);
 
-  const Series cov0 = stabilize_cov_(ssm.cov0, kTiny, ssm.out_cfg);
+  const Series cov0 = stabilize_cov_(ssm.cov0, kTiny);
   const Series chol0 = pluss::subsp::math::linalg::cholesky(cov0).to(ssm.out_cfg.platform, ssm.out_cfg.dtype);
   std::uint64_t draw_seed = (seed == 0U) ? 0xA5EED1234ULL : seed;
 

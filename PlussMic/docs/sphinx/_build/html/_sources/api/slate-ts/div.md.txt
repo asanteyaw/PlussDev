@@ -12,21 +12,21 @@ TimeSeriesAccessor::div(const Slate& other, const Slate& left_axis, const Slate&
 
 ## What It Does
 
-Divides the bound thread by `other` **after first reindexing `other` onto the
-bound thread's own positions**, using `left_axis` (the bound thread's time
+Divides the bound slate by `other` **after first reindexing `other` onto the
+bound slate's own positions**, using `left_axis` (the bound slate's time
 axis) and `right_axis` (`other`'s own time axis) — exactly the same alignment
 [`align_to()`](align_to.md) performs, run automatically before an ordinary
-[`Slate::div`](../thread/div.md). See [`add()`](add.md) for the shared
+[`Slate::div`](../slate/div.md). See [`add()`](add.md) for the shared
 alignment mechanics this method also uses.
 
 ## Parameters
 
 **other** (`const Slate&`)
-    The thread to divide by, currently living at `right_axis` ticks.
+    The slate to divide by, currently living at `right_axis` ticks.
 
 **left_axis** (`const Slate&`)
-    The bound thread's own time axis (`Timeline`/`TimeIndex`), same length as
-    the bound thread.
+    The bound slate's own time axis (`Timeline`/`TimeIndex`), same length as
+    the bound slate.
 
 **right_axis** (`const Slate&`)
     `other`'s time axis (`Timeline`/`TimeIndex`), same length as `other`.
@@ -38,12 +38,12 @@ alignment mechanics this method also uses.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound thread, holding
+    A new slate, same length as the bound slate, holding
     `bound / aligned(other)` at each position.
 
 ## Examples
 
-Example 1. Two threads on different daily axes, divided after exact alignment.
+Example 1. Two slates on different daily axes, divided after exact alignment.
 
 ```cpp
 using namespace pluss::table;
@@ -74,7 +74,7 @@ Only `2024-01-02` has an exact tick match on both sides (`20 / 100 = 0.2`); the
 other positions have no matching `right_axis` tick under `Exact`, so they're
 `NULL`.
 
-Example 2. The same threads, aligned with `Backward` — `other`'s most recent
+Example 2. The same slates, aligned with `Backward` — `other`'s most recent
 known value carries forward.
 
 ```cpp
@@ -114,19 +114,19 @@ TimeSeriesAccessor::div: right values and right time axis length mismatch
 
 ## Notes
 
-- `left_axis` must be the same length as the bound thread, and `right_axis`
+- `left_axis` must be the same length as the bound slate, and `right_axis`
   must be the same length as `other`, or it throws a length-mismatch error
   naming whichever side is wrong.
 - The alignment step is identical to [`align_to()`](align_to.md).
 - The division itself, once `other` is aligned, is an ordinary
-  [`Slate::div`](../thread/div.md) — a `NULL` on either side produces `NULL`,
-  and division-by-zero follows [`Slate::div`](../thread/div.md)'s own rules.
+  [`Slate::div`](../slate/div.md) — a `NULL` on either side produces `NULL`,
+  and division-by-zero follows [`Slate::div`](../slate/div.md)'s own rules.
 
 ## See Also
 
 - [`TimeSeriesAccessor::add`](add.md): the same align-then-combine pattern,
   fully worked through with both alignment modes.
-- [`Slate::div`](../thread/div.md): the plain positional division this method
+- [`Slate::div`](../slate/div.md): the plain positional division this method
   performs after alignment.
 
 <div class="pluss-inline-prev-next">

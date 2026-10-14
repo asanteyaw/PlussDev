@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 is every position whose <code class="docutils literal notranslate"><span class="pre">axis</span></code> tick falls within <code class="docutils literal notranslate"><span class="pre">duration_nanos</span></code> nanoseconds of
 that position’s own tick (per <code class="docutils literal notranslate"><span class="pre">closure</span></code>), rather than a fixed row count. <code class="docutils literal notranslate"><span class="pre">axis</span></code>
 can be a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, a <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or a plain <code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> of nanosecond
-ticks; it must be the same length as the bound thread, contain no missing
+ticks; it must be the same length as the bound slate, contain no missing
 entries, and be sorted ascending (not necessarily evenly spaced — the window
 width is a genuine span of time, so it naturally covers a different <em>number</em> of
 positions at each row when ticks are irregular).</p>
@@ -72,7 +72,7 @@ position.</p></li>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
 A <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or <code class="docutils literal notranslate"><span class="pre">Int64</span></code>-nanoseconds <code class="docutils literal notranslate"><span class="pre">Series</span></code>, the same length
-as the bound thread, non-missing and sorted ascending.</p>
+as the bound slate, non-missing and sorted ascending.</p>
 <p><strong>duration_nanos</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
 The window width, in nanoseconds. Must be positive.</p>
 <p><strong>statistic</strong> (<code class="docutils literal notranslate"><span class="pre">TimeWindowStatistic</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)
@@ -87,7 +87,7 @@ Which end(s) of each duration window are inclusive.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as the bound source, holding the duration-window
+A new slate, same length as the bound source, holding the duration-window
 statistic at each position.</p>
 </section>
 <section id="examples">
@@ -181,7 +181,7 @@ it throws <code class="docutils literal notranslate"><span class="pre">&quot;Sla
 <li><p>Only <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, and <code class="docutils literal notranslate"><span class="pre">Std</span></code> are supported (unlike the fixed-window
 <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>, which also supports <code class="docutils literal notranslate"><span class="pre">Minimum</span></code>/<code class="docutils literal notranslate"><span class="pre">Maximum</span></code>/<code class="docutils literal notranslate"><span class="pre">Sem</span></code>/
 <code class="docutils literal notranslate"><span class="pre">Skew</span></code>/<code class="docutils literal notranslate"><span class="pre">Kurtosis</span></code>).</p></li>
-<li><p>A pre-existing missing entry in the bound thread (not the axis) is skipped
+<li><p>A pre-existing missing entry in the bound slate (not the axis) is skipped
 within any window that contains it, the same as <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>.</p></li>
 </ul>
 </section>

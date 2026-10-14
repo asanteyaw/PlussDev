@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Counts entries in the thread — but exactly <em>what</em> it counts depends on the
+<p>Counts entries in the slate — but exactly <em>what</em> it counts depends on the
 payload’s dtype:</p>
 <ul class="simple">
 <li><p><strong>Non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> payload</strong> (any numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>):
@@ -132,7 +132,7 @@ catches it before delegating further, for <code class="docutils literal notransl
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>For non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> payloads, <code class="docutils literal notranslate"><span class="pre">count()</span></code> is always the non-missing count — a
-thread with no validity mask reports its full <code class="docutils literal notranslate"><span class="pre">size()</span></code>.</p></li>
+slate with no validity mask reports its full <code class="docutils literal notranslate"><span class="pre">size()</span></code>.</p></li>
 <li><p>For a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> specifically, <code class="docutils literal notranslate"><span class="pre">count_true</span></code> switches between counting
 <code class="docutils literal notranslate"><span class="pre">true</span></code>s and counting <code class="docutils literal notranslate"><span class="pre">false</span></code>s — a fundamentally different question from
 missingness.</p></li>
@@ -142,7 +142,7 @@ missingness.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::size</span></code></span></a>: the thread’s total length, missing or not.</p></li>
+<li><p><a class="reference internal" href="size.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::size</span></code></span></a>: the slate’s total length, missing or not.</p></li>
 <li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::isnull</span></code></span></a> / <a class="reference internal" href="notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::notnull</span></code></span></a>: inspect
 missingness position by position instead of a single count.</p></li>
 <li><p><a class="reference internal" href="any.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::any</span></code></span></a> / <a class="reference internal" href="all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::all</span></code></span></a>: other <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-only scalar

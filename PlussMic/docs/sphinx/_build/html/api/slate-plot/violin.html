@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,13 +53,13 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Two modes, chosen by which overload is called:</p>
 <ul class="simple">
-<li><p><strong>Single-violin mode</strong> (<code class="docutils literal notranslate"><span class="pre">violin(options)</span></code>): draws one violin for the bound thread’s own
+<li><p><strong>Single-violin mode</strong> (<code class="docutils literal notranslate"><span class="pre">violin(options)</span></code>): draws one violin for the bound slate’s own
 distribution — the single-series specialization of
 <a class="reference internal" href="../dataframe-plot/violin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::violin</span></code></span></a>’s feature-list
 mode, always with exactly one feature (there is no multi-feature form here, since a
 <code class="docutils literal notranslate"><span class="pre">Slate</span></code> is always one series).</p></li>
-<li><p><strong>Value/group mode</strong> (<code class="docutils literal notranslate"><span class="pre">violin(group[,</span> <span class="pre">options])</span></code>): splits the bound thread’s values into
-one violin per distinct value of a companion <code class="docutils literal notranslate"><span class="pre">group</span></code> thread — the single-series
+<li><p><strong>Value/group mode</strong> (<code class="docutils literal notranslate"><span class="pre">violin(group[,</span> <span class="pre">options])</span></code>): splits the bound slate’s values into
+one violin per distinct value of a companion <code class="docutils literal notranslate"><span class="pre">group</span></code> slate — the single-series
 specialization of the 2D accessor’s <code class="docutils literal notranslate"><span class="pre">violin(value_feature,</span> <span class="pre">group_feature[,</span> <span class="pre">options])</span></code>
 overload.</p></li>
 </ul>
@@ -67,7 +67,7 @@ overload.</p></li>
 <p class="admonition-title">Important</p>
 <p>group accepts a numeric Slate too, unlike scatter()’s hue
 Exactly like <a class="reference internal" href="../dataframe-plot/violin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::violin</span></code></span></a>’s
-value/group mode, a numeric <code class="docutils literal notranslate"><span class="pre">group</span></code> thread isn’t rejected — its raw distinct values become
+value/group mode, a numeric <code class="docutils literal notranslate"><span class="pre">group</span></code> slate isn’t rejected — its raw distinct values become
 violin group positions directly, rather than being cast to text. See that page’s important
 callout for why this is rarely what’s wanted unless the numeric column really is a
 small-cardinality code.</p>
@@ -76,9 +76,9 @@ small-cardinality code.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>group</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, value/group mode)
-The companion thread defining violin groups — text-like or numeric, see the important
-callout above. Must match the bound thread’s size, or the call throws
-<code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p>
+The companion slate defining violin groups — text-like or numeric, see the important
+callout above. Must match the bound slate’s size, or the call throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">ViolinPlotOptions</span></code>)
 The identical struct documented on
 <a class="reference internal" href="../dataframe-plot/violin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::violin</span></code></span></a>
@@ -103,7 +103,7 @@ per distinct group value (value/group mode).</p>
 </pre></div>
 </div>
 <p><img alt="Output of Example 1" src="../../_images/violin-11.svg" /></p>
-<p>Example 2. Value/group mode with a text-like group thread.</p>
+<p>Example 2. Value/group mode with a text-like group slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">71.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">79.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">82.0</span><span class="p">}));</span>
 <span class="n">score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">score</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;score&quot;</span><span class="p">);</span>
 
@@ -133,7 +133,7 @@ three scores.</p>
 <ul class="simple">
 <li><p>Single-violin mode always draws exactly one violin — there is no multi-feature form the
 way the 2D accessor’s feature-list mode has.</p></li>
-<li><p>Value/group mode accepts a numeric <code class="docutils literal notranslate"><span class="pre">group</span></code> thread, unlike
+<li><p>Value/group mode accepts a numeric <code class="docutils literal notranslate"><span class="pre">group</span></code> slate, unlike
 <a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::scatter</span></code></span></a>’s stricter <code class="docutils literal notranslate"><span class="pre">hue</span></code> — see the important callout
 above.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for how to view or save the

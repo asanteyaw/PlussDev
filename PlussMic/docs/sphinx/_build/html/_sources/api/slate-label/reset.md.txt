@@ -12,10 +12,10 @@ SlateLabelAccessor::reset() const -> Slate
 
 ## What It Does
 
-Clears the bound thread's case labels entirely — a direct forward to
+Clears the bound slate's case labels entirely — a direct forward to
 `Slate::clear_caselbl()`. Unlike [`range()`](range.md), which *attaches* an
-explicit default-range labels thread, `reset()` removes the case-label
-attachment altogether, so the thread displays with the default `0, 1, 2, ...`
+explicit default-range labels slate, `reset()` removes the case-label
+attachment altogether, so the slate displays with the default `0, 1, 2, ...`
 positions computed on the fly rather than stored.
 
 ## Parameters
@@ -25,7 +25,7 @@ positions computed on the fly rather than stored.
 ## Returns
 
 `Slate`
-    A new thread, holding the same values as `*this`, with no case labels
+    A new slate, holding the same values as `*this`, with no case labels
     attached.
 
 ## Examples
@@ -83,7 +83,7 @@ rather than attaching a fresh default range.
 ## See Also
 
 - [`SlateLabelAccessor::range`](range.md): visually identical result, but
-  actively attaches a default-range labels thread rather than clearing one.
+  actively attaches a default-range labels slate rather than clearing one.
 - [`SlateLabelAccessor::set`](set.md): the operation `reset()` undoes.
 
 <div class="pluss-inline-prev-next">

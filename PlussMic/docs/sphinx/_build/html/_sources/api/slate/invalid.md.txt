@@ -13,7 +13,7 @@ Slate::invalid() const -> Slate
 
 ## What It Does
 
-Returns a `Bool`-typed `Series` thread, same length as `*this`, marking `true`
+Returns a `Bool`-typed `Series` slate, same length as `*this`, marking `true`
 wherever a cell should be treated as unusable data. The exact meaning depends on
 payload kind:
 
@@ -25,7 +25,7 @@ payload kind:
   temporal payloads, so the two checks coincide.
 
 ```{important} invalid() is not isfinite()'s exact opposite for masked cells
-For `Series`-kind threads, `invalid()` and [`isfinite()`](isfinite.md) are close to
+For `Series`-kind slates, `invalid()` and [`isfinite()`](isfinite.md) are close to
 opposites but computed slightly differently under the hood — `invalid()` is built as
 "not finite, or explicitly null," which lands on the same result as `!isfinite()`
 for every practical case, but the two are documented separately here because they're
@@ -39,11 +39,11 @@ implemented via genuinely different code paths, not simply negated from one anot
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`.
+    A new `Bool`-typed `Series` slate, same length as `*this`.
 
 ## Examples
 
-Example 1. On a `Series`-kind thread, `invalid()` catches `NULL`, `NaN`, and `Inf`
+Example 1. On a `Series`-kind slate, `invalid()` catches `NULL`, `NaN`, and `Inf`
 alike.
 
 ```cpp
@@ -70,7 +70,7 @@ Every one of positions `1` through `3` is flagged `true`: `NaN`, `Inf`, and
 masked-`NULL` are all "invalid" together — a strictly broader net than
 [`isnull()`](isnull.md) alone would catch (which would only flag position `3`).
 
-Example 2. On a `Note`-kind thread, `invalid()` is exactly `isnull()`.
+Example 2. On a `Note`-kind slate, `invalid()` is exactly `isnull()`.
 
 ```cpp
 auto names = Slate(pluss::make_note({"Ada", "Bola", "Chen"}),
@@ -96,16 +96,16 @@ ptype: Series
 
 ## Notes
 
-- For `Series`-kind threads, `invalid()` is strictly broader than
+- For `Series`-kind slates, `invalid()` is strictly broader than
   [`isnull()`](isnull.md) — it also catches `NaN` and `±Inf`.
 - For every other kind, `invalid()` and `isnull()` produce identical results.
-- Always returns a `Bool`-typed `Series` thread, regardless of the source thread's
+- Always returns a `Bool`-typed `Series` slate, regardless of the source slate's
   own kind.
 
 ## See Also
 
 - [`Slate::isnull`](isnull.md): the narrower, validity-mask-only check this method
-  extends for `Series`-kind threads.
+  extends for `Series`-kind slates.
 - [`Slate::isfinite`](isfinite.md): the near-opposite numeric check.
 - [`Slate::dropnull`](dropnull.md): remove rows rather than just flagging them.
 

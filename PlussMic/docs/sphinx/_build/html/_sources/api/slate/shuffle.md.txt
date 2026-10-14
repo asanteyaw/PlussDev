@@ -13,7 +13,7 @@ Slate::shuffle(std::optional<std::uint64_t> random_state = std::nullopt) const -
 
 ## What It Does
 
-Returns a new thread with every entry in a random order — the same entries as the
+Returns a new slate with every entry in a random order — the same entries as the
 original, just permuted. Internally this builds the index range `[0, size())`,
 seeds a `std::mt19937_64` from `random_state` (or from `std::random_device` if
 `random_state` is omitted), calls `std::shuffle`, and takes the result — so it's
@@ -39,7 +39,7 @@ example output below reflects one particular build.
 ## Returns
 
 `Slate`
-    A new thread of the same length and kind, with entries reordered.
+    A new slate of the same length and kind, with entries reordered.
 
 ## Examples
 
@@ -102,7 +102,7 @@ auto d = scores.shuffle();
 
 ## See Also
 
-- [`Slate::sample`](sample.md): draw a random subset (or the whole thread,
+- [`Slate::sample`](sample.md): draw a random subset (or the whole slate,
   reordered) with more control over count/fraction and replacement.
 - [`Slate::arrange`](arrange.md): reorder deterministically by value,
   rather than randomly.

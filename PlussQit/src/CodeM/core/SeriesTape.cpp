@@ -435,6 +435,14 @@ void backpropagate(const Series& loss,
     PLUSS_CHECK(
         compatible_shape_or_scalar_(cur, *sens),
         "series_tape::backpropagate: internal sensitivity shape mismatch for node");
+    if (options.record_propagation &&
+        link->higher_order_support == HigherOrderSupport::Unsupported) {
+      throw_error(
+          std::string("series_tape::backpropagate: operation '") +
+          op_name_of_(link) +
+          "' has a first-order reverse rule that is not certified as tape-traceable; "
+          "higher-order differentiation is rejected rather than returning an unreliable value");
+    }
     PLUSS_CHECK(
         cur.storage().version() == link->output_version,
         std::string("series_tape::backpropagate: captured output Series was modified after graph capture [op=") +

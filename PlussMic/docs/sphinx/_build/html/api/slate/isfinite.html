@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,9 +49,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, marking <code class="docutils literal notranslate"><span class="pre">true</span></code>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, marking <code class="docutils literal notranslate"><span class="pre">true</span></code>
 wherever the value is both a real finite number (not <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, not <code class="docutils literal notranslate"><span class="pre">±Inf</span></code>) <strong>and</strong>
-valid (not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>). Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind. Unlike
+valid (not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>). Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind. Unlike
 <a class="reference internal" href="isnan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnan()</span></code></span></a>, which checks the numeric value alone, <code class="docutils literal notranslate"><span class="pre">isfinite()</span></code> combines
 the numeric check with the validity mask — a masked-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell is <code class="docutils literal notranslate"><span class="pre">false</span></code> here even
 if its underlying stored value happens to be an ordinary finite number.</p>
@@ -63,7 +63,7 @@ if its underlying stored value happens to be an ordinary finite number.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -91,7 +91,7 @@ ptype: Series
 finite numbers; position <code class="docutils literal notranslate"><span class="pre">3</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> because it’s masked <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, even though its
 underlying stored value (<code class="docutils literal notranslate"><span class="pre">4.0</span></code>) is an ordinary finite number. Only position <code class="docutils literal notranslate"><span class="pre">0</span></code> is
 genuinely finite <em>and</em> valid.</p>
-<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">isfinite</span><span class="p">();</span>
@@ -111,7 +111,7 @@ genuinely finite <em>and</em> valid.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
 <li><p>Combines a numeric finiteness check with the validity mask — <code class="docutils literal notranslate"><span class="pre">false</span></code> for <code class="docutils literal notranslate"><span class="pre">NaN</span></code>,
 <code class="docutils literal notranslate"><span class="pre">±Inf</span></code>, <em>and</em> masked-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells.</p></li>
 <li><p>The exact opposite question <code class="docutils literal notranslate"><span class="pre">NaN</span></code>-only checks like <a class="reference internal" href="isnan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnan()</span></code></span></a> answer:
@@ -126,7 +126,7 @@ validity mask.</p></li>
 <li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::isnull</span></code></span></a>: the validity-mask-only check, without inspecting
 the numeric value.</p></li>
 <li><p><a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::invalid</span></code></span></a>: the logical inverse of this method (for
-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind threads).</p></li>
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slates).</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="invalid.html">

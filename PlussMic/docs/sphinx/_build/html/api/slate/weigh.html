@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,13 +49,13 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a <strong>weighted trailing window</strong> statistic over the thread — like a
+<p>Computes a <strong>weighted trailing window</strong> statistic over the slate — like a
 fixed-width rolling window, but instead of every position in the window
 counting equally, each contributes according to <code class="docutils literal notranslate"><span class="pre">weights</span></code>. The window width is
 implicitly <code class="docutils literal notranslate"><span class="pre">weights.size()</span></code>; <code class="docutils literal notranslate"><span class="pre">weights[0]</span></code> applies to the <em>oldest</em> position in
 each window and <code class="docutils literal notranslate"><span class="pre">weights.back()</span></code> applies to the <em>most recent</em> (current)
 position — the natural left-to-right reading order.</p>
-<p>Near the start of the thread, where a full window isn’t yet available, the
+<p>Near the start of the slate, where a full window isn’t yet available, the
 missing leading positions are treated as absent (contributing zero weight)
 rather than zero-valued — so early rows still compute a properly normalized
 weighted average over however many real positions are actually available,
@@ -88,7 +88,7 @@ throws.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread the same length as the source, holding the weighted
+A new slate the same length as the source, holding the weighted
 statistic at each position.</p>
 </section>
 <section id="examples">
@@ -165,7 +165,7 @@ divided by the weight total (<code class="docutils literal notranslate"><span cl
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">weights[0]</span></code> applies to the oldest position in each window, <code class="docutils literal notranslate"><span class="pre">weights.back()</span></code>
 to the most recent — the window width is always <code class="docutils literal notranslate"><span class="pre">weights.size()</span></code>.</p></li>
-<li><p>Near the start of the thread, unavailable leading positions contribute zero
+<li><p>Near the start of the slate, unavailable leading positions contribute zero
 weight (not a zero value), so early results are still properly normalized
 weighted averages over a smaller effective window.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Minimum</span></code>/<code class="docutils literal notranslate"><span class="pre">Maximum</span></code> ignore the actual weight values — see the important note

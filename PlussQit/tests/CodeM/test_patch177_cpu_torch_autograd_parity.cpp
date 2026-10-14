@@ -2727,6 +2727,39 @@ TEST_CASE("CPU fmin and fmax match libtorch tie and NaN gradient routing",
   }
 }
 
+TEST_CASE("CPU index_reduce extrema ties match libtorch with and without the receiver",
+          "[autodiff][parity][cpu][torch][indexed-write]") {
+  auto options = at::TensorOptions().dtype(at::kDouble);
+  const std::vector<double> base_values{3.0};
+  const std::vector<double> source_values{3.0, 3.0};
+  const std::vector<std::int64_t> index_values{0, 0};
+
+  for (const std::string reduce : {"amax", "amin"}) {
+    for (const bool include_self : {false, true}) {
+      DYNAMIC_SECTION(reduce << (include_self ? " include_self" : " exclude_self")) {
+        Series base = make_series(base_values, {1}).to(ScalarType::Float64);
+        Series source = make_series(source_values, {2}).to(ScalarType::Float64);
+        const Series index = make_series(index_values, {2});
+        base.tracks_slope_(true);
+        source.tracks_slope_(true);
+        const Series output = base.index_reduce(0, index, source, reduce, include_self);
+        output.sum().reverse();
+
+        at::Tensor torch_base = at::tensor(base_values, options).set_requires_grad(true);
+        at::Tensor torch_source = at::tensor(source_values, options).set_requires_grad(true);
+        const at::Tensor torch_index = at::tensor(index_values, at::TensorOptions().dtype(at::kLong));
+        const at::Tensor torch_output =
+            torch_base.index_reduce(0, torch_index, torch_source, reduce, include_self);
+        torch_output.sum().backward();
+
+        require_close(output.to_vec<double>(), torch_values(torch_output));
+        require_close(base.sensitivity().to_vec<double>(), torch_values(torch_base.grad()));
+        require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+      }
+    }
+  }
+}
+
 TEST_CASE("CPU masked scatter routes receiver and source gradients like libtorch",
           "[autodiff][parity][cpu][torch][indexed-write]") {
   const std::vector<double> receiver_values{1.0, 2.0, 3.0, 4.0, 5.0, 6.0};

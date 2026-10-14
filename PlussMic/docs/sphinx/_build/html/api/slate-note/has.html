@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Checks each cell of the bound thread for the presence of <code class="docutils literal notranslate"><span class="pre">needle</span></code> anywhere in the
+<p>Checks each cell of the bound slate for the presence of <code class="docutils literal notranslate"><span class="pre">needle</span></code> anywhere in the
 cell, replacing each cell with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>. It’s the general substring/pattern search on
 this accessor — where <a class="reference internal" href="starts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">starts()</span></code></span></a> and <a class="reference internal" href="ends.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ends()</span></code></span></a> only check the
 two ends of the string, <code class="docutils literal notranslate"><span class="pre">has()</span></code> looks everywhere, and it can be switched between a
@@ -99,7 +99,7 @@ ignores case.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as the bound thread: <code class="docutils literal notranslate"><span class="pre">true</span></code>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as the bound slate: <code class="docutils literal notranslate"><span class="pre">true</span></code>
 where the cell contains a match, <code class="docutils literal notranslate"><span class="pre">false</span></code> where it doesn’t.</p>
 </section>
 <section id="examples">
@@ -201,7 +201,7 @@ overloads default to regex mode. See the warning above.</p></li>
 called.</p></li>
 <li><p>Changes the payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
 <li><p>A null cell on input stays null on output.</p></li>
-<li><p>Requires the bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
+<li><p>Requires the bound slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
 </ul>
 </section>
 <section id="see-also">

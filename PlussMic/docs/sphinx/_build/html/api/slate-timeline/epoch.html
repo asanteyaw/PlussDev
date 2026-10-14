@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces the bound thread with its Unix epoch value in <code class="docutils literal notranslate"><span class="pre">unit</span></code>, as a numeric
+<p>Replaces the bound slate with its Unix epoch value in <code class="docutils literal notranslate"><span class="pre">unit</span></code>, as a numeric
 <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
 </section>
 <section id="parameters">
@@ -62,7 +62,7 @@ a fixed epoch count) throws.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>) thread, same length as the bound thread,
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>) slate, same length as the bound slate,
 holding each row’s epoch count in <code class="docutils literal notranslate"><span class="pre">unit</span></code>.</p>
 </section>
 <section id="examples">
@@ -127,9 +127,9 @@ outright — see <a class="reference internal" href="span.html"><span class="std
 <li><p>The default unit is <code class="docutils literal notranslate"><span class="pre">Nanos</span></code>, not <code class="docutils literal notranslate"><span class="pre">Seconds</span></code>.</p></li>
 <li><p>Only fixed-duration units are accepted (<code class="docutils literal notranslate"><span class="pre">Nanos</span></code>/<code class="docutils literal notranslate"><span class="pre">Micros</span></code>/<code class="docutils literal notranslate"><span class="pre">Millis</span></code>/<code class="docutils literal notranslate"><span class="pre">Seconds</span></code>/
 <code class="docutils literal notranslate"><span class="pre">Days</span></code>); passing <code class="docutils literal notranslate"><span class="pre">Weeks</span></code>, <code class="docutils literal notranslate"><span class="pre">Months</span></code>, <code class="docutils literal notranslate"><span class="pre">Years</span></code>, or <code class="docutils literal notranslate"><span class="pre">BusinessDays</span></code> throws.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound slate to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
-<li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row (or one already null on the underlying thread) displays as
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row (or one already null on the underlying slate) displays as
 <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>, not a sentinel epoch value.</p></li>
 </ul>
 </section>

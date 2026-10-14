@@ -42,7 +42,7 @@ If every row is invalid, `fn` is never called at all and `map()` returns `*this`
 ## Returns
 
 `Slate`
-    A new thread of the same length as `*this`, built by concatenating each row's callback
+    A new slate of the same length as `*this`, built by concatenating each row's callback
     result. `NULL` rows are preserved without invoking `fn`.
 
 ## Examples
@@ -69,7 +69,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Turn each text value into its own length, as a new `Note`-kind thread — the
+Example 2. Turn each text value into its own length, as a new `Note`-kind slate — the
 callback can change payload kind entirely, as long as every row agrees on the new kind.
 
 ```cpp
@@ -139,10 +139,10 @@ Slate::map: output kinds must be consistent
 Example 5. An empty (default-constructed) `std::function` throws immediately.
 
 ```cpp
-auto thread = Slate(pluss::make_series({1.0}));
+auto slate = Slate(pluss::make_series({1.0}));
 try {
   std::function<SlateValue(const SlateValue&)> empty_fn;
-  auto out = thread.map(empty_fn);
+  auto out = slate.map(empty_fn);
 } catch (const std::exception& e) {
   std::cout << e.what();
 }
@@ -157,7 +157,7 @@ Slate::map: callback is empty
 ## Notes
 
 - Runs row by row, calling `fn` once per **valid** row — this is meaningfully slower than a
-  vectorized `Series`/`Note` operation for large threads; prefer the vectorized surface
+  vectorized `Series`/`Note` operation for large slates; prefer the vectorized surface
   (arithmetic, [`compare`](compare.md), [`cast`](cast.md), text methods) when it covers what
   you need.
 - Invalid rows never reach `fn` and are preserved as `NULL`, at whatever kind the valid rows
@@ -170,8 +170,8 @@ Slate::map: callback is empty
 
 - [`Slate::transform`](transform.md): dispatches to `map()` for the `SlateValue`-callback
   overload, and to [`fold`](fold.md) for the `Slate`-callback overload.
-- [`Slate::fold`](fold.md) / [`Slate::flow`](flow.md): whole-thread (not per-row)
-  functional transforms — call `fn` once with the entire thread instead of once per row.
+- [`Slate::fold`](fold.md) / [`Slate::flow`](flow.md): whole-slate (not per-row)
+  functional transforms — call `fn` once with the entire slate instead of once per row.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lxor.html">

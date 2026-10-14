@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,15 +49,15 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes the dot product of two numeric threads — <code class="docutils literal notranslate"><span class="pre">sum(this[i]</span> <span class="pre">*</span> <span class="pre">other[i])</span></code> over every
+<p>Computes the dot product of two numeric slates — <code class="docutils literal notranslate"><span class="pre">sum(this[i]</span> <span class="pre">*</span> <span class="pre">other[i])</span></code> over every
 row — and returns it wrapped in a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> rather than a full <code class="docutils literal notranslate"><span class="pre">Slate</span></code>. Both operands
-must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind threads; every other payload kind is rejected.</p>
+must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slates; every other payload kind is rejected.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>matmul() tolerates no NULL values at all, including ones introduced by alignment
 Unlike most arithmetic on <code class="docutils literal notranslate"><span class="pre">Slate</span></code> (which quietly skips or propagates <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows),
 <code class="docutils literal notranslate"><span class="pre">matmul()</span></code> refuses to run if <em>either</em> operand has any <code class="docutils literal notranslate"><span class="pre">NULL</span></code> at all — whether those <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s
-were already present, or introduced because the two threads don’t line up one-to-one (for
+were already present, or introduced because the two slates don’t line up one-to-one (for
 example, mismatched lengths with no shared case labels to align by). Either situation
 produces the same throw. See Examples 3 and 4.</p>
 </div>
@@ -65,9 +65,9 @@ produces the same throw. See Examples 3 and 4.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
-The right-hand numeric thread to dot with <code class="docutils literal notranslate"><span class="pre">*this</span></code>. Must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind, with
+The right-hand numeric slate to dot with <code class="docutils literal notranslate"><span class="pre">*this</span></code>. Must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind, with
 no <code class="docutils literal notranslate"><span class="pre">NULL</span></code> values, and must line up one-to-one with <code class="docutils literal notranslate"><span class="pre">*this</span></code> (matching length, or
-matching case labels if both threads carry them).</p>
+matching case labels if both slates carry them).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -77,7 +77,7 @@ the other <code class="docutils literal notranslate"><span class="pre">SlateValu
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Dot product of two equal-length numeric threads — read the scalar out with
+<p>Example 1. Dot product of two equal-length numeric slates — read the scalar out with
 <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
@@ -111,7 +111,7 @@ representation, not the friendly row-indexed rendering <code class="docutils lit
 data=[1400]
 </pre></div>
 </div>
-<p>Example 3. Calling <code class="docutils literal notranslate"><span class="pre">matmul()</span></code> on a non-numeric thread throws.</p>
+<p>Example 3. Calling <code class="docutils literal notranslate"><span class="pre">matmul()</span></code> on a non-numeric slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -128,7 +128,7 @@ data=[1400]
 </pre></div>
 </div>
 <p>Example 4. Mismatched lengths (with no shared case labels to align by) also throw — the
-message is the same <code class="docutils literal notranslate"><span class="pre">NULL</span></code>-rejection message as an explicit <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, since the two threads
+message is the same <code class="docutils literal notranslate"><span class="pre">NULL</span></code>-rejection message as an explicit <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, since the two slates
 can’t be lined up one-to-one without introducing a gap.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>

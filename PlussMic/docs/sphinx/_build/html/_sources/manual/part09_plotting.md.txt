@@ -536,7 +536,7 @@ auto fig = df.plot(options).scatter("temperature", "sales");
 ```
 
 When hue is used, PlussMic creates one `Cloud` trace per hue label. Hue features
-should be `Note`, `Timeline`, or `TimeIndex` threads. The typical hue feature is
+should be `Note`, `Timeline`, or `TimeIndex` slates. The typical hue feature is
 a `Note` category such as region, class, symbol, status, or cohort.
 
 `ScatterPlotOptions` contains:
@@ -1291,8 +1291,8 @@ Before sending a plot to users, check:
 
 - The frame is sorted when the plot depends on order.
 - Missing values are intentionally dropped, filled, or left as gaps.
-- Numeric features are really `Series` threads.
-- Categorical labels are `Note` threads or are safely convertible to labels.
+- Numeric features are really `Series` slates.
+- Categorical labels are `Note` slates or are safely convertible to labels.
 - Large datasets are sampled or aggregated before high-density plots.
 - Long category labels use rotated ticks or horizontal bars.
 - `width`, `height`, and tight layout are set for the target document.

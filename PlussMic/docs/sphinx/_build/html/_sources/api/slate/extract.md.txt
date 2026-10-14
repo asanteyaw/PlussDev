@@ -14,8 +14,8 @@ Slate::extract(std::string_view pattern,
 
 ## What It Does
 
-Extracts one or more regex capture groups from a `Note` (string) thread into a new
-`DataFrame` — one feature per capture group. Requires the thread to be `Note`-kind,
+Extracts one or more regex capture groups from a `Note` (string) slate into a new
+`DataFrame` — one feature per capture group. Requires the slate to be `Note`-kind,
 and `pattern` must contain at least one capture group (`(...)`), or the call throws.
 
 ## Parameters
@@ -113,7 +113,7 @@ Slate::extract: pattern needs a capture group
   throws.
 - A non-matching row stays in the output with `NULL` in every capture-group column,
   rather than being dropped — unlike a `filter()`-based approach.
-- A non-`Note` calling thread throws `"Slate::extract: expected Note payload"`.
+- A non-`Note` calling slate throws `"Slate::extract: expected Note payload"`.
 
 ## See Also
 

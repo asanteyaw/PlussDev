@@ -38,21 +38,21 @@ Slate::replace(pluss::null_t from, const pluss::Duration& to) const -> Slate
 
 - **Text substring/regex replace** — `replace(from, to)` and
   `replace(from, to, TextOptions)` — replaces occurrences of a substring or regex
-  pattern *within* each cell's text. Requires a `Note`-kind thread. This is the same
+  pattern *within* each cell's text. Requires a `Note`-kind slate. This is the same
   operation family as [`split()`](split.md) and the rest of the string/text methods.
 - **Whole-value replace** — every other overload — replaces cells whose **entire
   value** exactly equals `from` with `to`, the way a lookup-table substitution works.
   The C++ type of `from`/`to` determines which payload kind participates: `double`
-  pairs with a `Series`-kind thread, a scalar `pluss::Note` pairs with a `Note`-kind
-  thread (matching the **whole cell's text**, not a substring), a scalar
-  `pluss::Timeline` pairs with a `Timeline`-kind thread, and a scalar
-  `pluss::Duration` pairs with a `Duration`-kind thread. The `pluss::Series`
+  pairs with a `Series`-kind slate, a scalar `pluss::Note` pairs with a `Note`-kind
+  slate (matching the **whole cell's text**, not a substring), a scalar
+  `pluss::Timeline` pairs with a `Timeline`-kind slate, and a scalar
+  `pluss::Duration` pairs with a `Duration`-kind slate. The `pluss::Series`
   scalar-wrapper overloads are typed convenience forms that unwrap to the `double`
   overload; passing `pluss::null_t` for `from` fills nulls (equivalent to
   [`fillnull()`](fillnull.md)), and passing it for `to` nullifies matching cells.
 
 ```{danger} replace(Note, Note) is whole-cell exact match, not substring replace
-It is easy to reach for `replace()` on a `Note` thread and land on the wrong overload.
+It is easy to reach for `replace()` on a `Note` slate and land on the wrong overload.
 `replace("Tema", "Tamale")` (two `std::string_view` arguments) replaces the
 **substring** `"Tema"` wherever it occurs inside each cell — a cell like
 `"Tema West"` becomes `"Tamale West"`. `replace(pluss::make_note({"Tema"}),
@@ -86,7 +86,7 @@ difference between the two spellings.
 ## Returns
 
 `Slate`
-    A new thread, same length and kind as `*this` (except a `to = pluss::null_t`
+    A new slate, same length and kind as `*this` (except a `to = pluss::null_t`
     result, which nullifies matching cells rather than changing their kind).
 
 ## Examples
@@ -201,7 +201,7 @@ ptype: Note
 is returned unchanged.
 
 Example 5. Whole-value numeric replace: cells that exactly equal `from` become `to`;
-everything else is untouched. Requires a `Series`-kind thread.
+everything else is untouched. Requires a `Series`-kind slate.
 
 ```cpp
 auto codes = Slate(pluss::make_series({404.0, 200.0, 404.0, 500.0}));
@@ -306,7 +306,7 @@ auto via_series = codes.replace(pluss::make_series({404.0}), pluss::make_series(
 // via_series is identical to out5 from Example 5.
 ```
 
-Example 9. Whole-value replace on a `Timeline`-kind thread: cells equal to a given
+Example 9. Whole-value replace on a `Timeline`-kind slate: cells equal to a given
 timestamp are swapped for another.
 
 ```cpp
@@ -331,7 +331,7 @@ ptype: Timeline
 Both cells matching `2024-01-01T00:00:00Z` are replaced; `2024-01-02T00:00:00Z` is
 untouched.
 
-Example 9b. Whole-value replace on a `Duration`-kind thread works the same way, and
+Example 9b. Whole-value replace on a `Duration`-kind slate works the same way, and
 also composes with `null_t` for nullify/fill — verified against
 `PlussMic/test/temporal_core_migration_tests.cpp:205-213`.
 
@@ -396,12 +396,12 @@ fixed so both spellings fail identically.
   same operation.
 - Whole-value replace requires `from`/`to` scalar wrapper objects (`numel() == 1` /
   `size() == 1`) — a multi-element `pluss::Series`/`pluss::Note`/etc. throws.
-- `replace(Timeline, Timeline)` requires a `Timeline`-kind calling thread;
-  `replace(Duration, Duration)` requires a `Duration`-kind calling thread. Neither
+- `replace(Timeline, Timeline)` requires a `Timeline`-kind calling slate;
+  `replace(Duration, Duration)` requires a `Duration`-kind calling slate. Neither
   accepts the other's payload kind.
 - `replace(null_t, to)` is equivalent to [`fillnull(to)`](fillnull.md).
 - `replace(from, null_t)` nullifies cells matching `from` rather than changing the
-  thread's kind.
+  slate's kind.
 
 ## See Also
 

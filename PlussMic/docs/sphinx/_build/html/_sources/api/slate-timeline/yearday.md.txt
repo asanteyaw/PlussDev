@@ -12,7 +12,7 @@ SlateTimelineAccessor::yearday() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with its 1-based day-of-year (`1`-`366`), as a
+Replaces the bound slate with its 1-based day-of-year (`1`-`366`), as a
 numeric `Series`.
 
 ## Parameters
@@ -22,7 +22,7 @@ numeric `Series`.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread,
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
     holding each row's day-of-year.
 
 ## Examples
@@ -59,9 +59,9 @@ relative to a non-leap year, so early-March dates coincide numerically.
 ## Notes
 
 - 1-based: January 1st is day `1`, never `0`.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`.
 
 ## See Also

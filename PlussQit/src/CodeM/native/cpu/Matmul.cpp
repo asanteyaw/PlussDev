@@ -245,6 +245,81 @@ Series matmul(const Series& a, const Series& b) {
     return matmul_2d_core_(a.reshape({1, k}), b.reshape({k, 1})).reshape({});
   }
 
+  // Fold the batch of the larger operand into one GEMM instead of looping over pages, as libtorch's
+  // _matmul_impl / should_fold does (aten/src/ATen/native/LinearAlgebra.cpp): [..., n, k] @ [k, p]
+  // (or @ [k]) is a single [rows, k] @ [k, p] product.
+  if (a.dim() >= 3 && (b.dim() == 2 || b.dim() == 1)) {
+    const std::int64_t k = a.sizes().back();
+    const Series b2 = (b.dim() == 1) ? b.reshape({b.sizes()[0], 1}) : b;
+    if (b2.sizes()[0] != k) throw_error("matmul: shape mismatch");
+    std::vector<std::int64_t> out_shape(a.sizes().begin(), a.sizes().end() - 1); // [..., n]
+    const std::int64_t rows = product_(out_shape);
+    const std::int64_t p = b2.sizes()[1];
+    if (b.dim() == 2) out_shape.push_back(p);
+    if (rows == 0 || k == 0) {
+      std::vector<std::int64_t> empty_shape(a.sizes().begin(), a.sizes().end() - 1);
+      if (b.dim() == 2) empty_shape.push_back(p);
+      return Series::full(std::span<const std::int64_t>(empty_shape.data(), empty_shape.size()), 0.0, a.scalar_type());
+    }
+    return matmul_2d_core_(a.reshape({rows, k}), b2).reshape(out_shape);
+  }
+  // [n, k] @ [..., k, p]: fold the batch into the columns, one GEMM [n, k] @ [k, B p].
+  if (a.dim() == 2 && b.dim() >= 3) {
+    const std::int64_t n = a.sizes()[0];
+    const std::int64_t k = a.sizes()[1];
+    const std::int64_t p = b.sizes().back();
+    if (b.sizes()[b.dim() - 2] != k) throw_error("matmul: shape mismatch");
+    std::vector<std::int64_t> batch(b.sizes().begin(), b.sizes().end() - 2);
+    const std::int64_t count = product_(batch);
+    if (count != 0 && n != 0 && p != 0 && k != 0) {
+      const Series b3 = b.reshape({count, k, p});
+      const Series cols = b3.permute({1, 0, 2}).reshape({k, count * p});
+      const Series out2 = matmul_2d_core_(a, cols); // [n, count * p]
+      std::vector<std::int64_t> out_shape = batch;
+      out_shape.push_back(n);
+      out_shape.push_back(p);
+      return out2.reshape({n, count, p}).permute({1, 0, 2}).contiguous().reshape(out_shape);
+    }
+  }
+  // Equal batch shapes, contiguous f32/f64: call the GEMM on buffer offsets directly (no per-page
+  // Series allocation / pile). Broadcast batches fall through to the general path below.
+  if (a.dim() == b.dim() && a.dim() >= 3 &&
+      (a.scalar_type() == ScalarType::Float64 || a.scalar_type() == ScalarType::Float32)) {
+    bool same_batch = true;
+    for (std::int64_t i = 0; i + 2 < a.dim(); ++i)
+      same_batch = same_batch && a.sizes()[i] == b.sizes()[i];
+    const std::int64_t n = a.sizes()[a.dim() - 2], k = a.sizes().back();
+    const std::int64_t kb = b.sizes()[b.dim() - 2], p = b.sizes().back();
+    if (same_batch && k == kb) {
+      std::vector<std::int64_t> batch(a.sizes().begin(), a.sizes().end() - 2);
+      const std::int64_t count = product_(batch);
+      std::vector<std::int64_t> out_shape = batch;
+      out_shape.push_back(n);
+      out_shape.push_back(p);
+      Series out = Series::empty(out_shape, a.scalar_type());
+      if (count != 0 && n != 0 && p != 0 && k != 0) {
+        const Series ac = a.contiguous(), bc = b.contiguous();
+        const bool f64 = a.scalar_type() == ScalarType::Float64;
+        for (std::int64_t i = 0; i < count; ++i) {
+          if (f64) {
+            const auto* A = reinterpret_cast<const double*>(ac.raw_data()) + i * n * k;
+            const auto* B = reinterpret_cast<const double*>(bc.raw_data()) + i * k * p;
+            auto* C = reinterpret_cast<double*>(out.raw_data()) + i * n * p;
+            if (!blas::gemm_f64(A, B, C, n, p, k)) naive_matmul_f64(A, B, C, n, p, k);
+          } else {
+            const auto* A = reinterpret_cast<const float*>(ac.raw_data()) + i * n * k;
+            const auto* B = reinterpret_cast<const float*>(bc.raw_data()) + i * k * p;
+            auto* C = reinterpret_cast<float*>(out.raw_data()) + i * n * p;
+            if (!blas::gemm_f32(A, B, C, n, p, k)) naive_matmul_f32(A, B, C, n, p, k);
+          }
+        }
+      } else if (count != 0 && n != 0 && p != 0) {
+        out = Series::full(std::span<const std::int64_t>(out_shape.data(), out_shape.size()), 0.0, a.scalar_type()); // k == 0: empty sum
+      }
+      return out;
+    }
+  }
+
   Series out = batched_matmul_(a, b);
   if (a.dim() == 1) {
     out = out.squeeze(-2);

@@ -13,6 +13,12 @@
 
 namespace pluss::codem::series_tape {
 
+enum class HigherOrderSupport {
+  Traceable,
+  ConstantJacobian,
+  Unsupported,
+};
+
 // INTERNAL ENGINE NAMESPACE -- not the public Series surface, even though
 // this header is transitively reachable from public includes (it's used by
 // pluss/subsp/math/diff.h and other engine-internal headers). End users
@@ -48,6 +54,12 @@ struct SourceLink {
   std::string capture_file{};
   std::string capture_function{};
   std::uint_least32_t capture_line{0};
+  // First-order formulas that evaluate outside the tape must identify
+  // themselves so higher-order transforms fail instead of treating a detached
+  // sensitivity as a mathematically constant derivative.
+  // Fail closed. A reverse kernel must opt in only after its propagation path
+  // has been reviewed to construct every differentiable contribution on tape.
+  HigherOrderSupport higher_order_support{HigherOrderSupport::Unsupported};
   std::function<void(const Series&)> propagate{};
 };
 

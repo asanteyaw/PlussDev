@@ -18,9 +18,9 @@ Slate::split(std::string_view pattern,
 
 ## What It Does
 
-Splits every cell of a `Note` (string) thread on a delimiter, expanding the result into
+Splits every cell of a `Note` (string) slate on a delimiter, expanding the result into
 one output column per split position — column `part_0` (or `<prefix>_0`) holds each
-row's first piece, `part_1` its second, and so on. Requires the thread to be
+row's first piece, `part_1` its second, and so on. Requires the slate to be
 `Note`-kind. There are two overloads with different delimiter semantics:
 
 - **`split(delimiter, limit, prefix)`**: always a literal substring split (never
@@ -40,7 +40,7 @@ the capped split stays joined, it isn't dropped further).
 The single-delimiter overload (`split(delimiter, limit, prefix)`) determines the
 output column count from **every** row's underlying text — including rows marked
 invalid — because it works from a raw, validity-unaware split computed once over the
-whole thread. An invalid cell whose underlying stored text happens to contain many
+whole slate. An invalid cell whose underlying stored text happens to contain many
 delimiters can inflate the column count even though that row shows `NULL` in every one
 of them. The `(pattern, options)` overload does not have this quirk: it only computes
 each row's split (and therefore only contributes to the column count) for rows that
@@ -234,7 +234,7 @@ to contribute real data. The first overload's column count (4) is driven by that
 invisible text; the second overload's column count (2) is driven only by the two
 genuinely valid rows.
 
-Example 5. A non-`Note` thread throws.
+Example 5. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -254,7 +254,7 @@ Slate::split: expected Note payload
 
 ## Notes
 
-- Requires the calling thread to be `Note`-kind.
+- Requires the calling slate to be `Note`-kind.
 - An empty delimiter/pattern throws `"Slate::split: delimiter cannot be empty"`.
 - `limit` caps the *number of splits*, not the *number of output columns* directly —
   the capped remainder stays joined in the last piece (Example 2).

@@ -20,7 +20,7 @@ Has two entirely different behaviors depending on how it's called:
 - **The `names`-only overloads, and `drop(options)` with both `duplicated` and
   `repeated` left `false`**: drop **case-label levels** by name from a
   structured (multi-level) frame — not rows. The remaining levels are
-  rejoined into a new flat case-label thread. Feature columns are untouched.
+  rejoined into a new flat case-label slate. Feature columns are untouched.
 - **`drop(options)` with `duplicated = true` or `repeated = true`**: drop
   **rows** instead, filtering out whichever rows [`duplicated()`](duplicated.md)
   or [`repeated()`](repeated.md) (restricted to `options.names`, if given)

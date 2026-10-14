@@ -13,7 +13,7 @@ Slate::count(bool count_true = true) const -> SlateValue
 
 ## What It Does
 
-Counts entries in the thread — but exactly *what* it counts depends on the
+Counts entries in the slate — but exactly *what* it counts depends on the
 payload's dtype:
 
 - **Non-`Bool` payload** (any numeric `Series`, `Note`, `Timeline`, `TimeIndex`):
@@ -101,7 +101,7 @@ Slate::count(false) is only valid for Bool Series payload
 ## Notes
 
 - For non-`Bool` payloads, `count()` is always the non-missing count — a
-  thread with no validity mask reports its full `size()`.
+  slate with no validity mask reports its full `size()`.
 - For a `Bool` `Series` specifically, `count_true` switches between counting
   `true`s and counting `false`s — a fundamentally different question from
   missingness.
@@ -110,7 +110,7 @@ Slate::count(false) is only valid for Bool Series payload
 
 ## See Also
 
-- [`Slate::size`](size.md): the thread's total length, missing or not.
+- [`Slate::size`](size.md): the slate's total length, missing or not.
 - [`Slate::isnull`](isnull.md) / [`Slate::notnull`](notnull.md): inspect
   missingness position by position instead of a single count.
 - [`Slate::any`](any.md) / [`Slate::all`](all.md): other `Bool`-only scalar

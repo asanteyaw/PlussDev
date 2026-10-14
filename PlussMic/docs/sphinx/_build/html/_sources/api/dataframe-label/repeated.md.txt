@@ -33,7 +33,7 @@ Requires a structured frame.
 ## Returns
 
 `Slate`
-    A boolean thread, one entry per row, `display_name` `"repeated"`,
+    A boolean slate, one entry per row, `display_name` `"repeated"`,
     displayed against the case label(s) it was computed from.
 
 ## Examples

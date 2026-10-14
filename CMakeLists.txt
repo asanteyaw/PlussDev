@@ -90,6 +90,15 @@ if(_pluss_is_conda_clang AND EXISTS "/usr/bin/clang++")
 endif()
 
 project(plussma VERSION 0.1.0 LANGUAGES CXX)
+
+# Keep the explicitly selected Conda compiler usable with the active Xcode SDK.
+# This is a compile-toolchain repair, not a public header requirement.
+if(_pluss_is_conda_clang)
+    add_compile_options(
+        "$<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-include${CMAKE_CURRENT_SOURCE_DIR}/cmake/AppleCondaMathCompat.h>"
+    )
+endif()
+
 if(APPLE)
     enable_language(OBJCXX)
     if(NOT CMAKE_OBJCXX_COMPILE_OBJECT)
@@ -406,6 +415,18 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/include/
 # Stage those header trees so <pluss/pluss.h> remains self-contained for SDK users.
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/bundle/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bundle
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.hh"
+    PATTERN ".DS_Store" EXCLUDE
+)
+
+# Bundle and kindle expose relationship-aware operations whose declarations
+# share the relational contracts. Keep that public include dependency intact
+# in staged SDKs just as the neighboring PlussMic header trees are kept intact.
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/relational/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/relational
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hpp"

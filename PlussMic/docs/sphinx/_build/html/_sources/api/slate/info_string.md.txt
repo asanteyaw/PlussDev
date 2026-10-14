@@ -13,11 +13,11 @@ Slate::info_string() const -> std::string
 
 ## What It Does
 
-Builds a short, fixed-format summary of the thread's metadata — name, payload kind, dtype,
+Builds a short, fixed-format summary of the slate's metadata — name, payload kind, dtype,
 row count, and a valid/null breakdown — as a plain `std::string`. This is metadata only;
-unlike [`to_string()`](to_string.md) or [`show()`](show.md), it never renders the thread's
+unlike [`to_string()`](to_string.md) or [`show()`](show.md), it never renders the slate's
 actual row values. Use it for logging, quick sanity checks, or anywhere you want a
-one-glance summary of what a thread contains without printing every row.
+one-glance summary of what a slate contains without printing every row.
 
 ## Parameters
 
@@ -39,7 +39,7 @@ one-glance summary of what a thread contains without printing every row.
 
 ## Examples
 
-Example 1. An unnamed numeric thread with no `NULL` rows.
+Example 1. An unnamed numeric slate with no `NULL` rows.
 
 ```cpp
 using namespace pluss::table;
@@ -62,7 +62,7 @@ Non-Null Cases: 3
 Null Cases: 0
 ```
 
-Example 2. A named thread with a `NULL` row — [`name()`](name.md) assigns the display name
+Example 2. A named slate with a `NULL` row — [`name()`](name.md) assigns the display name
 that shows up as `Name:` here, and `Non-Null Cases`/`Null Cases` reflect the validity mask.
 
 ```cpp
@@ -113,13 +113,13 @@ Null Cases: 0
   [`show()`](show.md) instead if you want the actual data rendered.
 - The returned string has **no trailing newline** — [`info()`](info.md) is the
   convenience wrapper that both calls this and adds one when writing to a stream.
-- `Name:` reads `<unnamed>` unless the thread was given one via [`name()`](name.md).
+- `Name:` reads `<unnamed>` unless the slate was given one via [`name()`](name.md).
 
 ## See Also
 
 - [`Slate::info`](info.md): writes this same text straight to a stream (`std::cout` by
   default) with a trailing newline, instead of returning it as a string.
-- [`Slate::to_string`](to_string.md) / [`Slate::show`](show.md): render the thread's
+- [`Slate::to_string`](to_string.md) / [`Slate::show`](show.md): render the slate's
   actual row values, rather than metadata.
 - [`Slate::name`](name.md) / [`Slate::named`](named.md): set or check the display name
   that shows up as `Name:` here.

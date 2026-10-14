@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -43,7 +43,7 @@
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Whole-frame, thread-wise</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Whole-frame, slate-wise</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Slate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Slate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="w">  </span><span class="c1">// axis must be Axis::Feature</span>
 
@@ -61,7 +61,7 @@
 <p>Rewrites feature values by applying a user-supplied function, in several shapes
 depending on which overload you reach for:</p>
 <ul class="simple">
-<li><p><strong>Whole-frame, thread-wise</strong> (<code class="docutils literal notranslate"><span class="pre">transform(fn)</span></code>): applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to <em>every</em> feature’s
+<li><p><strong>Whole-frame, slate-wise</strong> (<code class="docutils literal notranslate"><span class="pre">transform(fn)</span></code>): applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to <em>every</em> feature’s
 <code class="docutils literal notranslate"><span class="pre">Slate</span></code> independently, replacing each with <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s result. The <code class="docutils literal notranslate"><span class="pre">Axis</span></code> overload is
 the same thing spelled out explicitly — it requires <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> and throws
 otherwise, pointing you at the row-wise <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-callback overload for
@@ -116,7 +116,7 @@ each case’s scalar result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Rewrite every feature with the same thread-level function.</p>
+<p>Example 1. Rewrite every feature with the same slate-level function.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>

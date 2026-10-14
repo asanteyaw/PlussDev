@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusQuery::execute &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="LocusQuery::prepare" href="prepare.html" />
+    <link rel="prev" title="LocusQuery API Reference" href="../../locus_query_api_reference.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locusquery-execute">
+<h1>LocusQuery::execute<a class="headerlink" href="#locusquery-execute" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_query_api_reference.html"><span class="doc std std-doc">Back to LocusQuery API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">LocusQuery</span><span class="o">::</span><span class="n">execute</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">statement</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">execute()</span></code> runs one SQL statement against the named catalogs captured by the
+accessor. Catalog keys are SQL table names. Selected expressions become streams
+in a new <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>, and SQL row order becomes the common record order of those
+streams.</p>
+<p>This is the direct path for statement text used once. Every call renders option
+parameters, creates an in-memory SQL workspace from the aligned frames, compiles
+the statement, consumes its rows, and converts the rectangular result back to a
+Catalog. For repeated template text, <a class="reference internal" href="prepare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">prepare()</span></code></span></a> centralizes the
+template and bindings, although execution still compiles against a fresh
+in-memory workspace.</p>
+<p>SQL may join any exposed catalog; it is not constrained by Locus’s declared link
+graph. A SQL join therefore follows the <code class="docutils literal notranslate"><span class="pre">ON</span></code> clause written in the statement and
+does not enforce <code class="docutils literal notranslate"><span class="pre">RelationshipCardinality</span></code>. Use Locus relational methods when
+declared-link validation and ragged join reporting are part of the contract.</p>
+</section>
+<section id="parameter">
+<h2>Parameter<a class="headerlink" href="#parameter" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><strong>statement</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</dt><dd><p>A result-producing SQL statement. <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> and <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">...</span> <span class="pre">SELECT</span></code> are the usual
+forms. Workspace catalog keys and stream keys are identifiers; use <code class="docutils literal notranslate"><span class="pre">AS</span></code> to
+control result stream names.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code></dt><dd><p>A defined catalog with one stream per projected expression. A zero-row result
+remains defined and retains its projected stream keys.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>All outputs below are emitted by
+<code class="docutils literal notranslate"><span class="pre">PlussMic/examples/bundle/locus_query_reference_demo.cpp</span></code>.</p>
+<p>Example 1. Filter and order one catalog. The result order is the SQL <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code>
+order, not the source record order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">filtered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT order_id, amount FROM orders WHERE amount &gt;= 50 ORDER BY amount DESC&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">filtered</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">filtered</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>order_id=[103, 101, 100]
+amount=[90, 75, 50]
+</pre></div>
+</div>
+<p>Example 2. Join catalog tables directly and alias projected names.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT customers.name AS customer, orders.amount AS amount &quot;</span>
+<span class="w">    </span><span class="s">&quot;FROM customers JOIN orders ON customers.customer_id = orders.customer_id &quot;</span>
+<span class="w">    </span><span class="s">&quot;WHERE orders.state = &#39;paid&#39; ORDER BY orders.amount DESC&quot;</span><span class="p">);</span>
+<span class="n">print_words</span><span class="p">(</span><span class="n">joined</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer&quot;</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">joined</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customer=[Bola, Ada]
+amount=[75, 50]
+</pre></div>
+</div>
+<p>Example 3. No matches produce a zero-row Catalog with the projected key intact.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_keys</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;SELECT order_id FROM orders WHERE amount &gt; 1000&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id] rows=0
+</pre></div>
+</div>
+<p>Example 4. SQL syntax errors surface at execution with the engine diagnostic.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;malformed&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELEKT order_id FROM orders&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>malformed: DataFrame::sql().execute: sqlite prepare failed: near &quot;SELEKT&quot;: syntax error
+</pre></div>
+</div>
+</section>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Empty or malformed SQL fails before a result Catalog is built.</p></li>
+<li><p>Unknown table or stream identifiers fail during SQL compilation.</p></li>
+<li><p>Missing template parameters, unsafe identifier bindings, negative limits, and
+invalid memory or timeout options fail before or during execution.</p></li>
+<li><p>A borrowed <code class="docutils literal notranslate"><span class="pre">SqlOptions::SourceBinding::frame</span></code> must remain alive through the call.</p></li>
+<li><p>Duplicate output names follow <code class="docutils literal notranslate"><span class="pre">collision_policy</span></code>; the default is to reject them.</p></li>
+</ul>
+</section>
+<section id="cost">
+<h2>Cost<a class="headerlink" href="#cost" title="Link to this heading">¶</a></h2>
+<p>Execution is eager. It loads each exposed aligned frame into a transient in-memory
+database, runs the statement, and allocates a fresh Catalog. Use relational Locus
+operations for graph-aware joins that can preserve ragged structure without
+materializing every table into SQL.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../locus_query_api_reference.html"><span class="label">Previous</span><span class="title">LocusQuery API Reference</span></a>
+  <a class="next-link" href="prepare.html"><span class="label">Next</span><span class="title">prepare</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_query_api_reference.html">LocusQuery API Reference</a><ul>
+      <li>Previous: <a href="../../locus_query_api_reference.html" title="previous chapter">LocusQuery API Reference</a></li>
+      <li>Next: <a href="prepare.html" title="next chapter">LocusQuery::prepare</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus-query/execute.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

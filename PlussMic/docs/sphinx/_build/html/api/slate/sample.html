@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -100,7 +100,7 @@ Whether a position can be drawn more than once.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread holding the drawn entries, length <code class="docutils literal notranslate"><span class="pre">n</span></code> (or the rounded <code class="docutils literal notranslate"><span class="pre">frac</span> <span class="pre">*</span>&#160;&#160;&#160;&#160; <span class="pre">size()</span></code>, capped as described above when <code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">false</span></code>).</p>
+A new slate holding the drawn entries, length <code class="docutils literal notranslate"><span class="pre">n</span></code> (or the rounded <code class="docutils literal notranslate"><span class="pre">frac</span> <span class="pre">*</span>&#160;&#160;&#160;&#160; <span class="pre">size()</span></code>, capped as described above when <code class="docutils literal notranslate"><span class="pre">replace</span> <span class="pre">=</span> <span class="pre">false</span></code>).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -149,7 +149,7 @@ error, no duplicates.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>8
 </pre></div>
 </div>
-<p>Example 4. <code class="docutils literal notranslate"><span class="pre">frac</span> <span class="pre">=</span> <span class="pre">0.4</span></code> on a 5-element thread draws <code class="docutils literal notranslate"><span class="pre">round(0.4</span> <span class="pre">*</span> <span class="pre">5)</span> <span class="pre">=</span> <span class="pre">2</span></code> entries.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">frac</span> <span class="pre">=</span> <span class="pre">0.4</span></code> on a 5-element slate draws <code class="docutils literal notranslate"><span class="pre">round(0.4</span> <span class="pre">*</span> <span class="pre">5)</span> <span class="pre">=</span> <span class="pre">2</span></code> entries.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">sample</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
 </pre></div>

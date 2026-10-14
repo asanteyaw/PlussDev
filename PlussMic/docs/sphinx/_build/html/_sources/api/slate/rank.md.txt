@@ -14,9 +14,9 @@ Slate::rank(RankTieRule ties = RankTieRule::Average, RankNullRule nulls = RankNu
 ## What It Does
 
 Assigns a numeric rank (`1` = smallest, by default) to every entry, based on
-its value relative to the rest of the thread. Ties — entries with equal
+its value relative to the rest of the slate. Ties — entries with equal
 value — are resolved by `ties`, and missing entries are handled by `nulls`.
-Always returns a `Float64` (or `Float32` off-CPU) thread the same length as the
+Always returns a `Float64` (or `Float32` off-CPU) slate the same length as the
 source, regardless of the source's own dtype, since `Average` and `percentage`
 ranks are inherently fractional. Restricted to numeric `Series` payloads; every
 other kind or dtype throws.
@@ -64,7 +64,7 @@ other kind or dtype throws.
 ## Returns
 
 `Slate`
-    A `Float64` (or `Float32` off-CPU) thread of ranks, the same length as the
+    A `Float64` (or `Float32` off-CPU) slate of ranks, the same length as the
     source.
 
 ## Examples
@@ -114,7 +114,7 @@ ptype: Series
 ```
 
 The first `10.0` (position `0`) gets rank `1`; the second (position `1`) gets
-`2` — purely by which one appeared first in the thread.
+`2` — purely by which one appeared first in the slate.
 
 Example 3. `ties = RankTieRule::Dense` doesn't skip rank numbers for the size
 of a tie group.
@@ -209,7 +209,7 @@ ptype: Series
   necessarily whole numbers once `ties = Average` or `percentage = true` is in
   play.
 - `nulls = Keep` is the only mode where the output can itself contain missing
-  entries; `Top` and `Bottom` always produce a fully-valid rank thread.
+  entries; `Top` and `Bottom` always produce a fully-valid rank slate.
 - Restricted to numeric `Series` payloads; anything else throws
   `"Slate::rank: expected a real numeric Series Slate"`.
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,12 +51,12 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the standard deviation of every observed (non-missing) value in a
-numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread — the square root of <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>’s result, with
+numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate — the square root of <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>’s result, with
 the exact same overload split and failure-mode difference:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">std(unbiased)</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default) computes the sample
 standard deviation (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> divisor underneath); <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">false</span></code> computes
-the population standard deviation (<code class="docutils literal notranslate"><span class="pre">n</span></code> divisor). An empty thread, or one
+the population standard deviation (<code class="docutils literal notranslate"><span class="pre">n</span></code> divisor). An empty slate, or one
 where every entry is missing, <strong>throws</strong>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">std(options)</span></code></strong>: takes a <code class="docutils literal notranslate"><span class="pre">StatisticOptions{ddof,</span> <span class="pre">min_count}</span></code>. Instead of
 throwing on an insufficient sample, this overload returns a result marked

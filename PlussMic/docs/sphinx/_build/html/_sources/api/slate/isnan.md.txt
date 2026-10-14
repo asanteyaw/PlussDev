@@ -13,8 +13,8 @@ Slate::isnan() const -> Slate
 
 ## What It Does
 
-Returns a `Bool`-typed `Series` thread, same length as `*this`, marking `true`
-wherever the underlying floating-point value is `NaN`. Requires the thread to be
+Returns a `Bool`-typed `Series` slate, same length as `*this`, marking `true`
+wherever the underlying floating-point value is `NaN`. Requires the slate to be
 `Series`-kind — checks the actual numeric value, unlike [`isnull()`](isnull.md),
 which only looks at the validity mask and doesn't inspect the value at all.
 
@@ -25,7 +25,7 @@ which only looks at the validity mask and doesn't inspect the value at all.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`.
+    A new `Bool`-typed `Series` slate, same length as `*this`.
 
 ## Examples
 
@@ -48,7 +48,7 @@ std::cout << readings.isnan();
 ptype: Series
 ```
 
-Example 2. A non-`Series` thread throws.
+Example 2. A non-`Series` slate throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -67,7 +67,7 @@ Slate::isnan is only valid for Series payload
 
 ## Notes
 
-- Requires the calling thread to be `Series`-kind.
+- Requires the calling slate to be `Series`-kind.
 - Checks the actual floating-point value — unaffected by, and independent of, the
   validity mask that [`isnull()`](isnull.md) checks.
 - A cell can be `NaN` and still report `false` from `isnull()`, and vice versa (a

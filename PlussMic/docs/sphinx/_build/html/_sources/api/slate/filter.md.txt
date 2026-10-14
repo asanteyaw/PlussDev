@@ -26,9 +26,9 @@ Two overloads, same behaviour:
   comparison methods ([`gt()`](gt.md), [`eq()`](eq.md), …) and predicates
   ([`isnull()`](isnull.md), [`duplicated()`](duplicated.md), [`between()`](between.md),
   …) already return, so you no longer need a trailing `.as_series()` to feed one
-  back in. It simply unwraps the thread's payload and forwards to the `Series`
-  overload; a non-`Series`-kind thread throws
-  `"Slate::filter: bool mask must be a Bool-typed Series thread"`.
+  back in. It simply unwraps the slate's payload and forwards to the `Series`
+  overload; a non-`Series`-kind slate throws
+  `"Slate::filter: bool mask must be a Bool-typed Series slate"`.
 
 This mirrors [`Slate::put`](put.md), [`DataFrame::filter`](../dataframe/filter.md),
 and `SlateGrouped::filter`, which all already accept a bare `Slate` mask.
@@ -38,12 +38,12 @@ and `SlateGrouped::filter`, which all already accept a bare `Slate` mask.
 **bool_mask** (`const pluss::Series&` or `const Slate&`)
     A `Bool`-typed, 1D mask the same length as `*this`. Each `true` position is
     kept, in original order; every `false` position is dropped. The `Slate`
-    overload additionally requires the thread's payload kind to be `Series`.
+    overload additionally requires the slate's payload kind to be `Series`.
 
 ## Returns
 
 `Slate`
-    A new thread holding only the entries where `bool_mask` was `true`, in their
+    A new slate holding only the entries where `bool_mask` was `true`, in their
     original relative order.
 
 ## Examples
@@ -145,8 +145,8 @@ Slate::filter: bool mask length mismatch
   `"...bool mask must be 1D"`, or `"...bool mask dtype must be Bool"`, depending on
   which check fails).
 - The `Slate` overload additionally requires `kind() == SlateKind::Series`;
-  a `Note`/`Timeline`/`TimeIndex`-kind thread throws
-  `"Slate::filter: bool mask must be a Bool-typed Series thread"`.
+  a `Note`/`Timeline`/`TimeIndex`-kind slate throws
+  `"Slate::filter: bool mask must be a Bool-typed Series slate"`.
 - Built on [`take()`](take.md) — the true-position indices are gathered and passed
   straight through.
 - Preserves relative order of the kept entries.

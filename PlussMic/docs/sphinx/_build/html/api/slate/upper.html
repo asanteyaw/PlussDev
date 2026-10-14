@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,9 +49,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Uppercases every character in a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread’s cells — the mirror image
+<p>Uppercases every character in a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate’s cells — the mirror image
 of <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>. Common uses include normalizing free-typed codes or
-abbreviations before comparing or grouping by them. Requires the thread to be
+abbreviations before comparing or grouping by them. Requires the slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -68,12 +68,12 @@ whether this build links the optional Unicode backend.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every character
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every character
 uppercased; non-alphabetic characters are left exactly as they were.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Uppercase a text thread.</p>
+<p>Example 1. Uppercase a text slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;gh-001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Gh-002&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;GH-003&quot;</span><span class="p">}));</span>
@@ -92,7 +92,7 @@ ptype: Note
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;gh&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Gh&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;GH&quot;</span></code> all normalize to the same <code class="docutils literal notranslate"><span class="pre">&quot;GH&quot;</span></code> — the hyphen and digits
 are untouched throughout, since <code class="docutils literal notranslate"><span class="pre">upper()</span></code> only ever changes letters.</p>
-<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">upper</span><span class="p">();</span>

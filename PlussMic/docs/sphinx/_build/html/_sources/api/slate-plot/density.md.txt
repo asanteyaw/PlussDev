@@ -14,7 +14,7 @@ SlatePlotAccessor::density(const DensityPlotOptions& options) const -> pluss::pl
 
 ## What It Does
 
-Draws a kernel-density estimate for the bound thread's values — the single-series
+Draws a kernel-density estimate for the bound slate's values — the single-series
 specialization of
 [`DataFramePlotAccessor::density`](../../api/dataframe-plot/density.md)'s single-feature
 path. Always draws exactly one curve, since a `Slate` is always one series; there is no

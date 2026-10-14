@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,8 +50,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Extracts one or more regex capture groups from a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread into a new
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — one feature per capture group. Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind,
+<p>Extracts one or more regex capture groups from a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate into a new
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — one feature per capture group. Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind,
 and <code class="docutils literal notranslate"><span class="pre">pattern</span></code> must contain at least one capture group (<code class="docutils literal notranslate"><span class="pre">(...)</span></code>), or the call throws.</p>
 </section>
 <section id="parameters">
@@ -141,7 +141,7 @@ in the output rather than being dropped.</p>
 throws.</p></li>
 <li><p>A non-matching row stays in the output with <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in every capture-group column,
 rather than being dropped — unlike a <code class="docutils literal notranslate"><span class="pre">filter()</span></code>-based approach.</p></li>
-<li><p>A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> calling thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::extract:</span> <span class="pre">expected</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>.</p></li>
+<li><p>A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> calling slate throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::extract:</span> <span class="pre">expected</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">

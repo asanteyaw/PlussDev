@@ -230,6 +230,54 @@ converters.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/converters.cpp.s
 .PHONY : converters.cpp.s
 
+src/bundle/Locus.o: src/bundle/Locus.cpp.o
+.PHONY : src/bundle/Locus.o
+
+# target to build an object file
+src/bundle/Locus.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Locus.cpp.o
+.PHONY : src/bundle/Locus.cpp.o
+
+src/bundle/Locus.i: src/bundle/Locus.cpp.i
+.PHONY : src/bundle/Locus.i
+
+# target to preprocess a source file
+src/bundle/Locus.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Locus.cpp.i
+.PHONY : src/bundle/Locus.cpp.i
+
+src/bundle/Locus.s: src/bundle/Locus.cpp.s
+.PHONY : src/bundle/Locus.s
+
+# target to generate assembly for a file
+src/bundle/Locus.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Locus.cpp.s
+.PHONY : src/bundle/Locus.cpp.s
+
+src/bundle/LocusPull.o: src/bundle/LocusPull.cpp.o
+.PHONY : src/bundle/LocusPull.o
+
+# target to build an object file
+src/bundle/LocusPull.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/LocusPull.cpp.o
+.PHONY : src/bundle/LocusPull.cpp.o
+
+src/bundle/LocusPull.i: src/bundle/LocusPull.cpp.i
+.PHONY : src/bundle/LocusPull.i
+
+# target to preprocess a source file
+src/bundle/LocusPull.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/LocusPull.cpp.i
+.PHONY : src/bundle/LocusPull.cpp.i
+
+src/bundle/LocusPull.s: src/bundle/LocusPull.cpp.s
+.PHONY : src/bundle/LocusPull.s
+
+# target to generate assembly for a file
+src/bundle/LocusPull.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/LocusPull.cpp.s
+.PHONY : src/bundle/LocusPull.cpp.s
+
 src/bundle/Nexus.o: src/bundle/Nexus.cpp.o
 .PHONY : src/bundle/Nexus.o
 
@@ -253,6 +301,30 @@ src/bundle/Nexus.s: src/bundle/Nexus.cpp.s
 src/bundle/Nexus.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/Nexus.cpp.s
 .PHONY : src/bundle/Nexus.cpp.s
+
+src/bundle/WorkspaceStore.o: src/bundle/WorkspaceStore.cpp.o
+.PHONY : src/bundle/WorkspaceStore.o
+
+# target to build an object file
+src/bundle/WorkspaceStore.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/WorkspaceStore.cpp.o
+.PHONY : src/bundle/WorkspaceStore.cpp.o
+
+src/bundle/WorkspaceStore.i: src/bundle/WorkspaceStore.cpp.i
+.PHONY : src/bundle/WorkspaceStore.i
+
+# target to preprocess a source file
+src/bundle/WorkspaceStore.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/WorkspaceStore.cpp.i
+.PHONY : src/bundle/WorkspaceStore.cpp.i
+
+src/bundle/WorkspaceStore.s: src/bundle/WorkspaceStore.cpp.s
+.PHONY : src/bundle/WorkspaceStore.s
+
+# target to generate assembly for a file
+src/bundle/WorkspaceStore.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/bundle/WorkspaceStore.cpp.s
+.PHONY : src/bundle/WorkspaceStore.cpp.s
 
 src/kindle/Archive.o: src/kindle/Archive.cpp.o
 .PHONY : src/kindle/Archive.o
@@ -301,6 +373,30 @@ src/kindle/Catalog.s: src/kindle/Catalog.cpp.s
 src/kindle/Catalog.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/kindle/Catalog.cpp.s
 .PHONY : src/kindle/Catalog.cpp.s
+
+src/kindle/Ragged.o: src/kindle/Ragged.cpp.o
+.PHONY : src/kindle/Ragged.o
+
+# target to build an object file
+src/kindle/Ragged.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/kindle/Ragged.cpp.o
+.PHONY : src/kindle/Ragged.cpp.o
+
+src/kindle/Ragged.i: src/kindle/Ragged.cpp.i
+.PHONY : src/kindle/Ragged.i
+
+# target to preprocess a source file
+src/kindle/Ragged.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/kindle/Ragged.cpp.i
+.PHONY : src/kindle/Ragged.cpp.i
+
+src/kindle/Ragged.s: src/kindle/Ragged.cpp.s
+.PHONY : src/kindle/Ragged.s
+
+# target to generate assembly for a file
+src/kindle/Ragged.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/kindle/Ragged.cpp.s
+.PHONY : src/kindle/Ragged.cpp.s
 
 src/kindle/Stream.o: src/kindle/Stream.cpp.o
 .PHONY : src/kindle/Stream.o
@@ -518,6 +614,126 @@ src/loader/parallel_csv_reader.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/loader/parallel_csv_reader.cpp.s
 .PHONY : src/loader/parallel_csv_reader.cpp.s
 
+src/relational/Codec.o: src/relational/Codec.cpp.o
+.PHONY : src/relational/Codec.o
+
+# target to build an object file
+src/relational/Codec.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Codec.cpp.o
+.PHONY : src/relational/Codec.cpp.o
+
+src/relational/Codec.i: src/relational/Codec.cpp.i
+.PHONY : src/relational/Codec.i
+
+# target to preprocess a source file
+src/relational/Codec.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Codec.cpp.i
+.PHONY : src/relational/Codec.cpp.i
+
+src/relational/Codec.s: src/relational/Codec.cpp.s
+.PHONY : src/relational/Codec.s
+
+# target to generate assembly for a file
+src/relational/Codec.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Codec.cpp.s
+.PHONY : src/relational/Codec.cpp.s
+
+src/relational/Links.o: src/relational/Links.cpp.o
+.PHONY : src/relational/Links.o
+
+# target to build an object file
+src/relational/Links.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Links.cpp.o
+.PHONY : src/relational/Links.cpp.o
+
+src/relational/Links.i: src/relational/Links.cpp.i
+.PHONY : src/relational/Links.i
+
+# target to preprocess a source file
+src/relational/Links.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Links.cpp.i
+.PHONY : src/relational/Links.cpp.i
+
+src/relational/Links.s: src/relational/Links.cpp.s
+.PHONY : src/relational/Links.s
+
+# target to generate assembly for a file
+src/relational/Links.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Links.cpp.s
+.PHONY : src/relational/Links.cpp.s
+
+src/relational/Match.o: src/relational/Match.cpp.o
+.PHONY : src/relational/Match.o
+
+# target to build an object file
+src/relational/Match.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Match.cpp.o
+.PHONY : src/relational/Match.cpp.o
+
+src/relational/Match.i: src/relational/Match.cpp.i
+.PHONY : src/relational/Match.i
+
+# target to preprocess a source file
+src/relational/Match.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Match.cpp.i
+.PHONY : src/relational/Match.cpp.i
+
+src/relational/Match.s: src/relational/Match.cpp.s
+.PHONY : src/relational/Match.s
+
+# target to generate assembly for a file
+src/relational/Match.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Match.cpp.s
+.PHONY : src/relational/Match.cpp.s
+
+src/relational/Pull.o: src/relational/Pull.cpp.o
+.PHONY : src/relational/Pull.o
+
+# target to build an object file
+src/relational/Pull.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Pull.cpp.o
+.PHONY : src/relational/Pull.cpp.o
+
+src/relational/Pull.i: src/relational/Pull.cpp.i
+.PHONY : src/relational/Pull.i
+
+# target to preprocess a source file
+src/relational/Pull.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Pull.cpp.i
+.PHONY : src/relational/Pull.cpp.i
+
+src/relational/Pull.s: src/relational/Pull.cpp.s
+.PHONY : src/relational/Pull.s
+
+# target to generate assembly for a file
+src/relational/Pull.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Pull.cpp.s
+.PHONY : src/relational/Pull.cpp.s
+
+src/relational/Types.o: src/relational/Types.cpp.o
+.PHONY : src/relational/Types.o
+
+# target to build an object file
+src/relational/Types.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Types.cpp.o
+.PHONY : src/relational/Types.cpp.o
+
+src/relational/Types.i: src/relational/Types.cpp.i
+.PHONY : src/relational/Types.i
+
+# target to preprocess a source file
+src/relational/Types.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Types.cpp.i
+.PHONY : src/relational/Types.cpp.i
+
+src/relational/Types.s: src/relational/Types.cpp.s
+.PHONY : src/relational/Types.s
+
+# target to generate assembly for a file
+src/relational/Types.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/relational/Types.cpp.s
+.PHONY : src/relational/Types.cpp.s
+
 src/scribble/Axel.o: src/scribble/Axel.cpp.o
 .PHONY : src/scribble/Axel.o
 
@@ -638,29 +854,29 @@ src/table/DataFrame.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/DataFrame.cpp.s
 .PHONY : src/table/DataFrame.cpp.s
 
-src/table/Thread.o: src/table/Thread.cpp.o
-.PHONY : src/table/Thread.o
+src/table/Slate.o: src/table/Slate.cpp.o
+.PHONY : src/table/Slate.o
 
 # target to build an object file
-src/table/Thread.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Thread.cpp.o
-.PHONY : src/table/Thread.cpp.o
+src/table/Slate.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Slate.cpp.o
+.PHONY : src/table/Slate.cpp.o
 
-src/table/Thread.i: src/table/Thread.cpp.i
-.PHONY : src/table/Thread.i
+src/table/Slate.i: src/table/Slate.cpp.i
+.PHONY : src/table/Slate.i
 
 # target to preprocess a source file
-src/table/Thread.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Thread.cpp.i
-.PHONY : src/table/Thread.cpp.i
+src/table/Slate.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Slate.cpp.i
+.PHONY : src/table/Slate.cpp.i
 
-src/table/Thread.s: src/table/Thread.cpp.s
-.PHONY : src/table/Thread.s
+src/table/Slate.s: src/table/Slate.cpp.s
+.PHONY : src/table/Slate.s
 
 # target to generate assembly for a file
-src/table/Thread.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Thread.cpp.s
-.PHONY : src/table/Thread.cpp.s
+src/table/Slate.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/Slate.cpp.s
+.PHONY : src/table/Slate.cpp.s
 
 src/table/display/Display.o: src/table/display/Display.cpp.o
 .PHONY : src/table/display/Display.o
@@ -758,29 +974,53 @@ src/table/io/DataFrameIO.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/DataFrameIO.cpp.s
 .PHONY : src/table/io/DataFrameIO.cpp.s
 
-src/table/io/ThreadIO.o: src/table/io/ThreadIO.cpp.o
-.PHONY : src/table/io/ThreadIO.o
+src/table/io/SlateIO.o: src/table/io/SlateIO.cpp.o
+.PHONY : src/table/io/SlateIO.o
 
 # target to build an object file
-src/table/io/ThreadIO.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/ThreadIO.cpp.o
-.PHONY : src/table/io/ThreadIO.cpp.o
+src/table/io/SlateIO.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/SlateIO.cpp.o
+.PHONY : src/table/io/SlateIO.cpp.o
 
-src/table/io/ThreadIO.i: src/table/io/ThreadIO.cpp.i
-.PHONY : src/table/io/ThreadIO.i
+src/table/io/SlateIO.i: src/table/io/SlateIO.cpp.i
+.PHONY : src/table/io/SlateIO.i
 
 # target to preprocess a source file
-src/table/io/ThreadIO.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/ThreadIO.cpp.i
-.PHONY : src/table/io/ThreadIO.cpp.i
+src/table/io/SlateIO.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/SlateIO.cpp.i
+.PHONY : src/table/io/SlateIO.cpp.i
 
-src/table/io/ThreadIO.s: src/table/io/ThreadIO.cpp.s
-.PHONY : src/table/io/ThreadIO.s
+src/table/io/SlateIO.s: src/table/io/SlateIO.cpp.s
+.PHONY : src/table/io/SlateIO.s
 
 # target to generate assembly for a file
-src/table/io/ThreadIO.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/ThreadIO.cpp.s
-.PHONY : src/table/io/ThreadIO.cpp.s
+src/table/io/SlateIO.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/SlateIO.cpp.s
+.PHONY : src/table/io/SlateIO.cpp.s
+
+src/table/io/SnapshotCsv.o: src/table/io/SnapshotCsv.cpp.o
+.PHONY : src/table/io/SnapshotCsv.o
+
+# target to build an object file
+src/table/io/SnapshotCsv.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/SnapshotCsv.cpp.o
+.PHONY : src/table/io/SnapshotCsv.cpp.o
+
+src/table/io/SnapshotCsv.i: src/table/io/SnapshotCsv.cpp.i
+.PHONY : src/table/io/SnapshotCsv.i
+
+# target to preprocess a source file
+src/table/io/SnapshotCsv.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/SnapshotCsv.cpp.i
+.PHONY : src/table/io/SnapshotCsv.cpp.i
+
+src/table/io/SnapshotCsv.s: src/table/io/SnapshotCsv.cpp.s
+.PHONY : src/table/io/SnapshotCsv.s
+
+# target to generate assembly for a file
+src/table/io/SnapshotCsv.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/io/SnapshotCsv.cpp.s
+.PHONY : src/table/io/SnapshotCsv.cpp.s
 
 src/table/ops/DataFrameAxisMatch.o: src/table/ops/DataFrameAxisMatch.cpp.o
 .PHONY : src/table/ops/DataFrameAxisMatch.o
@@ -878,29 +1118,29 @@ src/table/plot/DataFramePlot.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/DataFramePlot.cpp.s
 .PHONY : src/table/plot/DataFramePlot.cpp.s
 
-src/table/plot/ThreadPlot.o: src/table/plot/ThreadPlot.cpp.o
-.PHONY : src/table/plot/ThreadPlot.o
+src/table/plot/SlatePlot.o: src/table/plot/SlatePlot.cpp.o
+.PHONY : src/table/plot/SlatePlot.o
 
 # target to build an object file
-src/table/plot/ThreadPlot.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/ThreadPlot.cpp.o
-.PHONY : src/table/plot/ThreadPlot.cpp.o
+src/table/plot/SlatePlot.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/SlatePlot.cpp.o
+.PHONY : src/table/plot/SlatePlot.cpp.o
 
-src/table/plot/ThreadPlot.i: src/table/plot/ThreadPlot.cpp.i
-.PHONY : src/table/plot/ThreadPlot.i
+src/table/plot/SlatePlot.i: src/table/plot/SlatePlot.cpp.i
+.PHONY : src/table/plot/SlatePlot.i
 
 # target to preprocess a source file
-src/table/plot/ThreadPlot.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/ThreadPlot.cpp.i
-.PHONY : src/table/plot/ThreadPlot.cpp.i
+src/table/plot/SlatePlot.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/SlatePlot.cpp.i
+.PHONY : src/table/plot/SlatePlot.cpp.i
 
-src/table/plot/ThreadPlot.s: src/table/plot/ThreadPlot.cpp.s
-.PHONY : src/table/plot/ThreadPlot.s
+src/table/plot/SlatePlot.s: src/table/plot/SlatePlot.cpp.s
+.PHONY : src/table/plot/SlatePlot.s
 
 # target to generate assembly for a file
-src/table/plot/ThreadPlot.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/ThreadPlot.cpp.s
-.PHONY : src/table/plot/ThreadPlot.cpp.s
+src/table/plot/SlatePlot.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/CMakeFiles/PlussMic.dir/build.make PlussMic/CMakeFiles/PlussMic.dir/src/table/plot/SlatePlot.cpp.s
+.PHONY : src/table/plot/SlatePlot.cpp.s
 
 src/table/plot/atlas/AtlasPlotAccessor.o: src/table/plot/atlas/AtlasPlotAccessor.cpp.o
 .PHONY : src/table/plot/atlas/AtlasPlotAccessor.o
@@ -993,15 +1233,27 @@ help:
 	@echo "... converters.o"
 	@echo "... converters.i"
 	@echo "... converters.s"
+	@echo "... src/bundle/Locus.o"
+	@echo "... src/bundle/Locus.i"
+	@echo "... src/bundle/Locus.s"
+	@echo "... src/bundle/LocusPull.o"
+	@echo "... src/bundle/LocusPull.i"
+	@echo "... src/bundle/LocusPull.s"
 	@echo "... src/bundle/Nexus.o"
 	@echo "... src/bundle/Nexus.i"
 	@echo "... src/bundle/Nexus.s"
+	@echo "... src/bundle/WorkspaceStore.o"
+	@echo "... src/bundle/WorkspaceStore.i"
+	@echo "... src/bundle/WorkspaceStore.s"
 	@echo "... src/kindle/Archive.o"
 	@echo "... src/kindle/Archive.i"
 	@echo "... src/kindle/Archive.s"
 	@echo "... src/kindle/Catalog.o"
 	@echo "... src/kindle/Catalog.i"
 	@echo "... src/kindle/Catalog.s"
+	@echo "... src/kindle/Ragged.o"
+	@echo "... src/kindle/Ragged.i"
+	@echo "... src/kindle/Ragged.s"
 	@echo "... src/kindle/Stream.o"
 	@echo "... src/kindle/Stream.i"
 	@echo "... src/kindle/Stream.s"
@@ -1029,6 +1281,21 @@ help:
 	@echo "... src/loader/parallel_csv_reader.o"
 	@echo "... src/loader/parallel_csv_reader.i"
 	@echo "... src/loader/parallel_csv_reader.s"
+	@echo "... src/relational/Codec.o"
+	@echo "... src/relational/Codec.i"
+	@echo "... src/relational/Codec.s"
+	@echo "... src/relational/Links.o"
+	@echo "... src/relational/Links.i"
+	@echo "... src/relational/Links.s"
+	@echo "... src/relational/Match.o"
+	@echo "... src/relational/Match.i"
+	@echo "... src/relational/Match.s"
+	@echo "... src/relational/Pull.o"
+	@echo "... src/relational/Pull.i"
+	@echo "... src/relational/Pull.s"
+	@echo "... src/relational/Types.o"
+	@echo "... src/relational/Types.i"
+	@echo "... src/relational/Types.s"
 	@echo "... src/scribble/Axel.o"
 	@echo "... src/scribble/Axel.i"
 	@echo "... src/scribble/Axel.s"
@@ -1044,9 +1311,9 @@ help:
 	@echo "... src/table/DataFrame.o"
 	@echo "... src/table/DataFrame.i"
 	@echo "... src/table/DataFrame.s"
-	@echo "... src/table/Thread.o"
-	@echo "... src/table/Thread.i"
-	@echo "... src/table/Thread.s"
+	@echo "... src/table/Slate.o"
+	@echo "... src/table/Slate.i"
+	@echo "... src/table/Slate.s"
 	@echo "... src/table/display/Display.o"
 	@echo "... src/table/display/Display.i"
 	@echo "... src/table/display/Display.s"
@@ -1059,9 +1326,12 @@ help:
 	@echo "... src/table/io/DataFrameIO.o"
 	@echo "... src/table/io/DataFrameIO.i"
 	@echo "... src/table/io/DataFrameIO.s"
-	@echo "... src/table/io/ThreadIO.o"
-	@echo "... src/table/io/ThreadIO.i"
-	@echo "... src/table/io/ThreadIO.s"
+	@echo "... src/table/io/SlateIO.o"
+	@echo "... src/table/io/SlateIO.i"
+	@echo "... src/table/io/SlateIO.s"
+	@echo "... src/table/io/SnapshotCsv.o"
+	@echo "... src/table/io/SnapshotCsv.i"
+	@echo "... src/table/io/SnapshotCsv.s"
 	@echo "... src/table/ops/DataFrameAxisMatch.o"
 	@echo "... src/table/ops/DataFrameAxisMatch.i"
 	@echo "... src/table/ops/DataFrameAxisMatch.s"
@@ -1074,9 +1344,9 @@ help:
 	@echo "... src/table/plot/DataFramePlot.o"
 	@echo "... src/table/plot/DataFramePlot.i"
 	@echo "... src/table/plot/DataFramePlot.s"
-	@echo "... src/table/plot/ThreadPlot.o"
-	@echo "... src/table/plot/ThreadPlot.i"
-	@echo "... src/table/plot/ThreadPlot.s"
+	@echo "... src/table/plot/SlatePlot.o"
+	@echo "... src/table/plot/SlatePlot.i"
+	@echo "... src/table/plot/SlatePlot.s"
 	@echo "... src/table/plot/atlas/AtlasPlotAccessor.o"
 	@echo "... src/table/plot/atlas/AtlasPlotAccessor.i"
 	@echo "... src/table/plot/atlas/AtlasPlotAccessor.s"

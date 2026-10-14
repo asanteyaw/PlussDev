@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -68,9 +68,9 @@ value belonged to).</p>
 default-constructed <code class="docutils literal notranslate"><span class="pre">KindelizePolicy</span></code>. Its fields:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">attach_labels</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>): when <code class="docutils literal notranslate"><span class="pre">true</span></code>, each <code class="docutils literal notranslate"><span class="pre">Stream</span></code> carries the
-frame’s case-label thread alongside its values. Set <code class="docutils literal notranslate"><span class="pre">false</span></code> to build plain,
+frame’s case-label slate alongside its values. Set <code class="docutils literal notranslate"><span class="pre">false</span></code> to build plain,
 label-less streams instead.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">materialize_label</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>): when <code class="docutils literal notranslate"><span class="pre">true</span></code>, the case-label thread
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">materialize_label</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>): when <code class="docutils literal notranslate"><span class="pre">true</span></code>, the case-label slate
 is <em>also</em> added as its own additional <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> entry (keyed by <code class="docutils literal notranslate"><span class="pre">label_key</span></code>), rather
 than only being attached to each feature’s <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">label_key</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;_label&quot;</span></code>): the key used for the
@@ -129,7 +129,7 @@ sales: 3 cases
 </div>
 <p>Each of the three features becomes its own catalog entry, keyed by its original
 feature name, and each <code class="docutils literal notranslate"><span class="pre">Stream</span></code> carries <code class="docutils literal notranslate"><span class="pre">orders</span></code>’s three cases with it.</p>
-<p>Example 2. Materialize the case-label thread as its own catalog entry.</p>
+<p>Example 2. Materialize the case-label slate as its own catalog entry.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">KindelizePolicy</span><span class="w"> </span><span class="n">policy</span><span class="p">;</span>
 <span class="n">policy</span><span class="p">.</span><span class="n">materialize_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 
@@ -146,7 +146,7 @@ true
 </pre></div>
 </div>
 <p>With <code class="docutils literal notranslate"><span class="pre">materialize_label</span> <span class="pre">=</span> <span class="pre">true</span></code>, a fourth entry appears — keyed <code class="docutils literal notranslate"><span class="pre">&quot;_label&quot;</span></code> by default
-— holding the case-label thread (<code class="docutils literal notranslate"><span class="pre">o1,</span> <span class="pre">o2,</span> <span class="pre">o3</span></code>) as a stream in its own right, in
+— holding the case-label slate (<code class="docutils literal notranslate"><span class="pre">o1,</span> <span class="pre">o2,</span> <span class="pre">o3</span></code>) as a stream in its own right, in
 addition to it already being attached to <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">city</span></code>, and <code class="docutils literal notranslate"><span class="pre">sales</span></code>’s individual
 streams.</p>
 </section>

@@ -13,7 +13,7 @@ SlateLabelAccessor::repeated() const -> Slate
 ## What It Does
 
 Marks every row `true` whose case-label value occurs more than once anywhere
-in the thread — including its *first* occurrence, unlike
+in the slate — including its *first* occurrence, unlike
 [`duplicated()`](duplicated.md), which spares one occurrence (by default,
 the first). A value that never repeats is `false` everywhere it appears.
 
@@ -24,7 +24,7 @@ the first). A value that never repeats is `false` everywhere it appears.
 ## Returns
 
 `Slate`
-    A `Bool` thread, one entry per row, `display_name` `"repeated"`,
+    A `Bool` slate, one entry per row, `display_name` `"repeated"`,
     displayed against the same case labels as `*this`.
 
 ## Examples

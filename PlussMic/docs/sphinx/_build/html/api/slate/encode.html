@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,9 +49,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread with an encoded form of its raw
+<p>Replaces every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate with an encoded form of its raw
 bytes, choosing between three schemes via the <code class="docutils literal notranslate"><span class="pre">encoding</span></code> argument: <code class="docutils literal notranslate"><span class="pre">&quot;base64&quot;</span></code> (the
-default), <code class="docutils literal notranslate"><span class="pre">&quot;hex&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;url&quot;</span></code>. Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Unlike most
+default), <code class="docutils literal notranslate"><span class="pre">&quot;hex&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;url&quot;</span></code>. Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Unlike most
 methods in this family, <code class="docutils literal notranslate"><span class="pre">encode()</span></code> doesn’t validate its argument against an enum —
 any other string throws.</p>
 <ul class="simple">
@@ -79,11 +79,11 @@ Which scheme to apply: <code class="docutils literal notranslate"><span class="p
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the encoded text.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the encoded text.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>The examples below share one input thread containing a mix of plain text,
+<p>The examples below share one input slate containing a mix of plain text,
 punctuation, and a space:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
@@ -175,7 +175,7 @@ become <code class="docutils literal notranslate"><span class="pre">%2F</span></
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::encode: encoding must be base64, hex, or url
 </pre></div>
 </div>
-<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">encode</span><span class="p">();</span>
@@ -196,7 +196,7 @@ become <code class="docutils literal notranslate"><span class="pre">%2F</span></
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
 <li><p>Encodes raw bytes, not Unicode codepoints — for ASCII text, “bytes” and
 “characters” coincide, but multi-byte UTF-8 characters encode as their full
 multi-byte sequence, not as one unit.</p></li>

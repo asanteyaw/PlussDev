@@ -34,9 +34,9 @@ Controls how the conversion is done. Omitting it entirely is equivalent to passi
 default-constructed `KindelizePolicy`. Its fields:
 
 - **`attach_labels`** (`bool`, default `true`): when `true`, each `Stream` carries the
-  frame's case-label thread alongside its values. Set `false` to build plain,
+  frame's case-label slate alongside its values. Set `false` to build plain,
   label-less streams instead.
-- **`materialize_label`** (`bool`, default `false`): when `true`, the case-label thread
+- **`materialize_label`** (`bool`, default `false`): when `true`, the case-label slate
   is *also* added as its own additional `Catalog` entry (keyed by `label_key`), rather
   than only being attached to each feature's `Stream`.
 - **`label_key`** (`std::string`, default `"_label"`): the key used for the
@@ -99,7 +99,7 @@ sales: 3 cases
 Each of the three features becomes its own catalog entry, keyed by its original
 feature name, and each `Stream` carries `orders`'s three cases with it.
 
-Example 2. Materialize the case-label thread as its own catalog entry.
+Example 2. Materialize the case-label slate as its own catalog entry.
 
 ```cpp
 pluss::kindle::KindelizePolicy policy;
@@ -118,7 +118,7 @@ true
 ```
 
 With `materialize_label = true`, a fourth entry appears — keyed `"_label"` by default
-— holding the case-label thread (`o1, o2, o3`) as a stream in its own right, in
+— holding the case-label slate (`o1, o2, o3`) as a stream in its own right, in
 addition to it already being attached to `id`, `city`, and `sales`'s individual
 streams.
 

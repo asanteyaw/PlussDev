@@ -15,7 +15,7 @@ Note flash::get_dataset_names()
 Returns the curated flash dataset registry as a `Note` of dataset names.
 
 This function does not read a remote catalog and does not download anything. It is the
-discovery surface for the persisted teaching datasets that
+discovery surface for the persisted sample datasets that
 [`flash::load_dataset`](load_dataset.md) knows how to load.
 
 At runtime, the name list comes from the installed dataset manifest when one is present.

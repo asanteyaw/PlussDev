@@ -13,13 +13,13 @@ SlatePlotAccessor::act(const ActPlotOptions& options = {}) const -> pluss::pl::S
 
 ## What It Does
 
-Draws an autocorrelation plot for the bound thread's values — the single-series
+Draws an autocorrelation plot for the bound slate's values — the single-series
 specialization of [`DataFramePlotAccessor::act`](../../api/dataframe-plot/act.md), which on
-the 2D accessor requires naming a feature; here the bound thread is always the one and only
+the 2D accessor requires naming a feature; here the bound slate is always the one and only
 feature autocorrelated.
 
 ```{note} At least three data points are required
-Same as the 2D accessor: a thread with fewer than three rows throws
+Same as the 2D accessor: a slate with fewer than three rows throws
 `"flash::acfplot requires at least three points"`.
 ```
 
@@ -73,7 +73,7 @@ chart.show();
 
 ## Notes
 
-- The bound thread is always the single autocorrelated feature — there is no feature-name
+- The bound slate is always the single autocorrelated feature — there is no feature-name
   argument the way the 2D accessor's `act()` has.
 - Lag `0` is never shown; spikes start at lag `1`.
 - `max_lag` is clamped to `[1, n - 1]`, never throwing for an over-large request.

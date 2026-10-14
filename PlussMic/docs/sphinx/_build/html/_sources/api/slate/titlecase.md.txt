@@ -13,10 +13,10 @@ Slate::titlecase() const -> Slate
 
 ## What It Does
 
-Capitalizes the first letter of every "word" in a `Note` (string) thread's cells and
+Capitalizes the first letter of every "word" in a `Note` (string) slate's cells and
 lowercases the rest — the classic display-formatting transform for names,
 addresses, or titles typed in all-lowercase or inconsistent casing. Requires the
-thread to be `Note`-kind.
+slate to be `Note`-kind.
 
 ```{warning} Word-boundary detection resets on *any* non-alphanumeric character
 `titlecase()` decides where a new "word" starts the same way Python's `str.title()`
@@ -35,7 +35,7 @@ a bug specific to this implementation.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, with every cell's text
+    A new `Note`-kind slate, same length as `*this`, with every cell's text
     title-cased.
 
 ## Examples

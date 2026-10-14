@@ -67,7 +67,7 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
 
 - [`Catalog::cast`](cast.md): the full, target-configurable casting method this is a
   shorthand for.
-- [`Slate::astype`](../thread/astype.md): the underlying single-stream conversion this
+- [`Slate::astype`](../slate/astype.md): the underlying single-stream conversion this
   method applies uniformly.
 
 <div class="pluss-inline-prev-next">

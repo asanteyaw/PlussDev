@@ -12,7 +12,7 @@ SlateTimelineAccessor::leap() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with a boolean `Series` flagging whether each row's
+Replaces the bound slate with a boolean `Series` flagging whether each row's
 calendar year is a leap year.
 
 ## Parameters
@@ -22,7 +22,7 @@ calendar year is a leap year.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread:
+    A new `Bool`-typed `Series` slate, same length as the bound slate:
     `true` when the row's year is a leap year, `false` otherwise.
 
 ## Examples
@@ -58,9 +58,9 @@ Every 2024 row flags `true`; the 2023 row flags `false`.
 - Reflects the *row's year*, not whether the row's exact date is February
   29th — a `"2024-06-15"` row also flags `true`, since 2024 as a whole is a
   leap year.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`, not `false`.
 
 ## See Also

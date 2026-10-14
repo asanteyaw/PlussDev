@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <limits>
 #include <unordered_set>
 
 #include "CodeM/core/Errors.h"
@@ -25,6 +26,14 @@ std::string lower_ascii(std::string_view token) {
     return static_cast<char>(std::tolower(c));
   });
   return out;
+}
+std::int64_t checked_window_scale(std::int64_t value,
+                                  std::int64_t seconds_per_unit,
+                                  std::string_view where) {
+  PLUSS_CHECK(value > 0, std::string(where) + ": pull window value must be positive");
+  PLUSS_CHECK(value <= std::numeric_limits<std::int64_t>::max() / seconds_per_unit,
+              std::string(where) + ": pull window length exceeds the supported range");
+  return value * seconds_per_unit;
 }
 std::string join_pull_parts(const std::vector<std::string>& parts,
                             std::size_t begin,
@@ -374,19 +383,19 @@ std::int64_t pull_window_seconds(const PullAggregate& spec, std::string_view whe
   const auto value = *spec.window_value;
   const auto unit = lower_ascii(*spec.window_unit);
   if (unit == "s" || unit == "sec" || unit == "secs" || unit == "second" || unit == "seconds") {
-    return value;
+    return checked_window_scale(value, 1, where);
   }
   if (unit == "m" || unit == "min" || unit == "mins" || unit == "minute" || unit == "minutes") {
-    return value * 60LL;
+    return checked_window_scale(value, 60LL, where);
   }
   if (unit == "h" || unit == "hr" || unit == "hrs" || unit == "hour" || unit == "hours") {
-    return value * 60LL * 60LL;
+    return checked_window_scale(value, 60LL * 60LL, where);
   }
   if (unit == "d" || unit == "day" || unit == "days") {
-    return value * 24LL * 60LL * 60LL;
+    return checked_window_scale(value, 24LL * 60LL * 60LL, where);
   }
   if (unit == "w" || unit == "wk" || unit == "wks" || unit == "week" || unit == "weeks") {
-    return value * 7LL * 24LL * 60LL * 60LL;
+    return checked_window_scale(value, 7LL * 24LL * 60LL * 60LL, where);
   }
   PLUSS_FAIL(std::string(where) + ": unsupported pull window unit '" + *spec.window_unit + "'");
 }

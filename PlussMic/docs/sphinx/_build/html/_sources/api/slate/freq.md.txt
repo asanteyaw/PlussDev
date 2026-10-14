@@ -14,14 +14,14 @@ Slate::freq(SlateFreqOptions options) const -> Slate
 
 ## What It Does
 
-Counts how often each distinct value occurs in the thread, and returns the
+Counts how often each distinct value occurs in the slate, and returns the
 counts as a new `Slate` whose case labels are the distinct source values —
 the 1D value-count surface. Counts are sorted by frequency descending by
 default; ties keep the values' original **first-occurrence** relative order
 (a stable sort), not alphabetical order.
 
 Use [`DataFrame::freq`](../dataframe/freq.md) for grouped frequencies across
-one or more `DataFrame` features instead of a single thread.
+one or more `DataFrame` features instead of a single slate.
 
 ## Parameters
 
@@ -67,13 +67,13 @@ value. Must be `>= 0` — a negative `top` throws `"Slate::freq: top must be
 ## Returns
 
 `Slate`
-    A numeric thread — `Int64` when `kind = Count`, `Float64` when
+    A numeric slate — `Int64` when `kind = Count`, `Float64` when
     `kind = Prop` — with the distinct source values as its case labels, named
     `"count"` or `"prop"` to match `kind`.
 
 ## Examples
 
-Example 1. Default counts, sorted descending, for a `Note`-kind thread with a
+Example 1. Default counts, sorted descending, for a `Note`-kind slate with a
 repeated value.
 
 ```cpp
@@ -170,7 +170,7 @@ row `1`) comes before `"north"` (first seen at row `3`) — alphabetically
   highest-count rows, never an arbitrary prefix of the unsorted data.
 - A negative `top` throws.
 - [`Slate::describe()`](describe.md) uses `freq()` internally to compute a
-  `Note`-kind thread's `top`/`freq` summary fields, and inherits this same
+  `Note`-kind slate's `top`/`freq` summary fields, and inherits this same
   tie-break behavior.
 
 ## See Also
@@ -180,7 +180,7 @@ row `1`) comes before `"north"` (first seen at row `3`) — alphabetically
 - [`Slate::distinct`](distinct.md): the same set of unique values, without
   counts, in first-occurrence order.
 - [`Slate::describe`](describe.md): a fuller summary that uses `freq()`
-  internally for `Note`-kind threads.
+  internally for `Note`-kind slates.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fold.html">

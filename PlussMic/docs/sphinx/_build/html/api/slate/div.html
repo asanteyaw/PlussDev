@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,8 +54,8 @@
 matching, length-mismatch throw, no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-payload support). <code class="docutils literal notranslate"><span class="pre">div()</span></code> delegates to the
 underlying <code class="docutils literal notranslate"><span class="pre">Series</span></code> library’s own <code class="docutils literal notranslate"><span class="pre">div()</span></code> algebra, which is a distinct code path from
 <a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truediv()</span></code></span></a> (which always promotes to floating point via
-<code class="docutils literal notranslate"><span class="pre">true_divide()</span></code>). For the <code class="docutils literal notranslate"><span class="pre">Float64</span></code>-typed threads used throughout this reference, the
-two produce identical results; the distinction can matter for integer-typed threads,
+<code class="docutils literal notranslate"><span class="pre">true_divide()</span></code>). For the <code class="docutils literal notranslate"><span class="pre">Float64</span></code>-typed slates used throughout this reference, the
+two produce identical results; the distinction can matter for integer-typed slates,
 where <code class="docutils literal notranslate"><span class="pre">div()</span></code>’s exact type-preservation behavior comes from outside this repository
 and isn’t asserted here — prefer <a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truediv()</span></code></span></a> when you specifically want
 guaranteed floating-point division regardless of input type.</p>
@@ -68,7 +68,7 @@ guaranteed floating-point division regardless of input type.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise quotient.</p>
+A new slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise quotient.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -89,7 +89,7 @@ A new thread, same length as <code class="docutils literal notranslate"><span cl
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Divide two threads positionally.</p>
+<p>Example 2. Divide two slates positionally.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">splits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="n">splits</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
@@ -106,7 +106,7 @@ ptype: Series
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">/</span> <span class="pre">9</span></code> doesn’t divide evenly — the result is displayed to 10 significant digits
-(<code class="docutils literal notranslate"><span class="pre">3.333333333</span></code>), the same formatting every numeric thread uses.</p>
+(<code class="docutils literal notranslate"><span class="pre">3.333333333</span></code>), the same formatting every numeric slate uses.</p>
 </section>
 </section>
 <section id="notes">

@@ -13,8 +13,8 @@ Slate::named() const -> bool
 
 ## What It Does
 
-Reports whether the thread currently has a name attached — the safe way to check before
-calling [`name()`](name.md)'s getter overload, which throws on an unnamed thread.
+Reports whether the slate currently has a name attached — the safe way to check before
+calling [`name()`](name.md)'s getter overload, which throws on an unnamed slate.
 
 ## Parameters
 
@@ -24,12 +24,12 @@ calling [`name()`](name.md)'s getter overload, which throws on an unnamed thread
 
 `bool`
     `true` if a name is attached (via [`name(value)`](name.md)), `false` otherwise
-    (including on a freshly constructed thread, or one that had its name removed via
+    (including on a freshly constructed slate, or one that had its name removed via
     [`unname()`](unname.md)).
 
 ## Examples
 
-Example 1. A freshly constructed thread reports `false`.
+Example 1. A freshly constructed slate reports `false`.
 
 ```cpp
 using namespace pluss::table;
@@ -71,9 +71,9 @@ balance
 ## Notes
 
 - Guards [`name()`](name.md)'s getter overload, which throws
-  `"Slate::name: name is not set"` on an unnamed thread.
+  `"Slate::name: name is not set"` on an unnamed slate.
 - Reports `false` again after [`unname()`](unname.md).
-- Non-mutating; simply inspects the thread's current state.
+- Non-mutating; simply inspects the slate's current state.
 
 ## See Also
 

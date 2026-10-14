@@ -23,7 +23,7 @@ them (`atlas.axis0_labels().has_value()`); otherwise it falls back to auto-gener
 `table_0`, `table_1`, ... keys, same as [`inject()`](inject.md)'s unnamed form. The
 two-argument overload always uses the given `labels` explicitly, converting each label to
 a string key the same way [`neighbors()`](neighbors.md) and friends stringify things
-internally — text labels are used as-is; numeric labels are stringified; a labels thread
+internally — text labels are used as-is; numeric labels are stringified; a labels slate
 that produces the same key string twice throws.
 
 ## Parameters

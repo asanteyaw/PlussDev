@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a <strong>running</strong> (cumulative) statistic down the thread — the value at
+<p>Computes a <strong>running</strong> (cumulative) statistic down the slate — the value at
 each position reflects every observed entry up to and including it, not just
 that position alone. <a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum()</span></code></span></a>, <a class="reference internal" href="cumprod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumprod()</span></code></span></a>,
 <a class="reference internal" href="cummin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cummin()</span></code></span></a>, and <a class="reference internal" href="cummax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cummax()</span></code></span></a> are thin wrappers around
@@ -61,7 +61,7 @@ dtype throws.</p>
 <p>the throw message always says “Slate::scan”
 <code class="docutils literal notranslate"><span class="pre">cumsum()</span></code>/<code class="docutils literal notranslate"><span class="pre">cumprod()</span></code>/<code class="docutils literal notranslate"><span class="pre">cummin()</span></code>/<code class="docutils literal notranslate"><span class="pre">cummax()</span></code> each delegate straight to
 <code class="docutils literal notranslate"><span class="pre">scan(...)</span></code>, passing the literal string <code class="docutils literal notranslate"><span class="pre">&quot;Slate::scan&quot;</span></code> as the error context —
-so calling any of the four wrapper methods on a non-numeric thread throws
+so calling any of the four wrapper methods on a non-numeric slate throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Slate::scan:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Slate&quot;</span></code>, not a message naming
 the specific method you actually called.</p>
 </div>
@@ -98,7 +98,7 @@ position makes every subsequent output position missing too.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A thread the same length as the source, holding the running statistic at
+A slate the same length as the source, holding the running statistic at
 each position.</p>
 </section>
 <section id="examples">

@@ -189,7 +189,7 @@ Use the options struct when you need any of the following:
 - explicit `sort`
 - explicit `dropna`
 
-This is the teaching-grade surface and the one to reach for once your pivot becomes more
+This is the fully explicit surface and the one to reach for once your pivot becomes more
 than a toy.
 
 ## The Full Options Surface
@@ -464,7 +464,7 @@ Tema / Q2  | NULL                 5                   NULL                   50
 [4 cs x 4 feat]
 ```
 
-This example teaches three things at once:
+This example shows three things at once:
 
 - multiple `index` features create a tuple-grain row axis
 - multiple `values` create multiple output feature families

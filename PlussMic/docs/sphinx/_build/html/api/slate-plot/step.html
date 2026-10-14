@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,8 +52,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Identical in shape to <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> — the bound thread’s values drawn against an
-optional companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread, wrapped into the same one- or two-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and
+<p>Identical in shape to <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> — the bound slate’s values drawn against an
+optional companion <code class="docutils literal notranslate"><span class="pre">x</span></code> slate, wrapped into the same one- or two-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and
 delegated to <a class="reference internal" href="../dataframe-plot/step.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::step</span></code></span></a> — but each
 trace is drawn as a step function (horizontal-then-vertical jumps between points) instead
 of straight line segments. See <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for the full naming and row-label
@@ -62,8 +62,8 @@ inheritance rules shared by every method on this accessor.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, optional)
-Same as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">x</span></code> — a companion thread used as the x-axis, must match
-the bound thread’s size or the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.
+Same as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">x</span></code> — a companion slate used as the x-axis, must match
+the bound slate’s size or the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.
 Omitted falls back to the wrapped frame’s own row labels.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">StepPlotOptions</span></code>)
 The identical struct documented on
@@ -74,11 +74,11 @@ unconditionally before it could ever apply, same as <a class="reference internal
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
-A figure with one pane containing a single step trace of the bound thread’s values.</p>
+A figure with one pane containing a single step trace of the bound slate’s values.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. No companion thread: falls back to a plain case index.</p>
+<p>Example 1. No companion slate: falls back to a plain case index.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">price</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">9.99</span><span class="p">,</span><span class="w"> </span><span class="mf">19.99</span><span class="p">,</span><span class="w"> </span><span class="mf">39.99</span><span class="p">,</span><span class="w"> </span><span class="mf">79.99</span><span class="p">}));</span>
@@ -89,7 +89,7 @@ A figure with one pane containing a single step trace of the bound thread’s va
 </pre></div>
 </div>
 <p><img alt="Output of Example 1" src="../../_images/step-12.svg" /></p>
-<p>Example 2. An explicit companion thread as the x-axis.</p>
+<p>Example 2. An explicit companion slate as the x-axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Bronze&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Silver&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Gold&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Platinum&quot;</span><span class="p">}));</span>
 <span class="n">tier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tier</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;tier&quot;</span><span class="p">);</span>
 
@@ -116,7 +116,7 @@ emphasizing that the price is constant within a tier and jumps at tier boundarie
 <ul class="simple">
 <li><p>Shares every mechanic described on <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s page except the step-vs-line
 trace shape.</p></li>
-<li><p>A companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread must match the bound thread’s size, or the call throws.</p></li>
+<li><p>A companion <code class="docutils literal notranslate"><span class="pre">x</span></code> slate must match the bound slate’s size, or the call throws.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for how to view or save the
 result.</p></li>
 </ul>

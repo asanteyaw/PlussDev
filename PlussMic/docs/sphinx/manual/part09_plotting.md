@@ -3,7 +3,7 @@
 PlussMic plotting turns a table workflow into a report workflow. You clean a
 `DataFrame`, choose the features that should become axes, groups, or values, and
 receive a PlussPl `Studio` object that can be inspected, saved, or further
-customized. This chapter teaches the table-level plotting API. It is not a
+customized. This chapter covers the table-level plotting API. It is not a
 replacement for the lower-level PlussPl manual; it is the layer you use when the
 data already lives in PlussMic.
 

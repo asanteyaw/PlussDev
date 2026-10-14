@@ -30,7 +30,7 @@ just call `Slate(bool_mask)` and forward to the `Slate`-mask overload.
 Internally, `put(mask, value)` is a thin wrapper over
 [`Slate::select`](select.md) — it's exactly
 `Slate::select({mask}, {value}, *this)`: wherever the mask is true, use `value`;
-everywhere else, fall back to the original thread. Understanding `put()` this way explains
+everywhere else, fall back to the original slate. Understanding `put()` this way explains
 its broadcast rule for free: a scalar `value` (numeric, text, or a size-1 `Slate`)
 broadcasts to every masked row; a same-length `Slate` value supplies one replacement per
 row instead.
@@ -57,7 +57,7 @@ stored values untouched (just marked invalid). This is the masked equivalent of
 ## Returns
 
 `Slate`
-    A new thread the same length as `*this`, with masked rows replaced and every other row
+    A new slate the same length as `*this`, with masked rows replaced and every other row
     unchanged.
 
 ## Examples
@@ -104,7 +104,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 3. Replace masked rows in a `Note`-kind thread with a text scalar — useful for
+Example 3. Replace masked rows in a `Note`-kind slate with a text scalar — useful for
 redaction-style rewrites.
 
 ```cpp
@@ -147,7 +147,7 @@ ptype: Series
 ## Notes
 
 - Non-mutating — `put()` returns a new `Slate` and leaves `*this` unchanged; reassign the
-  result (`thread = thread.put(...)`) if you want the effect to stick.
+  result (`slate = slate.put(...)`) if you want the effect to stick.
 - `put(mask, value)` is exactly `Slate::select({mask}, {value}, *this)` — see
   [`Slate::select`](select.md) for the general multi-condition form this specializes.
 - `put(mask, pluss::series::null)` is the one overload that doesn't go through `select()` — it nulls

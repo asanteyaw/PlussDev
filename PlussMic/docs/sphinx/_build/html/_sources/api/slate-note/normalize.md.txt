@@ -12,12 +12,12 @@ SlateNoteAccessor::normalize(UnicodeForm form = UnicodeForm::NFC) const -> Slate
 
 ## What It Does
 
-Rewrites each cell of the bound thread into a canonical Unicode normalization
+Rewrites each cell of the bound slate into a canonical Unicode normalization
 form — the standard fix for text that looks identical on screen but compares
 unequal because it was encoded with a different sequence of combining characters
 (e.g. `"é"` as one precomposed codepoint vs. `"e"` + a combining acute accent). A
-direct forward to [`Slate::normalize()`](../thread/normalize.md). Requires the
-bound thread to be `Note`-kind.
+direct forward to [`Slate::normalize()`](../slate/normalize.md). Requires the
+bound slate to be `Note`-kind.
 
 ## Parameters
 
@@ -31,7 +31,7 @@ Which of the four standard Unicode normalization forms to apply: `NFC`
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, with each cell
+    A new `Note`-kind slate, same length as the bound slate, with each cell
     rewritten into the requested normalization form.
 
 ## Examples
@@ -72,8 +72,8 @@ std::cout << (out2 == decomposed);
 ptype: Series
 ```
 
-Example 3. A non-`Note` thread throws — the same message
-[`Slate::normalize()`](../thread/normalize.md) produces directly.
+Example 3. A non-`Note` slate throws — the same message
+[`Slate::normalize()`](../slate/normalize.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -94,7 +94,7 @@ Slate::normalize: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::normalize()` is a one-line forward to
-  [`Slate::normalize()`](../thread/normalize.md) — identical behavior and throws.
+  [`Slate::normalize()`](../slate/normalize.md) — identical behavior and throws.
 - Requires the optional Unicode backend (GNU libunistring) to be linked into this
   build; without it, non-ASCII normalization is unavailable.
 - A null cell on input stays null on output.
@@ -103,7 +103,7 @@ Slate::normalize: expected Note payload
 
 ## See Also
 
-- [`Slate::normalize`](../thread/normalize.md): the direct, non-accessor form
+- [`Slate::normalize`](../slate/normalize.md): the direct, non-accessor form
   this method forwards to.
 - [`SlateNoteAccessor::casefold`](casefold.md): case-insensitive comparison
   normalization — a complementary, not overlapping, concern.

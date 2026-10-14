@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,9 +49,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Extracts one or more regex capture groups from the bound thread into a new
+<p>Extracts one or more regex capture groups from the bound slate into a new
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — one feature per capture group. A direct forward to
-<a class="reference internal" href="#../thread/extract.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::extract()</span></code></span></a>. Requires the bound thread to be
+<a class="reference internal" href="../slate/extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::extract()</span></code></span></a>. Requires the bound slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, and <code class="docutils literal notranslate"><span class="pre">pattern</span></code> must contain at least one capture group (<code class="docutils literal notranslate"><span class="pre">(...)</span></code>), or the
 call throws.</p>
 </section>
@@ -138,19 +138,19 @@ dropped.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::extract()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/extract.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::extract()</span></code></span></a> — identical behavior and throws.</p></li>
+<a class="reference internal" href="../slate/extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::extract()</span></code></span></a> — identical behavior and throws.</p></li>
 <li><p>Auto-generated names are <code class="docutils literal notranslate"><span class="pre">match_0</span></code>, <code class="docutils literal notranslate"><span class="pre">match_1</span></code>, … — not <code class="docutils literal notranslate"><span class="pre">group_0</span></code>/<code class="docutils literal notranslate"><span class="pre">group_1</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">names</span></code>’s length must exactly equal the number of capture groups, or the call
 throws.</p></li>
 <li><p>A non-matching row stays in the output with <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in every capture-group column,
 rather than being dropped.</p></li>
-<li><p>A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> bound thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::extract:</span> <span class="pre">expected</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>.</p></li>
+<li><p>A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> bound slate throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::extract:</span> <span class="pre">expected</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/extract.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::extract</span></code></span></a>: the direct, non-accessor form this
+<li><p><a class="reference internal" href="../slate/extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::extract</span></code></span></a>: the direct, non-accessor form this
 method forwards to.</p></li>
 <li><p><a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::matches</span></code></span></a> / <a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a>:
 boolean regex checks, when you only need a mask rather than the captured text.</p></li>

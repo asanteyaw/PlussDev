@@ -20,7 +20,10 @@ void require_close(const std::vector<double>& got,
 
 } // namespace
 
-TEST_CASE("fmax and fmin skip one NaN and split finite ties", "[elementwise-ii][autodiff]") {
+// Routing follows libtorch (pinned in test_patch177_cpu_torch_autograd_parity.cpp): a lane
+// with exactly one NaN sends everything to the numeric operand; a finite tie sends
+// everything to the left operand.
+TEST_CASE("fmax and fmin skip one NaN and send finite ties to the left operand", "[elementwise-ii][autodiff]") {
   const double nan = std::numeric_limits<double>::quiet_NaN();
   auto a = pluss::make_series({1.0, 4.0, 3.0, nan});
   auto b = pluss::make_series({2.0, 4.0, nan, 5.0});
@@ -28,16 +31,16 @@ TEST_CASE("fmax and fmin skip one NaN and split finite ties", "[elementwise-ii][
   b.tracks_slope_(true);
 
   a.fmax(b).sum().reverse();
-  require_close(a.sensitivity().to_vec<double>(), {0.0, 0.5, 1.0, 0.0});
-  require_close(b.sensitivity().to_vec<double>(), {1.0, 0.5, 0.0, 1.0});
+  require_close(a.sensitivity().to_vec<double>(), {0.0, 1.0, 1.0, 0.0});
+  require_close(b.sensitivity().to_vec<double>(), {1.0, 0.0, 0.0, 1.0});
 
   auto c = pluss::make_series({1.0, 4.0, 3.0, nan});
   auto d = pluss::make_series({2.0, 4.0, nan, 5.0});
   c.tracks_slope_(true);
   d.tracks_slope_(true);
   c.fmin(d).sum().reverse();
-  require_close(c.sensitivity().to_vec<double>(), {1.0, 0.5, 1.0, 0.0});
-  require_close(d.sensitivity().to_vec<double>(), {0.0, 0.5, 0.0, 1.0});
+  require_close(c.sensitivity().to_vec<double>(), {1.0, 1.0, 1.0, 0.0});
+  require_close(d.sensitivity().to_vec<double>(), {0.0, 0.0, 0.0, 1.0});
 }
 
 TEST_CASE("heaviside enforces dtype and broadcasts its zero values", "[elementwise-ii]") {

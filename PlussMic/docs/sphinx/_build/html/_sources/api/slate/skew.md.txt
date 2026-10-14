@@ -14,7 +14,7 @@ Slate::skew(std::int64_t min_count = 3) const -> SlateValue
 ## What It Does
 
 Returns the sample skewness (the adjusted Fisher-Pearson standardized third
-moment) of every observed value in a numeric `Series` thread — a measure of
+moment) of every observed value in a numeric `Series` slate — a measure of
 asymmetry: `0` for a symmetric distribution, positive for a right-leaning tail,
 negative for a left-leaning tail. Rather than throwing on a too-small sample,
 this method returns a result marked *invalid* whenever the observed count is

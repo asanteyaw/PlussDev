@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,9 +48,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the bound thread’s case labels as a standalone <code class="docutils literal notranslate"><span class="pre">Slate</span></code> — a direct
+<p>Returns the bound slate’s case labels as a standalone <code class="docutils literal notranslate"><span class="pre">Slate</span></code> — a direct
 forward to <code class="docutils literal notranslate"><span class="pre">Slate::caselbl()</span></code>. Case labels are a separate companion
-sequence of row labels that can ride alongside a thread’s own values (the same
+sequence of row labels that can ride alongside a slate’s own values (the same
 concept <code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor</span></code> exposes for a whole frame’s leftmost display
 column, just here attached to a single <code class="docutils literal notranslate"><span class="pre">Slate</span></code>).</p>
 </section>
@@ -101,7 +101,7 @@ ptype: Note
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Always defined: every thread has case labels of some kind, even if they’re
+<li><p>Always defined: every slate has case labels of some kind, even if they’re
 just the default integer range.</p></li>
 <li><p>Identical to calling <code class="docutils literal notranslate"><span class="pre">Slate::caselbl()</span></code> directly.</p></li>
 </ul>

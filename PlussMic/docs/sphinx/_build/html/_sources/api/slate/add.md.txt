@@ -15,14 +15,14 @@ Slate::add(const Slate& other) const -> Slate
 ## What It Does
 
 Elementwise addition. The `double` overload adds the same scalar to every value; the
-`Slate` overload adds two threads together **positionally** — element `i` of the
-result is `(*this)[i] + other[i]` — and requires both threads to have the same
+`Slate` overload adds two slates together **positionally** — element `i` of the
+result is `(*this)[i] + other[i]` — and requires both slates to have the same
 length. There is no case-label alignment the way [`DataFrame`](../dataframe/add.md)'s
 `AlignOptions` overload has; a length mismatch throws rather than padding with
 `NULL`.
 
-`add()` normally requires a numeric `Series`-backed thread, with one special case:
-two `Note` (string) threads support `add()` too, and it means **string
+`add()` normally requires a numeric `Series`-backed slate, with one special case:
+two `Note` (string) slates support `add()` too, and it means **string
 concatenation**, not addition — `"north-".add("store")` behaves like `"north-" +
 "store"`, not a type error.
 
@@ -38,13 +38,13 @@ on what's different about each operator; this page covers the shared mechanics o
 **other** (`double` or `const Slate&`)
 
 The value(s) to add. For the `Slate` overload, must be the same length as `*this`
-(or a `Note`-kind thread, for concatenation).
+(or a `Note`-kind slate, for concatenation).
 
 ## Returns
 
 `Slate`
-    A new thread, same length as `*this`, holding the elementwise sum (or, for two
-    `Note` threads, the elementwise concatenation).
+    A new slate, same length as `*this`, holding the elementwise sum (or, for two
+    `Note` slates, the elementwise concatenation).
 
 ## Examples
 
@@ -68,7 +68,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Add two threads positionally.
+Example 2. Add two slates positionally.
 
 ```cpp
 auto boost = Slate(pluss::make_series({2.0, 4.0, 5.0}));
@@ -87,9 +87,9 @@ ptype: Series
 ```
 
 Position `0` adds `10 + 2`, position `1` adds `20 + 4`, position `2` adds `30 + 5` —
-purely positional, with no reference to any case labels either thread might carry.
+purely positional, with no reference to any case labels either slate might carry.
 
-Example 3. Two `Note` (string) threads concatenate instead of erroring.
+Example 3. Two `Note` (string) slates concatenate instead of erroring.
 
 ```cpp
 auto prefix = Slate(pluss::make_note({"north-", "south-", "east-"}));
@@ -136,11 +136,11 @@ Slate::add(Slate): positional operation requires identical lengths
 - The `Slate` overload's error message is prefixed with the exact call site
   (`Slate::add(Slate)`, `Slate::sub(Slate)`, and so on) — every method in this
   family reports its own name, not a shared generic message.
-- Mixing incompatible payload kinds (for example, adding a numeric `Series` thread to
-  a `Note` thread) throws `"Slate::add(Slate): unsupported payload combination for
-  operator '+' (Series vs Note)"` — `add()` only accepts two numeric threads or two
-  `Note` threads, never a mix.
-- If the calling thread carries display/case labels (set via `label().set()`), the
+- Mixing incompatible payload kinds (for example, adding a numeric `Series` slate to
+  a `Note` slate) throws `"Slate::add(Slate): unsupported payload combination for
+  operator '+' (Series vs Note)"` — `add()` only accepts two numeric slates or two
+  `Note` slates, never a mix.
+- If the calling slate carries display/case labels (set via `label().set()`), the
   result carries those same labels forward; `other`'s labels (if any) are never
   used.
 - [`radd()`](radd.md) is the reflected form — identical to `add()` for numbers

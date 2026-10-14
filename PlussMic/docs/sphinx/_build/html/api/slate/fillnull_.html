@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,9 +54,9 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>The mutating counterpart to <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>: fills <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells with
 <code class="docutils literal notranslate"><span class="pre">value</span></code> and updates <code class="docutils literal notranslate"><span class="pre">*this</span></code> in place, returning a reference to it, instead of
-returning a new <code class="docutils literal notranslate"><span class="pre">Slate</span></code>. Copy-on-write applies — if this thread’s storage is shared
+returning a new <code class="docutils literal notranslate"><span class="pre">Slate</span></code>. Copy-on-write applies — if this slate’s storage is shared
 with another <code class="docutils literal notranslate"><span class="pre">Slate</span></code> (from a copy via the copy constructor or <code class="docutils literal notranslate"><span class="pre">operator=</span></code>), the
-mutation clones the storage first, so the other thread is unaffected. See Example 2.</p>
+mutation clones the storage first, so the other slate is unaffected. See Example 2.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Only the double overload is genuinely in-place
@@ -97,7 +97,7 @@ A reference to <code class="docutils literal notranslate"><span class="pre">*thi
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Copy-on-write: mutating a copy leaves the original thread untouched.</p>
+<p>Example 2. Copy-on-write: mutating a copy leaves the original slate untouched.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">original</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">copy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">original</span><span class="p">;</span>
@@ -141,8 +141,8 @@ detached <code class="docutils literal notranslate"><span class="pre">copy</span
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Copy-on-write: mutating a thread that shares storage with another (from a copy)
-detaches it first, leaving the other thread untouched. See Example 2.</p></li>
+<li><p>Copy-on-write: mutating a slate that shares storage with another (from a copy)
+detaches it first, leaving the other slate untouched. See Example 2.</p></li>
 <li><p>Only the <code class="docutils literal notranslate"><span class="pre">double</span></code> overload mutates storage directly; the others reassign <code class="docutils literal notranslate"><span class="pre">*this</span></code>
 via the functional <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>. See the note above.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload’s error message includes the underscore:

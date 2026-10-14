@@ -55,7 +55,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Matches [`left.lor(right)`](lor.md) exactly here, since neither thread has display
+Matches [`left.lor(right)`](lor.md) exactly here, since neither slate has display
 labels set — the label-carry difference between `lor()`/`ror()` only becomes visible
 once labels are involved. See [`rand()`](rand.md) for a worked example with labels.
 

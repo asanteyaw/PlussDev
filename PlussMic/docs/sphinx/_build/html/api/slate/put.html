@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -65,7 +65,7 @@ just call <code class="docutils literal notranslate"><span class="pre">Slate(boo
 <p>Internally, <code class="docutils literal notranslate"><span class="pre">put(mask,</span> <span class="pre">value)</span></code> is a thin wrapper over
 <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::select</span></code></span></a> — it’s exactly
 <code class="docutils literal notranslate"><span class="pre">Slate::select({mask},</span> <span class="pre">{value},</span> <span class="pre">*this)</span></code>: wherever the mask is true, use <code class="docutils literal notranslate"><span class="pre">value</span></code>;
-everywhere else, fall back to the original thread. Understanding <code class="docutils literal notranslate"><span class="pre">put()</span></code> this way explains
+everywhere else, fall back to the original slate. Understanding <code class="docutils literal notranslate"><span class="pre">put()</span></code> this way explains
 its broadcast rule for free: a scalar <code class="docutils literal notranslate"><span class="pre">value</span></code> (numeric, text, or a size-1 <code class="docutils literal notranslate"><span class="pre">Slate</span></code>)
 broadcasts to every masked row; a same-length <code class="docutils literal notranslate"><span class="pre">Slate</span></code> value supplies one replacement per
 row instead.</p>
@@ -92,7 +92,7 @@ length supplies one replacement value per row instead.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with masked rows replaced and every other row
+A new slate the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with masked rows replaced and every other row
 unchanged.</p>
 </section>
 <section id="examples">
@@ -134,7 +134,7 @@ of <code class="docutils literal notranslate"><span class="pre">value</span></co
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. Replace masked rows in a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread with a text scalar — useful for
+<p>Example 3. Replace masked rows in a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate with a text scalar — useful for
 redaction-style rewrites.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">compare</span><span class="p">(</span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">SlateBinaryCompareOp</span><span class="o">::</span><span class="n">Eq</span><span class="p">);</span>
@@ -176,7 +176,7 @@ ptype: Series
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Non-mutating — <code class="docutils literal notranslate"><span class="pre">put()</span></code> returns a new <code class="docutils literal notranslate"><span class="pre">Slate</span></code> and leaves <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged; reassign the
-result (<code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">=</span> <span class="pre">thread.put(...)</span></code>) if you want the effect to stick.</p></li>
+result (<code class="docutils literal notranslate"><span class="pre">slate</span> <span class="pre">=</span> <span class="pre">slate.put(...)</span></code>) if you want the effect to stick.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">put(mask,</span> <span class="pre">value)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">Slate::select({mask},</span> <span class="pre">{value},</span> <span class="pre">*this)</span></code> — see
 <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::select</span></code></span></a> for the general multi-condition form this specializes.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">put(mask,</span> <span class="pre">pluss::series::null)</span></code> is the one overload that doesn’t go through <code class="docutils literal notranslate"><span class="pre">select()</span></code> — it nulls

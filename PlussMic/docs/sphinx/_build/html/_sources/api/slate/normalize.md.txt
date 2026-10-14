@@ -13,9 +13,9 @@ Slate::normalize(UnicodeForm form = UnicodeForm::NFC) const -> Slate
 
 ## What It Does
 
-Applies Unicode text normalization to every cell of a `Note` (string) thread,
+Applies Unicode text normalization to every cell of a `Note` (string) slate,
 choosing one of the four standard Unicode Normalization Forms via `form`. Requires
-the thread to be `Note`-kind.
+the slate to be `Note`-kind.
 
 ```cpp
 enum class UnicodeForm {
@@ -59,7 +59,7 @@ that might contain non-ASCII characters.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, holding the normalized text.
+    A new `Note`-kind slate, same length as `*this`, holding the normalized text.
 
 ## Examples
 
@@ -131,7 +131,7 @@ on this input rather than throwing — but the exact byte-level output in that c
 isn't asserted here, since it depends on a build-time optional dependency rather than
 anything guaranteed by the public API alone.
 
-Example 4. A non-`Note` thread throws.
+Example 4. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -151,7 +151,7 @@ Slate::normalize: expected Note payload
 
 ## Notes
 
-- Requires the calling thread to be `Note`-kind.
+- Requires the calling slate to be `Note`-kind.
 - All four `UnicodeForm` values are identity transforms on pure ASCII text, with or
   without the Unicode backend.
 - Non-ASCII input throws outright when this build lacks libunistring — there is no

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -71,7 +71,7 @@ and contain exactly one value.</p>
 <p><strong>start</strong> / <strong>stop</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code> / <code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
 The inclusive interval endpoints, in the case axis’s own key representation. The
 <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload requires each argument to be a defined, 1D, single-element
-thread (<code class="docutils literal notranslate"><span class="pre">pluss::make_note({&quot;X&quot;})</span></code>, not the scalar <code class="docutils literal notranslate"><span class="pre">pluss::make_note(&quot;X&quot;)</span></code> — the
+slate (<code class="docutils literal notranslate"><span class="pre">pluss::make_note({&quot;X&quot;})</span></code>, not the scalar <code class="docutils literal notranslate"><span class="pre">pluss::make_note(&quot;X&quot;)</span></code> — the
 latter constructs a 0D payload that <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own constructor rejects).</p>
 </section>
 <section id="returns">
@@ -141,7 +141,7 @@ B    | 3
 [2 cs x 1 feat]
 </pre></div>
 </div>
-<p>Example 4. Scalar Threads let computed bounds flow into the selection without leaving
+<p>Example 4. Scalar Slates let computed bounds flow into the selection without leaving
 the PlussMic value system. Each endpoint must be a strictly 1D, single-element Note —
 constructed with a one-element initializer list, not the bare-scalar overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="w"> </span><span class="n">begin</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">}));</span>

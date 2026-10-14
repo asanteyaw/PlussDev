@@ -14,13 +14,13 @@ Slate::mean() const -> SlateValue
 ## What It Does
 
 Returns the arithmetic mean of every observed (non-missing) value in a numeric
-`Series` thread, as a scalar `SlateValue`. Missing entries are excluded before
+`Series` slate, as a scalar `SlateValue`. Missing entries are excluded before
 the mean is computed — both from the sum and from the count used to divide it,
 so a missing entry never drags the average toward zero. The computation is
 carried out in `Float64` (or `Float32` on a non-CPU platform), regardless of
-the source dtype, so an integer-dtype thread still produces a proper fractional
+the source dtype, so an integer-dtype slate still produces a proper fractional
 mean rather than a truncated integer result. Restricted to `Series` payloads;
-every other kind throws. An empty thread, or one where every entry is missing,
+every other kind throws. An empty slate, or one where every entry is missing,
 also throws.
 
 See [`Slate::sum`'s note on printing a `SlateValue`](sum.md) — every example
@@ -39,7 +39,7 @@ below uses `.to_dbl()` to extract a clean number instead of streaming the
 
 ## Examples
 
-Example 1. Mean of a numeric thread with no missing entries.
+Example 1. Mean of a numeric slate with no missing entries.
 
 ```cpp
 using namespace pluss::table;
@@ -74,7 +74,7 @@ std::cout << out2.to_dbl();
 
 Only `10.0` and `40.0` participate: `(10 + 40) / 2 = 25`, not `(10 + 40) / 3`.
 
-Example 3. A thread with no observed values throws.
+Example 3. A slate with no observed values throws.
 
 ```cpp
 auto all_missing = Slate(
@@ -115,9 +115,9 @@ Slate::mean is only valid for Series payload
 
 - Missing entries are excluded from both the numerator and the divisor.
 - Always computed in `Float64` (CPU) or `Float32` (off-CPU), regardless of the
-  source dtype — an integer thread's mean is a proper fraction, not a truncated
+  source dtype — an integer slate's mean is a proper fraction, not a truncated
   integer.
-- An empty thread, or one where every entry is missing, throws `"Slate::mean
+- An empty slate, or one where every entry is missing, throws `"Slate::mean
   on an empty (all-null) selection"`.
 - Restricted to `Series` payloads; anything else throws `"Slate::mean is only
   valid for Series payload"`.

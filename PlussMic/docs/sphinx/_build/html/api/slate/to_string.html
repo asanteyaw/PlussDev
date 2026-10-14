@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Renders the thread’s actual row values — index, values, and the trailing <code class="docutils literal notranslate"><span class="pre">ptype:</span></code> footer —
+<p>Renders the slate’s actual row values — index, values, and the trailing <code class="docutils literal notranslate"><span class="pre">ptype:</span></code> footer —
 as a plain <code class="docutils literal notranslate"><span class="pre">std::string</span></code>, using the same rendering <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> and <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>
 use, just returned instead of written to a stream. This is the render-to-string counterpart
 of <a class="reference internal" href="info_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info_string()</span></code></span></a>, which returns <em>metadata</em> instead of row values.</p>
@@ -58,8 +58,8 @@ of <a class="reference internal" href="info_string.html"><span class="std std-do
 <p>No trailing newline — unlike show()/operator&lt;&lt;
 The string <code class="docutils literal notranslate"><span class="pre">to_string()</span></code> returns ends right after the <code class="docutils literal notranslate"><span class="pre">ptype:</span></code> line, with <strong>no</strong> trailing
 <code class="docutils literal notranslate"><span class="pre">\n</span></code>. <code class="docutils literal notranslate"><span class="pre">show()</span></code> and <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>, by contrast, always end their stream output with a
-trailing newline. If you’re switching from <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">thread</span></code> to
-<code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">thread.to_string()</span></code>, add your own <code class="docutils literal notranslate"><span class="pre">&quot;\n&quot;</span></code> if you want the same spacing. See
+trailing newline. If you’re switching from <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">slate</span></code> to
+<code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">slate.to_string()</span></code>, add your own <code class="docutils literal notranslate"><span class="pre">&quot;\n&quot;</span></code> if you want the same spacing. See
 Example 1.</p>
 </div>
 </section>
@@ -81,7 +81,7 @@ always present when rendering a <code class="docutils literal notranslate"><span
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
-The rendered thread — row index, values, and (by default) a <code class="docutils literal notranslate"><span class="pre">ptype:</span></code> footer — with no
+The rendered slate — row index, values, and (by default) a <code class="docutils literal notranslate"><span class="pre">ptype:</span></code> footer — with no
 trailing newline.</p>
 </section>
 <section id="examples">
@@ -104,7 +104,7 @@ call continues on the same line unless you add one yourself.</p>
 ptype: Series|END
 </pre></div>
 </div>
-<p>Example 2. A long thread truncates to a head/tail preview with a <code class="docutils literal notranslate"><span class="pre">...</span></code> ellipsis row —
+<p>Example 2. A long slate truncates to a head/tail preview with a <code class="docutils literal notranslate"><span class="pre">...</span></code> ellipsis row —
 how many rows are shown before truncating is driven by <code class="docutils literal notranslate"><span class="pre">terminal_height</span></code> (here forced small
 to make the truncation deterministic regardless of the real terminal).</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>

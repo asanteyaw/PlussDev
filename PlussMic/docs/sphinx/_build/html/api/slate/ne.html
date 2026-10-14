@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -55,7 +55,7 @@
 <p>The complement of <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">ne()</span></code> reports <code class="docutils literal notranslate"><span class="pre">true</span></code> at every position where
 <code class="docutils literal notranslate"><span class="pre">eq()</span></code> would report <code class="docutils literal notranslate"><span class="pre">false</span></code>, and vice versa. Same overload shape, same positional
 matching, same stringify-then-compare behavior on the string overload for non-<code class="docutils literal notranslate"><span class="pre">Note</span></code>
-threads.</p>
+slates.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -65,7 +65,7 @@ threads.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise
 inequality result — exactly the logical negation of what <code class="docutils literal notranslate"><span class="pre">eq()</span></code> would return for
 the same arguments.</p>
 </section>
@@ -89,7 +89,7 @@ ptype: Series
 </pre></div>
 </div>
 <p>The exact negation of <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scores.eq(85.0)</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">false,</span> <span class="pre">true,</span> <span class="pre">false</span></code>.</p>
-<p>Example 2. Compare two threads positionally.</p>
+<p>Example 2. Compare two slates positionally.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">72.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">ne</span><span class="p">(</span><span class="n">targets</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
@@ -105,7 +105,7 @@ ptype: Series
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. String inequality on a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread.</p>
+<p>Example 3. String inequality on a <code class="docutils literal notranslate"><span class="pre">Note</span></code> slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">ne</span><span class="p">(</span><span class="s">&quot;Bola&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_names</span><span class="p">;</span>
@@ -128,7 +128,7 @@ ptype: Series
 <ul class="simple">
 <li><p>See <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a> for the family-wide mechanics: positional matching, the
 length-mismatch throw, and the string-overload’s stringify-then-compare behavior
-on non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> threads.</p></li>
+on non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slates.</p></li>
 </ul>
 </section>
 <section id="see-also">

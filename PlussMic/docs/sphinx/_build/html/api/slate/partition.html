@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,9 +50,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread at the <em>first</em> occurrence of a literal
+<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate at the <em>first</em> occurrence of a literal
 <code class="docutils literal notranslate"><span class="pre">separator</span></code>, always producing exactly <strong>three</strong> output columns: the text before the
-separator, the separator itself, and the text after it. Requires the thread to be
+separator, the separator itself, and the text after it. Requires the slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. It’s a narrower, simpler cousin of <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a> — always
 literal (no regex), always stops at the first match, and always exactly three columns
 regardless of the input.</p>
@@ -162,7 +162,7 @@ output columns are genuinely <code class="docutils literal notranslate"><span cl
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::partition: separator cannot be empty
 </pre></div>
 </div>
-<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">);</span>
@@ -183,7 +183,7 @@ output columns are genuinely <code class="docutils literal notranslate"><span cl
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
 <li><p>Always literal (no regex mode) and always stops at the <em>first</em> occurrence — for a
 regex-aware or multi-way split, use <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>.</p></li>
 <li><p>Always produces exactly three output columns, regardless of the input.</p></li>

@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=e742a746"></script>
+    <script src="_static/api_nav.js?v=c8d94b85"></script>
     <script src="_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -42,6 +42,10 @@
 <h2>When To Use Bundle Types<a class="headerlink" href="#when-to-use-bundle-types" title="Link to this heading">¶</a></h2>
 <p>The bundle model is the multi-table workbench layer:</p>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Locus</span></code>: named collection of related, potentially ragged <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code>: fluent link-graph builder returned by <code class="docutils literal notranslate"><span class="pre">Locus::from(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LocusPull</span></code>: root-grain feature builder returned by <code class="docutils literal notranslate"><span class="pre">Locus::pull(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LocusQuery</span></code>: workspace SQL accessor returned by <code class="docutils literal notranslate"><span class="pre">Locus::query()</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code>: named collection of related <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> tables</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code>: fluent join-graph builder returned by <code class="docutils literal notranslate"><span class="pre">Nexus::from(...)</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code>: workspace SQL accessor returned by <code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code></p></li>
@@ -49,6 +53,16 @@
 <p>Use it when the job is bigger than one table: several frames must be coordinated,
 relationships should be declared once and reused, and join plans or audits should
 belong to the workspace itself rather than be rebuilt ad hoc each time.</p>
+<p>Choose Locus when ragged <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> structure is the public boundary. Choose Nexus
+when every member is already a rectangular <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. Locus aligns only for an
+operation that requires a frame workspace and converts data results back to
+Catalog, so callers do not have to abandon the ragged model merely to declare
+links, traverse them, pull root-grain features, or issue a query.</p>
+<p>See the <a class="reference internal" href="locus_api_reference.html"><span class="std std-doc">Locus API Reference</span></a>,
+<a class="reference internal" href="locus_traverse_api_reference.html"><span class="std std-doc">LocusTraverse API Reference</span></a>,
+<a class="reference internal" href="locus_pull_api_reference.html"><span class="std std-doc">LocusPull API Reference</span></a>, and
+<a class="reference internal" href="locus_query_api_reference.html"><span class="std std-doc">LocusQuery API Reference</span></a> for the ragged workspace
+surface.</p>
 </section>
 <section id="nexus">
 <h2>Nexus<a class="headerlink" href="#nexus" title="Link to this heading">¶</a></h2>

@@ -12,9 +12,9 @@ SlateNoteAccessor::titlecase() const -> Slate
 
 ## What It Does
 
-Capitalizes the first letter of every "word" in the bound thread's cells and
+Capitalizes the first letter of every "word" in the bound slate's cells and
 lowercases the rest — a direct forward to
-[`Slate::titlecase()`](../thread/titlecase.md). Requires the bound thread to be
+[`Slate::titlecase()`](../slate/titlecase.md). Requires the bound slate to be
 `Note`-kind. The classic display-formatting transform for names, addresses, or
 titles typed in inconsistent casing.
 
@@ -34,7 +34,7 @@ Example 2.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, with every cell's
+    A new `Note`-kind slate, same length as the bound slate, with every cell's
     text title-cased.
 
 ## Examples
@@ -85,8 +85,8 @@ no built-in way to make `titlecase()` treat apostrophes or hyphens as
 internal-to-a-word — post-process the result with [`replace()`](replace.md) for
 known quirks that matter for a given column.
 
-Example 3. A non-`Note` thread throws — the same message
-[`Slate::titlecase()`](../thread/titlecase.md) produces directly.
+Example 3. A non-`Note` slate throws — the same message
+[`Slate::titlecase()`](../slate/titlecase.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -107,7 +107,7 @@ Slate::titlecase: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::titlecase()` is a one-line forward to
-  [`Slate::titlecase()`](../thread/titlecase.md) — identical behavior and
+  [`Slate::titlecase()`](../slate/titlecase.md) — identical behavior and
   throws.
 - A null cell on input stays null on output.
 - Word-boundary detection resets on *any* non-alphanumeric character, not just
@@ -115,7 +115,7 @@ Slate::titlecase: expected Note payload
 
 ## See Also
 
-- [`Slate::titlecase`](../thread/titlecase.md): the direct, non-accessor form
+- [`Slate::titlecase`](../slate/titlecase.md): the direct, non-accessor form
   this method forwards to.
 - [`SlateNoteAccessor::lower`](lower.md) /
   [`SlateNoteAccessor::upper`](upper.md): whole-cell case transforms,

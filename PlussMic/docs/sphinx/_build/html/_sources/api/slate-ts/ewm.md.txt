@@ -14,7 +14,7 @@ TimeSeriesAccessor::ewm(double alpha, WindowStatistic statistic = WindowStatisti
 
 Computes an **exponentially-weighted moving statistic**: each position's output
 weighs every position seen so far, with more recent positions weighted more
-heavily by a factor of `alpha` (`0 < alpha <= 1`) — the whole thread contributes,
+heavily by a factor of `alpha` (`0 < alpha <= 1`) — the whole slate contributes,
 never just a fixed window, but older values fade out geometrically. Only `Mean`,
 `Var`, and `Std` are supported.
 
@@ -25,8 +25,8 @@ never just a fixed window, but older values fade out geometrically. Only `Mean`,
   classic recursive formula. Supports missing entries directly.
 - **`false`**: the classic recursive form,
   `y_t = alpha * x_t + (1 - alpha) * y_{t-1}` (with `y_0 = x_0`). **Requires the
-  source thread to carry no validity mask at all** — not just no actual missing
-  values within one; a thread that happens to carry an all-valid mask still
+  source slate to carry no validity mask at all** — not just no actual missing
+  values within one; a slate that happens to carry an all-valid mask still
   fails this check. Pass `adjusted = true` (the default) if there's any chance
   the source carries a mask.
 
@@ -57,7 +57,7 @@ positions before `min_count` real observations have been seen are `NULL`.
 
 **adjusted** (`bool`, default `true`)
     `true`: normalized form, supports missing entries. `false`: classic
-    recursive form, requires a non-nullable source thread.
+    recursive form, requires a non-nullable source slate.
 
 **bias_corrected** (`bool`, default `true`)
     For `Var`/`Std` only: whether to apply a bias correction to the exponentially
@@ -73,7 +73,7 @@ positions before `min_count` real observations have been seen are `NULL`.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, holding the exponentially-
+    A new slate, same length as the bound source, holding the exponentially-
     weighted statistic at each position.
 
 ## Examples
@@ -185,7 +185,7 @@ Position `0` has only one observation — a bias-corrected variance needs at
 least two, so it's `NULL` even though `min_count = 1` alone would have allowed
 it.
 
-Example 5. `adjusted = false` with a nullable source thread throws.
+Example 5. `adjusted = false` with a nullable source slate throws.
 
 ```cpp
 try {
@@ -211,7 +211,7 @@ Slate::decay(adjusted=false): nullable input requires adjusted=true
   carries forward the smoothed estimate from prior real observations. Only
   positions before `min_count` real observations have accumulated are `NULL`.
   See Example 3.
-- `adjusted = false` requires the source thread to carry no validity mask at
+- `adjusted = false` requires the source slate to carry no validity mask at
   all (not just no missing values within one) — pass `adjusted = true` (the
   default) if the source might carry a mask. See Example 5.
 - `bias_corrected` (for `Var`/`Std`) effectively requires at least 2 real
@@ -223,7 +223,7 @@ Slate::decay(adjusted=false): nullable input requires adjusted=true
   seen so far" statistic that weights every observation equally instead of
   decaying older ones.
 - [`TimeSeriesAccessor::rolling`](rolling.md): a fixed-width alternative, rather
-  than a decaying weight over the whole thread.
+  than a decaying weight over the whole slate.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="eq.html">

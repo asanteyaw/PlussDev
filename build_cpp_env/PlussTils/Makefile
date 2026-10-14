@@ -206,6 +206,110 @@ PlussTilsCore/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/PlussTilsCore.dir/build.make PlussTils/CMakeFiles/PlussTilsCore.dir/build
 .PHONY : PlussTilsCore/fast
 
+# Convenience name for target.
+PlussTils/CMakeFiles/plusstils_core_env_reference.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/CMakeFiles/plusstils_core_env_reference.dir/rule
+.PHONY : PlussTils/CMakeFiles/plusstils_core_env_reference.dir/rule
+
+# Convenience name for target.
+plusstils_core_env_reference: PlussTils/CMakeFiles/plusstils_core_env_reference.dir/rule
+.PHONY : plusstils_core_env_reference
+
+# fast build rule for target.
+plusstils_core_env_reference/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_reference.dir/build
+.PHONY : plusstils_core_env_reference/fast
+
+# Convenience name for target.
+PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/rule
+.PHONY : PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/rule
+
+# Convenience name for target.
+plusstils_core_seed_reference: PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/rule
+.PHONY : plusstils_core_seed_reference
+
+# fast build rule for target.
+plusstils_core_seed_reference/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/build
+.PHONY : plusstils_core_seed_reference/fast
+
+# Convenience name for target.
+PlussTils/CMakeFiles/plusstils_core_env_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/CMakeFiles/plusstils_core_env_tests.dir/rule
+.PHONY : PlussTils/CMakeFiles/plusstils_core_env_tests.dir/rule
+
+# Convenience name for target.
+plusstils_core_env_tests: PlussTils/CMakeFiles/plusstils_core_env_tests.dir/rule
+.PHONY : plusstils_core_env_tests
+
+# fast build rule for target.
+plusstils_core_env_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_tests.dir/build
+.PHONY : plusstils_core_env_tests/fast
+
+# Convenience name for target.
+PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/rule
+.PHONY : PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/rule
+
+# Convenience name for target.
+plusstils_core_seed_tests: PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/rule
+.PHONY : plusstils_core_seed_tests
+
+# fast build rule for target.
+plusstils_core_seed_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build
+.PHONY : plusstils_core_seed_tests/fast
+
+examples/tils/core_env_reference.o: examples/tils/core_env_reference.cpp.o
+.PHONY : examples/tils/core_env_reference.o
+
+# target to build an object file
+examples/tils/core_env_reference.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_reference.dir/examples/tils/core_env_reference.cpp.o
+.PHONY : examples/tils/core_env_reference.cpp.o
+
+examples/tils/core_env_reference.i: examples/tils/core_env_reference.cpp.i
+.PHONY : examples/tils/core_env_reference.i
+
+# target to preprocess a source file
+examples/tils/core_env_reference.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_reference.dir/examples/tils/core_env_reference.cpp.i
+.PHONY : examples/tils/core_env_reference.cpp.i
+
+examples/tils/core_env_reference.s: examples/tils/core_env_reference.cpp.s
+.PHONY : examples/tils/core_env_reference.s
+
+# target to generate assembly for a file
+examples/tils/core_env_reference.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_reference.dir/examples/tils/core_env_reference.cpp.s
+.PHONY : examples/tils/core_env_reference.cpp.s
+
+examples/tils/core_seed_reference.o: examples/tils/core_seed_reference.cpp.o
+.PHONY : examples/tils/core_seed_reference.o
+
+# target to build an object file
+examples/tils/core_seed_reference.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/examples/tils/core_seed_reference.cpp.o
+.PHONY : examples/tils/core_seed_reference.cpp.o
+
+examples/tils/core_seed_reference.i: examples/tils/core_seed_reference.cpp.i
+.PHONY : examples/tils/core_seed_reference.i
+
+# target to preprocess a source file
+examples/tils/core_seed_reference.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/examples/tils/core_seed_reference.cpp.i
+.PHONY : examples/tils/core_seed_reference.cpp.i
+
+examples/tils/core_seed_reference.s: examples/tils/core_seed_reference.cpp.s
+.PHONY : examples/tils/core_seed_reference.s
+
+# target to generate assembly for a file
+examples/tils/core_seed_reference.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/examples/tils/core_seed_reference.cpp.s
+.PHONY : examples/tils/core_seed_reference.cpp.s
+
 src/env/env.o: src/env/env.cpp.o
 .PHONY : src/env/env.o
 
@@ -230,6 +334,54 @@ src/env/env.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/PlussTilsCore.dir/build.make PlussTils/CMakeFiles/PlussTilsCore.dir/src/env/env.cpp.s
 .PHONY : src/env/env.cpp.s
 
+test/core_env_tests.o: test/core_env_tests.cpp.o
+.PHONY : test/core_env_tests.o
+
+# target to build an object file
+test/core_env_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_tests.dir/test/core_env_tests.cpp.o
+.PHONY : test/core_env_tests.cpp.o
+
+test/core_env_tests.i: test/core_env_tests.cpp.i
+.PHONY : test/core_env_tests.i
+
+# target to preprocess a source file
+test/core_env_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_tests.dir/test/core_env_tests.cpp.i
+.PHONY : test/core_env_tests.cpp.i
+
+test/core_env_tests.s: test/core_env_tests.cpp.s
+.PHONY : test/core_env_tests.s
+
+# target to generate assembly for a file
+test/core_env_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_tests.dir/test/core_env_tests.cpp.s
+.PHONY : test/core_env_tests.cpp.s
+
+test/core_seed_tests.o: test/core_seed_tests.cpp.o
+.PHONY : test/core_seed_tests.o
+
+# target to build an object file
+test/core_seed_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/test/core_seed_tests.cpp.o
+.PHONY : test/core_seed_tests.cpp.o
+
+test/core_seed_tests.i: test/core_seed_tests.cpp.i
+.PHONY : test/core_seed_tests.i
+
+# target to preprocess a source file
+test/core_seed_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/test/core_seed_tests.cpp.i
+.PHONY : test/core_seed_tests.cpp.i
+
+test/core_seed_tests.s: test/core_seed_tests.cpp.s
+.PHONY : test/core_seed_tests.s
+
+# target to generate assembly for a file
+test/core_seed_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/test/core_seed_tests.cpp.s
+.PHONY : test/core_seed_tests.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,9 +398,25 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... PlussTilsCore"
+	@echo "... plusstils_core_env_reference"
+	@echo "... plusstils_core_env_tests"
+	@echo "... plusstils_core_seed_reference"
+	@echo "... plusstils_core_seed_tests"
+	@echo "... examples/tils/core_env_reference.o"
+	@echo "... examples/tils/core_env_reference.i"
+	@echo "... examples/tils/core_env_reference.s"
+	@echo "... examples/tils/core_seed_reference.o"
+	@echo "... examples/tils/core_seed_reference.i"
+	@echo "... examples/tils/core_seed_reference.s"
 	@echo "... src/env/env.o"
 	@echo "... src/env/env.i"
 	@echo "... src/env/env.s"
+	@echo "... test/core_env_tests.o"
+	@echo "... test/core_env_tests.i"
+	@echo "... test/core_env_tests.s"
+	@echo "... test/core_seed_tests.o"
+	@echo "... test/core_seed_tests.i"
+	@echo "... test/core_seed_tests.s"
 .PHONY : help
 
 

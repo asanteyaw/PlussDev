@@ -43,10 +43,10 @@ The right-hand side can be a numeric scalar, a text scalar, one of the four nati
 payload types (`Series`, `Note`, `Timeline`, `Duration`), or another `Slate` — every
 overload converges on the same row-by-row boolean result.
 
-```{important} A text literal against a Timeline thread is parsed as a date, not compared as text
-Calling the `std::string_view` overload on a `Timeline`-kind thread does **not** perform
+```{important} A text literal against a Timeline slate is parsed as a date, not compared as text
+Calling the `std::string_view` overload on a `Timeline`-kind slate does **not** perform
 a lexical string comparison — the literal is parsed as a timestamp first (via
-`pluss::make_timeline`), then compared temporally. Only `Note`-kind threads (and, as a
+`pluss::make_timeline`), then compared temporally. Only `Note`-kind slates (and, as a
 fallback, everything else) compare the literal as plain text. See Example 4.
 ```
 
@@ -65,12 +65,12 @@ fallback, everything else) compare the literal as plain text. See Example 4.
 ## Returns
 
 `Slate`
-    A `Series`-kind thread of `Bool` values, one per row. Rows that are invalid in the
-    source thread compare `false` rather than propagating invalidity.
+    A `Series`-kind slate of `Bool` values, one per row. Rows that are invalid in the
+    source slate compare `false` rather than propagating invalidity.
 
 ## Examples
 
-Example 1. Broadcast one numeric scalar across a numeric thread.
+Example 1. Broadcast one numeric scalar across a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -91,7 +91,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Compare a `Note`-backed thread against a text literal — case-sensitive, exact
+Example 2. Compare a `Note`-backed slate against a text literal — case-sensitive, exact
 text comparison, since the source is `Note`-kind.
 
 ```cpp
@@ -110,7 +110,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 3. Compare two numeric threads element by element — a positional, row-by-row
+Example 3. Compare two numeric slates element by element — a positional, row-by-row
 comparison, not a broadcast.
 
 ```cpp
@@ -131,7 +131,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 4. Against a `Timeline`-kind thread, a text literal is parsed as a date before
+Example 4. Against a `Timeline`-kind slate, a text literal is parsed as a date before
 comparing — see the important callout above.
 
 ```cpp
@@ -173,7 +173,7 @@ Slate::compare: positional alignment requires identical lengths
 
 ## Notes
 
-- Invalid (`NULL`) rows in the source thread compare `false`, not `NULL` — `compare()`
+- Invalid (`NULL`) rows in the source slate compare `false`, not `NULL` — `compare()`
   never propagates invalidity into the result.
 - A scalar `Series`/`Note` payload (`dim() == 0`) broadcasts; a 1D payload must match
   `size()` exactly or the call throws.

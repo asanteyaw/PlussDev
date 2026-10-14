@@ -35,8 +35,8 @@
 
 <div class="pluss-card">
 <span class="card-name">bundle</span>
-<span class="card-model">Nexus &middot; NexusTraverse &middot; NexusQuery</span>
-<p class="card-desc">Multi-table workbenches: <code>Nexus</code> coordinates related frames, declared relationships, join plans, and reusable workspace operations.</p>
+<span class="card-model">Locus &middot; Nexus &middot; traversal &middot; pull &middot; query</span>
+<p class="card-desc">Multi-table workbenches: <code>Locus</code> coordinates related ragged catalogs, while <code>Nexus</code> coordinates rectangular frames; both retain declared links and reusable workspace plans.</p>
 </div>
 
 <div class="pluss-card">

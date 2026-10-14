@@ -24,7 +24,7 @@ Two different slicing conventions:
   after `stop`'s, it throws.
 
 Both overloads return the sliced case-label **values** as a bare `Slate` —
-not the bound thread's own data.
+not the bound slate's own data.
 
 ## Parameters
 
@@ -131,7 +131,7 @@ throws instead of silently returning nothing.
 - The label-value overload's `stop` bound is the **last**, not first,
   occurrence of that value — worth checking carefully when the slice value
   itself repeats, as in Example 2.
-- Both overloads return values only, not the bound thread's own data — pair
+- Both overloads return values only, not the bound slate's own data — pair
   with [`pos()`](pos.md)/[`find()`](find.md) and `Slate::take` if the
   corresponding data rows are needed instead.
 

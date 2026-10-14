@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,13 +48,13 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Renders the thread’s row values — the same rendering <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> and
+<p>Renders the slate’s row values — the same rendering <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> and
 <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a> use — as a side effect, rather than returning it. The two
 overloads behave differently in one important way, not just “default stream vs. explicit
 stream”:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">show(os,</span> <span class="pre">options)</span></code></strong> always prints plain text straight to <code class="docutils literal notranslate"><span class="pre">os</span></code>, exactly like
-<code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">thread</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">slate</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">show(options)</span></code></strong> (no stream argument) first checks whether a GUI backend is available
 and configured. If one is, it opens an interactive viewer window instead of printing to
 <code class="docutils literal notranslate"><span class="pre">std::cout</span></code>; only if no GUI backend is available does it fall back to printing to
@@ -64,10 +64,10 @@ and configured. If one is, it opens an interactive viewer window instead of prin
 <p class="admonition-title">Important</p>
 <p>show() with no stream argument may open a GUI window instead of printing
 On a machine with a GUI session available (a typical desktop dev environment), calling
-<code class="docutils literal notranslate"><span class="pre">thread.show()</span></code> with no arguments and default options can resolve to a native or web-based
+<code class="docutils literal notranslate"><span class="pre">slate.show()</span></code> with no arguments and default options can resolve to a native or web-based
 viewer window rather than writing to <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> — and can block waiting for that window.
 If you want guaranteed plain-text output to the console, either pass <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> explicitly
-(<code class="docutils literal notranslate"><span class="pre">thread.show(std::cout)</span></code>) or use <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a>/<code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>, neither of
+(<code class="docutils literal notranslate"><span class="pre">slate.show(std::cout)</span></code>) or use <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a>/<code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>, neither of
 which ever opens a GUI window.</p>
 </div>
 </section>
@@ -139,7 +139,7 @@ ptype: Series
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">show(os,</span> <span class="pre">options)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">thread</span></code> (plus whichever <code class="docutils literal notranslate"><span class="pre">options</span></code> you pass) —
+<li><p><code class="docutils literal notranslate"><span class="pre">show(os,</span> <span class="pre">options)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">slate</span></code> (plus whichever <code class="docutils literal notranslate"><span class="pre">options</span></code> you pass) —
 always plain text, never a GUI window.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">show(options)</span></code> (no stream) may open a GUI viewer window instead of printing, depending on
 the runtime environment — see the important callout above. Pass <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> explicitly if

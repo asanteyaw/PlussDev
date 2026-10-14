@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,11 +50,11 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Computes the value at each requested fractional position (<code class="docutils literal notranslate"><span class="pre">0.0</span></code> = minimum,
-<code class="docutils literal notranslate"><span class="pre">1.0</span></code> = maximum, <code class="docutils literal notranslate"><span class="pre">0.5</span></code> = median) among the thread’s observed values, using the
+<code class="docutils literal notranslate"><span class="pre">1.0</span></code> = maximum, <code class="docutils literal notranslate"><span class="pre">0.5</span></code> = median) among the slate’s observed values, using the
 same linear-interpolation-between-ranks convention as
 <a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">describe()</span></code>’s</span></a> <code class="docutils literal notranslate"><span class="pre">25%</span></code>/<code class="docutils literal notranslate"><span class="pre">50%</span></code>/<code class="docutils literal notranslate"><span class="pre">75%</span></code> rows and
 <a class="reference internal" href="median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">median()</span></code></span></a>. Missing entries are dropped first (via
-<a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dropnull()</span></code></span></a>). Returns a new thread — one entry per requested
+<a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dropnull()</span></code></span></a>). Returns a new slate — one entry per requested
 point, in the order given — rather than a scalar <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>, so the
 <code class="docutils literal notranslate"><span class="pre">0.5</span></code> point (for example) computes exactly the same value
 <a class="reference internal" href="median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">median()</span></code></span></a> would.</p>
@@ -75,7 +75,7 @@ every requested point comes back missing rather than throwing.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, one entry per requested point (in the order given), holding
+A new slate, one entry per requested point (in the order given), holding
 the interpolated value at each fractional position.</p>
 </section>
 <section id="examples">

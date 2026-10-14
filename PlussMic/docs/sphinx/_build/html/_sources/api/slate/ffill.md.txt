@@ -46,8 +46,8 @@ entries (nothing valid appears before it) never gets filled, no matter the limit
 ## Returns
 
 `Slate`
-    A new thread with eligible missing positions filled. If the thread had no
-    validity mask and nothing was missing, the original thread is returned
+    A new slate with eligible missing positions filled. If the slate had no
+    validity mask and nothing was missing, the original slate is returned
     unchanged. `limit == 0` is also a no-op.
 
 ## Examples

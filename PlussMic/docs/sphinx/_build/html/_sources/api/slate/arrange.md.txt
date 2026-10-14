@@ -13,8 +13,8 @@ Slate::arrange(bool ascending = true, bool nulls_last = true) const -> Slate
 
 ## What It Does
 
-Returns a new thread with every entry reordered by value — the payload kind is
-unchanged, only the order changes. The comparison key depends on what the thread
+Returns a new slate with every entry reordered by value — the payload kind is
+unchanged, only the order changes. The comparison key depends on what the slate
 holds:
 
 - **Numeric `Series`**: sorted numerically. If there's no validity mask, this is a
@@ -29,7 +29,7 @@ holds:
 
 In every case the sort is **stable** — entries that compare equal keep their
 original relative order — and `NULL` entries are grouped to one end according to
-`nulls_last` rather than being compared to real values at all. A thread with
+`nulls_last` rather than being compared to real values at all. A slate with
 `size() <= 1` returns unchanged immediately.
 
 ## Parameters
@@ -45,7 +45,7 @@ original relative order — and `NULL` entries are grouped to one end according 
 ## Returns
 
 `Slate`
-    A new thread of the same kind and length, reordered.
+    A new slate of the same kind and length, reordered.
 
 ## Examples
 
@@ -129,7 +129,7 @@ std::cout << out4;
 ptype: Series
 ```
 
-Example 5. `Note`-kind threads sort lexicographically.
+Example 5. `Note`-kind slates sort lexicographically.
 
 ```cpp
 auto words = Slate(pluss::make_note({"banana", "apple", "cherry"}));
@@ -174,7 +174,7 @@ ptype: Series
 - Always stable, across every payload kind.
 - `NULL` entries are never compared against real values — they're grouped
   wholesale to one end per `nulls_last`.
-- `size() <= 1` short-circuits to the thread unchanged.
+- `size() <= 1` short-circuits to the slate unchanged.
 - Backs both [`top()`](top.md) and [`bottom()`](bottom.md), which take a prefix of
   a descending or ascending `arrange()` call respectively.
 

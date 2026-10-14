@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces the bound thread with the elapsed distance between it and <code class="docutils literal notranslate"><span class="pre">other</span></code>, in
+<p>Replaces the bound slate with the elapsed distance between it and <code class="docutils literal notranslate"><span class="pre">other</span></code>, in
 <code class="docutils literal notranslate"><span class="pre">options.unit</span></code> (or plain <code class="docutils literal notranslate"><span class="pre">unit</span></code>) — same length, now a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>.
 <code class="docutils literal notranslate"><span class="pre">other</span></code> can be another <code class="docutils literal notranslate"><span class="pre">Slate</span></code> or a bare <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> scalar.</p>
 <p>Fixed-duration units (<code class="docutils literal notranslate"><span class="pre">Nanos</span></code>/<code class="docutils literal notranslate"><span class="pre">Micros</span></code>/<code class="docutils literal notranslate"><span class="pre">Millis</span></code>/<code class="docutils literal notranslate"><span class="pre">Seconds</span></code>/<code class="docutils literal notranslate"><span class="pre">Days</span></code>/<code class="docutils literal notranslate"><span class="pre">Weeks</span></code>) are
@@ -63,14 +63,14 @@ completed calendar periods or crossed calendar boundaries, per
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code>)</p>
-<p>The right-hand timestamp(s), paired row-by-row with the bound thread.</p>
+<p>The right-hand timestamp(s), paired row-by-row with the bound slate.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">TimelineSpanOptions&amp;</span></code>)</p>
 <p><code class="docutils literal notranslate"><span class="pre">unit</span></code> (default <code class="docutils literal notranslate"><span class="pre">TimeUnit::Days</span></code>), <code class="docutils literal notranslate"><span class="pre">mode</span></code> (<code class="docutils literal notranslate"><span class="pre">Complete</span></code> — fully elapsed calendar
 units, default; or <code class="docutils literal notranslate"><span class="pre">Boundary</span></code> — crossed calendar labels; only affects
 <code class="docutils literal notranslate"><span class="pre">Months</span></code>/<code class="docutils literal notranslate"><span class="pre">Years</span></code>), <code class="docutils literal notranslate"><span class="pre">anchor</span></code> (<code class="docutils literal notranslate"><span class="pre">DayOfMonth</span></code> — strict day-of-month completion,
 default; or <code class="docutils literal notranslate"><span class="pre">MonthEnd</span></code> — treat matching month-end dates as equivalent),
 <code class="docutils literal notranslate"><span class="pre">signed_result</span></code> (default <code class="docutils literal notranslate"><span class="pre">true</span></code> — negative when <code class="docutils literal notranslate"><span class="pre">other</span></code> precedes the bound
-thread; <code class="docutils literal notranslate"><span class="pre">false</span></code> returns the absolute magnitude), and <code class="docutils literal notranslate"><span class="pre">calendar</span></code> (a
+slate; <code class="docutils literal notranslate"><span class="pre">false</span></code> returns the absolute magnitude), and <code class="docutils literal notranslate"><span class="pre">calendar</span></code> (a
 <code class="docutils literal notranslate"><span class="pre">BusinessCalendar</span></code>, only used for <code class="docutils literal notranslate"><span class="pre">BusinessDays</span></code>).</p>
 <p><strong>unit</strong> (<code class="docutils literal notranslate"><span class="pre">TimeUnit</span></code>, convenience overload)</p>
 <p>Shorthand for <code class="docutils literal notranslate"><span class="pre">TimelineSpanOptions{.unit</span> <span class="pre">=</span> <span class="pre">unit}</span></code> with every other option left
@@ -79,7 +79,7 @@ at its default.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>) thread, same length as the bound thread,
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Int64</span></code>) slate, same length as the bound slate,
 holding each row’s elapsed distance to <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
 </section>
 <section id="examples">
@@ -294,7 +294,7 @@ on, as in Example 1) have no such requirement.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Calendar units (<code class="docutils literal notranslate"><span class="pre">Months</span></code>/<code class="docutils literal notranslate"><span class="pre">Years</span></code>) and <code class="docutils literal notranslate"><span class="pre">BusinessDays</span></code> require the bound
-thread and <code class="docutils literal notranslate"><span class="pre">other</span></code> to share the same timezone — mismatched timezones throw;
+slate and <code class="docutils literal notranslate"><span class="pre">other</span></code> to share the same timezone — mismatched timezones throw;
 convert one side with <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> first.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">anchor</span> <span class="pre">=</span> <span class="pre">TimelineSpanAnchor::MonthEnd</span></code> changes <code class="docutils literal notranslate"><span class="pre">Complete</span></code>-mode completion
 so that two month-end dates (e.g. January 31st and February 29th in a leap
@@ -307,7 +307,7 @@ and <code class="docutils literal notranslate"><span class="pre">nyse(...)</span
 <code class="docutils literal notranslate"><span class="pre">.tl().epoch(TimeUnit::Days)</span></code>), not epoch nanoseconds.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">signed_result</span> <span class="pre">=</span> <span class="pre">false</span></code> returns the absolute magnitude instead of a
 direction-sensitive (possibly negative) value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound slate to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
 <li><p>If either side is <code class="docutils literal notranslate"><span class="pre">NaT</span></code> for a row, that row’s span displays as <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>.</p></li>
 </ul>

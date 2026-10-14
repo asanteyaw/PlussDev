@@ -14,10 +14,10 @@ Slate::prod() const -> SlateValue
 ## What It Does
 
 Returns the product of every observed (non-missing) value in a numeric `Series`
-thread, as a scalar `SlateValue` — the multiplicative counterpart to
+slate, as a scalar `SlateValue` — the multiplicative counterpart to
 [`sum()`](sum.md). Missing entries are excluded before the product is computed,
 not treated as `1`. Restricted to `Series` payloads; every other kind throws. A
-thread whose every entry is missing (or that is empty) also throws.
+slate whose every entry is missing (or that is empty) also throws.
 
 See [`Slate::sum`'s note on printing a `SlateValue`](sum.md) — streaming the
 result directly prints its diagnostic form, not a bare number; use `.to_dbl()`
@@ -71,7 +71,7 @@ std::cout << out2.to_dbl();
 Only `2.0` and `4.0` (the two observed entries) participate — `2 * 4 = 8`, not
 `2 * 3 * 4 = 24`.
 
-Example 3. A thread with no observed values throws.
+Example 3. A slate with no observed values throws.
 
 ```cpp
 auto all_missing = Slate(
@@ -111,7 +111,7 @@ Slate::prod is only valid for Series payload
 ## Notes
 
 - Missing entries are excluded before multiplying — never treated as `1`.
-- An empty thread, or one where every entry is missing, throws `"Slate::prod on
+- An empty slate, or one where every entry is missing, throws `"Slate::prod on
   an empty (all-null) selection"`.
 - Restricted to `Series` payloads; anything else throws `"Slate::prod is only
   valid for Series payload"`.

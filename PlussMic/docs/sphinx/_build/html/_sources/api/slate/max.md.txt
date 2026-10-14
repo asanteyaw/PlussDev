@@ -13,7 +13,7 @@ Slate::max() const -> SlateValue
 
 ## What It Does
 
-Returns the largest observed value in the thread, as a scalar `SlateValue` —
+Returns the largest observed value in the slate, as a scalar `SlateValue` —
 the mirror image of [`min()`](min.md), and just like `min()`, this works on
 **every** payload kind:
 
@@ -22,7 +22,7 @@ the mirror image of [`min()`](min.md), and just like `min()`, this works on
 - **`Timeline`/`TimeIndex`**: the latest timestamp.
 
 Missing entries are excluded first (via [`dropnull()`](dropnull.md) when a
-validity mask is present). An empty thread, or one where every entry is
+validity mask is present). An empty slate, or one where every entry is
 missing, throws.
 
 See [`Slate::sum`'s note on printing a `SlateValue`](sum.md) — the examples
@@ -36,12 +36,12 @@ results, rather than streaming the `SlateValue` directly.
 ## Returns
 
 `SlateValue`
-    A scalar holding the largest observed value, in the source thread's own
+    A scalar holding the largest observed value, in the source slate's own
     payload kind (a one-entry `Series`, `Note`, `Timeline`, or `TimeIndex`).
 
 ## Examples
 
-Example 1. Largest value in a numeric thread.
+Example 1. Largest value in a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -57,7 +57,7 @@ std::cout << out.to_dbl();
 50
 ```
 
-Example 2. Alphabetically-last value in a `Note`-kind thread.
+Example 2. Alphabetically-last value in a `Note`-kind slate.
 
 ```cpp
 auto words = Slate(pluss::make_note({"banana", "apple", "cherry"}));
@@ -71,7 +71,7 @@ std::cout << out2.to_str();
 cherry
 ```
 
-Example 3. Latest timestamp in a `Timeline`-kind thread.
+Example 3. Latest timestamp in a `Timeline`-kind slate.
 
 ```cpp
 auto events = Slate(pluss::make_timeline({
@@ -107,7 +107,7 @@ std::cout << out4.to_dbl();
 The missing `100.0` — which would otherwise be the overall largest — is
 excluded entirely, so `50.0` (the larger of the two *observed* values) wins.
 
-Example 5. A thread with no observed values throws.
+Example 5. A slate with no observed values throws.
 
 ```cpp
 auto all_missing = Slate(
@@ -133,7 +133,7 @@ Slate::max on an empty (all-null) selection
   `TimeIndex` — unlike `sum()`/`mean()`/`median()`, which are `Series`-only.
 - Missing entries are excluded first, via the same mechanism as
   [`dropnull()`](dropnull.md).
-- An empty thread, or one where every entry is missing, throws `"Slate::max on
+- An empty slate, or one where every entry is missing, throws `"Slate::max on
   an empty (all-null) selection"`.
 
 ## See Also

@@ -12,9 +12,9 @@ SlateLabelAccessor::values() const -> Slate
 
 ## What It Does
 
-Returns the bound thread's case labels as a standalone `Slate` — a direct
+Returns the bound slate's case labels as a standalone `Slate` — a direct
 forward to `Slate::caselbl()`. Case labels are a separate companion
-sequence of row labels that can ride alongside a thread's own values (the same
+sequence of row labels that can ride alongside a slate's own values (the same
 concept `DataFrameLabelAccessor` exposes for a whole frame's leftmost display
 column, just here attached to a single `Slate`).
 
@@ -65,7 +65,7 @@ ptype: Note
 
 ## Notes
 
-- Always defined: every thread has case labels of some kind, even if they're
+- Always defined: every slate has case labels of some kind, even if they're
   just the default integer range.
 - Identical to calling `Slate::caselbl()` directly.
 

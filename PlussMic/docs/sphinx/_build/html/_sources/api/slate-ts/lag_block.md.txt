@@ -12,7 +12,7 @@ TimeSeriesAccessor::lag_block(pluss::msharp::RangeView::Int lags) const -> DataF
 
 ## What It Does
 
-Computes several [`lag()`](lag.md) shifts of the bound thread at once, each as
+Computes several [`lag()`](lag.md) shifts of the bound slate at once, each as
 its own output column named `"lag" + <lag value>`. Requires at least one lag.
 
 ## Parameters
@@ -25,11 +25,11 @@ its own output column named `"lag" + <lag value>`. Requires at least one lag.
 
 `DataFrame`
     A new frame with one column per requested lag (named `"lag1"`, `"lag2"`, and
-    so on), same case labels as the bound thread.
+    so on), same case labels as the bound slate.
 
 ## Examples
 
-Example 1. Compute two lags of the same thread at once.
+Example 1. Compute two lags of the same slate at once.
 
 ```cpp
 using namespace pluss::table;
@@ -78,11 +78,11 @@ TimeSeriesAccessor::lag_block: expected at least one lag
 ## Notes
 
 - Each requested lag becomes its own output column, letting you compare several
-  lag depths of the same thread side by side in one call, rather than calling
+  lag depths of the same slate side by side in one call, rather than calling
   [`lag()`](lag.md) repeatedly and combining the results yourself.
 - Output columns are always named `"lag" + <value>` — there's no way to
   customize the column names from this method directly.
-- A pre-existing missing entry in the source thread is honored in every lag
+- A pre-existing missing entry in the source slate is honored in every lag
   column, the same as [`lag()`](lag.md) itself.
 
 ## See Also

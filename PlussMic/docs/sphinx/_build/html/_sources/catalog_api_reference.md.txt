@@ -36,11 +36,14 @@ catalog_ts_accessor_api_reference
 catalog_cast_accessor_api_reference
 catalog_keyaxis_accessor_api_reference
 api/catalog/astype
+api/catalog/audit_keys
 api/catalog/begin
 api/catalog/bfill
 api/catalog/cast
 api/catalog/clean
+api/catalog/clear_join_cache
 api/catalog/cloc
+api/catalog/combine
 api/catalog/defined
 api/catalog/display
 api/catalog/distinct
@@ -52,6 +55,7 @@ api/catalog/featurize
 api/catalog/ffill
 api/catalog/fillnull
 api/catalog/filter
+api/catalog/fingerprint
 api/catalog/freq
 api/catalog/from_json
 api/catalog/get
@@ -59,9 +63,13 @@ api/catalog/grep
 api/catalog/group
 api/catalog/has
 api/catalog/head
+api/catalog/identity
 api/catalog/info
 api/catalog/invalid
 api/catalog/isnull
+api/catalog/join
+api/catalog/join_cache_stats
+api/catalog/join_detailed
 api/catalog/keyaxis
 api/catalog/keys
 api/catalog/keywords
@@ -71,9 +79,11 @@ api/catalog/load_excel
 api/catalog/load_json
 api/catalog/load_labeled
 api/catalog/load_parquet
+api/catalog/load_streams
 api/catalog/load_txt
 api/catalog/map
 api/catalog/map_
+api/catalog/match_keys
 api/catalog/max
 api/catalog/maxrows
 api/catalog/mean
@@ -88,6 +98,7 @@ api/catalog/nt
 api/catalog/plot
 api/catalog/plot3d
 api/catalog/query
+api/catalog/reduce
 api/catalog/rename
 api/catalog/rename_
 api/catalog/sample
@@ -96,6 +107,7 @@ api/catalog/save_csv
 api/catalog/save_excel
 api/catalog/save_json
 api/catalog/save_parquet
+api/catalog/save_streams
 api/catalog/save_txt
 api/catalog/scribbelize
 api/catalog/select

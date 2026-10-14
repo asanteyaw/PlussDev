@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,7 +54,7 @@ per-row index every frame carries alongside its features. <code class="docutils 
 nothing but bind the accessor to the current frame; the accessor exposes around
 thirty methods covering inspection (<code class="docutils literal notranslate"><span class="pre">.values()</span></code>, <code class="docutils literal notranslate"><span class="pre">.names()</span></code>, <code class="docutils literal notranslate"><span class="pre">.part()</span></code>), promoting a
 feature into the label axis and back (<code class="docutils literal notranslate"><span class="pre">.set()</span></code>, <code class="docutils literal notranslate"><span class="pre">.reset()</span></code>), reordering
-(<code class="docutils literal notranslate"><span class="pre">.sort()</span></code>, <code class="docutils literal notranslate"><span class="pre">.align()</span></code>), set-style operations between two label threads (<code class="docutils literal notranslate"><span class="pre">.unite()</span></code>,
+(<code class="docutils literal notranslate"><span class="pre">.sort()</span></code>, <code class="docutils literal notranslate"><span class="pre">.align()</span></code>), set-style operations between two label slates (<code class="docutils literal notranslate"><span class="pre">.unite()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">.intersect()</span></code>, <code class="docutils literal notranslate"><span class="pre">.diff()</span></code>, <code class="docutils literal notranslate"><span class="pre">.symdiff()</span></code>), positional lookup (<code class="docutils literal notranslate"><span class="pre">.find()</span></code>, <code class="docutils literal notranslate"><span class="pre">.pos()</span></code>), and
 distinct/duplicate inspection (<code class="docutils literal notranslate"><span class="pre">.distinct()</span></code>, <code class="docutils literal notranslate"><span class="pre">.duplicated()</span></code>, <code class="docutils literal notranslate"><span class="pre">.repeated()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">.freq()</span></code>) — the label-axis counterparts of the same-named <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> methods, but
@@ -115,7 +115,7 @@ c3   | 3     12
 ptype: Note
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">.values()</span></code> is the direct read of the case-label axis — the same thread <code class="docutils literal notranslate"><span class="pre">caselbl()</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">.values()</span></code> is the direct read of the case-label axis — the same slate <code class="docutils literal notranslate"><span class="pre">caselbl()</span></code>
 returns.</p>
 <p>Example 2. Promote a feature into the case-label axis, dropping it from the columns.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>

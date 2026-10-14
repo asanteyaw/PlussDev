@@ -65,7 +65,9 @@ SeriesImpl::SeriesImpl(Storage storage,
   if (!storage_.defined()) throw_error("SeriesImpl: undefined storage");
   if (storage_offset_elems_ < 0) throw_error("SeriesImpl: negative storage offset");
   if (sizes_.size() != strides_.size()) throw_error("SeriesImpl: rank mismatch");
-  if (sizes_.size() > 7) throw_error("SeriesImpl: max 7 dimensions supported");
+  if (sizes_.size() > kMaxSeriesRank) {
+    throw_error("SeriesImpl: max 64 dimensions supported");
+  }
 }
 
 std::int64_t SeriesImpl::numel() const noexcept { return compute_numel(sizes_); }

@@ -12,7 +12,7 @@ SlateTimelineAccessor::weekend() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with a boolean `Series` flagging whether each row
+Replaces the bound slate with a boolean `Series` flagging whether each row
 falls on Saturday or Sunday.
 
 ## Parameters
@@ -22,7 +22,7 @@ falls on Saturday or Sunday.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread:
+    A new `Bool`-typed `Series` slate, same length as the bound slate:
     `true` on Saturday/Sunday, `false` otherwise.
 
 ## Examples
@@ -58,9 +58,9 @@ Only `"2024-07-06"` (a Saturday) is a weekend row.
 - `true` covers Saturday and Sunday only — there's no way to include Friday or
   exclude one of the two via this method; build a custom mask from
   [`weekday()`](weekday.md) if a different day set is needed.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`, not `false`.
 
 ## See Also

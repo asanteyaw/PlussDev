@@ -13,11 +13,11 @@ Slate::cummax(bool skip_nulls = true) const -> Slate
 
 ## What It Does
 
-Returns the running (cumulative) maximum down the thread — a thin wrapper for
+Returns the running (cumulative) maximum down the slate — a thin wrapper for
 `scan(ScanStatistic::Maximum, skip_nulls)`. See [`Slate::scan`](scan.md) for
 the full mechanics shared by all four running-statistic methods, including
 exactly how missing entries are handled under `skip_nulls`, and why the throw
-message for a non-numeric thread reads `"Slate::scan"` rather than
+message for a non-numeric slate reads `"Slate::scan"` rather than
 `"Slate::cummax"`.
 
 ## Parameters
@@ -31,7 +31,7 @@ message for a non-numeric thread reads `"Slate::scan"` rather than
 ## Returns
 
 `Slate`
-    A thread the same length as the source, holding the running maximum at
+    A slate the same length as the source, holding the running maximum at
     each position.
 
 ## Examples

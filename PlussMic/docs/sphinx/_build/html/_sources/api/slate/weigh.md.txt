@@ -13,14 +13,14 @@ Slate::weigh(pluss::RangeView<double> weights, WindowStatistic statistic = Windo
 
 ## What It Does
 
-Computes a **weighted trailing window** statistic over the thread — like a
+Computes a **weighted trailing window** statistic over the slate — like a
 fixed-width rolling window, but instead of every position in the window
 counting equally, each contributes according to `weights`. The window width is
 implicitly `weights.size()`; `weights[0]` applies to the *oldest* position in
 each window and `weights.back()` applies to the *most recent* (current)
 position — the natural left-to-right reading order.
 
-Near the start of the thread, where a full window isn't yet available, the
+Near the start of the slate, where a full window isn't yet available, the
 missing leading positions are treated as absent (contributing zero weight)
 rather than zero-valued — so early rows still compute a properly normalized
 weighted average over however many real positions are actually available,
@@ -54,7 +54,7 @@ same width as `weights`.
 ## Returns
 
 `Slate`
-    A new thread the same length as the source, holding the weighted
+    A new slate the same length as the source, holding the weighted
     statistic at each position.
 
 ## Examples
@@ -140,7 +140,7 @@ divided by the weight total (`6` for a full window).
 
 - `weights[0]` applies to the oldest position in each window, `weights.back()`
   to the most recent — the window width is always `weights.size()`.
-- Near the start of the thread, unavailable leading positions contribute zero
+- Near the start of the slate, unavailable leading positions contribute zero
   weight (not a zero value), so early results are still properly normalized
   weighted averages over a smaller effective window.
 - `Minimum`/`Maximum` ignore the actual weight values — see the important note

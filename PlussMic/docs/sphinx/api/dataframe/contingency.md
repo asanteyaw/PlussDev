@@ -203,7 +203,7 @@ This surface is built for vectorized construction and reuse:
 - `slice(...)` and `marginalize(...)` work on the retained object rather than walking
   the source frame again
 
-But it is still a **dense** retained tensor. That is the important tradeoff to teach.
+But it is still a **dense** retained tensor. That is the important tradeoff to understand.
 
 If you cross-classify dimensions with extremely high cardinality, the dense cell count
 can explode even when many combinations never occur. That is why this API is excellent
@@ -376,7 +376,7 @@ auto no_weekend = ct.marginalize({"weekend"}).to_frame({"city"}, {"channel"});
 auto faceted = ct.facet({"city"}, {"channel"});
 ```
 
-That is the teaching sequence to internalize:
+That is the sequence to internalize:
 
 - build once
 - choose whether you want counts or shares

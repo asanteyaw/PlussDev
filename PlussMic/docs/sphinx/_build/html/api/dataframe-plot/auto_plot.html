@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -76,7 +76,7 @@ infers every numeric feature in the frame, and an explicitly-passed non-numeric 
 Given the resolved feature names (<code class="docutils literal notranslate"><span class="pre">names</span></code>) and whether <code class="docutils literal notranslate"><span class="pre">features</span></code> was passed non-empty
 (<code class="docutils literal notranslate"><span class="pre">explicit_features</span></code>), the first matching rule below wins:</p>
 <ol class="arabic simple">
-<li><p><strong>Exactly one numeric feature.</strong> If the frame’s row-label thread is Note-, Timeline-, or
+<li><p><strong>Exactly one numeric feature.</strong> If the frame’s row-label slate is Note-, Timeline-, or
 TimeIndex-kind (“labeled”) <strong>and</strong> the frame has 16 or fewer rows, routes to
 <code class="docutils literal notranslate"><span class="pre">bar(names.front())</span></code>. Otherwise routes to <code class="docutils literal notranslate"><span class="pre">line(names.front())</span></code>.</p></li>
 <li><p><strong>Exactly two numeric features, and <code class="docutils literal notranslate"><span class="pre">features</span></code> was left empty/default.</strong> If the frame
@@ -90,7 +90,7 @@ non-negative</strong> (non-finite cells treated as <code class="docutils literal
 or fewer rows, routes to <code class="docutils literal notranslate"><span class="pre">bar_stacked()</span></code> over the selected features; otherwise routes to
 <code class="docutils literal notranslate"><span class="pre">area_stacked()</span></code>.</p></li>
 <li><p><strong>Two, three, or four numeric features, and the frame “prefers an index plot”</strong> — true
-when the row-label thread is labeled-kind, <em>or</em> the frame has more than 24 rows (either
+when the row-label slate is labeled-kind, <em>or</em> the frame has more than 24 rows (either
 condition alone is enough). Routes to <code class="docutils literal notranslate"><span class="pre">line()</span></code> with all selected features as <code class="docutils literal notranslate"><span class="pre">y_features</span></code>.</p></li>
 <li><p><strong>Five or fewer numeric features, and 256 or fewer rows.</strong> Routes to a scatter-matrix
 view equivalent to <code class="docutils literal notranslate"><span class="pre">scatter_matrix(names)</span></code> with default options (<code class="docutils literal notranslate"><span class="pre">Full</span></code> triangle).</p></li>

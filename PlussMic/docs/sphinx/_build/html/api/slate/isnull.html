@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,22 +49,22 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, marking <code class="docutils literal notranslate"><span class="pre">true</span></code>
-wherever the source thread is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and <code class="docutils literal notranslate"><span class="pre">false</span></code> everywhere else. Works on every
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, marking <code class="docutils literal notranslate"><span class="pre">true</span></code>
+wherever the source slate is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and <code class="docutils literal notranslate"><span class="pre">false</span></code> everywhere else. Works on every
 payload kind — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — with no kind restriction,
 unlike most of the payload-specific methods elsewhere in this API.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>isnull() checks the validity mask, not the numeric value
-For a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> only looks at the thread’s validity mask — a
+For a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> only looks at the slate’s validity mask — a
 <code class="docutils literal notranslate"><span class="pre">NaN</span></code> value that’s still marked <em>valid</em> is reported <code class="docutils literal notranslate"><span class="pre">false</span></code> by <code class="docutils literal notranslate"><span class="pre">isnull()</span></code>, not
 <code class="docutils literal notranslate"><span class="pre">true</span></code>. Use <a class="reference internal" href="isnan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnan()</span></code></span></a> to check for <code class="docutils literal notranslate"><span class="pre">NaN</span></code> specifically, or
 <a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">invalid()</span></code></span></a> to catch both <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and non-finite values (<code class="docutils literal notranslate"><span class="pre">NaN</span></code>/<code class="docutils literal notranslate"><span class="pre">Inf</span></code>)
 in one call. See Example 2.</p>
 </div>
-<p>For a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> also folds in the payload’s own
+<p>For a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind slate, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> also folds in the payload’s own
 internal validity signal (its own “not-a-time” sentinel), in addition to the
-thread’s validity mask — so a timestamp that’s intrinsically invalid is reported as
+slate’s validity mask — so a timestamp that’s intrinsically invalid is reported as
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> here even without an explicit mask entry.</p>
 </section>
 <section id="parameters">
@@ -74,7 +74,7 @@ thread’s validity mask — so a timestamp that’s intrinsically invalid is re
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -130,7 +130,7 @@ the actual floating-point value, correctly flags it.</p>
 <li><p>Checks the validity mask (plus, for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, the payload’s own
 internal invalid-timestamp signal) — not the numeric value. See the important
 callout above.</p></li>
-<li><p>A thread with no validity mask at all reports <code class="docutils literal notranslate"><span class="pre">false</span></code> (not null) at every
+<li><p>A slate with no validity mask at all reports <code class="docutils literal notranslate"><span class="pre">false</span></code> (not null) at every
 position.</p></li>
 </ul>
 </section>
@@ -139,9 +139,9 @@ position.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::notnull</span></code></span></a>: the logical inverse.</p></li>
 <li><p><a class="reference internal" href="isnan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::isnan</span></code></span></a>: checks the floating-point value itself, for
-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind threads.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slates.</p></li>
 <li><p><a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::invalid</span></code></span></a>: the union of <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> and non-finite, for
-<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind threads.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slates.</p></li>
 <li><p><a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::dropnull</span></code></span></a>: remove <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows instead of just flagging
 them.</p></li>
 </ul>

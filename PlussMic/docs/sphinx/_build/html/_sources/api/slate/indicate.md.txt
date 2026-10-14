@@ -14,11 +14,11 @@ Slate::indicate(std::string_view delimiter = "|",
 
 ## What It Does
 
-Splits every cell of a `Note` (string) thread on `delimiter`, collects every distinct
-non-empty token seen anywhere in the thread, and produces one `Bool` column per
+Splits every cell of a `Note` (string) slate on `delimiter`, collects every distinct
+non-empty token seen anywhere in the slate, and produces one `Bool` column per
 distinct token ("level") — the classic one-hot / multi-label indicator ("dummy
-variable") encoding, for a text thread that holds delimiter-separated tags,
-categories, or labels rather than a single value per cell. Requires the thread to be
+variable") encoding, for a text slate that holds delimiter-separated tags,
+categories, or labels rather than a single value per cell. Requires the slate to be
 `Note`-kind. Column `<prefix><level>` is `true` for a row if `level` is one of that
 row's tokens, `false` otherwise.
 
@@ -38,7 +38,7 @@ tell "this row is invalid" apart from "this row matched nothing" by looking at
 ```{warning} An invalid row's hidden text can still create a phantom output column
 The set of levels is collected from **every row's underlying text**, including rows
 marked invalid — the delimiter split that builds the level set runs over the whole
-thread before any validity check happens. An invalid cell whose hidden underlying
+slate before any validity check happens. An invalid cell whose hidden underlying
 text contains a token no valid row ever uses still produces its own indicator column,
 one that's `false` for every row in the entire result (since no valid row can ever
 match it, and the invalid row itself is skipped when indicators are actually
@@ -61,7 +61,7 @@ computed). See Example 2 — this is the same category of surprise documented on
 
 `DataFrame`
     A new frame with one `Bool` feature per distinct non-empty token seen in the
-    thread, sorted alphabetically by token text, named `<prefix><level>`.
+    slate, sorted alphabetically by token text, named `<prefix><level>`.
 
 ## Examples
 
@@ -168,7 +168,7 @@ try {
 Slate::indicate: delimiter cannot be empty
 ```
 
-Example 4. A non-`Note` thread throws.
+Example 4. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -188,7 +188,7 @@ Slate::indicate: expected Note payload
 
 ## Notes
 
-- Requires the calling thread to be `Note`-kind.
+- Requires the calling slate to be `Note`-kind.
 - Output columns are sorted alphabetically by token text, not by first-appearance
   order.
 - No validity mask is attached to the result at all — invalid input rows show

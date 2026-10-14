@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,8 +49,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Trims characters from both ends of the bound thread’s cells — a direct forward
-to <a class="reference internal" href="#../thread/strip.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::strip()</span></code></span></a>. Requires the bound thread to be
+<p>Trims characters from both ends of the bound slate’s cells — a direct forward
+to <a class="reference internal" href="../slate/strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::strip()</span></code></span></a>. Requires the bound slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Two distinct trimming policies:</p>
 <ul class="simple">
 <li><p><strong>No-argument overload</strong>: trims the classic ASCII whitespace set (space, tab,
@@ -69,7 +69,7 @@ character not in the set is reached.</p></li>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as the bound thread, with each cell’s
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as the bound slate, with each cell’s
 text trimmed.</p>
 </section>
 <section id="examples">
@@ -111,8 +111,8 @@ ptype: Note
 <p><code class="docutils literal notranslate"><span class="pre">&quot;[[[SKU-1001]]]&quot;</span></code> has no <code class="docutils literal notranslate"><span class="pre">&quot;[]()&quot;</span></code> substring anywhere in it, yet every edge
 character still gets stripped, one character at a time, stopping the instant a
 character outside the <code class="docutils literal notranslate"><span class="pre">chars</span></code> set is reached.</p>
-<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws — the same message
-<a class="reference internal" href="#../thread/strip.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::strip()</span></code></span></a> produces directly.</p>
+<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws — the same message
+<a class="reference internal" href="../slate/strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::strip()</span></code></span></a> produces directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">strip</span><span class="p">();</span>
@@ -134,7 +134,7 @@ character outside the <code class="docutils literal notranslate"><span class="pr
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::strip()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/strip.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::strip()</span></code></span></a> — identical behavior and throws.</p></li>
+<a class="reference internal" href="../slate/strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::strip()</span></code></span></a> — identical behavior and throws.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">chars</span></code> overload’s set-membership semantics apply to
 <a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstrip()</span></code></span></a> and <a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rstrip()</span></code></span></a> identically — one-sided
 versions of everything shown here.</p></li>
@@ -144,7 +144,7 @@ versions of everything shown here.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/strip.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::strip</span></code></span></a>: the direct, non-accessor form this
+<li><p><a class="reference internal" href="../slate/strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::strip</span></code></span></a>: the direct, non-accessor form this
 method forwards to.</p></li>
 <li><p><a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::lstrip</span></code></span></a> /
 <a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::rstrip</span></code></span></a>: the one-sided equivalents.</p></li>

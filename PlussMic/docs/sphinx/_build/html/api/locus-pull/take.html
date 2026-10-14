@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusPull::take &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="LocusPull::var" href="var.html" />
+    <link rel="prev" title="LocusPull::sum" href="sum.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locuspull-take">
+<h1>LocusPull::take<a class="headerlink" href="#locuspull-take" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_pull_api_reference.html"><span class="doc std std-doc">Back to LocusPull API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Root fields, unaliased</span>
+<span class="n">LocusPull</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sources</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">LocusPull</span><span class="o">&amp;</span>
+<span class="n">LocusPull</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sources</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">LocusPull</span><span class="o">&amp;</span>
+
+<span class="c1">// A single root (or related) field, with an optional alias</span>
+<span class="n">LocusPull</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">alias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">LocusPull</span><span class="o">&amp;</span>
+
+<span class="c1">// Root fields, renamed as a batch of (source, alias) pairs</span>
+<span class="n">LocusPull</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">LocusPull</span><span class="o">&amp;</span>
+<span class="n">LocusPull</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">LocusPull</span><span class="o">&amp;</span>
+
+<span class="c1">// Related-table fields, scoped under one table token</span>
+<span class="n">LocusPull</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span>
+<span class="w">                </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">LocusPull</span><span class="o">&amp;</span>
+<span class="n">LocusPull</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span>
+<span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">LocusPull</span><span class="o">&amp;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Requests one or more <strong>plain</strong> (non-aggregate) fields – the fluent spelling
+of <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add</span></code></span></a> for <code class="docutils literal notranslate"><span class="pre">PullOp::Take</span></code> specs, built through <code class="docutils literal notranslate"><span class="pre">nexus::take</span></code>
+under the hood. Which overload you reach depends only on the shape of field
+list you’re describing:</p>
+<ul class="simple">
+<li><p><strong>A list of root feature names</strong> – <code class="docutils literal notranslate"><span class="pre">.take({&quot;id&quot;,</span> <span class="pre">&quot;name&quot;})</span></code> – pulls those
+features from <code class="docutils literal notranslate"><span class="pre">root</span></code> itself, each keeping its own name.</p></li>
+<li><p><strong>One field, optionally renamed</strong> – <code class="docutils literal notranslate"><span class="pre">.take(&quot;name&quot;,</span> <span class="pre">&quot;customer&quot;)</span></code> – the
+single-field form; omit the alias to keep the source name. This is also the
+form that reaches a <em>related</em> field directly, written
+<code class="docutils literal notranslate"><span class="pre">&quot;regions.zone&quot;</span></code> – see Example 3.</p></li>
+<li><p><strong>A batch of <code class="docutils literal notranslate"><span class="pre">(source,</span> <span class="pre">alias)</span></code> renames on root</strong> –
+<code class="docutils literal notranslate"><span class="pre">.take({{&quot;id&quot;,</span> <span class="pre">&quot;customer_id&quot;},</span> <span class="pre">{&quot;name&quot;,</span> <span class="pre">&quot;customer_name&quot;}})</span></code>.</p></li>
+<li><p><strong>A batch of related-table fields, scoped under one table token</strong> –
+<code class="docutils literal notranslate"><span class="pre">.take(&quot;regions&quot;,</span> <span class="pre">{{&quot;zone&quot;,</span> <span class="pre">&quot;area&quot;}})</span></code> – equivalent to
+<code class="docutils literal notranslate"><span class="pre">.take(&quot;regions.zone&quot;,</span> <span class="pre">&quot;area&quot;)</span></code>, without repeating <code class="docutils literal notranslate"><span class="pre">&quot;regions.&quot;</span></code> on every
+pair.</p></li>
+</ul>
+<p>Every batch overload also accepts a named container (<code class="docutils literal notranslate"><span class="pre">std::vector</span></code>, and
+anything else <code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView</span></code> converts from) in place of a brace
+literal, not just a literal <code class="docutils literal notranslate"><span class="pre">{...}</span></code> – the dedicated <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>
+overload alongside each <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> one exists specifically so a brace
+literal still resolves to the right overload unambiguously (see Example 6
+for the one case this doesn’t cover: a bare, empty <code class="docutils literal notranslate"><span class="pre">{}</span></code>).</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>A plain field cannot cross a one-to-many link
+<code class="docutils literal notranslate"><span class="pre">.take(...)</span></code> only ever follows <strong>root-preserving</strong> links (many-to-one or
+one-to-one) – a field on a table reached through a one-to-many or
+many-to-many relationship would require more than one output row per root
+record, which <code class="docutils literal notranslate"><span class="pre">take()</span></code> cannot produce. Requesting one throws at
+<a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">collect()</span></code></span></a>; see Example 5. Use a reducer
+(<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum</span></code></span></a>, <a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count</span></code></span></a>, and the rest, or
+<a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a>) to pull a value <em>through</em> such a link instead.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sources</span></code></p></td>
+<td><p>Root feature names to pull unchanged, each keeping its own name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">source</span></code></p></td>
+<td><p>A single feature – a root name, or <code class="docutils literal notranslate"><span class="pre">&quot;table.feature&quot;</span></code> for a related field.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alias</span></code></p></td>
+<td><p>The output column name for the single-field form. Empty means “keep <code class="docutils literal notranslate"><span class="pre">source</span></code>’s own name.”</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fields</span></code></p></td>
+<td><p>Several <code class="docutils literal notranslate"><span class="pre">(source,</span> <span class="pre">alias)</span></code> pairs; <code class="docutils literal notranslate"><span class="pre">source</span></code> is root-relative in the unscoped overloads, <code class="docutils literal notranslate"><span class="pre">table</span></code>-relative in the scoped ones.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">table</span></code></p></td>
+<td><p>The related table every entry in <code class="docutils literal notranslate"><span class="pre">fields</span></code> is qualified against, in the two-argument overloads.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Every field name is validated only when <a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">collect()</span></code></span></a> actually
+runs – an unknown feature, an unreachable table, or an expanding path all
+surface there.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p>A reference to the same builder, so calls chain in place.</p>
+</section>
+<section id="errors">
+<h2>Errors<a class="headerlink" href="#errors" title="Link to this heading">¶</a></h2>
+<p>Throws at <a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">collect()</span></code></span></a>, not at <code class="docutils literal notranslate"><span class="pre">take()</span></code> itself: an empty source
+or table name, an unknown feature, an unreachable table, or a field that
+would require root to expand into more than one row.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Plain root fields and a related field, by brace literal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">plain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions.zone&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">plain</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">plain</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="n">print_words</span><span class="p">(</span><span class="n">plain</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;zone&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[id, zone] rows=4
+id=[1, 2, 3, 4]
+zone=[west, west, east, north]
+</pre></div>
+</div>
+<p>Example 2. Single-field renames.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">renamed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions.zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;area&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">renamed</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[customer, area] rows=4
+</pre></div>
+</div>
+<p>Example 3. A batch of root names, and a batch of root renames.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">({</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;regions.zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="p">}).</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">names</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">aliases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">.</span><span class="n">take</span><span class="p">({</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">},</span>
+<span class="w">                          </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_name&quot;</span><span class="p">}})</span>
+<span class="w">                   </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">aliases</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[name, zone, id] rows=4
+keys=[customer_id, customer_name] rows=4
+</pre></div>
+</div>
+<p>Example 4. The two-argument, table-scoped batch form.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scoped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;area&quot;</span><span class="p">}})</span>
+<span class="w">                  </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">scoped</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[id, region, area] rows=4
+</pre></div>
+</div>
+<p>Example 5. Failures: an empty source, an empty table, an unknown feature
+(stored without complaint, rejected at <code class="docutils literal notranslate"><span class="pre">collect()</span></code>), and a field that would
+expand root.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;empty source&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<span class="n">print_error</span><span class="p">(</span><span class="s">&quot;empty table&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;area&quot;</span><span class="p">}});</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">unknown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions.absent&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;unknown plan specs=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">unknown</span><span class="p">.</span><span class="n">specs</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">print_error</span><span class="p">(</span><span class="s">&quot;unknown collect&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">unknown</span><span class="p">.</span><span class="n">collect</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+<span class="n">print_error</span><span class="p">(</span><span class="s">&quot;expanding&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;events.spend&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>empty source: pull spec source cannot be empty
+empty table: pull table scope cannot be empty
+unknown plan specs=1
+unknown collect: Locus::pull: unknown feature &#39;absent&#39; on table &#39;regions&#39;
+expanding: Locus::pull: requested field &#39;events.spend&#39; requires expanding relationship &#39;events-&gt;customers&#39; from &#39;customers&#39; to &#39;events&#39;. pull preserves root grain and cannot traverse one-to-many or many-to-many paths
+</pre></div>
+</div>
+<p>An unknown feature doesn’t fail <code class="docutils literal notranslate"><span class="pre">take()</span></code> itself – the spec is stored (<code class="docutils literal notranslate"><span class="pre">specs</span></code>
+reports <code class="docutils literal notranslate"><span class="pre">1</span></code>) and only rejected once <code class="docutils literal notranslate"><span class="pre">collect()</span></code> tries to resolve it.
+<code class="docutils literal notranslate"><span class="pre">events.spend</span></code> fails differently: <code class="docutils literal notranslate"><span class="pre">customers</span> <span class="pre">-[ManyToOne]-&gt;</span> <span class="pre">...</span> <span class="pre">&lt;-[OneToMany]-</span> <span class="pre">events</span></code> means one customer has <em>several</em> events, so a plain field from
+<code class="docutils literal notranslate"><span class="pre">events</span></code> can’t become one value per customer – that’s exactly what
+<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum</span></code></span></a>/<a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg</span></code></span></a> are for.</p>
+<p>Example 6. An empty batch, on all three batch overloads, is a no-op – it
+appends nothing. A bare <code class="docutils literal notranslate"><span class="pre">{}</span></code> is ambiguous between the batch overloads’
+shapes, so an empty call site needs its <code class="docutils literal notranslate"><span class="pre">initializer_list&lt;T&gt;</span></code> spelled out
+explicitly; <code class="docutils literal notranslate"><span class="pre">take(&quot;regions&quot;,</span> <span class="pre">{})</span></code> does not have this problem, since the
+<code class="docutils literal notranslate"><span class="pre">table</span></code> argument already selects the two-argument overload.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">empty_lists</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">);</span>
+<span class="n">empty_lists</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">{});</span>
+<span class="n">empty_lists</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="p">{});</span>
+<span class="n">empty_lists</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="p">{});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;specs=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">empty_lists</span><span class="p">.</span><span class="n">specs</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">print_error</span><span class="p">(</span><span class="s">&quot;collect&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">empty_lists</span><span class="p">.</span><span class="n">collect</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>specs=0
+collect: Locus::pull: at least one field is required
+</pre></div>
+</div>
+<p>Three empty batches add zero specs, not an error – the error comes later,
+from <a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">collect()</span></code></span></a> refusing a plan with no fields requested at
+all, not from any one of the empty calls.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add</span></code></span></a>: the lower-level method every <code class="docutils literal notranslate"><span class="pre">take(...)</span></code> overload funnels
+through.</p></li>
+<li><p><a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum</span></code></span></a> and the other reducers, <a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg</span></code></span></a>: the aggregate
+counterparts, for fields reached through a one-to-many link.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_pull_api_reference.html">LocusPull API Reference</a><ul>
+      <li>Previous: <a href="sum.html" title="previous chapter">LocusPull::sum</a></li>
+      <li>Next: <a href="var.html" title="next chapter">LocusPull::var</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus-pull/take.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

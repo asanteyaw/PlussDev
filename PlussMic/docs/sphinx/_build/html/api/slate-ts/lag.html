@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,10 +48,10 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Shifts the bound thread <code class="docutils literal notranslate"><span class="pre">periods</span></code> positions forward: <code class="docutils literal notranslate"><span class="pre">out[i]</span> <span class="pre">=</span> <span class="pre">x[i</span> <span class="pre">-</span> <span class="pre">periods]</span></code> where
+<p>Shifts the bound slate <code class="docutils literal notranslate"><span class="pre">periods</span></code> positions forward: <code class="docutils literal notranslate"><span class="pre">out[i]</span> <span class="pre">=</span> <span class="pre">x[i</span> <span class="pre">-</span> <span class="pre">periods]</span></code> where
 that index is in bounds, <code class="docutils literal notranslate"><span class="pre">NULL</span></code> otherwise. A negative <code class="docutils literal notranslate"><span class="pre">periods</span></code> delegates to
 <a class="reference internal" href="lead.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lead()</span></code></span></a> with the sign flipped — <code class="docutils literal notranslate"><span class="pre">lag(-periods)</span></code> and <code class="docutils literal notranslate"><span class="pre">lead(periods)</span></code> are the
-same operation. Restricted to a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread; anything else throws.</p>
+same operation. Restricted to a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate; anything else throws.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -62,11 +62,11 @@ The number of positions to shift forward. Negative values behave as
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as the bound source, shifted by <code class="docutils literal notranslate"><span class="pre">periods</span></code> positions.</p>
+A new slate, same length as the bound source, shifted by <code class="docutils literal notranslate"><span class="pre">periods</span></code> positions.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Lag a numeric thread by one position.</p>
+<p>Example 1. Lag a numeric slate by one position.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -87,7 +87,7 @@ ptype: Series
 <p>Each position now shows the previous position’s value: position <code class="docutils literal notranslate"><span class="pre">1</span></code> shows position
 <code class="docutils literal notranslate"><span class="pre">0</span></code>’s <code class="docutils literal notranslate"><span class="pre">10</span></code>, position <code class="docutils literal notranslate"><span class="pre">2</span></code> shows position <code class="docutils literal notranslate"><span class="pre">1</span></code>’s <code class="docutils literal notranslate"><span class="pre">20</span></code>, and so on. Position <code class="docutils literal notranslate"><span class="pre">0</span></code> has no
 predecessor, so it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. This is the same operation
-<a class="reference internal" href="#../thread/shift.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a> performs.</p>
+<a class="reference internal" href="../slate/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a> performs.</p>
 <p>Example 2. A negative <code class="docutils literal notranslate"><span class="pre">periods</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">lead()</span></code> with the sign flipped.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">load</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">load</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lead</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
@@ -114,7 +114,7 @@ ptype: Series
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">lag(-1)</span></code> and <code class="docutils literal notranslate"><span class="pre">lead(1)</span></code> produce identical results — <code class="docutils literal notranslate"><span class="pre">lag()</span></code> with a negative <code class="docutils literal notranslate"><span class="pre">periods</span></code>
 just forwards to <code class="docutils literal notranslate"><span class="pre">lead()</span></code> with the sign flipped internally.</p>
-<p>Example 3. A pre-existing missing entry in the source thread stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> after
+<p>Example 3. A pre-existing missing entry in the source slate stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> after
 shifting, even though its underlying storage is a real number.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}),</span>
@@ -139,7 +139,7 @@ ptype: Series
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> there, exactly as it was before the shift, rather than surfacing the real
 <code class="docutils literal notranslate"><span class="pre">20.0</span></code> sitting underneath the mask. Positions <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> still correctly pick up
 <code class="docutils literal notranslate"><span class="pre">10.0</span></code> and <code class="docutils literal notranslate"><span class="pre">30.0</span></code> from the real, valid positions <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
-<p>Example 4. A non-numeric thread throws.</p>
+<p>Example 4. A non-numeric slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
@@ -161,12 +161,12 @@ ptype: Series
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">lag(periods)</span></code> with a negative <code class="docutils literal notranslate"><span class="pre">periods</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">lead(-periods)</span></code> — the two
 methods share one implementation, differing only in shift direction.</p></li>
-<li><p>Equivalent to <a class="reference internal" href="#../thread/shift.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a> for a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>
-thread — vacated positions become <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, values shifted past the far edge are
+<li><p>Equivalent to <a class="reference internal" href="../slate/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a> for a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+slate — vacated positions become <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, values shifted past the far edge are
 dropped, not wrapped around.</p></li>
-<li><p>A pre-existing missing entry in the source thread is honored, not just the
+<li><p>A pre-existing missing entry in the source slate is honored, not just the
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s the shift itself introduces — see Example 3.</p></li>
-<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> slate
 throws <code class="docutils literal notranslate"><span class="pre">&quot;TimeSeriesAccessor::lag:</span> <span class="pre">source</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Series&quot;</span></code>; a non-numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>
 throws <code class="docutils literal notranslate"><span class="pre">&quot;TimeSeriesAccessor::lag:</span> <span class="pre">source</span> <span class="pre">Series</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">numeric&quot;</span></code>.</p></li>
 </ul>
@@ -176,8 +176,8 @@ throws <code class="docutils literal notranslate"><span class="pre">&quot;TimeSe
 <ul class="simple">
 <li><p><a class="reference internal" href="lead.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::lead</span></code></span></a>: the mirror-image shift.</p></li>
 <li><p><a class="reference internal" href="lag_block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::lag_block</span></code></span></a>: computing several lags of the
-same thread at once, each as its own <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> column.</p></li>
-<li><p><a class="reference internal" href="#../thread/shift.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::shift</span></code></span></a>: the equivalent top-level operation outside the
+same slate at once, each as its own <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> column.</p></li>
+<li><p><a class="reference internal" href="../slate/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shift</span></code></span></a>: the equivalent top-level operation outside the
 <code class="docutils literal notranslate"><span class="pre">ts()</span></code> accessor.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

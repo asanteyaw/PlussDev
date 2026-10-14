@@ -18,7 +18,7 @@ per-row index every frame carries alongside its features. `label()` itself does
 nothing but bind the accessor to the current frame; the accessor exposes around
 thirty methods covering inspection (`.values()`, `.names()`, `.part()`), promoting a
 feature into the label axis and back (`.set()`, `.reset()`), reordering
-(`.sort()`, `.align()`), set-style operations between two label threads (`.unite()`,
+(`.sort()`, `.align()`), set-style operations between two label slates (`.unite()`,
 `.intersect()`, `.diff()`, `.symdiff()`), positional lookup (`.find()`, `.pos()`), and
 distinct/duplicate inspection (`.distinct()`, `.duplicated()`, `.repeated()`,
 `.freq()`) — the label-axis counterparts of the same-named `DataFrame` methods, but
@@ -84,7 +84,7 @@ std::cout << labels;
 ptype: Note
 ```
 
-`.values()` is the direct read of the case-label axis — the same thread `caselbl()`
+`.values()` is the direct read of the case-label axis — the same slate `caselbl()`
 returns.
 
 Example 2. Promote a feature into the case-label axis, dropping it from the columns.

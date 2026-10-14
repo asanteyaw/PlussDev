@@ -2,6 +2,14 @@
 
 #include "pluss/subsp/math/optim.h"
 #include "pluss/subsp/math/optim_lsr1.h"
+#include "pluss/subsp/math/linprog.h"
+#include "pluss/subsp/math/milp.h"
+#include "pluss/subsp/math/roots.h"
+#include "pluss/subsp/math/lp/ipm.h"
+#include "pluss/subsp/math/lp/mip.h"
+#include "pluss/subsp/math/lp/mps.h"
+#include "pluss/subsp/math/lp/series_bridge.h"
+#include "pluss/subsp/math/lp/solve.h"
 
 #if __has_include("PlussMa/Math/Numerical/optimization/dfo_solver.h")
 #include "PlussMa/Math/Numerical/optimization/dfo_solver.h"

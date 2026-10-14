@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,15 +49,15 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Draws a lag plot for the bound thread’s values: a scatter of <code class="docutils literal notranslate"><span class="pre">x(t)</span></code> against
+<p>Draws a lag plot for the bound slate’s values: a scatter of <code class="docutils literal notranslate"><span class="pre">x(t)</span></code> against
 <code class="docutils literal notranslate"><span class="pre">x(t</span> <span class="pre">+</span> <span class="pre">lag)</span></code> — the single-series specialization of
 <a class="reference internal" href="../dataframe-plot/lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::lag</span></code></span></a>, which on the 2D accessor
-requires naming a feature; here the bound thread is always the one and only feature
+requires naming a feature; here the bound slate is always the one and only feature
 lagged.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>At least two data points are required
-Same as the 2D accessor: a thread with fewer than two rows throws
+Same as the 2D accessor: a slate with fewer than two rows throws
 <code class="docutils literal notranslate"><span class="pre">&quot;flash::lagplot</span> <span class="pre">requires</span> <span class="pre">at</span> <span class="pre">least</span> <span class="pre">two</span> <span class="pre">points&quot;</span></code>.</p>
 </div>
 </section>
@@ -100,10 +100,10 @@ A figure with one pane containing a single scatter (“cloud”) trace of <code 
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The bound thread is always the single lagged feature — there is no feature-name argument
+<li><p>The bound slate is always the single lagged feature — there is no feature-name argument
 the way the 2D accessor’s <code class="docutils literal notranslate"><span class="pre">lag()</span></code> has.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">lag</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">n</span> <span class="pre">-</span> <span class="pre">1]</span></code>, never throwing for an out-of-range request.</p></li>
-<li><p>A thread with fewer than two rows throws before any point is drawn.</p></li>
+<li><p>A slate with fewer than two rows throws before any point is drawn.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for how to view or save the
 result.</p></li>
 </ul>

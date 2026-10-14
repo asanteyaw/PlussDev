@@ -13,10 +13,10 @@ TimeSeriesAccessor::expanding(WindowStatistic statistic = WindowStatistic::Mean,
 ## What It Does
 
 Computes a **growing (expanding) window statistic**: position `i`'s window is
-every position from the very start of the thread through `i`, so the window
+every position from the very start of the slate through `i`, so the window
 widens by one position at a time rather than staying a fixed size. It's
 implemented as [`rolling()`](rolling.md) with the window fixed at the full
-thread length (`max(1, size())`) and `centered = false`, `closure = Right` — the
+slate length (`max(1, size())`) and `centered = false`, `closure = Right` — the
 same trailing-window engine, just wide enough that every position's window
 always starts at position `0`.
 
@@ -34,7 +34,7 @@ always starts at position `0`.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, holding the expanding
+    A new slate, same length as the bound source, holding the expanding
     statistic at each position.
 
 ## Examples
@@ -142,7 +142,7 @@ Position `3` is `mean(10, 30, 40) = 26.667`.
   just wide enough to always start at position `0`.
 - `Var`/`Std` additionally require the observation count to exceed `ddof`
   (default `1`), independent of `min_count`.
-- A pre-existing missing entry in the source thread is skipped within every
+- A pre-existing missing entry in the source slate is skipped within every
   window that would otherwise contain it — see Example 4.
 
 ## See Also
@@ -152,7 +152,7 @@ Position `3` is `mean(10, 30, 40) = 26.667`.
 - [`TimeSeriesAccessor::ewm`](ewm.md): an alternative "everything seen so far"
   statistic that weights recent observations more heavily instead of weighting
   every observation equally.
-- [`Slate::cumsum`](../thread/cumsum.md): the running total at every position —
+- [`Slate::cumsum`](../slate/cumsum.md): the running total at every position —
   `expanding(WindowStatistic::Sum)` computes the same thing through a different
   engine.
 

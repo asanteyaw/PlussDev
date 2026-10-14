@@ -13,15 +13,15 @@ Slate::csmax() const -> SlateValue
 
 ## What It Does
 
-Returns the **case label** of the row holding the largest value in the thread
+Returns the **case label** of the row holding the largest value in the slate
 — not the value itself. The mirror image of [`csmin()`](csmin.md): `"cs"`
 stands for case, so this is the "which row" answer (like `idxmax` elsewhere).
-If the thread has no explicit case labels, that's the default `0`-based
+If the slate has no explicit case labels, that's the default `0`-based
 position; if it does, it's that label's own value.
 
 Ties keep the **first** occurrence — if two rows tie for the largest value, the
 earlier row's label is returned. Works on every payload kind. Missing entries
-are skipped when scanning; an empty thread, or one where every entry is
+are skipped when scanning; an empty slate, or one where every entry is
 missing, throws.
 
 See [`Slate::sum`'s note on printing a `SlateValue`](sum.md) — the examples
@@ -36,7 +36,7 @@ labels) instead of streaming the `SlateValue` directly.
 
 `SlateValue`
     A scalar holding the case label of the maximum-valued row — an `Int64`
-    position by default, or whatever payload kind the thread's own case labels
+    position by default, or whatever payload kind the slate's own case labels
     use if explicit labels are set.
 
 ## Examples
@@ -116,7 +116,7 @@ Position `1` (stored value `100.0`, which would otherwise be the overall
 largest) is missing and skipped entirely — the maximum among the *observed*
 rows is `8.0` at position `2`.
 
-Example 5. An empty or entirely-missing thread throws.
+Example 5. An empty or entirely-missing slate throws.
 
 ```cpp
 auto all_missing = Slate(
@@ -143,7 +143,7 @@ Slate::csmax on an all-null Slate
 - Ties keep the first occurrence.
 - Works on every payload kind, since row comparison is delegated to the same
   logic [`arrange()`](arrange.md) uses.
-- An empty thread throws `"Slate::csmax on an empty Slate"`; a thread with no
+- An empty slate throws `"Slate::csmax on an empty Slate"`; a slate with no
   observed values throws `"Slate::csmax on an all-null Slate"`.
 
 ## See Also

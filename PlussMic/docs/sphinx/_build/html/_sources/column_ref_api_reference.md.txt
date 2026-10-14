@@ -21,7 +21,7 @@ ColumnRef::head(std::int64_t n) -> Slate
 
 #### What It Does
 
-Returns the first `n` values from the referenced column as a thread.
+Returns the first `n` values from the referenced column as a slate.
 
 #### Parameters
 
@@ -180,7 +180,7 @@ ColumnRef::slate() -> const Slate&
 
 #### What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns the referenced column as a `Slate` object.
 
 #### Parameters
 
@@ -275,7 +275,7 @@ auto out = ref.value();
 #### Practical Behavior
 
 - `value()` returns a `SlateValue` wrapper over the first element of the referenced column.
-- Use this when you need typed scalar extraction rather than a whole-column thread.
+- Use this when you need typed scalar extraction rather than a whole-column slate.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#slate">

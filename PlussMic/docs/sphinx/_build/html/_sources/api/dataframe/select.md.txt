@@ -52,7 +52,7 @@ first.
 **conditions** (`RangeView::Of<Slate>` or `std::initializer_list<Slate>`)
 
 An ordered, non-empty list of boolean masks, one per candidate in `choices`. Each
-`Slate` must be a `Series`-kind, `Bool`-scalar-type thread with one value per case —
+`Slate` must be a `Series`-kind, `Bool`-scalar-type slate with one value per case —
 the same requirement `land()`/`lor()`/`lxor()` place on their operands (see
 [`land()`](land.md)). `conditions` and `choices` must have the same length; each
 position pairs one condition with the candidate frame it "unlocks."

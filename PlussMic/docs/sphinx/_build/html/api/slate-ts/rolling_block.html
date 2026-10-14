@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Computes several rolling window statistics, at several window sizes, of the
-bound thread all at once — each <code class="docutils literal notranslate"><span class="pre">{statistic,</span> <span class="pre">window}</span></code> combination becomes its
+bound slate all at once — each <code class="docutils literal notranslate"><span class="pre">{statistic,</span> <span class="pre">window}</span></code> combination becomes its
 own output column named <code class="docutils literal notranslate"><span class="pre">&quot;roll_&quot;</span> <span class="pre">+</span> <span class="pre">&lt;statistic&gt;</span> <span class="pre">+</span> <span class="pre">&quot;_w&quot;</span> <span class="pre">+</span> <span class="pre">&lt;window&gt;</span></code>. Requires at
 least one window.</p>
 <div class="admonition important">
@@ -80,7 +80,7 @@ Which statistics to include, and the shared <code class="docutils literal notran
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">include_var</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">min_periods</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the minimum number of
 positions that must structurally exist in a window near the start of the
-thread — see <a class="reference internal" href="zscore_rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zscore_rolling()</span></code></span></a>’s parameter note for why
+slate — see <a class="reference internal" href="zscore_rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zscore_rolling()</span></code></span></a>’s parameter note for why
 this isn’t the same as “non-missing observations.”</p></li>
 </ul>
 </section>
@@ -88,7 +88,7 @@ this isn’t the same as “non-missing observations.”</p></li>
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 A new frame with one column per requested <code class="docutils literal notranslate"><span class="pre">{statistic,</span> <span class="pre">window}</span></code> pair, same
-case labels as the bound thread. Columns are ordered by window (in the
+case labels as the bound slate. Columns are ordered by window (in the
 order given), then by statistic in the fixed order mean, std, min, max,
 sum, var.</p>
 </section>

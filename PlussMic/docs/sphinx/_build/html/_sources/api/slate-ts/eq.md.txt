@@ -12,11 +12,11 @@ TimeSeriesAccessor::eq(const Slate& other, const Slate& left_axis, const Slate& 
 
 ## What It Does
 
-Compares the bound thread against `other` for equality **after first
-reindexing `other` onto the bound thread's own positions**, using `left_axis`
-(the bound thread's time axis) and `right_axis` (`other`'s own time axis) —
+Compares the bound slate against `other` for equality **after first
+reindexing `other` onto the bound slate's own positions**, using `left_axis`
+(the bound slate's time axis) and `right_axis` (`other`'s own time axis) —
 exactly the same alignment [`align_to()`](align_to.md) performs, run
-automatically before an ordinary [`Slate::eq`](../thread/eq.md). See
+automatically before an ordinary [`Slate::eq`](../slate/eq.md). See
 [`add()`](add.md) for the shared alignment mechanics this method (and
 [`ne()`](ne.md)/[`lt()`](lt.md)/[`le()`](le.md)/[`gt()`](gt.md)/
 [`ge()`](ge.md)) also use.
@@ -24,11 +24,11 @@ automatically before an ordinary [`Slate::eq`](../thread/eq.md). See
 ## Parameters
 
 **other** (`const Slate&`)
-    The thread to compare against, currently living at `right_axis` ticks.
+    The slate to compare against, currently living at `right_axis` ticks.
 
 **left_axis** (`const Slate&`)
-    The bound thread's own time axis (`Timeline`/`TimeIndex`), same length as
-    the bound thread.
+    The bound slate's own time axis (`Timeline`/`TimeIndex`), same length as
+    the bound slate.
 
 **right_axis** (`const Slate&`)
     `other`'s time axis (`Timeline`/`TimeIndex`), same length as `other`.
@@ -40,12 +40,12 @@ automatically before an ordinary [`Slate::eq`](../thread/eq.md). See
 ## Returns
 
 `Slate`
-    A new `Bool`-typed thread, same length as the bound thread, holding
+    A new `Bool`-typed slate, same length as the bound slate, holding
     `bound == aligned(other)` at each position.
 
 ## Examples
 
-Example 1. Two threads on different daily axes, compared after exact
+Example 1. Two slates on different daily axes, compared after exact
 alignment.
 
 ```cpp
@@ -77,7 +77,7 @@ Only `2024-01-02` has an exact tick match on both sides (`20 == 15` is
 `false`); the other positions have no matching `right_axis` tick under
 `Exact`, so the comparison itself is `NULL` — not `false`.
 
-Example 2. The same threads, aligned with `Backward` — `other`'s most recent
+Example 2. The same slates, aligned with `Backward` — `other`'s most recent
 known value carries forward, giving `2024-01-03` a real comparison instead of
 `NULL`.
 
@@ -101,7 +101,7 @@ ptype: Series
 
 ## Notes
 
-- `left_axis` must be the same length as the bound thread, and `right_axis`
+- `left_axis` must be the same length as the bound slate, and `right_axis`
   must be the same length as `other`, or it throws a length-mismatch error
   naming whichever side is wrong.
 - The alignment step is identical to [`align_to()`](align_to.md).
@@ -117,7 +117,7 @@ ptype: Series
   [`TimeSeriesAccessor::le`](le.md), [`TimeSeriesAccessor::gt`](gt.md),
   [`TimeSeriesAccessor::ge`](ge.md): the other comparison operators, sharing
   this exact alignment mechanic.
-- [`Slate::eq`](../thread/eq.md): the plain positional equality this method
+- [`Slate::eq`](../slate/eq.md): the plain positional equality this method
   performs after alignment.
 
 <div class="pluss-inline-prev-next">

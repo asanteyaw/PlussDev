@@ -36,8 +36,8 @@ A new `Series` at the broadcast shape and promoted dtype. The receiver and
 ## Gradient
 
 The selected finite operand receives the upstream sensitivity. A finite tie
-splits it equally, which preserves symmetry between the two inputs. A `NaN`
-operand receives no sensitivity when the other side supplies the result.
+goes entirely to the left operand (`self`), matching libtorch. A `NaN` operand
+receives no sensitivity when the other side supplies the result.
 
 ## Examples
 

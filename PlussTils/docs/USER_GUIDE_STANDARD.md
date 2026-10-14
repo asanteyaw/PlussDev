@@ -15,7 +15,7 @@ standard.
   arrived with a task, not a signature.
 - Every page opens with the task the reader is trying to accomplish and ends
   with where to go next.
-- The guide teaches decisions: which overload to pick, what each option changes,
+- The guide covers decisions: which overload to pick, what each option changes,
   what goes wrong when you pick badly, and how to check the result.
 
 ## 2. Prose
@@ -53,8 +53,8 @@ Every guide page contains, in this order:
 - Every example is a complete, compilable program. No fragments in a guide.
 - Every example that prints has its output copied **verbatim** from the
   permanent executable in `examples/tils/`. Output is never typed by hand.
-- Examples are exhaustive along the axes the page teaches. If a page teaches
-  three overloads, each overload has its own example. If a page teaches a
+- Examples are exhaustive along the axes the page covers. If a page covers
+  three overloads, each overload has its own example. If a page covers a
   toggle, both states have examples, and the page shows the difference.
 - Each example is preceded by a sentence stating what it demonstrates and
   followed by a sentence stating what the output means. The output alone is
@@ -67,7 +67,7 @@ Every guide page contains, in this order:
 
 ## 5. Verification
 
-- Every illustrative branch a guide page teaches is emitted by the permanent
+- Every illustrative branch a guide page covers is emitted by the permanent
   executable for that family. A branch that is described but not printed by the
   executable is a defect, not an omission.
 - The executable is built and run as part of the documentation build. A failing
@@ -88,7 +88,7 @@ Every guide page contains, in this order:
 
 ## 7. Terminology and names
 
-- Use the canonical public spellings from `docs/DOC_PLAN.md`. Do not teach
+- Use the canonical public spellings from `docs/DOC_PLAN.md`. Do not present
   retired spellings.
 - A term is defined once, at first use, in the guide page where it is first
   needed. Later pages link back rather than redefining it.
@@ -101,7 +101,7 @@ A guide page is accepted when all of these hold:
 - [ ] A mental model appears before the first example.
 - [ ] Every example is a complete program.
 - [ ] Every printed output is copied verbatim from the permanent executable.
-- [ ] Each overload and each toggle the page teaches has its own example.
+- [ ] Each overload and each toggle the page covers has its own example.
 - [ ] Each example is introduced and interpreted in prose.
 - [ ] Decisions and pitfalls sections are present and concrete.
 - [ ] Every illustrative branch is emitted by the executable.

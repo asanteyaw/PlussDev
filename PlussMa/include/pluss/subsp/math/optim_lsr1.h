@@ -128,56 +128,56 @@ namespace detail {
 namespace ll = pluss::subsp::math::linalg;
 
 inline void lsr1_validate_options_(const Lsr1Options& o) {
-  if (o.memory_size < 0) ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: memory_size must be >= 0");
+  if (o.memory_size < 0) ::pluss::throw_error("optim::l_sr1_trust_region: memory_size must be >= 0");
   if (!(o.initial_radius > 0.0) || !std::isfinite(o.initial_radius)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: initial_radius must be positive and finite");
+    ::pluss::throw_error("optim::l_sr1_trust_region: initial_radius must be positive and finite");
   }
   if (!(o.max_radius >= o.initial_radius) || !std::isfinite(o.max_radius)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: max_radius must be finite and >= initial_radius");
+    ::pluss::throw_error("optim::l_sr1_trust_region: max_radius must be finite and >= initial_radius");
   }
   if (!(o.initial_gamma > 0.0) || !std::isfinite(o.initial_gamma)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: initial_gamma must be positive and finite");
+    ::pluss::throw_error("optim::l_sr1_trust_region: initial_gamma must be positive and finite");
   }
   if (!(o.gamma_shrink > 0.0 && o.gamma_shrink < 1.0)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: gamma_shrink must be in (0,1)");
+    ::pluss::throw_error("optim::l_sr1_trust_region: gamma_shrink must be in (0,1)");
   }
   if (!(o.sr1_skip_tolerance > 0.0) || !std::isfinite(o.sr1_skip_tolerance)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: sr1_skip_tolerance must be positive and finite");
+    ::pluss::throw_error("optim::l_sr1_trust_region: sr1_skip_tolerance must be positive and finite");
   }
   if (!(o.tau_2 > 0.0 && o.tau_2 < 0.5 && o.tau_2 < o.tau_3)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: require 0 < tau_2 < 0.5 and tau_2 < tau_3");
+    ::pluss::throw_error("optim::l_sr1_trust_region: require 0 < tau_2 < 0.5 and tau_2 < tau_3");
   }
   if (!(o.tau_3 > 0.5 && o.tau_3 < 1.0)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: require 0.5 < tau_3 < 1");
+    ::pluss::throw_error("optim::l_sr1_trust_region: require 0.5 < tau_3 < 1");
   }
   if (!(o.eta_1 > 0.0 && o.eta_1 < o.eta_2 && o.eta_2 <= 0.5)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: require 0 < eta_1 < eta_2 <= 0.5");
+    ::pluss::throw_error("optim::l_sr1_trust_region: require 0 < eta_1 < eta_2 <= 0.5");
   }
   if (!(o.eta_3 > 0.5 && o.eta_3 < 1.0 && o.eta_4 > 1.0)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: require 0.5 < eta_3 < 1 < eta_4");
+    ::pluss::throw_error("optim::l_sr1_trust_region: require 0.5 < eta_3 < 1 < eta_4");
   }
   if (!(o.wolfe_c1 > 0.0 && o.wolfe_c1 < 1.0)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: require 0 < wolfe_c1 < 1");
+    ::pluss::throw_error("optim::l_sr1_trust_region: require 0 < wolfe_c1 < 1");
   }
   if (o.max_line_search_iterations <= 0) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: max_line_search_iterations must be > 0");
+    ::pluss::throw_error("optim::l_sr1_trust_region: max_line_search_iterations must be > 0");
   }
   if (!(o.line_search_shrink > 0.0 && o.line_search_shrink < 1.0)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: line_search_shrink must be in (0,1)");
+    ::pluss::throw_error("optim::l_sr1_trust_region: line_search_shrink must be in (0,1)");
   }
 }
 
 inline void lsr1_validate_solve_options_(const Lsr1SolveOptions& o) {
   lsr1_validate_options_(o.step);
-  if (o.max_iterations <= 0) ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: max_iterations must be > 0");
+  if (o.max_iterations <= 0) ::pluss::throw_error("optim::l_sr1_trust_region: max_iterations must be > 0");
   if (o.max_no_progress_iterations < 0) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: max_no_progress_iterations must be >= 0");
+    ::pluss::throw_error("optim::l_sr1_trust_region: max_no_progress_iterations must be >= 0");
   }
   if (!(o.gradient_tolerance >= 0.0) || !std::isfinite(o.gradient_tolerance)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: gradient_tolerance must be finite and >= 0");
+    ::pluss::throw_error("optim::l_sr1_trust_region: gradient_tolerance must be finite and >= 0");
   }
   if (!(o.step_tolerance >= 0.0) || !std::isfinite(o.step_tolerance)) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: step_tolerance must be finite and >= 0");
+    ::pluss::throw_error("optim::l_sr1_trust_region: step_tolerance must be finite and >= 0");
   }
 }
 
@@ -704,7 +704,7 @@ inline Lsr1Result l_sr1_trust_region_core_(
   detail::require_defined_(x0, "l_sr1_trust_region");
   detail::require_float_dtype_(x0, "l_sr1_trust_region");
   if (x0.dim() != 1) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: expected a flat (1-D) parameter vector");
+    ::pluss::throw_error("optim::l_sr1_trust_region: expected a flat (1-D) parameter vector");
   }
 
   const auto& opts = solve_options.step;
@@ -1033,7 +1033,7 @@ inline std::pair<std::vector<Series>, Lsr1Result> l_sr1_trust_region(
     const std::function<Trace(const std::vector<Trace>&)>& objective, const std::vector<Series>& params0,
     const Lsr1SolveOptions& solve_options = {}) {
   if (params0.empty()) {
-    ::pluss::throw_error("subsp::math::optim::l_sr1_trust_region: expected non-empty params");
+    ::pluss::throw_error("optim::l_sr1_trust_region: expected non-empty params");
   }
   const auto block_layout = detail::septima_make_layout_(params0);
   const Series flat0 = detail::septima_flatten_values_(params0);

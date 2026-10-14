@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Clamps every element into the closed interval <code class="docutils literal notranslate"><span class="pre">[min_value,</span> <span class="pre">max_value]</span></code> — a value
 below <code class="docutils literal notranslate"><span class="pre">min_value</span></code> becomes <code class="docutils literal notranslate"><span class="pre">min_value</span></code>, a value above <code class="docutils literal notranslate"><span class="pre">max_value</span></code> becomes
-<code class="docutils literal notranslate"><span class="pre">max_value</span></code>, and everything in between is left untouched. Requires the thread to be
+<code class="docutils literal notranslate"><span class="pre">max_value</span></code>, and everything in between is left untouched. Requires the slate to be
 <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p>
 </section>
 <section id="parameters">
@@ -64,7 +64,7 @@ The upper bound. Values above this are lowered to it.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every value clamped
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every value clamped
 into <code class="docutils literal notranslate"><span class="pre">[min_value,</span> <span class="pre">max_value]</span></code>.</p>
 </section>
 <section id="examples">
@@ -90,7 +90,7 @@ ptype: Series
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">10.0</span></code> (below <code class="docutils literal notranslate"><span class="pre">15.0</span></code>) is raised to <code class="docutils literal notranslate"><span class="pre">15.0</span></code>; <code class="docutils literal notranslate"><span class="pre">40.0</span></code> (above <code class="docutils literal notranslate"><span class="pre">35.0</span></code>) is lowered to
 <code class="docutils literal notranslate"><span class="pre">35.0</span></code>; <code class="docutils literal notranslate"><span class="pre">20.0</span></code> and <code class="docutils literal notranslate"><span class="pre">30.0</span></code>, already inside <code class="docutils literal notranslate"><span class="pre">[15.0,</span> <span class="pre">35.0]</span></code>, are unchanged.</p>
-<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
@@ -110,7 +110,7 @@ ptype: Series
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind.</p></li>
 <li><p>Both bounds are inclusive.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell on input stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> on output.</p></li>
 </ul>

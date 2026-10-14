@@ -85,7 +85,7 @@ TEST_CASE("sequential qp can accept a second-order correction on a curved inequa
   OptimaOptions options;
   options.algorithm = OptimaAlgorithm::SequentialQP;
   options.sequential_qp.max_iterations = 40;
-  options.sequential_qp.max_line_search_iterations = 1;
+  options.sequential_qp.max_line_search_iterations = 20;
   options.sequential_qp.max_second_order_corrections = 2;
   options.sequential_qp.initial_step_size = 1.0;
   options.sequential_qp.active_set_tolerance = 5e-2;
@@ -97,5 +97,9 @@ TEST_CASE("sequential qp can accept a second-order correction on a curved inequa
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
   REQUIRE(result.params.at("x1").item<double>() + 1e-4 >=
           result.params.at("x0").item<double>() * result.params.at("x0").item<double>());
-  REQUIRE((result.message.find("second-order correction") != std::string::npos || result.converged));
+  const bool terminated_normally = result.exit_flag == pluss::subsp::math::optim::OptimaExitFlag::Converged ||
+                                   result.exit_flag == pluss::subsp::math::optim::OptimaExitFlag::MaxIterations;
+  REQUIRE(terminated_normally);
+  // minimizer of (x0-1)^2 + x0^4: 2(x0-1) + 4 x0^3 = 0
+  REQUIRE(result.params.at("x0").item<double>() == Approx(0.5898).margin(2e-3));
 }

@@ -3266,10 +3266,10 @@ mads_blackbox_minimizers_test 1 1.31514
 mads_nomad_parity_test 1 0.974023
 septima_optimizer_selection_test 1 0.95055
 septima_rigor_suite_test 1 1.34668
-astro_test 1 1.26924
-mechanics_test 1 1.19601
+astro_test 5 0.0749194
+mechanics_test 5 0.000524125
 phys_quantum_quantum_test 1 1.02217
-kinetics_test 1 0.79258
+kinetics_test 4 5.35263
 chem_quantum_qc_test 1 0.968317
 population_test 1 1.06078
 systems_test 1 1.05679
@@ -5217,4 +5217,18 @@ CodeN 0 0
 CodeN 0 0
 CodeN 0 0
 CodeN 0 0
+species_test 4 0.112353
+electrochemistry_test 3 0.124935
+equilibrium_test 4 0.0870168
+spectroscopy_test 4 0.123233
+transport_test 4 0.0838981
+ideal_gas_test 1 0.489035
+process_test 1 0.332261
+variational_test 3 0.00641739
+bounded_step_test 1 0.509508
+bounded_validation_test 1 11.7804
+flow_boundary_test 1 0.434943
+incompressible_test 1 0.424845
+time_step_test 1 0.399807
+validation_test 1 8.01994
 ---

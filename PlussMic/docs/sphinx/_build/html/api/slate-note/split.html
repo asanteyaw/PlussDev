@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,9 +53,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Splits every cell of the bound thread on a delimiter, expanding the result into
+<p>Splits every cell of the bound slate on a delimiter, expanding the result into
 one output column per split position — direct forwards to
-<a class="reference internal" href="#../thread/split.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::split()</span></code></span></a>. Requires the bound thread to be
+<a class="reference internal" href="../slate/split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::split()</span></code></span></a>. Requires the bound slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Two overloads with different delimiter semantics:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">split(delimiter,</span> <span class="pre">limit,</span> <span class="pre">prefix)</span></code></strong>: always a literal substring split
@@ -72,7 +72,7 @@ row is <code class="docutils literal notranslate"><span class="pre">NULL</span><
 The single-delimiter overload determines the output column count from
 <strong>every</strong> row’s underlying text — including invalid rows. The
 <code class="docutils literal notranslate"><span class="pre">(pattern,</span> <span class="pre">options)</span></code> overload only computes each row’s split for rows that are
-actually valid. See <a class="reference internal" href="#../thread/split.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::split()</span></code></span></a> Example 4 for a
+actually valid. See <a class="reference internal" href="../slate/split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::split()</span></code></span></a> Example 4 for a
 side-by-side demonstration.</p>
 </div>
 </section>
@@ -156,7 +156,7 @@ last column.</p>
 [3 cs x 3 feat]
 </pre></div>
 </div>
-<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
@@ -178,7 +178,7 @@ last column.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::split()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/split.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::split()</span></code></span></a> — identical behavior and throws.</p></li>
+<a class="reference internal" href="../slate/split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::split()</span></code></span></a> — identical behavior and throws.</p></li>
 <li><p>An empty delimiter/pattern throws.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the <em>number of splits</em>, not the <em>number of output columns</em>
 directly.</p></li>
@@ -190,7 +190,7 @@ warning above.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/split.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::split</span></code></span></a>: the direct, non-accessor form this
+<li><p><a class="reference internal" href="../slate/split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::split</span></code></span></a>: the direct, non-accessor form this
 method forwards to.</p></li>
 <li><p><a class="reference internal" href="partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::partition</span></code></span></a>: a related but simpler split
 — always exactly 3 columns, first-occurrence-only.</p></li>

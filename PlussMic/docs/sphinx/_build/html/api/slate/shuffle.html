@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a new thread with every entry in a random order — the same entries as the
+<p>Returns a new slate with every entry in a random order — the same entries as the
 original, just permuted. Internally this builds the index range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">size())</span></code>,
 seeds a <code class="docutils literal notranslate"><span class="pre">std::mt19937_64</span></code> from <code class="docutils literal notranslate"><span class="pre">random_state</span></code> (or from <code class="docutils literal notranslate"><span class="pre">std::random_device</span></code> if
 <code class="docutils literal notranslate"><span class="pre">random_state</span></code> is omitted), calls <code class="docutils literal notranslate"><span class="pre">std::shuffle</span></code>, and takes the result — so it’s
@@ -76,7 +76,7 @@ non-reproducible seed each call via <code class="docutils literal notranslate"><
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread of the same length and kind, with entries reordered.</p>
+A new slate of the same length and kind, with entries reordered.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -136,7 +136,7 @@ directly for “reorder everything” use.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::sample</span></code></span></a>: draw a random subset (or the whole thread,
+<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::sample</span></code></span></a>: draw a random subset (or the whole slate,
 reordered) with more control over count/fraction and replacement.</p></li>
 <li><p><a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::arrange</span></code></span></a>: reorder deterministically by value,
 rather than randomly.</p></li>

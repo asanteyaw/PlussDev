@@ -14,19 +14,19 @@ SlatePlotAccessor::auto_plot(const AutoPlotOptions& options) const -> pluss::pl:
 
 ## What It Does
 
-Picks a chart type automatically for the bound thread and delegates to the corresponding
+Picks a chart type automatically for the bound slate and delegates to the corresponding
 method on this same accessor — a much smaller decision tree than
 [`DataFramePlotAccessor::auto_plot`](../../api/dataframe-plot/auto_plot.md)'s, since a
 single `Slate` has none of the multi-feature routing questions (feature count, hue
 candidates, non-negativity) the 2D accessor's tree branches on.
 
 ```{important} The full decision tree — just two rules
-1. **The bound thread has explicit row labels, and 16 or fewer rows.** Routes to
+1. **The bound slate has explicit row labels, and 16 or fewer rows.** Routes to
    [`bar()`](bar.md).
 2. **Everything else** (no explicit row labels, or more than 16 rows). Routes to
    [`line()`](line.md).
 
-Both routed-to calls use their own zero-argument overload — no companion `x` thread is
+Both routed-to calls use their own zero-argument overload — no companion `x` slate is
 ever passed through, even when one exists conceptually.
 ```
 

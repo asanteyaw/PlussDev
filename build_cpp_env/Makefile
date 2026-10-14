@@ -1493,6 +1493,58 @@ plussai_nodeb_full_nlp_workflow_demo/fast:
 .PHONY : plussai_nodeb_full_nlp_workflow_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussai_nodeb_docs_reference
+
+# Build rule for target.
+plussai_nodeb_docs_reference: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodeb_docs_reference
+.PHONY : plussai_nodeb_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_docs_reference/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/build
+.PHONY : plussai_nodeb_docs_reference/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodeb_core_docs_reference
+
+# Build rule for target.
+plussai_nodeb_core_docs_reference: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodeb_core_docs_reference
+.PHONY : plussai_nodeb_core_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_core_docs_reference/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/build
+.PHONY : plussai_nodeb_core_docs_reference/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodeb_tasks_docs_reference
+
+# Build rule for target.
+plussai_nodeb_tasks_docs_reference: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodeb_tasks_docs_reference
+.PHONY : plussai_nodeb_tasks_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_tasks_docs_reference/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/build
+.PHONY : plussai_nodeb_tasks_docs_reference/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodeb_embed_docs_reference
+
+# Build rule for target.
+plussai_nodeb_embed_docs_reference: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodeb_embed_docs_reference
+.PHONY : plussai_nodeb_embed_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_embed_docs_reference/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/build
+.PHONY : plussai_nodeb_embed_docs_reference/fast
+
+#=============================================================================
 # Target rules for targets named plussai_bike_sharing_end_to_end
 
 # Build rule for target.
@@ -15455,6 +15507,19 @@ plussqit_codem_series_ordering_reference_demo/fast:
 .PHONY : plussqit_codem_series_ordering_reference_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_codem_series_pair_metadata_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_pair_metadata_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_pair_metadata_reference_demo
+.PHONY : plussqit_codem_series_pair_metadata_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_pair_metadata_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_pair_metadata_reference_demo.dir/build
+.PHONY : plussqit_codem_series_pair_metadata_reference_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussqit_codem_series_factory_core_reference_demo
 
 # Build rule for target.
@@ -15544,6 +15609,58 @@ plussqit_codem_series_special_functions_ii_reference_demo: cmake_check_build_sys
 plussqit_codem_series_special_functions_ii_reference_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_functions_ii_reference_demo.dir/build
 .PHONY : plussqit_codem_series_special_functions_ii_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_special_views_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_special_views_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_special_views_reference_demo
+.PHONY : plussqit_codem_series_special_views_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_special_views_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_special_views_reference_demo.dir/build
+.PHONY : plussqit_codem_series_special_views_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_transform_activation_ii_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_transform_activation_ii_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_transform_activation_ii_reference_demo
+.PHONY : plussqit_codem_series_transform_activation_ii_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_transform_activation_ii_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_ii_reference_demo.dir/build
+.PHONY : plussqit_codem_series_transform_activation_ii_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_transform_activation_iii_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_transform_activation_iii_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_transform_activation_iii_reference_demo
+.PHONY : plussqit_codem_series_transform_activation_iii_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_transform_activation_iii_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_transform_activation_iii_reference_demo.dir/build
+.PHONY : plussqit_codem_series_transform_activation_iii_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_series_final_teachings_reference_demo
+
+# Build rule for target.
+plussqit_codem_series_final_teachings_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_series_final_teachings_reference_demo
+.PHONY : plussqit_codem_series_final_teachings_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_final_teachings_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_final_teachings_reference_demo.dir/build
+.PHONY : plussqit_codem_series_final_teachings_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codem_series_complex_components_reference_demo
@@ -16352,17 +16469,17 @@ plussqit_codeh_timeline_printing_2d_3d_demo/fast:
 .PHONY : plussqit_codeh_timeline_printing_2d_3d_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussqit_codeh_timeline_dataframe_timeindex_methods_demo
+# Target rules for targets named plussqit_codeh_timeline_index_methods_demo
 
 # Build rule for target.
-plussqit_codeh_timeline_dataframe_timeindex_methods_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_dataframe_timeindex_methods_demo
-.PHONY : plussqit_codeh_timeline_dataframe_timeindex_methods_demo
+plussqit_codeh_timeline_index_methods_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_index_methods_demo
+.PHONY : plussqit_codeh_timeline_index_methods_demo
 
 # fast build rule for target.
-plussqit_codeh_timeline_dataframe_timeindex_methods_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_dataframe_timeindex_methods_demo.dir/build
-.PHONY : plussqit_codeh_timeline_dataframe_timeindex_methods_demo/fast
+plussqit_codeh_timeline_index_methods_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_methods_demo.dir/build
+.PHONY : plussqit_codeh_timeline_index_methods_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codeh_timeline_non_generated_and_factory_methods_demo
@@ -16378,17 +16495,17 @@ plussqit_codeh_timeline_non_generated_and_factory_methods_demo/fast:
 .PHONY : plussqit_codeh_timeline_non_generated_and_factory_methods_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussqit_codeh_timeindex_docverify_demo
+# Target rules for targets named plussqit_codeh_timeline_index_docverify_demo
 
 # Build rule for target.
-plussqit_codeh_timeindex_docverify_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeindex_docverify_demo
-.PHONY : plussqit_codeh_timeindex_docverify_demo
+plussqit_codeh_timeline_index_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_timeline_index_docverify_demo
+.PHONY : plussqit_codeh_timeline_index_docverify_demo
 
 # fast build rule for target.
-plussqit_codeh_timeindex_docverify_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeindex_docverify_demo.dir/build
-.PHONY : plussqit_codeh_timeindex_docverify_demo/fast
+plussqit_codeh_timeline_index_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_timeline_index_docverify_demo.dir/build
+.PHONY : plussqit_codeh_timeline_index_docverify_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codeh_timeline_docverify_demo
@@ -16638,6 +16755,32 @@ plussqit_codeh_duration_docverify_demo/fast:
 .PHONY : plussqit_codeh_duration_docverify_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_codeh_queue_docverify_demo
+
+# Build rule for target.
+plussqit_codeh_queue_docverify_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_queue_docverify_demo
+.PHONY : plussqit_codeh_queue_docverify_demo
+
+# fast build rule for target.
+plussqit_codeh_queue_docverify_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_queue_docverify_demo.dir/build
+.PHONY : plussqit_codeh_queue_docverify_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codeh_duration_factory_reference_demo
+
+# Build rule for target.
+plussqit_codeh_duration_factory_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh_duration_factory_reference_demo
+.PHONY : plussqit_codeh_duration_factory_reference_demo
+
+# fast build rule for target.
+plussqit_codeh_duration_factory_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codeh_duration_factory_reference_demo.dir/build
+.PHONY : plussqit_codeh_duration_factory_reference_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussqit_codeh_timeline_duration_interop_docverify_demo
 
 # Build rule for target.
@@ -16781,6 +16924,19 @@ plussqit_codeh_tests/fast:
 .PHONY : plussqit_codeh_tests/fast
 
 #=============================================================================
+# Target rules for targets named bench_ops
+
+# Build rule for target.
+bench_ops: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_ops
+.PHONY : bench_ops
+
+# fast build rule for target.
+bench_ops/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/bench_ops.dir/build.make PlussQit/CMakeFiles/bench_ops.dir/build
+.PHONY : bench_ops/fast
+
+#=============================================================================
 # Target rules for targets named PlussTilsCore
 
 # Build rule for target.
@@ -16792,6 +16948,58 @@ PlussTilsCore: cmake_check_build_system
 PlussTilsCore/fast:
 	$(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/PlussTilsCore.dir/build.make PlussTils/CMakeFiles/PlussTilsCore.dir/build
 .PHONY : PlussTilsCore/fast
+
+#=============================================================================
+# Target rules for targets named plusstils_core_env_reference
+
+# Build rule for target.
+plusstils_core_env_reference: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_core_env_reference
+.PHONY : plusstils_core_env_reference
+
+# fast build rule for target.
+plusstils_core_env_reference/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_reference.dir/build
+.PHONY : plusstils_core_env_reference/fast
+
+#=============================================================================
+# Target rules for targets named plusstils_core_seed_reference
+
+# Build rule for target.
+plusstils_core_seed_reference: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_core_seed_reference
+.PHONY : plusstils_core_seed_reference
+
+# fast build rule for target.
+plusstils_core_seed_reference/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_reference.dir/build
+.PHONY : plusstils_core_seed_reference/fast
+
+#=============================================================================
+# Target rules for targets named plusstils_core_env_tests
+
+# Build rule for target.
+plusstils_core_env_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_core_env_tests
+.PHONY : plusstils_core_env_tests
+
+# fast build rule for target.
+plusstils_core_env_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_env_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_env_tests.dir/build
+.PHONY : plusstils_core_env_tests/fast
+
+#=============================================================================
+# Target rules for targets named plusstils_core_seed_tests
+
+# Build rule for target.
+plusstils_core_seed_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusstils_core_seed_tests
+.PHONY : plusstils_core_seed_tests
+
+# fast build rule for target.
+plusstils_core_seed_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build
+.PHONY : plusstils_core_seed_tests/fast
 
 #=============================================================================
 # Target rules for targets named PlussTilsView
@@ -17000,6 +17208,19 @@ plussview_macos_input_driver: cmake_check_build_system
 plussview_macos_input_driver/fast:
 	$(MAKE) $(MAKESILENT) -f PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/build.make PlussTils/view/CMakeFiles/plussview_macos_input_driver.dir/build
 .PHONY : plussview_macos_input_driver/fast
+
+#=============================================================================
+# Target rules for targets named PlussBI
+
+# Build rule for target.
+PlussBI: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussBI
+.PHONY : PlussBI
+
+# fast build rule for target.
+PlussBI/fast:
+	$(MAKE) $(MAKESILENT) -f PlussTils/src/PlussBI/CMakeFiles/PlussBI.dir/build.make PlussTils/src/PlussBI/CMakeFiles/PlussBI.dir/build
+.PHONY : PlussBI/fast
 
 #=============================================================================
 # Target rules for targets named PlussPl
@@ -17652,6 +17873,19 @@ external_reference_parity_test/fast:
 .PHONY : external_reference_parity_test/fast
 
 #=============================================================================
+# Target rules for targets named linprog_test
+
+# Build rule for target.
+linprog_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 linprog_test
+.PHONY : linprog_test
+
+# fast build rule for target.
+linprog_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/build
+.PHONY : linprog_test/fast
+
+#=============================================================================
 # Target rules for targets named lsr1_complex_test
 
 # Build rule for target.
@@ -17704,6 +17938,19 @@ mads_nomad_parity_test/fast:
 .PHONY : mads_nomad_parity_test/fast
 
 #=============================================================================
+# Target rules for targets named milp_test
+
+# Build rule for target.
+milp_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 milp_test
+.PHONY : milp_test
+
+# fast build rule for target.
+milp_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/milp_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/milp_test.dir/build
+.PHONY : milp_test/fast
+
+#=============================================================================
 # Target rules for targets named pattern_search_minimizer_test
 
 # Build rule for target.
@@ -17715,6 +17962,19 @@ pattern_search_minimizer_test: cmake_check_build_system
 pattern_search_minimizer_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build
 .PHONY : pattern_search_minimizer_test/fast
+
+#=============================================================================
+# Target rules for targets named roots_test
+
+# Build rule for target.
+roots_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 roots_test
+.PHONY : roots_test
+
+# fast build rule for target.
+roots_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/roots_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/roots_test.dir/build
+.PHONY : roots_test/fast
 
 #=============================================================================
 # Target rules for targets named septima_adam_complex_test
@@ -18354,6 +18614,110 @@ astro_test/fast:
 .PHONY : astro_test/fast
 
 #=============================================================================
+# Target rules for targets named natsci_astro_bench
+
+# Build rule for target.
+natsci_astro_bench: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 natsci_astro_bench
+.PHONY : natsci_astro_bench
+
+# fast build rule for target.
+natsci_astro_bench/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/astro/bench/CMakeFiles/natsci_astro_bench.dir/build.make PlussMa/NatSci/physics/astro/bench/CMakeFiles/natsci_astro_bench.dir/build
+.PHONY : natsci_astro_bench/fast
+
+#=============================================================================
+# Target rules for targets named bounded_step_test
+
+# Build rule for target.
+bounded_step_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bounded_step_test
+.PHONY : bounded_step_test
+
+# fast build rule for target.
+bounded_step_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/bounded_step_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/bounded_step_test.dir/build
+.PHONY : bounded_step_test/fast
+
+#=============================================================================
+# Target rules for targets named bounded_validation_test
+
+# Build rule for target.
+bounded_validation_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bounded_validation_test
+.PHONY : bounded_validation_test
+
+# fast build rule for target.
+bounded_validation_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/bounded_validation_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/bounded_validation_test.dir/build
+.PHONY : bounded_validation_test/fast
+
+#=============================================================================
+# Target rules for targets named flow_boundary_test
+
+# Build rule for target.
+flow_boundary_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 flow_boundary_test
+.PHONY : flow_boundary_test
+
+# fast build rule for target.
+flow_boundary_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/flow_boundary_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/flow_boundary_test.dir/build
+.PHONY : flow_boundary_test/fast
+
+#=============================================================================
+# Target rules for targets named incompressible_test
+
+# Build rule for target.
+incompressible_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 incompressible_test
+.PHONY : incompressible_test
+
+# fast build rule for target.
+incompressible_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/incompressible_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/incompressible_test.dir/build
+.PHONY : incompressible_test/fast
+
+#=============================================================================
+# Target rules for targets named time_step_test
+
+# Build rule for target.
+time_step_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 time_step_test
+.PHONY : time_step_test
+
+# fast build rule for target.
+time_step_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/time_step_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/time_step_test.dir/build
+.PHONY : time_step_test/fast
+
+#=============================================================================
+# Target rules for targets named validation_test
+
+# Build rule for target.
+validation_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 validation_test
+.PHONY : validation_test
+
+# fast build rule for target.
+validation_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/validation_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/validation_test.dir/build
+.PHONY : validation_test/fast
+
+#=============================================================================
+# Target rules for targets named natsci_fluids_bench
+
+# Build rule for target.
+natsci_fluids_bench: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 natsci_fluids_bench
+.PHONY : natsci_fluids_bench
+
+# fast build rule for target.
+natsci_fluids_bench/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/bench/CMakeFiles/natsci_fluids_bench.dir/build.make PlussMa/NatSci/physics/fluids/bench/CMakeFiles/natsci_fluids_bench.dir/build
+.PHONY : natsci_fluids_bench/fast
+
+#=============================================================================
 # Target rules for targets named mechanics_test
 
 # Build rule for target.
@@ -18365,6 +18729,19 @@ mechanics_test: cmake_check_build_system
 mechanics_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/mechanics_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/mechanics_test.dir/build
 .PHONY : mechanics_test/fast
+
+#=============================================================================
+# Target rules for targets named variational_test
+
+# Build rule for target.
+variational_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 variational_test
+.PHONY : variational_test
+
+# fast build rule for target.
+variational_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/build
+.PHONY : variational_test/fast
 
 #=============================================================================
 # Target rules for targets named phys_quantum_quantum_test
@@ -18380,6 +18757,84 @@ phys_quantum_quantum_test/fast:
 .PHONY : phys_quantum_quantum_test/fast
 
 #=============================================================================
+# Target rules for targets named ideal_gas_test
+
+# Build rule for target.
+ideal_gas_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ideal_gas_test
+.PHONY : ideal_gas_test
+
+# fast build rule for target.
+ideal_gas_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/thermo/test/CMakeFiles/ideal_gas_test.dir/build.make PlussMa/NatSci/physics/thermo/test/CMakeFiles/ideal_gas_test.dir/build
+.PHONY : ideal_gas_test/fast
+
+#=============================================================================
+# Target rules for targets named process_test
+
+# Build rule for target.
+process_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 process_test
+.PHONY : process_test
+
+# fast build rule for target.
+process_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/thermo/test/CMakeFiles/process_test.dir/build.make PlussMa/NatSci/physics/thermo/test/CMakeFiles/process_test.dir/build
+.PHONY : process_test/fast
+
+#=============================================================================
+# Target rules for targets named species_test
+
+# Build rule for target.
+species_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 species_test
+.PHONY : species_test
+
+# fast build rule for target.
+species_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/thermo/test/CMakeFiles/species_test.dir/build.make PlussMa/NatSci/physics/thermo/test/CMakeFiles/species_test.dir/build
+.PHONY : species_test/fast
+
+#=============================================================================
+# Target rules for targets named natsci_thermo_bench
+
+# Build rule for target.
+natsci_thermo_bench: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 natsci_thermo_bench
+.PHONY : natsci_thermo_bench
+
+# fast build rule for target.
+natsci_thermo_bench/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/thermo/bench/CMakeFiles/natsci_thermo_bench.dir/build.make PlussMa/NatSci/physics/thermo/bench/CMakeFiles/natsci_thermo_bench.dir/build
+.PHONY : natsci_thermo_bench/fast
+
+#=============================================================================
+# Target rules for targets named electrochemistry_test
+
+# Build rule for target.
+electrochemistry_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 electrochemistry_test
+.PHONY : electrochemistry_test
+
+# fast build rule for target.
+electrochemistry_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/electrochemistry/test/CMakeFiles/electrochemistry_test.dir/build.make PlussMa/NatSci/chemistry/electrochemistry/test/CMakeFiles/electrochemistry_test.dir/build
+.PHONY : electrochemistry_test/fast
+
+#=============================================================================
+# Target rules for targets named equilibrium_test
+
+# Build rule for target.
+equilibrium_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 equilibrium_test
+.PHONY : equilibrium_test
+
+# fast build rule for target.
+equilibrium_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/equilibrium/test/CMakeFiles/equilibrium_test.dir/build.make PlussMa/NatSci/chemistry/equilibrium/test/CMakeFiles/equilibrium_test.dir/build
+.PHONY : equilibrium_test/fast
+
+#=============================================================================
 # Target rules for targets named kinetics_test
 
 # Build rule for target.
@@ -18391,6 +18846,32 @@ kinetics_test: cmake_check_build_system
 kinetics_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/kinetics_test.dir/build.make PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/kinetics_test.dir/build
 .PHONY : kinetics_test/fast
+
+#=============================================================================
+# Target rules for targets named spectroscopy_test
+
+# Build rule for target.
+spectroscopy_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 spectroscopy_test
+.PHONY : spectroscopy_test
+
+# fast build rule for target.
+spectroscopy_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/spectroscopy/test/CMakeFiles/spectroscopy_test.dir/build.make PlussMa/NatSci/chemistry/spectroscopy/test/CMakeFiles/spectroscopy_test.dir/build
+.PHONY : spectroscopy_test/fast
+
+#=============================================================================
+# Target rules for targets named transport_test
+
+# Build rule for target.
+transport_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 transport_test
+.PHONY : transport_test
+
+# fast build rule for target.
+transport_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/transport/test/CMakeFiles/transport_test.dir/build.make PlussMa/NatSci/chemistry/transport/test/CMakeFiles/transport_test.dir/build
+.PHONY : transport_test/fast
 
 #=============================================================================
 # Target rules for targets named chem_quantum_qc_test
@@ -18406,6 +18887,19 @@ chem_quantum_qc_test/fast:
 .PHONY : chem_quantum_qc_test/fast
 
 #=============================================================================
+# Target rules for targets named ecology_test
+
+# Build rule for target.
+ecology_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ecology_test
+.PHONY : ecology_test
+
+# fast build rule for target.
+ecology_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/ecology_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/ecology_test.dir/build
+.PHONY : ecology_test/fast
+
+#=============================================================================
 # Target rules for targets named population_test
 
 # Build rule for target.
@@ -18417,6 +18911,32 @@ population_test: cmake_check_build_system
 population_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/build
 .PHONY : population_test/fast
+
+#=============================================================================
+# Target rules for targets named binding_test
+
+# Build rule for target.
+binding_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 binding_test
+.PHONY : binding_test
+
+# fast build rule for target.
+binding_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/systems/test/CMakeFiles/binding_test.dir/build.make PlussMa/NatSci/biology/systems/test/CMakeFiles/binding_test.dir/build
+.PHONY : binding_test/fast
+
+#=============================================================================
+# Target rules for targets named stability_models_test
+
+# Build rule for target.
+stability_models_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 stability_models_test
+.PHONY : stability_models_test
+
+# fast build rule for target.
+stability_models_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/systems/test/CMakeFiles/stability_models_test.dir/build.make PlussMa/NatSci/biology/systems/test/CMakeFiles/stability_models_test.dir/build
+.PHONY : stability_models_test/fast
 
 #=============================================================================
 # Target rules for targets named systems_test
@@ -18445,6 +18965,97 @@ biophysics_test/fast:
 .PHONY : biophysics_test/fast
 
 #=============================================================================
+# Target rules for targets named epidemiology_test
+
+# Build rule for target.
+epidemiology_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 epidemiology_test
+.PHONY : epidemiology_test
+
+# fast build rule for target.
+epidemiology_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/epidemiology/test/CMakeFiles/epidemiology_test.dir/build.make PlussMa/NatSci/biology/epidemiology/test/CMakeFiles/epidemiology_test.dir/build
+.PHONY : epidemiology_test/fast
+
+#=============================================================================
+# Target rules for targets named genetics_test
+
+# Build rule for target.
+genetics_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 genetics_test
+.PHONY : genetics_test
+
+# fast build rule for target.
+genetics_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/genetics/test/CMakeFiles/genetics_test.dir/build.make PlussMa/NatSci/biology/genetics/test/CMakeFiles/genetics_test.dir/build
+.PHONY : genetics_test/fast
+
+#=============================================================================
+# Target rules for targets named neuroscience_test
+
+# Build rule for target.
+neuroscience_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 neuroscience_test
+.PHONY : neuroscience_test
+
+# fast build rule for target.
+neuroscience_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/neuroscience/test/CMakeFiles/neuroscience_test.dir/build.make PlussMa/NatSci/biology/neuroscience/test/CMakeFiles/neuroscience_test.dir/build
+.PHONY : neuroscience_test/fast
+
+#=============================================================================
+# Target rules for targets named pharmacokinetics_test
+
+# Build rule for target.
+pharmacokinetics_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 pharmacokinetics_test
+.PHONY : pharmacokinetics_test
+
+# fast build rule for target.
+pharmacokinetics_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/pharmacokinetics/test/CMakeFiles/pharmacokinetics_test.dir/build.make PlussMa/NatSci/biology/pharmacokinetics/test/CMakeFiles/pharmacokinetics_test.dir/build
+.PHONY : pharmacokinetics_test/fast
+
+#=============================================================================
+# Target rules for targets named genome_scale_test
+
+# Build rule for target.
+genome_scale_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 genome_scale_test
+.PHONY : genome_scale_test
+
+# fast build rule for target.
+genome_scale_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/genome_scale_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/genome_scale_test.dir/build
+.PHONY : genome_scale_test/fast
+
+#=============================================================================
+# Target rules for targets named metabolism_test
+
+# Build rule for target.
+metabolism_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 metabolism_test
+.PHONY : metabolism_test
+
+# fast build rule for target.
+metabolism_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/metabolism_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/metabolism_test.dir/build
+.PHONY : metabolism_test/fast
+
+#=============================================================================
+# Target rules for targets named boundary_test
+
+# Build rule for target.
+boundary_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 boundary_test
+.PHONY : boundary_test
+
+# fast build rule for target.
+boundary_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/boundary_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/boundary_test.dir/build
+.PHONY : boundary_test/fast
+
+#=============================================================================
 # Target rules for targets named constants_test
 
 # Build rule for target.
@@ -18456,6 +19067,97 @@ constants_test: cmake_check_build_system
 constants_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/constants_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/constants_test.dir/build
 .PHONY : constants_test/fast
+
+#=============================================================================
+# Target rules for targets named diff_test
+
+# Build rule for target.
+diff_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 diff_test
+.PHONY : diff_test
+
+# fast build rule for target.
+diff_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/diff_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/diff_test.dir/build
+.PHONY : diff_test/fast
+
+#=============================================================================
+# Target rules for targets named field_test
+
+# Build rule for target.
+field_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 field_test
+.PHONY : field_test
+
+# fast build rule for target.
+field_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/field_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/field_test.dir/build
+.PHONY : field_test/fast
+
+#=============================================================================
+# Target rules for targets named records_test
+
+# Build rule for target.
+records_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 records_test
+.PHONY : records_test
+
+# fast build rule for target.
+records_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/records_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/records_test.dir/build
+.PHONY : records_test/fast
+
+#=============================================================================
+# Target rules for targets named sensitivity_test
+
+# Build rule for target.
+sensitivity_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 sensitivity_test
+.PHONY : sensitivity_test
+
+# fast build rule for target.
+sensitivity_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/sensitivity_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/sensitivity_test.dir/build
+.PHONY : sensitivity_test/fast
+
+#=============================================================================
+# Target rules for targets named solve_test
+
+# Build rule for target.
+solve_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 solve_test
+.PHONY : solve_test
+
+# fast build rule for target.
+solve_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/solve_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/solve_test.dir/build
+.PHONY : solve_test/fast
+
+#=============================================================================
+# Target rules for targets named stability_test
+
+# Build rule for target.
+stability_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 stability_test
+.PHONY : stability_test
+
+# fast build rule for target.
+stability_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/stability_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/stability_test.dir/build
+.PHONY : stability_test/fast
+
+#=============================================================================
+# Target rules for targets named stiff_test
+
+# Build rule for target.
+stiff_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 stiff_test
+.PHONY : stiff_test
+
+# fast build rule for target.
+stiff_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/NatSci/common/test/CMakeFiles/stiff_test.dir/build.make PlussMa/NatSci/common/test/CMakeFiles/stiff_test.dir/build
+.PHONY : stiff_test/fast
 
 #=============================================================================
 # Target rules for targets named distr_test
@@ -19316,17 +20018,17 @@ plussmic_dataframe_ab_reference_demo/fast:
 .PHONY : plussmic_dataframe_ab_reference_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussmic_thread_a_reference_demo
+# Target rules for targets named plussmic_slate_a_reference_demo
 
 # Build rule for target.
-plussmic_thread_a_reference_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_thread_a_reference_demo
-.PHONY : plussmic_thread_a_reference_demo
+plussmic_slate_a_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_slate_a_reference_demo
+.PHONY : plussmic_slate_a_reference_demo
 
 # fast build rule for target.
-plussmic_thread_a_reference_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build
-.PHONY : plussmic_thread_a_reference_demo/fast
+plussmic_slate_a_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/build
+.PHONY : plussmic_slate_a_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_dataframe_b_reference_demo
@@ -19342,17 +20044,17 @@ plussmic_dataframe_b_reference_demo/fast:
 .PHONY : plussmic_dataframe_b_reference_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussmic_thread_b_reference_demo
+# Target rules for targets named plussmic_slate_b_reference_demo
 
 # Build rule for target.
-plussmic_thread_b_reference_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_thread_b_reference_demo
-.PHONY : plussmic_thread_b_reference_demo
+plussmic_slate_b_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_slate_b_reference_demo
+.PHONY : plussmic_slate_b_reference_demo
 
 # fast build rule for target.
-plussmic_thread_b_reference_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build
-.PHONY : plussmic_thread_b_reference_demo/fast
+plussmic_slate_b_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/build
+.PHONY : plussmic_slate_b_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_dataframe_cd_reference_demo
@@ -19368,17 +20070,17 @@ plussmic_dataframe_cd_reference_demo/fast:
 .PHONY : plussmic_dataframe_cd_reference_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussmic_thread_cd_reference_demo
+# Target rules for targets named plussmic_slate_cd_reference_demo
 
 # Build rule for target.
-plussmic_thread_cd_reference_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_thread_cd_reference_demo
-.PHONY : plussmic_thread_cd_reference_demo
+plussmic_slate_cd_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_slate_cd_reference_demo
+.PHONY : plussmic_slate_cd_reference_demo
 
 # fast build rule for target.
-plussmic_thread_cd_reference_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build
-.PHONY : plussmic_thread_cd_reference_demo/fast
+plussmic_slate_cd_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/build
+.PHONY : plussmic_slate_cd_reference_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_dataframe_view_demo
@@ -19537,17 +20239,17 @@ plussmic_dataframe_plot_demo/fast:
 .PHONY : plussmic_dataframe_plot_demo/fast
 
 #=============================================================================
-# Target rules for targets named plussmic_dataframe_thread_values_demo
+# Target rules for targets named plussmic_dataframe_slate_values_demo
 
 # Build rule for target.
-plussmic_dataframe_thread_values_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_thread_values_demo
-.PHONY : plussmic_dataframe_thread_values_demo
+plussmic_dataframe_slate_values_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_dataframe_slate_values_demo
+.PHONY : plussmic_dataframe_slate_values_demo
 
 # fast build rule for target.
-plussmic_dataframe_thread_values_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build
-.PHONY : plussmic_dataframe_thread_values_demo/fast
+plussmic_dataframe_slate_values_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/build
+.PHONY : plussmic_dataframe_slate_values_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_loader_saver_parity_demo
@@ -19706,6 +20408,110 @@ plussmic_bi_demo_suite/fast:
 .PHONY : plussmic_bi_demo_suite/fast
 
 #=============================================================================
+# Target rules for targets named nexus_docs_verify
+
+# Build rule for target.
+nexus_docs_verify: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nexus_docs_verify
+.PHONY : nexus_docs_verify
+
+# fast build rule for target.
+nexus_docs_verify/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/build
+.PHONY : nexus_docs_verify/fast
+
+#=============================================================================
+# Target rules for targets named series_docs_verify
+
+# Build rule for target.
+series_docs_verify: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 series_docs_verify
+.PHONY : series_docs_verify
+
+# fast build rule for target.
+series_docs_verify/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/build
+.PHONY : series_docs_verify/fast
+
+#=============================================================================
+# Target rules for targets named inplace_batch_a
+
+# Build rule for target.
+inplace_batch_a: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 inplace_batch_a
+.PHONY : inplace_batch_a
+
+# fast build rule for target.
+inplace_batch_a/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/build
+.PHONY : inplace_batch_a/fast
+
+#=============================================================================
+# Target rules for targets named inplace_batch_b
+
+# Build rule for target.
+inplace_batch_b: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 inplace_batch_b
+.PHONY : inplace_batch_b
+
+# fast build rule for target.
+inplace_batch_b/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/build
+.PHONY : inplace_batch_b/fast
+
+#=============================================================================
+# Target rules for targets named inplace_batch_c
+
+# Build rule for target.
+inplace_batch_c: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 inplace_batch_c
+.PHONY : inplace_batch_c
+
+# fast build rule for target.
+inplace_batch_c/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/build
+.PHONY : inplace_batch_c/fast
+
+#=============================================================================
+# Target rules for targets named inplace_batch_d
+
+# Build rule for target.
+inplace_batch_d: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 inplace_batch_d
+.PHONY : inplace_batch_d
+
+# fast build rule for target.
+inplace_batch_d/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/build
+.PHONY : inplace_batch_d/fast
+
+#=============================================================================
+# Target rules for targets named inplace_batch_e
+
+# Build rule for target.
+inplace_batch_e: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 inplace_batch_e
+.PHONY : inplace_batch_e
+
+# fast build rule for target.
+inplace_batch_e/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/build
+.PHONY : inplace_batch_e/fast
+
+#=============================================================================
+# Target rules for targets named inplace_batch_f
+
+# Build rule for target.
+inplace_batch_f: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 inplace_batch_f
+.PHONY : inplace_batch_f
+
+# fast build rule for target.
+inplace_batch_f/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/build
+.PHONY : inplace_batch_f/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_kindle_model_demo
 
 # Build rule for target.
@@ -19758,6 +20564,45 @@ plussmic_scribble_accessor_demo/fast:
 .PHONY : plussmic_scribble_accessor_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_locus_query_reference_demo
+
+# Build rule for target.
+plussmic_locus_query_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_locus_query_reference_demo
+.PHONY : plussmic_locus_query_reference_demo
+
+# fast build rule for target.
+plussmic_locus_query_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/build
+.PHONY : plussmic_locus_query_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_locus_traverse_reference_demo
+
+# Build rule for target.
+plussmic_locus_traverse_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_locus_traverse_reference_demo
+.PHONY : plussmic_locus_traverse_reference_demo
+
+# fast build rule for target.
+plussmic_locus_traverse_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/build
+.PHONY : plussmic_locus_traverse_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_locus_pull_reference_demo
+
+# Build rule for target.
+plussmic_locus_pull_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_locus_pull_reference_demo
+.PHONY : plussmic_locus_pull_reference_demo
+
+# fast build rule for target.
+plussmic_locus_pull_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/build
+.PHONY : plussmic_locus_pull_reference_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_table_csv_tests
 
 # Build rule for target.
@@ -19782,6 +20627,19 @@ plussmic_kindle_catalog_tests: cmake_check_build_system
 plussmic_kindle_catalog_tests/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/build
 .PHONY : plussmic_kindle_catalog_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_bundle_locus_tests
+
+# Build rule for target.
+plussmic_bundle_locus_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_bundle_locus_tests
+.PHONY : plussmic_bundle_locus_tests
+
+# fast build rule for target.
+plussmic_bundle_locus_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/build
+.PHONY : plussmic_bundle_locus_tests/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_scribble_model_tests
@@ -19823,6 +20681,19 @@ plussmic_table_ts_accessor_tests/fast:
 .PHONY : plussmic_table_ts_accessor_tests/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_table_ts_unsorted_axis_tests
+
+# Build rule for target.
+plussmic_table_ts_unsorted_axis_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_table_ts_unsorted_axis_tests
+.PHONY : plussmic_table_ts_unsorted_axis_tests
+
+# fast build rule for target.
+plussmic_table_ts_unsorted_axis_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/build
+.PHONY : plussmic_table_ts_unsorted_axis_tests/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_table_axis_match_tests
 
 # Build rule for target.
@@ -19862,6 +20733,19 @@ plussmic_table_flash_dataset_bridge_tests/fast:
 .PHONY : plussmic_table_flash_dataset_bridge_tests/fast
 
 #=============================================================================
+# Target rules for targets named plussmic_temporal_core_migration_tests
+
+# Build rule for target.
+plussmic_temporal_core_migration_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_temporal_core_migration_tests
+.PHONY : plussmic_temporal_core_migration_tests
+
+# fast build rule for target.
+plussmic_temporal_core_migration_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/build
+.PHONY : plussmic_temporal_core_migration_tests/fast
+
+#=============================================================================
 # Target rules for targets named plussmic_bi_tests
 
 # Build rule for target.
@@ -19873,6 +20757,19 @@ plussmic_bi_tests: cmake_check_build_system
 plussmic_bi_tests/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build
 .PHONY : plussmic_bi_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussmic_bi_serve_tests
+
+# Build rule for target.
+plussmic_bi_serve_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussmic_bi_serve_tests
+.PHONY : plussmic_bi_serve_tests
+
+# fast build rule for target.
+plussmic_bi_serve_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/build
+.PHONY : plussmic_bi_serve_tests/fast
 
 #=============================================================================
 # Target rules for targets named plussmic_table_gap_benchmark
@@ -20115,6 +21012,30 @@ PlussAI/Ice/io/checkpoint.s: PlussAI/Ice/io/checkpoint.cpp.s
 PlussAI/Ice/io/checkpoint.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Ice/io/checkpoint.cpp.s
 .PHONY : PlussAI/Ice/io/checkpoint.cpp.s
+
+PlussAI/Ice/io/kv_artifact.o: PlussAI/Ice/io/kv_artifact.cpp.o
+.PHONY : PlussAI/Ice/io/kv_artifact.o
+
+# target to build an object file
+PlussAI/Ice/io/kv_artifact.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Ice/io/kv_artifact.cpp.o
+.PHONY : PlussAI/Ice/io/kv_artifact.cpp.o
+
+PlussAI/Ice/io/kv_artifact.i: PlussAI/Ice/io/kv_artifact.cpp.i
+.PHONY : PlussAI/Ice/io/kv_artifact.i
+
+# target to preprocess a source file
+PlussAI/Ice/io/kv_artifact.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Ice/io/kv_artifact.cpp.i
+.PHONY : PlussAI/Ice/io/kv_artifact.cpp.i
+
+PlussAI/Ice/io/kv_artifact.s: PlussAI/Ice/io/kv_artifact.cpp.s
+.PHONY : PlussAI/Ice/io/kv_artifact.s
+
+# target to generate assembly for a file
+PlussAI/Ice/io/kv_artifact.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/Ice/io/kv_artifact.cpp.s
+.PHONY : PlussAI/Ice/io/kv_artifact.cpp.s
 
 PlussAI/Ice/io/state_dict.o: PlussAI/Ice/io/state_dict.cpp.o
 .PHONY : PlussAI/Ice/io/state_dict.o
@@ -22604,6 +23525,30 @@ PlussMa/NatSci/physics/astro/black_hole.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/NatSci/physics/astro/black_hole.cpp.s
 .PHONY : PlussMa/NatSci/physics/astro/black_hole.cpp.s
 
+PlussMa/NatSci/physics/fluids/incompressible.o: PlussMa/NatSci/physics/fluids/incompressible.cpp.o
+.PHONY : PlussMa/NatSci/physics/fluids/incompressible.o
+
+# target to build an object file
+PlussMa/NatSci/physics/fluids/incompressible.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/NatSci/physics/fluids/incompressible.cpp.o
+.PHONY : PlussMa/NatSci/physics/fluids/incompressible.cpp.o
+
+PlussMa/NatSci/physics/fluids/incompressible.i: PlussMa/NatSci/physics/fluids/incompressible.cpp.i
+.PHONY : PlussMa/NatSci/physics/fluids/incompressible.i
+
+# target to preprocess a source file
+PlussMa/NatSci/physics/fluids/incompressible.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/NatSci/physics/fluids/incompressible.cpp.i
+.PHONY : PlussMa/NatSci/physics/fluids/incompressible.cpp.i
+
+PlussMa/NatSci/physics/fluids/incompressible.s: PlussMa/NatSci/physics/fluids/incompressible.cpp.s
+.PHONY : PlussMa/NatSci/physics/fluids/incompressible.s
+
+# target to generate assembly for a file
+PlussMa/NatSci/physics/fluids/incompressible.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/NatSci/physics/fluids/incompressible.cpp.s
+.PHONY : PlussMa/NatSci/physics/fluids/incompressible.cpp.s
+
 PlussMa/NatSci/physics/mechanics/hamiltonian.o: PlussMa/NatSci/physics/mechanics/hamiltonian.cpp.o
 .PHONY : PlussMa/NatSci/physics/mechanics/hamiltonian.o
 
@@ -23425,6 +24370,7 @@ help:
 	@echo "... plusspl_4d_flash_4d_geometry_demo"
 	@echo "... plusspl_gallery_outputs"
 	@echo "... plussqit_coden_closed_note_contract_check"
+	@echo "... PlussBI"
 	@echo "... PlussMic"
 	@echo "... PlussPl"
 	@echo "... PlussTilsCore"
@@ -23437,8 +24383,13 @@ help:
 	@echo "... attention_transformer_test"
 	@echo "... autodiff_audit_bridge_test"
 	@echo "... bates_pricing_test"
+	@echo "... bench_ops"
+	@echo "... binding_test"
 	@echo "... biophysics_test"
 	@echo "... black_scholes_test"
+	@echo "... boundary_test"
+	@echo "... bounded_step_test"
+	@echo "... bounded_validation_test"
 	@echo "... chem_quantum_qc_test"
 	@echo "... constants_test"
 	@echo "... conv_test"
@@ -23455,15 +24406,24 @@ help:
 	@echo "... dfo_minimizers_test"
 	@echo "... dfo_solver_test"
 	@echo "... diagnostics_test"
+	@echo "... diff_test"
 	@echo "... direct_cv_forecaster_test"
 	@echo "... direct_forecaster_test"
 	@echo "... distr_objects_catch2"
 	@echo "... distr_test"
+	@echo "... ecology_test"
 	@echo "... egarch_gjr_test"
+	@echo "... electrochemistry_test"
+	@echo "... epidemiology_test"
+	@echo "... equilibrium_test"
 	@echo "... external_reference_parity_test"
+	@echo "... field_test"
 	@echo "... filtering_test"
+	@echo "... flow_boundary_test"
 	@echo "... fusion_route_test"
 	@echo "... garch11_test"
+	@echo "... genetics_test"
+	@echo "... genome_scale_test"
 	@echo "... glm_regression_test"
 	@echo "... gof_hypothesis_test"
 	@echo "... heston_sv_pricing_test"
@@ -23480,10 +24440,19 @@ help:
 	@echo "... ice_text_judge_test"
 	@echo "... ice_tft_test"
 	@echo "... ice_time_series_dataset_test"
+	@echo "... ideal_gas_test"
+	@echo "... incompressible_test"
+	@echo "... inplace_batch_a"
+	@echo "... inplace_batch_b"
+	@echo "... inplace_batch_c"
+	@echo "... inplace_batch_d"
+	@echo "... inplace_batch_e"
+	@echo "... inplace_batch_f"
 	@echo "... integ_test"
 	@echo "... kinetics_test"
 	@echo "... lag_features_test"
 	@echo "... life_contingencies_foundation_test"
+	@echo "... linprog_test"
 	@echo "... loss_models_foundation_test"
 	@echo "... lsr1_complex_test"
 	@echo "... lymph_balance_factory_test"
@@ -23507,8 +24476,15 @@ help:
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
 	@echo "... mechanics_test"
+	@echo "... metabolism_test"
+	@echo "... milp_test"
 	@echo "... module_snapshot_test"
 	@echo "... mv_vol_test"
+	@echo "... natsci_astro_bench"
+	@echo "... natsci_fluids_bench"
+	@echo "... natsci_thermo_bench"
+	@echo "... neuroscience_test"
+	@echo "... nexus_docs_verify"
 	@echo "... nn_dropout_parity_test"
 	@echo "... nn_elu_layernorm_embedding_test"
 	@echo "... nn_grad_mode_test"
@@ -23567,6 +24543,7 @@ help:
 	@echo "... parametric_hypothesis_test"
 	@echo "... pattern_search_closure_catch2"
 	@echo "... pattern_search_minimizer_test"
+	@echo "... pharmacokinetics_test"
 	@echo "... phys_quantum_quantum_test"
 	@echo "... pipeline_module_test"
 	@echo "... pluss"
@@ -24506,12 +25483,16 @@ help:
 	@echo "... plussai_nn_sp500_lstm_end_to_end_minimal_demo"
 	@echo "... plussai_nn_transformer_demo"
 	@echo "... plussai_nodeb_contextual_generation_end_to_end"
+	@echo "... plussai_nodeb_core_docs_reference"
+	@echo "... plussai_nodeb_docs_reference"
+	@echo "... plussai_nodeb_embed_docs_reference"
 	@echo "... plussai_nodeb_embed_end_to_end"
 	@echo "... plussai_nodeb_full_nlp_workflow_demo"
 	@echo "... plussai_nodeb_linguistics_overview_demo"
 	@echo "... plussai_nodeb_ner_end_to_end"
 	@echo "... plussai_nodeb_sentiment_end_to_end"
 	@echo "... plussai_nodeb_tagger_sequence_end_to_end"
+	@echo "... plussai_nodeb_tasks_docs_reference"
 	@echo "... plussai_nodeb_textcat_mvp"
 	@echo "... plussai_nodeb_vectorize_end_to_end"
 	@echo "... plussai_nodej_cv_tune_demo"
@@ -24657,8 +25638,10 @@ help:
 	@echo "... plussma_ts_vecm_raw_demo"
 	@echo "... plussmic_atlas_plot_demo"
 	@echo "... plussmic_bi_demo_suite"
+	@echo "... plussmic_bi_serve_tests"
 	@echo "... plussmic_bi_tests"
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
+	@echo "... plussmic_bundle_locus_tests"
 	@echo "... plussmic_csv_engine_bench"
 	@echo "... plussmic_dataframe_ab_reference_demo"
 	@echo "... plussmic_dataframe_b_reference_demo"
@@ -24670,7 +25653,7 @@ help:
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
 	@echo "... plussmic_dataframe_rich_reference_demo"
-	@echo "... plussmic_dataframe_thread_values_demo"
+	@echo "... plussmic_dataframe_slate_values_demo"
 	@echo "... plussmic_dataframe_tl_batched_demo"
 	@echo "... plussmic_dataframe_versatile_methods_demo"
 	@echo "... plussmic_dataframe_view_demo"
@@ -24683,12 +25666,18 @@ help:
 	@echo "... plussmic_kindle_catalog_tests"
 	@echo "... plussmic_kindle_model_demo"
 	@echo "... plussmic_loader_saver_parity_demo"
+	@echo "... plussmic_locus_pull_reference_demo"
+	@echo "... plussmic_locus_query_reference_demo"
+	@echo "... plussmic_locus_traverse_reference_demo"
 	@echo "... plussmic_native_gap_api_demo"
 	@echo "... plussmic_option_smile_skew_surface_demo"
 	@echo "... plussmic_scribble_accessor_demo"
 	@echo "... plussmic_scribble_gap_benchmark"
 	@echo "... plussmic_scribble_model_demo"
 	@echo "... plussmic_scribble_model_tests"
+	@echo "... plussmic_slate_a_reference_demo"
+	@echo "... plussmic_slate_b_reference_demo"
+	@echo "... plussmic_slate_cd_reference_demo"
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
 	@echo "... plussmic_table_axis_match_tests"
 	@echo "... plussmic_table_csv_tests"
@@ -24697,9 +25686,8 @@ help:
 	@echo "... plussmic_table_gap_benchmark"
 	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
-	@echo "... plussmic_thread_a_reference_demo"
-	@echo "... plussmic_thread_b_reference_demo"
-	@echo "... plussmic_thread_cd_reference_demo"
+	@echo "... plussmic_table_ts_unsorted_axis_tests"
+	@echo "... plussmic_temporal_core_migration_tests"
 	@echo "... plussmic_time_series_accessor_demo"
 	@echo "... plussmic_us_accidents_eda_verbs_demo"
 	@echo "... plusspl_2d_all_families_demo"
@@ -24727,17 +25715,19 @@ help:
 	@echo "... plusspl_flash_api_capture_demo"
 	@echo "... plussqit_codeh"
 	@echo "... plussqit_codeh_duration_docverify_demo"
+	@echo "... plussqit_codeh_duration_factory_reference_demo"
+	@echo "... plussqit_codeh_queue_docverify_demo"
 	@echo "... plussqit_codeh_tests"
-	@echo "... plussqit_codeh_timeindex_docverify_demo"
 	@echo "... plussqit_codeh_timeline_between_reference_demo"
 	@echo "... plussqit_codeh_timeline_calendar_fields_reference_demo"
 	@echo "... plussqit_codeh_timeline_calendar_predicates_reference_demo"
-	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
 	@echo "... plussqit_codeh_timeline_docverify_demo"
 	@echo "... plussqit_codeh_timeline_duration_interop_docverify_demo"
 	@echo "... plussqit_codeh_timeline_extrema_reference_demo"
 	@echo "... plussqit_codeh_timeline_factory_reference_demo"
 	@echo "... plussqit_codeh_timeline_foundations_reference_demo"
+	@echo "... plussqit_codeh_timeline_index_docverify_demo"
+	@echo "... plussqit_codeh_timeline_index_methods_demo"
 	@echo "... plussqit_codeh_timeline_non_generated_and_factory_methods_demo"
 	@echo "... plussqit_codeh_timeline_operators_reference_demo"
 	@echo "... plussqit_codeh_timeline_ordering_reference_demo"
@@ -24781,6 +25771,7 @@ help:
 	@echo "... plussqit_codem_series_extract_index_take_reference_demo"
 	@echo "... plussqit_codem_series_extrema_norm_reference_demo"
 	@echo "... plussqit_codem_series_factory_core_reference_demo"
+	@echo "... plussqit_codem_series_final_teachings_reference_demo"
 	@echo "... plussqit_codem_series_introspection_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_decomposition_solve_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_determinant_reference_demo"
@@ -24794,6 +25785,7 @@ help:
 	@echo "... plussqit_codem_series_number_reference_demo"
 	@echo "... plussqit_codem_series_ordered_extrema_reference_demo"
 	@echo "... plussqit_codem_series_ordering_reference_demo"
+	@echo "... plussqit_codem_series_pair_metadata_reference_demo"
 	@echo "... plussqit_codem_series_random_sampling_reference_demo"
 	@echo "... plussqit_codem_series_read_index_reference_demo"
 	@echo "... plussqit_codem_series_rearrange_reference_demo"
@@ -24805,8 +25797,11 @@ help:
 	@echo "... plussqit_codem_series_setops_reference_demo"
 	@echo "... plussqit_codem_series_shape_reference_demo"
 	@echo "... plussqit_codem_series_special_functions_ii_reference_demo"
+	@echo "... plussqit_codem_series_special_views_reference_demo"
 	@echo "... plussqit_codem_series_stat_accessor_reference_demo"
 	@echo "... plussqit_codem_series_stats_reference_demo"
+	@echo "... plussqit_codem_series_transform_activation_ii_reference_demo"
+	@echo "... plussqit_codem_series_transform_activation_iii_reference_demo"
 	@echo "... plussqit_codem_series_transport_reference_demo"
 	@echo "... plussqit_codem_series_traverse_accessor_reference_demo"
 	@echo "... plussqit_codem_series_trig_reference_demo"
@@ -24848,6 +25843,10 @@ help:
 	@echo "... plussqit_queue_demo"
 	@echo "... plussqit_tests"
 	@echo "... plussqit_translate_demo"
+	@echo "... plusstils_core_env_reference"
+	@echo "... plusstils_core_env_tests"
+	@echo "... plusstils_core_seed_reference"
+	@echo "... plusstils_core_seed_tests"
 	@echo "... plusstils_view_inhouse_html_render_demo"
 	@echo "... plusstils_view_inhouse_scroll_showcase"
 	@echo "... plusstils_view_plussmic_inhouse_showcase"
@@ -24873,23 +25872,36 @@ help:
 	@echo "... procedure_phase7_test"
 	@echo "... procedure_phase8_test"
 	@echo "... procedure_system_test"
+	@echo "... process_test"
 	@echo "... quantile_regression_test"
 	@echo "... random_processes_test"
 	@echo "... rate_models_test"
 	@echo "... rates_paths_test"
+	@echo "... records_test"
 	@echo "... rnn_fusion_test"
+	@echo "... roots_test"
 	@echo "... sabr_slv_pricing_test"
 	@echo "... schedule_test"
+	@echo "... sensitivity_test"
 	@echo "... septima_adam_complex_test"
 	@echo "... septima_lbfgs_complex_test"
 	@echo "... septima_optimizer_selection_test"
 	@echo "... septima_rigor_suite_test"
+	@echo "... series_docs_verify"
 	@echo "... series_ts_transforms_test"
 	@echo "... simulator_matlab_parity_test"
+	@echo "... solve_test"
+	@echo "... species_test"
+	@echo "... spectroscopy_test"
 	@echo "... ssm_test"
+	@echo "... stability_models_test"
+	@echo "... stability_test"
+	@echo "... stiff_test"
 	@echo "... stochastic_vol_paths_test"
 	@echo "... stochvol_models_test"
 	@echo "... systems_test"
+	@echo "... time_step_test"
+	@echo "... transport_test"
 	@echo "... ts_arima_catch2"
 	@echo "... ts_core_catch2"
 	@echo "... ts_diagnostics_catch2"
@@ -24903,6 +25915,8 @@ help:
 	@echo "... ts_vecm_catch2"
 	@echo "... ts_vecm_test"
 	@echo "... ts_vol_catch2"
+	@echo "... validation_test"
+	@echo "... variational_test"
 	@echo "... PlussAI/Ice/core/callback.o"
 	@echo "... PlussAI/Ice/core/callback.i"
 	@echo "... PlussAI/Ice/core/callback.s"
@@ -24930,6 +25944,9 @@ help:
 	@echo "... PlussAI/Ice/io/checkpoint.o"
 	@echo "... PlussAI/Ice/io/checkpoint.i"
 	@echo "... PlussAI/Ice/io/checkpoint.s"
+	@echo "... PlussAI/Ice/io/kv_artifact.o"
+	@echo "... PlussAI/Ice/io/kv_artifact.i"
+	@echo "... PlussAI/Ice/io/kv_artifact.s"
 	@echo "... PlussAI/Ice/io/state_dict.o"
 	@echo "... PlussAI/Ice/io/state_dict.i"
 	@echo "... PlussAI/Ice/io/state_dict.s"
@@ -25241,6 +26258,9 @@ help:
 	@echo "... PlussMa/NatSci/physics/astro/black_hole.o"
 	@echo "... PlussMa/NatSci/physics/astro/black_hole.i"
 	@echo "... PlussMa/NatSci/physics/astro/black_hole.s"
+	@echo "... PlussMa/NatSci/physics/fluids/incompressible.o"
+	@echo "... PlussMa/NatSci/physics/fluids/incompressible.i"
+	@echo "... PlussMa/NatSci/physics/fluids/incompressible.s"
 	@echo "... PlussMa/NatSci/physics/mechanics/hamiltonian.o"
 	@echo "... PlussMa/NatSci/physics/mechanics/hamiltonian.i"
 	@echo "... PlussMa/NatSci/physics/mechanics/hamiltonian.s"

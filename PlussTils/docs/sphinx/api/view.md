@@ -17,7 +17,7 @@ module calls any of it directly today; it is documented here because it is
 real, public, and a genuine lower level underneath `.show()`, for pixel-level
 control PlussView's own callers don't expose, not because it is a known,
 separate way people build things with PlussView. The
-[PlussView guide](../manual/view.md) teaches it at that level.
+[PlussView guide](../manual/view.md) covers it at that level.
 
 - [Types](view-types.md): `PointI`, `SizeI`, `RectI`, and `Color`.
 - [`PixelCanvas`](view-canvas.md): the RGBA frame buffer.

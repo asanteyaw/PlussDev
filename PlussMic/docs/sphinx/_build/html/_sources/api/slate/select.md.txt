@@ -33,8 +33,8 @@ static Slate Slate::select(pluss::msharp::RangeView::Of<Slate> conditions,
 ## What It Does
 
 **A `static` factory method, not an instance method** — you call it as `Slate::select(...)`,
-not `thread.select(...)`. It's the numpy-`select`-style construct: given a parallel list of
-boolean `conditions` and value `choices`, it builds a new thread where row `i` takes the
+not `slate.select(...)`. It's the numpy-`select`-style construct: given a parallel list of
+boolean `conditions` and value `choices`, it builds a new slate where row `i` takes the
 value from the **first** `choices[k]` whose `conditions[k]` is `true` at row `i` — falling
 back to `default_value` if no condition matches that row at all. Conditions are evaluated
 in order, and the first match wins even if a later condition would also match.
@@ -46,7 +46,7 @@ behavior is identical either way.
 ```{important} All choices and the default must share one payload kind
 `choices[0]`'s payload kind becomes the required kind for every other choice *and* for
 `default_value` — mixing, say, a `Series` choice with a `Note` default throws. Each
-`condition` must itself be a `Series`-backed `Bool`-dtype thread (the direct output of
+`condition` must itself be a `Series`-backed `Bool`-dtype slate (the direct output of
 [`compare()`](compare.md)/[`eq()`](eq.md)/etc.), and every condition must share the same
 length. Each `choice` (and `default_value`) may be either scalar-like (one value,
 broadcasting to every selected row) or exactly that same length.
@@ -72,7 +72,7 @@ broadcasting to every selected row) or exactly that same length.
 ## Returns
 
 `Slate`
-    A new thread, one row per condition's length, built by picking each row's value from
+    A new slate, one row per condition's length, built by picking each row's value from
     the first matching condition's corresponding choice (or `default_value`).
 
 ## Examples
@@ -160,7 +160,7 @@ Slate::select: condition/choice count mismatch
 - Evaluation order matters: the **first** `true` condition at each row wins, even if a
   later condition also matches that row.
 - Every `choice` and the `default_value` must agree on payload kind; every `condition` must
-  be a `Bool`-dtype `Series`-backed thread of matching length. See the important callout
+  be a `Bool`-dtype `Series`-backed slate of matching length. See the important callout
   above.
 - [`Slate::put`](put.md) is the single-condition specialization of this same construct —
   `put(mask, value)` is exactly `Slate::select({mask}, {value}, *this)`.

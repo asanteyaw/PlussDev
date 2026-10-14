@@ -91,7 +91,7 @@ row. Leave empty to load every column present in the file.
 
 Names a source column that should become the frame's case axis instead of an
 auto-generated integer index. The column is consumed from the regular feature set and
-becomes the case label thread.
+becomes the case label slate.
 
 **on_bad_lines** (`pluss::loader::BadLinePolicy`, default `Error`)
 

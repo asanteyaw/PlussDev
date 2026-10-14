@@ -12,7 +12,7 @@ SlateTimelineAccessor::week() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with its ISO-8601 week number (`1`-`53`), as a
+Replaces the bound slate with its ISO-8601 week number (`1`-`53`), as a
 numeric `Series`.
 
 ## Parameters
@@ -22,7 +22,7 @@ numeric `Series`.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread,
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
     holding each row's ISO week number.
 
 ## Examples
@@ -58,9 +58,9 @@ ptype: Series
   late December or very early January can report a week number that belongs
   to the neighboring calendar year — `week()` alone doesn't disambiguate which
   ISO year that week number belongs to.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`.
 
 ## See Also

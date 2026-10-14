@@ -37,7 +37,7 @@ and contain exactly one value.
 **start** / **stop** (`std::string_view` / `std::int64_t` / `double` / `const Slate&`)
     The inclusive interval endpoints, in the case axis's own key representation. The
     `Slate` overload requires each argument to be a defined, 1D, single-element
-    thread (`pluss::make_note({"X"})`, not the scalar `pluss::make_note("X")` — the
+    slate (`pluss::make_note({"X"})`, not the scalar `pluss::make_note("X")` — the
     latter constructs a 0D payload that `Slate`'s own constructor rejects).
 
 ## Returns
@@ -114,7 +114,7 @@ std::cout << numeric;
 [2 cs x 1 feat]
 ```
 
-Example 4. Scalar Threads let computed bounds flow into the selection without leaving
+Example 4. Scalar Slates let computed bounds flow into the selection without leaving
 the PlussMic value system. Each endpoint must be a strictly 1D, single-element Note —
 constructed with a one-element initializer list, not the bare-scalar overload.
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,11 +49,11 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the <strong>case label</strong> of the row holding the smallest value in the thread
+<p>Returns the <strong>case label</strong> of the row holding the smallest value in the slate
 — not the value itself. <code class="docutils literal notranslate"><span class="pre">&quot;cs&quot;</span></code> stands for case: this is the “which row” answer
 (like <code class="docutils literal notranslate"><span class="pre">idxmin</span></code> elsewhere), scanning every valid entry, comparing by the same
 rule <a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange()</span></code></span></a> uses, and returning
-<a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">caselbl()</span></code></span></a> at the winning row’s position. If the thread has no
+<a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">caselbl()</span></code></span></a> at the winning row’s position. If the slate has no
 explicit case labels, that’s the default <code class="docutils literal notranslate"><span class="pre">0</span></code>-based position; if it does (via
 <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code></span></a> or the <code class="docutils literal notranslate"><span class="pre">caselbl()</span></code> mutator), it’s that label’s
 own value.</p>
@@ -61,7 +61,7 @@ own value.</p>
 the earlier row’s label is returned, not the later one. Works on every payload
 kind (comparison is delegated to the same generic row-comparison logic
 <code class="docutils literal notranslate"><span class="pre">arrange()</span></code> uses). Missing entries are skipped when scanning; an empty
-thread, or one where every entry is missing, throws.</p>
+slate, or one where every entry is missing, throws.</p>
 <p>See <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::sum</span></code>’s note on printing a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code></span></a> — the examples
 below use <code class="docutils literal notranslate"><span class="pre">.to_int()</span></code> (default integer labels) or <code class="docutils literal notranslate"><span class="pre">.to_str()</span></code> (explicit <code class="docutils literal notranslate"><span class="pre">Note</span></code>
 labels) instead of streaming the <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> directly.</p>
@@ -74,7 +74,7 @@ labels) instead of streaming the <code class="docutils literal notranslate"><spa
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>
 A scalar holding the case label of the minimum-valued row — an <code class="docutils literal notranslate"><span class="pre">Int64</span></code>
-position by default, or whatever payload kind the thread’s own case labels
+position by default, or whatever payload kind the slate’s own case labels
 use if explicit labels are set.</p>
 </section>
 <section id="examples">
@@ -143,7 +143,7 @@ underlying stored value.</p>
 <p>Position <code class="docutils literal notranslate"><span class="pre">1</span></code> (stored value <code class="docutils literal notranslate"><span class="pre">1.0</span></code>, which would otherwise be the overall
 smallest) is missing and skipped entirely — the minimum among the <em>observed</em>
 rows is <code class="docutils literal notranslate"><span class="pre">5.0</span></code> at position <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
-<p>Example 5. An empty or entirely-missing thread throws.</p>
+<p>Example 5. An empty or entirely-missing slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">all_missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
@@ -171,7 +171,7 @@ you want the value itself.</p></li>
 <li><p>Ties keep the first occurrence.</p></li>
 <li><p>Works on every payload kind, since row comparison is delegated to the same
 logic <a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">arrange()</span></code></span></a> uses.</p></li>
-<li><p>An empty thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::csmin</span> <span class="pre">on</span> <span class="pre">an</span> <span class="pre">empty</span> <span class="pre">Slate&quot;</span></code>; a thread with no
+<li><p>An empty slate throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::csmin</span> <span class="pre">on</span> <span class="pre">an</span> <span class="pre">empty</span> <span class="pre">Slate&quot;</span></code>; a slate with no
 observed values throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::csmin</span> <span class="pre">on</span> <span class="pre">an</span> <span class="pre">all-null</span> <span class="pre">Slate&quot;</span></code>.</p></li>
 </ul>
 </section>

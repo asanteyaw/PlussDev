@@ -14,9 +14,9 @@ Slate::shift(std::int64_t periods = 1) const -> Slate
 ## What It Does
 
 Shifts every value forward (`periods > 0`) or backward (`periods < 0`) by
-`periods` positions, keeping the thread the same length — positions that shift in
+`periods` positions, keeping the slate the same length — positions that shift in
 from beyond either edge become `NULL`, and values shifted past the opposite edge
-are dropped entirely (not wrapped around). `periods = 0` (or an empty thread) is a
+are dropped entirely (not wrapped around). `periods = 0` (or an empty slate) is a
 no-op, returning `*this` unchanged.
 
 ## Parameters
@@ -29,7 +29,7 @@ no-op, returning `*this` unchanged.
 ## Returns
 
 `Slate`
-    A new thread, same length as `*this`, with values shifted and the vacated
+    A new slate, same length as `*this`, with values shifted and the vacated
     positions set to `NULL`.
 
 ## Examples
@@ -124,7 +124,7 @@ position, not from the shift itself vacating it.
 - Values shifted past either edge are dropped, not wrapped around.
 - Vacated positions (and any already-`NULL` positions that moved) are `NULL` in
   the result.
-- `periods = 0`, or shifting an empty thread, returns `*this` unchanged.
+- `periods = 0`, or shifting an empty slate, returns `*this` unchanged.
 - Works on every payload kind, not just `Series`.
 
 ## See Also

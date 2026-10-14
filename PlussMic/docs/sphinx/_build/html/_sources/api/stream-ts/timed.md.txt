@@ -116,7 +116,7 @@ and `2s` itself, so its window is `(10, 20, 30)` → mean `20`.
   computed independently per group, rather than a duration-based window.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`TimeSeriesAccessor::timed`](../slate-ts/timed.md): the underlying
-  single-thread engine, with additional edge-case examples (a non-monotonic
+  single-slate engine, with additional edge-case examples (a non-monotonic
   axis throw).
 
 <div class="pluss-inline-prev-next">

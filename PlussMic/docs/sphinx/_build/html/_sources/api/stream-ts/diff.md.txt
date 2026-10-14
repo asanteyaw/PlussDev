@@ -105,7 +105,7 @@ TimeSeriesAccessor::diff: source must be Series
 - [`CatalogTimeSeriesAccessor::diff`](../catalog-ts/diff.md): the
   whole-catalog equivalent.
 - [`TimeSeriesAccessor::diff`](../slate-ts/diff.md): the underlying
-  single-thread engine, with additional edge-case examples.
+  single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="calendar.html">

@@ -27,7 +27,7 @@ different source than the stream's own row count.
 ## Parameters
 
 **label** (`const pluss::table::Slate&`)
-    The row-label axis to attach. Commonly a `Note`-kind thread of string labels, but any
+    The row-label axis to attach. Commonly a `Note`-kind slate of string labels, but any
     `Slate` payload kind is accepted. Must match the stream's own length.
 
 ## Returns

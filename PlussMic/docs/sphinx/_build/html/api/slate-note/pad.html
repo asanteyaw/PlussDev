@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,9 +50,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Grows every cell of the bound thread up to a target character <code class="docutils literal notranslate"><span class="pre">width</span></code> by adding
+<p>Grows every cell of the bound slate up to a target character <code class="docutils literal notranslate"><span class="pre">width</span></code> by adding
 <code class="docutils literal notranslate"><span class="pre">fill</span></code> characters, positioning the original text according to <code class="docutils literal notranslate"><span class="pre">align</span></code> — a direct
-forward to <a class="reference internal" href="#../thread/pad.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::pad()</span></code></span></a>. Requires the bound thread to be
+forward to <a class="reference internal" href="../slate/pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::pad()</span></code></span></a>. Requires the bound slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TextAlign</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">Right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">Center</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">};</span>
 </pre></div>
@@ -80,7 +80,7 @@ multi-byte UTF-8 fill sequences.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as the bound thread, holding the
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as the bound slate, holding the
 padded (or unchanged) text.</p>
 </section>
 <section id="examples">
@@ -120,7 +120,7 @@ ptype: Note
 </pre></div>
 </div>
 <p>Example 3. A negative <code class="docutils literal notranslate"><span class="pre">width</span></code> throws — the same message
-<a class="reference internal" href="#../thread/pad.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::pad()</span></code></span></a> produces directly.</p>
+<a class="reference internal" href="../slate/pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::pad()</span></code></span></a> produces directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">pad</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -140,7 +140,7 @@ ptype: Note
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::pad()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/pad.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::pad()</span></code></span></a> — identical behavior and throws.</p></li>
+<a class="reference internal" href="../slate/pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::pad()</span></code></span></a> — identical behavior and throws.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pad()</span></code> only grows; a cell already at or beyond <code class="docutils literal notranslate"><span class="pre">width</span></code> is returned unchanged,
 never truncated.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">width</span></code> is measured in Unicode codepoints, the same unit
@@ -153,7 +153,7 @@ the right.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/pad.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::pad</span></code></span></a>: the direct, non-accessor form this method
+<li><p><a class="reference internal" href="../slate/pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::pad</span></code></span></a>: the direct, non-accessor form this method
 forwards to.</p></li>
 <li><p><a class="reference internal" href="chars.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::chars</span></code></span></a>: the complementary shrink/slice
 operation.</p></li>

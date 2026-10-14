@@ -12,23 +12,23 @@ TimeSeriesAccessor::add(const Slate& other, const Slate& left_axis, const Slate&
 
 ## What It Does
 
-Adds `other` to the bound thread **after first reindexing `other` onto the
-bound thread's own positions**, using `left_axis` (the bound thread's time
+Adds `other` to the bound slate **after first reindexing `other` onto the
+bound slate's own positions**, using `left_axis` (the bound slate's time
 axis) and `right_axis` (`other`'s own time axis) to figure out the
 correspondence — exactly the same alignment [`align_to()`](align_to.md)
-performs, run automatically before an ordinary [`Slate::add`](../thread/add.md).
-Use this when two threads live on *different* time axes and you want them
+performs, run automatically before an ordinary [`Slate::add`](../slate/add.md).
+Use this when two slates live on *different* time axes and you want them
 added position-by-position after lining up by time, rather than by raw
 position.
 
 ## Parameters
 
 **other** (`const Slate&`)
-    The thread to add, currently living at `right_axis` ticks.
+    The slate to add, currently living at `right_axis` ticks.
 
 **left_axis** (`const Slate&`)
-    The bound thread's own time axis (`Timeline`/`TimeIndex`), same length as
-    the bound thread.
+    The bound slate's own time axis (`Timeline`/`TimeIndex`), same length as
+    the bound slate.
 
 **right_axis** (`const Slate&`)
     `other`'s time axis (`Timeline`/`TimeIndex`), same length as `other`.
@@ -40,12 +40,12 @@ position.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound thread, holding
+    A new slate, same length as the bound slate, holding
     `bound + aligned(other)` at each position.
 
 ## Examples
 
-Example 1. Two threads on different (non-overlapping) daily axes, added after
+Example 1. Two slates on different (non-overlapping) daily axes, added after
 exact alignment.
 
 ```cpp
@@ -78,7 +78,7 @@ Only `2024-01-02` has an exact tick match on both sides (`20 + 100 = 120`);
 under `Exact` alignment, so `other`'s contribution is `NULL` there, and adding
 `NULL` to anything is `NULL`.
 
-Example 2. The same threads, aligned with `Backward` instead — `other`'s most
+Example 2. The same slates, aligned with `Backward` instead — `other`'s most
 recent known value carries forward.
 
 ```cpp
@@ -119,7 +119,7 @@ TimeSeriesAccessor::add: right values and right time axis length mismatch
 
 ## Notes
 
-- `left_axis` must be the same length as the bound thread, and `right_axis`
+- `left_axis` must be the same length as the bound slate, and `right_axis`
   must be the same length as `other`, or it throws
   `"TimeSeriesAccessor::add: left values and left time axis length mismatch"` /
   `"TimeSeriesAccessor::add: right values and right time axis length mismatch"`
@@ -128,13 +128,13 @@ TimeSeriesAccessor::add: right values and right time axis length mismatch
   reference for the exact `Exact`/`Backward`/`Forward`/`Nearest` matching
   rules.
 - The addition itself, once `other` is aligned, is an ordinary
-  [`Slate::add`](../thread/add.md) — a `NULL` on either side produces `NULL`.
+  [`Slate::add`](../slate/add.md) — a `NULL` on either side produces `NULL`.
 
 ## See Also
 
 - [`TimeSeriesAccessor::align_to`](align_to.md): the alignment step this
   method runs automatically before adding.
-- [`Slate::add`](../thread/add.md): the plain positional addition this method
+- [`Slate::add`](../slate/add.md): the plain positional addition this method
   performs after alignment.
 - [`TimeSeriesAccessor::sub`](sub.md), [`TimeSeriesAccessor::mul`](mul.md),
   [`TimeSeriesAccessor::div`](div.md): the same align-then-combine pattern for

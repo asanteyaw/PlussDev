@@ -14,14 +14,14 @@ Slate::median() const -> SlateValue
 ## What It Does
 
 Returns the median of every observed (non-missing) value in a numeric `Series`
-thread, as a scalar `SlateValue` — the middle value when the observed values
+slate, as a scalar `SlateValue` — the middle value when the observed values
 are sorted, less sensitive to outliers than [`mean()`](mean.md). For an
 even number of observed values, it's the average of the two middle values
 (the same linear-interpolation convention [`describe()`'s](describe.md) `50%`
 quartile uses). Missing entries are excluded first, exactly like `mean()`. The
 computation is carried out in `Float64` (or `Float32` off-CPU), regardless of
 the source dtype. Restricted to `Series` payloads; every other kind throws. An
-empty thread, or one where every entry is missing, also throws.
+empty slate, or one where every entry is missing, also throws.
 
 See [`Slate::sum`'s note on printing a `SlateValue`](sum.md) — every example
 below uses `.to_dbl()` to extract a clean number instead of streaming the
@@ -39,7 +39,7 @@ below uses `.to_dbl()` to extract a clean number instead of streaming the
 
 ## Examples
 
-Example 1. Median of an odd-length thread — the exact middle value.
+Example 1. Median of an odd-length slate — the exact middle value.
 
 ```cpp
 using namespace pluss::table;
@@ -55,7 +55,7 @@ std::cout << out.to_dbl();
 5
 ```
 
-Example 2. Median of an even-length thread — the average of the two middle
+Example 2. Median of an even-length slate — the average of the two middle
 values.
 
 ```cpp
@@ -93,7 +93,7 @@ std::cout << out3.to_dbl();
 Excluding the missing `100.0`, the observed values are `{1, 5, 9}` — median
 `5`. The excluded value never enters the sort at all, however extreme it is.
 
-Example 4. A thread with no observed values throws.
+Example 4. A slate with no observed values throws.
 
 ```cpp
 auto all_missing = Slate(
@@ -120,7 +120,7 @@ Slate::median on an empty (all-null) selection
   linear-interpolation convention as `describe()`'s `50%` quartile.
 - Always computed in `Float64` (CPU) or `Float32` (off-CPU), regardless of the
   source dtype.
-- An empty thread, or one where every entry is missing, throws
+- An empty slate, or one where every entry is missing, throws
   `"Slate::median on an empty (all-null) selection"`.
 - Restricted to `Series` payloads; anything else throws `"Slate::median is
   only valid for Series payload"`.

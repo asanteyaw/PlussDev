@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,9 +49,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a <strong>trailing</strong> rolling aggregate over a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread: row <code class="docutils literal notranslate"><span class="pre">i</span></code> of
+<p>Computes a <strong>trailing</strong> rolling aggregate over a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate: row <code class="docutils literal notranslate"><span class="pre">i</span></code> of
 the result summarizes rows <code class="docutils literal notranslate"><span class="pre">[i</span> <span class="pre">-</span> <span class="pre">window</span> <span class="pre">+</span> <span class="pre">1,</span> <span class="pre">i]</span></code> of the input (clipped at the start of the
-thread for the first <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">-</span> <span class="pre">1</span></code> rows), using whichever aggregate <code class="docutils literal notranslate"><span class="pre">op</span></code> selects.</p>
+slate for the first <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">-</span> <span class="pre">1</span></code> rows), using whichever aggregate <code class="docutils literal notranslate"><span class="pre">op</span></code> selects.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">SlateWindowOp</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">RollingSum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">  </span><span class="n">RollingMean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
@@ -64,11 +64,11 @@ thread for the first <code class="docutils literal notranslate"><span class="pre
 for that row to produce a result at all — rows whose window has fewer valid entries than
 <code class="docutils literal notranslate"><span class="pre">min_periods</span></code> come back <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. With the default <code class="docutils literal notranslate"><span class="pre">min_periods</span> <span class="pre">=</span> <span class="pre">1</span></code>, every row from the very
 first one produces a value, computed over however many rows are actually available near the
-start of the thread (a genuine, shrinking window, not one padded with zeros).</p>
+start of the slate (a genuine, shrinking window, not one padded with zeros).</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>min_periods, not window size, controls when NULL appears near the start
-Near the start of the thread, fewer than <code class="docutils literal notranslate"><span class="pre">window</span></code> rows are available. With the default
+Near the start of the slate, fewer than <code class="docutils literal notranslate"><span class="pre">window</span></code> rows are available. With the default
 <code class="docutils literal notranslate"><span class="pre">min_periods</span> <span class="pre">=</span> <span class="pre">1</span></code>, those early rows still produce a result over whatever’s available (see
 Example 1: row 0’s window is just itself, row 1’s is rows 0–1). Raise <code class="docutils literal notranslate"><span class="pre">min_periods</span></code> — up to
 and including <code class="docutils literal notranslate"><span class="pre">window</span></code> itself — to require a <em>full</em> window before producing a value; rows
@@ -89,7 +89,7 @@ produce a result; rows with fewer are <code class="docutils literal notranslate"
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A <code class="docutils literal notranslate"><span class="pre">Float64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread, the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding one rolling
+A <code class="docutils literal notranslate"><span class="pre">Float64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate, the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding one rolling
 aggregate per row.</p>
 </section>
 <section id="examples">
@@ -179,7 +179,7 @@ ptype: Series
 ptype: Series
 </pre></div>
 </div>
-<p>Example 5. <code class="docutils literal notranslate"><span class="pre">window()</span></code> requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread — calling it on any other
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">window()</span></code> requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate — calling it on any other
 payload kind throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -203,8 +203,8 @@ payload kind throws.</p>
 <li><p>The window is trailing and inclusive of the current row: row <code class="docutils literal notranslate"><span class="pre">i</span></code> summarizes
 <code class="docutils literal notranslate"><span class="pre">[i</span> <span class="pre">-</span> <span class="pre">window</span> <span class="pre">+</span> <span class="pre">1,</span> <span class="pre">i]</span></code>, clipped at index <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">min_periods</span></code> (not the window size) controls whether the shrinking window near the start
-of the thread produces a value or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — see the important callout above.</p></li>
-<li><p>Requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread; throws on <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> payloads,
+of the slate produces a value or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — see the important callout above.</p></li>
+<li><p>Requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate; throws on <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> payloads,
 and on <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">min_periods</span></code> outside <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">window]</span></code>.</p></li>
 <li><p>The result is always <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, regardless of the input’s numeric dtype.</p></li>
 </ul>
@@ -212,10 +212,10 @@ and on <code class="docutils literal notranslate"><span class="pre">window</span
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Slate::timed</span></code>: the time-duration-based rolling window, for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind threads with
+<li><p><code class="docutils literal notranslate"><span class="pre">Slate::timed</span></code>: the time-duration-based rolling window, for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slates with
 irregular spacing, instead of a fixed row count.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Slate::grouped</span></code>: the same rolling-window computation, run independently within each
-group of a parallel grouping thread.</p></li>
+group of a parallel grouping slate.</p></li>
 <li><p><a class="reference internal" href="scan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::scan</span></code></span></a>: a cumulative (unbounded window) statistic, rather than a
 fixed-size rolling one.</p></li>
 </ul>

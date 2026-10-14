@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,13 +51,13 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Elementwise addition. The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload adds the same scalar to every value; the
-<code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload adds two threads together <strong>positionally</strong> — element <code class="docutils literal notranslate"><span class="pre">i</span></code> of the
-result is <code class="docutils literal notranslate"><span class="pre">(*this)[i]</span> <span class="pre">+</span> <span class="pre">other[i]</span></code> — and requires both threads to have the same
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload adds two slates together <strong>positionally</strong> — element <code class="docutils literal notranslate"><span class="pre">i</span></code> of the
+result is <code class="docutils literal notranslate"><span class="pre">(*this)[i]</span> <span class="pre">+</span> <span class="pre">other[i]</span></code> — and requires both slates to have the same
 length. There is no case-label alignment the way <a class="reference internal" href="../dataframe/add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></span></a>’s
 <code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code> overload has; a length mismatch throws rather than padding with
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">add()</span></code> normally requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-backed thread, with one special case:
-two <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) threads support <code class="docutils literal notranslate"><span class="pre">add()</span></code> too, and it means <strong>string
+<p><code class="docutils literal notranslate"><span class="pre">add()</span></code> normally requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-backed slate, with one special case:
+two <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slates support <code class="docutils literal notranslate"><span class="pre">add()</span></code> too, and it means <strong>string
 concatenation</strong>, not addition — <code class="docutils literal notranslate"><span class="pre">&quot;north-&quot;.add(&quot;store&quot;)</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">&quot;north-&quot;</span> <span class="pre">+</span> <span class="pre">&quot;store&quot;</span></code>, not a type error.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -72,13 +72,13 @@ on what’s different about each operator; this page covers the shared mechanics
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)</p>
 <p>The value(s) to add. For the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload, must be the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>
-(or a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, for concatenation).</p>
+(or a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, for concatenation).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise sum (or, for two
-<code class="docutils literal notranslate"><span class="pre">Note</span></code> threads, the elementwise concatenation).</p>
+A new slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise sum (or, for two
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> slates, the elementwise concatenation).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -99,7 +99,7 @@ A new thread, same length as <code class="docutils literal notranslate"><span cl
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Add two threads positionally.</p>
+<p>Example 2. Add two slates positionally.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">boost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">boost</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
@@ -116,8 +116,8 @@ ptype: Series
 </pre></div>
 </div>
 <p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code> adds <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">+</span> <span class="pre">2</span></code>, position <code class="docutils literal notranslate"><span class="pre">1</span></code> adds <code class="docutils literal notranslate"><span class="pre">20</span> <span class="pre">+</span> <span class="pre">4</span></code>, position <code class="docutils literal notranslate"><span class="pre">2</span></code> adds <code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">+</span> <span class="pre">5</span></code> —
-purely positional, with no reference to any case labels either thread might carry.</p>
-<p>Example 3. Two <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) threads concatenate instead of erroring.</p>
+purely positional, with no reference to any case labels either slate might carry.</p>
+<p>Example 3. Two <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slates concatenate instead of erroring.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north-&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south-&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east-&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">base_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;store&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hub&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depot&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_concat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prefix</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">base_name</span><span class="p">);</span>
@@ -162,10 +162,10 @@ order.</p>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload’s error message is prefixed with the exact call site
 (<code class="docutils literal notranslate"><span class="pre">Slate::add(Slate)</span></code>, <code class="docutils literal notranslate"><span class="pre">Slate::sub(Slate)</span></code>, and so on) — every method in this
 family reports its own name, not a shared generic message.</p></li>
-<li><p>Mixing incompatible payload kinds (for example, adding a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread to
-a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread) throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::add(Slate):</span> <span class="pre">unsupported</span> <span class="pre">payload</span> <span class="pre">combination</span> <span class="pre">for</span> <span class="pre">operator</span> <span class="pre">'+'</span> <span class="pre">(Series</span> <span class="pre">vs</span> <span class="pre">Note)&quot;</span></code> — <code class="docutils literal notranslate"><span class="pre">add()</span></code> only accepts two numeric threads or two
-<code class="docutils literal notranslate"><span class="pre">Note</span></code> threads, never a mix.</p></li>
-<li><p>If the calling thread carries display/case labels (set via <code class="docutils literal notranslate"><span class="pre">label().set()</span></code>), the
+<li><p>Mixing incompatible payload kinds (for example, adding a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate to
+a <code class="docutils literal notranslate"><span class="pre">Note</span></code> slate) throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::add(Slate):</span> <span class="pre">unsupported</span> <span class="pre">payload</span> <span class="pre">combination</span> <span class="pre">for</span> <span class="pre">operator</span> <span class="pre">'+'</span> <span class="pre">(Series</span> <span class="pre">vs</span> <span class="pre">Note)&quot;</span></code> — <code class="docutils literal notranslate"><span class="pre">add()</span></code> only accepts two numeric slates or two
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> slates, never a mix.</p></li>
+<li><p>If the calling slate carries display/case labels (set via <code class="docutils literal notranslate"><span class="pre">label().set()</span></code>), the
 result carries those same labels forward; <code class="docutils literal notranslate"><span class="pre">other</span></code>’s labels (if any) are never
 used.</p></li>
 <li><p><a class="reference internal" href="radd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">radd()</span></code></span></a> is the reflected form — identical to <code class="docutils literal notranslate"><span class="pre">add()</span></code> for numbers

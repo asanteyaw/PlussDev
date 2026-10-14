@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,7 +50,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Selects case-label values at the given positions, in the order given —
 positions may repeat or appear out of order. Returns the selected <strong>values</strong>
-as a bare <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, not the bound thread’s own data at those positions.</p>
+as a bare <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, not the bound slate’s own data at those positions.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -92,7 +92,7 @@ doesn’t appear.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Returns the case-label <strong>values</strong> only — if the matching data rows are
-needed, call <code class="docutils literal notranslate"><span class="pre">Slate::take</span></code> on the bound thread itself with the same
+needed, call <code class="docutils literal notranslate"><span class="pre">Slate::take</span></code> on the bound slate itself with the same
 indices.</p></li>
 <li><p>Positions may repeat; there’s no requirement that <code class="docutils literal notranslate"><span class="pre">indices</span></code> be sorted or
 unique.</p></li>

@@ -13,10 +13,10 @@ Slate::starts(std::string_view prefix) const -> Slate
 
 ## What It Does
 
-Checks a `Note` (string) thread's cells for a literal, case-sensitive prefix match,
+Checks a `Note` (string) slate's cells for a literal, case-sensitive prefix match,
 replacing each cell with a `Bool` — `true` where the cell's text begins with
 `prefix`, `false` where it doesn't. The payload kind changes from `Note` to `Series`
-(`Bool`). Requires the thread to be `Note`-kind.
+(`Bool`). Requires the slate to be `Note`-kind.
 
 `starts()` has exactly one overload and takes no options — always a plain,
 case-sensitive, literal check. There's no regex mode; use [`matches()`](matches.md)
@@ -32,12 +32,12 @@ every non-null cell.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`, holding the
+    A new `Bool`-typed `Series` slate, same length as `*this`, holding the
     elementwise prefix check.
 
 ## Examples
 
-Example 1. Check a text thread for a literal prefix.
+Example 1. Check a text slate for a literal prefix.
 
 ```cpp
 using namespace pluss::table;
@@ -60,7 +60,7 @@ ptype: Series
 Row `1` (`"sku-1002"`) doesn't match — the comparison is case-sensitive, so a
 lowercase `"sku-"` isn't a match for `"SKU-"`.
 
-Example 2. A non-`Note` thread throws.
+Example 2. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -83,7 +83,7 @@ Slate::starts: expected Note payload
 - Case-sensitive, literal comparison only — no regex mode, no case-insensitivity
   toggle. Normalize with [`lower()`](lower.md)/[`casefold()`](casefold.md) first, or
   use [`matches()`](matches.md), for anything more flexible.
-- Changes the thread's payload kind from `Note` to `Series` (`Bool`).
+- Changes the slate's payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
 
 ## See Also

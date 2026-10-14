@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,9 +52,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>A row-wise membership test — despite the name suggesting a single “does this thread
+<p>A row-wise membership test — despite the name suggesting a single “does this slate
 contain X anywhere” answer, <code class="docutils literal notranslate"><span class="pre">has()</span></code> returns one boolean <strong>per row</strong>, not one boolean for
-the whole thread.</p>
+the whole slate.</p>
 <p>The scalar overloads (<code class="docutils literal notranslate"><span class="pre">double</span></code>, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code>) are a direct alias for
 <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">has(value)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">eq(value)</span></code>, testing each row against the one
 value. The <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-argument overload is the more useful form in practice — it’s an <code class="docutils literal notranslate"><span class="pre">isin</span></code>
@@ -62,10 +62,10 @@ style test: row <code class="docutils literal notranslate"><span class="pre">i</
 together one <code class="docutils literal notranslate"><span class="pre">has(scalar)</span></code> call per (valid) entry of <code class="docutils literal notranslate"><span class="pre">values</span></code>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>has(const Slate&amp;) is per-row “is this value in the candidate set”, not a global “does this thread contain any of these”
-<code class="docutils literal notranslate"><span class="pre">thread.has(candidates)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> the same length as <code class="docutils literal notranslate"><span class="pre">thread</span></code> — row <code class="docutils literal notranslate"><span class="pre">i</span></code> tells you
-whether <code class="docutils literal notranslate"><span class="pre">thread</span></code>’s row <code class="docutils literal notranslate"><span class="pre">i</span></code> matches one of <code class="docutils literal notranslate"><span class="pre">candidates</span></code>’ values, not whether <code class="docutils literal notranslate"><span class="pre">candidates</span></code>
-appears anywhere in <code class="docutils literal notranslate"><span class="pre">thread</span></code> as a whole. This is the <code class="docutils literal notranslate"><span class="pre">isin</span></code>/membership pattern common to
+<p>has(const Slate&amp;) is per-row “is this value in the candidate set”, not a global “does this slate contain any of these”
+<code class="docutils literal notranslate"><span class="pre">slate.has(candidates)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> the same length as <code class="docutils literal notranslate"><span class="pre">slate</span></code> — row <code class="docutils literal notranslate"><span class="pre">i</span></code> tells you
+whether <code class="docutils literal notranslate"><span class="pre">slate</span></code>’s row <code class="docutils literal notranslate"><span class="pre">i</span></code> matches one of <code class="docutils literal notranslate"><span class="pre">candidates</span></code>’ values, not whether <code class="docutils literal notranslate"><span class="pre">candidates</span></code>
+appears anywhere in <code class="docutils literal notranslate"><span class="pre">slate</span></code> as a whole. This is the <code class="docutils literal notranslate"><span class="pre">isin</span></code>/membership pattern common to
 most table libraries. Invalid rows in <code class="docutils literal notranslate"><span class="pre">candidates</span></code> are skipped (never contribute a match).</p>
 </div>
 </section>
@@ -74,18 +74,18 @@ most table libraries. Invalid rows in <code class="docutils literal notranslate"
 <p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code>)
 A single scalar to test every row against — equivalent to <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq(value)</span></code></span></a>.</p>
 <p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
-A set of candidate values (typically a short, <code class="docutils literal notranslate"><span class="pre">Note</span></code>- or <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread) — each
+A set of candidate values (typically a short, <code class="docutils literal notranslate"><span class="pre">Note</span></code>- or <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate) — each
 row of <code class="docutils literal notranslate"><span class="pre">*this</span></code> is tested against every entry of <code class="docutils literal notranslate"><span class="pre">values</span></code>, matching if it equals <em>any</em>
 of them.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread of <code class="docutils literal notranslate"><span class="pre">Bool</span></code> values, one membership result per row.</p>
+A <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate of <code class="docutils literal notranslate"><span class="pre">Bool</span></code> values, one membership result per row.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Test a numeric thread against one scalar — identical to <code class="docutils literal notranslate"><span class="pre">eq(20.0)</span></code>.</p>
+<p>Example 1. Test a numeric slate against one scalar — identical to <code class="docutils literal notranslate"><span class="pre">eq(20.0)</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -102,7 +102,7 @@ A <code class="docutils literal notranslate"><span class="pre">Series</span></co
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Test a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-backed thread against one text scalar.</p>
+<p>Example 2. Test a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-backed slate against one text scalar.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;Bola&quot;</span><span class="p">);</span>
@@ -156,7 +156,7 @@ ptype: Series
 </pre></div>
 </div>
 <p>Example 5. Mismatched payload kinds compare by string form rather than throwing — a
-<code class="docutils literal notranslate"><span class="pre">Note</span></code>-backed thread tested against a numeric candidate set simply finds no matches
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-backed slate tested against a numeric candidate set simply finds no matches
 (here the candidates are the <em>counts</em> from a <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> result, a common
 mistake — the distinct values live on the label axis, reachable via
 <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().values()</span></code></span></a>).</p>
@@ -197,10 +197,10 @@ better at the call site.</p></li>
 <li><p>The numeric fast path in <code class="docutils literal notranslate"><span class="pre">has(const</span> <span class="pre">Slate&amp;)</span></code> is only taken when <strong>both</strong> <code class="docutils literal notranslate"><span class="pre">*this</span></code> and
 the candidate set are numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>. Any other kind combination compares by string
 form (matching <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a>/<a class="reference internal" href="distinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">distinct()</span></code></span></a>/<a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">duplicated()</span></code></span></a>),
-so <code class="docutils literal notranslate"><span class="pre">note_thread.has(numeric_thread)</span></code> yields all-<code class="docutils literal notranslate"><span class="pre">false</span></code> instead of raising
+so <code class="docutils literal notranslate"><span class="pre">note_slate.has(numeric_slate)</span></code> yields all-<code class="docutils literal notranslate"><span class="pre">false</span></code> instead of raising
 <code class="docutils literal notranslate"><span class="pre">&quot;Slate::eq(double):</span> <span class="pre">operation</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">Series-backed</span> <span class="pre">Slate&quot;</span></code>.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-argument overload is the genuinely distinct behavior: a per-row <code class="docutils literal notranslate"><span class="pre">isin</span></code> test
-against a candidate set, not a whole-thread containment check.</p></li>
+against a candidate set, not a whole-slate containment check.</p></li>
 <li><p>Invalid rows in the <code class="docutils literal notranslate"><span class="pre">values</span></code> candidate set are skipped and never produce a match; an
 invalid row in <code class="docutils literal notranslate"><span class="pre">*this</span></code> is compared normally against each candidate (matching
 <a class="reference internal" href="compare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">compare()</span></code></span></a>’s general rule that invalid rows just compare <code class="docutils literal notranslate"><span class="pre">false</span></code>).</p></li>

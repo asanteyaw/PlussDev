@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusPullAgg API Reference &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=c8d94b85"></script>
+    <script src="_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="LocusPullAgg::count" href="api/locus-pull-agg/count.html" />
+    <link rel="prev" title="LocusPull::var" href="api/locus-pull/var.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locuspullagg-api-reference">
+<h1>LocusPullAgg API Reference<a class="headerlink" href="#locuspullagg-api-reference" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">LocusPullAgg</span></code> is the table-scoped reducer returned by
+<a class="reference internal" href="api/locus-pull/agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">LocusPull::agg(table)</span></code></span></a>. It borrows the owning
+<code class="docutils literal notranslate"><span class="pre">LocusPull</span></code>, appends reducer specifications to that plan, and returns the owner
+through <code class="docutils literal notranslate"><span class="pre">end()</span></code>. It is a temporary planning scope, not a standalone workspace
+or result container.</p>
+<p>Each reducer accepts one <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">alias)</span></code> pair or a batch of such pairs. The
+scope supplies the catalog name; the feature remains relative to that catalog.
+The supported reducers are <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">ndistinct</span></code>, <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>,
+<code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, and <code class="docutils literal notranslate"><span class="pre">var</span></code>.</p>
+<p>Every reducer has a scalar <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">alias)</span></code> overload and an
+initializer-list overload of ordered <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">alias)</span></code> pairs. Feature names are
+relative to the scoped catalog. Empty batches are no-ops; empty feature names
+are rejected immediately. Catalog, relationship, stream-kind, duplicate-spec,
+and output-alias validation occurs when the parent plan is collected.</p>
+<p>The scope stores a borrowed parent pointer. Keep the <code class="docutils literal notranslate"><span class="pre">LocusPull</span></code> alive until all
+scoped calls and <code class="docutils literal notranslate"><span class="pre">end()</span></code> have completed. Opening a scope and adding reducers
+does not read a stream or allocate a result.</p>
+<section id="method-pages">
+<h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+</div>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/locus-pull-agg/count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a> counts usable occurrences.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/end.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">end()</span></code></span></a> returns the exact parent builder.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a> adds upper-extreme reducers.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a> adds arithmetic means.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">median()</span></code></span></a> adds midpoint reducers.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min()</span></code></span></a> adds lower-extreme reducers.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code></span></a> counts unique values.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">std()</span></code></span></a> adds sample standard deviations.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a> adds numeric totals.</p></li>
+<li><p><a class="reference internal" href="api/locus-pull-agg/var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a> adds sample variances.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="api/locus-pull/var.html"><span class="label">Previous</span><span class="title">LocusPull::var</span></a>
+  <a class="next-link" href="api/locus-pull-agg/count.html"><span class="label">Next</span><span class="title">count</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api/plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+  <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="api/plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+      <li>Previous: <a href="api/locus-pull/var.html" title="previous chapter">LocusPull::var</a></li>
+      <li>Next: <a href="api/locus-pull-agg/count.html" title="next chapter">LocusPullAgg::count</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/locus_pull_agg_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -2,21 +2,23 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/data_loader.h>
 
-struct DataBatch {
-  std::vector<Series> fields;
+std::vector<Series> fields;
 
-  bool empty() const noexcept;
-  std::size_t size() const noexcept;
-  Series& at(std::size_t index);
-  Series& operator[](std::size_t index);
-  Series& x();
-  bool has_y() const noexcept;
-  Series& y();
-};
+bool empty() const noexcept;
+std::size_t size() const noexcept;
+Series& at(std::size_t index);
+Series& operator[](std::size_t index);
+Series& x();
+bool has_y() const noexcept;
+Series& y();
 ```
+
+## What It Does
 
 `DataBatch` holds the fields of one batch, in the order a dataset or a `DataLoader` produced them. `at` and `operator[]` read a field by position, with the same bounds check either way. `x` is a shorthand for the first field, and `y` is a shorthand for the second; `has_y` tells you whether a second field exists before you call `y`. A default-constructed batch has no fields, and reading `x` on one is refused.
 

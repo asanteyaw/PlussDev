@@ -14,7 +14,7 @@ SlatePlotAccessor::hist(const HistPlotOptions& options) const -> pluss::pl::Stud
 
 ## What It Does
 
-Bins the bound thread's values into a single frequency-count histogram — the
+Bins the bound slate's values into a single frequency-count histogram — the
 single-series specialization of
 [`DataFramePlotAccessor::hist`](../../api/dataframe-plot/hist.md)'s single-feature path.
 Unlike the 2D accessor's `hist()`, which lays out a mosaic grid of panes for several
@@ -43,7 +43,7 @@ explanation.
 ## Returns
 
 `pluss::pl::Studio`
-    A single-pane figure containing one histogram of the bound thread's values.
+    A single-pane figure containing one histogram of the bound slate's values.
 
 ## Examples
 

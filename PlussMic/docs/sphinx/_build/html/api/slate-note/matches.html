@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,19 +48,19 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Checks each cell of the bound thread against a regular expression, replacing each
-cell with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>. Unlike <a class="reference internal" href="#../thread/matches.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::matches()</span></code></span></a> (which always
+<p>Checks each cell of the bound slate against a regular expression, replacing each
+cell with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>. Unlike <a class="reference internal" href="../slate/matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::matches()</span></code></span></a> (which always
 does a start-anchored, prefix-only search), this accessor method adds a <code class="docutils literal notranslate"><span class="pre">full</span></code>
 switch that dispatches between the two related checks:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">=</span> <span class="pre">false</span></code></strong> (the default): a <strong>start-anchored search</strong>, not a full-string
 match — reports <code class="docutils literal notranslate"><span class="pre">true</span></code> as soon as <code class="docutils literal notranslate"><span class="pre">pattern</span></code> matches a <em>prefix</em> of the cell’s text.
-Internally forwards to <a class="reference internal" href="#../thread/matches.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::matches(pattern)</span></code></span></a>.</p></li>
+Internally forwards to <a class="reference internal" href="../slate/matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::matches(pattern)</span></code></span></a>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">=</span> <span class="pre">true</span></code></strong>: requires <code class="docutils literal notranslate"><span class="pre">pattern</span></code> to consume the <strong>entire</strong> cell’s text.
-Internally forwards to <a class="reference internal" href="#../thread/fullmatch.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::fullmatch(pattern)</span></code></span></a> —
+Internally forwards to <a class="reference internal" href="../slate/fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::fullmatch(pattern)</span></code></span></a> —
 identical to calling <a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fullmatch()</span></code></span></a> directly.</p></li>
 </ul>
-<p>Requires the bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+<p>Requires the bound slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -73,7 +73,7 @@ identical to calling <a class="reference internal" href="fullmatch.html"><span c
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as the bound thread, holding the
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as the bound slate, holding the
 elementwise match result.</p>
 </section>
 <section id="examples">
@@ -115,7 +115,7 @@ ptype: Series
 </pre></div>
 </div>
 <p>Identical to calling <code class="docutils literal notranslate"><span class="pre">codes.nt().fullmatch(&quot;SKU-[0-9]{2}&quot;)</span></code> directly.</p>
-<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">matches</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">);</span>
@@ -147,7 +147,7 @@ name.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/matches.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::matches</span></code></span></a>: the direct, non-accessor form, which has
+<li><p><a class="reference internal" href="../slate/matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::matches</span></code></span></a>: the direct, non-accessor form, which has
 no <code class="docutils literal notranslate"><span class="pre">full</span></code> parameter and always does the prefix-only check.</p></li>
 <li><p><a class="reference internal" href="fullmatch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::fullmatch</span></code></span></a>: the same operation as
 <code class="docutils literal notranslate"><span class="pre">matches(pattern,</span> <span class="pre">true)</span></code>, under its own dedicated name.</p></li>

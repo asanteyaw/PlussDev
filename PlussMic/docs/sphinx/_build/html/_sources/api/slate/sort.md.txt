@@ -30,9 +30,9 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Use the overload whose parameter combination matches the data you already have and the amount of control you want over the result.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.sort(true, true);
+auto out = slate.sort(true, true);
 ```
 
 ### Output

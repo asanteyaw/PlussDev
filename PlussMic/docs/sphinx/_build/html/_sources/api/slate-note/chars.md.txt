@@ -14,17 +14,17 @@ SlateNoteAccessor::chars(std::int64_t start,
 
 ## What It Does
 
-Slices the bound thread's text the same way Python slices a string —
+Slices the bound slate's text the same way Python slices a string —
 `chars(start, stop, step)` mirrors `s[start:stop:step]` exactly, including negative
 indices (counted from the end) and a negative step (walking the string backwards). A
-direct forward to [`Slate::chars()`](../thread/chars.md). Requires the bound thread
+direct forward to [`Slate::chars()`](../slate/chars.md). Requires the bound slate
 to be `Note`-kind. Each cell is split into individual characters (Unicode
 codepoints, the same unit [`length()`](length.md) counts), the slice is applied
 per-cell using that cell's own length, and the selected characters are rejoined into
 the output string.
 
 Because the slice bounds are evaluated per-cell using each cell's own length, cells
-of different lengths in the same thread can each keep a different *number* of
+of different lengths in the same slate can each keep a different *number* of
 characters from the same `(start, stop, step)` call.
 
 ## Parameters
@@ -48,7 +48,7 @@ character; a negative step walks backwards. Must not be `0`.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, holding the sliced
+    A new `Note`-kind slate, same length as the bound slate, holding the sliced
     text.
 
 ## Examples
@@ -116,8 +116,8 @@ try {
 Slate::chars: step cannot be zero
 ```
 
-Example 4. A non-`Note` thread throws — the same message
-[`Slate::chars()`](../thread/chars.md) produces directly.
+Example 4. A non-`Note` slate throws — the same message
+[`Slate::chars()`](../slate/chars.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -138,7 +138,7 @@ Slate::chars: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::chars()` is a one-line forward to
-  [`Slate::chars()`](../thread/chars.md) — identical behavior and throws.
+  [`Slate::chars()`](../slate/chars.md) — identical behavior and throws.
 - Slices by Unicode codepoint, the same unit [`length()`](length.md) counts.
 - Out-of-range `start`/`stop` values are clamped rather than throwing — only
   `step == 0` throws.
@@ -146,7 +146,7 @@ Slate::chars: expected Note payload
 
 ## See Also
 
-- [`Slate::chars`](../thread/chars.md): the direct, non-accessor form this method
+- [`Slate::chars`](../slate/chars.md): the direct, non-accessor form this method
   forwards to.
 - [`SlateNoteAccessor::length`](length.md): the character count that `chars()`'s
   implicit bounds are computed against.

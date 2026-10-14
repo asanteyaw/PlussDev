@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,7 +54,7 @@
 kind, dtype, row count, valid/null breakdown — straight to a stream, with a trailing
 newline appended. <code class="docutils literal notranslate"><span class="pre">info()</span></code> (no arguments) writes to <code class="docutils literal notranslate"><span class="pre">std::cout</span></code>; <code class="docutils literal notranslate"><span class="pre">info(os)</span></code> writes to
 whatever stream you provide. Both are pure conveniences over
-<code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">thread.info_string()</span> <span class="pre">&lt;&lt;</span> <span class="pre">'\n'</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">slate.info_string()</span> <span class="pre">&lt;&lt;</span> <span class="pre">'\n'</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -115,10 +115,10 @@ Null Cases: 0
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Both overloads are a thin convenience over
-<a class="reference internal" href="info_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info_string()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">thread.info_string()</span> <span class="pre">&lt;&lt;</span> <span class="pre">'\n'</span></code>.</p></li>
+<a class="reference internal" href="info_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info_string()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">slate.info_string()</span> <span class="pre">&lt;&lt;</span> <span class="pre">'\n'</span></code>.</p></li>
 <li><p>Unlike <a class="reference internal" href="info_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info_string()</span></code></span></a>’s returned string, the stream output <em>does</em> end
 with a trailing newline.</p></li>
-<li><p>Metadata only — like <code class="docutils literal notranslate"><span class="pre">info_string()</span></code>, this never renders the thread’s actual row values.
+<li><p>Metadata only — like <code class="docutils literal notranslate"><span class="pre">info_string()</span></code>, this never renders the slate’s actual row values.
 Use <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> for that.</p></li>
 </ul>
 </section>
@@ -127,7 +127,7 @@ Use <a class="reference internal" href="show.html"><span class="std std-doc"><co
 <ul class="simple">
 <li><p><a class="reference internal" href="info_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::info_string</span></code></span></a>: the same summary, returned as a <code class="docutils literal notranslate"><span class="pre">std::string</span></code>
 instead of written to a stream — see that page for the exact field-by-field format.</p></li>
-<li><p><a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::show</span></code></span></a>: render the thread’s actual row values to a stream, rather than
+<li><p><a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::show</span></code></span></a>: render the slate’s actual row values to a stream, rather than
 metadata.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

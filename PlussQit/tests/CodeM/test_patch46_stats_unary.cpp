@@ -49,14 +49,19 @@ TEST_CASE("exp/log/sqrt run", "[unary]") {
 
 TEST_CASE("root order statistics validate ranks and missing values", "[stats]") {
   auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0});
-  REQUIRE(values.median().item<double>() == 2.5);
+  // median() selects the lower middle value like torch.median (the even case differs
+  // from the interpolated quantile(0.5), which is 2.5; both are pinned against libtorch
+  // in test_patch177_cpu_torch_autograd_parity.cpp).
+  REQUIRE(values.median().item<double>() == 2.0);
+  REQUIRE(values.quantile(0.5).item<double>() == 2.5);
   REQUIRE(values.quantile(0.25).item<double>() == 1.75);
   REQUIRE_THROWS(values.quantile(-0.1));
   REQUIRE_THROWS(values.nanquantile(1.1));
 
   auto missing = pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 5.0});
   REQUIRE(std::isnan(missing.median().item<double>()));
-  REQUIRE(missing.nanmedian().item<double>() == 3.0);
+  // nanmedian of the valid {1, 5} is the lower centre; the interpolated quantile is 3.
+  REQUIRE(missing.nanmedian().item<double>() == 1.0);
   REQUIRE(missing.nanquantile(0.5).item<double>() == 3.0);
 
   auto empty = pluss::series::zeros({0});

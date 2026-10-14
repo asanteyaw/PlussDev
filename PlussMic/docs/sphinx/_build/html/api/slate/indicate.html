@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,11 +50,11 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread on <code class="docutils literal notranslate"><span class="pre">delimiter</span></code>, collects every distinct
-non-empty token seen anywhere in the thread, and produces one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> column per
+<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate on <code class="docutils literal notranslate"><span class="pre">delimiter</span></code>, collects every distinct
+non-empty token seen anywhere in the slate, and produces one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> column per
 distinct token (“level”) — the classic one-hot / multi-label indicator (“dummy
-variable”) encoding, for a text thread that holds delimiter-separated tags,
-categories, or labels rather than a single value per cell. Requires the thread to be
+variable”) encoding, for a text slate that holds delimiter-separated tags,
+categories, or labels rather than a single value per cell. Requires the slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Column <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> for a row if <code class="docutils literal notranslate"><span class="pre">level</span></code> is one of that
 row’s tokens, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
 <p>Levels are collected into a <code class="docutils literal notranslate"><span class="pre">std::set&lt;std::string&gt;</span></code>, so the output columns always
@@ -75,7 +75,7 @@ tell “this row is invalid” apart from “this row matched nothing” by look
 <p>An invalid row’s hidden text can still create a phantom output column
 The set of levels is collected from <strong>every row’s underlying text</strong>, including rows
 marked invalid — the delimiter split that builds the level set runs over the whole
-thread before any validity check happens. An invalid cell whose hidden underlying
+slate before any validity check happens. An invalid cell whose hidden underlying
 text contains a token no valid row ever uses still produces its own indicator column,
 one that’s <code class="docutils literal notranslate"><span class="pre">false</span></code> for every row in the entire result (since no valid row can ever
 match it, and the invalid row itself is skipped when indicators are actually
@@ -97,7 +97,7 @@ token produces a column literally named <code class="docutils literal notranslat
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 A new frame with one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> feature per distinct non-empty token seen in the
-thread, sorted alphabetically by token text, named <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code>.</p>
+slate, sorted alphabetically by token text, named <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -195,7 +195,7 @@ exists as inert padding.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::indicate: delimiter cannot be empty
 </pre></div>
 </div>
-<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">indicate</span><span class="p">();</span>
@@ -216,7 +216,7 @@ exists as inert padding.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
 <li><p>Output columns are sorted alphabetically by token text, not by first-appearance
 order.</p></li>
 <li><p>No validity mask is attached to the result at all — invalid input rows show

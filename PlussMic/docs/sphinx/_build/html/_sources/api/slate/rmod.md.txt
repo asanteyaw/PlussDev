@@ -28,7 +28,7 @@ Same shape as [`mod()`](mod.md).
 ## Returns
 
 `Slate`
-    A new thread holding `other % (*this)`, elementwise.
+    A new slate holding `other % (*this)`, elementwise.
 
 ## Examples
 
@@ -54,7 +54,7 @@ ptype: Series
 `200 = 17*11 + 13`, `200 = 26*7 + 18`, `200 = 33*6 + 2` — the opposite framing from
 [`amounts.mod(...)`](mod.md), where `amounts` supplied the dividends.
 
-Example 2. Reflected against another thread.
+Example 2. Reflected against another slate.
 
 ```cpp
 auto multiples = Slate(pluss::make_series({50.0, 80.0, 90.0}));

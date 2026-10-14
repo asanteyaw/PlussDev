@@ -43,7 +43,7 @@ If `true`, the *last* occurrence is spared instead; every earlier one is
 ## Returns
 
 `Slate`
-    A boolean thread, one entry per row, `display_name` `"duplicated"`,
+    A boolean slate, one entry per row, `display_name` `"duplicated"`,
     displayed against the case label(s) it was computed from.
 
 ## Examples

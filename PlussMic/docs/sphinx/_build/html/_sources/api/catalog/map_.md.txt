@@ -56,8 +56,8 @@ city   -> Note(["Accra", "Tema", "Kumasi"])
     <span class="label">Previous</span>
     <span class="title">map</span>
   </a>
-  <a class="next-link" href="max.html">
+  <a class="next-link" href="match_keys.html">
     <span class="label">Next</span>
-    <span class="title">max</span>
+    <span class="title">match_keys</span>
   </a>
 </div>

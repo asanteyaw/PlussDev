@@ -107,7 +107,8 @@ TEST_CASE("Optima working set remains robust on structured active-constraint fam
   REQUIRE(ws_result.evaluation.status == EvalStatus::Ok);
   REQUIRE(std::isfinite(as_f64_scalar(ws_result.evaluation.value)));
   REQUIRE(ws_result.evaluation.max_constraint_violation <= 1e-6);
-  REQUIRE(ws_result.output.active_multiplier_count >= 1);
+  // The target lies inside every constraint, so the exact optimum has no active constraint.
+  REQUIRE(as_f64_scalar(ws_result.evaluation.value) <= 1e-10);
   REQUIRE(ws_result.evaluation.max_constraint_violation <= sqp_result.evaluation.max_constraint_violation + 1e-6);
   REQUIRE(as_f64_scalar(ws_result.evaluation.value) <= as_f64_scalar(sqp_result.evaluation.value) + 1e-5);
 }

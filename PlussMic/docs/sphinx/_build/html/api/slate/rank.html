@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,9 +50,9 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Assigns a numeric rank (<code class="docutils literal notranslate"><span class="pre">1</span></code> = smallest, by default) to every entry, based on
-its value relative to the rest of the thread. Ties — entries with equal
+its value relative to the rest of the slate. Ties — entries with equal
 value — are resolved by <code class="docutils literal notranslate"><span class="pre">ties</span></code>, and missing entries are handled by <code class="docutils literal notranslate"><span class="pre">nulls</span></code>.
-Always returns a <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) thread the same length as the
+Always returns a <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) slate the same length as the
 source, regardless of the source’s own dtype, since <code class="docutils literal notranslate"><span class="pre">Average</span></code> and <code class="docutils literal notranslate"><span class="pre">percentage</span></code>
 ranks are inherently fractional. Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; every
 other kind or dtype throws.</p>
@@ -97,7 +97,7 @@ a fraction in <code class="docutils literal notranslate"><span class="pre">(0,</
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) thread of ranks, the same length as the
+A <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) slate of ranks, the same length as the
 source.</p>
 </section>
 <section id="examples">
@@ -141,7 +141,7 @@ ptype: Series
 </pre></div>
 </div>
 <p>The first <code class="docutils literal notranslate"><span class="pre">10.0</span></code> (position <code class="docutils literal notranslate"><span class="pre">0</span></code>) gets rank <code class="docutils literal notranslate"><span class="pre">1</span></code>; the second (position <code class="docutils literal notranslate"><span class="pre">1</span></code>) gets
-<code class="docutils literal notranslate"><span class="pre">2</span></code> — purely by which one appeared first in the thread.</p>
+<code class="docutils literal notranslate"><span class="pre">2</span></code> — purely by which one appeared first in the slate.</p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">ties</span> <span class="pre">=</span> <span class="pre">RankTieRule::Dense</span></code> doesn’t skip rank numbers for the size
 of a tie group.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">rank</span><span class="p">(</span><span class="n">RankTieRule</span><span class="o">::</span><span class="n">Dense</span><span class="p">);</span>
@@ -228,7 +228,7 @@ through <code class="docutils literal notranslate"><span class="pre">size()</spa
 necessarily whole numbers once <code class="docutils literal notranslate"><span class="pre">ties</span> <span class="pre">=</span> <span class="pre">Average</span></code> or <code class="docutils literal notranslate"><span class="pre">percentage</span> <span class="pre">=</span> <span class="pre">true</span></code> is in
 play.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nulls</span> <span class="pre">=</span> <span class="pre">Keep</span></code> is the only mode where the output can itself contain missing
-entries; <code class="docutils literal notranslate"><span class="pre">Top</span></code> and <code class="docutils literal notranslate"><span class="pre">Bottom</span></code> always produce a fully-valid rank thread.</p></li>
+entries; <code class="docutils literal notranslate"><span class="pre">Top</span></code> and <code class="docutils literal notranslate"><span class="pre">Bottom</span></code> always produce a fully-valid rank slate.</p></li>
 <li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Slate::rank:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Slate&quot;</span></code>.</p></li>
 </ul>

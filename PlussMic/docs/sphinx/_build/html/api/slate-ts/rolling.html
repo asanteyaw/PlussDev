@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a <strong>trailing rolling window statistic</strong> over the bound thread, in one of
+<p>Computes a <strong>trailing rolling window statistic</strong> over the bound slate, in one of
 two shapes:</p>
 <ul class="simple">
 <li><p><strong>Fixed row count</strong> (<code class="docutils literal notranslate"><span class="pre">rolling(window,</span> <span class="pre">statistic,</span> <span class="pre">options)</span></code>): each position’s
@@ -63,7 +63,7 @@ it can see falls below <code class="docutils literal notranslate"><span class="p
 the same trailing-window idea, but each position’s window spans a fixed span of
 time (like <code class="docutils literal notranslate"><span class="pre">&quot;2D&quot;</span></code>) looked up against an explicit time <code class="docutils literal notranslate"><span class="pre">axis</span></code>, rather than a
 fixed row count. <code class="docutils literal notranslate"><span class="pre">axis</span></code> must be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, the same length as
-the bound thread, non-missing, and sorted ascending.</p></li>
+the bound slate, non-missing, and sorted ascending.</p></li>
 </ul>
 </section>
 <section id="parameters">
@@ -86,7 +86,7 @@ inclusive.</p></li>
 </ul>
 <p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, calendar-duration overload)
 An explicit time axis (<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), the same length as the
-bound thread, non-missing and sorted ascending.</p>
+bound slate, non-missing and sorted ascending.</p>
 <p><strong>duration</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, calendar-duration overload)
 A duration string (for example <code class="docutils literal notranslate"><span class="pre">&quot;2D&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;12H&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;30min&quot;</span></code>) defining each
 position’s time-based window width.</p>
@@ -99,7 +99,7 @@ Which end of the time window is inclusive.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as the bound source, holding the rolling statistic
+A new slate, same length as the bound source, holding the rolling statistic
 at each position.</p>
 </section>
 <section id="examples">
@@ -221,7 +221,7 @@ partial window rather than becoming <code class="docutils literal notranslate"><
 require a full window everywhere instead.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Std</span></code> additionally require the window’s observation count to exceed
 <code class="docutils literal notranslate"><span class="pre">ddof</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>), independent of <code class="docutils literal notranslate"><span class="pre">min_count</span></code>.</p></li>
-<li><p>A pre-existing missing entry in the source thread is skipped within any window
+<li><p>A pre-existing missing entry in the source slate is skipped within any window
 that contains it (it doesn’t count toward <code class="docutils literal notranslate"><span class="pre">min_count</span></code>, and doesn’t contribute
 to the statistic) — see Example 4.</p></li>
 <li><p>The calendar-duration overload requires <code class="docutils literal notranslate"><span class="pre">axis</span></code> to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or
@@ -238,9 +238,9 @@ rules.</p></li>
 <li><p><a class="reference internal" href="timed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::timed</span></code></span></a>: the calendar-duration engine this
 overload’s second signature delegates to, with a fully worked example.</p></li>
 <li><p><a class="reference internal" href="grouped.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::grouped</span></code></span></a>: the same fixed-window statistic,
-computed independently per group instead of over the whole thread.</p></li>
+computed independently per group instead of over the whole slate.</p></li>
 <li><p><a class="reference internal" href="expanding.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::expanding</span></code></span></a>: the same engine with the
-window growing from the start of the thread instead of a fixed size.</p></li>
+window growing from the start of the slate instead of a fixed size.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="returns.html">

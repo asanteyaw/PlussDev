@@ -13,7 +13,7 @@ TimeSeriesAccessor::align_to(const Slate& source_axis, const Slate& target_axis,
 
 ## What It Does
 
-Reindexes the bound thread's values — currently living at `source_axis` ticks —
+Reindexes the bound slate's values — currently living at `source_axis` ticks —
 onto an entirely new `target_axis`, matching each target tick to a `source_axis`
 tick according to `mode`:
 
@@ -32,8 +32,8 @@ filling in whatever's still `NULL` after alignment.
 ## Parameters
 
 **source_axis** (`const Slate&`)
-    The time axis (`Timeline`/`TimeIndex`) the bound thread's own values
-    currently live at. Must be the same length as the bound thread.
+    The time axis (`Timeline`/`TimeIndex`) the bound slate's own values
+    currently live at. Must be the same length as the bound slate.
 
 **target_axis** (`const Slate&`)
     The new time axis (`Timeline`/`TimeIndex`) to reindex onto. Determines the
@@ -53,12 +53,12 @@ filling in whatever's still `NULL` after alignment.
 ## Returns
 
 `Slate`
-    A new thread, length `target_axis.size()`, holding the bound values
+    A new slate, length `target_axis.size()`, holding the bound values
     reindexed according to `mode` (and optionally gap-filled).
 
 ## Examples
 
-Example 1. Reindex a sparse thread onto a regular daily grid, comparing all
+Example 1. Reindex a sparse slate onto a regular daily grid, comparing all
 four alignment modes.
 
 ```cpp
@@ -160,7 +160,7 @@ Same `Exact` alignment as before, but `GapFillMode::Constant` immediately fills
 both still-`NULL` positions with `-1` — equivalent to calling the 3-argument
 overload and then [`fill_gaps()`](fill_gaps.md) yourself.
 
-Example 3. A `source_axis` whose length doesn't match the bound thread throws.
+Example 3. A `source_axis` whose length doesn't match the bound slate throws.
 
 ```cpp
 auto short_axis = Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
@@ -179,12 +179,12 @@ TimeSeriesAccessor::align_to: right values and right time axis length mismatch
 
 ## Notes
 
-- `source_axis` must be the same length as the bound thread — it pairs
-  one-to-one with the thread's own values, position by position.
+- `source_axis` must be the same length as the bound slate — it pairs
+  one-to-one with the slate's own values, position by position.
 - `Nearest` breaks a tie between two equally-close source ticks toward the
   *earlier* one.
 - The result's length always matches `target_axis.size()`, regardless of the
-  bound thread's own length.
+  bound slate's own length.
 - The fill overload is exactly the 3-argument overload followed by
   [`fill_gaps(fill_mode, constant)`](fill_gaps.md) — there's no option to
   "align without filling" beyond simply calling the 3-argument overload

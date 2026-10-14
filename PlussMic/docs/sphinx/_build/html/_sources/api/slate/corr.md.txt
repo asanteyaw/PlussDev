@@ -13,32 +13,32 @@ Slate::corr(const Slate& other, SlateCorrMethod method = SlateCorrMethod::Pearso
 
 ## What It Does
 
-Computes the correlation between this thread and `other`, as a plain `double`
+Computes the correlation between this slate and `other`, as a plain `double`
 (unlike most of the reduction family, this one doesn't return a
 `SlateValue`). Three methods are available:
 
 - **`Pearson`** (the default): ordinary linear correlation — sensitive to the
   actual shape of the relationship, not just its direction.
 - **`Spearman`**: rank correlation — correlates the *ranks* of the two
-  threads instead of their raw values, so it only cares whether the
+  slates instead of their raw values, so it only cares whether the
   relationship is monotonic, not whether it's linear.
 - **`KendallTau`**: rank-concordance correlation — a different, more
   robust-to-outliers measure of monotonic association.
 
-Both threads must be numeric `Series`, or it throws. If either thread has
+Both slates must be numeric `Series`, or it throws. If either slate has
 explicit case labels, the two are first **aligned by case label** rather than
 raw position — see the important callout below, since this changes the result
 compared to a naive positional pairing. After alignment, missing/non-finite
-entries in either thread are excluded pairwise (a position missing in *either*
-thread drops that pair from both). If fewer than 2 valid pairs remain, or
-either thread has zero variance across its valid pairs, the result is `NaN`
+entries in either slate are excluded pairwise (a position missing in *either*
+slate drops that pair from both). If fewer than 2 valid pairs remain, or
+either slate has zero variance across its valid pairs, the result is `NaN`
 (never thrown).
 
 ```{important} case-label alignment changes the result
-If both threads carry explicit case labels, `corr()` (and
+If both slates carry explicit case labels, `corr()` (and
 [`covar()`](covar.md)/[`corr_with()`](corr_with.md)) pairs entries by
 *matching label*, not by raw position — the same way two `DataFrame` columns
-with mismatched row order still combine correctly. Two threads of equal length
+with mismatched row order still combine correctly. Two slates of equal length
 with no explicit labels pair positionally instead. Example 3 below shows how
 different these two outcomes can be for the same underlying data.
 ```
@@ -46,7 +46,7 @@ different these two outcomes can be for the same underlying data.
 ## Parameters
 
 **other** (`const Slate&`)
-    The numeric `Series` thread to correlate with.
+    The numeric `Series` slate to correlate with.
 
 **method** (`SlateCorrMethod`, default `Pearson`)
     `Pearson`, `Spearman`, or `KendallTau`.
@@ -59,7 +59,7 @@ different these two outcomes can be for the same underlying data.
 
 ## Examples
 
-Example 1. Pearson correlation between two related numeric threads.
+Example 1. Pearson correlation between two related numeric slates.
 
 ```cpp
 using namespace pluss::table;
@@ -121,11 +121,11 @@ Even though `right`'s raw values are in a different order than `left`'s,
 matching them up by label (`"a"` with `"a"`, `"b"` with `"b"`, `"c"` with
 `"c"`) reveals a perfect underlying relationship: label `"a"` pairs `1` with
 `10`, `"b"` pairs `2` with `20`, `"c"` pairs `3` with `30`. Comparing the same
-two threads' *raw positions* instead (`1` with `30`, `2` with `10`, `3` with
+two slates' *raw positions* instead (`1` with `30`, `2` with `10`, `3` with
 `20`) would give `-0.5` — label alignment is what makes this example correlate
 perfectly.
 
-Example 4. Fewer than 2 valid pairs, or zero variance in either thread,
+Example 4. Fewer than 2 valid pairs, or zero variance in either slate,
 returns `NaN` rather than throwing.
 
 ```cpp
@@ -143,10 +143,10 @@ true
 
 ## Notes
 
-- If either thread carries explicit case labels, pairing is by matching label,
+- If either slate carries explicit case labels, pairing is by matching label,
   not raw position — see the important callout above.
 - Missing or non-finite entries are excluded pairwise; a position missing in
-  either thread drops that pair from both.
+  either slate drops that pair from both.
 - Returns `NaN` (never throws) for fewer than 2 valid pairs or zero variance
   in either side.
 - Restricted to numeric `Series` payloads; anything else throws

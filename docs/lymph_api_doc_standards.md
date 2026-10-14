@@ -59,7 +59,7 @@ These carry the same weight as the rest of the file.
 5. **No classroom or "mental model" framing in headings or prose.** Section
    headings are plain and concrete (`What It Does`, `Parameters`, `Input
    Shapes`, `Practical Examples`, `Errors`). Do not write "Mental Model",
-   "Teaching", or similar.
+   a classroom-style label, or similar.
 
 6. **Mix alias and full-scope spellings in examples.** Implementations live at
    the fullest scope; the family re-exports a shorter alias. Both must compile.
@@ -83,12 +83,12 @@ These carry the same weight as the rest of the file.
   follow-up example reusing earlier page-local context.
 - Every object and options page must contain several examples whenever the
   surface has more than one meaningful operation or decision. Cover normal
-  use and relevant edge behavior. Most teaching should come from end-to-end
+  use and relevant edge behavior. Most explanation should come from end-to-end
   examples: construct realistic inputs, configure the object, run it, and
   inspect the result. Short follow-up examples are encouraged for individual
   methods or toggles once the page has established its page-local context.
 - Not every example has to be end to end, but end-to-end examples should be
-  the dominant teaching pattern. Use shorter follow-up snippets only when the
+  the dominant pattern. Use shorter follow-up snippets only when the
   page has already established the data, object, and printing context clearly.
 - Place a verified output block immediately beneath every example. Run the
   exact shown program, then copy its output directly under that code block.
@@ -176,7 +176,7 @@ pluss::Series lymph::selection::Plan::scores(...) const;
   - `pluss::make_series({1.2, 3.4, 2.5}, ...)`
 - Avoid unnecessary verbosity like:
   - `pluss::make_series(std::vector<double>{1.2, 3.4, 2.5}, ...)`
-- Small synthetic data is acceptable when it teaches the API clearly.
+- Small synthetic data is acceptable when it shows the API clearly.
 - Real data examples are also acceptable, but public docs must not expose local
   absolute filesystem paths.
 
@@ -193,7 +193,7 @@ pluss::Series lymph::selection::Plan::scores(...) const;
 - Explain what each parameter or toggle changes in behavior.
 - Explain defaults, constraints, tradeoffs, and failure modes where relevant.
 - The docs should be written with pedagogical completeness in mind, but do not
-  literally say "teach", "teaching", or similar classroom framing in the
+  use classroom framing in the
   public prose.
 - A careful reader should be able to learn the API deeply from the reference
   alone.

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,7 +53,7 @@
 escape hatch for calendar-component extraction, rounding, localization, and other
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-specific operations that live below the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> surface (many of which are
 already re-exposed more conveniently via <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tl()</span></code></span></a>, the <code class="docutils literal notranslate"><span class="pre">SlateTimelineAccessor</span></code>).
-Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind; every other payload kind throws — including
+Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind; every other payload kind throws — including
 <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, even though the two are closely related.</p>
 <p>Same reference/no-rewrap contract as <a class="reference internal" href="as_series.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_series()</span></code></span></a> — see that page’s
 important callout for the full explanation.</p>
@@ -95,8 +95,8 @@ ptype: Series
 <p><code class="docutils literal notranslate"><span class="pre">year()</span></code> here is <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code>’s own method, not the <code class="docutils literal notranslate"><span class="pre">tl().year()</span></code>
 Slate-surface accessor — this example calls the underlying payload’s method
 directly through the reference <code class="docutils literal notranslate"><span class="pre">as_timeline()</span></code> returns.</p>
-<p>Example 2. Calling <code class="docutils literal notranslate"><span class="pre">as_timeline()</span></code> on a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> thread throws — including on a
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread.</p>
+<p>Example 2. Calling <code class="docutils literal notranslate"><span class="pre">as_timeline()</span></code> on a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> slate throws — including on a
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">as_timeline</span><span class="p">();</span>
@@ -116,7 +116,7 @@ directly through the reference <code class="docutils literal notranslate"><span 
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Returns a reference into the thread’s own storage — no copy, no allocation.</p></li>
+<li><p>Returns a reference into the slate’s own storage — no copy, no allocation.</p></li>
 <li><p>The result does not automatically become a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> again — wrap it explicitly with
 <code class="docutils literal notranslate"><span class="pre">Slate(...)</span></code> when a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-only API needs it back.</p></li>
 </ul>

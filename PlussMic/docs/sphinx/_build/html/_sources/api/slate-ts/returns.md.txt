@@ -12,11 +12,11 @@ TimeSeriesAccessor::returns(std::int64_t periods = 1) const -> Slate
 
 ## What It Does
 
-Computes the fractional period-over-period change of the bound thread:
+Computes the fractional period-over-period change of the bound slate:
 `out[i] = x[i] / base[i] - 1`, where `base` is `x` shifted by `periods` (a lag when
 `periods > 0`, a lead when `periods < 0`). A position is `NULL` wherever `x[i]` or
 `base[i]` is missing, `base[i]` is `0`, or either value is non-finite. Restricted
-to a numeric `Series` thread; anything else throws.
+to a numeric `Series` slate; anything else throws.
 
 ## Parameters
 
@@ -28,12 +28,12 @@ to a numeric `Series` thread; anything else throws.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, holding the period-over-period
+    A new slate, same length as the bound source, holding the period-over-period
     fractional return.
 
 ## Examples
 
-Example 1. Compute the one-period return of a numeric thread.
+Example 1. Compute the one-period return of a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -108,7 +108,7 @@ Position `1` (`x = 0`, base `= 10`) is an ordinary `0 / 10 - 1 = -1`. Position `
 (`x = 20`, base `= 0`) has a `base` of exactly `0` — rather than dividing by zero,
 `returns()` reports `NULL` directly, per the rule stated above.
 
-Example 4. A pre-existing missing entry in the source thread propagates into
+Example 4. A pre-existing missing entry in the source slate propagates into
 every return that touches it.
 
 ```cpp
@@ -161,11 +161,11 @@ output.
 
 - A `base` value of exactly `0` always produces `NULL`, regardless of `x[i]`,
   since the fractional change would otherwise be undefined or infinite.
-- A pre-existing missing entry in the source thread is honored — it produces
+- A pre-existing missing entry in the source slate is honored — it produces
   `NULL` in every return that would otherwise reference it. See Example 4.
 - `periods` must not be `0`, or it throws
   `"subsp::stats::ts::returns: periods cannot be zero"`.
-- Restricted to numeric `Series` payloads; a `Note`/`Timeline`/`TimeIndex` thread
+- Restricted to numeric `Series` payloads; a `Note`/`Timeline`/`TimeIndex` slate
   throws `"TimeSeriesAccessor::returns: source must be Series"`; a non-numeric
   `Series` throws `"TimeSeriesAccessor::returns: source Series must be numeric"`.
 

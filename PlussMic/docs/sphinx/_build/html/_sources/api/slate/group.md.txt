@@ -15,7 +15,7 @@ Slate::group(const SlateGroupOptions& options) const -> SlateGroupBuilder
 ## What It Does
 
 The entry point into `Slate`'s group-by pipeline. `group()` itself does no grouping — it
-binds the current thread (as the value column to aggregate/transform) and an optional
+binds the current slate (as the value column to aggregate/transform) and an optional
 `SlateGroupOptions` policy, and hands back a `SlateGroupBuilder` whose `.by(key)` method
 supplies the actual grouping key(s) and produces a `SlateGrouped`:
 
@@ -42,7 +42,7 @@ public:
 };
 ```
 
-The full chain reads `thread.group(options).by(key).agg({...})` (one row per group) or
+The full chain reads `slate.group(options).by(key).agg({...})` (one row per group) or
 `.transform(op)` (one row per *input* row, broadcasting each group's aggregate back out) —
 the same split `pandas`' `groupby().agg()` vs. `groupby().transform()` draws.
 
@@ -57,12 +57,12 @@ the same split `pandas`' `groupby().agg()` vs. `groupby().transform()` draws.
 ## Returns
 
 `SlateGroupBuilder`
-    A binder for the current thread (and `options`) — call `.by(key)` on it to actually
+    A binder for the current slate (and `options`) — call `.by(key)` on it to actually
     form groups.
 
 ## Examples
 
-Example 1. Group by a `Note`-kind key thread and aggregate each group to a single sum —
+Example 1. Group by a `Note`-kind key slate and aggregate each group to a single sum —
 `agg()` returns a `DataFrame`, one row per group.
 
 ```cpp
@@ -142,14 +142,14 @@ follow the key's first-occurrence order (`"b"` first, since it appears in row `0
 
 ## Notes
 
-- `group()`/`group(options)` alone do no grouping — they only bind the value thread and
+- `group()`/`group(options)` alone do no grouping — they only bind the value slate and
   options; `.by(key)` is what actually forms groups.
 - `agg()` returns a `DataFrame` (one row per group); `transform(op)` returns a `Slate`
   the same length as the input (one row per original row, broadcasting each group's
   aggregate).
 - `dropnull` (default `true`) excludes `NULL`-keyed rows from every group; `sort` (default
   `false`) controls whether groups appear in key order or first-occurrence order.
-- `.by(...)` accepts a single key thread, or multiple keys (via `std::initializer_list` or
+- `.by(...)` accepts a single key slate, or multiple keys (via `std::initializer_list` or
   a `RangeView`) for a composite group-by.
 
 ## See Also

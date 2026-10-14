@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusTraverse::via &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="LocusPull API Reference" href="../../locus_pull_api_reference.html" />
+    <link rel="prev" title="LocusTraverse::pick" href="pick.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locustraverse-via">
+<h1>LocusTraverse::via<a class="headerlink" href="#locustraverse-via" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_traverse_api_reference.html"><span class="doc std std-doc">Back to LocusTraverse API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LocusTraverse</span><span class="w"> </span><span class="n">LocusTraverse</span><span class="o">::</span><span class="n">via</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">to</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">locus</span><span class="o">::</span><span class="n">JoinHow</span><span class="w"> </span><span class="n">how</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">locus</span><span class="o">::</span><span class="n">JoinHow</span><span class="o">::</span><span class="n">Left</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="traversing-a-relationship-path">
+<h2>Traversing A Relationship Path<a class="headerlink" href="#traversing-a-relationship-path" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">via()</span></code> connects the current anchor to a target catalog through the fewest
+declared relationships. It appends every hop of that path to the existing plan,
+then makes <code class="docutils literal notranslate"><span class="pre">to</span></code> the new anchor. Use it when the destination matters more than
+the intermediate catalogs. Use <a class="reference internal" href="join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">join()</span></code></span></a> when each adjacent hop,
+key set, suffix, or cardinality override must be written explicitly.</p>
+<p>Path resolution occurs when <code class="docutils literal notranslate"><span class="pre">via()</span></code> is called, not at collection. The captured
+Locus must contain both endpoint names and a connecting route. If several
+fewest-hop routes exist, declaration order deterministically chooses one. Each
+path step retains its relationship name, oriented key pairs, and appropriately
+reversed cardinality.</p>
+<p>The same <code class="docutils literal notranslate"><span class="pre">how</span></code> value is assigned to every appended hop. The default is <code class="docutils literal notranslate"><span class="pre">Left</span></code>,
+not the <code class="docutils literal notranslate"><span class="pre">Inner</span></code> default of <code class="docutils literal notranslate"><span class="pre">join()</span></code>. Consequently, a path normally preserves
+the records that have survived on the accumulated left side at each step and
+materializes unavailable right streams as null. <code class="docutils literal notranslate"><span class="pre">Inner</span></code> narrows at every hop;
+an item lacking an order or an order lacking a customer is removed as soon as
+that step executes.</p>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">via()</span></code> with the current anchor names a valid zero-hop route. It appends
+nothing and returns an equivalent plan.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><strong>to</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</dt><dd><p>Existing target catalog name. The name is copied into the returned builder.</p>
+</dd>
+<dt><strong>how</strong> (<code class="docutils literal notranslate"><span class="pre">locus::JoinHow</span></code>)</dt><dd><p>Matching mode applied uniformly to every hop. The default is <code class="docutils literal notranslate"><span class="pre">Left</span></code>. All
+seven join modes are accepted, although multi-hop <code class="docutils literal notranslate"><span class="pre">Cross</span></code> is rarely useful:
+a path still determines which catalogs are visited, but each hop forms a
+Cartesian product rather than using its relationship keys.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code></dt><dd><p>A new immutable builder containing the appended path and <code class="docutils literal notranslate"><span class="pre">to</span></code> as its current
+anchor. No Catalog is materialized until <code class="docutils literal notranslate"><span class="pre">collect()</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>All outputs are emitted by the permanent Locus traversal reference executable.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">items</span></code> reaches <code class="docutils literal notranslate"><span class="pre">customers</span></code> through <code class="docutils literal notranslate"><span class="pre">orders</span></code>. Default left traversal
+keeps the item whose order points to an absent customer and gives it a null name.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;items&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;item_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;item_id&quot;</span><span class="p">);</span>
+<span class="n">print_words</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>item_id=[1000, 1001, 1002, 1003]
+name=[Ada, Ada, Bola, null]
+</pre></div>
+</div>
+<p>Example 2. Changing the uniform mode to <code class="docutils literal notranslate"><span class="pre">Inner</span></code> removes the unmatched path at
+the customer hop. <code class="docutils literal notranslate"><span class="pre">Cross</span></code> uses the path only to choose catalogs and forms a
+Cartesian product at each edge.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;left rows=&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;items&quot;</span><span class="p">).</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">().</span><span class="n">maxrows</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;inner rows=&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;items&quot;</span><span class="p">).</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">JoinHow</span><span class="o">::</span><span class="n">Inner</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">collect</span><span class="p">().</span><span class="n">maxrows</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;cross rows=&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;items&quot;</span><span class="p">).</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">JoinHow</span><span class="o">::</span><span class="n">Cross</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">collect</span><span class="p">().</span><span class="n">maxrows</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>left rows=4
+inner rows=3
+cross rows=80
+</pre></div>
+</div>
+<p>Example 3. A zero-hop route preserves the anchor schema and records.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_keys</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id, customer_id, amount, state] rows=5
+</pre></div>
+</div>
+<p>Example 4. The returned target becomes the anchor, so a later operation starts
+there. After <code class="docutils literal notranslate"><span class="pre">via(&quot;orders&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">join(&quot;customers&quot;)</span></code> resolves the direct
+orders-to-customers relationship rather than looking for an items-to-customers
+edge.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">chained</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;items&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;item_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">chained</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;item_id&quot;</span><span class="p">);</span>
+<span class="n">print_words</span><span class="p">(</span><span class="n">chained</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>item_id=[1000, 1001, 1002]
+name=[Ada, Ada, Bola]
+</pre></div>
+</div>
+<p>Example 5. Unknown and disconnected targets fail during route construction,
+before any call to <code class="docutils literal notranslate"><span class="pre">collect()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;unknown target&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;absent&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">island</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="s">&quot;island&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">catalog</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">));</span>
+<span class="n">print_error</span><span class="p">(</span><span class="s">&quot;no path&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">island</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">via</span><span class="p">(</span><span class="s">&quot;island&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>unknown target: Locus::plan: unknown catalog &#39;absent&#39;
+no path: Locus::plan: no relationship path from &#39;orders&#39; to &#39;island&#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="schema-and-cost">
+<h2>Schema And Cost<a class="headerlink" href="#schema-and-cost" title="Link to this heading">¶</a></h2>
+<p>Route search is breadth-first over the declared relationship graph and is
+cached by the Locus relationship engine until that immutable workspace changes.
+Appending the resolved steps copies plan metadata but does not read Catalog
+values. Collection cost is still one full join per path edge; shortest hop count
+does not necessarily mean least data volume. For a performance-sensitive path
+where a different route has smaller intermediate results, spell the intended
+sequence with <code class="docutils literal notranslate"><span class="pre">join()</span></code>.</p>
+<p>Every hop carries streams from the accumulated left and the newly joined right,
+subject to collision suffixing and key coalescing. Long paths can therefore
+become wide even when a final <code class="docutils literal notranslate"><span class="pre">pick()</span></code> is narrow, because final projection does
+not push into intermediate joins.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pick.html"><span class="label">Previous</span><span class="title">pick</span></a>
+  <a class="next-link" href="../../locus_traverse_api_reference.html"><span class="label">Next</span><span class="title">LocusTraverse API Reference</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_traverse_api_reference.html">LocusTraverse API Reference</a><ul>
+      <li>Previous: <a href="pick.html" title="previous chapter">LocusTraverse::pick</a></li>
+      <li>Next: <a href="../../locus_pull_api_reference.html" title="next chapter">LocusPull API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus-traverse/via.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

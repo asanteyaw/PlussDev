@@ -26,7 +26,7 @@ Same shape as [`pow()`](pow.md).
 ## Returns
 
 `Slate`
-    A new `Float64` thread holding `other ^ (*this)`, elementwise.
+    A new `Float64` slate holding `other ^ (*this)`, elementwise.
 
 ## Examples
 
@@ -52,7 +52,7 @@ ptype: Series
 `3^2 = 9`, `3^3 = 27`, `3^4 = 81` — the base and exponent roles are swapped from
 [`base.pow(3.0)`](pow.md), which gave `8, 27, 64`.
 
-Example 2. Reflected against another thread.
+Example 2. Reflected against another slate.
 
 ```cpp
 auto exps = Slate(pluss::make_series({1.0, 2.0, 3.0}));

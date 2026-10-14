@@ -16,7 +16,7 @@ Slate::land(const Slate& other) const -> Slate
 Elementwise logical AND. Unlike the arithmetic and comparison families, `land()` has
 only one overload — there's no scalar form, since a scalar boolean would just be
 `true`/`false` applied uniformly, which reads more clearly as a plain `if`. Both
-`*this` and `other` must be genuine `Bool`-typed `Series` threads (not `0`/`1`
+`*this` and `other` must be genuine `Bool`-typed `Series` slates (not `0`/`1`
 numbers — cast first with `astype(pluss::ScalarType::Bool)` if needed), and must be
 the same length; matching is purely positional.
 
@@ -32,18 +32,18 @@ of this reference's reflected-method pairs.
 
 **other** (`const Slate&`)
 
-A `Bool`-typed `Series` thread, the same length as `*this`.
+A `Bool`-typed `Series` slate, the same length as `*this`.
 
 ## Returns
 
 `Slate`
-    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    A new `Bool`-typed slate, same length as `*this`, holding the elementwise
     logical AND. Display labels (if `*this` has any set via `label().set()`) carry
     through onto the result.
 
 ## Examples
 
-Example 1. AND two boolean threads, with display labels set on both sides.
+Example 1. AND two boolean slates, with display labels set on both sides.
 
 ```cpp
 using namespace pluss::table;
@@ -68,7 +68,7 @@ ptype: Series
 ```
 
 `true & true = true`, `false & true = false`, `true & false = false` — and the
-result's row labels (`p, q, r`) come from `left`, the thread `land()` was called on.
+result's row labels (`p, q, r`) come from `left`, the slate `land()` was called on.
 `right`'s labels (`x, y, z`) never appear. See [`rand()`](rand.md) for how the
 reflected form differs here.
 
@@ -90,7 +90,7 @@ try {
 Slate::land(Slate): operation requires a Bool Series payload
 ```
 
-Even though `1.0`/`0.0` look boolean-ish, `land()` requires the thread's actual
+Even though `1.0`/`0.0` look boolean-ish, `land()` requires the slate's actual
 scalar type to be `Bool` — cast first with `astype(pluss::ScalarType::Bool)`.
 
 Example 3. A length mismatch throws too.

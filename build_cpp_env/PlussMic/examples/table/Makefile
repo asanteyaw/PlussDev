@@ -221,18 +221,18 @@ plussmic_dataframe_ab_reference_demo/fast:
 .PHONY : plussmic_dataframe_ab_reference_demo/fast
 
 # Convenience name for target.
-PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule
-.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule
+PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/rule
 
 # Convenience name for target.
-plussmic_thread_a_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/rule
-.PHONY : plussmic_thread_a_reference_demo
+plussmic_slate_a_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/rule
+.PHONY : plussmic_slate_a_reference_demo
 
 # fast build rule for target.
-plussmic_thread_a_reference_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build
-.PHONY : plussmic_thread_a_reference_demo/fast
+plussmic_slate_a_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/build
+.PHONY : plussmic_slate_a_reference_demo/fast
 
 # Convenience name for target.
 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_b_reference_demo.dir/rule:
@@ -249,18 +249,18 @@ plussmic_dataframe_b_reference_demo/fast:
 .PHONY : plussmic_dataframe_b_reference_demo/fast
 
 # Convenience name for target.
-PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule
-.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule
+PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/rule
 
 # Convenience name for target.
-plussmic_thread_b_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/rule
-.PHONY : plussmic_thread_b_reference_demo
+plussmic_slate_b_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/rule
+.PHONY : plussmic_slate_b_reference_demo
 
 # fast build rule for target.
-plussmic_thread_b_reference_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build
-.PHONY : plussmic_thread_b_reference_demo/fast
+plussmic_slate_b_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/build
+.PHONY : plussmic_slate_b_reference_demo/fast
 
 # Convenience name for target.
 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_cd_reference_demo.dir/rule:
@@ -277,18 +277,18 @@ plussmic_dataframe_cd_reference_demo/fast:
 .PHONY : plussmic_dataframe_cd_reference_demo/fast
 
 # Convenience name for target.
-PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule
-.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule
+PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/rule
 
 # Convenience name for target.
-plussmic_thread_cd_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/rule
-.PHONY : plussmic_thread_cd_reference_demo
+plussmic_slate_cd_reference_demo: PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/rule
+.PHONY : plussmic_slate_cd_reference_demo
 
 # fast build rule for target.
-plussmic_thread_cd_reference_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build
-.PHONY : plussmic_thread_cd_reference_demo/fast
+plussmic_slate_cd_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/build
+.PHONY : plussmic_slate_cd_reference_demo/fast
 
 # Convenience name for target.
 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_view_demo.dir/rule:
@@ -459,18 +459,18 @@ plussmic_dataframe_plot_demo/fast:
 .PHONY : plussmic_dataframe_plot_demo/fast
 
 # Convenience name for target.
-PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/rule
-.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/rule
+PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/rule
 
 # Convenience name for target.
-plussmic_dataframe_thread_values_demo: PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/rule
-.PHONY : plussmic_dataframe_thread_values_demo
+plussmic_dataframe_slate_values_demo: PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/rule
+.PHONY : plussmic_dataframe_slate_values_demo
 
 # fast build rule for target.
-plussmic_dataframe_thread_values_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build
-.PHONY : plussmic_dataframe_thread_values_demo/fast
+plussmic_dataframe_slate_values_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/build
+.PHONY : plussmic_dataframe_slate_values_demo/fast
 
 # Convenience name for target.
 PlussMic/examples/table/CMakeFiles/plussmic_loader_saver_parity_demo.dir/rule:
@@ -639,6 +639,310 @@ plussmic_bi_demo_suite: PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suit
 plussmic_bi_demo_suite/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_bi_demo_suite.dir/build
 .PHONY : plussmic_bi_demo_suite/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/rule
+
+# Convenience name for target.
+nexus_docs_verify: PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/rule
+.PHONY : nexus_docs_verify
+
+# fast build rule for target.
+nexus_docs_verify/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/build
+.PHONY : nexus_docs_verify/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/rule
+
+# Convenience name for target.
+series_docs_verify: PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/rule
+.PHONY : series_docs_verify
+
+# fast build rule for target.
+series_docs_verify/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/build
+.PHONY : series_docs_verify/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/rule
+
+# Convenience name for target.
+inplace_batch_a: PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/rule
+.PHONY : inplace_batch_a
+
+# fast build rule for target.
+inplace_batch_a/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/build
+.PHONY : inplace_batch_a/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/rule
+
+# Convenience name for target.
+inplace_batch_b: PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/rule
+.PHONY : inplace_batch_b
+
+# fast build rule for target.
+inplace_batch_b/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/build
+.PHONY : inplace_batch_b/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/rule
+
+# Convenience name for target.
+inplace_batch_c: PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/rule
+.PHONY : inplace_batch_c
+
+# fast build rule for target.
+inplace_batch_c/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/build
+.PHONY : inplace_batch_c/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/rule
+
+# Convenience name for target.
+inplace_batch_d: PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/rule
+.PHONY : inplace_batch_d
+
+# fast build rule for target.
+inplace_batch_d/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/build
+.PHONY : inplace_batch_d/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/rule
+
+# Convenience name for target.
+inplace_batch_e: PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/rule
+.PHONY : inplace_batch_e
+
+# fast build rule for target.
+inplace_batch_e/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/build
+.PHONY : inplace_batch_e/fast
+
+# Convenience name for target.
+PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/rule
+.PHONY : PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/rule
+
+# Convenience name for target.
+inplace_batch_f: PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/rule
+.PHONY : inplace_batch_f
+
+# fast build rule for target.
+inplace_batch_f/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/build
+.PHONY : inplace_batch_f/fast
+
+__/__/__/scratch/nexus_docs/nexus_docs_verify.o: __/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.o
+.PHONY : __/__/__/scratch/nexus_docs/nexus_docs_verify.o
+
+# target to build an object file
+__/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/__/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.o
+.PHONY : __/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.o
+
+__/__/__/scratch/nexus_docs/nexus_docs_verify.i: __/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.i
+.PHONY : __/__/__/scratch/nexus_docs/nexus_docs_verify.i
+
+# target to preprocess a source file
+__/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/__/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.i
+.PHONY : __/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.i
+
+__/__/__/scratch/nexus_docs/nexus_docs_verify.s: __/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.s
+.PHONY : __/__/__/scratch/nexus_docs/nexus_docs_verify.s
+
+# target to generate assembly for a file
+__/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/nexus_docs_verify.dir/__/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.s
+.PHONY : __/__/__/scratch/nexus_docs/nexus_docs_verify.cpp.s
+
+__/__/__/scratch/series_docs_gap/inplace_batch_a.o: __/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_a.o
+
+# target to build an object file
+__/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/__/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.o
+
+__/__/__/scratch/series_docs_gap/inplace_batch_a.i: __/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_a.i
+
+# target to preprocess a source file
+__/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/__/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.i
+
+__/__/__/scratch/series_docs_gap/inplace_batch_a.s: __/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_a.s
+
+# target to generate assembly for a file
+__/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_a.dir/__/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_a.cpp.s
+
+__/__/__/scratch/series_docs_gap/inplace_batch_b.o: __/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_b.o
+
+# target to build an object file
+__/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/__/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.o
+
+__/__/__/scratch/series_docs_gap/inplace_batch_b.i: __/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_b.i
+
+# target to preprocess a source file
+__/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/__/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.i
+
+__/__/__/scratch/series_docs_gap/inplace_batch_b.s: __/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_b.s
+
+# target to generate assembly for a file
+__/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_b.dir/__/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_b.cpp.s
+
+__/__/__/scratch/series_docs_gap/inplace_batch_c.o: __/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_c.o
+
+# target to build an object file
+__/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/__/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.o
+
+__/__/__/scratch/series_docs_gap/inplace_batch_c.i: __/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_c.i
+
+# target to preprocess a source file
+__/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/__/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.i
+
+__/__/__/scratch/series_docs_gap/inplace_batch_c.s: __/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_c.s
+
+# target to generate assembly for a file
+__/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_c.dir/__/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_c.cpp.s
+
+__/__/__/scratch/series_docs_gap/inplace_batch_d.o: __/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_d.o
+
+# target to build an object file
+__/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/__/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.o
+
+__/__/__/scratch/series_docs_gap/inplace_batch_d.i: __/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_d.i
+
+# target to preprocess a source file
+__/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/__/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.i
+
+__/__/__/scratch/series_docs_gap/inplace_batch_d.s: __/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_d.s
+
+# target to generate assembly for a file
+__/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_d.dir/__/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_d.cpp.s
+
+__/__/__/scratch/series_docs_gap/inplace_batch_e.o: __/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_e.o
+
+# target to build an object file
+__/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/__/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.o
+
+__/__/__/scratch/series_docs_gap/inplace_batch_e.i: __/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_e.i
+
+# target to preprocess a source file
+__/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/__/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.i
+
+__/__/__/scratch/series_docs_gap/inplace_batch_e.s: __/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_e.s
+
+# target to generate assembly for a file
+__/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_e.dir/__/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_e.cpp.s
+
+__/__/__/scratch/series_docs_gap/inplace_batch_f.o: __/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_f.o
+
+# target to build an object file
+__/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/__/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.o
+
+__/__/__/scratch/series_docs_gap/inplace_batch_f.i: __/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_f.i
+
+# target to preprocess a source file
+__/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/__/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.i
+
+__/__/__/scratch/series_docs_gap/inplace_batch_f.s: __/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_f.s
+
+# target to generate assembly for a file
+__/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/build.make PlussMic/examples/table/CMakeFiles/inplace_batch_f.dir/__/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/inplace_batch_f.cpp.s
+
+__/__/__/scratch/series_docs_gap/series_docs_verify.o: __/__/__/scratch/series_docs_gap/series_docs_verify.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/series_docs_verify.o
+
+# target to build an object file
+__/__/__/scratch/series_docs_gap/series_docs_verify.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/__/__/__/scratch/series_docs_gap/series_docs_verify.cpp.o
+.PHONY : __/__/__/scratch/series_docs_gap/series_docs_verify.cpp.o
+
+__/__/__/scratch/series_docs_gap/series_docs_verify.i: __/__/__/scratch/series_docs_gap/series_docs_verify.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/series_docs_verify.i
+
+# target to preprocess a source file
+__/__/__/scratch/series_docs_gap/series_docs_verify.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/__/__/__/scratch/series_docs_gap/series_docs_verify.cpp.i
+.PHONY : __/__/__/scratch/series_docs_gap/series_docs_verify.cpp.i
+
+__/__/__/scratch/series_docs_gap/series_docs_verify.s: __/__/__/scratch/series_docs_gap/series_docs_verify.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/series_docs_verify.s
+
+# target to generate assembly for a file
+__/__/__/scratch/series_docs_gap/series_docs_verify.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/build.make PlussMic/examples/table/CMakeFiles/series_docs_verify.dir/__/__/__/scratch/series_docs_gap/series_docs_verify.cpp.s
+.PHONY : __/__/__/scratch/series_docs_gap/series_docs_verify.cpp.s
 
 atlas_plot_demo.o: atlas_plot_demo.cpp.o
 .PHONY : atlas_plot_demo.o
@@ -976,29 +1280,29 @@ dataframe_rich_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_rich_reference_demo.dir/dataframe_rich_reference_demo.cpp.s
 .PHONY : dataframe_rich_reference_demo.cpp.s
 
-dataframe_thread_values_demo.o: dataframe_thread_values_demo.cpp.o
-.PHONY : dataframe_thread_values_demo.o
+dataframe_slate_values_demo.o: dataframe_slate_values_demo.cpp.o
+.PHONY : dataframe_slate_values_demo.o
 
 # target to build an object file
-dataframe_thread_values_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/dataframe_thread_values_demo.cpp.o
-.PHONY : dataframe_thread_values_demo.cpp.o
+dataframe_slate_values_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/dataframe_slate_values_demo.cpp.o
+.PHONY : dataframe_slate_values_demo.cpp.o
 
-dataframe_thread_values_demo.i: dataframe_thread_values_demo.cpp.i
-.PHONY : dataframe_thread_values_demo.i
+dataframe_slate_values_demo.i: dataframe_slate_values_demo.cpp.i
+.PHONY : dataframe_slate_values_demo.i
 
 # target to preprocess a source file
-dataframe_thread_values_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/dataframe_thread_values_demo.cpp.i
-.PHONY : dataframe_thread_values_demo.cpp.i
+dataframe_slate_values_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/dataframe_slate_values_demo.cpp.i
+.PHONY : dataframe_slate_values_demo.cpp.i
 
-dataframe_thread_values_demo.s: dataframe_thread_values_demo.cpp.s
-.PHONY : dataframe_thread_values_demo.s
+dataframe_slate_values_demo.s: dataframe_slate_values_demo.cpp.s
+.PHONY : dataframe_slate_values_demo.s
 
 # target to generate assembly for a file
-dataframe_thread_values_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_thread_values_demo.dir/dataframe_thread_values_demo.cpp.s
-.PHONY : dataframe_thread_values_demo.cpp.s
+dataframe_slate_values_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_dataframe_slate_values_demo.dir/dataframe_slate_values_demo.cpp.s
+.PHONY : dataframe_slate_values_demo.cpp.s
 
 dataframe_tl_batched_demo.o: dataframe_tl_batched_demo.cpp.o
 .PHONY : dataframe_tl_batched_demo.o
@@ -1264,6 +1568,78 @@ pluss_native_gap_api_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_native_gap_api_demo.dir/pluss_native_gap_api_demo.cpp.s
 .PHONY : pluss_native_gap_api_demo.cpp.s
 
+slate_a_reference_demo.o: slate_a_reference_demo.cpp.o
+.PHONY : slate_a_reference_demo.o
+
+# target to build an object file
+slate_a_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/slate_a_reference_demo.cpp.o
+.PHONY : slate_a_reference_demo.cpp.o
+
+slate_a_reference_demo.i: slate_a_reference_demo.cpp.i
+.PHONY : slate_a_reference_demo.i
+
+# target to preprocess a source file
+slate_a_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/slate_a_reference_demo.cpp.i
+.PHONY : slate_a_reference_demo.cpp.i
+
+slate_a_reference_demo.s: slate_a_reference_demo.cpp.s
+.PHONY : slate_a_reference_demo.s
+
+# target to generate assembly for a file
+slate_a_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_a_reference_demo.dir/slate_a_reference_demo.cpp.s
+.PHONY : slate_a_reference_demo.cpp.s
+
+slate_b_reference_demo.o: slate_b_reference_demo.cpp.o
+.PHONY : slate_b_reference_demo.o
+
+# target to build an object file
+slate_b_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/slate_b_reference_demo.cpp.o
+.PHONY : slate_b_reference_demo.cpp.o
+
+slate_b_reference_demo.i: slate_b_reference_demo.cpp.i
+.PHONY : slate_b_reference_demo.i
+
+# target to preprocess a source file
+slate_b_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/slate_b_reference_demo.cpp.i
+.PHONY : slate_b_reference_demo.cpp.i
+
+slate_b_reference_demo.s: slate_b_reference_demo.cpp.s
+.PHONY : slate_b_reference_demo.s
+
+# target to generate assembly for a file
+slate_b_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_b_reference_demo.dir/slate_b_reference_demo.cpp.s
+.PHONY : slate_b_reference_demo.cpp.s
+
+slate_cd_reference_demo.o: slate_cd_reference_demo.cpp.o
+.PHONY : slate_cd_reference_demo.o
+
+# target to build an object file
+slate_cd_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/slate_cd_reference_demo.cpp.o
+.PHONY : slate_cd_reference_demo.cpp.o
+
+slate_cd_reference_demo.i: slate_cd_reference_demo.cpp.i
+.PHONY : slate_cd_reference_demo.i
+
+# target to preprocess a source file
+slate_cd_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/slate_cd_reference_demo.cpp.i
+.PHONY : slate_cd_reference_demo.cpp.i
+
+slate_cd_reference_demo.s: slate_cd_reference_demo.cpp.s
+.PHONY : slate_cd_reference_demo.s
+
+# target to generate assembly for a file
+slate_cd_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_slate_cd_reference_demo.dir/slate_cd_reference_demo.cpp.s
+.PHONY : slate_cd_reference_demo.cpp.s
+
 sp500_eda_ml_prep_notebook_demo.o: sp500_eda_ml_prep_notebook_demo.cpp.o
 .PHONY : sp500_eda_ml_prep_notebook_demo.o
 
@@ -1287,78 +1663,6 @@ sp500_eda_ml_prep_notebook_demo.s: sp500_eda_ml_prep_notebook_demo.cpp.s
 sp500_eda_ml_prep_notebook_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_sp500_eda_ml_prep_notebook_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_sp500_eda_ml_prep_notebook_demo.dir/sp500_eda_ml_prep_notebook_demo.cpp.s
 .PHONY : sp500_eda_ml_prep_notebook_demo.cpp.s
-
-thread_a_reference_demo.o: thread_a_reference_demo.cpp.o
-.PHONY : thread_a_reference_demo.o
-
-# target to build an object file
-thread_a_reference_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/thread_a_reference_demo.cpp.o
-.PHONY : thread_a_reference_demo.cpp.o
-
-thread_a_reference_demo.i: thread_a_reference_demo.cpp.i
-.PHONY : thread_a_reference_demo.i
-
-# target to preprocess a source file
-thread_a_reference_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/thread_a_reference_demo.cpp.i
-.PHONY : thread_a_reference_demo.cpp.i
-
-thread_a_reference_demo.s: thread_a_reference_demo.cpp.s
-.PHONY : thread_a_reference_demo.s
-
-# target to generate assembly for a file
-thread_a_reference_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_a_reference_demo.dir/thread_a_reference_demo.cpp.s
-.PHONY : thread_a_reference_demo.cpp.s
-
-thread_b_reference_demo.o: thread_b_reference_demo.cpp.o
-.PHONY : thread_b_reference_demo.o
-
-# target to build an object file
-thread_b_reference_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/thread_b_reference_demo.cpp.o
-.PHONY : thread_b_reference_demo.cpp.o
-
-thread_b_reference_demo.i: thread_b_reference_demo.cpp.i
-.PHONY : thread_b_reference_demo.i
-
-# target to preprocess a source file
-thread_b_reference_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/thread_b_reference_demo.cpp.i
-.PHONY : thread_b_reference_demo.cpp.i
-
-thread_b_reference_demo.s: thread_b_reference_demo.cpp.s
-.PHONY : thread_b_reference_demo.s
-
-# target to generate assembly for a file
-thread_b_reference_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_b_reference_demo.dir/thread_b_reference_demo.cpp.s
-.PHONY : thread_b_reference_demo.cpp.s
-
-thread_cd_reference_demo.o: thread_cd_reference_demo.cpp.o
-.PHONY : thread_cd_reference_demo.o
-
-# target to build an object file
-thread_cd_reference_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/thread_cd_reference_demo.cpp.o
-.PHONY : thread_cd_reference_demo.cpp.o
-
-thread_cd_reference_demo.i: thread_cd_reference_demo.cpp.i
-.PHONY : thread_cd_reference_demo.i
-
-# target to preprocess a source file
-thread_cd_reference_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/thread_cd_reference_demo.cpp.i
-.PHONY : thread_cd_reference_demo.cpp.i
-
-thread_cd_reference_demo.s: thread_cd_reference_demo.cpp.s
-.PHONY : thread_cd_reference_demo.s
-
-# target to generate assembly for a file
-thread_cd_reference_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/build.make PlussMic/examples/table/CMakeFiles/plussmic_thread_cd_reference_demo.dir/thread_cd_reference_demo.cpp.s
-.PHONY : thread_cd_reference_demo.cpp.s
 
 time_series_accessor_demo.o: time_series_accessor_demo.cpp.o
 .PHONY : time_series_accessor_demo.o
@@ -1423,6 +1727,13 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... inplace_batch_a"
+	@echo "... inplace_batch_b"
+	@echo "... inplace_batch_c"
+	@echo "... inplace_batch_d"
+	@echo "... inplace_batch_e"
+	@echo "... inplace_batch_f"
+	@echo "... nexus_docs_verify"
 	@echo "... plussmic_atlas_plot_demo"
 	@echo "... plussmic_bi_demo_suite"
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
@@ -1437,7 +1748,7 @@ help:
 	@echo "... plussmic_dataframe_initial_demo"
 	@echo "... plussmic_dataframe_plot_demo"
 	@echo "... plussmic_dataframe_rich_reference_demo"
-	@echo "... plussmic_dataframe_thread_values_demo"
+	@echo "... plussmic_dataframe_slate_values_demo"
 	@echo "... plussmic_dataframe_tl_batched_demo"
 	@echo "... plussmic_dataframe_versatile_methods_demo"
 	@echo "... plussmic_dataframe_view_demo"
@@ -1449,12 +1760,37 @@ help:
 	@echo "... plussmic_loader_saver_parity_demo"
 	@echo "... plussmic_native_gap_api_demo"
 	@echo "... plussmic_option_smile_skew_surface_demo"
+	@echo "... plussmic_slate_a_reference_demo"
+	@echo "... plussmic_slate_b_reference_demo"
+	@echo "... plussmic_slate_cd_reference_demo"
 	@echo "... plussmic_sp500_eda_ml_prep_notebook_demo"
-	@echo "... plussmic_thread_a_reference_demo"
-	@echo "... plussmic_thread_b_reference_demo"
-	@echo "... plussmic_thread_cd_reference_demo"
 	@echo "... plussmic_time_series_accessor_demo"
 	@echo "... plussmic_us_accidents_eda_verbs_demo"
+	@echo "... series_docs_verify"
+	@echo "... __/__/__/scratch/nexus_docs/nexus_docs_verify.o"
+	@echo "... __/__/__/scratch/nexus_docs/nexus_docs_verify.i"
+	@echo "... __/__/__/scratch/nexus_docs/nexus_docs_verify.s"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_a.o"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_a.i"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_a.s"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_b.o"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_b.i"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_b.s"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_c.o"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_c.i"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_c.s"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_d.o"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_d.i"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_d.s"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_e.o"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_e.i"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_e.s"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_f.o"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_f.i"
+	@echo "... __/__/__/scratch/series_docs_gap/inplace_batch_f.s"
+	@echo "... __/__/__/scratch/series_docs_gap/series_docs_verify.o"
+	@echo "... __/__/__/scratch/series_docs_gap/series_docs_verify.i"
+	@echo "... __/__/__/scratch/series_docs_gap/series_docs_verify.s"
 	@echo "... atlas_plot_demo.o"
 	@echo "... atlas_plot_demo.i"
 	@echo "... atlas_plot_demo.s"
@@ -1497,9 +1833,9 @@ help:
 	@echo "... dataframe_rich_reference_demo.o"
 	@echo "... dataframe_rich_reference_demo.i"
 	@echo "... dataframe_rich_reference_demo.s"
-	@echo "... dataframe_thread_values_demo.o"
-	@echo "... dataframe_thread_values_demo.i"
-	@echo "... dataframe_thread_values_demo.s"
+	@echo "... dataframe_slate_values_demo.o"
+	@echo "... dataframe_slate_values_demo.i"
+	@echo "... dataframe_slate_values_demo.s"
 	@echo "... dataframe_tl_batched_demo.o"
 	@echo "... dataframe_tl_batched_demo.i"
 	@echo "... dataframe_tl_batched_demo.s"
@@ -1533,18 +1869,18 @@ help:
 	@echo "... pluss_native_gap_api_demo.o"
 	@echo "... pluss_native_gap_api_demo.i"
 	@echo "... pluss_native_gap_api_demo.s"
+	@echo "... slate_a_reference_demo.o"
+	@echo "... slate_a_reference_demo.i"
+	@echo "... slate_a_reference_demo.s"
+	@echo "... slate_b_reference_demo.o"
+	@echo "... slate_b_reference_demo.i"
+	@echo "... slate_b_reference_demo.s"
+	@echo "... slate_cd_reference_demo.o"
+	@echo "... slate_cd_reference_demo.i"
+	@echo "... slate_cd_reference_demo.s"
 	@echo "... sp500_eda_ml_prep_notebook_demo.o"
 	@echo "... sp500_eda_ml_prep_notebook_demo.i"
 	@echo "... sp500_eda_ml_prep_notebook_demo.s"
-	@echo "... thread_a_reference_demo.o"
-	@echo "... thread_a_reference_demo.i"
-	@echo "... thread_a_reference_demo.s"
-	@echo "... thread_b_reference_demo.o"
-	@echo "... thread_b_reference_demo.i"
-	@echo "... thread_b_reference_demo.s"
-	@echo "... thread_cd_reference_demo.o"
-	@echo "... thread_cd_reference_demo.i"
-	@echo "... thread_cd_reference_demo.s"
 	@echo "... time_series_accessor_demo.o"
 	@echo "... time_series_accessor_demo.i"
 	@echo "... time_series_accessor_demo.s"

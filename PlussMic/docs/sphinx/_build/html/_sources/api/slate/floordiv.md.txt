@@ -36,7 +36,7 @@ The divisor(s). For the `Slate` overload, must be the same length as `*this`.
 ## Returns
 
 `Slate`
-    A new thread, same length as `*this`, holding the elementwise floored quotient.
+    A new slate, same length as `*this`, holding the elementwise floored quotient.
 
 ## Examples
 
@@ -62,7 +62,7 @@ ptype: Series
 `floor(17 / 5) = floor(3.4) = 3`; `floor(26 / 5) = floor(5.2) = 5`;
 `floor(33 / 5) = floor(6.6) = 6` — how many whole groups of `5` fit into each amount.
 
-Example 2. Floor-divide two threads positionally.
+Example 2. Floor-divide two slates positionally.
 
 ```cpp
 auto divisors = Slate(pluss::make_series({4.0, 7.0, 9.0}));

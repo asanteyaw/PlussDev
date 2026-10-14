@@ -1,5 +1,6 @@
 #pragma once
 #include "pluss/export.h"
+#include <cstddef>
 #include <cstdint>
 #include <span>
 #include <vector>
@@ -10,6 +11,8 @@
 #include "MSharp/SnapPtr.h"
 
 namespace pluss::codem {
+
+inline constexpr std::size_t kMaxSeriesRank = 64;
 
 // Metadata+storage backing object (Torch-like TensorImpl).
 class CODEM_API SeriesImpl final : public pluss::msharp::RefCounted {

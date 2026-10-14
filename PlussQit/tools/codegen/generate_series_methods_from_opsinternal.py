@@ -33,12 +33,17 @@ STATIC_METHODS = {
 
 
 SERIES_DECL_RE = re.compile(
-    r"(?m)^\s*(static\s+)?(Series(?:\s*&)?(?:\s+const)?)\s+([A-Za-z_][A-Za-z0-9_]*)\s*"
+    r"(?m)^\s*(static\s+)?(Series\b(?:\s*&)?(?:\s+const)?)\s*([A-Za-z_][A-Za-z0-9_]*)\s*"
     r"\(([^)]*)\)\s*(const)?\s*;"
 )
 
+SERIES_INLINE_DEF_RE = re.compile(
+    r"(?m)^\s*(static\s+)?(Series\b(?:\s*&)?(?:\s+const)?)\s*([A-Za-z_][A-Za-z0-9_]*)\s*"
+    r"\(([^)]*)\)\s*(const)?\s*\{"
+)
+
 SERIES_DEF_RE = re.compile(
-    r"(?m)^\s*(Series(?:\s*&)?(?:\s+const)?)\s+Series::([A-Za-z_][A-Za-z0-9_]*)\s*"
+    r"(?m)^\s*(Series\b(?:\s*&)?(?:\s+const)?)\s*Series::([A-Za-z_][A-Za-z0-9_]*)\s*"
     r"\(([^)]*)\)\s*(const)?\s*\{"
 )
 
@@ -102,13 +107,22 @@ def _canonical_param_type(param: str) -> str:
     p = _strip_default(param)
     if not p:
         return ""
-    tokens = p.split()
-    if len(tokens) >= 2 and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", tokens[-1]):
-        # Drop trailing parameter name (`foo`) while preserving the full type.
-        idx = p.rfind(tokens[-1])
-        if idx > 0:
-            p = p[:idx].rstrip()
-    return " ".join(p.split())
+    # Drop a trailing parameter name whether the formatter attaches a pointer
+    # or reference token to it (`Series& rhs`, `Series &rhs`, `Series *rhs`).
+    # The retained type is normalized so harmless whitespace changes cannot
+    # make the generator redeclare an existing member.
+    named = re.match(
+        r"^(?P<type>.+?)(?P<ptr>[*&]+)?\s*(?P<name>[A-Za-z_][A-Za-z0-9_]*)$",
+        p,
+    )
+    if named and named.group("type").strip():
+        p = named.group("type").rstrip() + (named.group("ptr") or "")
+    p = " ".join(p.split())
+    return re.sub(r"\s*([*&]+)\s*", r"\1", p)
+
+
+def _canonical_type(value: str) -> str:
+    return re.sub(r"\s*([*&]+)\s*", r"\1", " ".join(value.split()))
 
 
 def _signature_key(
@@ -127,21 +141,22 @@ def _signature_key(
                 plist.append(pt)
     sp = "static " if static_prefix else ""
     cq = " const" if const_qual else ""
-    return f"{sp}{' '.join(ret.split())} {name}({','.join(plist)}){cq}"
+    return f"{sp}{_canonical_type(ret)} {name}({','.join(plist)}){cq}"
 
 
 def parse_existing_decls(series_header: Path) -> set[str]:
     text = series_header.read_text(encoding="utf-8")
     keys: set[str] = set()
-    for m in SERIES_DECL_RE.finditer(text):
-        key = _signature_key(
-            static_prefix=(m.group(1) or "").strip(),
-            ret=m.group(2),
-            name=m.group(3),
-            params=m.group(4),
-            const_qual=(m.group(5) or "").strip(),
-        )
-        keys.add(key)
+    for pattern in (SERIES_DECL_RE, SERIES_INLINE_DEF_RE):
+        for m in pattern.finditer(text):
+            key = _signature_key(
+                static_prefix=(m.group(1) or "").strip(),
+                ret=m.group(2),
+                name=m.group(3),
+                params=m.group(4),
+                const_qual=(m.group(5) or "").strip(),
+            )
+            keys.add(key)
     return keys
 
 

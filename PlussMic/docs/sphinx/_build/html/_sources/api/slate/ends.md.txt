@@ -13,11 +13,11 @@ Slate::ends(std::string_view suffix) const -> Slate
 
 ## What It Does
 
-Checks a `Note` (string) thread's cells for a literal, case-sensitive suffix match,
+Checks a `Note` (string) slate's cells for a literal, case-sensitive suffix match,
 replacing each cell with a `Bool` — `true` where the cell's text ends with
 `suffix`, `false` where it doesn't. The mirror image of [`starts()`](starts.md):
 same single-overload, no-options shape, anchored at the end instead of the
-beginning. Requires the thread to be `Note`-kind.
+beginning. Requires the slate to be `Note`-kind.
 
 ## Parameters
 
@@ -29,12 +29,12 @@ non-null cell.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`, holding the
+    A new `Bool`-typed `Series` slate, same length as `*this`, holding the
     elementwise suffix check.
 
 ## Examples
 
-Example 1. Check a filenames thread for a literal, case-sensitive suffix.
+Example 1. Check a filenames slate for a literal, case-sensitive suffix.
 
 ```cpp
 using namespace pluss::table;
@@ -82,7 +82,7 @@ happens entirely in the `lower()` step ahead of it.
 
 - Case-sensitive, literal comparison only — no regex mode. See Example 2 for the
   normalize-then-check pattern that works around this.
-- Changes the thread's payload kind from `Note` to `Series` (`Bool`).
+- Changes the slate's payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
 
 ## See Also

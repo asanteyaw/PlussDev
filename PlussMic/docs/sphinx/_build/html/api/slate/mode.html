@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns every value tied for the <strong>most frequently observed</strong> in the thread —
+<p>Returns every value tied for the <strong>most frequently observed</strong> in the slate —
 not just one. If several values are equally the most common, <code class="docutils literal notranslate"><span class="pre">mode()</span></code> returns
 all of them, in ascending order (alphabetical for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, chronological for
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), rather than picking one arbitrarily. Works on numeric
@@ -63,7 +63,7 @@ no matter how many there are — only real, observed values compete.</p></li>
 “missing” turns out to be the single most frequent “value,” a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> entry
 is included in the result (appended after every tied real-value mode).</p></li>
 </ul>
-<p>Throws if there are no values to consider at all (an empty thread, or one that
+<p>Throws if there are no values to consider at all (an empty slate, or one that
 is entirely missing while <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">true</span></code>).</p>
 </section>
 <section id="parameters">
@@ -75,7 +75,7 @@ is entirely missing while <code class="docutils literal notranslate"><span class
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread holding every value tied for most frequent, in ascending
+A new slate holding every value tied for most frequent, in ascending
 order. Length <code class="docutils literal notranslate"><span class="pre">1</span></code> if there’s a single mode, longer if there’s a tie.</p>
 </section>
 <section id="examples">
@@ -113,7 +113,7 @@ ptype: Series
 </div>
 <p>Both <code class="docutils literal notranslate"><span class="pre">10.0</span></code> and <code class="docutils literal notranslate"><span class="pre">20.0</span></code> occur twice; <code class="docutils literal notranslate"><span class="pre">30.0</span></code> occurs once and doesn’t qualify.</p>
 <p>Example 3. <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default) excludes missing entries from
-candidacy, even when they’re the single most common “value” in the thread.</p>
+candidacy, even when they’re the single most common “value” in the slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mostly_missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
@@ -148,7 +148,7 @@ ptype: Series
 </div>
 <p>Now missing (three occurrences) beats <code class="docutils literal notranslate"><span class="pre">10.0</span></code>’s two, so the sole mode is
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
-<p>Example 5. <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads work the same way, alphabetically ordered on
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slates work the same way, alphabetically ordered on
 ties.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cherry&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">mode</span><span class="p">();</span>
@@ -190,7 +190,7 @@ frequent they are.</p></li>
 <li><p>With <code class="docutils literal notranslate"><span class="pre">drop_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code>, a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> entry appears in the result (after every
 tied real-value mode) if missing is itself the single most frequent
 “value.”</p></li>
-<li><p>Throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::mode:</span> <span class="pre">no</span> <span class="pre">values&quot;</span></code> for an empty thread, or one with nothing
+<li><p>Throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::mode:</span> <span class="pre">no</span> <span class="pre">values&quot;</span></code> for an empty slate, or one with nothing
 left to consider.</p></li>
 <li><p>For a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payload, restricted to numeric dtypes — a non-numeric
 <code class="docutils literal notranslate"><span class="pre">Series</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::mode:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Slate&quot;</span></code>.</p></li>
@@ -201,7 +201,7 @@ left to consider.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::freq</span></code></span></a>: the full frequency breakdown this method’s
 “most frequent” answer is drawn from.</p></li>
-<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::describe</span></code></span></a>: for <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads, reports the
+<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::describe</span></code></span></a>: for <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slates, reports the
 single most frequent value (<code class="docutils literal notranslate"><span class="pre">top</span></code>) and its count (<code class="docutils literal notranslate"><span class="pre">freq</span></code>) — <code class="docutils literal notranslate"><span class="pre">mode()</span></code> returns
 every tied top value, <code class="docutils literal notranslate"><span class="pre">describe()</span></code> only the first alphabetically.</p></li>
 <li><p><a class="reference internal" href="median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::median</span></code></span></a>: the middle value, a different measure of

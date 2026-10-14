@@ -32,7 +32,7 @@ list.
 ## Returns
 
 `Slate`
-    A new thread, length `indices.size()`, holding the selected entries in the
+    A new slate, length `indices.size()`, holding the selected entries in the
     requested order.
 
 ## Examples

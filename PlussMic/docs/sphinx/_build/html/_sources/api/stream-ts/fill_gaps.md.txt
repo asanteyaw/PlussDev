@@ -92,7 +92,7 @@ real value. Positions `2` and `3` were never missing, so they're untouched.
   same way.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`TimeSeriesAccessor::fill_gaps`](../slate-ts/fill_gaps.md): the
-  underlying single-thread engine, with additional edge-case examples.
+  underlying single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="expanding.html">

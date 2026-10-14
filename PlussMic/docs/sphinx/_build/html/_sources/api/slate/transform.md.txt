@@ -25,11 +25,11 @@ entire slate:
   result must contain one value, and all returned values must have the same payload kind.
 - A callback taking `const Slate&` runs exactly once with the complete slate. This
   overload has the same contract as [`fold()`](fold.md), except that `transform()` defaults
-  `shape` to `ResultShape::Preserve`. A whole-thread transform is therefore expected to
+  `shape` to `ResultShape::Preserve`. A whole-slate transform is therefore expected to
   retain the input row count unless the caller explicitly requests reduction or an
   unconstrained result.
 
-```{important} The whole-thread default is Preserve, not Reduce
+```{important} The whole-slate default is Preserve, not Reduce
 `fold(slate_fn)` defaults to `ResultShape::Reduce`, but `transform(slate_fn)` defaults to
 `ResultShape::Preserve`. The implementations share the same validation kernel; only their
 public defaults differ. Write `transform(fn, ResultShape::Reduce)` when a transform should
@@ -51,15 +51,15 @@ needs no row-count constraint. Those two policies currently perform the same val
     type explicitly when both forms could be inferred through a generic lambda; it makes
     overload selection unambiguous and records the intended granularity.
 
-**shape** (`ResultShape`, default `Preserve`, whole-thread overload only)
+**shape** (`ResultShape`, default `Preserve`, whole-slate overload only)
     Validates the row count returned by the callback. `Preserve` requires the input row
     count; `Reduce` requires exactly one row; `Infer` and `Expand` accept any row count.
 
 ## Returns
 
 `Slate`
-    A newly produced thread. The value callback assembles one output lane per input lane;
-    the whole-thread callback returns its thread after the requested shape check. Neither
+    A newly produced slate. The value callback assembles one output lane per input lane;
+    the whole-slate callback returns its slate after the requested shape check. Neither
     overload mutates the receiver.
 
 ## Validation And Cost
@@ -71,7 +71,7 @@ the callback once and performs only constant-time definition and size checks aro
 callback's own work.
 
 An empty callback, an undefined callback result, a per-value result whose size is not one,
-mixed per-value payload kinds, or a whole-thread result that violates `shape` throws before
+mixed per-value payload kinds, or a whole-slate result that violates `shape` throws before
 an invalid result is returned.
 
 ## Examples
@@ -195,7 +195,7 @@ Slate::fold: Preserve requires input length
   `shape`; calling `fold(slate_fn)` directly instead supplies `Reduce`.
 - Overload selection is compile-time and depends on the callback signature, not a runtime
   mode.
-- [`Slate::flow`](flow.md) is a related whole-thread transform but is **not** one of
+- [`Slate::flow`](flow.md) is a related whole-slate transform but is **not** one of
   `transform()`'s targets. It accepts any returned size without asking the caller to state
   a shape policy.
 
@@ -203,9 +203,9 @@ Slate::fold: Preserve requires input length
 
 - [`Slate::map`](map.md): what the `SlateValue`-callback overload forwards to — row-by-row
   transformation.
-- [`Slate::fold`](fold.md): what the `Slate`-callback overload forwards to — whole-thread
+- [`Slate::fold`](fold.md): what the `Slate`-callback overload forwards to — whole-slate
   transformation with a size check.
-- [`Slate::flow`](flow.md): whole-thread transformation with no size check at all, not
+- [`Slate::flow`](flow.md): whole-slate transformation with no size check at all, not
   reachable through `transform()`.
 
 <div class="pluss-inline-prev-next">

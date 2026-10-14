@@ -298,8 +298,9 @@ void require_mps_native_dispatch_supported_(std::string_view op) {
     return;
   }
   // Explicit platform transfers remain available with fallback disabled; dtype
-  // casts without a native MPS kernel must fail loud like other data-plane ops.
-  if (op.rfind("Series::to(", 0) == 0) {
+  // casts without a native MPS kernel must fail loud like other data-plane ops,
+  // so "Series::to(dtype)" is deliberately not exempt.
+  if (op.rfind("Series::to(", 0) == 0 && op != "Series::to(dtype)") {
     return;
   }
   PLUSS_FAIL(
@@ -1025,7 +1026,13 @@ static bool same_shape_(const Series& a, const Series& b) {
 
 static Series reduce_broadcasted_sensitivity_to_like_(const Series& sens, const Series& like, const char* op) {
   if (same_shape_(sens, like)) return sens;
-  if (like.numel() == 1) return sens.sum();
+  if (like.numel() == 1) {
+    Series total = sens.sum();
+    if (!same_shape_(total, like)) {
+      total = total.reshape(std::vector<std::int64_t>(like.sizes().begin(), like.sizes().end()));
+    }
+    return total;
+  }
 
   std::vector<std::int64_t> sens_shape(sens.sizes().begin(), sens.sizes().end());
   std::vector<std::int64_t> like_shape(like.sizes().begin(), like.sizes().end());
@@ -1082,6 +1089,7 @@ static void maybe_link_binary_op_(
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = op;
   link->parents = {a, b};
+  link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
   link->parent_data_guarded = {
       (ta && lhs_rule_reads_a) || (tb && rhs_rule_reads_a),
       (ta && lhs_rule_reads_b) || (tb && rhs_rule_reads_b),
@@ -1103,13 +1111,16 @@ static void maybe_link_unary_op_(
     const Series& out,
     const Series& a,
     const char* op,
-    std::function<Series(const Series&)> rule) {
+    std::function<Series(const Series&)> rule,
+    series_tape::HigherOrderSupport higher_order_support =
+        series_tape::HigherOrderSupport::Traceable) {
   if (!series_tape::recording_enabled()) return;
   if (!series_tape::tracks_slope(a)) return;
 
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = op ? op : "unary";
   link->parents = {a};
+  link->higher_order_support = higher_order_support;
   link->propagate = [a, rule = std::move(rule)](const Series& out_sens) {
     series_tape::accumulate_sensitivity(a, rule(out_sens));
   };
@@ -1131,6 +1142,7 @@ static void maybe_link_where_op_(const Series& out, const Series& cond, const Se
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = "where";
   link->parents = {a, b};
+  link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
   link->propagate = [cond, a, b, ta, tb](const Series& out_sens) {
     const Series mask = (cond.scalar_type() == ScalarType::Bool ? cond : cond.to(ScalarType::Bool))
                             .expand(out_sens.sizes(), true);
@@ -1159,6 +1171,7 @@ static void maybe_link_transport_op_(const Series& out, const Series& input, std
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = std::move(op_name);
   link->parents = {input};
+  link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
   link->propagate = [input](const Series& out_sens) {
     Series grad = reduce_broadcasted_sensitivity_to_like_(out_sens, input, "transport");
     if (grad.scalar_type() != input.scalar_type()) grad = grad.to(input.scalar_type());
@@ -1487,12 +1500,14 @@ Series pow(const Series& a, const Series& b) {
   return out;
 }
 
+// Rank-0 constant: broadcasts against anything without changing the other
+// operand's rank (a shape-[1] constant would promote a 0-d operand to rank 1,
+// unlike libtorch where python scalars are wrapped 0-d numbers).
 static Series scalar_like_(const Series& a, double s) {
-  const std::array<std::int64_t, 1> one{{1}};
   return Series::full(
-      std::span<const std::int64_t>(one.data(), one.size()),
+      std::span<const std::int64_t>{},
       s,
-      a.scalar_type(),
+      scalar_operand_dtype(a.scalar_type(), s),
       a.platform());
 }
 
@@ -1575,10 +1590,10 @@ Series pow(const Series& a, double s) {
       (s >= static_cast<double>(std::numeric_limits<std::int64_t>::min())) &&
       (s <= static_cast<double>(std::numeric_limits<std::int64_t>::max()));
   if (base_is_int && exponent_is_integer && s >= 0.0) {
-    return pow(a, Series::full({1}, s, ScalarType::Int64).to(a.platform()));
+    return pow(a, Series::full({}, s, ScalarType::Int64).to(a.platform()));
   }
   const ScalarType scalar_dt = (a.platform() == Platform::MPS) ? ScalarType::Float32 : ScalarType::Float64;
-  return pow(a, Series::full({1}, s, scalar_dt).to(a.platform()));
+  return pow(a, Series::full({}, s, scalar_dt).to(a.platform()));
 }
 
 Series& add_(Series& a, double s) { a = add(a, s); return a; }
@@ -1789,6 +1804,7 @@ Series abs(const Series& a) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "abs";
     link->parents = {a};
+    link->higher_order_support = series_tape::HigherOrderSupport::ConstantJacobian;
     link->propagate = [a](const Series& out_sens) {
       const Series zero = scalar_like_(a, 0.0);
       const Series pos = gt(a, zero).to(a.scalar_type());
@@ -1809,6 +1825,7 @@ Series neg(const Series& a) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "neg";
     link->parents = {a};
+    link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
     link->propagate = [a](const Series& out_sens) {
       series_tape::accumulate_sensitivity(a, out_sens.neg());
     };
@@ -2199,13 +2216,19 @@ Series erfc(const Series& a) {
   return out;
 }
 // psi(x) = d/dx ln|Gamma(x)|. Backing kernel is float-only; non-CPU inputs are
-// bridged through the CPU kernel and moved back. Not itself differentiable
-// (second-order reverse through lgamma is unsupported).
+// bridged through the CPU kernel and moved back. Its reverse delegates to the
+// public polygamma operation so the backward pass remains traceable.
 Series digamma(const Series& a) {
+  Series out = pluss::series::undefined();
   if (a.platform() != Platform::CPU) {
-    return unary_op_(native::cpu::UnaryOpId::Digamma, a.to(Platform::CPU)).to(a.platform());
+    out = unary_op_(native::cpu::UnaryOpId::Digamma, a.to(Platform::CPU)).to(a.platform());
+  } else {
+    out = unary_op_(native::cpu::UnaryOpId::Digamma, a);
   }
-  return unary_op_(native::cpu::UnaryOpId::Digamma, a);
+  maybe_link_unary_op_(out, a, "digamma", [a](const Series& out_sens) {
+    return mul(out_sens, a.polygamma(1));
+  });
+  return out;
 }
 
 Series lgamma(const Series& a) {
@@ -2426,6 +2449,7 @@ Series masked_select(const Series& a, const Series& mask) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "masked_select";
     link->parents = {a};
+    link->higher_order_support = series_tape::HigherOrderSupport::ConstantJacobian;
     link->propagate = [a, mask](const Series& out_sens) {
       series_tape::NoGradGuard no_grad;
       Series grad = Series::zeros(a.sizes(), a.scalar_type()).to(a.platform());
@@ -2762,6 +2786,7 @@ Series sum(const Series& a) {
         auto link = std::make_shared<series_tape::SourceLink>();
         link->op_name = "sum";
         link->parents = {a};
+        link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
         link->propagate = [a](const Series& out_sens) {
           const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens);
           series_tape::accumulate_sensitivity(a, ga);
@@ -2783,6 +2808,7 @@ Series sum(const Series& a) {
           auto link = std::make_shared<series_tape::SourceLink>();
           link->op_name = "sum";
           link->parents = {a};
+          link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
           link->propagate = [a](const Series& out_sens) {
             const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens);
             series_tape::accumulate_sensitivity(a, ga);
@@ -2807,6 +2833,7 @@ Series sum(const Series& a) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "sum";
     link->parents = {a};
+    link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
     link->propagate = [a](const Series& out_sens) {
       const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens);
       series_tape::accumulate_sensitivity(a, ga);
@@ -2842,6 +2869,7 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
           auto link = std::make_shared<series_tape::SourceLink>();
           link->op_name = "sum(dim)";
           link->parents = {a};
+          link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
           link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
             Series shaped = out_sens;
             if (!keepdim) {
@@ -2871,6 +2899,7 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
         auto link = std::make_shared<series_tape::SourceLink>();
         link->op_name = "sum(dim)";
         link->parents = {a};
+        link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
         link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
           Series shaped = out_sens;
           if (!keepdim) {
@@ -2898,6 +2927,7 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
           auto link = std::make_shared<series_tape::SourceLink>();
           link->op_name = "sum(dim)";
           link->parents = {a};
+          link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
           link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
             Series shaped = out_sens;
             if (!keepdim) {
@@ -2928,6 +2958,7 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "sum(dim)";
     link->parents = {a};
+    link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
     link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
       Series shaped = out_sens;
       if (!keepdim) {
@@ -3073,6 +3104,7 @@ Series mean(const Series& a) {
           auto link = std::make_shared<series_tape::SourceLink>();
           link->op_name = "mean";
           link->parents = {a};
+          link->higher_order_support = series_tape::HigherOrderSupport::ConstantJacobian;
           link->propagate = [a, inv_n](const Series& out_sens) {
             const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens).mul(inv_n);
             series_tape::accumulate_sensitivity(a, ga);
@@ -3104,6 +3136,7 @@ Series mean(const Series& a) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "mean";
     link->parents = {a};
+    link->higher_order_support = series_tape::HigherOrderSupport::ConstantJacobian;
     link->propagate = [a, inv_n](const Series& out_sens) {
       const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens).mul(inv_n);
       series_tape::accumulate_sensitivity(a, ga);
@@ -3151,6 +3184,7 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
           auto link = std::make_shared<series_tape::SourceLink>();
           link->op_name = "mean(dim)";
           link->parents = {a};
+          link->higher_order_support = series_tape::HigherOrderSupport::ConstantJacobian;
           link->propagate = [a, norm_dim, keepdim, inv_n](const Series& out_sens) {
             Series shaped = out_sens;
             if (!keepdim) {
@@ -3208,6 +3242,7 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "mean(dim)";
     link->parents = {a};
+    link->higher_order_support = series_tape::HigherOrderSupport::ConstantJacobian;
     link->propagate = [a, norm_dim, keepdim, inv_n](const Series& out_sens) {
       Series shaped = out_sens;
       if (!keepdim) {
@@ -4303,6 +4338,9 @@ Series scatter(const Series& a, std::int64_t dim, const Series& index, const Ser
       auto link = std::make_shared<series_tape::SourceLink>();
       link->op_name = "scatter";
       link->parents = {a, src};
+      // With a fixed integer index, scatter is linear in both value inputs.
+      // Its reverse is expressed entirely through tracked scatter/gather ops.
+      link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
       link->propagate = [a, src, idx, dim, ta, ts](const Series& out_sens) {
         if (ta) {
           Series zeros = Series::zeros(idx.sizes(), out_sens.scalar_type()).to(out_sens.platform());
@@ -4600,6 +4638,7 @@ Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const
       auto link = std::make_shared<series_tape::SourceLink>();
       link->op_name = "scatter_add";
       link->parents = {a, src};
+      link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
       link->propagate = [a, src, idx, dim](const Series& out_sens) {
         if (series_tape::tracks_slope(a)) {
           Series ga = out_sens;
@@ -8887,6 +8926,7 @@ Series Series::unite(pluss::msharp::RangeView::Of<Series> others, std::int64_t d
       auto link = std::make_shared<series_tape::SourceLink>();
       link->op_name = "unite";
       link->parents = parents;
+      link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
       link->propagate = [parents, nd](const Series& out_sens) {
         std::int64_t offset = 0;
         for (const Series& p : parents) {
@@ -9006,10 +9046,11 @@ Series& Series::scatter_add_(std::int64_t dim, const Series& index, const Series
 }
 
 static Series scalar_to_series_(double v, ScalarType dt, Platform platform) {
-  // For now: create 1-element Series of dtype matching `dt` (or float64 fallback).
-  ScalarType use = dt;
+  // Rank-0 constant of dtype `dt`: broadcasts without changing the other
+  // operand's rank (a shape-[1] constant promoted 0-d operands to rank 1).
+  ScalarType use = scalar_operand_dtype(dt, v);
   if (use == ScalarType::Bool) use = ScalarType::Float32;
-  Series s = Series::full({1}, v, use).to(platform);
+  Series s = Series::full({}, v, use).to(platform);
   return s;
 }
 
@@ -10046,10 +10087,22 @@ std::pair<Series, Series> Series::topk_pair(
   return _compat::topk_pair(*this, k, dim, largest, sorted);
 }
 
+Series Series::beta(const Series& other) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return _compat::invoke("beta", *this, {other});
+}
+
 Series Series::betaln(const Series& other) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
   return _compat::invoke("betaln", *this, {other});
+}
+
+Series Series::zeta(const Series& other) const {
+  PLUSS_CALL_GUARD();
+  ops_internal::PlatformScope platform_scope{platform()};
+  return _compat::invoke("zeta", *this, {other});
 }
 
 std::pair<Series, Series> Series::frexp() const {

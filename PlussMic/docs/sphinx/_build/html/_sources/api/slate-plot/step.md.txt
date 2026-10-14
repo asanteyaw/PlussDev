@@ -16,8 +16,8 @@ SlatePlotAccessor::step(const Slate& x, const StepPlotOptions& options) const ->
 
 ## What It Does
 
-Identical in shape to [`line()`](line.md) — the bound thread's values drawn against an
-optional companion `x` thread, wrapped into the same one- or two-column `DataFrame` and
+Identical in shape to [`line()`](line.md) — the bound slate's values drawn against an
+optional companion `x` slate, wrapped into the same one- or two-column `DataFrame` and
 delegated to [`DataFramePlotAccessor::step`](../../api/dataframe-plot/step.md) — but each
 trace is drawn as a step function (horizontal-then-vertical jumps between points) instead
 of straight line segments. See [`line()`](line.md) for the full naming and row-label
@@ -26,8 +26,8 @@ inheritance rules shared by every method on this accessor.
 ## Parameters
 
 **x** (`const Slate&`, optional)
-    Same as [`line()`](line.md)'s `x` — a companion thread used as the x-axis, must match
-    the bound thread's size or the call throws `"Slate::plot: thread size mismatch"`.
+    Same as [`line()`](line.md)'s `x` — a companion slate used as the x-axis, must match
+    the bound slate's size or the call throws `"Slate::plot: slate size mismatch"`.
     Omitted falls back to the wrapped frame's own row labels.
 
 **options** (`StepPlotOptions`)
@@ -39,11 +39,11 @@ inheritance rules shared by every method on this accessor.
 ## Returns
 
 `pluss::pl::Studio`
-    A figure with one pane containing a single step trace of the bound thread's values.
+    A figure with one pane containing a single step trace of the bound slate's values.
 
 ## Examples
 
-Example 1. No companion thread: falls back to a plain case index.
+Example 1. No companion slate: falls back to a plain case index.
 
 ```cpp
 using namespace pluss::table;
@@ -57,7 +57,7 @@ chart.show();
 
 ![Output of Example 1](img/step-1.svg)
 
-Example 2. An explicit companion thread as the x-axis.
+Example 2. An explicit companion slate as the x-axis.
 
 ```cpp
 auto tier = Slate(pluss::make_note({"Bronze", "Silver", "Gold", "Platinum"}));
@@ -89,7 +89,7 @@ chart.show();
 
 - Shares every mechanic described on [`line()`](line.md)'s page except the step-vs-line
   trace shape.
-- A companion `x` thread must match the bound thread's size, or the call throws.
+- A companion `x` slate must match the bound slate's size, or the call throws.
 - Returns a `pluss::pl::Studio` — see [`line()`](line.md) for how to view or save the
   result.
 

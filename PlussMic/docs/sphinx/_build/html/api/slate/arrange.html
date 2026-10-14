@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,8 +49,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a new thread with every entry reordered by value — the payload kind is
-unchanged, only the order changes. The comparison key depends on what the thread
+<p>Returns a new slate with every entry reordered by value — the payload kind is
+unchanged, only the order changes. The comparison key depends on what the slate
 holds:</p>
 <ul class="simple">
 <li><p><strong>Numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code></strong>: sorted numerically. If there’s no validity mask, this is a
@@ -65,7 +65,7 @@ key (each entry’s string form), with the same null-grouping logic applied.</p>
 </ul>
 <p>In every case the sort is <strong>stable</strong> — entries that compare equal keep their
 original relative order — and <code class="docutils literal notranslate"><span class="pre">NULL</span></code> entries are grouped to one end according to
-<code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> rather than being compared to real values at all. A thread with
+<code class="docutils literal notranslate"><span class="pre">nulls_last</span></code> rather than being compared to real values at all. A slate with
 <code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code> returns unchanged immediately.</p>
 </section>
 <section id="parameters">
@@ -80,7 +80,7 @@ reverses the comparison.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread of the same kind and length, reordered.</p>
+A new slate of the same kind and length, reordered.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -155,7 +155,7 @@ ptype: Series
 ptype: Series
 </pre></div>
 </div>
-<p>Example 5. <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads sort lexicographically.</p>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slates sort lexicographically.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cherry&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">arrange</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out5</span><span class="p">;</span>
@@ -199,7 +199,7 @@ ptype: Series
 <li><p>Always stable, across every payload kind.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NULL</span></code> entries are never compared against real values — they’re grouped
 wholesale to one end per <code class="docutils literal notranslate"><span class="pre">nulls_last</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code> short-circuits to the thread unchanged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code> short-circuits to the slate unchanged.</p></li>
 <li><p>Backs both <a class="reference internal" href="top.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">top()</span></code></span></a> and <a class="reference internal" href="bottom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bottom()</span></code></span></a>, which take a prefix of
 a descending or ascending <code class="docutils literal notranslate"><span class="pre">arrange()</span></code> call respectively.</p></li>
 </ul>

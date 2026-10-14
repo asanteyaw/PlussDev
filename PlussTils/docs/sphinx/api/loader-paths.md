@@ -2,11 +2,10 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/pathing.h>
-
-struct PathPolicy { bool canonicalize_root{true}; bool auto_create_dirs{false}; bool force_replace_dirs{false}; };
-struct PathOptions { std::optional<bool> create_dirs{}; std::optional<bool> force_replace_dirs{}; };
 
 std::filesystem::path root_path();
 void set_root_path(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
@@ -23,9 +22,11 @@ PathRef absolute_path(std::filesystem::path path, PathOptions options = {});
 std::filesystem::path join_path(std::filesystem::path base, std::initializer_list<std::string_view> parts);
 ```
 
+## What It Does
+
 There is one process-wide root, set with `set_root_path` and read back with `root_path`; `reset_root_path` returns it to the auto-detected project root. `file_path` resolves a path under that root and checks that it does not climb outside it; it computes the location and does not create anything, unless `PathOptions::create_dirs` is set. `file_dir` does the same for a directory, and returns a `DirRef`, whose own `file` member resolves paths under that directory. `file_paths` and `file_path_map` resolve several paths at once, the map form keyed by a name you choose, and refuse a duplicate name. `absolute_path` resolves a path that is meant to be outside the root. `join_path` concatenates path parts without resolving or checking anything.
 
-`path_policy` reads the process-wide policy, and `set_path_policy` replaces it. `auto_create_dirs`, when set, makes `file_path` and `file_dir` create what they resolve, the same as passing `PathOptions{.create_dirs = true}` on every call.
+`path_policy` reads the process-wide policy, and `set_path_policy` replaces it. `auto_create_dirs`, when set, makes `file_path` and `file_dir` create what they resolve, the same as passing `PathOptions{.create_dirs = true}` on every call. `force_replace_dirs` only affects `file_dir`: when it and directory creation are both in effect, an existing directory at the resolved location is removed and recreated empty, instead of being left as-is; it has no effect on `file_path`, which never creates a directory outright.
 
 ## Parameters
 
@@ -36,6 +37,21 @@ There is one process-wide root, set with `set_root_path` and read back with `roo
 | `root` | The new process-wide root, for `set_root_path`. |
 | `policy` | The new process-wide policy, for `set_path_policy`. |
 | `base`, `parts` | The path and the parts to append, for `join_path`. |
+
+## `PathPolicy` Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `canonicalize_root` | Whether the root is resolved to its canonical (symlink-free) form. | `true` |
+| `auto_create_dirs` | Whether `file_path` and `file_dir` create what they resolve, unless overridden per call by `PathOptions::create_dirs`. | `false` |
+| `force_replace_dirs` | Whether `file_dir` removes and recreates an existing directory instead of leaving it, when directory creation is in effect. Unless overridden per call by `PathOptions::force_replace_dirs`. | `false` |
+
+## `PathOptions` Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `create_dirs` | Per-call override of `PathPolicy::auto_create_dirs`. | unset (falls back to the policy) |
+| `force_replace_dirs` | Per-call override of `PathPolicy::force_replace_dirs`. | unset (falls back to the policy) |
 
 ## Returns
 
@@ -349,6 +365,68 @@ escape refused: true
 ```
 
 The file resolves under the root without creating it, and the directory is created and found under the root.
+
+### Example 7
+
+Example 7 shows force_replace_dirs clearing an existing directory, and that it has no bearing on file_path.
+
+```cpp
+// force_replace_dirs removes and recreates an existing directory instead of leaving it, when
+// directory creation is in effect. It only affects file_dir; file_path never creates a directory
+// outright, so the flag has nothing to act on there.
+#include <pluss/tils/aux/pathing.h>
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+namespace fs = std::filesystem;
+namespace loader = pluss::loader;
+
+int main() {
+  std::cout << std::boolalpha;
+  const fs::path project = fs::temp_directory_path() / "pluss_guide_force_replace";
+  fs::remove_all(project);
+  fs::create_directories(project);
+  loader::set_root_path(project);
+
+  // Create the directory once, and leave a marker file inside it.
+  loader::PathOptions create{};
+  create.create_dirs = true;
+  const loader::DirRef cache = loader::file_dir("cache/features", create);
+  std::ofstream(fs::path(cache) / "marker.txt") << "first run";
+  std::cout << "marker exists before: " << fs::exists(fs::path(cache) / "marker.txt") << '\n';
+
+  // Without force_replace_dirs, resolving the same directory again leaves it as-is.
+  const loader::DirRef kept = loader::file_dir("cache/features", create);
+  std::cout << "marker survives without force_replace_dirs: "
+            << fs::exists(fs::path(kept) / "marker.txt") << '\n';
+
+  // With force_replace_dirs, the existing directory is removed and recreated empty.
+  loader::PathOptions replace{};
+  replace.create_dirs = true;
+  replace.force_replace_dirs = true;
+  const loader::DirRef replaced = loader::file_dir("cache/features", replace);
+  std::cout << "marker gone after force_replace_dirs: "
+            << !fs::exists(fs::path(replaced) / "marker.txt") << '\n';
+  std::cout << "directory still exists after replacement: " << fs::is_directory(fs::path(replaced)) << '\n';
+
+  loader::reset_root_path();
+  fs::remove_all(project);
+  return 0;
+}
+```
+
+Output
+
+```text
+marker exists before: true
+marker survives without force_replace_dirs: true
+marker gone after force_replace_dirs: true
+directory still exists after replacement: true
+```
+
+Resolving the directory again without the flag leaves the marker in place; setting it removes and recreates the directory, and the directory itself still exists afterward.
 
 ## See Also
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces the bound thread’s <em>display</em> timezone with <code class="docutils literal notranslate"><span class="pre">name</span></code> — same length,
+<p>Replaces the bound slate’s <em>display</em> timezone with <code class="docutils literal notranslate"><span class="pre">name</span></code> — same length,
 still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind. <strong>The underlying instant is unchanged</strong> —
 only the timezone used to compute local calendar fields (year/month/day/hour,
 and box-table display) shifts.</p>
@@ -63,12 +63,12 @@ recognized (case-insensitive); any other name throws.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, same length as the bound
-thread, with its display timezone switched to <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate, same length as the bound
+slate, with its display timezone switched to <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Relabel a UTC thread to <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>.</p>
+<p>Example 1. Relabel a UTC slate to <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
@@ -138,7 +138,7 @@ timezone is used to interpret it for display and field extraction (like
 <a class="reference internal" href="hour.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hour()</span></code></span></a>/<a class="reference internal" href="year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">year()</span></code></span></a>). Use <a class="reference internal" href="localize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">localize()</span></code></span></a> if
 the data is naive local wall-clock text that needs to be <em>anchored</em> to a
 real instant for the first time.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound slate to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> regardless of <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p></li>
 </ul>

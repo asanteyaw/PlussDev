@@ -16,7 +16,7 @@ Slate::radd(const Slate& other) const -> Slate
 
 The reflected form of [`add()`](add.md). For numbers, addition is commutative, so
 `radd()` and `add()` produce identical results in every observable way. The
-distinction only matters for `Note` (string) threads, where `add()` means
+distinction only matters for `Note` (string) slates, where `add()` means
 concatenation and concatenation order depends on which operand comes first —
 `radd()` reverses that order.
 
@@ -30,7 +30,7 @@ Same shape as [`add()`](add.md).
 
 `Slate`
     For numbers, identical to what `add()` would produce for the same arguments. For
-    two `Note` threads, the concatenation with the operand order reversed.
+    two `Note` slates, the concatenation with the operand order reversed.
 
 ## Examples
 
@@ -56,7 +56,7 @@ ptype: Series
 
 Same values as [`prices.add(5.0)`](add.md) — addition doesn't care about order.
 
-Example 2. For `Note` threads, `radd()` concatenates in the opposite order from
+Example 2. For `Note` slates, `radd()` concatenates in the opposite order from
 `add()`.
 
 ```cpp
@@ -89,7 +89,7 @@ text comes first instead.
 
 ## Notes
 
-- For numeric threads, `radd()` exists purely for API symmetry with the rest of the
+- For numeric slates, `radd()` exists purely for API symmetry with the rest of the
   reflected family (`rsub`, `rmul`, and so on) — there is no behavioral reason to
   prefer it over `add()`.
 - See [`add()`](add.md) for the shared mechanics every arithmetic method in this

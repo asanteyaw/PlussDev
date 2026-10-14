@@ -33,7 +33,7 @@ There are now three public ways to describe the requested fields:
   `median(...)`, `min(...)`, `max(...)`, `std(...)`, `var(...)`)
 
 The execution rules are the same either way. The fluent builder is now the preferred
-teaching surface because it removes the repetitive fully qualified helper calls from
+public surface because it removes the repetitive fully qualified helper calls from
 real feature-engineering code while still delegating to the same underlying typed pull
 engine. The lower-level typed form remains useful when you want to inject a prebuilt
 `PullSpec`, especially for windowed reducers.

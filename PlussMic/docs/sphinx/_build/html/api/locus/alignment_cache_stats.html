@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Locus::alignment_cache_stats &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Locus::join, Locus::join_detailed" href="join.html" />
+    <link rel="prev" title="Locus::nexus" href="nexus.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locus-alignment-cache-stats">
+<h1>Locus::alignment_cache_stats<a class="headerlink" href="#locus-alignment-cache-stats" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_api_reference.html"><span class="doc std std-doc">Back to Locus API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Locus</span><span class="o">::</span><span class="n">alignment_cache_stats</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reports <code class="docutils literal notranslate"><span class="pre">(hits,</span> <span class="pre">misses)</span></code> of the <em>per-catalog</em> alignment cache behind
+<a class="reference internal" href="nexus.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nexus()</span></code></span></a>. A catalog is tabelized once per <code class="docutils literal notranslate"><span class="pre">TabelizePolicy</span></code> and
+the aligned result is cached, keyed by the catalog’s own data fingerprint
+plus the policy – not by which <code class="docutils literal notranslate"><span class="pre">Locus</span></code> asked for it, and not by the
+catalog’s position or name. That cache is shared across every <code class="docutils literal notranslate"><span class="pre">Locus</span></code>
+derived from a common ancestor (<code class="docutils literal notranslate"><span class="pre">with_</span></code>, <code class="docutils literal notranslate"><span class="pre">link_</span></code>, and the rest), so a
+catalog aligned once by one <code class="docutils literal notranslate"><span class="pre">Locus</span></code> is reused by another that happens to
+hold the identical data under the same policy, even if that catalog arrived
+through a different-looking derivation.</p>
+<p>This counts per-catalog alignments, <strong>not</strong> <code class="docutils literal notranslate"><span class="pre">nexus()</span></code> calls: a second
+<code class="docutils literal notranslate"><span class="pre">nexus()</span></code> call on the <em>same</em> <code class="docutils literal notranslate"><span class="pre">Locus</span></code> with the <em>same</em> policy is answered
+directly from that <code class="docutils literal notranslate"><span class="pre">Locus</span></code>’s own cached <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> (see <a class="reference internal" href="nexus.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nexus</span></code></span></a>)
+and never reaches the per-catalog cache at all, so it changes neither <code class="docutils literal notranslate"><span class="pre">hits</span></code>
+nor <code class="docutils literal notranslate"><span class="pre">misses</span></code>. A hit only appears when a <em>different</em>, derived <code class="docutils literal notranslate"><span class="pre">Locus</span></code> calls
+<code class="docutils literal notranslate"><span class="pre">nexus()</span></code> for the first time and finds that some of its catalogs were
+already aligned by an ancestor it shares data with.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>None.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">{hits,</span> <span class="pre">misses}</span></code>, both <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, as of the moment of the call.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A fresh <code class="docutils literal notranslate"><span class="pre">Locus</span></code>’s first <code class="docutils literal notranslate"><span class="pre">nexus()</span></code> call is all misses – one per
+catalog. A second call on the <em>same</em> <code class="docutils literal notranslate"><span class="pre">Locus</span></code> changes nothing, since it’s
+answered from that <code class="docutils literal notranslate"><span class="pre">Locus</span></code>’s own cached <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> before the per-catalog cache
+is ever consulted.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_linked_shop</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">before</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">alignment_cache_stats</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;before any nexus(): hits=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">before</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; misses=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">before</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">base</span><span class="p">.</span><span class="n">nexus</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">after_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">alignment_cache_stats</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after 1st nexus(): hits=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_first</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; misses=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_first</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">base</span><span class="p">.</span><span class="n">nexus</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">after_second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">alignment_cache_stats</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after 2nd nexus() on the SAME Locus: hits=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_second</span><span class="p">.</span><span class="n">first</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; misses=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_second</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>before any nexus(): hits=0 misses=0
+after 1st nexus(): hits=0 misses=3
+after 2nd nexus() on the SAME Locus: hits=0 misses=3
+</pre></div>
+</div>
+<p>Three catalogs (<code class="docutils literal notranslate"><span class="pre">customers</span></code>, <code class="docutils literal notranslate"><span class="pre">orders</span></code>, <code class="docutils literal notranslate"><span class="pre">items</span></code>), three misses on the first
+alignment. The second call doesn’t add three more misses – it adds
+nothing, because it never reaches the per-catalog cache.</p>
+<p>Example 2. A <em>derived</em> <code class="docutils literal notranslate"><span class="pre">Locus</span></code> that shares data with <code class="docutils literal notranslate"><span class="pre">base</span></code> gets hits on
+its own first <code class="docutils literal notranslate"><span class="pre">nexus()</span></code> call – even for a catalog <code class="docutils literal notranslate"><span class="pre">with_</span></code> just “replaced”
+with the identical data it already held.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">derived</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span>
+<span class="n">derived</span><span class="p">.</span><span class="n">with_</span><span class="p">(</span><span class="s">&quot;items&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">catalog</span><span class="p">(</span><span class="s">&quot;items&quot;</span><span class="p">));</span>
+<span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">derived</span><span class="p">.</span><span class="n">nexus</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">after_derived</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">derived</span><span class="p">.</span><span class="n">alignment_cache_stats</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after a derived Locus&#39;s nexus(): hits=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_derived</span><span class="p">.</span><span class="n">first</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; misses=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_derived</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>after a derived Locus&#39;s nexus(): hits=3 misses=3
+</pre></div>
+</div>
+<p>All three of <code class="docutils literal notranslate"><span class="pre">derived</span></code>’s catalogs hit the cache – not just the two
+(<code class="docutils literal notranslate"><span class="pre">customers</span></code>, <code class="docutils literal notranslate"><span class="pre">orders</span></code>) that were never touched, but also <code class="docutils literal notranslate"><span class="pre">items</span></code>, because
+<code class="docutils literal notranslate"><span class="pre">with_(&quot;items&quot;,</span> <span class="pre">base.catalog(&quot;items&quot;))</span></code> replaced it with data that
+fingerprints identically to what was already cached. The cache keys on data,
+not on which <code class="docutils literal notranslate"><span class="pre">Locus</span></code> or which call produced it.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="nexus.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nexus</span></code></span></a>: the whole-<code class="docutils literal notranslate"><span class="pre">Nexus</span></code>-level cache this sits underneath,
+and the one a repeated call on the same <code class="docutils literal notranslate"><span class="pre">Locus</span></code> actually hits.</p></li>
+<li><p><a class="reference internal" href="policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">policy</span></code></span></a>: part of the cache key alongside each catalog’s own
+data.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_api_reference.html">Locus API Reference</a><ul>
+      <li>Previous: <a href="nexus.html" title="previous chapter">Locus::nexus</a></li>
+      <li>Next: <a href="join.html" title="next chapter">Locus::join, Locus::join_detailed</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus/alignment_cache_stats.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

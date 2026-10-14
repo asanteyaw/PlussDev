@@ -13,14 +13,14 @@ Slate::matmul(const Slate& other) const -> SlateValue
 
 ## What It Does
 
-Computes the dot product of two numeric threads — `sum(this[i] * other[i])` over every
+Computes the dot product of two numeric slates — `sum(this[i] * other[i])` over every
 row — and returns it wrapped in a `SlateValue` rather than a full `Slate`. Both operands
-must be numeric `Series`-kind threads; every other payload kind is rejected.
+must be numeric `Series`-kind slates; every other payload kind is rejected.
 
 ```{important} matmul() tolerates no NULL values at all, including ones introduced by alignment
 Unlike most arithmetic on `Slate` (which quietly skips or propagates `NULL` rows),
 `matmul()` refuses to run if *either* operand has any `NULL` at all — whether those `NULL`s
-were already present, or introduced because the two threads don't line up one-to-one (for
+were already present, or introduced because the two slates don't line up one-to-one (for
 example, mismatched lengths with no shared case labels to align by). Either situation
 produces the same throw. See Examples 3 and 4.
 ```
@@ -28,9 +28,9 @@ produces the same throw. See Examples 3 and 4.
 ## Parameters
 
 **other** (`const Slate&`)
-    The right-hand numeric thread to dot with `*this`. Must be numeric `Series`-kind, with
+    The right-hand numeric slate to dot with `*this`. Must be numeric `Series`-kind, with
     no `NULL` values, and must line up one-to-one with `*this` (matching length, or
-    matching case labels if both threads carry them).
+    matching case labels if both slates carry them).
 
 ## Returns
 
@@ -40,7 +40,7 @@ produces the same throw. See Examples 3 and 4.
 
 ## Examples
 
-Example 1. Dot product of two equal-length numeric threads — read the scalar out with
+Example 1. Dot product of two equal-length numeric slates — read the scalar out with
 `.to_dbl()`.
 
 ```cpp
@@ -80,7 +80,7 @@ pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, cont
 data=[1400]
 ```
 
-Example 3. Calling `matmul()` on a non-numeric thread throws.
+Example 3. Calling `matmul()` on a non-numeric slate throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -99,7 +99,7 @@ Slate::matmul: expected a real numeric Series Slate
 ```
 
 Example 4. Mismatched lengths (with no shared case labels to align by) also throw — the
-message is the same `NULL`-rejection message as an explicit `NULL`, since the two threads
+message is the same `NULL`-rejection message as an explicit `NULL`, since the two slates
 can't be lined up one-to-one without introducing a gap.
 
 ```cpp

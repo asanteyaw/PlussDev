@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusPull::specs &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="LocusPull::std" href="std.html" />
+    <link rel="prev" title="LocusPull::root" href="root.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locuspull-specs">
+<h1>LocusPull::specs<a class="headerlink" href="#locuspull-specs" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_pull_api_reference.html"><span class="doc std std-doc">Back to LocusPull API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LocusPull</span><span class="o">::</span><span class="n">specs</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PullSpec</span><span class="o">&gt;&amp;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Exposes the plan’s stored <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code> list, in the order they were added, for
+inspection – it does not validate or execute anything. The reference stays
+live as the plan grows, so a reference taken early reflects every spec added
+afterward too, rather than a snapshot of what existed when <code class="docutils literal notranslate"><span class="pre">specs()</span></code> was
+called. Every builder spelling – <code class="docutils literal notranslate"><span class="pre">take()</span></code>, <code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">add()</span></code>, scoped
+<a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">agg()</span></code></span></a> calls – ends up appending to this same list, so <code class="docutils literal notranslate"><span class="pre">specs()</span></code>
+is a uniform way to inspect a plan regardless of which methods built it.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>None.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p>A reference to the stored spec vector.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">specs()</span></code> is empty on a freshly built plan, and reflects every
+field added, including scoped <code class="docutils literal notranslate"><span class="pre">agg()</span></code> and raw <code class="docutils literal notranslate"><span class="pre">add()</span></code> calls.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">spec_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;empty specs=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spec_plan</span><span class="p">.</span><span class="n">specs</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">spec_plan</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">).</span><span class="n">sum</span><span class="p">(</span><span class="s">&quot;events.spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spent&quot;</span><span class="p">);</span>
+<span class="n">print_specs</span><span class="p">(</span><span class="n">spec_plan</span><span class="p">.</span><span class="n">specs</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>empty specs=0
+specs=2
+source=id op=take alias=&lt;default&gt;
+source=events.spend op=sum alias=spent
+</pre></div>
+</div>
+<p>Example 2. The reference stays live: a reference taken before more fields
+are added reflects them afterward too.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">inspected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">);</span>
+<span class="n">inspected</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">inspected</span><span class="p">.</span><span class="n">specs</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;before=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spec_view</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">inspected</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spec_view</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>before=1
+after=2
+</pre></div>
+</div>
+<p>Example 3. Every builder spelling – <code class="docutils literal notranslate"><span class="pre">take()</span></code>, <code class="docutils literal notranslate"><span class="pre">add()</span></code>, and a scoped <code class="docutils literal notranslate"><span class="pre">agg()</span></code>
+call – appends to the same list.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">);</span>
+<span class="n">mixed_plan</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>
+<span class="n">mixed_plan</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">nx</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer&quot;</span><span class="p">));</span>
+<span class="n">mixed_plan</span><span class="p">.</span><span class="n">agg</span><span class="p">(</span><span class="s">&quot;events&quot;</span><span class="p">).</span><span class="n">sum</span><span class="p">(</span><span class="s">&quot;spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spent&quot;</span><span class="p">).</span><span class="n">count</span><span class="p">(</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;events&quot;</span><span class="p">).</span><span class="n">end</span><span class="p">();</span>
+<span class="n">print_specs</span><span class="p">(</span><span class="n">mixed_plan</span><span class="p">.</span><span class="n">specs</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>specs=4
+source=id op=take alias=&lt;default&gt;
+source=name op=take alias=customer
+source=events.spend op=sum alias=spent
+source=events.event_id op=count alias=events
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add</span></code></span></a>: where every spec in this list is actually appended.</p></li>
+<li><p><a class="reference internal" href="root.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">root</span></code></span></a>: the other read-only planning accessor.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_pull_api_reference.html">LocusPull API Reference</a><ul>
+      <li>Previous: <a href="root.html" title="previous chapter">LocusPull::root</a></li>
+      <li>Next: <a href="std.html" title="next chapter">LocusPull::std</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus-pull/specs.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -150,7 +150,7 @@ Name: count, ptype: Series
 ## See Also
 
 - [`DataFrame::tally`](tally.md)
-- [`Slate::freq`](../thread/freq.md)
+- [`Slate::freq`](../slate/freq.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fold.html">

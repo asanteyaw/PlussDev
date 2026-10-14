@@ -13,15 +13,15 @@ Slate::ts() const -> TimeSeriesAccessor
 
 ## What It Does
 
-Enters the dedicated time-series-*numerics* accessor for this thread — period-over-
+Enters the dedicated time-series-*numerics* accessor for this slate — period-over-
 period returns, differencing, lag/lead, rolling and expanding windows, exponentially-
 weighted statistics, gap filling, resampling, and axis-aligned arithmetic, one method
 per operation. Unlike [`tl()`](tl.md) (which requires `Timeline`/`TimeIndex` payloads),
-`ts()` requires the thread to already be a numeric `Series` — cast it first with
+`ts()` requires the slate to already be a numeric `Series` — cast it first with
 [`astype()`](astype.md)/[`cast()`](cast.md) if it isn't.
 
 Unlike [`DataFrame::ts()`](../dataframe/ts.md), this overload takes no options — there's
-no `group`/`anchor` concept for a single thread outside a frame, and duration-based
+no `group`/`anchor` concept for a single slate outside a frame, and duration-based
 methods that need an explicit time axis (like the duration overload of `rolling()`)
 simply take that axis as a direct argument instead.
 
@@ -38,13 +38,13 @@ left sidebar to jump straight to any method (`lag`, `diff`, `rolling`, `expandin
 ## Returns
 
 `TimeSeriesAccessor`
-    A lightweight accessor bound to this (numeric) thread. Every method on it returns a
+    A lightweight accessor bound to this (numeric) slate. Every method on it returns a
     new `Slate` (or a `TimeSeriesResample`/`DataFrame` for the block/resample methods);
-    the source thread is never mutated.
+    the source slate is never mutated.
 
 ## Examples
 
-Example 1. Compute a lag and a period-over-period difference on a numeric thread.
+Example 1. Compute a lag and a period-over-period difference on a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -89,7 +89,7 @@ ptype: Series
 `15 - 20 = -5`, position `3` is `30 - 15 = 15`; position `0` has no prior position to
 subtract, so it's `NULL`.
 
-Example 2. `ts()` on a non-numeric thread throws before the accessor's methods can run.
+Example 2. `ts()` on a non-numeric slate throws before the accessor's methods can run.
 
 ```cpp
 auto words = Slate(pluss::make_note({"a", "b"}));
@@ -107,13 +107,13 @@ TimeSeriesAccessor::lag: source must be Series
 ```
 
 The check happens lazily, on the first method call against the accessor — `ts()`
-itself never throws, since it just binds the thread without inspecting it.
+itself never throws, since it just binds the slate without inspecting it.
 
 ## Notes
 
-- The source thread must already be a numeric `Series`; every accessor method throws
+- The source slate must already be a numeric `Series`; every accessor method throws
   otherwise (`ts()` itself doesn't validate eagerly).
-- `.lag(periods)` on a numeric thread behaves identically to [`shift(periods)`](shift.md)
+- `.lag(periods)` on a numeric slate behaves identically to [`shift(periods)`](shift.md)
   — both introduce `NULL` at the vacated end.
 - No `options`/`TsOptions` parameter here, unlike [`DataFrame::ts()`](../dataframe/ts.md)
   — duration-aware methods take their time axis directly as an argument instead.

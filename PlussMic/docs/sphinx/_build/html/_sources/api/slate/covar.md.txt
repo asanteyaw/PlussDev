@@ -13,10 +13,10 @@ Slate::covar(const Slate& other, const StatisticOptions& options = {}) const -> 
 
 ## What It Does
 
-Computes the covariance between this thread and `other`, as a scalar
+Computes the covariance between this slate and `other`, as a scalar
 `SlateValue` — the unnormalized counterpart to [`corr()`](corr.md) (`corr()`
 is covariance divided by the product of the two standard deviations). Both
-threads must be numeric `Series`. If either thread carries explicit case
+slates must be numeric `Series`. If either slate carries explicit case
 labels, the two are aligned by matching label first — see
 [`corr()`'s important callout](corr.md) on how much this can change the
 result. `ddof` (in `options`) controls the divisor, exactly like
@@ -27,13 +27,13 @@ is marked *invalid* rather than thrown — see
 [`Slate::sum`'s note](sum.md) on checking the scalar validity mask rather than
 trusting the printed number in that case.
 
-Unlike `corr()`, this method requires both threads to already share the same
+Unlike `corr()`, this method requires both slates to already share the same
 platform (CPU/CUDA/MPS) — there's no automatic host-side conversion here.
 
 ## Parameters
 
 **other** (`const Slate&`)
-    The numeric `Series` thread to compute covariance with.
+    The numeric `Series` slate to compute covariance with.
 
 **options** (`StatisticOptions`, default `{}`)
     `ddof` (default `1`): the divisor is `n - ddof` over the valid pairs.
@@ -48,7 +48,7 @@ platform (CPU/CUDA/MPS) — there's no automatic host-side conversion here.
 
 ## Examples
 
-Example 1. Sample covariance (the default) between two related threads.
+Example 1. Sample covariance (the default) between two related slates.
 
 ```cpp
 using namespace pluss::table;
@@ -96,13 +96,13 @@ false
 
 ## Notes
 
-- If either thread carries explicit case labels, pairing is by matching
+- If either slate carries explicit case labels, pairing is by matching
   label — see [`corr()`'s callout](corr.md).
 - `ddof = 1` (the default) gives the sample covariance; `ddof = 0` gives the
   population covariance.
 - Below `min_count` valid pairs, the result is marked invalid rather than
   thrown.
-- Both threads must already share the same platform, or it throws
+- Both slates must already share the same platform, or it throws
   `"Slate::covar: operands must share a platform"` — unlike `corr()`, this
   method doesn't convert to a common host representation first.
 - Restricted to numeric `Series` payloads; anything else throws
@@ -113,7 +113,7 @@ false
 - [`Slate::corr`](corr.md): the normalized counterpart — a value in `[-1,
   1]` instead of covariance's unbounded scale.
 - [`Slate::var`](var.md): the special case of `covar()` with `other` equal to
-  the thread itself.
+  the slate itself.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="count.html">

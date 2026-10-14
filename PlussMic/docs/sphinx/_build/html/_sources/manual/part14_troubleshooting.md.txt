@@ -84,7 +84,7 @@ For missing values, the expected `fillnull` contract is:
 
 - existing non-null values remain unchanged;
 - null values in selected features are replaced;
-- the validity mask is cleared when all null values in the filled thread are
+- the validity mask is cleared when all null values in the filled slate are
   resolved.
 
 When writing production code around missing values, keep a small regression

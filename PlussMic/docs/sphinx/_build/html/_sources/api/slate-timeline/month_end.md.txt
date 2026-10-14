@@ -12,7 +12,7 @@ SlateTimelineAccessor::month_end() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with a boolean `Series` flagging whether each row
+Replaces the bound slate with a boolean `Series` flagging whether each row
 falls on the last day of its month.
 
 ## Parameters
@@ -22,7 +22,7 @@ falls on the last day of its month.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread:
+    A new `Bool`-typed `Series` slate, same length as the bound slate:
     `true` when the row's day-of-month is its month's last valid day, `false`
     otherwise.
 
@@ -61,9 +61,9 @@ day in this leap year — both flag `true`.
   leap), but a February 28th in a non-leap year would also flag `true`.
 - Only checks the date portion — the time-of-day (if any) doesn't affect the
   result.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`, not `false`.
 
 ## See Also

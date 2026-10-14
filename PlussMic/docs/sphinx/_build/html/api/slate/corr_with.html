@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 <p>Computes the same correlation <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a> does, but returns it as a
 scalar <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> gated by <code class="docutils literal notranslate"><span class="pre">min_count</span></code> instead of a raw <code class="docutils literal notranslate"><span class="pre">double</span></code> — below
 <code class="docutils literal notranslate"><span class="pre">min_count</span></code> valid pairs, the result is marked <em>invalid</em> rather than returning
-<code class="docutils literal notranslate"><span class="pre">NaN</span></code> as a plain, unflagged value. Both threads must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>; case
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> as a plain, unflagged value. Both slates must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>; case
 labels align the pairing exactly as they do for <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -70,7 +70,7 @@ result. You never need to separately guard against a <code class="docutils liter
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
-The numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread to correlate with.</p>
+The numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate to correlate with.</p>
 <p><strong>method</strong> (<code class="docutils literal notranslate"><span class="pre">SlateCorrMethod</span></code>, default <code class="docutils literal notranslate"><span class="pre">Pearson</span></code>)
 <code class="docutils literal notranslate"><span class="pre">Pearson</span></code>, <code class="docutils literal notranslate"><span class="pre">Spearman</span></code>, or <code class="docutils literal notranslate"><span class="pre">KendallTau</span></code> — same semantics as
 <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a>.</p>
@@ -150,7 +150,7 @@ caught too, not just the Pearson path.</p>
 <li><p>See the important callout above: validity covers both the <code class="docutils literal notranslate"><span class="pre">min_count</span></code> gate
 and whether the underlying correlation itself came out finite, across all
 three methods.</p></li>
-<li><p>Both threads must already share the same platform, or it throws
+<li><p>Both slates must already share the same platform, or it throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Slate::corr_with:</span> <span class="pre">operands</span> <span class="pre">must</span> <span class="pre">share</span> <span class="pre">a</span> <span class="pre">platform&quot;</span></code>.</p></li>
 <li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Slate::corr_with:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Slate&quot;</span></code>.</p></li>

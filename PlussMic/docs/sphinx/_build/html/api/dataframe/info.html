@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -147,7 +147,7 @@ Memory         | 316.00 B
 <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>, and row 2 is missing <code class="docutils literal notranslate"><span class="pre">discount</span></code> — you can already tell that before
 inspecting a single value directly, because the feature inventory shows <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> and
 <code class="docutils literal notranslate"><span class="pre">discount</span></code> each sitting at <code class="docutils literal notranslate"><span class="pre">5</span></code> non-null cases against <code class="docutils literal notranslate"><span class="pre">6</span></code> total.</p>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">PTypes</span></code> reports <strong>logical</strong> thread kinds, not numeric precision — <code class="docutils literal notranslate"><span class="pre">order_id</span></code>,
+<p>Note that <code class="docutils literal notranslate"><span class="pre">PTypes</span></code> reports <strong>logical</strong> slate kinds, not numeric precision — <code class="docutils literal notranslate"><span class="pre">order_id</span></code>,
 <code class="docutils literal notranslate"><span class="pre">units</span></code>, <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>, and <code class="docutils literal notranslate"><span class="pre">discount</span></code> are all <code class="docutils literal notranslate"><span class="pre">Series</span></code>, whether they hold <code class="docutils literal notranslate"><span class="pre">int64</span></code> or
 <code class="docutils literal notranslate"><span class="pre">double</span></code> underneath. If you need the concrete scalar dtype per feature (<code class="docutils literal notranslate"><span class="pre">int64</span></code>,
 <code class="docutils literal notranslate"><span class="pre">float64</span></code>, and so on), use <a class="reference internal" href="dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code></span></a> instead; <code class="docutils literal notranslate"><span class="pre">info()</span></code> intentionally keeps
@@ -167,12 +167,12 @@ the <code class="docutils literal notranslate"><span class="pre">PType</span></c
 rough memory estimate — a structural summary, not a value-level one. Two design choices
 worth knowing up front:</p>
 <ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">PType</span></code> column reports the <strong>logical</strong> Pluss thread kind — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
+<li><p>The <code class="docutils literal notranslate"><span class="pre">PType</span></code> column reports the <strong>logical</strong> Pluss slate kind — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — rather than a concrete scalar dtype, because a single
 <code class="docutils literal notranslate"><span class="pre">Series</span></code> column can already carry any numeric scalar type underneath. Pair <code class="docutils literal notranslate"><span class="pre">info()</span></code>
 with <a class="reference internal" href="dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code></span></a> when you need the concrete per-column scalar type.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Case</span> <span class="pre">Range</span></code> reports the frame’s case axis span, but the case axis is not always a
-plain integer range — it can be a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> label thread, in
+plain integer range — it can be a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> label slate, in
 which case <code class="docutils literal notranslate"><span class="pre">Case</span> <span class="pre">Range</span></code> shows the first and last case <em>values</em> rather than positions.</p></li>
 </ul>
 </section>

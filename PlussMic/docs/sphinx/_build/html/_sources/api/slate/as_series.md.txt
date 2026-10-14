@@ -16,8 +16,8 @@ Slate::as_series() const -> const pluss::Series&
 Exposes the underlying `pluss::Series` payload directly, by reference — the numeric escape
 hatch for when you need the full `Series` surface (native reductions, elementwise
 arithmetic, kernels that live below the table layer) rather than the curated subset
-`Slate` re-exposes as its own methods. Requires the thread to be `Series`-kind; calling it
-on a `Note`/`Timeline`/`TimeIndex` thread throws.
+`Slate` re-exposes as its own methods. Requires the slate to be `Series`-kind; calling it
+on a `Note`/`Timeline`/`TimeIndex` slate throws.
 
 ```{important} Returns a reference, not a copy — and does not rewrap into Slate
 `as_series()` hands back `const pluss::Series&`, not a `Slate`. It does no rewrapping and
@@ -59,7 +59,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Calling `as_series()` on a non-`Series` thread throws.
+Example 2. Calling `as_series()` on a non-`Series` slate throws.
 
 ```cpp
 auto names = Slate(pluss::make_note({"Ada", "Bola"}));
@@ -78,7 +78,7 @@ Slate: payload is not Series
 
 ## Notes
 
-- Returns a reference into the thread's own storage — no copy, no allocation.
+- Returns a reference into the slate's own storage — no copy, no allocation.
 - Requires `Series`-kind; throws on every other payload kind.
 - The result does not automatically become a `Slate` again — wrap it explicitly with
   `Slate(...)` when a `Slate`-only API needs it back.

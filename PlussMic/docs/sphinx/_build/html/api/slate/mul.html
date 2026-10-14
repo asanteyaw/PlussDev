@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Elementwise multiplication, following <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s shared mechanics. <code class="docutils literal notranslate"><span class="pre">mul()</span></code>
 has its own payload special case, parallel to <code class="docutils literal notranslate"><span class="pre">add()</span></code>’s <code class="docutils literal notranslate"><span class="pre">Note</span></code>-concatenation
-exception: multiplying a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread by a non-negative integral scalar
+exception: multiplying a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate by a non-negative integral scalar
 <strong>repeats</strong> each string that many times — <code class="docutils literal notranslate"><span class="pre">&quot;ab&quot;.mul(3.0)</span></code> behaves like Python’s
 <code class="docutils literal notranslate"><span class="pre">&quot;ab&quot;</span> <span class="pre">*</span> <span class="pre">3</span></code>, giving <code class="docutils literal notranslate"><span class="pre">&quot;ababab&quot;</span></code>. This only works for the scalar overload; there is no
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-times-<code class="docutils literal notranslate"><span class="pre">Note</span></code> multiplication.</p>
@@ -60,13 +60,13 @@ exception: multiplying a <code class="docutils literal notranslate"><span class=
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)</p>
-<p>The value(s) to multiply by. For a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread, <code class="docutils literal notranslate"><span class="pre">double</span></code> must be a non-negative
+<p>The value(s) to multiply by. For a <code class="docutils literal notranslate"><span class="pre">Note</span></code> slate, <code class="docutils literal notranslate"><span class="pre">double</span></code> must be a non-negative
 integral value (<code class="docutils literal notranslate"><span class="pre">3.0</span></code>, not <code class="docutils literal notranslate"><span class="pre">3.5</span></code>).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread holding the elementwise product — or, for a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread multiplied
+A new slate holding the elementwise product — or, for a <code class="docutils literal notranslate"><span class="pre">Note</span></code> slate multiplied
 by a scalar, each string repeated that many times.</p>
 </section>
 <section id="examples">
@@ -88,7 +88,7 @@ by a scalar, each string repeated that many times.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Multiply two threads positionally.</p>
+<p>Example 2. Multiply two slates positionally.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">boost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">boost</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
@@ -103,7 +103,7 @@ ptype: Series
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. A <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread multiplied by a scalar repeats each string.</p>
+<p>Example 3. A <code class="docutils literal notranslate"><span class="pre">Note</span></code> slate multiplied by a scalar repeats each string.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;ab&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;xy&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_repeat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">3.0</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_repeat</span><span class="p">;</span>
@@ -129,8 +129,8 @@ a non-integral or negative scalar (like <code class="docutils literal notranslat
 <ul class="simple">
 <li><p>See <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> for the family-wide mechanics: positional matching, the
 length-mismatch throw, and how display labels carry through.</p></li>
-<li><p>Note repetition only exists on the scalar overload — there is no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-thread
-equivalent of <code class="docutils literal notranslate"><span class="pre">mul(const</span> <span class="pre">Slate&amp;)</span></code>; multiplying two <code class="docutils literal notranslate"><span class="pre">Note</span></code> threads throws.</p></li>
+<li><p>Note repetition only exists on the scalar overload — there is no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-slate
+equivalent of <code class="docutils literal notranslate"><span class="pre">mul(const</span> <span class="pre">Slate&amp;)</span></code>; multiplying two <code class="docutils literal notranslate"><span class="pre">Note</span></code> slates throws.</p></li>
 <li><p><a class="reference internal" href="rmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rmul()</span></code></span></a> produces identical results to <code class="docutils literal notranslate"><span class="pre">mul()</span></code> in every case, including
 <code class="docutils literal notranslate"><span class="pre">Note</span></code> repetition — multiplication is commutative for numbers, and the repetition
 special case doesn’t check operand order at all.</p></li>

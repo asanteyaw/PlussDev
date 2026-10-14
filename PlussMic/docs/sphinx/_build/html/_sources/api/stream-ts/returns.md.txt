@@ -112,7 +112,7 @@ subsp::stats::ts::returns: periods cannot be zero
 - [`CatalogTimeSeriesAccessor::returns`](../catalog-ts/returns.md): the
   whole-catalog equivalent.
 - [`TimeSeriesAccessor::returns`](../slate-ts/returns.md): the underlying
-  single-thread engine, with additional edge-case examples.
+  single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="log_returns.html">

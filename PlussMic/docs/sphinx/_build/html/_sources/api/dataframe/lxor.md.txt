@@ -25,7 +25,7 @@ operands *disagree* — a useful "exactly one of these flags is set" check.
 **other**
 
 `const DataFrame&` (same feature names in order, same case count, matched
-positionally) or `const Slate&` (one boolean thread applied identically to every
+positionally) or `const Slate&` (one boolean slate applied identically to every
 feature). See [`land()`](land.md) for the full breakdown.
 
 ## Returns
@@ -77,8 +77,8 @@ feature.
 
 ```cpp
 auto mask = Slate(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
-auto out_thread = left.lxor(mask);
-std::cout << out_thread;
+auto out_slate = left.lxor(mask);
+std::cout << out_slate;
 ```
 
 ### Output

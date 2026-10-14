@@ -1,6 +1,6 @@
 # Data Workflows
 
-This guide teaches the day-to-day `DataFrame`, `Slate`, and `Atlas` workflow.
+This guide covers the day-to-day `DataFrame`, `Slate`, and `Atlas` workflow.
 It is usage-first: load data, inspect it, select columns, filter rows, derive
 features, aggregate, plot, and save results.
 

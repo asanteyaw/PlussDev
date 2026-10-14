@@ -12,13 +12,13 @@ TimeSeriesAccessor::log_returns(std::int64_t periods = 1) const -> Slate
 
 ## What It Does
 
-Computes the logarithmic period-over-period change of the bound thread:
+Computes the logarithmic period-over-period change of the bound slate:
 `out[i] = ln(x[i] / base[i])`, where `base` is `x` shifted by `periods` (a lag when
 `periods > 0`, a lead when `periods < 0`). A position is `NULL` wherever `x[i]` or
 `base[i]` is missing or non-finite, **or either value is not strictly positive** —
 unlike [`returns()`](returns.md), a zero or negative value anywhere in the
 comparison always yields `NULL`, since the logarithm would otherwise be undefined.
-Restricted to a numeric `Series` thread; anything else throws.
+Restricted to a numeric `Series` slate; anything else throws.
 
 ## Parameters
 
@@ -30,12 +30,12 @@ Restricted to a numeric `Series` thread; anything else throws.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, holding the period-over-period
+    A new slate, same length as the bound source, holding the period-over-period
     log return.
 
 ## Examples
 
-Example 1. Compute the one-period log return of a numeric thread.
+Example 1. Compute the one-period log return of a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -96,7 +96,7 @@ ptype: Series
 requires **both** sides to be strictly positive; since every comparison here
 involves the negative `-5`, all three positions come back `NULL`.
 
-Example 3. A pre-existing missing entry in the source thread propagates into
+Example 3. A pre-existing missing entry in the source slate propagates into
 every log return that touches it.
 
 ```cpp
@@ -154,11 +154,11 @@ output.
   returns equals the multi-period log return), which plain fractional
   [`returns()`](returns.md) are not — a common reason to prefer this method for
   compounding analysis.
-- A pre-existing missing entry in the source thread is honored — it produces
+- A pre-existing missing entry in the source slate is honored — it produces
   `NULL` in every log return that would otherwise reference it. See Example 3.
 - `periods` must not be `0`, or it throws
   `"subsp::stats::ts::log_returns: periods cannot be zero"`.
-- Restricted to numeric `Series` payloads; a `Note`/`Timeline`/`TimeIndex` thread
+- Restricted to numeric `Series` payloads; a `Note`/`Timeline`/`TimeIndex` slate
   throws `"TimeSeriesAccessor::log_returns: source must be Series"`; a
   non-numeric `Series` throws
   `"TimeSeriesAccessor::log_returns: source Series must be numeric"`.

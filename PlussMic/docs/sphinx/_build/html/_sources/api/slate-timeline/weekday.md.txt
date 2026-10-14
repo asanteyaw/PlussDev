@@ -12,7 +12,7 @@ SlateTimelineAccessor::weekday() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with its day-of-week, as a numeric `Series`.
+Replaces the bound slate with its day-of-week, as a numeric `Series`.
 Encoding is `0 = Monday` through `6 = Sunday`.
 
 ## Parameters
@@ -22,7 +22,7 @@ Encoding is `0 = Monday` through `6 = Sunday`.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread,
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
     holding each row's day-of-week (`0`-`6`, Monday-first).
 
 ## Examples
@@ -58,9 +58,9 @@ ptype: Series
 
 - The encoding is Monday `0` through Sunday `6` — **not** the C/Python
   `tm_wday`-style Sunday-first convention some other libraries use.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`.
 
 ## See Also

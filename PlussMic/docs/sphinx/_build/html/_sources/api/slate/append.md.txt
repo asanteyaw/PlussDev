@@ -13,27 +13,27 @@ Slate::append(const Slate& other) const -> Slate
 
 ## What It Does
 
-Concatenates `other` onto the end of `*this`, returning a new, longer thread. This
+Concatenates `other` onto the end of `*this`, returning a new, longer slate. This
 is a strict operation: `*this` and `other` must have the same [`kind()`](kind.md),
-and for `Series`-kind threads, the same concrete scalar dtype and platform too —
-`append()` never coerces or promotes types to make two mismatched threads fit
+and for `Series`-kind slates, the same concrete scalar dtype and platform too —
+`append()` never coerces or promotes types to make two mismatched slates fit
 together.
 
 ## Parameters
 
 **other** (`const Slate&`)
-    The thread to append. Must match `*this` exactly in payload kind (and, for
+    The slate to append. Must match `*this` exactly in payload kind (and, for
     `Series`, scalar dtype and platform).
 
 ## Returns
 
 `Slate`
-    A new thread, length `this->size() + other.size()`, holding `*this`'s entries
+    A new slate, length `this->size() + other.size()`, holding `*this`'s entries
     followed by `other`'s.
 
 ## Examples
 
-Example 1. Append two compatible `Series`-kind threads.
+Example 1. Append two compatible `Series`-kind slates.
 
 ```cpp
 using namespace pluss::table;
@@ -55,7 +55,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Appending threads of different payload kinds throws.
+Example 2. Appending slates of different payload kinds throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -76,13 +76,13 @@ Slate::append: payload kinds must match
 
 - Requires identical `kind()` between `*this` and `other`; throws
   `"Slate::append: payload kinds must match"` otherwise.
-- For `Series`-kind threads, also requires identical concrete scalar dtype
+- For `Series`-kind slates, also requires identical concrete scalar dtype
   (`"Slate::append: Series dtypes must match"`) and platform
   (`"Slate::append: Series platforms must match"`).
 - Validity masks combine correctly even when only one side has one — a side with
   no explicit mask is treated as fully valid.
-- Also requires both threads to agree on whether they carry case labels at all
-  (`"Slate::append: both Threads must either have case labels or both be
+- Also requires both slates to agree on whether they carry case labels at all
+  (`"Slate::append: both Slates must either have case labels or both be
   unlabeled"`); if both do, the labels are appended too.
 
 ## See Also
@@ -90,7 +90,7 @@ Slate::append: payload kinds must match
 - [`Slate::take`](take.md): combine with `append()` for more elaborate
   reassembly.
 - [`Slate::cast`](cast.md) / [`Slate::astype`](astype.md): convert dtype first
-  if two `Series`-kind threads have mismatched scalar types.
+  if two `Series`-kind slates have mismatched scalar types.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="any.html">

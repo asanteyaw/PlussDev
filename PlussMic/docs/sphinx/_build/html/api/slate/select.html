@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -69,8 +69,8 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p><strong>A <code class="docutils literal notranslate"><span class="pre">static</span></code> factory method, not an instance method</strong> — you call it as <code class="docutils literal notranslate"><span class="pre">Slate::select(...)</span></code>,
-not <code class="docutils literal notranslate"><span class="pre">thread.select(...)</span></code>. It’s the numpy-<code class="docutils literal notranslate"><span class="pre">select</span></code>-style construct: given a parallel list of
-boolean <code class="docutils literal notranslate"><span class="pre">conditions</span></code> and value <code class="docutils literal notranslate"><span class="pre">choices</span></code>, it builds a new thread where row <code class="docutils literal notranslate"><span class="pre">i</span></code> takes the
+not <code class="docutils literal notranslate"><span class="pre">slate.select(...)</span></code>. It’s the numpy-<code class="docutils literal notranslate"><span class="pre">select</span></code>-style construct: given a parallel list of
+boolean <code class="docutils literal notranslate"><span class="pre">conditions</span></code> and value <code class="docutils literal notranslate"><span class="pre">choices</span></code>, it builds a new slate where row <code class="docutils literal notranslate"><span class="pre">i</span></code> takes the
 value from the <strong>first</strong> <code class="docutils literal notranslate"><span class="pre">choices[k]</span></code> whose <code class="docutils literal notranslate"><span class="pre">conditions[k]</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> at row <code class="docutils literal notranslate"><span class="pre">i</span></code> — falling
 back to <code class="docutils literal notranslate"><span class="pre">default_value</span></code> if no condition matches that row at all. Conditions are evaluated
 in order, and the first match wins even if a later condition would also match.</p>
@@ -82,7 +82,7 @@ behavior is identical either way.</p>
 <p>All choices and the default must share one payload kind
 <code class="docutils literal notranslate"><span class="pre">choices[0]</span></code>’s payload kind becomes the required kind for every other choice <em>and</em> for
 <code class="docutils literal notranslate"><span class="pre">default_value</span></code> — mixing, say, a <code class="docutils literal notranslate"><span class="pre">Series</span></code> choice with a <code class="docutils literal notranslate"><span class="pre">Note</span></code> default throws. Each
-<code class="docutils literal notranslate"><span class="pre">condition</span></code> must itself be a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-backed <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype thread (the direct output of
+<code class="docutils literal notranslate"><span class="pre">condition</span></code> must itself be a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-backed <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype slate (the direct output of
 <a class="reference internal" href="compare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">compare()</span></code></span></a>/<a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>/etc.), and every condition must share the same
 length. Each <code class="docutils literal notranslate"><span class="pre">choice</span></code> (and <code class="docutils literal notranslate"><span class="pre">default_value</span></code>) may be either scalar-like (one value,
 broadcasting to every selected row) or exactly that same length.</p>
@@ -106,7 +106,7 @@ payload kind (or be <code class="docutils literal notranslate"><span class="pre"
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, one row per condition’s length, built by picking each row’s value from
+A new slate, one row per condition’s length, built by picking each row’s value from
 the first matching condition’s corresponding choice (or <code class="docutils literal notranslate"><span class="pre">default_value</span></code>).</p>
 </section>
 <section id="examples">
@@ -189,7 +189,7 @@ instance.</p></li>
 <li><p>Evaluation order matters: the <strong>first</strong> <code class="docutils literal notranslate"><span class="pre">true</span></code> condition at each row wins, even if a
 later condition also matches that row.</p></li>
 <li><p>Every <code class="docutils literal notranslate"><span class="pre">choice</span></code> and the <code class="docutils literal notranslate"><span class="pre">default_value</span></code> must agree on payload kind; every <code class="docutils literal notranslate"><span class="pre">condition</span></code> must
-be a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype <code class="docutils literal notranslate"><span class="pre">Series</span></code>-backed thread of matching length. See the important callout
+be a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype <code class="docutils literal notranslate"><span class="pre">Series</span></code>-backed slate of matching length. See the important callout
 above.</p></li>
 <li><p><a class="reference internal" href="put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::put</span></code></span></a> is the single-condition specialization of this same construct —
 <code class="docutils literal notranslate"><span class="pre">put(mask,</span> <span class="pre">value)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">Slate::select({mask},</span> <span class="pre">{value},</span> <span class="pre">*this)</span></code>.</p></li>

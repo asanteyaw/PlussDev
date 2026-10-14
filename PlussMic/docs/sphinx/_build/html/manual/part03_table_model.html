@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -52,17 +52,17 @@ relate. Understanding these types makes the rest of PlussMic predictable.</p>
 <span class="p">}));</span>
 </pre></div>
 </div>
-<p>Inspect a thread:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kr">thread</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
-<span class="kr">thread</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">();</span>
-<span class="kr">thread</span><span class="p">.</span><span class="n">dtype</span><span class="p">();</span>
-<span class="kr">thread</span><span class="p">.</span><span class="n">info</span><span class="p">();</span>
+<p>Inspect a slate:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">slate</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
+<span class="n">slate</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="n">slate</span><span class="p">.</span><span class="n">kind</span><span class="p">();</span>
+<span class="n">slate</span><span class="p">.</span><span class="n">dtype</span><span class="p">();</span>
+<span class="n">slate</span><span class="p">.</span><span class="n">info</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Access the payload only after you know the kind:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateKind</span><span class="o">::</span><span class="n">Series</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">as_series</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">slate</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateKind</span><span class="o">::</span><span class="n">Series</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slate</span><span class="p">.</span><span class="n">as_series</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -71,13 +71,13 @@ relate. Understanding these types makes the rest of PlussMic predictable.</p>
 <h2>Missingness and validity<a class="headerlink" href="#missingness-and-validity" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code> can carry a validity mask. Loader-created columns use this to represent
 missing values from input files.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">present</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">complete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slate</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">present</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slate</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">filled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slate</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">complete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slate</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>Numeric threads also support <code class="docutils literal notranslate"><span class="pre">isnan</span></code> and <code class="docutils literal notranslate"><span class="pre">isfinite</span></code>.</p>
+<p>Numeric slates also support <code class="docutils literal notranslate"><span class="pre">isnan</span></code> and <code class="docutils literal notranslate"><span class="pre">isfinite</span></code>.</p>
 </section>
 <section id="dataframe">
 <h2>DataFrame<a class="headerlink" href="#dataframe" title="Link to this heading">¶</a></h2>

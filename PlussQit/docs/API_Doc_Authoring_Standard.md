@@ -6,7 +6,7 @@ This is the standing quality bar for handwritten PlussQit API references. It
 applies to free functions, instance methods, static methods, operators, and
 accessor methods.
 
-## Prose Must Teach The Complete Contract
+## Prose Must Explain The Complete Contract
 
 A page is not complete when it merely paraphrases the function name. Its prose
 must give a reader enough understanding to choose the operation correctly and
@@ -69,7 +69,7 @@ examples collectively cover the public contract.
 For datetime semantics, consult the current official `pandas.Timestamp` and
 datetime-array documentation and source as an external correctness reference.
 Use it to check replacement, offsets, timezone transitions, precision,
-comparisons, and absent-instant behavior. The public PlussQit prose should teach
+comparisons, and absent-instant behavior. The public PlussQit prose should explain
 PlussQit directly rather than advertise or compare external APIs.
 
 An external reference is evidence, not an excuse to copy names that do not fit
@@ -93,7 +93,7 @@ If you find an (or what appears to be an) implementation bug or even a heavily n
   for explaining an option contract; reserve construction syntax for runnable
   examples that configure an actual call.
 - Keep one canonical page and sidebar entry per public operation.
-- Avoid duplicate aliases and compatibility spellings in the teaching surface.
+- Avoid duplicate aliases and compatibility spellings in the public surface.
 - Give each accessor or factory family its own landing page and per-operation
   pages.
 - Order operation pages A-Z in the landing toctree, browser sidebar, and

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the number of elements (rows) in the thread — the one dimension a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>
+<p>Returns the number of elements (rows) in the slate — the one dimension a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>
 has, regardless of payload kind. This is the same count <a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shape()</span></code></span></a> reports
 as its first element and <a class="reference internal" href="ncases.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ncases()</span></code></span></a> returns under a different name.</p>
 </section>
@@ -60,11 +60,11 @@ as its first element and <a class="reference internal" href="ncases.html"><span 
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-The element count. <code class="docutils literal notranslate"><span class="pre">0</span></code> for an empty (but still defined) thread.</p>
+The element count. <code class="docutils literal notranslate"><span class="pre">0</span></code> for an empty (but still defined) slate.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. A thread’s size is independent of payload kind.</p>
+<p>Example 1. A slate’s size is independent of payload kind.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -99,7 +99,7 @@ non-null count.</p>
 <ul class="simple">
 <li><p>Counts every element, valid or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — see <a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">count()</span></code></span></a> for a
 non-null-only count.</p></li>
-<li><p>Calling <code class="docutils literal notranslate"><span class="pre">size()</span></code> on an undefined thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> — see
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">size()</span></code> on an undefined slate throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> — see
 <a class="reference internal" href="defined.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">defined()</span></code></span></a>.</p></li>
 </ul>
 </section>
@@ -107,7 +107,7 @@ non-null-only count.</p></li>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="ncases.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::ncases</span></code></span></a>: the same count, under DataFrame-consistent naming.</p></li>
-<li><p><a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shape</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">{size(),</span> <span class="pre">1}</span></code> — the thread’s shape as a pair.</p></li>
+<li><p><a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shape</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">{size(),</span> <span class="pre">1}</span></code> — the slate’s shape as a pair.</p></li>
 <li><p><a class="reference internal" href="count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::count</span></code></span></a>: the non-null element count.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

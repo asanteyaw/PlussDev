@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns whether <strong>every</strong> entry in a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread is <code class="docutils literal notranslate"><span class="pre">true</span></code> — the
+<p>Returns whether <strong>every</strong> entry in a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate is <code class="docutils literal notranslate"><span class="pre">true</span></code> — the
 scalar universal-truth counterpart to <a class="reference internal" href="any.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">any()</span></code></span></a>. Restricted to <code class="docutils literal notranslate"><span class="pre">Bool</span></code>
 <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; any other kind or dtype throws. With a validity mask
 present, missing entries are excluded from consideration entirely (their
@@ -62,14 +62,14 @@ the <code class="docutils literal notranslate"><span class="pre">SlateValue</spa
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>skipnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
-Must stay <code class="docutils literal notranslate"><span class="pre">true</span></code> when the thread has a validity mask — missing entries are
+Must stay <code class="docutils literal notranslate"><span class="pre">true</span></code> when the slate has a validity mask — missing entries are
 always excluded from the reduction when a mask is present. <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span>&#160;&#160;&#160;&#160; <span class="pre">false</span></code> together with a validity mask throws.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>
 A scalar <code class="docutils literal notranslate"><span class="pre">Bool</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> only if every observed entry is <code class="docutils literal notranslate"><span class="pre">true</span></code> (an empty or
-entirely-missing thread reports <code class="docutils literal notranslate"><span class="pre">true</span></code> — vacuously, there’s no observed
+entirely-missing slate reports <code class="docutils literal notranslate"><span class="pre">true</span></code> — vacuously, there’s no observed
 <code class="docutils literal notranslate"><span class="pre">false</span></code> to disprove it).</p>
 </section>
 <section id="examples">
@@ -142,7 +142,7 @@ throws.</p>
 <ul class="simple">
 <li><p>Missing entries are always excluded from consideration when a validity mask
 is present — their raw stored value never contributes.</p></li>
-<li><p>An empty or entirely-missing thread reports <code class="docutils literal notranslate"><span class="pre">true</span></code> (vacuous truth), not
+<li><p>An empty or entirely-missing slate reports <code class="docutils literal notranslate"><span class="pre">true</span></code> (vacuous truth), not
 <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code> with a validity mask throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::all(skipnull=false)</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">supported</span> <span class="pre">for</span> <span class="pre">nullable</span> <span class="pre">Bool</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
 <li><p>Restricted to <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>; a non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> kind throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::all</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>, and a non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> throws

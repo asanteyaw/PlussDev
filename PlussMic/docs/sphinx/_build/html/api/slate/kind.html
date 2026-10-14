@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the <code class="docutils literal notranslate"><span class="pre">SlateKind</span></code> enum value identifying which payload family a thread
+<p>Returns the <code class="docutils literal notranslate"><span class="pre">SlateKind</span></code> enum value identifying which payload family a slate
 currently stores: <code class="docutils literal notranslate"><span class="pre">Series</span></code> (numeric/bool), <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text), <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or
 <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>. This is the typed enum form; <a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptype()</span></code></span></a> returns the same
 information as a human-readable string (<code class="docutils literal notranslate"><span class="pre">&quot;Series&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Note&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Timeline&quot;</span></code>,
@@ -111,7 +111,7 @@ method raises.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Calling <code class="docutils literal notranslate"><span class="pre">kind()</span></code> on an undefined thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">kind()</span></code> on an undefined slate throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
 <li><p>Every method restricted to one payload family checks <code class="docutils literal notranslate"><span class="pre">kind()</span></code> first and throws a
 method-specific message when it doesn’t match.</p></li>
 </ul>

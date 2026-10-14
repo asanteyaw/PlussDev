@@ -55,8 +55,8 @@ PlussMic represents time in three common ways:
 | `TimeIndex` | A timeline with index semantics. Use it when alignment and as-of operations matter. |
 | Numeric `Series` | A numeric value stream measured over time, such as close price, volume, demand, or latency. |
 
-Time-series value transforms require numeric `Series` threads. Time-axis
-methods require a `Timeline` or `TimeIndex` thread.
+Time-series value transforms require numeric `Series` slates. Time-axis
+methods require a `Timeline` or `TimeIndex` slate.
 
 This split is deliberate. A price column and a timestamp column have different
 semantics even though both can be represented internally as arrays.
@@ -122,7 +122,7 @@ auto close = df.features("close");
 auto r = close.ts().returns(1);
 ```
 
-The source thread must be defined, must be `SlateKind::Series`, and must be
+The source slate must be defined, must be `SlateKind::Series`, and must be
 numeric. If you call `ts()` on a `Note`, `Timeline`, or non-numeric payload, the
 operation throws when you call the accessor method.
 

@@ -12,7 +12,7 @@ SlateTimelineAccessor::fmt(std::string_view pattern) const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with a custom text representation built from
+Replaces the bound slate with a custom text representation built from
 `pattern`, as a `Note` `Series`.
 
 ## Parameters
@@ -30,7 +30,7 @@ Cannot be empty.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, holding each
+    A new `Note`-kind slate, same length as the bound slate, holding each
     row's text rendered per `pattern`.
 
 ## Examples
@@ -105,9 +105,9 @@ Slate::tl().fmt: pattern cannot be empty
   digits are needed.
 - `%z` always renders as a signed `HH:MM` offset (e.g. `"+00:00"`), never the
   bare `"Z"` suffix some ISO-8601 tooling uses for UTC.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`, regardless of `pattern`.
 
 ## See Also

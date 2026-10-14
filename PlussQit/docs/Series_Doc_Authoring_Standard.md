@@ -19,7 +19,7 @@ arbitrary minimum.
 - Public-facing names are `Series`, `Note`, and `Timeline`.
 - Do not surface internal coded names like `coden`, `codem`, or `codeh` in the
   prose unless a private/internal implementation note is absolutely unavoidable.
-- Do not teach through comparisons to other public libraries or APIs.
+- Do not explain through comparisons to other public libraries or APIs.
 - Do not mention names like `torch`, `numpy`, or similar external surfaces in
   these public docs.
 - Prefer public aliases over internal type spellings in signatures and
@@ -31,7 +31,7 @@ arbitrary minimum.
 
 ## Prose Standard
 
-- Write with the goal of teaching the reader how to use `Series` in real
+- Write with the goal of showing the reader how to use `Series` in real
   projects, not just documenting that a method exists.
 - Explain each parameter, including every toggle and overload branch.
 - State what each toggle changes:
@@ -43,7 +43,7 @@ arbitrary minimum.
   comparison vs reduction,
   value-returning vs index-returning,
   global vs axis-wise behavior.
-- Prefer richer prose that teaches the mental model behind the method, not just
+- Prefer richer prose that explains the mental model behind the method, not just
   a terse definition.
 - Add explicit "Gotchas And Failure Modes" sections where useful.
 - Add a short "Summary" section on load-bearing methods.
@@ -79,7 +79,7 @@ arbitrary minimum.
 - If a parameter accepts range-like input, prefer ordinary brace usage or plain
   containers in the example instead of explicitly constructing internal
   `RangeView`/`msharp` wrappers.
-- Avoid teaching low-level internal construction patterns that would encourage
+- Avoid presenting low-level internal construction patterns that would encourage
   users to program against internals.
 
 ## Verification Discipline
@@ -115,7 +115,7 @@ Not every page needs every section, but this is the default standard.
 
 ## Tone
 
-- Clear, direct, and teacherly.
+- Clear, direct, and instructive.
 - Richer than terse reference prose, but still precise.
 - No fluff.
 - No internal-engineering leakage unless the behavior cannot be explained

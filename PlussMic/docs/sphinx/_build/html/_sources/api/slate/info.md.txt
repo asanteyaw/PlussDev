@@ -18,7 +18,7 @@ Writes the same metadata summary [`info_string()`](info_string.md) builds — na
 kind, dtype, row count, valid/null breakdown — straight to a stream, with a trailing
 newline appended. `info()` (no arguments) writes to `std::cout`; `info(os)` writes to
 whatever stream you provide. Both are pure conveniences over
-`os << thread.info_string() << '\n'`.
+`os << slate.info_string() << '\n'`.
 
 ## Parameters
 
@@ -81,17 +81,17 @@ Null Cases: 0
 ## Notes
 
 - Both overloads are a thin convenience over
-  [`info_string()`](info_string.md): `os << thread.info_string() << '\n'`.
+  [`info_string()`](info_string.md): `os << slate.info_string() << '\n'`.
 - Unlike [`info_string()`](info_string.md)'s returned string, the stream output *does* end
   with a trailing newline.
-- Metadata only — like `info_string()`, this never renders the thread's actual row values.
+- Metadata only — like `info_string()`, this never renders the slate's actual row values.
   Use [`show()`](show.md) for that.
 
 ## See Also
 
 - [`Slate::info_string`](info_string.md): the same summary, returned as a `std::string`
   instead of written to a stream — see that page for the exact field-by-field format.
-- [`Slate::show`](show.md): render the thread's actual row values to a stream, rather than
+- [`Slate::show`](show.md): render the slate's actual row values to a stream, rather than
   metadata.
 
 <div class="pluss-inline-prev-next">

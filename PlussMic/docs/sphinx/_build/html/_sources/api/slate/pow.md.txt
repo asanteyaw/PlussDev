@@ -29,7 +29,7 @@ The exponent(s). For the `Slate` overload, must be the same length as `*this`.
 ## Returns
 
 `Slate`
-    A new `Float64` thread, same length as `*this`, holding the elementwise power.
+    A new `Float64` slate, same length as `*this`, holding the elementwise power.
 
 ## Examples
 
@@ -80,7 +80,7 @@ ptype: Series
   `Slate` overload's internal check, distinct from the generic
   `"positional operation requires identical lengths"` message the rest of the family
   uses).
-- No `Note`-payload special case — `pow()` requires numeric threads only.
+- No `Note`-payload special case — `pow()` requires numeric slates only.
 
 ## See Also
 

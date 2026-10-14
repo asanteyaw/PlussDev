@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.28)
+project(PlussMic_examples_bundle NONE)
+
+add_executable(plussmic_locus_query_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/locus_query_reference_demo.cpp
+)
+target_link_libraries(plussmic_locus_query_reference_demo PRIVATE PlussMic)
+set_target_properties(plussmic_locus_query_reference_demo PROPERTIES CXX_STANDARD 20)
+
+add_executable(plussmic_locus_traverse_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/locus_traverse_reference_demo.cpp
+)
+target_link_libraries(plussmic_locus_traverse_reference_demo PRIVATE PlussMic)
+set_target_properties(plussmic_locus_traverse_reference_demo PROPERTIES CXX_STANDARD 20)
+
+add_executable(plussmic_locus_pull_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/locus_pull_reference_demo.cpp
+)
+target_link_libraries(plussmic_locus_pull_reference_demo PRIVATE PlussMic)
+set_target_properties(plussmic_locus_pull_reference_demo PROPERTIES CXX_STANDARD 20)

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,8 +52,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Draws one point per row at <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">value)</span></code>, where <code class="docutils literal notranslate"><span class="pre">value</span></code> is the bound thread, optionally
-split into separate, distinctly colored/labeled point groups by a companion <code class="docutils literal notranslate"><span class="pre">hue</span></code> thread.
+<p>Draws one point per row at <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">value)</span></code>, where <code class="docutils literal notranslate"><span class="pre">value</span></code> is the bound slate, optionally
+split into separate, distinctly colored/labeled point groups by a companion <code class="docutils literal notranslate"><span class="pre">hue</span></code> slate.
 The single-series specialization of
 <a class="reference internal" href="../dataframe-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::scatter</span></code></span></a>.</p>
 <p>Unlike every other method on this accessor, <code class="docutils literal notranslate"><span class="pre">scatter()</span></code> has <strong>no zero-argument overload</strong>
@@ -69,7 +69,7 @@ exact same fallback-naming pattern.</p>
 <p>hue must be Note-, Timeline-, or TimeIndex-kind, same as the 2D accessor
 Because <code class="docutils literal notranslate"><span class="pre">scatter()</span></code> always delegates to
 <a class="reference internal" href="../dataframe-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::scatter</span></code></span></a>’s explicit
-<code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> argument (never through <code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code>), a <code class="docutils literal notranslate"><span class="pre">hue</span></code> thread that resolves
+<code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> argument (never through <code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code>), a <code class="docutils literal notranslate"><span class="pre">hue</span></code> slate that resolves
 to a plain numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot().scatter:</span> <span class="pre">hue</span> <span class="pre">feature</span> <span class="pre">'hue'</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">note-like</span> <span class="pre">or</span> <span class="pre">time-like&quot;</span></code> — see that page’s important callout for the full rule. If you want
 to color by a numeric value, bucket or cast it to text first.</p>
 </div>
@@ -77,10 +77,10 @@ to color by a numeric value, bucket or cast it to text first.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, required)
-The companion thread for the horizontal axis. Must match the bound thread’s size, or
-the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p>
+The companion slate for the horizontal axis. Must match the bound slate’s size, or
+the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p>
 <p><strong>hue</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, optional)
-Optional companion thread splitting points into separate colored/labeled groups. Must
+Optional companion slate splitting points into separate colored/labeled groups. Must
 be Note-, Timeline-, or TimeIndex-kind — see the important callout above.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions</span></code>)
 The identical struct documented on
@@ -110,7 +110,7 @@ distinct hue value when <code class="docutils literal notranslate"><span class="
 </div>
 <p>Every row becomes one point at <code class="docutils literal notranslate"><span class="pre">(midterm,</span> <span class="pre">final)</span></code>; no legend is shown since there’s no hue.</p>
 <p><img alt="Output of Example 1" src="../../_images/scatter-14.svg" /></p>
-<p>Example 2. With a categorical hue thread.</p>
+<p>Example 2. With a categorical hue slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cohort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Morning&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Evening&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Morning&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Evening&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Morning&quot;</span><span class="p">}));</span>
 <span class="n">cohort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cohort</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;cohort&quot;</span><span class="p">);</span>
 
@@ -150,7 +150,7 @@ Examples 4–5.</p>
 </pre></div>
 </div>
 <p><img alt="Output of Example 4" src="../../_images/scatter-43.svg" /></p>
-<p>Example 5. <code class="docutils literal notranslate"><span class="pre">fit_line</span> <span class="pre">=</span> <span class="pre">true</span></code> together with a <code class="docutils literal notranslate"><span class="pre">hue</span></code> thread: one fit line per hue group,
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">fit_line</span> <span class="pre">=</span> <span class="pre">true</span></code> together with a <code class="docutils literal notranslate"><span class="pre">hue</span></code> slate: one fit line per hue group,
 color-matched to its own group’s points.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ScatterPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">fit_line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
@@ -166,7 +166,7 @@ color-matched to its own group’s points.</p>
 For fit shapes beyond a polynomial least-squares fit (robust regression, LOWESS, a
 bootstrap confidence interval), <code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions</span></code> has no field for it — reach for
 <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s <code class="docutils literal notranslate"><span class="pre">pluss::pl::flash::regplot(pane,</span> <span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">options)</span></code> directly on a pane you create
-yourself, passing each thread’s values as a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> (via <code class="docutils literal notranslate"><span class="pre">thread.value()</span></code>, assigned
+yourself, passing each slate’s values as a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> (via <code class="docutils literal notranslate"><span class="pre">slate.value()</span></code>, assigned
 to an explicit <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> variable rather than <code class="docutils literal notranslate"><span class="pre">auto</span></code> — see Example 6).</p>
 </div>
 <p>Example 6. Reaching past <code class="docutils literal notranslate"><span class="pre">fit_line</span></code> for <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s <code class="docutils literal notranslate"><span class="pre">flash::regplot</span></code> directly.</p>
@@ -195,8 +195,8 @@ the full <code class="docutils literal notranslate"><span class="pre">RegPlotOpt
 <ul class="simple">
 <li><p>No zero-argument overload — <code class="docutils literal notranslate"><span class="pre">x</span></code> is always required, unlike every other chart method on
 this accessor.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hue</span></code> must resolve to a Note-, Timeline-, or TimeIndex-kind thread, or the call throws.</p></li>
-<li><p>A mismatched-size <code class="docutils literal notranslate"><span class="pre">x</span></code> or <code class="docutils literal notranslate"><span class="pre">hue</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hue</span></code> must resolve to a Note-, Timeline-, or TimeIndex-kind slate, or the call throws.</p></li>
+<li><p>A mismatched-size <code class="docutils literal notranslate"><span class="pre">x</span></code> or <code class="docutils literal notranslate"><span class="pre">hue</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fit_line</span> <span class="pre">=</span> <span class="pre">true</span></code> overlays a line of best fit — one per hue group when <code class="docutils literal notranslate"><span class="pre">hue</span></code> is given.
 For fit shapes beyond a polynomial least-squares fit, see the note above and Example 6
 for <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s <code class="docutils literal notranslate"><span class="pre">flash::regplot</span></code>/<code class="docutils literal notranslate"><span class="pre">flash::lmplot</span></code> instead.</p></li>
@@ -211,7 +211,7 @@ result.</p></li>
 delegates to, including the full <code class="docutils literal notranslate"><span class="pre">hue_feature</span></code> type-requirement explanation and the
 fuller <code class="docutils literal notranslate"><span class="pre">flash::regplot</span></code> writeup in its Example 9.</p></li>
 <li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::line</span></code></span></a>: connected points against an optional companion
-thread, instead of an unconnected cloud against a required one.</p></li>
+slate, instead of an unconnected cloud against a required one.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pie.html">

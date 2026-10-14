@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,11 +49,11 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Splits every cell of the bound thread on <code class="docutils literal notranslate"><span class="pre">delimiter</span></code>, collects every distinct
-non-empty token seen anywhere in the thread, and produces one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> column per
+<p>Splits every cell of the bound slate on <code class="docutils literal notranslate"><span class="pre">delimiter</span></code>, collects every distinct
+non-empty token seen anywhere in the slate, and produces one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> column per
 distinct token (“level”) — the classic one-hot / multi-label indicator (“dummy
 variable”) encoding. A direct forward to
-<a class="reference internal" href="#../thread/indicate.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::indicate()</span></code></span></a>. Requires the bound thread to be
+<a class="reference internal" href="../slate/indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::indicate()</span></code></span></a>. Requires the bound slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Column <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> for a row if <code class="docutils literal notranslate"><span class="pre">level</span></code> is one of that
 row’s tokens, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
 <p>Levels are collected into a <code class="docutils literal notranslate"><span class="pre">std::set&lt;std::string&gt;</span></code>, so the output columns always
@@ -80,7 +80,7 @@ prefix, a column is named exactly after the level text itself.</p>
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 A new frame with one <code class="docutils literal notranslate"><span class="pre">Bool</span></code> feature per distinct non-empty token seen in the
-thread, sorted alphabetically by token text, named <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code>.</p>
+slate, sorted alphabetically by token text, named <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;level&gt;</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -156,8 +156,8 @@ every column, not <code class="docutils literal notranslate"><span class="pre">N
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::indicate: delimiter cannot be empty
 </pre></div>
 </div>
-<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws — the same message
-<a class="reference internal" href="#../thread/indicate.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::indicate()</span></code></span></a> produces directly.</p>
+<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws — the same message
+<a class="reference internal" href="../slate/indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::indicate()</span></code></span></a> produces directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">indicate</span><span class="p">();</span>
@@ -179,7 +179,7 @@ every column, not <code class="docutils literal notranslate"><span class="pre">N
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::indicate()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/indicate.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::indicate()</span></code></span></a> — identical behavior and throws.</p></li>
+<a class="reference internal" href="../slate/indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::indicate()</span></code></span></a> — identical behavior and throws.</p></li>
 <li><p>Output columns are sorted alphabetically by token text, not by first-appearance
 order.</p></li>
 <li><p>No validity mask is attached to the result at all — invalid input rows show
@@ -190,7 +190,7 @@ order.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/indicate.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::indicate</span></code></span></a>: the direct, non-accessor form this
+<li><p><a class="reference internal" href="../slate/indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::indicate</span></code></span></a>: the direct, non-accessor form this
 method forwards to.</p></li>
 <li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::split</span></code></span></a>: the same underlying delimiter-split
 mechanic, producing positional columns instead of one-hot level columns.</p></li>

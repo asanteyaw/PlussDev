@@ -6,3 +6,5 @@
 # testing this directory and lists subdirectories to be tested as well.
 add_test([=[mechanics_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/physics/mechanics/test/mechanics_test")
 set_tests_properties([=[mechanics_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/physics/mechanics/test/CMakeLists.txt;14;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/physics/mechanics/test/CMakeLists.txt;0;")
+add_test([=[variational_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/physics/mechanics/test/variational_test")
+set_tests_properties([=[variational_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/physics/mechanics/test/CMakeLists.txt;14;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/physics/mechanics/test/CMakeLists.txt;0;")

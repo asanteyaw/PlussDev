@@ -27,7 +27,7 @@ Same shape as [`truediv()`](truediv.md).
 ## Returns
 
 `Slate`
-    A new `Float64` thread holding `other / (*this)`, elementwise.
+    A new `Float64` slate holding `other / (*this)`, elementwise.
 
 ## Examples
 
@@ -55,7 +55,7 @@ Matches [`prices.rdiv(4.0)`](rdiv.md) exactly for this `Float64` data.
 
 ## Notes
 
-- See [`rdiv()`](rdiv.md) for a second example against another thread — the two
+- See [`rdiv()`](rdiv.md) for a second example against another slate — the two
   methods agree in every case shown in this reference, differing only in their
   type-promotion guarantee for non-`Float64` source data.
 

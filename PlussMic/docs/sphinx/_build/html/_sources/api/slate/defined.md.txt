@@ -17,14 +17,14 @@ Reports whether the `Slate` object currently owns a usable backing payload at al
 an object-level integrity check, not a data-level one. A default-constructed
 `Slate()` is undefined: it has no `Series`, `Note`, `Timeline`, or `TimeIndex`
 payload behind it, and calling almost any other method on it throws. This is a
-different question from "does this thread have missing values" — a fully defined
-thread can still hold `NULL` cells; see [`isnull()`](isnull.md) for that question.
+different question from "does this slate have missing values" — a fully defined
+slate can still hold `NULL` cells; see [`isnull()`](isnull.md) for that question.
 
 ```{important} Almost every other method requires defined() == true
 Calling `size()`, `kind()`, `dtype()`, or any transform/reduction on an undefined
-thread throws `"Slate: undefined handle"`. `defined()` itself is one of the very
+slate throws `"Slate: undefined handle"`. `defined()` itself is one of the very
 few methods safe to call unconditionally — it never throws, regardless of whether
-the thread is defined.
+the slate is defined.
 ```
 
 ## Parameters
@@ -34,12 +34,12 @@ the thread is defined.
 ## Returns
 
 `bool`
-    `true` when the thread owns a backing payload and can participate in ordinary
+    `true` when the slate owns a backing payload and can participate in ordinary
     operations; `false` for a default-constructed or moved-from `Slate`.
 
 ## Examples
 
-Example 1. A thread built from real data is defined.
+Example 1. A slate built from real data is defined.
 
 ```cpp
 using namespace pluss::table;
@@ -55,7 +55,7 @@ std::cout << std::boolalpha << out;
 true
 ```
 
-Example 2. A default-constructed thread is not defined.
+Example 2. A default-constructed slate is not defined.
 
 ```cpp
 auto empty_handle = Slate();
@@ -69,7 +69,7 @@ std::cout << std::boolalpha << out2;
 false
 ```
 
-Example 3. Calling another method on an undefined thread throws.
+Example 3. Calling another method on an undefined slate throws.
 
 ```cpp
 try {
@@ -87,7 +87,7 @@ Slate: undefined handle
 
 ## Notes
 
-- `defined()` never throws, even on an undefined thread — it's the safe way to check
+- `defined()` never throws, even on an undefined slate — it's the safe way to check
   before calling anything else.
 - Object-level validity only: says nothing about whether individual cells are
   `NULL`. Use [`isnull()`](isnull.md) / [`notnull()`](notnull.md) for that.

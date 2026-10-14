@@ -13,13 +13,13 @@ SlateLabelAccessor::map(const std::function<SlateValue(const SlateValue&)>& fn) 
 ## What It Does
 
 Applies `fn` to every case label individually and reattaches the results as
-the bound thread's new case labels — a direct forward to
-`Slate::caselbl(Slate::caselbl().map(fn))`. The thread's own values are
+the bound slate's new case labels — a direct forward to
+`Slate::caselbl(Slate::caselbl().map(fn))`. The slate's own values are
 untouched; only the case-label companion sequence changes.
 
 ```{note} Always reachable — unlike DataFrameLabelAccessor::map
 `DataFrameLabelAccessor::map` throws on a structured (multi-level) frame,
-since there's no single flat thread to map over. A `Slate`'s case labels
+since there's no single flat slate to map over. A `Slate`'s case labels
 are always a single flat sequence, so `SlateLabelAccessor::map` never has
 that concern.
 ```
@@ -34,7 +34,7 @@ and returning its replacement.
 ## Returns
 
 `Slate`
-    A new thread, holding the same values as `*this`, with case labels
+    A new slate, holding the same values as `*this`, with case labels
     replaced by `fn`'s output.
 
 ## Examples
@@ -76,18 +76,18 @@ r4!  90
 ptype: Series
 ```
 
-Each case label is transformed by appending `"!"`; the thread's own `sales`-
+Each case label is transformed by appending `"!"`; the slate's own `sales`-
 style values are exactly as they were.
 
 ## Notes
 
 - `fn` must return a `SlateValue` of a kind consistent with the rest of the
   output (a length-1 `Slate` wrapped in `SlateValue`, as constructed above).
-- Only the case labels change — the bound thread's own values are untouched.
+- Only the case labels change — the bound slate's own values are untouched.
 
 ## See Also
 
-- [`SlateLabelAccessor::values`](values.md): pull the raw label thread if a
+- [`SlateLabelAccessor::values`](values.md): pull the raw label slate if a
   transform outside `map(...)` is needed.
 - [`SlateLabelAccessor::set`](set.md): the underlying mechanism this method
   applies its result through.

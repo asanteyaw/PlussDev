@@ -12,7 +12,7 @@ SlateTimelineAccessor::tz(std::string_view name) const -> Slate
 
 ## What It Does
 
-Replaces the bound thread's *display* timezone with `name` — same length,
+Replaces the bound slate's *display* timezone with `name` — same length,
 still `Timeline`-kind. **The underlying instant is unchanged** —
 only the timezone used to compute local calendar fields (year/month/day/hour,
 and box-table display) shifts.
@@ -28,12 +28,12 @@ recognized (case-insensitive); any other name throws.
 ## Returns
 
 `Slate`
-    A new `Timeline`-kind thread, same length as the bound
-    thread, with its display timezone switched to `name`.
+    A new `Timeline`-kind slate, same length as the bound
+    slate, with its display timezone switched to `name`.
 
 ## Examples
 
-Example 1. Relabel a UTC thread to `"America/New_York"`.
+Example 1. Relabel a UTC slate to `"America/New_York"`.
 
 ```cpp
 using namespace pluss::table;
@@ -110,7 +110,7 @@ backing it.
   [`hour()`](hour.md)/[`year()`](year.md)). Use [`localize()`](localize.md) if
   the data is naive local wall-clock text that needs to be *anchored* to a
   real instant for the first time.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` regardless of `name`.
 

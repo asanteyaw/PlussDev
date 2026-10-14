@@ -13,7 +13,7 @@ Slate::bucketize(pluss::RangeView<double> bins, pluss::RangeView<std::int64_t> l
 
 ## What It Does
 
-Converts a numeric thread into interval labels defined by explicit bin edges —
+Converts a numeric slate into interval labels defined by explicit bin edges —
 the one-dimensional building block behind histogram-style feature engineering,
 grading bands, and coarse segmentation. `bins` must be strictly increasing and
 supply `N + 1` edges to define `N` buckets; each value is assigned the index
@@ -52,7 +52,7 @@ edge[1]]` for that one interval only.
 ## Returns
 
 `Slate`
-    A numeric thread of bucket labels, the same length as the source, with a
+    A numeric slate of bucket labels, the same length as the source, with a
     missing entry wherever the source value falls outside every bucket's
     interval.
 

@@ -837,7 +837,7 @@ available rather than assumed buildable:
   importance; RFE is "fit, rank, drop the weakest, repeat" on top of those. The real
   complication: RFE needs the *label*, and a probe model, inside what's currently an X-only
   prep stage — every existing `Stage` only ever sees a `FeatureBatch` during `.learn_()`, never
-  `y`. Making RFE a real Stage means teaching that one stage type to see labels, which
+  `y`. Making RFE a real Stage means extending that one stage type to see labels, which
   today's `TransformKind`/`Flow` dispatch doesn't support for *any* stage yet. Real, scoped
   engineering — not hard, but not "just call the existing function" the way `pca` is.
 - **`lymph::stage::select_k_best(...)`** (hypothesis-test-based feature selection). Partially

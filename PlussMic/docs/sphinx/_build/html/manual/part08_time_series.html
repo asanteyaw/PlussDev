@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -95,8 +95,8 @@ streams.</p>
 </tr>
 </tbody>
 </table>
-<p>Time-series value transforms require numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> threads. Time-axis
-methods require a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread.</p>
+<p>Time-series value transforms require numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> slates. Time-axis
+methods require a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> slate.</p>
 <p>This split is deliberate. A price column and a timestamp column have different
 semantics even though both can be represented internally as arrays.</p>
 </section>
@@ -150,7 +150,7 @@ slightly messy return; it is a different calculation.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The source thread must be defined, must be <code class="docutils literal notranslate"><span class="pre">SlateKind::Series</span></code>, and must be
+<p>The source slate must be defined, must be <code class="docutils literal notranslate"><span class="pre">SlateKind::Series</span></code>, and must be
 numeric. If you call <code class="docutils literal notranslate"><span class="pre">ts()</span></code> on a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or non-numeric payload, the
 operation throws when you call the accessor method.</p>
 <section id="slate-accessor-methods">

@@ -21,7 +21,7 @@ Subtraction is not commutative, so — unlike `add()` — `sub()` and its reflec
 [`rsub()`](rsub.md) genuinely produce different results, even for plain numbers.
 
 Unlike `add()`, there is no `Note`-payload special case for `sub()` — subtracting one
-string thread from another always throws.
+string slate from another always throws.
 
 ## Parameters
 
@@ -33,7 +33,7 @@ The value(s) to subtract. For the `Slate` overload, must be the same length as
 ## Returns
 
 `Slate`
-    A new thread, same length as `*this`, holding the elementwise difference.
+    A new slate, same length as `*this`, holding the elementwise difference.
 
 ## Examples
 
@@ -57,7 +57,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Subtract two threads positionally.
+Example 2. Subtract two slates positionally.
 
 ```cpp
 auto boost = Slate(pluss::make_series({2.0, 4.0, 5.0}));
@@ -84,7 +84,7 @@ calling `prices.sub(boost)`. See [`rsub()`](rsub.md) for the flipped order.
   length-mismatch throw (`"Slate::sub(Slate): positional operation requires
   identical lengths"`), and how display labels carry through.
 - `sub()` has no `Note`-payload special case — subtraction between two `Note`
-  threads throws `"unsupported payload combination"`, unlike `add()`'s
+  slates throws `"unsupported payload combination"`, unlike `add()`'s
   concatenation exception.
 
 ## See Also

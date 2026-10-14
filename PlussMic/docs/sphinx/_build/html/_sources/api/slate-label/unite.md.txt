@@ -12,7 +12,7 @@ SlateLabelAccessor::unite(const Slate& other) const -> Slate
 
 ## What It Does
 
-Treats the bound thread's case labels and `other` as two sets of values, and
+Treats the bound slate's case labels and `other` as two sets of values, and
 returns their union — deduplicated, this accessor's distinct values first (in
 first-occurrence order), then `other`'s distinct values not already seen.
 

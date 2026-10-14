@@ -16,11 +16,11 @@ SlateLabelAccessor::has(const Slate& values) const -> Slate
 Two unrelated questions share this name:
 
 - **`has()`** (no arguments) answers a structural question: have case labels
-  ever been explicitly attached to this thread (via [`set()`](set.md) or a
+  ever been explicitly attached to this slate (via [`set()`](set.md) or a
   derived operation), as opposed to still sitting at the default integer
   range? A direct forward to `Slate::has_caselbl()`.
 - **`has(values)`** answers an elementwise membership question over the
-  **case labels themselves** (not the thread's own data): for each row, is
+  **case labels themselves** (not the slate's own data): for each row, is
   its case label equal to *any* of `values`? The result keeps the same case
   labels as `*this`, `display_name` `"has"`.
 
@@ -37,7 +37,7 @@ against all of them.
     (No-argument overload) Whether case labels have been explicitly set.
 
 `Slate`
-    (`values`-taking overload) A `Bool` thread, one entry per row, with the
+    (`values`-taking overload) A `Bool` slate, one entry per row, with the
     same case labels as `*this`.
 
 ## Examples
@@ -92,7 +92,7 @@ values.
 
 - The no-argument overload is purely structural — it says nothing about
   whether any particular label value is present.
-- `has(values)` tests the case labels, not the thread's own data — for a
+- `has(values)` tests the case labels, not the slate's own data — for a
   membership test over the data itself, use `Slate::has()` directly.
 - Identical to calling `Slate::has_caselbl()` (no-argument overload)
   directly.

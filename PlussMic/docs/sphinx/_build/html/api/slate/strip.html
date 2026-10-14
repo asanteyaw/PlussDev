@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,8 +50,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Trims characters from both ends of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread’s cells. Requires the
-thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Two distinct trimming policies:</p>
+<p>Trims characters from both ends of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate’s cells. Requires the
+slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Two distinct trimming policies:</p>
 <ul class="simple">
 <li><p><strong>No-argument overload</strong>: trims the classic ASCII whitespace set — space, tab,
 newline, carriage return, form feed, vertical tab — from both ends of each cell.</p></li>
@@ -70,7 +70,7 @@ convention Python’s <code class="docutils literal notranslate"><span class="pr
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with each cell’s text trimmed.</p>
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with each cell’s text trimmed.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -113,7 +113,7 @@ ptype: Note
 character still gets stripped: <code class="docutils literal notranslate"><span class="pre">[</span></code>, <code class="docutils literal notranslate"><span class="pre">]</span></code>, <code class="docutils literal notranslate"><span class="pre">(</span></code>, and <code class="docutils literal notranslate"><span class="pre">)</span></code> are each individually members
 of the <code class="docutils literal notranslate"><span class="pre">chars</span></code> set, so <code class="docutils literal notranslate"><span class="pre">strip(&quot;[]()&quot;)</span></code> peels off <code class="docutils literal notranslate"><span class="pre">[[[</span></code> from the front and <code class="docutils literal notranslate"><span class="pre">]]]</span></code>
 from the back, one character at a time, stopping the instant it reaches <code class="docutils literal notranslate"><span class="pre">S</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
-<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">strip</span><span class="p">();</span>

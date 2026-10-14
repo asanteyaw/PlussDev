@@ -15,13 +15,13 @@ Slate::var(const StatisticOptions& options) const -> SlateValue
 ## What It Does
 
 Returns the variance of every observed (non-missing) value in a numeric
-`Series` thread, as a scalar `SlateValue`. There are two overloads, and they
+`Series` slate, as a scalar `SlateValue`. There are two overloads, and they
 handle an insufficient sample differently:
 
 - **`var(unbiased)`**: the simple form. `unbiased = true` (the default)
   computes the **sample** variance (dividing by `n - 1`, Bessel's correction);
   `unbiased = false` computes the **population** variance (dividing by `n`).
-  An empty thread, or one where every entry is missing, **throws**.
+  An empty slate, or one where every entry is missing, **throws**.
 - **`var(options)`**: the general form, taking a `StatisticOptions{ddof,
   min_count}`. `ddof` (delta degrees of freedom) generalizes the divisor to
   `n - ddof` — `ddof = 1` matches `unbiased = true`, `ddof = 0` matches
@@ -120,7 +120,7 @@ false
 ```
 
 Only two observations are present, below the required `min_count = 5`, so the
-single-entry result thread is marked invalid at position `0` — no exception is
+single-entry result slate is marked invalid at position `0` — no exception is
 thrown, but `.to_dbl()` would still hand back whatever number the arithmetic
 happened to produce underneath (`50`, in this case: `Series`/`SlateValue`
 printing has no concept of nullness, only the wrapping `Slate`'s own validity

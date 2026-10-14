@@ -13,7 +13,7 @@ Slate::unname() const -> Slate
 
 ## What It Does
 
-Removes an attached name from the thread, returning a new thread with no name — the
+Removes an attached name from the slate, returning a new slate with no name — the
 inverse of [`name(value)`](name.md)'s setter overload. The underlying values, validity
 mask, and row labels are all carried over unchanged; only the name is cleared.
 
@@ -24,8 +24,8 @@ mask, and row labels are all carried over unchanged; only the name is cleared.
 ## Returns
 
 `Slate`
-    A new thread with no name attached, everything else unchanged. Non-mutating — the
-    source thread is never modified, even if it had no name to begin with.
+    A new slate with no name attached, everything else unchanged. Non-mutating — the
+    source slate is never modified, even if it had no name to begin with.
 
 ## Examples
 
@@ -57,7 +57,7 @@ false
 `named_balance` itself is left unmodified — `unname()` is non-mutating, so
 `unnamed_again` is a distinct copy with the name cleared.
 
-Example 2. Calling `unname()` on a thread that already has no name is a no-op; it still
+Example 2. Calling `unname()` on a slate that already has no name is a no-op; it still
 returns a valid (still-unnamed) copy rather than throwing.
 
 ```cpp

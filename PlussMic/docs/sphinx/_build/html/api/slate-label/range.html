@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,11 +48,11 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces the bound thread’s case labels with an explicit default integer
+<p>Replaces the bound slate’s case labels with an explicit default integer
 range (<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>) — a direct forward to <code class="docutils literal notranslate"><span class="pre">Slate::rangelbl()</span></code>. Visually
-identical to a thread that never had case labels set at all, but — unlike
+identical to a slate that never had case labels set at all, but — unlike
 <a class="reference internal" href="reset.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></span></a> — <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> reports <code class="docutils literal notranslate"><span class="pre">true</span></code> afterward, since
-<code class="docutils literal notranslate"><span class="pre">range()</span></code> actively attaches a labels thread rather than clearing one.</p>
+<code class="docutils literal notranslate"><span class="pre">range()</span></code> actively attaches a labels slate rather than clearing one.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -61,7 +61,7 @@ identical to a thread that never had case labels set at all, but — unlike
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with an explicit
+A new slate, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with an explicit
 default integer range as its case labels.</p>
 </section>
 <section id="examples">
@@ -104,8 +104,8 @@ ptype: Series
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
-<p>The display now looks like a thread with no case labels at all, but <code class="docutils literal notranslate"><span class="pre">has()</span></code>
-still reports <code class="docutils literal notranslate"><span class="pre">true</span></code> — <code class="docutils literal notranslate"><span class="pre">range()</span></code> actively attached a labels thread, it didn’t
+<p>The display now looks like a slate with no case labels at all, but <code class="docutils literal notranslate"><span class="pre">has()</span></code>
+still reports <code class="docutils literal notranslate"><span class="pre">true</span></code> — <code class="docutils literal notranslate"><span class="pre">range()</span></code> actively attached a labels slate, it didn’t
 clear one. Contrast with <a class="reference internal" href="reset.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></span></a>, which produces the same
 display but leaves <code class="docutils literal notranslate"><span class="pre">has()</span></code> <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
@@ -113,7 +113,7 @@ display but leaves <code class="docutils literal notranslate"><span class="pre">
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Produces the same visible <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code> display as a never-labeled thread,
+<li><p>Produces the same visible <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code> display as a never-labeled slate,
 but <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> reports <code class="docutils literal notranslate"><span class="pre">true</span></code> afterward — see
 <a class="reference internal" href="reset.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></span></a> for the version that leaves <code class="docutils literal notranslate"><span class="pre">has()</span></code> <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
 <li><p>Identical to calling <code class="docutils literal notranslate"><span class="pre">Slate::rangelbl()</span></code> directly.</p></li>

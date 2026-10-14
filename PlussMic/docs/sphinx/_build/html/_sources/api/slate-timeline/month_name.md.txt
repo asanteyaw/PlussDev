@@ -12,7 +12,7 @@ SlateTimelineAccessor::month_name() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with its full English month name, as a `Note`
+Replaces the bound slate with its full English month name, as a `Note`
 (text) `Series`.
 
 ## Parameters
@@ -22,7 +22,7 @@ Replaces the bound thread with its full English month name, as a `Note`
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, holding each
+    A new `Note`-kind slate, same length as the bound slate, holding each
     row's full month name (`"January"`-`"December"`).
 
 ## Examples
@@ -55,9 +55,9 @@ ptype: Note
 
 - Always the full English name (`"January"`, not `"Jan"`); use
   [`fmt("%b")`](fmt.md) for the abbreviated three-letter form.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`, not a text placeholder.
 
 ## See Also

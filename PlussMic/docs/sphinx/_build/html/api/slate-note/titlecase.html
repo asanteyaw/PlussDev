@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,9 +48,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Capitalizes the first letter of every “word” in the bound thread’s cells and
+<p>Capitalizes the first letter of every “word” in the bound slate’s cells and
 lowercases the rest — a direct forward to
-<a class="reference internal" href="#../thread/titlecase.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase()</span></code></span></a>. Requires the bound thread to be
+<a class="reference internal" href="../slate/titlecase.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase()</span></code></span></a>. Requires the bound slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. The classic display-formatting transform for names, addresses, or
 titles typed in inconsistent casing.</p>
 <div class="admonition warning">
@@ -71,7 +71,7 @@ Example 2.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as the bound thread, with every cell’s
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as the bound slate, with every cell’s
 text title-cased.</p>
 </section>
 <section id="examples">
@@ -116,8 +116,8 @@ right after it is treated as the start of a new word and capitalized. There is
 no built-in way to make <code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> treat apostrophes or hyphens as
 internal-to-a-word — post-process the result with <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace()</span></code></span></a> for
 known quirks that matter for a given column.</p>
-<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws — the same message
-<a class="reference internal" href="#../thread/titlecase.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase()</span></code></span></a> produces directly.</p>
+<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws — the same message
+<a class="reference internal" href="../slate/titlecase.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase()</span></code></span></a> produces directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">titlecase</span><span class="p">();</span>
@@ -139,7 +139,7 @@ known quirks that matter for a given column.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::titlecase()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/titlecase.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase()</span></code></span></a> — identical behavior and
+<a class="reference internal" href="../slate/titlecase.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase()</span></code></span></a> — identical behavior and
 throws.</p></li>
 <li><p>A null cell on input stays null on output.</p></li>
 <li><p>Word-boundary detection resets on <em>any</em> non-alphanumeric character, not just
@@ -149,7 +149,7 @@ whitespace — see the warning above.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/titlecase.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase</span></code></span></a>: the direct, non-accessor form
+<li><p><a class="reference internal" href="../slate/titlecase.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::titlecase</span></code></span></a>: the direct, non-accessor form
 this method forwards to.</p></li>
 <li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::lower</span></code></span></a> /
 <a class="reference internal" href="upper.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::upper</span></code></span></a>: whole-cell case transforms,

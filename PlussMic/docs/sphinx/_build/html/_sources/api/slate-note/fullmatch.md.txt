@@ -12,10 +12,10 @@ SlateNoteAccessor::fullmatch(std::string_view pattern) const -> Slate
 
 ## What It Does
 
-Checks each cell of the bound thread against a regular expression, requiring
+Checks each cell of the bound slate against a regular expression, requiring
 `pattern` to match the **entire** cell's text — not just a prefix, the way
 [`matches()`](matches.md) does. A direct forward to
-[`Slate::fullmatch()`](../thread/fullmatch.md). Requires the bound thread to be
+[`Slate::fullmatch()`](../slate/fullmatch.md). Requires the bound slate to be
 `Note`-kind.
 
 ## Parameters
@@ -27,7 +27,7 @@ A regular expression (ECMAScript-flavored, via `std::regex`).
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread, holding the
+    A new `Bool`-typed `Series` slate, same length as the bound slate, holding the
     elementwise full-match result.
 
 ## Examples
@@ -58,8 +58,8 @@ digits after `SKU-` with nothing left over, so it's `true`. Compare with
 [`matches()`](matches.md), which reports `"SKU-1001"` as `true` for the same pattern
 since it only checks a prefix.
 
-Example 2. A non-`Note` thread throws — the same message
-[`Slate::fullmatch()`](../thread/fullmatch.md) produces directly.
+Example 2. A non-`Note` slate throws — the same message
+[`Slate::fullmatch()`](../slate/fullmatch.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -80,14 +80,14 @@ Slate::fullmatch: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::fullmatch()` is a one-line forward to
-  [`Slate::fullmatch()`](../thread/fullmatch.md) — identical behavior and throws.
+  [`Slate::fullmatch()`](../slate/fullmatch.md) — identical behavior and throws.
 - An invalid regex pattern throws at call time.
 - Changes the payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
 
 ## See Also
 
-- [`Slate::fullmatch`](../thread/fullmatch.md): the direct, non-accessor form this
+- [`Slate::fullmatch`](../slate/fullmatch.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateNoteAccessor::matches`](matches.md): the prefix-only counterpart.
 - [`SlateNoteAccessor::extract`](extract.md): pull out capture groups instead of

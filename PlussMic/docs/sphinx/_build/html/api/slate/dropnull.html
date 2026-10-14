@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,18 +49,18 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a new, compacted thread containing only the entries <strong>not</strong> marked missing
-by the validity mask. If the thread carries no validity mask at all, this is a
-no-op — the thread is returned unchanged (there’s nothing to drop). Otherwise, it
+<p>Returns a new, compacted slate containing only the entries <strong>not</strong> marked missing
+by the validity mask. If the slate carries no validity mask at all, this is a
+no-op — the slate is returned unchanged (there’s nothing to drop). Otherwise, it
 gathers the indices of every valid entry and calls <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a> with them,
-so the result is a genuinely shorter thread (no null holes left in place) rather
+so the result is a genuinely shorter slate (no null holes left in place) rather
 than the original length with gaps. The result never carries a leftover validity
 mask, even if <code class="docutils literal notranslate"><span class="pre">take()</span></code>’s bookkeeping would otherwise attach one — <code class="docutils literal notranslate"><span class="pre">dropnull()</span></code>
 explicitly clears it, so a fully-valid result reports no mask at all.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>mask-driven, not NaN-driven
-<code class="docutils literal notranslate"><span class="pre">dropnull()</span></code> inspects the thread’s validity mask only. A plain <code class="docutils literal notranslate"><span class="pre">NaN</span></code> inside a
+<code class="docutils literal notranslate"><span class="pre">dropnull()</span></code> inspects the slate’s validity mask only. A plain <code class="docutils literal notranslate"><span class="pre">NaN</span></code> inside a
 numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> is not, by itself, “missing” to <code class="docutils literal notranslate"><span class="pre">dropnull()</span></code> unless that position
 is also marked invalid in the mask — see <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a> for the same
 mask-vs-<code class="docutils literal notranslate"><span class="pre">NaN</span></code> distinction.</p>
@@ -73,7 +73,7 @@ mask-vs-<code class="docutils literal notranslate"><span class="pre">NaN</span><
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread holding only the valid entries, compacted (re-indexed from <code class="docutils literal notranslate"><span class="pre">0</span></code>),
+A new slate holding only the valid entries, compacted (re-indexed from <code class="docutils literal notranslate"><span class="pre">0</span></code>),
 with no validity mask attached.</p>
 </section>
 <section id="examples">
@@ -99,7 +99,7 @@ ptype: Series
 </div>
 <p>Only the two entries marked valid (positions <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>) survive, and the result
 is re-indexed from <code class="docutils literal notranslate"><span class="pre">0</span></code> — not left with gaps at the old positions <code class="docutils literal notranslate"><span class="pre">1</span></code>/<code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
-<p>Example 2. No validity mask at all is a no-op — the thread comes back unchanged.</p>
+<p>Example 2. No validity mask at all is a no-op — the slate comes back unchanged.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">plain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plain</span><span class="p">.</span><span class="n">dropnull</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
@@ -111,7 +111,7 @@ is re-indexed from <code class="docutils literal notranslate"><span class="pre">
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3
 </pre></div>
 </div>
-<p>Example 3. Every entry marked invalid drops the whole thread to empty.</p>
+<p>Example 3. Every entry marked invalid drops the whole slate to empty.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">all_missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
@@ -131,7 +131,7 @@ is re-indexed from <code class="docutils literal notranslate"><span class="pre">
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>No-op when there’s no validity mask — returns the thread unchanged, not a copy
+<li><p>No-op when there’s no validity mask — returns the slate unchanged, not a copy
 with a fresh empty mask.</p></li>
 <li><p>The result is compacted: surviving entries are re-indexed, never left with holes
 at their old positions.</p></li>

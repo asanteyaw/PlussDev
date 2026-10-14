@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,11 +49,11 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Builds a short, fixed-format summary of the thread’s metadata — name, payload kind, dtype,
+<p>Builds a short, fixed-format summary of the slate’s metadata — name, payload kind, dtype,
 row count, and a valid/null breakdown — as a plain <code class="docutils literal notranslate"><span class="pre">std::string</span></code>. This is metadata only;
-unlike <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a> or <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a>, it never renders the thread’s
+unlike <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a> or <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a>, it never renders the slate’s
 actual row values. Use it for logging, quick sanity checks, or anywhere you want a
-one-glance summary of what a thread contains without printing every row.</p>
+one-glance summary of what a slate contains without printing every row.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -67,7 +67,7 @@ A multi-line summary in this fixed shape (no trailing newline):
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. An unnamed numeric thread with no <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows.</p>
+<p>Example 1. An unnamed numeric slate with no <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -87,7 +87,7 @@ Non-Null Cases: 3
 Null Cases: 0
 </pre></div>
 </div>
-<p>Example 2. A named thread with a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> row — <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a> assigns the display name
+<p>Example 2. A named slate with a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> row — <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a> assigns the display name
 that shows up as <code class="docutils literal notranslate"><span class="pre">Name:</span></code> here, and <code class="docutils literal notranslate"><span class="pre">Non-Null</span> <span class="pre">Cases</span></code>/<code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">Cases</span></code> reflect the validity mask.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}),</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})).</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
@@ -137,7 +137,7 @@ Null Cases: 0
 <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> instead if you want the actual data rendered.</p></li>
 <li><p>The returned string has <strong>no trailing newline</strong> — <a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info()</span></code></span></a> is the
 convenience wrapper that both calls this and adds one when writing to a stream.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Name:</span></code> reads <code class="docutils literal notranslate"><span class="pre">&lt;unnamed&gt;</span></code> unless the thread was given one via <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Name:</span></code> reads <code class="docutils literal notranslate"><span class="pre">&lt;unnamed&gt;</span></code> unless the slate was given one via <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a>.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -145,7 +145,7 @@ convenience wrapper that both calls this and adds one when writing to a stream.<
 <ul class="simple">
 <li><p><a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::info</span></code></span></a>: writes this same text straight to a stream (<code class="docutils literal notranslate"><span class="pre">std::cout</span></code> by
 default) with a trailing newline, instead of returning it as a string.</p></li>
-<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::to_string</span></code></span></a> / <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::show</span></code></span></a>: render the thread’s
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::to_string</span></code></span></a> / <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::show</span></code></span></a>: render the slate’s
 actual row values, rather than metadata.</p></li>
 <li><p><a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::name</span></code></span></a> / <a class="reference internal" href="named.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::named</span></code></span></a>: set or check the display name
 that shows up as <code class="docutils literal notranslate"><span class="pre">Name:</span></code> here.</p></li>

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -74,15 +74,15 @@
 <ul class="simple">
 <li><p><strong>Text substring/regex replace</strong> — <code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">to)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">to,</span> <span class="pre">TextOptions)</span></code> — replaces occurrences of a substring or regex
-pattern <em>within</em> each cell’s text. Requires a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread. This is the same
+pattern <em>within</em> each cell’s text. Requires a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate. This is the same
 operation family as <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a> and the rest of the string/text methods.</p></li>
 <li><p><strong>Whole-value replace</strong> — every other overload — replaces cells whose <strong>entire
 value</strong> exactly equals <code class="docutils literal notranslate"><span class="pre">from</span></code> with <code class="docutils literal notranslate"><span class="pre">to</span></code>, the way a lookup-table substitution works.
 The C++ type of <code class="docutils literal notranslate"><span class="pre">from</span></code>/<code class="docutils literal notranslate"><span class="pre">to</span></code> determines which payload kind participates: <code class="docutils literal notranslate"><span class="pre">double</span></code>
-pairs with a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread, a scalar <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> pairs with a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind
-thread (matching the <strong>whole cell’s text</strong>, not a substring), a scalar
-<code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> pairs with a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, and a scalar
-<code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> pairs with a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind thread. The <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>
+pairs with a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate, a scalar <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> pairs with a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind
+slate (matching the <strong>whole cell’s text</strong>, not a substring), a scalar
+<code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> pairs with a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate, and a scalar
+<code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> pairs with a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind slate. The <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>
 scalar-wrapper overloads are typed convenience forms that unwrap to the <code class="docutils literal notranslate"><span class="pre">double</span></code>
 overload; passing <code class="docutils literal notranslate"><span class="pre">pluss::null_t</span></code> for <code class="docutils literal notranslate"><span class="pre">from</span></code> fills nulls (equivalent to
 <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a>), and passing it for <code class="docutils literal notranslate"><span class="pre">to</span></code> nullifies matching cells.</p></li>
@@ -90,7 +90,7 @@ overload; passing <code class="docutils literal notranslate"><span class="pre">p
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
 <p>replace(Note, Note) is whole-cell exact match, not substring replace
-It is easy to reach for <code class="docutils literal notranslate"><span class="pre">replace()</span></code> on a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread and land on the wrong overload.
+It is easy to reach for <code class="docutils literal notranslate"><span class="pre">replace()</span></code> on a <code class="docutils literal notranslate"><span class="pre">Note</span></code> slate and land on the wrong overload.
 <code class="docutils literal notranslate"><span class="pre">replace(&quot;Tema&quot;,</span> <span class="pre">&quot;Tamale&quot;)</span></code> (two <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> arguments) replaces the
 <strong>substring</strong> <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> wherever it occurs inside each cell — a cell like
 <code class="docutils literal notranslate"><span class="pre">&quot;Tema</span> <span class="pre">West&quot;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;Tamale</span> <span class="pre">West&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">replace(pluss::make_note({&quot;Tema&quot;}),</span> <span class="pre">pluss::make_note({&quot;Tamale&quot;}))</span></code> (two scalar <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code> arguments) instead requires
@@ -123,7 +123,7 @@ of literal text; supports <code class="docutils literal notranslate"><span class
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length and kind as <code class="docutils literal notranslate"><span class="pre">*this</span></code> (except a <code class="docutils literal notranslate"><span class="pre">to</span> <span class="pre">=</span> <span class="pre">pluss::null_t</span></code>
+A new slate, same length and kind as <code class="docutils literal notranslate"><span class="pre">*this</span></code> (except a <code class="docutils literal notranslate"><span class="pre">to</span> <span class="pre">=</span> <span class="pre">pluss::null_t</span></code>
 result, which nullifies matching cells rather than changing their kind).</p>
 </section>
 <section id="examples">
@@ -225,7 +225,7 @@ ptype: Note
 <code class="docutils literal notranslate"><span class="pre">#</span></code>. Row 2 (<code class="docutils literal notranslate"><span class="pre">&quot;invalid&quot;</span></code>) has no <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> at all, so the pattern doesn’t match and the text
 is returned unchanged.</p>
 <p>Example 5. Whole-value numeric replace: cells that exactly equal <code class="docutils literal notranslate"><span class="pre">from</span></code> become <code class="docutils literal notranslate"><span class="pre">to</span></code>;
-everything else is untouched. Requires a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread.</p>
+everything else is untouched. Requires a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">404.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">404.0</span><span class="p">,</span><span class="w"> </span><span class="mf">500.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="mf">404.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out5</span><span class="p">;</span>
@@ -319,7 +319,7 @@ to the same <code class="docutils literal notranslate"><span class="pre">double<
 <span class="c1">// via_series is identical to out5 from Example 5.</span>
 </pre></div>
 </div>
-<p>Example 9. Whole-value replace on a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread: cells equal to a given
+<p>Example 9. Whole-value replace on a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate: cells equal to a given
 timestamp are swapped for another.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">}));</span>
@@ -341,7 +341,7 @@ ptype: Timeline
 </div>
 <p>Both cells matching <code class="docutils literal notranslate"><span class="pre">2024-01-01T00:00:00Z</span></code> are replaced; <code class="docutils literal notranslate"><span class="pre">2024-01-02T00:00:00Z</span></code> is
 untouched.</p>
-<p>Example 9b. Whole-value replace on a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind thread works the same way, and
+<p>Example 9b. Whole-value replace on a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind slate works the same way, and
 also composes with <code class="docutils literal notranslate"><span class="pre">null_t</span></code> for nullify/fill — verified against
 <code class="docutils literal notranslate"><span class="pre">PlussMic/test/temporal_core_migration_tests.cpp:205-213</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">gaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">({</span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">-2&#39;000&#39;000&#39;000LL</span><span class="p">}));</span>
@@ -402,12 +402,12 @@ danger box above.</p></li>
 same operation.</p></li>
 <li><p>Whole-value replace requires <code class="docutils literal notranslate"><span class="pre">from</span></code>/<code class="docutils literal notranslate"><span class="pre">to</span></code> scalar wrapper objects (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code> /
 <code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">==</span> <span class="pre">1</span></code>) — a multi-element <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>/<code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>/etc. throws.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">replace(Timeline,</span> <span class="pre">Timeline)</span></code> requires a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind calling thread;
-<code class="docutils literal notranslate"><span class="pre">replace(Duration,</span> <span class="pre">Duration)</span></code> requires a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind calling thread. Neither
+<li><p><code class="docutils literal notranslate"><span class="pre">replace(Timeline,</span> <span class="pre">Timeline)</span></code> requires a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind calling slate;
+<code class="docutils literal notranslate"><span class="pre">replace(Duration,</span> <span class="pre">Duration)</span></code> requires a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind calling slate. Neither
 accepts the other’s payload kind.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">replace(null_t,</span> <span class="pre">to)</span></code> is equivalent to <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull(to)</span></code></span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">replace(from,</span> <span class="pre">null_t)</span></code> nullifies cells matching <code class="docutils literal notranslate"><span class="pre">from</span></code> rather than changing the
-thread’s kind.</p></li>
+slate’s kind.</p></li>
 </ul>
 </section>
 <section id="see-also">

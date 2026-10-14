@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -53,7 +53,7 @@
 first distinct value seen gets code <code class="docutils literal notranslate"><span class="pre">0</span></code>, the next new value gets <code class="docutils literal notranslate"><span class="pre">1</span></code>, and so
 on). For a structured (multi-level) frame, each level is factorized
 <strong>independently</strong>, producing one integer column per level. For an unstructured
-frame, the whole flat case-label thread is factorized into a single <code class="docutils literal notranslate"><span class="pre">label</span></code>
+frame, the whole flat case-label slate is factorized into a single <code class="docutils literal notranslate"><span class="pre">label</span></code>
 column.</p>
 </section>
 <section id="returns">
@@ -136,7 +136,7 @@ r4   | 3
 <p><code class="docutils literal notranslate"><span class="pre">tagged</span></code>’s case labels came from <code class="docutils literal notranslate"><span class="pre">set(const</span> <span class="pre">Slate&amp;)</span></code> — the raw-axis overload,
 which never populates <code class="docutils literal notranslate"><span class="pre">case_axis_</span></code> — so <code class="docutils literal notranslate"><span class="pre">.label().has()</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> here, and
 <code class="docutils literal notranslate"><span class="pre">codes()</span></code> takes the unstructured branch: one column, always named <code class="docutils literal notranslate"><span class="pre">&quot;label&quot;</span></code>,
-factorizing the whole flat thread. Contrast with a frame built by promoting a
+factorizing the whole flat slate. Contrast with a frame built by promoting a
 <em>named</em> feature (like <code class="docutils literal notranslate"><span class="pre">set(&quot;region&quot;)</span></code>), which — even with only one promoted
 name — still creates a genuine one-level <code class="docutils literal notranslate"><span class="pre">case_axis_</span></code>, so <code class="docutils literal notranslate"><span class="pre">codes()</span></code> takes the
 structured branch instead and names the column after that level (<code class="docutils literal notranslate"><span class="pre">&quot;region&quot;</span></code>,

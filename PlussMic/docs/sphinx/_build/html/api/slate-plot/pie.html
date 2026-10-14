@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,24 +52,24 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Draws a pie chart from the bound thread’s values, with slice labels coming either from an
-explicit companion <code class="docutils literal notranslate"><span class="pre">labels</span></code> thread or (if omitted) from the wrapped frame’s own row
+<p>Draws a pie chart from the bound slate’s values, with slice labels coming either from an
+explicit companion <code class="docutils literal notranslate"><span class="pre">labels</span></code> slate or (if omitted) from the wrapped frame’s own row
 labels — the single-series specialization of
 <a class="reference internal" href="../dataframe-plot/pie.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::pie</span></code></span></a>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Non-positive and non-finite values are silently dropped, not zero-sized slices
 Exactly like <a class="reference internal" href="../dataframe-plot/pie.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::pie</span></code></span></a>, only rows
-where the bound thread’s value is both finite and strictly greater than zero survive. A
-thread with no positive finite values throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot().pie:</span> <span class="pre">feature</span> <span class="pre">'value'</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">positive</span> <span class="pre">finite</span> <span class="pre">values&quot;</span></code> — see that page’s important callout for the full rule,
+where the bound slate’s value is both finite and strictly greater than zero survive. A
+slate with no positive finite values throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot().pie:</span> <span class="pre">feature</span> <span class="pre">'value'</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">positive</span> <span class="pre">finite</span> <span class="pre">values&quot;</span></code> — see that page’s important callout for the full rule,
 including how percentages are computed against the filtered total.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, optional)
-A companion thread whose values label each slice. Must match the bound thread’s size,
-or the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>. Omitted falls back to the
+A companion slate whose values label each slice. Must match the bound slate’s size,
+or the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>. Omitted falls back to the
 wrapped frame’s own row labels — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s row-label inheritance rule.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">PiePlotOptions</span></code>)
 The identical struct documented on
@@ -83,7 +83,7 @@ A figure with one pane containing a single pie trace.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. An explicit <code class="docutils literal notranslate"><span class="pre">labels</span></code> thread.</p>
+<p>Example 1. An explicit <code class="docutils literal notranslate"><span class="pre">labels</span></code> slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">spend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">420.0</span><span class="p">,</span><span class="w"> </span><span class="mf">180.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">130.0</span><span class="p">}));</span>
@@ -97,7 +97,7 @@ A figure with one pane containing a single pie trace.</p>
 </pre></div>
 </div>
 <p><img alt="Output of Example 1" src="../../_images/pie-11.svg" /></p>
-<p>Example 2. No <code class="docutils literal notranslate"><span class="pre">labels</span></code>: falls back to the bound thread’s own row labels.</p>
+<p>Example 2. No <code class="docutils literal notranslate"><span class="pre">labels</span></code>: falls back to the bound slate’s own row labels.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled_spend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">420.0</span><span class="p">,</span><span class="w"> </span><span class="mf">180.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">130.0</span><span class="p">}))</span>
 <span class="w">                          </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;eng&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;support&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;marketing&quot;</span><span class="p">})));</span>
 
@@ -125,7 +125,7 @@ A figure with one pane containing a single pie trace.</p>
 see the important callout above.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> omitted falls back to the wrapped frame’s own row labels — see
 <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s row-label inheritance rule.</p></li>
-<li><p>An entirely-filtered-out thread throws rather than producing an empty chart.</p></li>
+<li><p>An entirely-filtered-out slate throws rather than producing an empty chart.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for how to view or save the
 result.</p></li>
 </ul>

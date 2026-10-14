@@ -7,3 +7,8 @@
 subdirs("population")
 subdirs("systems")
 subdirs("biophysics")
+subdirs("epidemiology")
+subdirs("genetics")
+subdirs("neuroscience")
+subdirs("pharmacokinetics")
+subdirs("metabolism")

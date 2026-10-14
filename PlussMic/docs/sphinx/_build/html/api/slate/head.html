@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> entries of the thread as a <code class="docutils literal notranslate"><span class="pre">SlateView</span></code> — a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> subclass
+<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> entries of the slate as a <code class="docutils literal notranslate"><span class="pre">SlateView</span></code> — a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> subclass
 (it inherits every <code class="docutils literal notranslate"><span class="pre">Slate</span></code> method and renders identically via <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>) that
 additionally carries a display title (<code class="docutils literal notranslate"><span class="pre">&quot;head&quot;</span></code>) and an opt-in auto-render behavior
 for interactive/terminal contexts. <code class="docutils literal notranslate"><span class="pre">n</span></code> is silently clamped into <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">size()]</span></code> —
@@ -83,7 +83,7 @@ A view over the first <code class="docutils literal notranslate"><span class="pr
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. The default <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">5</span></code> on a shorter thread returns everything.</p>
+<p>Example 1. The default <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">5</span></code> on a shorter slate returns everything.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -99,7 +99,7 @@ A view over the first <code class="docutils literal notranslate"><span class="pr
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">n</span></code> larger than <code class="docutils literal notranslate"><span class="pre">size()</span></code> clamps — no error, just the whole thread back.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">n</span></code> larger than <code class="docutils literal notranslate"><span class="pre">size()</span></code> clamps — no error, just the whole slate back.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
 </pre></div>

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -74,8 +74,8 @@ or it throws.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread with eligible interior gaps interpolated. A thread with no
-missing values, or <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">==</span> <span class="pre">0</span></code>, or an empty thread, is returned unchanged.</p>
+A new slate with eligible interior gaps interpolated. A slate with no
+missing values, or <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">==</span> <span class="pre">0</span></code>, or an empty slate, is returned unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -147,7 +147,7 @@ left anchor to interpolate from.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 4. Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> — a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread throws.</p>
+<p>Example 4. Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> — a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">interp</span><span class="p">();</span>

@@ -12,7 +12,7 @@ SlateTimelineAccessor::period(std::string_view freq) const -> Slate
 
 ## What It Does
 
-Truncates every row of the bound thread to the *start* of its enclosing `freq`
+Truncates every row of the bound slate to the *start* of its enclosing `freq`
 period — same length, still `Timeline`-kind.
 
 ## Parameters
@@ -30,7 +30,7 @@ Cannot be empty.
 ## Returns
 
 `Slate`
-    A new `Timeline`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind slate, same length as the bound slate,
     truncated to the start of its `freq` period.
 
 ## Examples
@@ -125,7 +125,7 @@ Timeline::to_period: unsupported frequency
   [`floor()`](floor.md) with the corresponding unit; `"year"`/`"month"` go
   further than `floor()` supports (`floor()` has no calendar-unit option).
 - `freq` cannot be empty, and an unrecognized string throws.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 

@@ -13,15 +13,15 @@ Slate::tl() const -> SlateTimelineAccessor
 
 ## What It Does
 
-Enters the dedicated timestamp accessor for this thread — calendar-component
+Enters the dedicated timestamp accessor for this slate — calendar-component
 extraction (`year`, `month`, `weekday`, ...), formatting, timezone conversion,
 flooring/ceiling/rounding to a unit, spans between two timestamps, and more, one
 method per operation. Unlike [`nt()`](nt.md), `tl()` validates **eagerly**: the
-thread must already be defined and must already be `Timeline`- or `TimeIndex`-kind,
+slate must already be defined and must already be `Timeline`- or `TimeIndex`-kind,
 or the `.tl()` call itself throws immediately, before any accessor method runs.
 
 Unlike [`DataFrame::tl()`](../dataframe/tl.md), this accessor is bound to a single
-thread — there's no equivalent of `.features(...)` narrowing to do first.
+slate — there's no equivalent of `.features(...)` narrowing to do first.
 
 This page previews the accessor's most common entry points. Every one of its methods
 has its own dedicated, example-rich reference page — start at the
@@ -37,12 +37,12 @@ and use its left sidebar to jump straight to any method (`year`, `month`, `fmt`,
 
 `SlateTimelineAccessor`
     A lightweight accessor bound to this (already-validated) `Timeline`/`TimeIndex`
-    thread. Nearly every method on it returns a new `Slate`; the source thread is
+    slate. Nearly every method on it returns a new `Slate`; the source slate is
     never mutated.
 
 ## Examples
 
-Example 1. Pull calendar components off a `Timeline` thread.
+Example 1. Pull calendar components off a `Timeline` slate.
 
 ```cpp
 using namespace pluss::table;
@@ -82,10 +82,10 @@ std::cout << weekdays;
 ptype: Note
 ```
 
-`.year()` returns an `Int64` `Series`-kind thread; `.weekday_name()` returns a
-`Note`-kind thread of full weekday names.
+`.year()` returns an `Int64` `Series`-kind slate; `.weekday_name()` returns a
+`Note`-kind slate of full weekday names.
 
-Example 2. `tl()` throws immediately on a non-`Timeline`/`TimeIndex` thread — unlike
+Example 2. `tl()` throws immediately on a non-`Timeline`/`TimeIndex` slate — unlike
 [`nt()`](nt.md), the check happens at the `.tl()` call itself, not on first method use.
 
 ```cpp
@@ -105,7 +105,7 @@ Slate::tl: expected Timeline or TimeIndex payload
 
 ## Notes
 
-- `tl()` validates eagerly: the thread must be defined and must already be
+- `tl()` validates eagerly: the slate must be defined and must already be
   `Timeline`- or `TimeIndex`-kind, or `.tl()` itself throws
   (`"Slate::tl: Slate is undefined"` / `"Slate::tl: expected Timeline or
   TimeIndex payload"`) before any accessor method runs.
@@ -119,7 +119,7 @@ Slate::tl: expected Timeline or TimeIndex payload
 - [`Slate::nt`](nt.md): the equivalent dedicated accessor for `Note` text payloads,
   which validates its payload kind lazily instead of eagerly.
 - [`Slate::label`](label.md): the dedicated accessor for the case-label axis, which
-  works regardless of the thread's own payload kind.
+  works regardless of the slate's own payload kind.
 - [`DataFrame::tl`](../dataframe/tl.md): the frame-level equivalent, which requires
   every selected feature to already be `Timeline`/`TimeIndex`-kind.
 

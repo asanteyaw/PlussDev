@@ -14,7 +14,7 @@ Slate::dtype() const -> std::string
 ## What It Does
 
 Returns the concrete dtype name of the underlying payload — one level more specific
-than [`ptype()`](ptype.md)'s broad family name. For a `Series`-kind thread this is
+than [`ptype()`](ptype.md)'s broad family name. For a `Series`-kind slate this is
 the scalar type's own name (`"float64"`, `"bool"`, `"int64"`, and so on); for `Note`
 it's `"utf8"` (or `"bytes"`, for byte-string payloads); for `Timeline`/`TimeIndex`
 it's `"datetime64[ns, <tz>]"`, including the timezone.
@@ -32,7 +32,7 @@ it's `"datetime64[ns, <tz>]"`, including the timezone.
 
 Example 1. `dtype()` across the payload kinds — note how it differs from
 [`ptype()`](ptype.md), which would report `"Series"` / `"Note"` / `"Timeline"` for
-the same threads.
+the same slates.
 
 ```cpp
 using namespace pluss::table;
@@ -60,12 +60,12 @@ carries the `UTC` timezone — `dtype()` includes it directly in the string, unl
 
 ## Notes
 
-- `Series`-kind threads report their scalar type by name (`"float64"`, `"bool"`,
+- `Series`-kind slates report their scalar type by name (`"float64"`, `"bool"`,
   `"int64"`, etc.) — the same names `DataFrame::dtypes()` reports per feature.
-- `Note`-kind threads report `"utf8"` (or `"bytes"` for a byte-string payload).
-- `Timeline`/`TimeIndex`-kind threads report `"datetime64[ns, <tz>]"`, including the
+- `Note`-kind slates report `"utf8"` (or `"bytes"` for a byte-string payload).
+- `Timeline`/`TimeIndex`-kind slates report `"datetime64[ns, <tz>]"`, including the
   timezone.
-- Calling `dtype()` on an undefined thread throws `"Slate: undefined handle"`.
+- Calling `dtype()` on an undefined slate throws `"Slate: undefined handle"`.
 
 ## See Also
 

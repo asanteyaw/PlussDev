@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 <p>Executes the plan and materializes it as a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> of <code class="docutils literal notranslate"><span class="pre">Int64</span></code> <strong>row
 positions</strong> — the reusable permutation artifact, rather than the sorted
 frame itself. Feeding this into <a class="reference internal" href="../dataframe/take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::take</span></code></span></a>
-(on the same frame, or any other frame/thread that shares its row
+(on the same frame, or any other frame/slate that shares its row
 alignment) reproduces the sorted order.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -70,7 +70,7 @@ supplied to an earlier <code class="docutils literal notranslate"><span class="p
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-An <code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread of row positions, in sorted order.</p>
+An <code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate of row positions, in sorted order.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>

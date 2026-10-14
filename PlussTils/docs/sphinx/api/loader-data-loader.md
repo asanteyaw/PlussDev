@@ -2,22 +2,23 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/data_loader.h>
 
-class DataLoader {
-public:
-  using batch_type = DataBatch;
+using batch_type = DataBatch;
 
-  DataLoader() = default;
-  explicit DataLoader(const Dataset& dataset, DataLoaderOptions options = {});
-  explicit DataLoader(const SeriesDataset& dataset, DataLoaderOptions options = {});
-  explicit DataLoader(std::vector<Series> fields, DataLoaderOptions options = {});
-  DataLoader(std::initializer_list<Series> fields, DataLoaderOptions options = {});
+DataLoader();
+explicit DataLoader(const Dataset& dataset, DataLoaderOptions options = {});
+explicit DataLoader(const SeriesDataset& dataset, DataLoaderOptions options = {});
+explicit DataLoader(std::vector<Series> fields, DataLoaderOptions options = {});
+DataLoader(std::initializer_list<Series> fields, DataLoaderOptions options = {});
 
-  DataLoader& set_options(DataLoaderOptions options);
-};
+DataLoader& set_options(DataLoaderOptions options);
 ```
+
+## What It Does
 
 `DataLoader` turns a dataset into a sequence of batches, in the order its options describe: sequential or shuffled, with or without a custom sampler, with or without background workers. Build one from a list of fields, from a `SeriesDataset`, or from any `Dataset` subclass; all four constructors validate the options and compute the batch plan immediately, so a bad configuration is refused at construction, not on first use.
 

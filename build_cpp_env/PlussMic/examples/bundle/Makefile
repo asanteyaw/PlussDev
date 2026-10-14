@@ -193,80 +193,118 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/rule
-.PHONY : PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/rule
+PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/rule
+.PHONY : PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/rule
 
 # Convenience name for target.
-plussmic_bundle_model_demo: PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/rule
-.PHONY : plussmic_bundle_model_demo
+plussmic_locus_query_reference_demo: PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/rule
+.PHONY : plussmic_locus_query_reference_demo
 
 # fast build rule for target.
-plussmic_bundle_model_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build
-.PHONY : plussmic_bundle_model_demo/fast
+plussmic_locus_query_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/build
+.PHONY : plussmic_locus_query_reference_demo/fast
 
 # Convenience name for target.
-PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule
-.PHONY : PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule
+PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/rule
+.PHONY : PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/rule
 
 # Convenience name for target.
-plussmic_bundle_accessor_demo: PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/rule
-.PHONY : plussmic_bundle_accessor_demo
+plussmic_locus_traverse_reference_demo: PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/rule
+.PHONY : plussmic_locus_traverse_reference_demo
 
 # fast build rule for target.
-plussmic_bundle_accessor_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build
-.PHONY : plussmic_bundle_accessor_demo/fast
+plussmic_locus_traverse_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/build
+.PHONY : plussmic_locus_traverse_reference_demo/fast
 
-bundle_accessor_demo.o: bundle_accessor_demo.cpp.o
-.PHONY : bundle_accessor_demo.o
+# Convenience name for target.
+PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/rule
+.PHONY : PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/rule
 
-# target to build an object file
-bundle_accessor_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/bundle_accessor_demo.cpp.o
-.PHONY : bundle_accessor_demo.cpp.o
+# Convenience name for target.
+plussmic_locus_pull_reference_demo: PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/rule
+.PHONY : plussmic_locus_pull_reference_demo
 
-bundle_accessor_demo.i: bundle_accessor_demo.cpp.i
-.PHONY : bundle_accessor_demo.i
+# fast build rule for target.
+plussmic_locus_pull_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/build
+.PHONY : plussmic_locus_pull_reference_demo/fast
 
-# target to preprocess a source file
-bundle_accessor_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/bundle_accessor_demo.cpp.i
-.PHONY : bundle_accessor_demo.cpp.i
-
-bundle_accessor_demo.s: bundle_accessor_demo.cpp.s
-.PHONY : bundle_accessor_demo.s
-
-# target to generate assembly for a file
-bundle_accessor_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_accessor_demo.dir/bundle_accessor_demo.cpp.s
-.PHONY : bundle_accessor_demo.cpp.s
-
-bundle_model_demo.o: bundle_model_demo.cpp.o
-.PHONY : bundle_model_demo.o
+locus_pull_reference_demo.o: locus_pull_reference_demo.cpp.o
+.PHONY : locus_pull_reference_demo.o
 
 # target to build an object file
-bundle_model_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/bundle_model_demo.cpp.o
-.PHONY : bundle_model_demo.cpp.o
+locus_pull_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/locus_pull_reference_demo.cpp.o
+.PHONY : locus_pull_reference_demo.cpp.o
 
-bundle_model_demo.i: bundle_model_demo.cpp.i
-.PHONY : bundle_model_demo.i
+locus_pull_reference_demo.i: locus_pull_reference_demo.cpp.i
+.PHONY : locus_pull_reference_demo.i
 
 # target to preprocess a source file
-bundle_model_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/bundle_model_demo.cpp.i
-.PHONY : bundle_model_demo.cpp.i
+locus_pull_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/locus_pull_reference_demo.cpp.i
+.PHONY : locus_pull_reference_demo.cpp.i
 
-bundle_model_demo.s: bundle_model_demo.cpp.s
-.PHONY : bundle_model_demo.s
+locus_pull_reference_demo.s: locus_pull_reference_demo.cpp.s
+.PHONY : locus_pull_reference_demo.s
 
 # target to generate assembly for a file
-bundle_model_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_bundle_model_demo.dir/bundle_model_demo.cpp.s
-.PHONY : bundle_model_demo.cpp.s
+locus_pull_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_pull_reference_demo.dir/locus_pull_reference_demo.cpp.s
+.PHONY : locus_pull_reference_demo.cpp.s
+
+locus_query_reference_demo.o: locus_query_reference_demo.cpp.o
+.PHONY : locus_query_reference_demo.o
+
+# target to build an object file
+locus_query_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/locus_query_reference_demo.cpp.o
+.PHONY : locus_query_reference_demo.cpp.o
+
+locus_query_reference_demo.i: locus_query_reference_demo.cpp.i
+.PHONY : locus_query_reference_demo.i
+
+# target to preprocess a source file
+locus_query_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/locus_query_reference_demo.cpp.i
+.PHONY : locus_query_reference_demo.cpp.i
+
+locus_query_reference_demo.s: locus_query_reference_demo.cpp.s
+.PHONY : locus_query_reference_demo.s
+
+# target to generate assembly for a file
+locus_query_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_query_reference_demo.dir/locus_query_reference_demo.cpp.s
+.PHONY : locus_query_reference_demo.cpp.s
+
+locus_traverse_reference_demo.o: locus_traverse_reference_demo.cpp.o
+.PHONY : locus_traverse_reference_demo.o
+
+# target to build an object file
+locus_traverse_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/locus_traverse_reference_demo.cpp.o
+.PHONY : locus_traverse_reference_demo.cpp.o
+
+locus_traverse_reference_demo.i: locus_traverse_reference_demo.cpp.i
+.PHONY : locus_traverse_reference_demo.i
+
+# target to preprocess a source file
+locus_traverse_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/locus_traverse_reference_demo.cpp.i
+.PHONY : locus_traverse_reference_demo.cpp.i
+
+locus_traverse_reference_demo.s: locus_traverse_reference_demo.cpp.s
+.PHONY : locus_traverse_reference_demo.s
+
+# target to generate assembly for a file
+locus_traverse_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/build.make PlussMic/examples/bundle/CMakeFiles/plussmic_locus_traverse_reference_demo.dir/locus_traverse_reference_demo.cpp.s
+.PHONY : locus_traverse_reference_demo.cpp.s
 
 # Help Target
 help:
@@ -283,14 +321,18 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... plussmic_bundle_accessor_demo"
-	@echo "... plussmic_bundle_model_demo"
-	@echo "... bundle_accessor_demo.o"
-	@echo "... bundle_accessor_demo.i"
-	@echo "... bundle_accessor_demo.s"
-	@echo "... bundle_model_demo.o"
-	@echo "... bundle_model_demo.i"
-	@echo "... bundle_model_demo.s"
+	@echo "... plussmic_locus_pull_reference_demo"
+	@echo "... plussmic_locus_query_reference_demo"
+	@echo "... plussmic_locus_traverse_reference_demo"
+	@echo "... locus_pull_reference_demo.o"
+	@echo "... locus_pull_reference_demo.i"
+	@echo "... locus_pull_reference_demo.s"
+	@echo "... locus_query_reference_demo.o"
+	@echo "... locus_query_reference_demo.i"
+	@echo "... locus_query_reference_demo.s"
+	@echo "... locus_traverse_reference_demo.o"
+	@echo "... locus_traverse_reference_demo.i"
+	@echo "... locus_traverse_reference_demo.s"
 .PHONY : help
 
 

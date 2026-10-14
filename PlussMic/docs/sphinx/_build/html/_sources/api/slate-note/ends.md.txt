@@ -12,11 +12,11 @@ SlateNoteAccessor::ends(std::string_view suffix) const -> Slate
 
 ## What It Does
 
-Checks the bound thread's cells for a literal, case-sensitive suffix match,
+Checks the bound slate's cells for a literal, case-sensitive suffix match,
 replacing each cell with a `Bool` — `true` where the cell's text ends with
 `suffix`, `false` where it doesn't. A direct forward to
-[`Slate::ends()`](../thread/ends.md); the mirror image of [`starts()`](starts.md).
-Requires the bound thread to be `Note`-kind.
+[`Slate::ends()`](../slate/ends.md); the mirror image of [`starts()`](starts.md).
+Requires the bound slate to be `Note`-kind.
 
 ## Parameters
 
@@ -28,12 +28,12 @@ non-null cell.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread, holding the
+    A new `Bool`-typed `Series` slate, same length as the bound slate, holding the
     elementwise suffix check.
 
 ## Examples
 
-Example 1. Check a filenames thread for a literal, case-sensitive suffix.
+Example 1. Check a filenames slate for a literal, case-sensitive suffix.
 
 ```cpp
 using namespace pluss::table;
@@ -76,8 +76,8 @@ ptype: Series
 Lowercasing first folds `"notes.PDF"` down to `"notes.pdf"`, so row `1` now matches
 too — `ends()` itself never gained a case-insensitivity option.
 
-Example 3. A non-`Note` thread throws — the same message
-[`Slate::ends()`](../thread/ends.md) produces directly.
+Example 3. A non-`Note` slate throws — the same message
+[`Slate::ends()`](../slate/ends.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -98,14 +98,14 @@ Slate::ends: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::ends()` is a one-line forward to
-  [`Slate::ends()`](../thread/ends.md) — identical behavior and throws.
+  [`Slate::ends()`](../slate/ends.md) — identical behavior and throws.
 - Case-sensitive, literal comparison only — no regex mode.
 - Changes the payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
 
 ## See Also
 
-- [`Slate::ends`](../thread/ends.md): the direct, non-accessor form this method
+- [`Slate::ends`](../slate/ends.md): the direct, non-accessor form this method
   forwards to.
 - [`SlateNoteAccessor::starts`](starts.md): the same check anchored at the start
   instead of the end.

@@ -16,7 +16,7 @@ behavioral prose and executable-derived outputs.
 across columns whose concrete type isn't known until runtime, such as a
 table layer that stores Series, Note, Timeline, and Duration columns side by
 side. A `Queue` always holds exactly one of the four; `kind()` reports which,
-and `invoke("method", args...)` routes a MATLAB-style method name to a
+and `invoke("method", args...)` routes the method name to a
 method on whichever of `Series`, `Note`, `Timeline`, or `Duration` the
 payload actually is.
 
@@ -82,15 +82,19 @@ same result: true
 ## Practical Construction Patterns
 
 Example 1. Wrap each of the four payload types. `kind_name()` reports which
-one a given `Queue` is actually holding.
+one a given `Queue` is actually holding. Assignment and braces make the two
+steps explicit: a public factory first creates the payload, and the public
+`Queue` constructor then wraps it.
 
 ```cpp
-pluss::Queue from_series(pluss::make_series({1.0, 2.0, 3.0}));
-pluss::Queue from_note(pluss::make_note({"a", "b"}));
-pluss::Queue from_timeline(pluss::timeline::make("1999-04-17T21:15:23Z"));
-pluss::Queue from_duration(pluss::duration::days(3));
-std::cout << from_series.kind_name() << ' ' << from_note.kind_name() << ' '
-          << from_timeline.kind_name() << ' ' << from_duration.kind_name() << '\n';
+const auto measurements = pluss::Queue{pluss::make_series({1.0, 2.0, 3.0})};
+const auto labels = pluss::Queue{pluss::make_note({"a", "b"})};
+const auto observed_at =
+    pluss::Queue{pluss::timeline::make("1999-04-17T21:15:23Z")};
+const auto timeout = pluss::Queue{pluss::duration::days(3)};
+
+std::cout << measurements.kind_name() << ' ' << labels.kind_name() << ' '
+          << observed_at.kind_name() << ' ' << timeout.kind_name() << '\n';
 ```
 
 ### Output

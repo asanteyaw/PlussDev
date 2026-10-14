@@ -17,7 +17,7 @@ Applies `fn` to every case label individually and replaces the case labels
 with the results. Only works on an **unstructured** frame (no `case_axis_` —
 i.e. not one built by promoting a named feature via [`set(feature_name)`](set.md));
 calling it on a structured, multi-level frame throws, since there's no single
-flat thread to map over. Map an individual level via
+flat slate to map over. Map an individual level via
 [`part(name)`](part.md) and [`set()`](set.md) it back instead.
 
 ## Parameters
@@ -125,7 +125,7 @@ throws instead of silently doing nothing.
 
 ## See Also
 
-- [`DataFrameLabelAccessor::values`](values.md): pull the raw label thread if you
+- [`DataFrameLabelAccessor::values`](values.md): pull the raw label slate if you
   need to cast or otherwise transform label payloads outside `map(...)`.
 - [`DataFrameLabelAccessor::set`](set.md): the underlying mechanism this method
   applies its result through.

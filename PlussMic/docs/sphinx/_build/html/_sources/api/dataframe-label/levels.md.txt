@@ -16,7 +16,7 @@ DataFrameLabelAccessor::levels() const -> DataFrame
 Lists the distinct values of each case-label level, one column per level, in
 first-occurrence order — the values that [`codes()`](codes.md)'s integer
 codes index into. For an unstructured frame, this is a single `label` column of
-the flat case-label thread's own distinct values.
+the flat case-label slate's own distinct values.
 
 Levels naturally hold different numbers of distinct values; shorter columns
 are padded to match the longest one.

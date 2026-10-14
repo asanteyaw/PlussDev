@@ -12,8 +12,8 @@ SlateNoteAccessor::casefold() const -> Slate
 
 ## What It Does
 
-Produces a case-insensitive-comparison form of the bound thread's text — a direct
-forward to [`Slate::casefold()`](../thread/casefold.md), the identical operation
+Produces a case-insensitive-comparison form of the bound slate's text — a direct
+forward to [`Slate::casefold()`](../slate/casefold.md), the identical operation
 reached without going through the accessor. Conceptually similar to
 [`lower()`](lower.md), but intended specifically as a normalization step **before
 equality comparison**, not as a display transform. True Unicode case folding can
@@ -27,8 +27,8 @@ being functionally identical to [`lower()`](lower.md). On plain ASCII input, the
 always produce the same result regardless of build configuration.
 ```
 
-Requires the bound thread to be `Note`-kind — calling it on a numeric or other kind
-of thread throws.
+Requires the bound slate to be `Note`-kind — calling it on a numeric or other kind
+of slate throws.
 
 ## Parameters
 
@@ -37,7 +37,7 @@ of thread throws.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, holding the
+    A new `Note`-kind slate, same length as the bound slate, holding the
     case-folded text.
 
 ## Examples
@@ -64,8 +64,8 @@ ptype: Note
 
 On this plain-ASCII input, identical to what `roles.nt().lower()` would produce.
 
-Example 2. Calling it on a non-`Note` thread throws — the same message
-[`Slate::casefold()`](../thread/casefold.md) produces directly, since the accessor
+Example 2. Calling it on a non-`Note` slate throws — the same message
+[`Slate::casefold()`](../slate/casefold.md) produces directly, since the accessor
 is a pure forward.
 
 ```cpp
@@ -87,7 +87,7 @@ Slate::casefold: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::casefold()` is a one-line forward to
-  [`Slate::casefold()`](../thread/casefold.md) — identical behavior, same throw
+  [`Slate::casefold()`](../slate/casefold.md) — identical behavior, same throw
   message, whether reached via `.nt().casefold()` or `.casefold()` directly.
 - A null cell on input stays null on output.
 - Reach for `casefold()`, not `lower()`, whenever the goal is a case-insensitive
@@ -97,7 +97,7 @@ Slate::casefold: expected Note payload
 
 ## See Also
 
-- [`Slate::casefold`](../thread/casefold.md): the direct, non-accessor form this
+- [`Slate::casefold`](../slate/casefold.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateNoteAccessor::lower`](lower.md): the plain lowercase display transform this
   method is easy to confuse with.

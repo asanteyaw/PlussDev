@@ -225,7 +225,7 @@ Primary APIs:
 
 Optimization libraries should not be built around manual graph plumbing.
 
-Instead of teaching solvers to perform:
+Instead of making solvers perform:
 
 - tape setup
 - reverse seeding

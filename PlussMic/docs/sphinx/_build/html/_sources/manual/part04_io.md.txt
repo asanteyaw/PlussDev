@@ -268,7 +268,7 @@ Important CSV options:
 | `sep` | explicit separator |
 | `auto_detect_sep` | infer separator when `sep` is not explicit |
 | `engine` | `Auto`, `Parallel`, or `Serial` |
-| `parallel_threads` | requested parallel parse threads |
+| `parallel_threads` | requested parallel parse slates |
 | `profile` | emit parser timing diagnostics |
 | `header`, `header_row`, `names` | header handling |
 | `usefeats`, `usefeats_idx` | select input features |

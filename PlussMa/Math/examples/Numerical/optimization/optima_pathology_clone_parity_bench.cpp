@@ -300,7 +300,6 @@ int main() {
     options.internal_protocol.minimum_barrier_parameter = 1e-10;
     options.internal_protocol.constraint_tolerance = 1e-6;
     options.internal_protocol.optimality_tolerance = 1e-6;
-    options.internal_protocol.dual_recentering_fraction = 0.0;
     const auto problem = make_complementarity_probe_problem();
     const ParameterPack<Series> initial({
         {"x", make_vec2(0.7, 0.7)},

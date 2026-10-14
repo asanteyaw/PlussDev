@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 <p>Elementwise logical AND. Unlike the arithmetic and comparison families, <code class="docutils literal notranslate"><span class="pre">land()</span></code> has
 only one overload — there’s no scalar form, since a scalar boolean would just be
 <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code> applied uniformly, which reads more clearly as a plain <code class="docutils literal notranslate"><span class="pre">if</span></code>. Both
-<code class="docutils literal notranslate"><span class="pre">*this</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> must be genuine <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> threads (not <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code>
+<code class="docutils literal notranslate"><span class="pre">*this</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> must be genuine <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slates (not <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code>
 numbers — cast first with <code class="docutils literal notranslate"><span class="pre">astype(pluss::ScalarType::Bool)</span></code> if needed), and must be
 the same length; matching is purely positional.</p>
 <div class="admonition important">
@@ -68,18 +68,18 @@ of this reference’s reflected-method pairs.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)</p>
-<p>A <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise
 logical AND. Display labels (if <code class="docutils literal notranslate"><span class="pre">*this</span></code> has any set via <code class="docutils literal notranslate"><span class="pre">label().set()</span></code>) carry
 through onto the result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. AND two boolean threads, with display labels set on both sides.</p>
+<p>Example 1. AND two boolean slates, with display labels set on both sides.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))</span>
@@ -101,7 +101,7 @@ ptype: Series
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">true</span> <span class="pre">&amp;</span> <span class="pre">true</span> <span class="pre">=</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span> <span class="pre">&amp;</span> <span class="pre">true</span> <span class="pre">=</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">true</span> <span class="pre">&amp;</span> <span class="pre">false</span> <span class="pre">=</span> <span class="pre">false</span></code> — and the
-result’s row labels (<code class="docutils literal notranslate"><span class="pre">p,</span> <span class="pre">q,</span> <span class="pre">r</span></code>) come from <code class="docutils literal notranslate"><span class="pre">left</span></code>, the thread <code class="docutils literal notranslate"><span class="pre">land()</span></code> was called on.
+result’s row labels (<code class="docutils literal notranslate"><span class="pre">p,</span> <span class="pre">q,</span> <span class="pre">r</span></code>) come from <code class="docutils literal notranslate"><span class="pre">left</span></code>, the slate <code class="docutils literal notranslate"><span class="pre">land()</span></code> was called on.
 <code class="docutils literal notranslate"><span class="pre">right</span></code>’s labels (<code class="docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">z</span></code>) never appear. See <a class="reference internal" href="rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rand()</span></code></span></a> for how the
 reflected form differs here.</p>
 <p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Bool</span></code> operand throws.</p>
@@ -120,7 +120,7 @@ reflected form differs here.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::land(Slate): operation requires a Bool Series payload
 </pre></div>
 </div>
-<p>Even though <code class="docutils literal notranslate"><span class="pre">1.0</span></code>/<code class="docutils literal notranslate"><span class="pre">0.0</span></code> look boolean-ish, <code class="docutils literal notranslate"><span class="pre">land()</span></code> requires the thread’s actual
+<p>Even though <code class="docutils literal notranslate"><span class="pre">1.0</span></code>/<code class="docutils literal notranslate"><span class="pre">0.0</span></code> look boolean-ish, <code class="docutils literal notranslate"><span class="pre">land()</span></code> requires the slate’s actual
 scalar type to be <code class="docutils literal notranslate"><span class="pre">Bool</span></code> — cast first with <code class="docutils literal notranslate"><span class="pre">astype(pluss::ScalarType::Bool)</span></code>.</p>
 <p>Example 3. A length mismatch throws too.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">too_short</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>

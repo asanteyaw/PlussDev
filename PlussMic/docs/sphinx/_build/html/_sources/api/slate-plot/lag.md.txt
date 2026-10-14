@@ -13,14 +13,14 @@ SlatePlotAccessor::lag(const LagPlotOptions& options = {}) const -> pluss::pl::S
 
 ## What It Does
 
-Draws a lag plot for the bound thread's values: a scatter of `x(t)` against
+Draws a lag plot for the bound slate's values: a scatter of `x(t)` against
 `x(t + lag)` — the single-series specialization of
 [`DataFramePlotAccessor::lag`](../../api/dataframe-plot/lag.md), which on the 2D accessor
-requires naming a feature; here the bound thread is always the one and only feature
+requires naming a feature; here the bound slate is always the one and only feature
 lagged.
 
 ```{note} At least two data points are required
-Same as the 2D accessor: a thread with fewer than two rows throws
+Same as the 2D accessor: a slate with fewer than two rows throws
 `"flash::lagplot requires at least two points"`.
 ```
 
@@ -67,10 +67,10 @@ chart.show();
 
 ## Notes
 
-- The bound thread is always the single lagged feature — there is no feature-name argument
+- The bound slate is always the single lagged feature — there is no feature-name argument
   the way the 2D accessor's `lag()` has.
 - `lag` is clamped to `[1, n - 1]`, never throwing for an out-of-range request.
-- A thread with fewer than two rows throws before any point is drawn.
+- A slate with fewer than two rows throws before any point is drawn.
 - Returns a `pluss::pl::Studio` — see [`line()`](line.md) for how to view or save the
   result.
 

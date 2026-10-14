@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,11 +52,11 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Draws a single line trace of the bound thread’s own values, against either a plain case
+<p>Draws a single line trace of the bound slate’s own values, against either a plain case
 index (no <code class="docutils literal notranslate"><span class="pre">x</span></code> given) or an explicit companion <code class="docutils literal notranslate"><span class="pre">Slate</span></code> used as the x-axis. This is the
 single-series specialization of
 <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>: internally, <code class="docutils literal notranslate"><span class="pre">line()</span></code>
-wraps the bound thread (and, if given, <code class="docutils literal notranslate"><span class="pre">x</span></code>) into a one- or two-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and calls
+wraps the bound slate (and, if given, <code class="docutils literal notranslate"><span class="pre">x</span></code>) into a one- or two-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and calls
 straight into that method — every field of <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code> behaves identically to its 2D
 counterpart, and this page’s callouts on naming and row-label handling apply to every other
 method on this accessor too, not just <code class="docutils literal notranslate"><span class="pre">line()</span></code>.</p>
@@ -64,13 +64,13 @@ method on this accessor too, not just <code class="docutils literal notranslate"
 <p class="admonition-title">Important</p>
 <p>How a wrapped Slate becomes a named column and inherits row labels
 Every method on this accessor that takes one or more <code class="docutils literal notranslate"><span class="pre">Slate</span></code> arguments builds a small
-internal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> before delegating. Each thread becomes one column, named after that
-thread’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one (set via <code class="docutils literal notranslate"><span class="pre">name(...)</span></code>, checked via <code class="docutils literal notranslate"><span class="pre">named()</span></code>); otherwise a
-generic fallback name is used — <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> for the bound thread itself, <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> for a
-companion x-axis thread (other methods on this accessor use <code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;label&quot;</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">&quot;group&quot;</span></code> for their own second-thread arguments, documented on their own pages). Row
-(case) labels for the resulting frame come from whichever thread involved actually has
-them: the bound value thread is checked first, then the companion thread — the first one
+internal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> before delegating. Each slate becomes one column, named after that
+slate’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one (set via <code class="docutils literal notranslate"><span class="pre">name(...)</span></code>, checked via <code class="docutils literal notranslate"><span class="pre">named()</span></code>); otherwise a
+generic fallback name is used — <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> for the bound slate itself, <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> for a
+companion x-axis slate (other methods on this accessor use <code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;label&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;group&quot;</span></code> for their own second-slate arguments, documented on their own pages). Row
+(case) labels for the resulting frame come from whichever slate involved actually has
+them: the bound value slate is checked first, then the companion slate — the first one
 found wins, and if neither has row labels the frame falls back to a plain numeric case
 index, exactly like a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> built without explicit row labels.</p>
 </div>
@@ -78,8 +78,8 @@ index, exactly like a <code class="docutils literal notranslate"><span class="pr
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>, optional)
-A companion thread used as the x-axis. Must be the same size as the bound thread — a
-mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>. Omitted means the
+A companion slate used as the x-axis. Must be the same size as the bound slate — a
+mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>. Omitted means the
 x-axis falls back to the resulting frame’s own row labels (or a plain case index — see
 the important callout above), exactly like
 <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a> with no <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>
@@ -89,18 +89,18 @@ The identical struct documented on
 <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>
 (<code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">line_width</span></code>, <code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>) — see that page for each field’s
 meaning. <code class="docutils literal notranslate"><span class="pre">align</span></code> is doubly inert at this layer: <code class="docutils literal notranslate"><span class="pre">x</span></code>’s own size check above
-(<code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>) throws unconditionally on a mismatch, before
+(<code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>) throws unconditionally on a mismatch, before
 any <code class="docutils literal notranslate"><span class="pre">align</span></code>-aware reconciliation could ever run.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
 A figure with one pane containing a single, unlabeled (no-legend) line trace of the
-bound thread’s values.</p>
+bound slate’s values.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. No companion thread: the x-axis falls back to a plain case index.</p>
+<p>Example 1. No companion slate: the x-axis falls back to a plain case index.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}));</span>
@@ -111,10 +111,10 @@ bound thread’s values.</p>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">revenue</span></code> has no row labels of its own, so the wrapped one-column frame falls back to a
-plain <code class="docutils literal notranslate"><span class="pre">0..3</span></code> case index; the y-axis is labeled <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code>, taken from the thread’s own
+plain <code class="docutils literal notranslate"><span class="pre">0..3</span></code> case index; the y-axis is labeled <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code>, taken from the slate’s own
 <code class="docutils literal notranslate"><span class="pre">name()</span></code>.</p>
 <p><img alt="Output of Example 1" src="../../_images/line-14.svg" /></p>
-<p>Example 2. An explicit companion thread as the x-axis.</p>
+<p>Example 2. An explicit companion slate as the x-axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Apr&quot;</span><span class="p">}));</span>
 <span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">month</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">);</span>
 
@@ -123,7 +123,7 @@ plain <code class="docutils literal notranslate"><span class="pre">0..3</span></
 </pre></div>
 </div>
 <p>The wrapped frame now has two columns, <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code> (each named from its own
-thread’s <code class="docutils literal notranslate"><span class="pre">name()</span></code>), and the line is drawn against <code class="docutils literal notranslate"><span class="pre">month</span></code>’s four categorical
+slate’s <code class="docutils literal notranslate"><span class="pre">name()</span></code>), and the line is drawn against <code class="docutils literal notranslate"><span class="pre">month</span></code>’s four categorical
 positions instead of a numeric case index.</p>
 <p><img alt="Output of Example 2" src="../../_images/line-22.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity and the y-axis fit.</p>
@@ -137,7 +137,7 @@ positions instead of a numeric case index.</p>
 </div>
 <p><img alt="Output of Example 3" src="../../_images/line-33.svg" /></p>
 <p>Example 4. Row labels are inherited from whichever operand actually has them — here, from
-<code class="docutils literal notranslate"><span class="pre">month</span></code> since the bound <code class="docutils literal notranslate"><span class="pre">revenue</span></code> thread itself has none.</p>
+<code class="docutils literal notranslate"><span class="pre">month</span></code> since the bound <code class="docutils literal notranslate"><span class="pre">revenue</span></code> slate itself has none.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))</span>
 <span class="w">                            </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q4&quot;</span><span class="p">})));</span>
 
@@ -146,16 +146,16 @@ positions instead of a numeric case index.</p>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">labeled_revenue</span></code> carries its own row labels (<code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code>), so the wrapped frame’s case
-axis uses those directly, even with no companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread supplied.</p>
+axis uses those directly, even with no companion <code class="docutils literal notranslate"><span class="pre">x</span></code> slate supplied.</p>
 <p><img alt="Output of Example 4" src="../../_images/line-43.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Wraps the bound thread (and any companion thread) into a small internal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and
+<li><p>Wraps the bound slate (and any companion slate) into a small internal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and
 delegates to <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a> — see the
 important callout above for exactly how naming and row-label inheritance work.</p></li>
-<li><p>A companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread must match the bound thread’s size, or the call throws.</p></li>
+<li><p>A companion <code class="docutils literal notranslate"><span class="pre">x</span></code> slate must match the bound slate’s size, or the call throws.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code> behaves identically to its 2D counterpart.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, never printed as text — see
 <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>’s important callout for
@@ -170,8 +170,8 @@ delegates to, and the canonical explanation of <code class="docutils literal not
 <li><p><a class="reference internal" href="step.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::step</span></code></span></a> / <a class="reference internal" href="area.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">area</span></code></span></a>: the same shape, drawn as a
 step function or a filled area instead of a straight line.</p></li>
 <li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::scatter</span></code></span></a>: unconnected points against a required
-companion thread, instead of a connected line against an optional one.</p></li>
-<li><p><a class="reference internal" href="#../thread/plot.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::plot</span></code></span></a>: how to enter this accessor in the first place.</p></li>
+companion slate, instead of a connected line against an optional one.</p></li>
+<li><p><a class="reference internal" href="../slate/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::plot</span></code></span></a>: how to enter this accessor in the first place.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lag.html">

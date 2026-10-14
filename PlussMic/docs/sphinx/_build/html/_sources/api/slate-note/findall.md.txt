@@ -13,7 +13,7 @@ SlateNoteAccessor::findall(std::string_view pattern, const TextOptions& options)
 
 ## What It Does
 
-Finds every match of `pattern` in each cell of the bound thread and expands the
+Finds every match of `pattern` in each cell of the bound slate and expands the
 result into one output column per match position — column `match_0` holds each
 row's first match, `match_1` its second, and so on. Rows with fewer matches than
 another row have `NULL` in the columns beyond their own match count; the number of
@@ -173,7 +173,7 @@ std::cout << out4;
   `limit` is applied); rows with fewer matches get `NULL` in the extra columns.
 - An invalid input cell contributes zero matches, the same as a cell with genuinely
   no matches.
-- Requires the bound thread to be `Note`-kind, or the call throws.
+- Requires the bound slate to be `Note`-kind, or the call throws.
 
 ## See Also
 

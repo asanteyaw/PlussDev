@@ -13,9 +13,9 @@ Slate::isfinite() const -> Slate
 
 ## What It Does
 
-Returns a `Bool`-typed `Series` thread, same length as `*this`, marking `true`
+Returns a `Bool`-typed `Series` slate, same length as `*this`, marking `true`
 wherever the value is both a real finite number (not `NaN`, not `±Inf`) **and**
-valid (not `NULL`). Requires the thread to be `Series`-kind. Unlike
+valid (not `NULL`). Requires the slate to be `Series`-kind. Unlike
 [`isnan()`](isnan.md), which checks the numeric value alone, `isfinite()` combines
 the numeric check with the validity mask — a masked-`NULL` cell is `false` here even
 if its underlying stored value happens to be an ordinary finite number.
@@ -27,7 +27,7 @@ if its underlying stored value happens to be an ordinary finite number.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`.
+    A new `Bool`-typed `Series` slate, same length as `*this`.
 
 ## Examples
 
@@ -59,7 +59,7 @@ finite numbers; position `3` is `false` because it's masked `NULL`, even though 
 underlying stored value (`4.0`) is an ordinary finite number. Only position `0` is
 genuinely finite *and* valid.
 
-Example 2. A non-`Series` thread throws.
+Example 2. A non-`Series` slate throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -78,7 +78,7 @@ Slate::isfinite is only valid for Series payload
 
 ## Notes
 
-- Requires the calling thread to be `Series`-kind.
+- Requires the calling slate to be `Series`-kind.
 - Combines a numeric finiteness check with the validity mask — `false` for `NaN`,
   `±Inf`, *and* masked-`NULL` cells.
 - The exact opposite question `NaN`-only checks like [`isnan()`](isnan.md) answer:
@@ -91,7 +91,7 @@ Slate::isfinite is only valid for Series payload
 - [`Slate::isnull`](isnull.md): the validity-mask-only check, without inspecting
   the numeric value.
 - [`Slate::invalid`](invalid.md): the logical inverse of this method (for
-  `Series`-kind threads).
+  `Series`-kind slates).
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="invalid.html">

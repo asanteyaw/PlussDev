@@ -2,7 +2,7 @@
 
 This document freezes the target contract for making `pluss::Note` a closed,
 homogeneously typed value family. It is an implementation gate for the eight
-migration passes, not public API teaching.
+migration passes, not public API documentation.
 
 The priority order is strict:
 

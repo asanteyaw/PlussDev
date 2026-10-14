@@ -202,7 +202,6 @@ detail::LocusImpl& Locus::impl_mut_() {
 
 Locus Locus::clone_() const { return Locus(clone_impl(impl_ref_())); }
 
-std::int64_t Locus::size() const { return ntables(); }
 std::int64_t Locus::ntables() const { return static_cast<std::int64_t>(impl_ref_().keys_.size()); }
 std::int64_t Locus::nrelationships() const {
   return static_cast<std::int64_t>(impl_ref_().relationships_.size());
@@ -210,7 +209,6 @@ std::int64_t Locus::nrelationships() const {
 std::pair<std::int64_t, std::int64_t> Locus::shape() const { return {ntables(), nrelationships()}; }
 
 const std::vector<std::string>& Locus::keys() const { return impl_ref_().keys_; }
-const std::vector<std::string>& Locus::names() const { return keys(); }
 const std::vector<pluss::kindle::Catalog>& Locus::catalogs() const { return impl_ref_().catalogs_; }
 
 bool Locus::has(std::string_view name) const {
@@ -230,8 +228,6 @@ pluss::kindle::Catalog Locus::catalog(std::int64_t index) const {
   const auto idx = normalize_index(index, ntables(), "Locus::catalog");
   return src.catalogs_[static_cast<std::size_t>(idx)];
 }
-
-pluss::kindle::Catalog Locus::dloc(std::int64_t index) const { return catalog(index); }
 
 std::optional<pluss::kindle::Catalog> Locus::get(std::string_view name) const {
   const auto& src = impl_ref_();
@@ -825,8 +821,6 @@ Locus Locus::apply_all(const CatalogFn& fn) const {
   return out;
 }
 
-Locus Locus::map_catalogs(const CatalogFn& fn) const { return apply_all(fn); }
-
 Locus Locus::flow(const std::function<Locus(const Locus&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn), "Locus::flow: callback is empty");
   auto out = fn(*this);
@@ -895,12 +889,6 @@ Catalog Locus::duplicates(std::string_view table) const { return kindled(nexus()
 
 Catalog Locus::duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const {
   return kindled(nexus().duplicates(table, keys));
-}
-
-Catalog Locus::detect_duplicates(std::string_view table) const { return duplicates(table); }
-
-Catalog Locus::detect_duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const {
-  return duplicates(table, keys);
 }
 
 bool Locus::validate_relationship(std::string_view name) const { return nexus().validate_relationship(name); }

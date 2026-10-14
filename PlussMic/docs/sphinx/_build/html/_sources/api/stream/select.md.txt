@@ -23,7 +23,7 @@ static Stream Stream::select(
 
 Chooses row-wise between whole streams, using boolean `Slate` masks as the conditions.
 
-Payload selection delegates to [`Slate::select`](../thread/select.md). If the streams
+Payload selection delegates to [`Slate::select`](../slate/select.md). If the streams
 carry labels, label selection is delegated a second time on the label axis so the output
 keeps the matching row labels too.
 
@@ -36,7 +36,7 @@ keeps the matching row labels too.
 
 ## See Also
 
-- [`Slate::select`](../thread/select.md): the lower-level row-wise chooser this delegates
+- [`Slate::select`](../slate/select.md): the lower-level row-wise chooser this delegates
   to.
 - [`Catalog::select`](../catalog/select.md): the whole-catalog coordinator built on this.
 

@@ -2,24 +2,26 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/data_loader.h>
 
-class Dataset {
-public:
-  virtual std::int64_t size() const = 0;
-  virtual DataBatch get(std::int64_t index) const = 0;
-  virtual std::vector<Series> materialize_fields() const { return {}; }
-  virtual std::int64_t batch_dim() const noexcept { return 0; }
-};
+virtual std::int64_t Dataset::size() const = 0;
+virtual DataBatch Dataset::get(std::int64_t index) const = 0;
+virtual std::vector<Series> Dataset::materialize_fields() const;
+virtual std::int64_t Dataset::batch_dim() const noexcept;
 
-class SeriesDataset final : public Dataset {
-public:
-  explicit SeriesDataset(std::vector<Series> fields, std::int64_t batch_dim = 0);
-  SeriesDataset(std::initializer_list<Series> fields, std::int64_t batch_dim = 0);
-  const std::vector<Series>& fields() const noexcept;
-};
+explicit SeriesDataset::SeriesDataset(std::vector<Series> fields, std::int64_t batch_dim = 0);
+SeriesDataset::SeriesDataset(std::initializer_list<Series> fields, std::int64_t batch_dim = 0);
+const std::vector<Series>& SeriesDataset::fields() const noexcept;
 ```
+
+`SeriesDataset` derives from `Dataset`. `size` and `get` are pure virtual and
+must be overridden; `materialize_fields` and `batch_dim` have defaults, so a
+subclass only needs to override them when it has a faster whole-dataset path.
+
+## What It Does
 
 `Dataset` is the map-style interface a `DataLoader` reads from: `size` reports the sample count, and `get` returns one sample as a `DataBatch`. Override `materialize_fields` when the whole dataset can be produced as a set of batch-dimension-aligned fields in one call; a `DataLoader` prefers this path when it is available, because it avoids calling `get` once per sample. `batch_dim` names which axis of those fields holds the samples; it defaults to the first axis.
 

@@ -248,7 +248,10 @@ JoinPlan plan_from_path(const JoinPath& path, JoinHow how) {
     JoinSpec spec;
     spec.how = how;
     spec.right_suffix = std::string("_") + step.to_table;
-    spec.relationship_name = step.relationship_name;
+    // A cross join uses the route only to choose the sequence of catalogs. It
+    // must not carry relationship keys or a relationship binding into the
+    // resolver, because Cartesian matching is intentionally keyless.
+    if (how != JoinHow::Cross) spec.relationship_name = step.relationship_name;
     out.steps.push_back(JoinPlanStep{
         .left_table = step.from_table,
         .right_table = step.to_table,

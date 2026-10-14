@@ -1,6 +1,7 @@
 #include "bundle/Locus.h"
 
 #include <algorithm>
+#include <limits>
 #include <numeric>
 #include <unordered_map>
 #include <unordered_set>
@@ -110,18 +111,18 @@ LocusPull& LocusPull::add(std::initializer_list<locus::PullSpec> specs) {
   return *this;
 }
 
-LocusPull& LocusPull::take(std::initializer_list<std::string_view> sources) {
+LocusPull& LocusPull::take(pluss::msharp::RangeView::Of<std::string_view> sources) {
   for (const auto source : sources) add(nexus::take(source));
   return *this;
 }
 
-LocusPull& LocusPull::take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+LocusPull& LocusPull::take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
   for (const auto& [source, alias] : fields) add(nexus::take(source, alias));
   return *this;
 }
 
 LocusPull& LocusPull::take(std::string_view table,
-                           std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+                           pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) {
   for (const auto& [source, alias] : fields) add(nexus::take(qualify(table, source), alias));
   return *this;
 }
@@ -152,7 +153,7 @@ LocusPullAgg::LocusPullAgg(LocusPull& pull, std::string table) : pull_(&pull), t
     pull_->add(nexus::NAME(qualify(table_, feature), alias));                                         \
     return *this;                                                                                     \
   }                                                                                                   \
-  LocusPullAgg& LocusPullAgg::NAME(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) { \
+  LocusPullAgg& LocusPullAgg::NAME(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) { \
     for (const auto& [feature, alias] : fields) NAME(feature, alias);                                \
     return *this;                                                                                     \
   }
@@ -320,7 +321,10 @@ Catalog LocusPull::collect() const {
                               f.token, f.table));
       const auto child_time = load_time(tb.catalog, *child_meta->time_field, f.table, where);
       const auto child_shift = tb.layout.shift_of(*child_meta->time_field);
-      const std::int64_t window_ns = relational::pull_window_seconds(*aggregate, where) * 1'000'000'000LL;
+      const auto window_seconds = relational::pull_window_seconds(*aggregate, where);
+      PLUSS_CHECK(window_seconds <= std::numeric_limits<std::int64_t>::max() / 1'000'000'000LL,
+                  fmt::format("{}: pull window length exceeds the supported nanosecond range", where));
+      const std::int64_t window_ns = window_seconds * 1'000'000'000LL;
 
       const auto time_of = [&](std::int64_t record, std::int64_t& out_ns) {
         const auto p = record + child_shift;
@@ -361,7 +365,10 @@ Catalog LocusPull::collect() const {
         const auto r = static_cast<std::size_t>(roots[k]);
         std::int64_t t = 0;
         if (!has_anchor[r] || !time_of(leaves[k], t)) continue;
-        if (t >= anchor[r] - window_ns && t <= anchor[r]) {
+        const auto lower = anchor[r] < std::numeric_limits<std::int64_t>::min() + window_ns
+                               ? std::numeric_limits<std::int64_t>::min()
+                               : anchor[r] - window_ns;
+        if (t >= lower && t <= anchor[r]) {
           kept_roots.push_back(roots[k]);
           kept_leaves.push_back(leaves[k]);
         }

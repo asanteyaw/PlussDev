@@ -12,9 +12,9 @@ SlateLabelAccessor::sort(bool ascending = true, bool nulls_last = true) const ->
 
 ## What It Does
 
-Reorders the **entire bound thread** — its own values together with their
+Reorders the **entire bound slate** — its own values together with their
 case labels — by case-label value. This is the one `SlateLabelAccessor`
-method that touches the thread's actual data rather than just the case-label
+method that touches the slate's actual data rather than just the case-label
 companion sequence: every row moves together as a unit, so a value and the
 case label it was originally paired with always stay matched after sorting.
 
@@ -31,11 +31,11 @@ Where null case labels sort relative to real values.
 ## Returns
 
 `Slate`
-    A new thread with the same rows as `*this`, reordered by case label.
+    A new slate with the same rows as `*this`, reordered by case label.
 
 ## Examples
 
-Example 1. Sort a case-labeled thread ascending and descending.
+Example 1. Sort a case-labeled slate ascending and descending.
 
 ```cpp
 using namespace pluss::table;
@@ -95,7 +95,7 @@ original relative order either way — the sort is stable.
   relative order.
 - Unlike most other `SlateLabelAccessor` methods (which only return a
   transformed view of the case labels themselves), `sort()` reorders the
-  bound thread's actual values along with its labels.
+  bound slate's actual values along with its labels.
 
 ## See Also
 

@@ -15,9 +15,9 @@ Slate::pad(std::int64_t width,
 
 ## What It Does
 
-Grows every cell of a `Note` (string) thread up to a target character `width` by
+Grows every cell of a `Note` (string) slate up to a target character `width` by
 adding `fill` characters, positioning the original text according to `align`.
-Requires the thread to be `Note`-kind.
+Requires the slate to be `Note`-kind.
 
 ```cpp
 enum class TextAlign { Left = 0, Right = 1, Center = 2 };
@@ -55,7 +55,7 @@ the same unit [`length()`](length.md) counts.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, holding the padded text (or
+    A new `Note`-kind slate, same length as `*this`, holding the padded text (or
     left unchanged, for cells already at or beyond `width`).
 
 ## Examples
@@ -190,7 +190,7 @@ try {
 Slate::pad: width must be >= 0
 ```
 
-Example 5. A non-`Note` thread throws.
+Example 5. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -210,7 +210,7 @@ Slate::pad: expected Note payload
 
 ## Notes
 
-- Requires the calling thread to be `Note`-kind.
+- Requires the calling slate to be `Note`-kind.
 - `pad()` only grows; a cell already at or beyond `width` is returned unchanged,
   never truncated.
 - `width` is measured in Unicode codepoints, the same unit [`length()`](length.md)

@@ -17,7 +17,7 @@ pluss::pl::Studio& SlatePlotAccessor::brief(
 
 ## What It Does
 
-Renders a fixed-width, monospace-formatted text table of the bound thread's raw values as
+Renders a fixed-width, monospace-formatted text table of the bound slate's raw values as
 a pane in a `Studio` — the single-series specialization of
 [`DataFramePlotAccessor::brief`](../../api/dataframe-plot/brief.md). Like the 2D accessor's
 `brief()`, this has two distinct overloads: the first creates a brand-new `Studio` and
@@ -36,7 +36,7 @@ for the full explanation of this in-place composition pattern.
     (`title`, `precision`, `include_header`, `max_cases`, `transpose`,
     `include_case_index`, `features_per_table`, `tables_per_row`, `table_gap_spaces`).
     `features_per_table`/`tables_per_row` have no visible effect here since there is always
-    exactly one feature (the bound thread) to lay out.
+    exactly one feature (the bound slate) to lay out.
 
 ## Returns
 
@@ -48,7 +48,7 @@ pane appended.
 
 ## Examples
 
-Example 1. Default options: a fresh `Studio` with the bound thread's values as a table.
+Example 1. Default options: a fresh `Studio` with the bound slate's values as a table.
 
 ```cpp
 using namespace pluss::table;

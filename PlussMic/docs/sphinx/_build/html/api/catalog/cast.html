@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -58,7 +58,7 @@
 <li><p>direct root overload: <code class="docutils literal notranslate"><span class="pre">ct.cast(target,</span> <span class="pre">options)</span></code></p></li>
 </ul>
 <p>Both apply each stream’s own cast machinery uniformly across the catalog. This is the
-whole-catalog counterpart to <a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast()</span></code></span></a>; see that page for
+whole-catalog counterpart to <a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast()</span></code></span></a>; see that page for
 the full explanation of what each <code class="docutils literal notranslate"><span class="pre">SlateCastTarget</span></code> means and how
 <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code> (dtype selection, parse-failure handling) affects the conversion.</p>
 <div class="admonition important">
@@ -91,7 +91,7 @@ For the direct root overload, the payload kind to cast every stream to — <code
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::SlateCastOptions&amp;</span></code>, optional)
 For the direct root overload, conversion policy — <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> picks the numeric
 dtype for a <code class="docutils literal notranslate"><span class="pre">Series</span></code> target; <code class="docutils literal notranslate"><span class="pre">invalid</span></code> chooses parse-failure behavior. See
-<a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for the full breakdown.</p>
+<a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for the full breakdown.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -183,7 +183,7 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
 <li><p><code class="docutils literal notranslate"><span class="pre">Catalog::cast(target,</span> <span class="pre">options)</span></code> and <code class="docutils literal notranslate"><span class="pre">Catalog::cast(options).series()</span></code> are equivalent
 in result; they differ only in surface style.</p></li>
 <li><p>Requires a defined catalog; throws <code class="docutils literal notranslate"><span class="pre">&quot;Catalog:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> otherwise.</p></li>
-<li><p>Follows the same per-target conversion rules as <a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>,
+<li><p>Follows the same per-target conversion rules as <a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>,
 including its documented quirk that <code class="docutils literal notranslate"><span class="pre">SlateCastOptions::invalid</span></code> only actually takes
 effect for the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> target.</p></li>
 </ul>
@@ -192,7 +192,7 @@ effect for the <code class="docutils literal notranslate"><span class="pre">Time
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::astype</span></code></span></a>: the shorthand for <code class="docutils literal notranslate"><span class="pre">cast(Series,</span> <span class="pre">{.series_dtype</span> <span class="pre">=</span> <span class="pre">dtype})</span></code>.</p></li>
-<li><p><a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>: the underlying single-stream conversion this method
+<li><p><a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>: the underlying single-stream conversion this method
 applies uniformly.</p></li>
 <li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys</span></code></span></a>: scope a cast to specific streams instead of the whole
 catalog, via its own <code class="docutils literal notranslate"><span class="pre">cast()</span></code> accessor.</p></li>

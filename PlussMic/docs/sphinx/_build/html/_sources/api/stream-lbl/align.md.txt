@@ -16,7 +16,7 @@ Stream StreamLabelAccessor::align(const pluss::table::Slate& target_labels, cons
 
 Reorders (and, depending on `options.align`, relabels) the bound stream to
 match `target_labels`, following exactly the same `AlignBy`/`AlignOptions`
-rules as [`Slate::align`](../thread/align.md):
+rules as [`Slate::align`](../slate/align.md):
 
 - **`AlignBy::Pos`** (the default): `target_labels` is used only for its
   *length* — the values and labels pass through positionally unchanged. See
@@ -29,7 +29,7 @@ rules as [`Slate::align`](../thread/align.md):
 ```{important} AlignBy::Both is rejected for a single Stream
 `AlignBy::Both` (matching by *both* case label and feature) is a
 `DataFrame`-only concept — passing it here throws, the same as it would for
-a bare [`Slate::align`](../thread/align.md) call. Only `Pos` and `Caselbl`
+a bare [`Slate::align`](../slate/align.md) call. Only `Pos` and `Caselbl`
 are meaningful for a single `Stream`.
 ```
 
@@ -163,7 +163,7 @@ result — only its length (`3`) mattered, and the bound stream's own
 
 ## See Also
 
-- [`Slate::align`](../thread/align.md): the underlying single-column
+- [`Slate::align`](../slate/align.md): the underlying single-column
   alignment semantics this accessor's `align()` follows exactly.
 - [`StreamLabelAccessor::set`](set.md): attach a label outright instead of
   reordering by an existing one.

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,7 +51,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Converts the stream to a different payload kind (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>,
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), delegating to <code class="docutils literal notranslate"><span class="pre">Slate::cast()</span></code>; see <a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), delegating to <code class="docutils literal notranslate"><span class="pre">Slate::cast()</span></code>; see <a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for
 the full breakdown of what each <code class="docutils literal notranslate"><span class="pre">SlateCastTarget</span></code> means and how <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code>
 (dtype selection, parse-failure handling) affects the conversion. The first overload is a
 convenience shorthand accepting just a <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> directly instead of a full
@@ -76,7 +76,7 @@ The numeric dtype to use when <code class="docutils literal notranslate"><span c
 field of <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code>.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::SlateCastOptions&amp;</span></code>, second overload)
 The full conversion policy — <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> and <code class="docutils literal notranslate"><span class="pre">invalid</span></code> (parse-failure handling). See
-<a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for the complete breakdown.</p>
+<a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for the complete breakdown.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -155,7 +155,7 @@ label        | value
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Follows the same per-target conversion rules as <a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>,
+<li><p>Follows the same per-target conversion rules as <a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>,
 including its documented quirk that <code class="docutils literal notranslate"><span class="pre">SlateCastOptions::invalid</span></code> only actually takes
 effect for the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> target.</p></li>
 <li><p>The no-argument <code class="docutils literal notranslate"><span class="pre">cast()</span></code>/<code class="docutils literal notranslate"><span class="pre">cast(options)</span></code> accessor overloads (returning
@@ -168,7 +168,7 @@ effect for the <code class="docutils literal notranslate"><span class="pre">Time
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::astype</span></code></span></a>: the shorthand for <code class="docutils literal notranslate"><span class="pre">cast(Series,</span> <span class="pre">{.series_dtype</span> <span class="pre">=</span> <span class="pre">dtype})</span></code>.</p></li>
-<li><p><a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>: the underlying single-stream conversion this method
+<li><p><a class="reference internal" href="../slate/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>: the underlying single-stream conversion this method
 delegates to.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

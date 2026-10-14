@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Converts a numeric thread into interval labels defined by explicit bin edges —
+<p>Converts a numeric slate into interval labels defined by explicit bin edges —
 the one-dimensional building block behind histogram-style feature engineering,
 grading bands, and coarse segmentation. <code class="docutils literal notranslate"><span class="pre">bins</span></code> must be strictly increasing and
 supply <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">+</span> <span class="pre">1</span></code> edges to define <code class="docutils literal notranslate"><span class="pre">N</span></code> buckets; each value is assigned the index
@@ -83,7 +83,7 @@ since the first interval is already left-closed in that case.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A numeric thread of bucket labels, the same length as the source, with a
+A numeric slate of bucket labels, the same length as the source, with a
 missing entry wherever the source value falls outside every bucket’s
 interval.</p>
 </section>

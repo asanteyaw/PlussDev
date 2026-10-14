@@ -26,9 +26,9 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.scribbelize();
+auto out = slate.scribbelize();
 ```
 
 ### Output

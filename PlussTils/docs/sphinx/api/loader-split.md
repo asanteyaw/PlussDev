@@ -2,33 +2,21 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/data_loader.h>
-
-struct DataSplitOptions {
-  double train_ratio{0.8};
-  double val_ratio{0.1};
-  bool shuffle{true};
-  std::uint64_t seed{0};
-  std::int64_t batch_dim{0};
-};
-
-struct DataSplit {
-  std::vector<Series> train_fields, val_fields, test_fields;
-};
 
 DataSplit split_fields(const std::vector<Series>& fields, DataSplitOptions options = {});
 DataSplit split_fields(const SeriesDataset& dataset, DataSplitOptions options = {});
 DataSplit split_fields(const Dataset& dataset, DataSplitOptions options = {});
 
-struct DataLoaderSplit {
-  DataLoader train, val, test;
-};
-
 DataLoaderSplit split_loaders(const std::vector<Series>& fields, DataSplitOptions split_options = {},
-                             DataLoaderOptions train_options = {}, DataLoaderOptions val_options = {},
-                             DataLoaderOptions test_options = {});
+                               DataLoaderOptions train_options = {}, DataLoaderOptions val_options = {},
+                               DataLoaderOptions test_options = {});
 ```
+
+## What It Does
 
 `split_fields` partitions a dataset into three parts, train, validation, and test, by ratio: `train_ratio` and `val_ratio` set the first two shares, and the rest becomes test. With `shuffle` left at its default, the rows are shuffled once, with `seed`, before the cut, so every row still appears in exactly one of the three parts. The same input, options, and fields all accept a plain field list, an initializer list, a `SeriesDataset`, or any `Dataset`; the dataset overloads read `batch_dim` from the dataset itself rather than from the options.
 
@@ -42,9 +30,19 @@ DataLoaderSplit split_loaders(const std::vector<Series>& fields, DataSplitOption
 | `options` / `split_options` | The ratios, shuffle, and seed for the partition. |
 | `train_options`, `val_options`, `test_options` | The `DataLoaderOptions` for each of the three resulting loaders, for `split_loaders`. |
 
+## `DataSplitOptions` Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `train_ratio` | Fraction of rows assigned to the train split. | `0.8` |
+| `val_ratio` | Fraction of rows assigned to the validation split; the remainder becomes test. | `0.1` |
+| `shuffle` | Whether rows are shuffled once, by `seed`, before the cut. | `true` |
+| `seed` | The shuffle seed. | `0` |
+| `batch_dim` | Which axis holds the samples, for the plain-field-list overload. Dataset overloads read this from the dataset instead. | `0` |
+
 ## Returns
 
-`split_fields` returns a `DataSplit` of three field lists. `split_loaders` returns a `DataLoaderSplit` of three ready-to-use loaders.
+`split_fields` returns a `DataSplit`: `train_fields`, `val_fields`, and `test_fields`, each a `std::vector<Series>`. `split_loaders` returns a `DataLoaderSplit`: `train`, `val`, and `test`, each a ready-to-use `DataLoader`.
 
 ## Errors
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Locus API Reference &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=c8d94b85"></script>
+    <script src="_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Locus::from_archive, Locus::from_nexus" href="api/locus/construction.html" />
+    <link rel="prev" title="PlussMic bundle" href="api/plussmic_bundle.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locus-api-reference">
+<h1>Locus API Reference<a class="headerlink" href="#locus-api-reference" title="Link to this heading">¶</a></h1>
+<p>This page documents the public <code class="docutils literal notranslate"><span class="pre">Locus</span></code> surface as part of the <code class="docutils literal notranslate"><span class="pre">bundle</span></code> workspace
+model.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Locus</span></code> is a named, heterogeneous workspace of <a class="reference internal" href="catalog_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog</span></code></span></a>s
+with declared relationships – the <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> counterpart of
+<a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus</span></code></span></a>, which coordinates <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>s. Native Locus joins,
+pulls, traversal, plans, and integrity checks preserve Catalog and Stream semantics;
+their matching and gathering work runs through the shared relational and Catalog
+kernels rather than forcing ragged data through a rectangular frame. <code class="docutils literal notranslate"><span class="pre">nexus()</span></code> remains
+the explicit aligned bridge for DataFrame-oriented workflows, reports, and SQL.</p>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">pluss::bundle</span></code> namespace for <code class="docutils literal notranslate"><span class="pre">Locus</span></code> itself, and <code class="docutils literal notranslate"><span class="pre">pluss::kindle</span></code> for the
+<code class="docutils literal notranslate"><span class="pre">Catalog</span></code> objects it coordinates.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No dedicated constructor page
+Construct a <code class="docutils literal notranslate"><span class="pre">Locus</span></code> with <code class="docutils literal notranslate"><span class="pre">Locus({{&quot;name&quot;,</span> <span class="pre">catalog},</span> <span class="pre">...})</span></code> (a vector or brace list of
+name/<code class="docutils literal notranslate"><span class="pre">Catalog</span></code> pairs); there is no dedicated constructor page, the same as <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>’s
+own constructors. The two named factories, <code class="docutils literal notranslate"><span class="pre">from_archive</span></code> and <code class="docutils literal notranslate"><span class="pre">from_nexus</span></code>, each have
+their own page.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Full surface coverage
+<code class="docutils literal notranslate"><span class="pre">Locus</span></code> has roughly ninety public members across six classes (<code class="docutils literal notranslate"><span class="pre">Locus</span></code>, <code class="docutils literal notranslate"><span class="pre">LocusPull</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LocusPullAgg</span></code>, <code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code>, <code class="docutils literal notranslate"><span class="pre">LocusQuery</span></code>, <code class="docutils literal notranslate"><span class="pre">LocusQueryPrepared</span></code>). Every one has a
+method page: this page’s own tranche below covers <code class="docutils literal notranslate"><span class="pre">Locus</span></code> itself; <code class="docutils literal notranslate"><span class="pre">LocusPull</span></code> and
+<code class="docutils literal notranslate"><span class="pre">LocusPullAgg</span></code> have their own landing pages
+(<a class="reference internal" href="locus_pull_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">LocusPull</span></code></span></a>, <a class="reference internal" href="locus_pull_agg_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">LocusPullAgg</span></code></span></a>);
+and <code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code>, <code class="docutils literal notranslate"><span class="pre">LocusQuery</span></code>, and <code class="docutils literal notranslate"><span class="pre">LocusQueryPrepared</span></code> have theirs
+(<a class="reference internal" href="locus_traverse_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code></span></a>, <a class="reference internal" href="locus_query_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">LocusQuery</span></code></span></a>,
+<a class="reference internal" href="locus_query_prepared_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">LocusQueryPrepared</span></code></span></a>).</p>
+</div>
+<section id="using-this-reference">
+<h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use the left sidebar to open one method page at a time.</p></li>
+<li><p>Each method page contains its own signature, parameter details, notes, verified
+outputs, and working previous/next navigation within this tranche.</p></li>
+<li><p>This landing page stays intentionally short so the content panel is not one giant
+scroll of every method.</p></li>
+</ul>
+</section>
+<section id="method-pages">
+<h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/locus/construction.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">construction</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">from_archive</span></code>, <code class="docutils literal notranslate"><span class="pre">from_nexus</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/state.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">state</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">defined</span></code>, <code class="docutils literal notranslate"><span class="pre">unique</span></code>, <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">ntables</span></code>,
+<code class="docutils literal notranslate"><span class="pre">nrelationships</span></code>, <code class="docutils literal notranslate"><span class="pre">shape</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/catalogs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">catalogs</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">keys</span></code>, <code class="docutils literal notranslate"><span class="pre">catalogs</span></code>, <code class="docutils literal notranslate"><span class="pre">has</span></code>, <code class="docutils literal notranslate"><span class="pre">catalog</span></code>, <code class="docutils literal notranslate"><span class="pre">get</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">tail</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">select</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">drop</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/with.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">with</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">with</span></code>, <code class="docutils literal notranslate"><span class="pre">with_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/inject.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">inject</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">inject</span></code>, <code class="docutils literal notranslate"><span class="pre">inject_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/without.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">without</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">without</span></code>, <code class="docutils literal notranslate"><span class="pre">without_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/rename.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rename</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">rename</span></code>, <code class="docutils literal notranslate"><span class="pre">rename_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/apply.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">apply</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_all</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">apply_all</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">flow</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">flow</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/has_table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has_table_meta</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">has_table_meta</span></code>, <code class="docutils literal notranslate"><span class="pre">table_meta</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">meta</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">meta</span></code> (getter and setter), <code class="docutils literal notranslate"><span class="pre">meta_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/set_table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_table_meta</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">set_table_meta</span></code>, <code class="docutils literal notranslate"><span class="pre">set_table_meta_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/link.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">link</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">link</span></code> (both overloads), <code class="docutils literal notranslate"><span class="pre">add_relationship</span></code>,
+<code class="docutils literal notranslate"><span class="pre">add_relationships</span></code>, <code class="docutils literal notranslate"><span class="pre">unlink</span></code>, <code class="docutils literal notranslate"><span class="pre">has_relationship</span></code>, <code class="docutils literal notranslate"><span class="pre">relationship</span></code>, <code class="docutils literal notranslate"><span class="pre">relationships</span></code>,
+<code class="docutils literal notranslate"><span class="pre">links</span></code>, <code class="docutils literal notranslate"><span class="pre">neighbors</span></code>, <code class="docutils literal notranslate"><span class="pre">path</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/audit.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">audit</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">audit</span></code> (both overloads), <code class="docutils literal notranslate"><span class="pre">validate</span></code>,
+<code class="docutils literal notranslate"><span class="pre">validate_keys</span></code>, <code class="docutils literal notranslate"><span class="pre">duplicates</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_relationship</span></code>, <code class="docutils literal notranslate"><span class="pre">check</span></code>, <code class="docutils literal notranslate"><span class="pre">detect_orphans</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">policy</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">default_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">policy</span></code>, <code class="docutils literal notranslate"><span class="pre">with_policy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">with_policy_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/nexus.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nexus</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">nexus</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/alignment_cache_stats.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">alignment_cache_stats</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">alignment_cache_stats</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/join.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">join</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">join</span></code> (both overloads), <code class="docutils literal notranslate"><span class="pre">join_detailed</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/audit_report.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">audit_report</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">audit_report</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/grain_audit.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">grain_audit</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">grain_audit</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/relationship_audit.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">relationship_audit</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">relationship_audit</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/summary.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">summary</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">summary</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/profile.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">profile</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">profile</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/scan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scan</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">scan</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/deduce.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">deduce</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">deduce</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/schema.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">schema</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">schema</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/graph.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">graph</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">graph</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/fingerprint.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fingerprint</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">fingerprint</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/plan.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">plan</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">plan</span></code> (both overloads)</p></li>
+<li><p><a class="reference internal" href="api/locus/materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">materialize</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">materialize</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/has_store.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has_store</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">has_store</span></code>, <code class="docutils literal notranslate"><span class="pre">stores</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/store.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">store</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">store</span></code> (getter and setter), <code class="docutils literal notranslate"><span class="pre">store_</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/run.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">run</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">run</span></code> (both overloads)</p></li>
+<li><p><a class="reference internal" href="api/locus/persistence.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">persistence</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">save</span></code>, <code class="docutils literal notranslate"><span class="pre">load</span></code>, <code class="docutils literal notranslate"><span class="pre">read</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/stream.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stream</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">to_string</span></code>, <code class="docutils literal notranslate"><span class="pre">show</span></code>, <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code></p></li>
+<li><p><a class="reference internal" href="api/locus/pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pull</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">Locus::pull()</span></code>, the entry point into the
+<code class="docutils literal notranslate"><span class="pre">LocusPull</span></code> root-grain feature builder</p></li>
+<li><p><a class="reference internal" href="api/locus/from.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">from</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">Locus::from()</span></code>, the entry point into the
+<code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code> join-walking builder</p></li>
+<li><p><a class="reference internal" href="api/locus/query.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">query</span></code></span></a> – <code class="docutils literal notranslate"><span class="pre">Locus::query()</span></code>, the entry point into the
+<code class="docutils literal notranslate"><span class="pre">LocusQuery</span></code> SQL workspace</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="api/locus/construction.html">
+    <span class="label">Next</span>
+    <span class="title">construction</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api/plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+  <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="api/plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+      <li>Previous: <a href="api/plussmic_bundle.html" title="previous chapter">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a></li>
+      <li>Next: <a href="api/locus/construction.html" title="next chapter">Locus::from_archive, Locus::from_nexus</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/locus_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

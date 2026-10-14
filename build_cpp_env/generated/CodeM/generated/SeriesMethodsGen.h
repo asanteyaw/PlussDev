@@ -712,6 +712,8 @@
   // Typed wrappers for `fftshift` (staged migration off variadic surface).
   Series fftshift() const { return pluss::codem::_compat::invoke("fftshift", *this); }
 
+  Series fftshift(pluss::msharp::RangeView::Int dims) const { return pluss::codem::_compat::invoke("fftshift", *this, {dims}); }
+
   // Typed wrappers for `fill_` (staged migration off variadic surface).
   Series& fill_(double value) const { return pluss::codem::_compat::invoke_("fill_", *this, {value}); }
 
@@ -874,13 +876,6 @@
 
   Series histc(std::int64_t bins) const { return pluss::codem::_compat::invoke("histc", *this, {bins, 0.0, 0.0}); }
 
-  // Typed wrappers for `histcounts` (staged migration off variadic surface).
-  Series histcounts() const { return pluss::codem::_compat::invoke("histcounts", *this); }
-
-  Series histcounts(std::int64_t bins) const { return pluss::codem::_compat::invoke("histcounts", *this, {bins}); }
-
-  Series histcounts(std::int64_t bins, double min_v, double max_v) const { return pluss::codem::_compat::invoke("histcounts", *this, {bins, min_v, max_v}); }
-
   // `histogram` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `hsplit` has concrete declarations/definitions; variadic wrapper intentionally skipped.
@@ -911,8 +906,6 @@
   Series ifftshift() const { return pluss::codem::_compat::invoke("ifftshift", *this); }
 
   Series ifftshift(pluss::msharp::RangeView::Int dims) const { return pluss::codem::_compat::invoke("ifftshift", *this, {dims}); }
-
-  Series ifftshift(pluss::msharp::RangeView::Int dims, std::int64_t dim) const { return pluss::codem::_compat::invoke("ifftshift", *this, {dims, dim}); }
 
   // Typed wrappers for `igamma` (staged migration off variadic surface).
   Series igamma(const Series& other) const { return pluss::codem::_compat::invoke("igamma", *this, {other}); }
@@ -1939,10 +1932,7 @@
   // `threshold` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `threshold_` (staged migration off variadic surface).
-  Series& threshold_(double threshold_val, double value) const { return pluss::codem::_compat::invoke_("threshold_", *this, {threshold_val, value}); }
-
-  // Typed wrappers for `tile` (staged migration off variadic surface).
-  Series tile(pluss::msharp::RangeView::Int dims) const { return pluss::codem::_compat::invoke("tile", *this, {dims}); }
+  Series& threshold_(double threshold_val, double value) { return pluss::codem::_compat::invoke_("threshold_", *this, {threshold_val, value}); }
 
   // Typed wrappers for `to_dense` (staged migration off variadic surface).
   Series to_dense() const { return pluss::codem::_compat::invoke("to_dense", *this); }

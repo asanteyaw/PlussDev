@@ -5,7 +5,7 @@
 Core utilities are small, independent helpers. Each one answers a question that
 comes up in ordinary programs, and none of them asks you to adopt a data model.
 This manual groups the utilities by the decision you are making, and each
-chapter teaches one of them with complete programs.
+chapter covers one of them with complete programs.
 
 ## Choosing a utility
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,7 +52,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>The reflected form of <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>. For numbers, addition is commutative, so
 <code class="docutils literal notranslate"><span class="pre">radd()</span></code> and <code class="docutils literal notranslate"><span class="pre">add()</span></code> produce identical results in every observable way. The
-distinction only matters for <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) threads, where <code class="docutils literal notranslate"><span class="pre">add()</span></code> means
+distinction only matters for <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slates, where <code class="docutils literal notranslate"><span class="pre">add()</span></code> means
 concatenation and concatenation order depends on which operand comes first —
 <code class="docutils literal notranslate"><span class="pre">radd()</span></code> reverses that order.</p>
 </section>
@@ -65,7 +65,7 @@ concatenation and concatenation order depends on which operand comes first —
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
 For numbers, identical to what <code class="docutils literal notranslate"><span class="pre">add()</span></code> would produce for the same arguments. For
-two <code class="docutils literal notranslate"><span class="pre">Note</span></code> threads, the concatenation with the operand order reversed.</p>
+two <code class="docutils literal notranslate"><span class="pre">Note</span></code> slates, the concatenation with the operand order reversed.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -87,7 +87,7 @@ ptype: Series
 </pre></div>
 </div>
 <p>Same values as <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">prices.add(5.0)</span></code></span></a> — addition doesn’t care about order.</p>
-<p>Example 2. For <code class="docutils literal notranslate"><span class="pre">Note</span></code> threads, <code class="docutils literal notranslate"><span class="pre">radd()</span></code> concatenates in the opposite order from
+<p>Example 2. For <code class="docutils literal notranslate"><span class="pre">Note</span></code> slates, <code class="docutils literal notranslate"><span class="pre">radd()</span></code> concatenates in the opposite order from
 <code class="docutils literal notranslate"><span class="pre">add()</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north-&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south-&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east-&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">base_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;store&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hub&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depot&quot;</span><span class="p">}));</span>
@@ -120,7 +120,7 @@ text comes first instead.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>For numeric threads, <code class="docutils literal notranslate"><span class="pre">radd()</span></code> exists purely for API symmetry with the rest of the
+<li><p>For numeric slates, <code class="docutils literal notranslate"><span class="pre">radd()</span></code> exists purely for API symmetry with the rest of the
 reflected family (<code class="docutils literal notranslate"><span class="pre">rsub</span></code>, <code class="docutils literal notranslate"><span class="pre">rmul</span></code>, and so on) — there is no behavioral reason to
 prefer it over <code class="docutils literal notranslate"><span class="pre">add()</span></code>.</p></li>
 <li><p>See <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> for the shared mechanics every arithmetic method in this

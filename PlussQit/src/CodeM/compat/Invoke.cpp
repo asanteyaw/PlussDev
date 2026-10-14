@@ -368,22 +368,6 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
   return native::cpu::matmul(a, b);
 }
 
-static Series matmul_backprop_dispatch_(
-    const Series& lhs,
-    const Series& rhs,
-    Platform out_platform,
-    ScalarType out_dtype) {
-  ops_internal::require_same_platform(lhs, rhs, "matmul(backprop)");
-  Series out = matmul_dispatch_(lhs, rhs);
-  if (out.scalar_type() != out_dtype) {
-    out = out.to(out_dtype);
-  }
-  if (out.platform() != out_platform) {
-    out = out.to(out_platform);
-  }
-  return out;
-}
-
 static Series reduce_broadcasted_like_(const Series& grad, const Series& like, std::string_view op_name) {
   std::vector<std::int64_t> grad_shape(grad.sizes().begin(), grad.sizes().end());
   std::vector<std::int64_t> like_shape(like.sizes().begin(), like.sizes().end());
@@ -500,6 +484,7 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = "matmul";
   link->parents = {a, b};
+  link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
   link->propagate = [a, b, ta, tb](const Series& out_sens) {
     const auto [a_promoted, a_was_vec] = promote_lhs_matmul_operand_(a);
     const auto [b_promoted, b_was_vec] = promote_rhs_matmul_operand_(b);
@@ -507,11 +492,13 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
 
     if (ta) {
       const Series bt = matmul_adjoint_(b_promoted);
-      Series ga = matmul_backprop_dispatch_(
-          g_promoted,
-          bt,
-          a_promoted.platform(),
-          a_promoted.scalar_type());
+      Series ga = matmul_with_tape_(g_promoted, bt);
+      if (ga.scalar_type() != a_promoted.scalar_type()) {
+        ga = ga.to(a_promoted.scalar_type());
+      }
+      if (ga.platform() != a_promoted.platform()) {
+        ga = ga.to(a_promoted.platform());
+      }
       ga = reduce_broadcasted_like_(ga, a_promoted, "matmul");
       if (a_was_vec) {
         ga = ga.squeeze(0);
@@ -520,11 +507,13 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
     }
     if (tb) {
       const Series at = matmul_adjoint_(a_promoted);
-      Series gb = matmul_backprop_dispatch_(
-          at,
-          g_promoted,
-          b_promoted.platform(),
-          b_promoted.scalar_type());
+      Series gb = matmul_with_tape_(at, g_promoted);
+      if (gb.scalar_type() != b_promoted.scalar_type()) {
+        gb = gb.to(b_promoted.scalar_type());
+      }
+      if (gb.platform() != b_promoted.platform()) {
+        gb = gb.to(b_promoted.platform());
+      }
       gb = reduce_broadcasted_like_(gb, b_promoted, "matmul");
       if (b_was_vec) {
         gb = gb.squeeze(-1);
@@ -629,11 +618,13 @@ static double as_numeric_or_series_scalar_double(const Arg& a) {
 }
 
 static Series scalar_like(const Series& self, double value) {
-  const std::array<std::int64_t, 1> one{{1}};
+  // Rank-0 so combining with a 0-d operand keeps rank 0 (matches libtorch's
+  // wrapped-number semantics; a shape-[1] constant promoted 0-d results).
   // Force construction on the target platform scope to avoid leaking a prior
   // scope (e.g. MPS) into CPU-side scalar temporaries.
   ops_internal::PlatformScope scope{self.platform()};
-  return Series::full(std::span<const std::int64_t>(one.data(), one.size()), value, self.scalar_type())
+  return Series::full(std::span<const std::int64_t>{}, value,
+                      ops_internal::scalar_operand_dtype(self.scalar_type(), value))
       .to(self.platform());
 }
 
@@ -1075,6 +1066,24 @@ static Series put_dispatch_copy_(
   return out;
 }
 
+// Land the result of a functional put/index_put into `self`. Off the autodiff
+// path the values are written into the storage `self` already owns, so views
+// and other handles aliasing it observe the update like every other in-place
+// op. On an autodiff path `self` is rebound to the graph-bearing result and the
+// old storage is left untouched: earlier operations may have saved it for their
+// reverse pass, and overwriting it would corrupt those gradients.
+static void write_put_result_in_place_(Series& self, const Series& result, bool tracked) {
+  const bool compatible = !tracked && self.defined() && result.defined() &&
+                          self.platform() == result.platform() &&
+                          self.scalar_type() == result.scalar_type() && self.is_same_size(result);
+  if (compatible) {
+    assign_inplace_preserve_storage_(self, result);
+    self.storage().bump_version();
+    return;
+  }
+  self = result;
+}
+
 static Series& put_dispatch_inplace_(
     Series& self,
     const Series& index,
@@ -1089,8 +1098,12 @@ static Series& put_dispatch_inplace_(
   Series val = src;
   if (val.platform() != self.platform()) val = val.to(self.platform());
   if (val.scalar_type() != self.scalar_type()) val = val.to(self.scalar_type());
-  // Route through functional copy path so autodiff links are preserved.
-  self = put_dispatch_copy_(self, idx, val, accumulate);
+  // Compute through the functional path (autodiff links preserved), then write
+  // the result into self's own storage so views and other handles that alias
+  // it observe the update, exactly like every other in-place op.
+  const bool tracked = series_tape::recording_enabled() &&
+                       (series_tape::tracks_slope(self) || series_tape::tracks_slope(src));
+  write_put_result_in_place_(self, put_dispatch_copy_(self, idx, val, accumulate), tracked);
   if (keep_self_sensitivity) {
     series_tape::set_keep_sensitivity(self, true);
   }
@@ -1106,7 +1119,9 @@ static Series& put_dispatch_inplace_indices_(
       series_tape::recording_enabled() &&
       series_tape::tracks_slope(self) &&
       series_tape::is_leaf(self);
-  self = put_dispatch_copy_indices_(self, indices, src, accumulate);
+  const bool tracked = series_tape::recording_enabled() &&
+                       (series_tape::tracks_slope(self) || series_tape::tracks_slope(src));
+  write_put_result_in_place_(self, put_dispatch_copy_indices_(self, indices, src, accumulate), tracked);
   if (keep_self_sensitivity) {
     series_tape::set_keep_sensitivity(self, true);
   }
@@ -1314,6 +1329,7 @@ static Series index_select_dispatch_(const Series& self, std::int64_t dim, const
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "index_select";
     link->parents = {self};
+    link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
     link->propagate = [self, dim, idx_expanded_cpu](const Series& out_sens) {
       Series sens = out_sens;
       if (sens.scalar_type() != self.scalar_type()) sens = sens.to(self.scalar_type());
@@ -1745,6 +1761,7 @@ static Series expand_impl(const Series& self, std::span<const std::int64_t> targ
       auto link = std::make_shared<series_tape::SourceLink>();
       link->op_name = "expand";
       link->parents = {self};
+      link->higher_order_support = series_tape::HigherOrderSupport::Traceable;
       link->propagate = [self](const Series& g) {
         series_tape::accumulate_sensitivity(self, reduce_broadcasted_like_(g, self, "expand"));
       };
@@ -1790,6 +1807,50 @@ static Series repeat_interleave_impl(const Series& self, std::int64_t repeats, s
       i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), self.platform()));
 }
 
+static Series roll_impl(const Series& self, std::span<const std::int64_t> shifts, std::span<const std::int64_t> dims);
+
+// CPU roll along one axis as two block copies per outer slice:
+//   out[j] = in[(j - shift) mod n]  =>  out[shift..n) = in[0..n-shift),
+//                                       out[0..shift) = in[n-shift..n).
+// The generic path gathers element by element through an index vector; this is
+// an order of magnitude faster and every stencil in the library (rolls are the
+// building block of periodic differences) pays for it. `shift` is in (0, n).
+static Series roll_cpu_blocks_(const Series& self, std::int64_t dim, std::int64_t shift) {
+  const Series x = self.contiguous();
+  const auto sizes = x.sizes();
+  std::int64_t outer = 1;
+  std::int64_t inner = 1;
+  for (std::int64_t d = 0; d < dim; ++d) outer *= sizes[(std::size_t)d];
+  for (std::int64_t d = dim + 1; d < x.dim(); ++d) inner *= sizes[(std::size_t)d];
+  const std::int64_t n = sizes[(std::size_t)dim];
+  Series out = Series::empty(x.sizes(), x.scalar_type());
+  const auto row = static_cast<std::size_t>(inner) * static_cast<std::size_t>(x.itemsize());
+  const std::byte* src = x.raw_data();
+  std::byte* dst = reinterpret_cast<std::byte*>(out.raw_mutable_data());
+  const std::size_t slab = row * static_cast<std::size_t>(n);
+  const std::size_t head = row * static_cast<std::size_t>(shift);
+  const std::size_t tail = slab - head;
+  for (std::int64_t o = 0; o < outer; ++o) {
+    const std::byte* in = src + static_cast<std::size_t>(o) * slab;
+    std::byte* to = dst + static_cast<std::size_t>(o) * slab;
+    std::memcpy(to + head, in, tail);
+    std::memcpy(to, in + tail, head);
+  }
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(self)) return out;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "roll";
+  link->parents = {self};
+  link->propagate = [self, dim, n, shift](const Series& out_sens) {
+    const std::array<std::int64_t, 1> back{{n - shift}};
+    const std::array<std::int64_t, 1> axis{{dim}};
+    series_tape::accumulate_sensitivity(
+        self, roll_impl(out_sens, std::span<const std::int64_t>(back.data(), 1),
+                        std::span<const std::int64_t>(axis.data(), 1)));
+  };
+  series_tape::bind_source_link(out, std::move(link));
+  return out;
+}
+
 static Series roll_impl(const Series& self, std::span<const std::int64_t> shifts, std::span<const std::int64_t> dims) {
   PLUSS_CHECK(!shifts.empty(), "roll: shifts must be non-empty");
   PLUSS_CHECK(!dims.empty(), "roll: dims must be non-empty");
@@ -1803,6 +1864,10 @@ static Series roll_impl(const Series& self, std::span<const std::int64_t> shifts
     std::int64_t shift = shifts[shifts.size() == 1 ? 0 : i] % n;
     if (shift < 0) shift += n;
     if (shift == 0) continue;
+    if (out.platform() == Platform::CPU) {
+      out = roll_cpu_blocks_(out, dim, shift);
+      continue;
+    }
     std::vector<std::int64_t> idx((std::size_t)n);
     for (std::int64_t j = 0; j < n; ++j) idx[(std::size_t)j] = (j - shift + n) % n;
     out = index_select_dispatch_(
@@ -5393,26 +5458,37 @@ static Series corrcoef_impl(const Series& self) {
   return was_1d ? corr.reshape(std::vector<std::int64_t>{}) : corr;
 }
 
-// Straight-through backward for a special function whose derivative w.r.t. its
-// tracked input `wrt` is `deriv(wrt)`. `deriv` runs under a NoGradGuard during
-// the reverse pass, so it may call the (non-recording) special-function impls
-// freely. Handles the case where `out` is a broadcast of `wrt` (two-arg funcs
-// like igamma/zeta binding only their second operand).
+// Backward for a special function whose derivative with respect to `wrt` is
+// `deriv(wrt)`. Certified recurrences execute on tape; legacy first-order-only
+// rules execute under NoGradGuard and are marked unsupported for higher-order
+// propagation. Handles broadcasted second operands such as igamma and zeta.
 static Series bind_special_grad_(
     Series out, const Series& wrt,
-    std::function<Series(const Series&)> deriv, const char* op_name) {
+    std::function<Series(const Series&)> deriv, const char* op_name,
+    bool trace_higher_order = false) {
   if (!series_tape::recording_enabled() || !series_tape::tracks_slope(wrt)) return out;
   if (!dtype_of(wrt.scalar_type()).is_floating()) return out;
   auto link = std::make_shared<series_tape::SourceLink>();
   link->op_name = op_name;
   link->parents = {wrt};
-  link->propagate = [wrt, deriv = std::move(deriv), op_name](const Series& g) {
-    series_tape::NoGradGuard ng;
-    Series contrib = ops_internal::mul(
-        g.to(wrt.platform()).to(ScalarType::Float64),
-        deriv(wrt).to(wrt.platform()).to(ScalarType::Float64));
-    contrib = reduce_broadcasted_like_(contrib, wrt, op_name);
-    series_tape::accumulate_sensitivity(wrt, contrib.to(wrt.scalar_type()));
+  link->higher_order_support = trace_higher_order
+      ? series_tape::HigherOrderSupport::Traceable
+      : series_tape::HigherOrderSupport::Unsupported;
+  link->propagate = [wrt, deriv = std::move(deriv), op_name,
+                     trace_higher_order](const Series& g) {
+    auto accumulate = [&]() {
+      Series contrib = ops_internal::mul(
+          g.to(wrt.platform()).to(ScalarType::Float64),
+          deriv(wrt).to(wrt.platform()).to(ScalarType::Float64));
+      contrib = reduce_broadcasted_like_(contrib, wrt, op_name);
+      series_tape::accumulate_sensitivity(wrt, contrib.to(wrt.scalar_type()));
+    };
+    if (trace_higher_order) {
+      accumulate();
+    } else {
+      series_tape::NoGradGuard no_grad;
+      accumulate();
+    }
   };
   series_tape::bind_source_link(out, std::move(link));
   return out;
@@ -5531,6 +5607,31 @@ static double i1_scalar(double x) {
   return std::copysign(value, x);
 }
 
+static double integer_bessel_i_scalar_(std::int64_t n, double x) {
+  PLUSS_CHECK(n >= 0, "integer Bessel I: order must be non-negative");
+  if (n == 0) return i0_scalar(x);
+  if (n == 1) return i1_scalar(x);
+  if (x == 0.0) return 0.0;
+
+  const long double half = 0.5L * std::abs(static_cast<long double>(x));
+  long double term = std::exp(
+      static_cast<long double>(n) * std::log(half) -
+      std::lgamma(static_cast<long double>(n + 1)));
+  long double total = term;
+  const long double half_squared = half * half;
+  for (std::int64_t k = 1; k <= 10000; ++k) {
+    term *= half_squared /
+        (static_cast<long double>(k) * static_cast<long double>(k + n));
+    total += term;
+    if (!std::isfinite(total) ||
+        std::abs(term) <= std::abs(total) * std::numeric_limits<long double>::epsilon()) {
+      break;
+    }
+  }
+  const double value = static_cast<double>(total);
+  return x < 0.0 && (n % 2 != 0) ? -value : value;
+}
+
 static Series i0_impl(const Series& self) {
   return unary_special_impl_(self, [](double x) { return i0_scalar(x); });
 }
@@ -5560,6 +5661,79 @@ static Series polygamma_impl(const Series& self, std::int64_t n) {
   return unary_special_impl_(self, [order, fact, sign](double x) {
     return sign * fact * hurwitz_zeta_scalar(order, x);
   });
+}
+
+static Series polygamma_tracked_impl_(const Series& self, std::int64_t n);
+static Series erfinv_tracked_impl_(const Series& self);
+static Series bessel_i_tracked_impl_(const Series& self, std::int64_t n);
+
+static Series polygamma_tracked_impl_(const Series& self, std::int64_t n) {
+  return bind_special_grad_(
+      polygamma_impl(self, n), self,
+      [n](const Series& x) { return polygamma_tracked_impl_(x, n + 1); },
+      "polygamma", /*trace_higher_order=*/true);
+}
+
+static Series erfinv_tracked_impl_(const Series& self) {
+  return bind_special_grad_(
+      erfinv_impl(self), self,
+      [](const Series& x) {
+        const Series y = erfinv_tracked_impl_(x);
+        return ops_internal::exp(ops_internal::square(y))
+            .mul(std::sqrt(kPi) / 2.0);
+      },
+      "erfinv", /*trace_higher_order=*/true);
+}
+
+static Series bessel_i_tracked_impl_(const Series& self, std::int64_t n) {
+  PLUSS_CHECK(n >= 0, "bessel_i reverse recurrence: order must be non-negative");
+  Series out = pluss::series::undefined();
+  if (n == 0) {
+    out = i0_impl(self);
+  } else if (n == 1) {
+    out = unary_special_impl_(self, [](double x) { return i1_scalar(x); });
+  } else {
+    out = unary_special_impl_(self, [n](double x) {
+      return integer_bessel_i_scalar_(n, x);
+    });
+  }
+  return bind_special_grad_(
+      out, self,
+      [n](const Series& x) {
+        if (n == 0) return bessel_i_tracked_impl_(x, 1);
+        return ops_internal::add(
+                   bessel_i_tracked_impl_(x, n - 1),
+                   bessel_i_tracked_impl_(x, n + 1))
+            .mul(0.5);
+      },
+      n == 0 ? "i0" : "bessel_i_reverse", /*trace_higher_order=*/true);
+}
+
+static Series mvlgamma_tracked_impl_(const Series& self, std::int64_t p) {
+  return bind_special_grad_(
+      mvlgamma_impl(self, p), self,
+      [p](const Series& x) {
+        Series acc = ops_internal::digamma(x);
+        for (std::int64_t j = 2; j <= p; ++j) {
+          acc = ops_internal::add(
+              acc,
+              ops_internal::digamma(ops_internal::add(
+                  x, scalar_like(x, 0.5 * (1.0 - static_cast<double>(j))))));
+        }
+        return acc;
+      },
+      "mvlgamma", /*trace_higher_order=*/true);
+}
+
+static Series zeta_q_tracked_impl_(const Series& s, const Series& q) {
+  return bind_special_grad_(
+      zeta_impl(s, q), q,
+      [s](const Series& x) {
+        const Series next_s = ops_internal::add(s, scalar_like(s, 1.0));
+        return ops_internal::mul(ops_internal::neg(s),
+                                 zeta_q_tracked_impl_(next_s, x));
+      },
+      "zeta", /*trace_higher_order=*/true);
 }
 
 static Series frexp_impl(const Series& self) {
@@ -5756,6 +5930,23 @@ static Series igamma_impl(const Series& a, const Series& x, bool complement) {
     write_real_(out, i, complement ? (1.0 - p) : p);
   }
   return out;
+}
+
+static Series igamma_x_tracked_impl_(
+    const Series& a, const Series& x, bool complement) {
+  return bind_special_grad_(
+      igamma_impl(a, x, complement), x,
+      [a, complement](const Series& value) {
+        Series slope = ops_internal::exp(ops_internal::sub(
+            ops_internal::sub(
+                ops_internal::mul(
+                    ops_internal::sub(a, scalar_like(a, 1.0)),
+                    ops_internal::log(value)),
+                value),
+            ops_internal::lgamma(a)));
+        return complement ? ops_internal::neg(slope) : slope;
+      },
+      complement ? "igammac" : "igamma", /*trace_higher_order=*/true);
 }
 
 static Series as_strided_impl(
@@ -6762,27 +6953,12 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "corrcoef") return corrcoef_impl(self);
     if (op == "cummax") return (self.dim() == 0) ? self.clone() : cum_extrema_impl(self, 0, /*is_max=*/true);
     if (op == "cummin") return (self.dim() == 0) ? self.clone() : cum_extrema_impl(self, 0, /*is_max=*/false);
-    if (op == "digamma")
-      return bind_special_grad_(digamma_impl(self), self,
-          [](const Series& x) { return polygamma_impl(x, 1); }, "digamma");
-    if (op == "erfinv")
-      return bind_special_grad_(erfinv_impl(self), self,
-          [](const Series& x) {
-            return ops_internal::mul(ops_internal::exp(ops_internal::square(erfinv_impl(x))),
-                                     scalar_like(x, std::sqrt(kPi) / 2.0));
-          }, "erfinv");
-    if (op == "i0")
-      return bind_special_grad_(i0_impl(self), self,
-          [](const Series& x) {
-            return unary_special_impl_(x, [](double v) { return i1_scalar(v); });
-          }, "i0");
+    if (op == "digamma") return ops_internal::digamma(self);
+    if (op == "erfinv") return erfinv_tracked_impl_(self);
+    if (op == "i0") return bessel_i_tracked_impl_(self, 0);
     if (op == "frexp") return frexp_impl(self);
-    if (op == "mvlgamma")
-      return bind_special_grad_(mvlgamma_impl(self, 1), self,
-          [](const Series& x) { return digamma_impl(x); }, "mvlgamma");
-    if (op == "polygamma")
-      return bind_special_grad_(polygamma_impl(self, 1), self,
-          [](const Series& x) { return polygamma_impl(x, 2); }, "polygamma");
+    if (op == "mvlgamma") return mvlgamma_tracked_impl_(self, 1);
+    if (op == "polygamma") return polygamma_tracked_impl_(self, 1);
     if (op == "multinomial") return multinomial_impl(self, 1, /*replacement=*/true);
     if (op == "histogram") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
     if (op == "pinverse") return pluss::subsp::linearalg::pinverse(self, 1e-12);
@@ -6972,20 +7148,11 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "matrix_power") return pluss::subsp::linearalg::matrix_power(self, (std::int64_t)s);
       if (op == "mvlgamma") {
         const std::int64_t p = (std::int64_t)s;
-        return bind_special_grad_(mvlgamma_impl(self, p), self,
-            [p](const Series& x) {
-              Series acc = digamma_impl(x);
-              for (std::int64_t j = 2; j <= p; ++j)
-                acc = ops_internal::add(
-                    acc, digamma_impl(ops_internal::add(
-                             x, scalar_like(x, 0.5 * (1.0 - (double)j)))));
-              return acc;
-            }, "mvlgamma");
+        return mvlgamma_tracked_impl_(self, p);
       }
       if (op == "polygamma") {
         const std::int64_t n = (std::int64_t)s;
-        return bind_special_grad_(polygamma_impl(self, n), self,
-            [n](const Series& x) { return polygamma_impl(x, n + 1); }, "polygamma");
+        return polygamma_tracked_impl_(self, n);
       }
       if (op == "multinomial") return multinomial_impl(self, (std::int64_t)s, /*replacement=*/false);
       if (op == "cummax") return cum_extrema_impl(self, (std::int64_t)s, /*is_max=*/true);
@@ -7147,20 +7314,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "triangular_solve") return pluss::subsp::linearalg::triangular_solve(other, self, /*upper=*/true, /*unitriangular=*/false);
       if (op == "igamma" || op == "igammac") {
         const bool complement = (op == "igammac");
-        // d/dx of the regularized lower incomplete gamma P(a, x) is
-        //   x^(a-1) e^(-x) / Gamma(a);  the upper form Q = 1 - P negates it.
-        Series a_copy = self;
-        return bind_special_grad_(
-            igamma_impl(self, other, complement), other,
-            [a_copy, complement](const Series& x) {
-              Series d = ops_internal::exp(ops_internal::sub(
-                  ops_internal::sub(
-                      ops_internal::mul(ops_internal::sub(a_copy, scalar_like(a_copy, 1.0)),
-                                        ops_internal::log(x)),
-                      x),
-                  ops_internal::lgamma(a_copy)));
-              return complement ? ops_internal::neg(d) : d;
-            }, op == "igammac" ? "igammac" : "igamma");
+        // PyTorch likewise implements only the value-argument derivative.
+        return igamma_x_tracked_impl_(self, other, complement);
       }
       if (op == "add") return ops_internal::add(self, other);
       if (op == "sub") return ops_internal::sub(self, other);
@@ -7272,14 +7427,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "zeta") {
         // Hurwitz zeta zeta(s, q): d/dq = -s * zeta(s + 1, q). The exponent
         // slot has no closed-form routing and is left non-differentiable.
-        Series s_copy = self;
-        return bind_special_grad_(
-            zeta_impl(self, other), other,
-            [s_copy](const Series& q) {
-              return ops_internal::mul(
-                  ops_internal::neg(s_copy),
-                  zeta_impl(ops_internal::add(s_copy, scalar_like(s_copy, 1.0)), q));
-            }, "zeta");
+        return zeta_q_tracked_impl_(self, other);
       }
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, other, 2.0);
       if (op == "sparse_mask") return ops_internal::where(other.to(ScalarType::Bool), self, scalar_like(self, 0.0));

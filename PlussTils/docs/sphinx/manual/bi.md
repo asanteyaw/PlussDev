@@ -27,7 +27,7 @@ you can read this guide without them.
 ## The chapters
 
 This landing page introduces the family with its first programs. Each chapter below covers one part of the
-family in full, with an example for each overload and each toggle it teaches.
+family in full, with an example for each overload and each toggle it covers.
 
 - [Sessions and parameters](bi-sessions.md) -- the versioned choices a reader makes, and the named values views read.
 - [Filters](bi-filters.md) -- every filter factory, its payload types, and what a refusal looks like.

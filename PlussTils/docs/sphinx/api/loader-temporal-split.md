@@ -2,32 +2,22 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/data_loader.h>
 
-struct TemporalSplitOptions {
-  std::int64_t folds{5};
-  std::optional<std::int64_t> test_size{};
-  std::optional<std::int64_t> max_train_size{};
-  std::int64_t gap{0};
-  std::int64_t batch_dim{0};
-};
-
-struct TemporalIndexFold { std::vector<std::int64_t> train_indices, test_indices; };
-struct TemporalIndexSplit { std::vector<TemporalIndexFold> folds; };
 TemporalIndexSplit temporal_split_indices(std::int64_t sample_count, TemporalSplitOptions options = {});
 
-struct TemporalFieldFold { std::vector<Series> train_fields, test_fields; };
-struct TemporalFieldSplit { std::vector<TemporalFieldFold> folds; };
 TemporalFieldSplit temporal_split_fields(const std::vector<Series>& fields, TemporalSplitOptions options = {});
 
-struct TemporalLoaderFold { DataLoader train, test; };
-struct TemporalLoaderSplit { std::vector<TemporalLoaderFold> folds; };
 TemporalLoaderSplit temporal_split_loaders(const std::vector<Series>& fields, TemporalSplitOptions split_options = {},
-                                           DataLoaderOptions train_options = {}, DataLoaderOptions test_options = {});
+                                            DataLoaderOptions train_options = {}, DataLoaderOptions test_options = {});
 ```
 
-These three functions produce rolling-origin folds for time-ordered data, the same idea as scikit-learn's `TimeSeriesSplit`: no shuffling anywhere, and each fold's test window comes later in the sequence than its train window. `temporal_split_indices` computes the plan as index lists; `temporal_split_fields` applies the same plan to real `Series` fields; `temporal_split_loaders` goes one step further and wraps each fold's train and test fields in their own `DataLoader`.
+## What It Does
+
+These three functions produce rolling-origin folds for time-ordered data: no shuffling anywhere, and each fold's test window comes later in the sequence than its train window. `temporal_split_indices` computes the plan as index lists; `temporal_split_fields` applies the same plan to real `Series` fields; `temporal_split_loaders` goes one step further and wraps each fold's train and test fields in their own `DataLoader`.
 
 `folds` sets how many train/test pairs to produce. `test_size` sets how many samples each test window holds; left unset, it is `sample_count / (folds + 1)`. The test windows do not overlap, and together they cover the last `folds * test_size` samples of the sequence, earliest fold first. A fold's train window is everything before its test window, from the very start, unless `max_train_size` caps it, in which case the window slides forward instead of growing. `gap` leaves that many samples between the end of a fold's train window and the start of its test window, untouched by either.
 
@@ -42,9 +32,26 @@ These three functions produce rolling-origin folds for time-ordered data, the sa
 | `options` / `split_options` | The fold count, test size, gap, and cap on the train window. |
 | `train_options`, `test_options` | The `DataLoaderOptions` for each fold's two loaders, for `temporal_split_loaders`. |
 
+## `TemporalSplitOptions` Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `folds` | How many train/test pairs to produce. | `5` |
+| `test_size` | Samples per test window. | unset (`sample_count / (folds + 1)`) |
+| `max_train_size` | Caps each fold's train window so it slides forward instead of growing. | unset (the window grows from the start) |
+| `gap` | Samples left untouched between the end of a fold's train window and the start of its test window. | `0` |
+| `batch_dim` | Which axis holds the samples, for the plain-field-list overloads. Dataset overloads read this from the dataset instead. | `0` |
+
 ## Returns
 
-A `TemporalIndexSplit`, `TemporalFieldSplit`, or `TemporalLoaderSplit`, each holding one fold per element of `folds`.
+| Type | Fields | Meaning |
+|---|---|---|
+| `TemporalIndexFold` | `train_indices`, `test_indices` (each `std::vector<std::int64_t>`) | One fold's train/test index lists. |
+| `TemporalIndexSplit` | `folds` (`std::vector<TemporalIndexFold>`) | Every fold, returned by `temporal_split_indices`. |
+| `TemporalFieldFold` | `train_fields`, `test_fields` (each `std::vector<Series>`) | One fold's train/test fields. |
+| `TemporalFieldSplit` | `folds` (`std::vector<TemporalFieldFold>`) | Every fold, returned by `temporal_split_fields`. |
+| `TemporalLoaderFold` | `train`, `test` (each `DataLoader`) | One fold's train/test loaders. |
+| `TemporalLoaderSplit` | `folds` (`std::vector<TemporalLoaderFold>`) | Every fold, returned by `temporal_split_loaders`. |
 
 ## Errors
 

@@ -13,7 +13,7 @@ Slate::describe(bool render = false) const -> SlateView
 
 ## What It Does
 
-Returns a compact statistical summary of one thread, as a `SlateView` whose case
+Returns a compact statistical summary of one slate, as a `SlateView` whose case
 labels are the names of the computed statistics. The exact statistics depend on
 the payload kind:
 
@@ -21,7 +21,7 @@ the payload kind:
   [`DataFrame::describe()`](../dataframe/describe.md) computes per column —
   `count`, `mean`, `std` (sample standard deviation, `n - 1` denominator), `min`,
   `25%`, `50%`, `75%` (quantiles via linear interpolation between ranks), `max`.
-  Internally this wraps the thread in a one-column `DataFrame`, calls its
+  Internally this wraps the slate in a one-column `DataFrame`, calls its
   `describe()`, and extracts the single resulting column back out — so it's the
   exact per-column counterpart of that method, not a separately implemented
   calculation.
@@ -42,14 +42,14 @@ the payload kind:
 
 `SlateView`
     A summary view with one entry per statistic, labeled by statistic name. It is
-    given a display name — the source thread's own [`name()`](name.md)
+    given a display name — the source slate's own [`name()`](name.md)
     if it has one, or `"value"` otherwise — so the render footer always reads
     `Name: {name}, ptype: {kind}` rather than the plain `ptype: {kind}` a default
-    thread shows.
+    slate shows.
 
 ## Examples
 
-Example 1. Describe a numeric thread.
+Example 1. Describe a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -105,7 +105,7 @@ Name: value, ptype: Series
 `count` reports `3`, not `4` — the missing entry is dropped before any statistic
 is computed, not treated as `0` or left to propagate a `NaN` through the results.
 
-Example 3. Describe a `Note`-kind thread — a frequency summary instead of
+Example 3. Describe a `Note`-kind slate — a frequency summary instead of
 numeric statistics.
 
 ```cpp
@@ -154,9 +154,9 @@ Slate::describe supports numeric Series and Note payloads
   exactly — `std` uses `n - 1` (sample standard deviation), and quartiles use
   linear interpolation between the two closest ranks, so `50%` coincides with the
   median exactly, including for even-sized samples.
-- For `Note`-kind threads, `top` comes from [`freq()`](freq.md); ties for
+- For `Note`-kind slates, `top` comes from [`freq()`](freq.md); ties for
   `top` keep first-occurrence order, not alphabetical order.
-- The returned view always has a display name (`"value"` if the source thread
+- The returned view always has a display name (`"value"` if the source slate
   didn't already have one), so the render footer reads `Name: ..., ptype: ...`.
 - Restricted to numeric `Series` and `Note` payloads; `Timeline`, `TimeIndex`, and
   non-numeric `Series` all throw `"Slate::describe supports numeric Series and

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,8 +50,8 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>The right-only half of <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>: trims characters from the <strong>end</strong>
-of the bound thread’s cells, leaving the leading edge untouched. A direct
-forward to <a class="reference internal" href="#../thread/rstrip.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::rstrip()</span></code></span></a>. Same two policies as
+of the bound slate’s cells, leaving the leading edge untouched. A direct
+forward to <a class="reference internal" href="../slate/rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::rstrip()</span></code></span></a>. Same two policies as
 <code class="docutils literal notranslate"><span class="pre">strip()</span></code> (whitespace by default, character-set membership with <code class="docutils literal notranslate"><span class="pre">chars</span></code>).</p>
 </section>
 <section id="parameters">
@@ -62,7 +62,7 @@ forward to <a class="reference internal" href="#../thread/rstrip.md"><span class
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as the bound thread, with each cell’s
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as the bound slate, with each cell’s
 trailing text trimmed.</p>
 </section>
 <section id="examples">
@@ -93,7 +93,7 @@ characters are peeled off.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::rstrip()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/rstrip.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::rstrip()</span></code></span></a> — identical behavior and throws.</p></li>
+<a class="reference internal" href="../slate/rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::rstrip()</span></code></span></a> — identical behavior and throws.</p></li>
 <li><p>See <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a> for the full explanation of the default-whitespace
 vs. <code class="docutils literal notranslate"><span class="pre">chars</span></code>-set-membership policies, and the non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> throw.</p></li>
 </ul>
@@ -101,7 +101,7 @@ vs. <code class="docutils literal notranslate"><span class="pre">chars</span></c
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/rstrip.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::rstrip</span></code></span></a>: the direct, non-accessor form this
+<li><p><a class="reference internal" href="../slate/rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::rstrip</span></code></span></a>: the direct, non-accessor form this
 method forwards to.</p></li>
 <li><p><a class="reference internal" href="lstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::lstrip</span></code></span></a>: the mirror image, trimming the
 leading end only.</p></li>

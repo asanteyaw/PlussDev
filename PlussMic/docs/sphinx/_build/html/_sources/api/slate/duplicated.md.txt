@@ -13,7 +13,7 @@ Slate::duplicated(bool keep_first = true, bool keep_last = false) const -> Slate
 
 ## What It Does
 
-Returns a boolean thread, the same length as the source, marking which entries
+Returns a boolean slate, the same length as the source, marking which entries
 are duplicate *followers* of an earlier (or later) occurrence — one designated
 occurrence per distinct value is left `false` (the "survivor"), and every other
 occurrence of that value is marked `true`. Which occurrence survives is

@@ -318,6 +318,62 @@ plussai_nodeb_full_nlp_workflow_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_full_nlp_workflow_demo.dir/build
 .PHONY : plussai_nodeb_full_nlp_workflow_demo/fast
 
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_docs_reference: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/rule
+.PHONY : plussai_nodeb_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_docs_reference/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/build
+.PHONY : plussai_nodeb_docs_reference/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_core_docs_reference: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/rule
+.PHONY : plussai_nodeb_core_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_core_docs_reference/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/build
+.PHONY : plussai_nodeb_core_docs_reference/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_tasks_docs_reference: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/rule
+.PHONY : plussai_nodeb_tasks_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_tasks_docs_reference/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/build
+.PHONY : plussai_nodeb_tasks_docs_reference/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/rule
+.PHONY : PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/rule
+
+# Convenience name for target.
+plussai_nodeb_embed_docs_reference: PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/rule
+.PHONY : plussai_nodeb_embed_docs_reference
+
+# fast build rule for target.
+plussai_nodeb_embed_docs_reference/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/build
+.PHONY : plussai_nodeb_embed_docs_reference/fast
+
 nodeb_contextual_generation_end_to_end.o: nodeb_contextual_generation_end_to_end.cpp.o
 .PHONY : nodeb_contextual_generation_end_to_end.o
 
@@ -341,6 +397,78 @@ nodeb_contextual_generation_end_to_end.s: nodeb_contextual_generation_end_to_end
 nodeb_contextual_generation_end_to_end.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_contextual_generation_end_to_end.dir/nodeb_contextual_generation_end_to_end.cpp.s
 .PHONY : nodeb_contextual_generation_end_to_end.cpp.s
+
+nodeb_core_docs_reference.o: nodeb_core_docs_reference.cpp.o
+.PHONY : nodeb_core_docs_reference.o
+
+# target to build an object file
+nodeb_core_docs_reference.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/nodeb_core_docs_reference.cpp.o
+.PHONY : nodeb_core_docs_reference.cpp.o
+
+nodeb_core_docs_reference.i: nodeb_core_docs_reference.cpp.i
+.PHONY : nodeb_core_docs_reference.i
+
+# target to preprocess a source file
+nodeb_core_docs_reference.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/nodeb_core_docs_reference.cpp.i
+.PHONY : nodeb_core_docs_reference.cpp.i
+
+nodeb_core_docs_reference.s: nodeb_core_docs_reference.cpp.s
+.PHONY : nodeb_core_docs_reference.s
+
+# target to generate assembly for a file
+nodeb_core_docs_reference.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_core_docs_reference.dir/nodeb_core_docs_reference.cpp.s
+.PHONY : nodeb_core_docs_reference.cpp.s
+
+nodeb_docs_reference.o: nodeb_docs_reference.cpp.o
+.PHONY : nodeb_docs_reference.o
+
+# target to build an object file
+nodeb_docs_reference.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/nodeb_docs_reference.cpp.o
+.PHONY : nodeb_docs_reference.cpp.o
+
+nodeb_docs_reference.i: nodeb_docs_reference.cpp.i
+.PHONY : nodeb_docs_reference.i
+
+# target to preprocess a source file
+nodeb_docs_reference.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/nodeb_docs_reference.cpp.i
+.PHONY : nodeb_docs_reference.cpp.i
+
+nodeb_docs_reference.s: nodeb_docs_reference.cpp.s
+.PHONY : nodeb_docs_reference.s
+
+# target to generate assembly for a file
+nodeb_docs_reference.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_docs_reference.dir/nodeb_docs_reference.cpp.s
+.PHONY : nodeb_docs_reference.cpp.s
+
+nodeb_embed_docs_reference.o: nodeb_embed_docs_reference.cpp.o
+.PHONY : nodeb_embed_docs_reference.o
+
+# target to build an object file
+nodeb_embed_docs_reference.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/nodeb_embed_docs_reference.cpp.o
+.PHONY : nodeb_embed_docs_reference.cpp.o
+
+nodeb_embed_docs_reference.i: nodeb_embed_docs_reference.cpp.i
+.PHONY : nodeb_embed_docs_reference.i
+
+# target to preprocess a source file
+nodeb_embed_docs_reference.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/nodeb_embed_docs_reference.cpp.i
+.PHONY : nodeb_embed_docs_reference.cpp.i
+
+nodeb_embed_docs_reference.s: nodeb_embed_docs_reference.cpp.s
+.PHONY : nodeb_embed_docs_reference.s
+
+# target to generate assembly for a file
+nodeb_embed_docs_reference.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_embed_docs_reference.dir/nodeb_embed_docs_reference.cpp.s
+.PHONY : nodeb_embed_docs_reference.cpp.s
 
 nodeb_embed_end_to_end.o: nodeb_embed_end_to_end.cpp.o
 .PHONY : nodeb_embed_end_to_end.o
@@ -486,6 +614,30 @@ nodeb_tagger_sequence_end_to_end.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tagger_sequence_end_to_end.dir/nodeb_tagger_sequence_end_to_end.cpp.s
 .PHONY : nodeb_tagger_sequence_end_to_end.cpp.s
 
+nodeb_tasks_docs_reference.o: nodeb_tasks_docs_reference.cpp.o
+.PHONY : nodeb_tasks_docs_reference.o
+
+# target to build an object file
+nodeb_tasks_docs_reference.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/nodeb_tasks_docs_reference.cpp.o
+.PHONY : nodeb_tasks_docs_reference.cpp.o
+
+nodeb_tasks_docs_reference.i: nodeb_tasks_docs_reference.cpp.i
+.PHONY : nodeb_tasks_docs_reference.i
+
+# target to preprocess a source file
+nodeb_tasks_docs_reference.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/nodeb_tasks_docs_reference.cpp.i
+.PHONY : nodeb_tasks_docs_reference.cpp.i
+
+nodeb_tasks_docs_reference.s: nodeb_tasks_docs_reference.cpp.s
+.PHONY : nodeb_tasks_docs_reference.s
+
+# target to generate assembly for a file
+nodeb_tasks_docs_reference.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/build.make PlussAI/examples/NodeB/CMakeFiles/plussai_nodeb_tasks_docs_reference.dir/nodeb_tasks_docs_reference.cpp.s
+.PHONY : nodeb_tasks_docs_reference.cpp.s
+
 nodeb_textcat_mvp.o: nodeb_textcat_mvp.cpp.o
 .PHONY : nodeb_textcat_mvp.o
 
@@ -550,17 +702,30 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... plussai_nodeb_contextual_generation_end_to_end"
+	@echo "... plussai_nodeb_core_docs_reference"
+	@echo "... plussai_nodeb_docs_reference"
+	@echo "... plussai_nodeb_embed_docs_reference"
 	@echo "... plussai_nodeb_embed_end_to_end"
 	@echo "... plussai_nodeb_full_nlp_workflow_demo"
 	@echo "... plussai_nodeb_linguistics_overview_demo"
 	@echo "... plussai_nodeb_ner_end_to_end"
 	@echo "... plussai_nodeb_sentiment_end_to_end"
 	@echo "... plussai_nodeb_tagger_sequence_end_to_end"
+	@echo "... plussai_nodeb_tasks_docs_reference"
 	@echo "... plussai_nodeb_textcat_mvp"
 	@echo "... plussai_nodeb_vectorize_end_to_end"
 	@echo "... nodeb_contextual_generation_end_to_end.o"
 	@echo "... nodeb_contextual_generation_end_to_end.i"
 	@echo "... nodeb_contextual_generation_end_to_end.s"
+	@echo "... nodeb_core_docs_reference.o"
+	@echo "... nodeb_core_docs_reference.i"
+	@echo "... nodeb_core_docs_reference.s"
+	@echo "... nodeb_docs_reference.o"
+	@echo "... nodeb_docs_reference.i"
+	@echo "... nodeb_docs_reference.s"
+	@echo "... nodeb_embed_docs_reference.o"
+	@echo "... nodeb_embed_docs_reference.i"
+	@echo "... nodeb_embed_docs_reference.s"
 	@echo "... nodeb_embed_end_to_end.o"
 	@echo "... nodeb_embed_end_to_end.i"
 	@echo "... nodeb_embed_end_to_end.s"
@@ -579,6 +744,9 @@ help:
 	@echo "... nodeb_tagger_sequence_end_to_end.o"
 	@echo "... nodeb_tagger_sequence_end_to_end.i"
 	@echo "... nodeb_tagger_sequence_end_to_end.s"
+	@echo "... nodeb_tasks_docs_reference.o"
+	@echo "... nodeb_tasks_docs_reference.i"
+	@echo "... nodeb_tasks_docs_reference.s"
 	@echo "... nodeb_textcat_mvp.o"
 	@echo "... nodeb_textcat_mvp.i"
 	@echo "... nodeb_textcat_mvp.s"

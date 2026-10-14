@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,10 +48,10 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Clears the bound thread’s case labels entirely — a direct forward to
+<p>Clears the bound slate’s case labels entirely — a direct forward to
 <code class="docutils literal notranslate"><span class="pre">Slate::clear_caselbl()</span></code>. Unlike <a class="reference internal" href="range.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">range()</span></code></span></a>, which <em>attaches</em> an
-explicit default-range labels thread, <code class="docutils literal notranslate"><span class="pre">reset()</span></code> removes the case-label
-attachment altogether, so the thread displays with the default <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>
+explicit default-range labels slate, <code class="docutils literal notranslate"><span class="pre">reset()</span></code> removes the case-label
+attachment altogether, so the slate displays with the default <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>
 positions computed on the fly rather than stored.</p>
 </section>
 <section id="parameters">
@@ -61,7 +61,7 @@ positions computed on the fly rather than stored.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with no case labels
+A new slate, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with no case labels
 attached.</p>
 </section>
 <section id="examples">
@@ -120,7 +120,7 @@ but <a class="reference internal" href="has.html"><span class="std std-doc"><cod
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="range.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateLabelAccessor::range</span></code></span></a>: visually identical result, but
-actively attaches a default-range labels thread rather than clearing one.</p></li>
+actively attaches a default-range labels slate rather than clearing one.</p></li>
 <li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateLabelAccessor::set</span></code></span></a>: the operation <code class="docutils literal notranslate"><span class="pre">reset()</span></code> undoes.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

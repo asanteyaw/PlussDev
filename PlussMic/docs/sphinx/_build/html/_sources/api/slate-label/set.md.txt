@@ -12,8 +12,8 @@ SlateLabelAccessor::set(const Slate& labels) const -> Slate
 
 ## What It Does
 
-Replaces the bound thread's case labels with `labels`, used as-is — a direct
-forward to `Slate::caselbl(labels)`. The thread's own values are completely
+Replaces the bound slate's case labels with `labels`, used as-is — a direct
+forward to `Slate::caselbl(labels)`. The slate's own values are completely
 unchanged; only the companion case-label sequence shown alongside them (and
 used by [`sort()`](sort.md), [`slice()`](slice.md), [`pos()`](pos.md), and
 similar) is replaced.
@@ -22,17 +22,17 @@ similar) is replaced.
 
 **labels** (`const Slate&`)
 
-The replacement case labels. Must be the same length as the bound thread.
+The replacement case labels. Must be the same length as the bound slate.
 
 ## Returns
 
 `Slate`
-    A new thread, holding the same values as `*this`, with `labels` as its
+    A new slate, holding the same values as `*this`, with `labels` as its
     case labels.
 
 ## Examples
 
-Example 1. Attach text labels to a numeric thread.
+Example 1. Attach text labels to a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -59,7 +59,7 @@ case labels) changed.
 
 ## Notes
 
-- The thread's own values and kind are never touched — only the case-label
+- The slate's own values and kind are never touched — only the case-label
   companion sequence changes.
 - Identical to calling `Slate::caselbl(labels)` directly.
 - Unlike `DataFrameLabelAccessor::set`, there is no feature-promotion overload

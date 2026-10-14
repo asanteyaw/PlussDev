@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,11 +54,11 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Replaces every <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell with <code class="docutils literal notranslate"><span class="pre">value</span></code>, leaving already-valid cells untouched. The
 overload selects which payload kind is required: <code class="docutils literal notranslate"><span class="pre">double</span></code> requires a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind
-thread, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> requires <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> requires
+slate, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> requires <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> requires
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, and <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> requires <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind. Unlike the other
 overloads, the <code class="docutils literal notranslate"><span class="pre">Duration</span></code> overload also clears any intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code> lanes (not just
 lanes flagged by a validity mask) via <code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>, since <code class="docutils literal notranslate"><span class="pre">Duration</span></code>’s own payload can
-carry a sentinel-missing value independent of the thread’s validity mask. This is the
+carry a sentinel-missing value independent of the slate’s validity mask. This is the
 same operation <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace(null_t,</span> <span class="pre">to)</span></code></span></a> delegates to internally when <code class="docutils literal notranslate"><span class="pre">from</span></code>
 is <code class="docutils literal notranslate"><span class="pre">pluss::series::null</span></code>.</p>
 </section>
@@ -67,14 +67,14 @@ is <code class="docutils literal notranslate"><span class="pre">pluss::series::n
 <p><strong>value</strong>
 The replacement for <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells. Its C++ type selects the overload — <code class="docutils literal notranslate"><span class="pre">double</span></code>
 for <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> for
-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind threads, <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> for <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind threads. The
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slates, <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> for <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind slates. The
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> overload requires a scalar value (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code>); the <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
 overload requires exactly one value and that value must not itself be <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length and kind as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell replaced
+A new slate, same length and kind as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell replaced
 by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
 </section>
 <section id="examples">
@@ -132,7 +132,7 @@ ptype: Note
 ptype: Timeline
 </pre></div>
 </div>
-<p>Example 4. Fill a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind thread. <code class="docutils literal notranslate"><span class="pre">fillnull(Duration)</span></code> clears intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code>
+<p>Example 4. Fill a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind slate. <code class="docutils literal notranslate"><span class="pre">fillnull(Duration)</span></code> clears intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code>
 lanes in addition to any validity-mask-flagged ones.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">gaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">({</span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">::</span><span class="n">kNaT</span><span class="p">,</span>
 <span class="w">                                           </span><span class="mi">-2&#39;000&#39;000&#39;000LL</span><span class="p">}));</span>
@@ -173,7 +173,7 @@ replacement value, or throws <code class="docutils literal notranslate"><span cl
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull(Duration)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Duration</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Duration)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Duration</span> <span class="pre">payload&quot;</span></code>. It requires exactly one replacement value
 (<code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Duration):</span> <span class="pre">replacement</span> <span class="pre">must</span> <span class="pre">contain</span> <span class="pre">exactly</span> <span class="pre">one</span> <span class="pre">value&quot;</span></code>), and
 that value cannot itself be <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Duration):</span> <span class="pre">replacement</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">NaT&quot;</span></code>). Unlike the other overloads, it clears intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code> lanes even when
-the thread carries no validity mask at all.</p></li>
+the slate carries no validity mask at all.</p></li>
 <li><p>A mutating sibling, <a class="reference internal" href="fillnull_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code></span></a>, applies the same fill in place.</p></li>
 </ul>
 </section>

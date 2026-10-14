@@ -13,7 +13,7 @@ Slate::tail(std::int64_t n = 5, bool render = false) const -> SlateView
 
 ## What It Does
 
-Returns the last `n` entries of the thread as a `SlateView` — see
+Returns the last `n` entries of the slate as a `SlateView` — see
 [`head()`](head.md) for the shared `SlateView` mechanics (it's a full `Slate`
 subclass, renders identically). `n` is clamped into `[0, size()]`, same as
 `head()` — never throws for an out-of-range `n`.

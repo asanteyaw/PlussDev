@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,10 +49,10 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> <strong>exactly once</strong>, passing the entire current thread, and returns whatever <code class="docutils literal notranslate"><span class="pre">fn</span></code>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> <strong>exactly once</strong>, passing the entire current slate, and returns whatever <code class="docutils literal notranslate"><span class="pre">fn</span></code>
 returns — after checking the result’s size against <code class="docutils literal notranslate"><span class="pre">shape</span></code>. Despite the name, this is
 <strong>not</strong> a row-by-row accumulator-style fold (there’s no running accumulator, and <code class="docutils literal notranslate"><span class="pre">fn</span></code> never
-sees individual rows in isolation) — it’s a whole-thread escape hatch for a transform that
+sees individual rows in isolation) — it’s a whole-slate escape hatch for a transform that
 doesn’t fit <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s built-in vectorized methods, with <code class="docutils literal notranslate"><span class="pre">shape</span></code> documenting (and
 enforcing) what kind of result you’re expected to produce.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">ResultShape</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="w"> </span><span class="p">{</span>
@@ -65,7 +65,7 @@ enforcing) what kind of result you’re expected to produce.</p>
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>fold() calls fn() once with the whole thread — it does not iterate rows
+<p>fold() calls fn() once with the whole slate — it does not iterate rows
 If you want <code class="docutils literal notranslate"><span class="pre">fn</span></code> invoked once per row instead, with a running per-row callback, use
 <a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> — its <code class="docutils literal notranslate"><span class="pre">SlateValue(const</span> <span class="pre">SlateValue&amp;)</span></code> callback runs once for each valid
 row. <code class="docutils literal notranslate"><span class="pre">fold()</span></code>’s <code class="docutils literal notranslate"><span class="pre">shape</span></code> parameter only validates the <em>size</em> of whatever <code class="docutils literal notranslate"><span class="pre">fn</span></code> returns after
@@ -88,7 +88,7 @@ Exactly what <code class="docutils literal notranslate"><span class="pre">fn</sp
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. <code class="docutils literal notranslate"><span class="pre">ResultShape::Reduce</span></code> (the default) — collapse the whole thread to one value.</p>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">ResultShape::Reduce</span></code> (the default) — collapse the whole slate to one value.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -165,7 +165,7 @@ against the default <code class="docutils literal notranslate"><span class="pre"
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> is called exactly once, with the whole thread — not once per row. See the important
+<li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> is called exactly once, with the whole slate — not once per row. See the important
 callout above; use <a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> for genuine row-by-row iteration.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">shape</span></code> only validates the <em>size</em> of <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s return value; it never changes how <code class="docutils literal notranslate"><span class="pre">fn</span></code> is
 invoked or how many times.</p></li>
@@ -178,10 +178,10 @@ reads more clearly at the call site.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::flow</span></code></span></a>: the same “call <code class="docutils literal notranslate"><span class="pre">fn</span></code> once with the whole thread” shape, but with
+<li><p><a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::flow</span></code></span></a>: the same “call <code class="docutils literal notranslate"><span class="pre">fn</span></code> once with the whole slate” shape, but with
 no size validation at all — not even the loose <code class="docutils literal notranslate"><span class="pre">Infer</span></code>/<code class="docutils literal notranslate"><span class="pre">Expand</span></code> bookkeeping.</p></li>
 <li><p><a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::map</span></code></span></a>: the row-by-row counterpart — calls <code class="docutils literal notranslate"><span class="pre">fn</span></code> once per valid row
-instead of once for the whole thread.</p></li>
+instead of once for the whole slate.</p></li>
 <li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::transform</span></code></span></a>: dispatches to <code class="docutils literal notranslate"><span class="pre">fold()</span></code> for the <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-callback
 overload.</p></li>
 </ul>

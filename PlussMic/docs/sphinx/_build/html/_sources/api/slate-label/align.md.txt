@@ -29,7 +29,7 @@ enum class AlignBy : std::uint8_t { Pos = 0, Caselbl = 1, Feature = 2, Both = 3 
   second, and so on). A target occurrence beyond the number of matching
   source rows — or a label absent from the source case labels entirely —
   produces `NULL` in the result (or `options.fill`, for numeric `Series`
-  threads only). The result's case labels become `target_labels` exactly.
+  slates only). The result's case labels become `target_labels` exactly.
 - **`AlignBy::Feature`** / **`AlignBy::Both`**: not meaningful for a single
   `Slate` (a `Slate` has no features to align by); `Both` throws
   unconditionally, and `Feature` is only sensible for `DataFrame`-to-`DataFrame`
@@ -56,13 +56,13 @@ case labels.
 `align` (default `AlignBy::Pos`) selects the behavior described above. `fill`
 (`std::optional<double>`, default `std::nullopt`) supplies a constant for
 unmatched cells under `AlignBy::Caselbl`, but only reaches numeric (`Series`)
-threads — a `Note`/`Timeline`/`TimeIndex` thread's unmatched cells stay `NULL`
+slates — a `Note`/`Timeline`/`TimeIndex` slate's unmatched cells stay `NULL`
 regardless.
 
 ## Returns
 
 `Slate`
-    Under `Pos`: `*this`, unchanged. Under `Caselbl`: a new thread reindexed
+    Under `Pos`: `*this`, unchanged. Under `Caselbl`: a new slate reindexed
     onto `target_labels`.
 
 ## Examples
@@ -165,7 +165,7 @@ Slate::align: positional alignment requires identical lengths
   value — see the important callout above.
 - `AlignBy::Caselbl` matching is purely by label **value**, occurrence-by-
   occurrence — not by source row position or sort order.
-- `fill` never reaches non-numeric threads; an unmatched `Note`/`Timeline`/
+- `fill` never reaches non-numeric slates; an unmatched `Note`/`Timeline`/
   `TimeIndex` cell is always `NULL` regardless of `fill`.
 - `AlignBy::Both` always throws for `Slate`-level alignment (it's only valid
   DataFrame-to-DataFrame); `AlignBy::Feature` has no meaningful effect on a
@@ -173,7 +173,7 @@ Slate::align: positional alignment requires identical lengths
 
 ## See Also
 
-- [`Slate::align`](../thread/align.md): the direct, non-accessor form this
+- [`Slate::align`](../slate/align.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateLabelAccessor::set`](set.md): attach the case labels that `align()`
   reindexes against.

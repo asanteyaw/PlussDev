@@ -24,9 +24,9 @@ logical AND (which, internally, is exactly what `between()` does). It supports t
 styles:
 
 - **Numeric scalar bounds** (`double a, double b`) — requires a numeric `Series`-kind
-  thread; throws otherwise.
+  slate; throws otherwise.
 - **Temporal/text scalar bounds** (`std::string_view lo, std::string_view hi`) — requires a
-  `Timeline`- or `TimeIndex`-kind thread; the literals are parsed as timestamps.
+  `Timeline`- or `TimeIndex`-kind slate; the literals are parsed as timestamps.
 - **Rowwise bounds** (`const Slate& lo, const Slate& hi`) — a different lower and upper
   bound per row, useful for grading bands or per-row tolerance envelopes.
 
@@ -45,15 +45,15 @@ want to be certain rather than relying on the default. See Examples 1 and 5.
 ## Parameters
 
 **a**, **b** (`double`)
-    Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind thread.
+    Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind slate.
 
 **lo**, **hi** (`std::string_view`)
     Lower and upper scalar temporal literals, parsed the same way
-    [`compare()`](compare.md)'s text overload parses them against a temporal thread.
-    Requires a `Timeline`- or `TimeIndex`-kind thread.
+    [`compare()`](compare.md)'s text overload parses them against a temporal slate.
+    Requires a `Timeline`- or `TimeIndex`-kind slate.
 
 **lo**, **hi** (`const Slate&`)
-    Lower- and upper-bound threads, applied element by element (row `i`'s value is tested
+    Lower- and upper-bound slates, applied element by element (row `i`'s value is tested
     against `lo`'s and `hi`'s row `i`).
 
 **inclusive** (`bool`)
@@ -67,7 +67,7 @@ want to be certain rather than relying on the default. See Examples 1 and 5.
 ## Returns
 
 `Slate`
-    A `Series`-kind thread of `Bool` values, one interval-membership result per row.
+    A `Series`-kind slate of `Bool` values, one interval-membership result per row.
 
 ## Examples
 
@@ -176,7 +176,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 6. Rowwise lower and upper bound threads — a different interval per row, useful
+Example 6. Rowwise lower and upper bound slates — a different interval per row, useful
 for tolerance bands.
 
 ```cpp
@@ -199,7 +199,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 7. Calling the numeric-scalar overload on a non-`Series` thread throws.
+Example 7. Calling the numeric-scalar overload on a non-`Series` slate throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -213,7 +213,7 @@ try {
 ### Output
 
 ```text
-Slate::between(double,double,...): requires Series payload; use temporal overloads for date/time threads
+Slate::between(double,double,...): requires Series payload; use temporal overloads for date/time slates
 ```
 
 ## Notes

@@ -45,7 +45,7 @@ more than once — the corresponding row is duplicated once per occurrence.
 
 The same case positions, supplied as a numeric `Series`-kind `Slate` instead of a
 `RangeView`. Same negative-index and repetition rules apply. A non-numeric `Slate`
-throws `"DataFrame::take: indices thread must be a Series"`.
+throws `"DataFrame::take: indices slate must be a Series"`.
 
 ## Returns
 
@@ -162,7 +162,7 @@ try {
 ### Output
 
 ```text
-DataFrame::take: indices thread must be a Series
+DataFrame::take: indices slate must be a Series
 ```
 
 ## Notes
@@ -176,7 +176,7 @@ DataFrame::take: indices thread must be a Series
   duplicated case label — useful for bootstrapped resampling or building a synthetic
   frame from an existing one's rows.
 - The `Slate`-indices overload requires a numeric (`Series`-kind) `Slate`; a
-  `Note`/`Timeline`/`TimeIndex` thread throws `"DataFrame::take: indices thread
+  `Note`/`Timeline`/`TimeIndex` slate throws `"DataFrame::take: indices slate
   must be a Series"` — see Example 4.
 
 ## See Also

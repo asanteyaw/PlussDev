@@ -12,7 +12,7 @@ SlateLabelAccessor::monotonic(bool ascending = true, bool strict = false, bool n
 
 ## What It Does
 
-Checks whether the bound thread's case labels are sorted, according to
+Checks whether the bound slate's case labels are sorted, according to
 `ascending` and `strict`.
 
 ## Parameters
@@ -110,7 +110,7 @@ Passing `nulls_last = false` instead expects nulls to sort *first*; since the
 
 ## Notes
 
-- Operates on the bound thread's case labels, not its own data.
+- Operates on the bound slate's case labels, not its own data.
 
 ## See Also
 

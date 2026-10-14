@@ -16,7 +16,7 @@ Slate DataFrameSortBuilder::order() const
 Executes the plan and materializes it as a `Slate` of `Int64` **row
 positions** — the reusable permutation artifact, rather than the sorted
 frame itself. Feeding this into [`DataFrame::take`](../dataframe/take.md)
-(on the same frame, or any other frame/thread that shares its row
+(on the same frame, or any other frame/slate that shares its row
 alignment) reproduces the sorted order.
 
 ```{important} A terminal method — this is where unknown-feature validation actually fires
@@ -33,7 +33,7 @@ supplied to an earlier `.by(...)`/`.then(...)` call only throws here. See
 ## Returns
 
 `Slate`
-    An `Int64` `Series`-kind thread of row positions, in sorted order.
+    An `Int64` `Series`-kind slate of row positions, in sorted order.
 
 ## Examples
 

@@ -97,6 +97,42 @@ MANUAL_API_NAV = {
         'landing': 'nexus_query_api_reference.html',
         'index': DOCS / 'nexus_query_api_reference.md',
     },
+    'Locus': {
+        'title': 'Locus',
+        'slug': 'locus',
+        'landing': 'locus_api_reference.html',
+        'index': DOCS / 'locus_api_reference.md',
+    },
+    'LocusTraverse': {
+        'title': 'LocusTraverse',
+        'slug': 'locus-traverse',
+        'landing': 'locus_traverse_api_reference.html',
+        'index': DOCS / 'locus_traverse_api_reference.md',
+    },
+    'LocusPull': {
+        'title': 'LocusPull',
+        'slug': 'locus-pull',
+        'landing': 'locus_pull_api_reference.html',
+        'index': DOCS / 'locus_pull_api_reference.md',
+    },
+    'LocusPullAgg': {
+        'title': 'LocusPullAgg',
+        'slug': 'locus-pull-agg',
+        'landing': 'locus_pull_agg_api_reference.html',
+        'index': DOCS / 'locus_pull_agg_api_reference.md',
+    },
+    'LocusQuery': {
+        'title': 'LocusQuery',
+        'slug': 'locus-query',
+        'landing': 'locus_query_api_reference.html',
+        'index': DOCS / 'locus_query_api_reference.md',
+    },
+    'LocusQueryPrepared': {
+        'title': 'LocusQueryPrepared',
+        'slug': 'locus-query-prepared',
+        'landing': 'locus_query_prepared_api_reference.html',
+        'index': DOCS / 'locus_query_prepared_api_reference.md',
+    },
 }
 
 @dataclass
@@ -10317,11 +10353,12 @@ def write_api_nav_manifest(extracted: dict[str, list[Method]]) -> None:
             'methods': ordered_method_names(methods_for_index(extracted, class_name)),
         }
     for class_name, cfg in MANUAL_API_NAV.items():
+        methods = cfg['methods'] if 'methods' in cfg else manual_nav_methods(cfg['index'])
         payload[class_name] = {
             'title': cfg['title'],
             'slug': cfg['slug'],
             'landing': cfg['landing'],
-            'methods': manual_nav_methods(cfg['index']),
+            'methods': methods,
         }
     API_NAV_JS.write_text(f'window.PLUSS_API_NAV = {json.dumps(payload, indent=2)};\n')
 

@@ -26,9 +26,9 @@ Converts or reinterprets the current payload as another public Pluss type so dow
 Example 1. Convert the current object into the `duration` representation before continuing with another type-specific workflow.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.as_duration();
+auto out = slate.as_duration();
 ```
 
 ### Output

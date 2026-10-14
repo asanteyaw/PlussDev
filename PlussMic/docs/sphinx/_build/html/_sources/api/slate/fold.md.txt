@@ -13,10 +13,10 @@ Slate::fold(const std::function<Slate(const Slate&)>& fn, ResultShape shape = Re
 
 ## What It Does
 
-Calls `fn` **exactly once**, passing the entire current thread, and returns whatever `fn`
+Calls `fn` **exactly once**, passing the entire current slate, and returns whatever `fn`
 returns — after checking the result's size against `shape`. Despite the name, this is
 **not** a row-by-row accumulator-style fold (there's no running accumulator, and `fn` never
-sees individual rows in isolation) — it's a whole-thread escape hatch for a transform that
+sees individual rows in isolation) — it's a whole-slate escape hatch for a transform that
 doesn't fit `Slate`'s built-in vectorized methods, with `shape` documenting (and
 enforcing) what kind of result you're expected to produce.
 
@@ -29,7 +29,7 @@ enum class ResultShape : std::uint8_t {
 };
 ```
 
-```{important} fold() calls fn() once with the whole thread — it does not iterate rows
+```{important} fold() calls fn() once with the whole slate — it does not iterate rows
 If you want `fn` invoked once per row instead, with a running per-row callback, use
 [`map()`](map.md) — its `SlateValue(const SlateValue&)` callback runs once for each valid
 row. `fold()`'s `shape` parameter only validates the *size* of whatever `fn` returns after
@@ -53,7 +53,7 @@ that single call; it does not change how many times `fn` is invoked.
 
 ## Examples
 
-Example 1. `ResultShape::Reduce` (the default) — collapse the whole thread to one value.
+Example 1. `ResultShape::Reduce` (the default) — collapse the whole slate to one value.
 
 ```cpp
 using namespace pluss::table;
@@ -136,7 +136,7 @@ Slate::fold: Reduce requires one value
 
 ## Notes
 
-- `fn` is called exactly once, with the whole thread — not once per row. See the important
+- `fn` is called exactly once, with the whole slate — not once per row. See the important
   callout above; use [`map()`](map.md) for genuine row-by-row iteration.
 - `shape` only validates the *size* of `fn`'s return value; it never changes how `fn` is
   invoked or how many times.
@@ -147,10 +147,10 @@ Slate::fold: Reduce requires one value
 
 ## See Also
 
-- [`Slate::flow`](flow.md): the same "call `fn` once with the whole thread" shape, but with
+- [`Slate::flow`](flow.md): the same "call `fn` once with the whole slate" shape, but with
   no size validation at all — not even the loose `Infer`/`Expand` bookkeeping.
 - [`Slate::map`](map.md): the row-by-row counterpart — calls `fn` once per valid row
-  instead of once for the whole thread.
+  instead of once for the whole slate.
 - [`Slate::transform`](transform.md): dispatches to `fold()` for the `Slate`-callback
   overload.
 

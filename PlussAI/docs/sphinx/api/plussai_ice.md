@@ -12,7 +12,7 @@ It sits above `nn` and packages higher-level concerns such as:
 
 ## Public Positioning
 
-Teach `ice` as the family you reach for when you want to train and operate neural
+Present `ice` as the family you reach for when you want to train and operate neural
 models, not when you want to define low-level modules themselves.
 
 Use `nn` for module construction.

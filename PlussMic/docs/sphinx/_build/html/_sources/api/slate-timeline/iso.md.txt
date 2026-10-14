@@ -12,7 +12,7 @@ SlateTimelineAccessor::iso() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with a fixed ISO-8601-with-offset text
+Replaces the bound slate with a fixed ISO-8601-with-offset text
 representation, as a `Note` `Series`. Equivalent to
 [`fmt("%Y-%m-%dT%H:%M:%S.%f%z")`](fmt.md).
 
@@ -23,7 +23,7 @@ representation, as a `Note` `Series`. Equivalent to
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, holding each
+    A new `Note`-kind slate, same length as the bound slate, holding each
     row as `"YYYY-MM-DDTHH:MM:SS.fffffffff+HH:MM"`.
 
 ## Examples
@@ -57,9 +57,9 @@ ptype: Note
   pattern for a more compact string.
 - The offset is always `+HH:MM`/`-HH:MM` — UTC renders as `"+00:00"`, never a
   bare `"Z"`.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`.
 
 ## See Also

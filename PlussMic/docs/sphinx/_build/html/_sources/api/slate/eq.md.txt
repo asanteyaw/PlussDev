@@ -16,15 +16,15 @@ Slate::eq(const Slate& other) const -> Slate
 
 ## What It Does
 
-Elementwise equality, returning a `Bool`-typed `Series` thread. The `double`
+Elementwise equality, returning a `Bool`-typed `Series` slate. The `double`
 overload compares every value against the same scalar; the `Slate` overload
-compares two threads **positionally** (same length required, no case-label
+compares two slates **positionally** (same length required, no case-label
 alignment); the `std::string_view` overload (with a `const char*` convenience
 wrapper that just forwards to it) behaves differently depending on the calling
-thread's kind:
+slate's kind:
 
-- On a `Note` (string) thread, it compares each string directly against `other`.
-- On any other kind (a numeric `Series` thread, for example), it **stringifies**
+- On a `Note` (string) slate, it compares each string directly against `other`.
+- On any other kind (a numeric `Series` slate, for example), it **stringifies**
   each value first, then does a plain string comparison against `other`. It does not
   parse `other` as a number and compare numerically.
 
@@ -46,7 +46,7 @@ The value to compare against. For the `Slate` overload, must be the same length 
 ## Returns
 
 `Slate`
-    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    A new `Bool`-typed slate, same length as `*this`, holding the elementwise
     equality result.
 
 ## Examples
@@ -71,7 +71,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Compare two threads positionally.
+Example 2. Compare two slates positionally.
 
 ```cpp
 auto targets = Slate(pluss::make_series({72.0, 80.0, 95.0}));
@@ -91,7 +91,7 @@ ptype: Series
 
 Only position `0` matches (`72 == 72`); the others differ (`85 != 80`, `91 != 95`).
 
-Example 3. String equality on a `Note` thread compares text directly.
+Example 3. String equality on a `Note` slate compares text directly.
 
 ```cpp
 auto names = Slate(pluss::make_note({"Ada", "Bola", "Chen"}));
@@ -109,7 +109,7 @@ std::cout << out_names;
 ptype: Series
 ```
 
-Example 4. String equality on a numeric thread stringifies first.
+Example 4. String equality on a numeric slate stringifies first.
 
 ```cpp
 auto values = Slate(pluss::make_series({9.0, 10.0, 11.0}));
@@ -152,12 +152,12 @@ Slate::eq(Slate): positional comparison requires identical lengths
 
 ## Notes
 
-- The comparison family also accepts `Timeline`/`TimeIndex`-kind threads on the
+- The comparison family also accepts `Timeline`/`TimeIndex`-kind slates on the
   `Slate` overload (comparing timestamps), and `Note`-vs-`Note` on the same
   overload (comparing strings) — this page focuses on the numeric case, which is
   the most common.
 - Mixing incompatible payload kinds on the `Slate` overload (for example, a numeric
-  thread against a `Note` thread) throws `"unsupported payload combination"`.
+  slate against a `Note` slate) throws `"unsupported payload combination"`.
 - Every method in this family reports its own name in error messages
   (`Slate::eq(Slate)`, `Slate::lt(Slate)`, and so on), not a shared generic one.
 

@@ -13,13 +13,13 @@ Slate::distinct(bool dropnull = true) const -> Slate
 
 ## What It Does
 
-Returns the distinct values of the thread, one representative per value, in
+Returns the distinct values of the slate, one representative per value, in
 **first-seen order** — not sorted. Grouping is done by each value's string form
 (the same conversion [`freq()`](freq.md) uses), so this works on any payload
 kind, not just `Note`. Unlike a sort-based dedup, the surviving representative
 for each value is always the earliest occurrence, and the relative order of
 distinct values in the output matches the order they first appeared in the
-source thread.
+source slate.
 
 ## Parameters
 
@@ -32,8 +32,8 @@ source thread.
 ## Returns
 
 `Slate`
-    A new thread holding one representative of each distinct value, in
-    first-seen order. Shorter than (or equal in length to) the source thread.
+    A new slate holding one representative of each distinct value, in
+    first-seen order. Shorter than (or equal in length to) the source slate.
 
 ## Examples
 
@@ -99,8 +99,8 @@ though the source had two missing entries.
 - [`Slate::freq`](freq.md): distinct values paired with their occurrence
   counts, sorted by frequency instead of first-seen order.
 - [`Slate::duplicated`](duplicated.md) / [`Slate::repeated`](repeated.md):
-  boolean masks over the original thread's positions, rather than a
-  deduplicated thread.
+  boolean masks over the original slate's positions, rather than a
+  deduplicated slate.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="describe.html">

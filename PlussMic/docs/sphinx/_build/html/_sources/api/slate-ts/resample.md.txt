@@ -13,7 +13,7 @@ TimeSeriesAccessor::resample(const Slate& axis, const pluss::TimeIndex::Resample
 
 ## What It Does
 
-Buckets the bound thread's values into regular calendar/duration periods (like
+Buckets the bound slate's values into regular calendar/duration periods (like
 every day, every 6 hours, every week), keyed by an explicit `axis`, and
 aggregates each bucket with `op`. `freq` supports fixed units (`S`/`min`/`H`/`D`,
 optionally prefixed with a multiplier like `"6H"`), calendar-aware `W`
@@ -38,7 +38,7 @@ over the remaining real observations in that bucket.
 ## Parameters
 
 **axis** (`const Slate&`)
-    The time axis (`Timeline`/`TimeIndex`), same length as the bound thread,
+    The time axis (`Timeline`/`TimeIndex`), same length as the bound slate,
     supplying each position's bucket membership.
 
 **freq** (`std::string_view`) / **options** (`const pluss::TimeIndex::ResampleOptions&`)
@@ -58,8 +58,8 @@ over the remaining real observations in that bucket.
 ## Returns
 
 `TimeSeriesResample`
-    A `{labels, values}` pair: `labels` is a `Timeline`/`TimeIndex` thread of
-    bucket boundaries, `values` is a `Series` thread of the aggregated result,
+    A `{labels, values}` pair: `labels` is a `Timeline`/`TimeIndex` slate of
+    bucket boundaries, `values` is a `Series` slate of the aggregated result,
     one entry per bucket, in the same order.
 
 ## Examples

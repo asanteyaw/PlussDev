@@ -17,16 +17,16 @@ Wraps `*this` in a `SlateValue` — a lightweight box around a whole `Slate` tha
 adds typed scalar-extraction helpers (`to_dbl()`, `to_int()`, `to_str()`, `host()`)
 and implicit conversions to the underlying payload types (`pluss::Series`,
 `pluss::Note`, `pluss::Timeline`, `pluss::TimeIndex`). `value()` itself does **not**
-reduce or require a single-element thread — it wraps the thread as-is, at whatever
+reduce or require a single-element slate — it wraps the slate as-is, at whatever
 length it already has. The reduction methods ([`sum()`](sum.md), [`mean()`](mean.md),
 [`min()`](min.md), and the rest) also return `SlateValue`, typically already
 length-1 after their own reduction; `value()` is the direct way to get the same box
-type around a thread you already have, without any reduction step.
+type around a slate you already have, without any reduction step.
 
 ```{important} Scalar accessors require exactly one element
-`to_dbl()`, `to_int()`, `to_str()`, and `host()` all check that the wrapped thread has
+`to_dbl()`, `to_int()`, `to_str()`, and `host()` all check that the wrapped slate has
 `size() == 1`, throwing `"SlateValue::host: Slate payload must contain exactly one
-value"` otherwise. Calling `.value()` on a multi-element thread is legal; calling
+value"` otherwise. Calling `.value()` on a multi-element slate is legal; calling
 `.to_dbl()` on the result of that isn't. See Example 3.
 ```
 
@@ -37,11 +37,11 @@ value"` otherwise. Calling `.value()` on a multi-element thread is legal; callin
 ## Returns
 
 `SlateValue`
-    A box around `*this`, same length and kind as the source thread.
+    A box around `*this`, same length and kind as the source slate.
 
 ## Examples
 
-Example 1. Wrap a single-element thread and pull out its scalar value.
+Example 1. Wrap a single-element slate and pull out its scalar value.
 
 ```cpp
 using namespace pluss::table;
@@ -57,7 +57,7 @@ std::cout << boxed.to_dbl();
 42
 ```
 
-Example 2. `value()` works on `Note`-kind threads too, via `to_str()`.
+Example 2. `value()` works on `Note`-kind slates too, via `to_str()`.
 
 ```cpp
 auto label = Slate(pluss::make_note({"Accra"}));
@@ -70,7 +70,7 @@ std::cout << label.value().to_str();
 Accra
 ```
 
-Example 3. `value()` on a multi-element thread succeeds — the scalar accessors are
+Example 3. `value()` on a multi-element slate succeeds — the scalar accessors are
 what enforce the single-element requirement, not `value()` itself.
 
 ```cpp
@@ -95,10 +95,10 @@ SlateValue::host: Slate payload must contain exactly one value
 ## Notes
 
 - `value()` never reduces or validates length — it's a plain wrapper.
-- `to_dbl()` / `to_int()` / `to_str()` / `host()` all require the wrapped thread to
+- `to_dbl()` / `to_int()` / `to_str()` / `host()` all require the wrapped slate to
   have exactly one element.
 - `SlateValue` also converts implicitly back to `pluss::Series` / `pluss::Note` /
-  `pluss::Timeline` / `pluss::TimeIndex`, matching the wrapped thread's `kind()`.
+  `pluss::Timeline` / `pluss::TimeIndex`, matching the wrapped slate's `kind()`.
 
 ## See Also
 

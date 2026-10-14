@@ -13,7 +13,7 @@ Slate::head(std::int64_t n = 5, bool render = false) const -> SlateView
 
 ## What It Does
 
-Returns the first `n` entries of the thread as a `SlateView` — a `Slate` subclass
+Returns the first `n` entries of the slate as a `SlateView` — a `Slate` subclass
 (it inherits every `Slate` method and renders identically via `operator<<`) that
 additionally carries a display title (`"head"`) and an opt-in auto-render behavior
 for interactive/terminal contexts. `n` is silently clamped into `[0, size()]` —
@@ -47,7 +47,7 @@ like `Slate`'s own).
 
 ## Examples
 
-Example 1. The default `n = 5` on a shorter thread returns everything.
+Example 1. The default `n = 5` on a shorter slate returns everything.
 
 ```cpp
 using namespace pluss::table;
@@ -66,7 +66,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. `n` larger than `size()` clamps — no error, just the whole thread back.
+Example 2. `n` larger than `size()` clamps — no error, just the whole slate back.
 
 ```cpp
 auto out2 = scores.head(100);

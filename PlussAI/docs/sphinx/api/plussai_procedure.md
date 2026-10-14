@@ -9,7 +9,7 @@ graph that coordinates those engines, not a replacement for any of them.
 
 ## Public Positioning
 
-Teach `procedure` as the family for:
+Present `procedure` as the family for:
 
 - wiring `lymph`/`ice`/`nlp`/raw-module components into one named, validated,
   ordered DAG

@@ -13,9 +13,9 @@ SlateNoteAccessor::extract(std::string_view pattern,
 
 ## What It Does
 
-Extracts one or more regex capture groups from the bound thread into a new
+Extracts one or more regex capture groups from the bound slate into a new
 `DataFrame` — one feature per capture group. A direct forward to
-[`Slate::extract()`](../thread/extract.md). Requires the bound thread to be
+[`Slate::extract()`](../slate/extract.md). Requires the bound slate to be
 `Note`-kind, and `pattern` must contain at least one capture group (`(...)`), or the
 call throws.
 
@@ -110,17 +110,17 @@ Slate::extract: pattern needs a capture group
 ## Notes
 
 - `SlateNoteAccessor::extract()` is a one-line forward to
-  [`Slate::extract()`](../thread/extract.md) — identical behavior and throws.
+  [`Slate::extract()`](../slate/extract.md) — identical behavior and throws.
 - Auto-generated names are `match_0`, `match_1`, ... — not `group_0`/`group_1`.
 - `names`'s length must exactly equal the number of capture groups, or the call
   throws.
 - A non-matching row stays in the output with `NULL` in every capture-group column,
   rather than being dropped.
-- A non-`Note` bound thread throws `"Slate::extract: expected Note payload"`.
+- A non-`Note` bound slate throws `"Slate::extract: expected Note payload"`.
 
 ## See Also
 
-- [`Slate::extract`](../thread/extract.md): the direct, non-accessor form this
+- [`Slate::extract`](../slate/extract.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateNoteAccessor::matches`](matches.md) / [`fullmatch()`](fullmatch.md):
   boolean regex checks, when you only need a mask rather than the captured text.

@@ -13,7 +13,7 @@ Slate::repeated() const -> Slate
 
 ## What It Does
 
-Returns a boolean thread, the same length as the source, marking **every**
+Returns a boolean slate, the same length as the source, marking **every**
 entry whose value occurs more than once — including the occurrence that
 [`duplicated()`](duplicated.md) would leave unmarked as the "survivor." Where
 `duplicated()` answers "which entries are extra copies to drop," `repeated()`
@@ -31,7 +31,7 @@ default policy would mark only the second `A` and second `B`
 
 `Slate`
     A boolean `Series`, same length as the source, `true` at every position
-    whose value occurs more than once anywhere in the thread.
+    whose value occurs more than once anywhere in the slate.
 
 ## Examples
 

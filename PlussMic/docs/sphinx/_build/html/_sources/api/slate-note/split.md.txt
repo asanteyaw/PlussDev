@@ -17,9 +17,9 @@ SlateNoteAccessor::split(std::string_view pattern,
 
 ## What It Does
 
-Splits every cell of the bound thread on a delimiter, expanding the result into
+Splits every cell of the bound slate on a delimiter, expanding the result into
 one output column per split position — direct forwards to
-[`Slate::split()`](../thread/split.md). Requires the bound thread to be
+[`Slate::split()`](../slate/split.md). Requires the bound slate to be
 `Note`-kind. Two overloads with different delimiter semantics:
 
 - **`split(delimiter, limit, prefix)`**: always a literal substring split
@@ -35,7 +35,7 @@ row is `NULL` in the extra columns.
 The single-delimiter overload determines the output column count from
 **every** row's underlying text — including invalid rows. The
 `(pattern, options)` overload only computes each row's split for rows that are
-actually valid. See [`Slate::split()`](../thread/split.md) Example 4 for a
+actually valid. See [`Slate::split()`](../slate/split.md) Example 4 for a
 side-by-side demonstration.
 ```
 
@@ -133,7 +133,7 @@ std::cout << out3;
 [3 cs x 3 feat]
 ```
 
-Example 4. A non-`Note` thread throws.
+Example 4. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -154,7 +154,7 @@ Slate::split: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::split()` is a one-line forward to
-  [`Slate::split()`](../thread/split.md) — identical behavior and throws.
+  [`Slate::split()`](../slate/split.md) — identical behavior and throws.
 - An empty delimiter/pattern throws.
 - `limit` caps the *number of splits*, not the *number of output columns*
   directly.
@@ -164,7 +164,7 @@ Slate::split: expected Note payload
 
 ## See Also
 
-- [`Slate::split`](../thread/split.md): the direct, non-accessor form this
+- [`Slate::split`](../slate/split.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateNoteAccessor::partition`](partition.md): a related but simpler split
   — always exactly 3 columns, first-occurrence-only.

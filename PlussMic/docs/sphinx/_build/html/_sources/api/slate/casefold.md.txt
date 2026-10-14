@@ -13,7 +13,7 @@ Slate::casefold() const -> Slate
 
 ## What It Does
 
-Produces a case-insensitive-comparison form of a `Note` (string) thread's text —
+Produces a case-insensitive-comparison form of a `Note` (string) slate's text —
 conceptually similar to [`lower()`](lower.md), but intended specifically as a
 normalization step **before equality comparison**, not as a display transform. True
 Unicode case folding can differ from a simple lowercase mapping for certain
@@ -27,8 +27,8 @@ being functionally identical to [`lower()`](lower.md). On plain ASCII input, the
 always produce the same result regardless of build configuration.
 ```
 
-Requires the thread to be `Note`-kind — calling it on a numeric or other kind of
-thread throws.
+Requires the slate to be `Note`-kind — calling it on a numeric or other kind of
+slate throws.
 
 ## Parameters
 
@@ -37,7 +37,7 @@ thread throws.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, holding the case-folded text.
+    A new `Note`-kind slate, same length as `*this`, holding the case-folded text.
 
 ## Examples
 
@@ -64,7 +64,7 @@ ptype: Note
 On this plain-ASCII input, identical to what [`roles.lower()`](lower.md) would
 produce.
 
-Example 2. Calling it on a non-`Note` thread throws.
+Example 2. Calling it on a non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));

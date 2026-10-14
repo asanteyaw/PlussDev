@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusTraverse::collect &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="LocusTraverse::drop" href="drop.html" />
+    <link rel="prev" title="LocusTraverse API Reference" href="../../locus_traverse_api_reference.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locustraverse-collect">
+<h1>LocusTraverse::collect<a class="headerlink" href="#locustraverse-collect" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_traverse_api_reference.html"><span class="doc std std-doc">Back to LocusTraverse API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="w"> </span><span class="n">LocusTraverse</span><span class="o">::</span><span class="n">collect</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="materializing-the-plan">
+<h2>Materializing The Plan<a class="headerlink" href="#materializing-the-plan" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">collect()</span></code> is the execution boundary of a <code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code> chain. The methods
+before it describe work: <code class="docutils literal notranslate"><span class="pre">join()</span></code> appends one hop, <code class="docutils literal notranslate"><span class="pre">via()</span></code> appends a resolved
+path, <code class="docutils literal notranslate"><span class="pre">options()</span></code> replaces relational policy, and <code class="docutils literal notranslate"><span class="pre">pick()</span></code> or <code class="docutils literal notranslate"><span class="pre">drop()</span></code> records a
+final projection. <code class="docutils literal notranslate"><span class="pre">collect()</span></code> reads the captured Locus, executes the hops in
+order, applies the projection, and returns a new <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>.</p>
+<p>A zero-hop plan is valid. Calling <code class="docutils literal notranslate"><span class="pre">collect()</span></code> immediately after
+<code class="docutils literal notranslate"><span class="pre">locus.from(&quot;orders&quot;)</span></code> returns the anchor Catalog’s streams and record layout.
+This makes one builder useful for code that may or may not add relationships:
+the terminal operation does not require a special case.</p>
+<p>Each hop receives the Catalog produced by the previous hop. This matters in a
+long plan because a right-side name collision can suffix a stream, and a later
+hop must find its left key in that accumulated schema. Join matching preserves
+the selected <code class="docutils literal notranslate"><span class="pre">JoinHow</span></code>; ragged stream layout follows the current
+<a class="reference internal" href="options.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">options()</span></code></span></a>. After the last hop, <code class="docutils literal notranslate"><span class="pre">pick()</span></code> runs first and <code class="docutils literal notranslate"><span class="pre">drop()</span></code>
+runs second.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Catalog</span></code></dt><dd><p>A newly materialized, defined Catalog. Its stream order is the accumulated
+join order unless <code class="docutils literal notranslate"><span class="pre">pick()</span></code> supplies an explicit order. The result owns its
+Catalog structure; the source Locus and builder remain unchanged and may be
+reused.</p>
+</dd>
+</dl>
+<p>The result can itself be ragged. With the default relational policy, trailing
+absence is preserved rather than padded merely to make every stream the same
+length. Use <code class="docutils literal notranslate"><span class="pre">options()</span></code> with <code class="docutils literal notranslate"><span class="pre">RaggedMaterialize::Pad</span></code> when a rectangular record
+domain is required.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>All outputs are emitted by
+<code class="docutils literal notranslate"><span class="pre">PlussMic/examples/bundle/locus_traverse_reference_demo.cpp</span></code>.</p>
+<p>Example 1. A zero-hop collection returns the anchor Catalog.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">anchor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">anchor</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id, customer_id, amount, state] rows=5
+order_id=[100, 101, 102, 103, 104]
+</pre></div>
+</div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">collect()</span></code> executes an accumulated adjacent join. The default join
+is inner, so the order whose customer key has no partner is omitted.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">joined</span><span class="p">);</span>
+<span class="n">print_words</span><span class="p">(</span><span class="n">joined</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id, customer_id, amount, state, name] rows=4
+name=[Ada, Bola, Bola, Chen]
+</pre></div>
+</div>
+<p>Example 3. Builders are persistent values. Deriving a projection or a joined
+branch does not mutate the common base plan.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">);</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">base</span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;order_id&quot;</span><span class="p">}).</span><span class="n">collect</span><span class="p">());</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">base</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name&quot;</span><span class="p">}).</span><span class="n">collect</span><span class="p">());</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">base</span><span class="p">.</span><span class="n">collect</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id] rows=5
+keys=[order_id, name] rows=4
+keys=[order_id, customer_id, amount, state] rows=5
+</pre></div>
+</div>
+<p>Example 4. Projection is terminal: <code class="docutils literal notranslate"><span class="pre">pick()</span></code> establishes the candidate schema,
+then <code class="docutils literal notranslate"><span class="pre">drop()</span></code> removes from that schema.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;state&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">drop</span><span class="p">({</span><span class="s">&quot;state&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id] rows=5
+</pre></div>
+</div>
+</section>
+</section>
+<section id="validation-boundary">
+<h2>Validation Boundary<a class="headerlink" href="#validation-boundary" title="Link to this heading">¶</a></h2>
+<p>Some errors occur while the plan is formed: an unknown <code class="docutils literal notranslate"><span class="pre">join()</span></code> target, an
+ambiguous direct relationship, or an unreachable <code class="docutils literal notranslate"><span class="pre">via()</span></code> target. Errors that
+require materialized schemas occur here: unknown projection names, absent join
+keys, incompatible key kinds, contradicted cardinality, output-name collision,
+invalid ragged policy, and loss forbidden by <code class="docutils literal notranslate"><span class="pre">RaggedLoss::Error</span></code>.</p>
+<p>Because collection is eager, no partial Catalog is returned when a later hop or
+projection fails.</p>
+</section>
+<section id="cost-and-reuse">
+<h2>Cost And Reuse<a class="headerlink" href="#cost-and-reuse" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">collect()</span></code> allocates every join result and the final projection. Key encoding
+and matching are delegated to Catalog’s relational kernels; eligible numeric
+built sides may reuse their internal match cache. <code class="docutils literal notranslate"><span class="pre">pick()</span></code> and <code class="docutils literal notranslate"><span class="pre">drop()</span></code> do not
+push stream pruning into earlier joins, so place them for schema clarity rather
+than expecting them to reduce join work. Reuse an uncollected base builder when
+several related outputs share the same prefix, but expect each call to
+<code class="docutils literal notranslate"><span class="pre">collect()</span></code> to execute its own materialization.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../locus_traverse_api_reference.html"><span class="label">Previous</span><span class="title">LocusTraverse API Reference</span></a>
+  <a class="next-link" href="drop.html"><span class="label">Next</span><span class="title">drop</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_traverse_api_reference.html">LocusTraverse API Reference</a><ul>
+      <li>Previous: <a href="../../locus_traverse_api_reference.html" title="previous chapter">LocusTraverse API Reference</a></li>
+      <li>Next: <a href="drop.html" title="next chapter">LocusTraverse::drop</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus-traverse/collect.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

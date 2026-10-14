@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,13 +49,13 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the distinct values of the thread, one representative per value, in
+<p>Returns the distinct values of the slate, one representative per value, in
 <strong>first-seen order</strong> — not sorted. Grouping is done by each value’s string form
 (the same conversion <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a> uses), so this works on any payload
 kind, not just <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Unlike a sort-based dedup, the surviving representative
 for each value is always the earliest occurrence, and the relative order of
 distinct values in the output matches the order they first appeared in the
-source thread.</p>
+source slate.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -68,8 +68,8 @@ its first occurrence among the survivors.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread holding one representative of each distinct value, in
-first-seen order. Shorter than (or equal in length to) the source thread.</p>
+A new slate holding one representative of each distinct value, in
+first-seen order. Shorter than (or equal in length to) the source slate.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -133,8 +133,8 @@ the values themselves.</p></li>
 <li><p><a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::freq</span></code></span></a>: distinct values paired with their occurrence
 counts, sorted by frequency instead of first-seen order.</p></li>
 <li><p><a class="reference internal" href="duplicated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::duplicated</span></code></span></a> / <a class="reference internal" href="repeated.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::repeated</span></code></span></a>:
-boolean masks over the original thread’s positions, rather than a
-deduplicated thread.</p></li>
+boolean masks over the original slate’s positions, rather than a
+deduplicated slate.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="describe.html">

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -57,7 +57,7 @@ single call agreeing on exactly one row per group, so this can’t be expressed 
 spec alongside them.</p>
 <p>Ties are broken by sorting the tied values themselves in ascending order (not by
 which one was observed first) — this deliberately does <em>not</em> reuse the
-first-occurrence tie-break <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a> and <a class="reference internal" href="#../thread/freq.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>
+first-occurrence tie-break <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a> and <a class="reference internal" href="../slate/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>
 use, because those pick one arbitrary winner among many distinct values, while this
 method already returns the full tied set: ordering that set by value is a property of
 the values themselves, independent of how the source rows happened to be ordered,
@@ -235,7 +235,7 @@ numbers; this method always sorts by the latter for numeric features).</p>
 <a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></span></a> in the same call — those require a fixed one-row-
 per-group shape across every spec, which a variable-length tie set cannot satisfy.</p></li>
 <li><p>Ties are sorted ascending by value, not by first-occurrence order — a deliberate
-difference from <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a> and <a class="reference internal" href="#../thread/freq.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>,
+difference from <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a> and <a class="reference internal" href="../slate/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>,
 justified by this method returning the whole tied set rather than picking one
 winner from it.</p></li>
 <li><p>Supports the same value-feature kinds as <a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mode()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">Note</span></code> and numeric
@@ -253,7 +253,7 @@ combining several features’ tie sets has no single obviously-correct behavior.
 <ul class="simple">
 <li><p><a class="reference internal" href="mode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::mode</span></code></span></a>: the single-winner counterpart this method
 complements.</p></li>
-<li><p><a class="reference internal" href="#../thread/freq.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>: the same first-occurrence tie-break
+<li><p><a class="reference internal" href="../slate/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>: the same first-occurrence tie-break
 <code class="docutils literal notranslate"><span class="pre">mode()</span></code> uses, explained in full.</p></li>
 <li><p><a class="reference internal" href="agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameGrouped::agg</span></code></span></a>: the fixed-one-row-per-group terminal this
 method cannot be expressed through.</p></li>

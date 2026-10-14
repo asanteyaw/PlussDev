@@ -41,7 +41,7 @@ infers every numeric feature in the frame, and an explicitly-passed non-numeric 
 Given the resolved feature names (`names`) and whether `features` was passed non-empty
 (`explicit_features`), the first matching rule below wins:
 
-1. **Exactly one numeric feature.** If the frame's row-label thread is Note-, Timeline-, or
+1. **Exactly one numeric feature.** If the frame's row-label slate is Note-, Timeline-, or
    TimeIndex-kind ("labeled") **and** the frame has 16 or fewer rows, routes to
    `bar(names.front())`. Otherwise routes to `line(names.front())`.
 2. **Exactly two numeric features, and `features` was left empty/default.** If the frame
@@ -55,7 +55,7 @@ Given the resolved feature names (`names`) and whether `features` was passed non
    or fewer rows, routes to `bar_stacked()` over the selected features; otherwise routes to
    `area_stacked()`.
 4. **Two, three, or four numeric features, and the frame "prefers an index plot"** — true
-   when the row-label thread is labeled-kind, *or* the frame has more than 24 rows (either
+   when the row-label slate is labeled-kind, *or* the frame has more than 24 rows (either
    condition alone is enough). Routes to `line()` with all selected features as `y_features`.
 5. **Five or fewer numeric features, and 256 or fewer rows.** Routes to a scatter-matrix
    view equivalent to `scatter_matrix(names)` with default options (`Full` triangle).

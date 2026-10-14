@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -183,8 +183,8 @@ other cell still compares equal.</p>
 <p>Example 4. Compare against a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> with one value per feature — <code class="docutils literal notranslate"><span class="pre">quiz</span></code> checked
 against <code class="docutils literal notranslate"><span class="pre">84</span></code>, <code class="docutils literal notranslate"><span class="pre">final</span></code> checked against <code class="docutils literal notranslate"><span class="pre">88</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">thresholds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">84.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">thresholds</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_slate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">thresholds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_slate</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>

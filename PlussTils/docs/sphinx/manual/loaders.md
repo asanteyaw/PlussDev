@@ -15,7 +15,7 @@ into two parts, or a worker thread delivers batches out of order. The loader
 family handles these chores, and each one is a separate decision you make on
 purpose.
 
-This guide teaches those decisions in order. It starts with plain batching and
+This guide walks through those decisions in order. It starts with plain batching and
 moves to shuffling, sampling, custom datasets, splitting, parallel workers,
 file paths, and dtype transfer. It ends with the configurations the loader
 refuses, so you know what an error means before you meet it. Every program is

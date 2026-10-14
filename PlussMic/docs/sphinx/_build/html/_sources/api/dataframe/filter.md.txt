@@ -23,7 +23,7 @@ for you, while `filter()` takes an already-built mask — a boolean `Series`, or
 
 Reach for `filter()` when the mask is more naturally expressed in C++ than in a query
 string — built from a helper function, combined from several intermediate boolean
-threads with `&&` / `||`, or reused across several calls — and reach for `query()` when a
+slates with `&&` / `||`, or reused across several calls — and reach for `query()` when a
 single self-contained string predicate reads more clearly at the call site.
 
 Masks are usually built by comparing the `Slate` returned from
@@ -105,7 +105,7 @@ auto mask = (orders.features("units") >= 3) && (orders.features("city") != "Kuma
 auto out = orders.filter(mask);
 ```
 
-Composing boolean threads with `&&` / `||` reads naturally once a mask needs more than
+Composing boolean slates with `&&` / `||` reads naturally once a mask needs more than
 one condition, and keeps the logic in ordinary C++ rather than a string that only gets
 checked at runtime.
 

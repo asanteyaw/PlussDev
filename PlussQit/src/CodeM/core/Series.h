@@ -3,30 +3,31 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <initializer_list>
+#include <iosfwd>
+#include <limits>
+#include <optional>
 #include <span>
 #include <sstream>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
-#include <type_traits>
-#include <iosfwd>
-#include <utility>
-#include <limits>
 
-
-#include "CodeM/core/Errors.h"
 #include "CodeM/Indexing/ExtractSpec.h"
 #include "CodeM/Traverse/Traverse.h"
+#include "CodeM/core/Errors.h"
 
-#include "CodeM/core/SeriesBase.h"
-#include "CodeM/core/DType.h"
-#include "CodeM/core/exotic_containers.h"
-#include "CodeM/core/Storage.h"
-#include "CodeM/core/ScalarType.h"
-#include "CodeM/core/Half.h"
 #include "CodeM/core/Complex.h"
+#include "CodeM/core/DType.h"
+#include "CodeM/core/Half.h"
 #include "CodeM/core/Scalar.h"
+#include "CodeM/core/ScalarType.h"
+#include "CodeM/core/SeriesBase.h"
+#include "CodeM/core/Storage.h"
+#include "CodeM/core/exotic_containers.h"
 #include "MSharp/IntrusivePtr.h"
 #include "pluss/export.h"
 #include "pluss/slicing.h"
@@ -43,8 +44,7 @@
 #endif
 
 namespace pluss {
-template <class T>
-class StackArray;
+template <class T> class StackArray;
 }
 
 namespace pluss::codem {
@@ -63,7 +63,6 @@ struct SeriesFactoryAccess;
 
 struct TernaryCompareBuilder;
 
-
 // Forward declaration for tensor memory/layout format used by generated APIs.
 // Full definition should come from the appropriate header if/when needed.
 enum class MemoryFormat : std::uint8_t;
@@ -72,55 +71,42 @@ enum class MemoryFormat : std::uint8_t;
 class CODEM_API Series : public SeriesBase {
 public:
   using SeriesBase::size;
-  std::int64_t size(int dim) const { return SeriesBase::size(static_cast<std::int64_t>(dim)); }
+  std::int64_t size(int dim) const {
+    return SeriesBase::size(static_cast<std::int64_t>(dim));
+  }
   std::int64_t size(std::int64_t dim) const { return SeriesBase::size(dim); }
 
-  template <class T>
-  struct HostArray {
+  template <class T> struct HostArray {
     std::vector<T> data;
     std::vector<std::int64_t> sizes;
     std::vector<std::int64_t> strides;
     bool contiguous{false};
 
     std::span<const std::int64_t> shape() const noexcept { return sizes; }
-    std::span<const std::int64_t> stride_view() const noexcept { return strides; }
-    std::int64_t dim() const noexcept { return static_cast<std::int64_t>(sizes.size()); }
-    std::int64_t numel() const noexcept { return static_cast<std::int64_t>(data.size()); }
+    std::span<const std::int64_t> stride_view() const noexcept {
+      return strides;
+    }
+    std::int64_t dim() const noexcept {
+      return static_cast<std::int64_t>(sizes.size());
+    }
+    std::int64_t numel() const noexcept {
+      return static_cast<std::int64_t>(data.size());
+    }
   };
 
-  using HostScalarAny = std::variant<
-      bool,
-      std::uint8_t,
-      std::uint16_t,
-      std::uint32_t,
-      std::uint64_t,
-      std::int8_t,
-      std::int16_t,
-      std::int32_t,
-      std::int64_t,
-      Float16,
-      BFloat16,
-      float,
-      double,
-      Complex64,
-      Complex128>;
+  using HostScalarAny =
+      std::variant<bool, std::uint8_t, std::uint16_t, std::uint32_t,
+                   std::uint64_t, std::int8_t, std::int16_t, std::int32_t,
+                   std::int64_t, Float16, BFloat16, float, double, Complex64,
+                   Complex128>;
 
   using HostVectorAny = std::variant<
-      std::vector<bool>,
-      std::vector<std::uint8_t>,
-      std::vector<std::uint16_t>,
-      std::vector<std::uint32_t>,
-      std::vector<std::uint64_t>,
-      std::vector<std::int8_t>,
-      std::vector<std::int16_t>,
-      std::vector<std::int32_t>,
-      std::vector<std::int64_t>,
-      std::vector<Float16>,
-      std::vector<BFloat16>,
-      std::vector<float>,
-      std::vector<double>,
-      std::vector<Complex64>,
-      std::vector<Complex128>>;
+      std::vector<bool>, std::vector<std::uint8_t>, std::vector<std::uint16_t>,
+      std::vector<std::uint32_t>, std::vector<std::uint64_t>,
+      std::vector<std::int8_t>, std::vector<std::int16_t>,
+      std::vector<std::int32_t>, std::vector<std::int64_t>,
+      std::vector<Float16>, std::vector<BFloat16>, std::vector<float>,
+      std::vector<double>, std::vector<Complex64>, std::vector<Complex128>>;
 
   struct HostArrayAny final {
     HostVectorAny data;
@@ -129,21 +115,25 @@ public:
     bool contiguous{false};
 
     std::span<const std::int64_t> shape() const noexcept { return sizes; }
-    std::span<const std::int64_t> stride_view() const noexcept { return strides; }
-    std::int64_t dim() const noexcept { return static_cast<std::int64_t>(sizes.size()); }
+    std::span<const std::int64_t> stride_view() const noexcept {
+      return strides;
+    }
+    std::int64_t dim() const noexcept {
+      return static_cast<std::int64_t>(sizes.size());
+    }
     std::int64_t numel() const noexcept {
       return std::visit(
-          [](const auto& v) -> std::int64_t {
+          [](const auto &v) -> std::int64_t {
             return static_cast<std::int64_t>(v.size());
           },
           data);
     }
 
-    template <class T>
-    std::span<const T> flat_span_as() const {
-      const auto& v = std::get<std::vector<T>>(data);
+    template <class T> std::span<const T> flat_span_as() const {
+      const auto &v = std::get<std::vector<T>>(data);
       if constexpr (std::is_same_v<T, bool>) {
-        PLUSS_FAIL("Series::host(): bool payload does not expose span view; use vector_as<bool>()");
+        PLUSS_FAIL("Series::host(): bool payload does not expose span view; "
+                   "use vector_as<bool>()");
       } else {
         return std::span<const T>(v.data(), v.size());
       }
@@ -186,51 +176,48 @@ public:
     bool is_vector() const noexcept { return kind_ == Kind::Vector; }
     bool is_array() const noexcept { return kind_ == Kind::Array; }
 
-    const HostScalarAny& scalar() const {
+    const HostScalarAny &scalar() const {
       PLUSS_CHECK(is_scalar(), "Series::host(): value is not scalar");
       return std::get<HostScalarAny>(payload_);
     }
 
-    const HostVectorAny& vector() const {
+    const HostVectorAny &vector() const {
       PLUSS_CHECK(is_vector(), "Series::host(): value is not a 1-D vector");
       return std::get<HostVectorAny>(payload_);
     }
 
-    const HostArrayAny& array() const {
+    const HostArrayAny &array() const {
       PLUSS_CHECK(is_array(), "Series::host(): value is not N-D array");
       return std::get<HostArrayAny>(payload_);
     }
 
-    template <class T>
-    const T& scalar_as() const {
+    template <class T> const T &scalar_as() const {
       return std::get<T>(scalar());
     }
 
-    template <class T>
-    const std::vector<T>& vector_as() const {
+    template <class T> const std::vector<T> &vector_as() const {
       return std::get<std::vector<T>>(vector());
     }
 
-    template <class T>
-    std::span<const T> vector_span_as() const {
-      const auto& v = vector_as<T>();
+    template <class T> std::span<const T> vector_span_as() const {
+      const auto &v = vector_as<T>();
       if constexpr (std::is_same_v<T, bool>) {
-        PLUSS_FAIL("Series::host(): bool payload does not expose span view; use vector_as<bool>()");
+        PLUSS_FAIL("Series::host(): bool payload does not expose span view; "
+                   "use vector_as<bool>()");
       } else {
         return std::span<const T>(v.data(), v.size());
       }
     }
 
-    template <class T>
-    std::span<const T> array_flat_span_as() const {
+    template <class T> std::span<const T> array_flat_span_as() const {
       return array().template flat_span_as<T>();
     }
 
-    template <class T>
-    T to_scalar() const {
-      PLUSS_CHECK(is_scalar(), "Series::host(): scalar conversion requested on non-scalar");
+    template <class T> T to_scalar() const {
+      PLUSS_CHECK(is_scalar(),
+                  "Series::host(): scalar conversion requested on non-scalar");
       return std::visit(
-          [](const auto& v) -> T {
+          [](const auto &v) -> T {
             using U = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
             if constexpr (std::is_same_v<U, Float16>) {
               return static_cast<T>(float16_to_float(v));
@@ -244,9 +231,11 @@ public:
     }
 
     double to_double() const {
-      PLUSS_CHECK(is_scalar(), "Series::host(): scalar numeric conversion requested on non-scalar");
+      PLUSS_CHECK(
+          is_scalar(),
+          "Series::host(): scalar numeric conversion requested on non-scalar");
       return std::visit(
-          [](const auto& v) -> double {
+          [](const auto &v) -> double {
             using U = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
             if constexpr (std::is_same_v<U, bool>) {
               return v ? 1.0 : 0.0;
@@ -254,8 +243,11 @@ public:
               return static_cast<double>(float16_to_float(v));
             } else if constexpr (std::is_same_v<U, BFloat16>) {
               return static_cast<double>(bfloat16_to_float(v));
-            } else if constexpr (std::is_same_v<U, Complex64> || std::is_same_v<U, Complex128>) {
-              PLUSS_CHECK(std::abs(v.imag()) == 0.0, "Series::host(): cannot cast complex scalar with non-zero imaginary part to double");
+            } else if constexpr (std::is_same_v<U, Complex64> ||
+                                 std::is_same_v<U, Complex128>) {
+              PLUSS_CHECK(std::abs(v.imag()) == 0.0,
+                          "Series::host(): cannot cast complex scalar with "
+                          "non-zero imaginary part to double");
               return static_cast<double>(v.real());
             } else {
               return static_cast<double>(v);
@@ -266,17 +258,23 @@ public:
 
     operator double() const { return to_double(); }
 
-    friend std::ostream& operator<<(std::ostream& os, Kind k) {
+    friend std::ostream &operator<<(std::ostream &os, Kind k) {
       switch (k) {
-        case Kind::Scalar: os << "Scalar"; break;
-        case Kind::Vector: os << "Vector"; break;
-        case Kind::Array: os << "Array"; break;
+      case Kind::Scalar:
+        os << "Scalar";
+        break;
+      case Kind::Vector:
+        os << "Vector";
+        break;
+      case Kind::Array:
+        os << "Array";
+        break;
       }
       return os;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const HostAny& v) {
-      auto append_scalar = [&](const auto& x) {
+    friend std::ostream &operator<<(std::ostream &os, const HostAny &v) {
+      auto append_scalar = [&](const auto &x) {
         using U = std::remove_cv_t<std::remove_reference_t<decltype(x)>>;
         if constexpr (std::is_same_v<U, bool>) {
           os << (x ? "true" : "false");
@@ -289,31 +287,33 @@ public:
         }
       };
 
-      auto append_vector = [&](const auto& vec) {
+      auto append_vector = [&](const auto &vec) {
         os << "[";
         for (std::size_t i = 0; i < vec.size(); ++i) {
-          if (i) os << ", ";
+          if (i)
+            os << ", ";
           append_scalar(vec[i]);
         }
         os << "]";
       };
 
       if (v.is_scalar()) {
-        std::visit([&](const auto& x) { append_scalar(x); }, v.scalar());
+        std::visit([&](const auto &x) { append_scalar(x); }, v.scalar());
         return os;
       }
       if (v.is_vector()) {
-        std::visit([&](const auto& vec) { append_vector(vec); }, v.vector());
+        std::visit([&](const auto &vec) { append_vector(vec); }, v.vector());
         return os;
       }
-      const auto& arr = v.array();
+      const auto &arr = v.array();
       os << "{shape=[";
       for (std::size_t i = 0; i < arr.sizes.size(); ++i) {
-        if (i) os << ",";
+        if (i)
+          os << ",";
         os << arr.sizes[i];
       }
       os << "], flat=";
-      std::visit([&](const auto& vec) { append_vector(vec); }, arr.data);
+      std::visit([&](const auto &vec) { append_vector(vec); }, arr.data);
       os << "}";
       return os;
     }
@@ -321,7 +321,8 @@ public:
   private:
     Kind kind_{Kind::Scalar};
     ScalarType dtype_{ScalarType::Float64};
-    std::variant<HostScalarAny, HostVectorAny, HostArrayAny> payload_{HostScalarAny{0.0}};
+    std::variant<HostScalarAny, HostVectorAny, HostArrayAny> payload_{
+        HostScalarAny{0.0}};
   };
 
   // Dynamic host export wrapper:
@@ -330,8 +331,7 @@ public:
   // - N-D Series    -> HostArray<T>
   // `array()` always preserves exact shape/stride/contiguous metadata from
   // the source Series (including scalar/1-D cases).
-  template <class T>
-  class HostValue {
+  template <class T> class HostValue {
   public:
     enum class Kind : std::uint8_t { Scalar = 0, Vector = 1, Array = 2 };
 
@@ -339,34 +339,43 @@ public:
     explicit HostValue(HostArray<T> arr, Kind kind = Kind::Array)
         : arr_(std::move(arr)), kind_(kind) {}
 
-    static HostValue from_scalar(HostArray<T> arr) { return HostValue(std::move(arr), Kind::Scalar); }
-    static HostValue from_vector(HostArray<T> arr) { return HostValue(std::move(arr), Kind::Vector); }
-    static HostValue from_array(HostArray<T> arr) { return HostValue(std::move(arr), Kind::Array); }
+    static HostValue from_scalar(HostArray<T> arr) {
+      return HostValue(std::move(arr), Kind::Scalar);
+    }
+    static HostValue from_vector(HostArray<T> arr) {
+      return HostValue(std::move(arr), Kind::Vector);
+    }
+    static HostValue from_array(HostArray<T> arr) {
+      return HostValue(std::move(arr), Kind::Array);
+    }
 
     Kind kind() const noexcept { return kind_; }
     bool is_scalar() const noexcept { return kind_ == Kind::Scalar; }
     bool is_vector() const noexcept { return kind_ == Kind::Vector; }
     bool is_array() const noexcept { return kind_ == Kind::Array; }
 
-    const T& scalar() const {
+    const T &scalar() const {
       PLUSS_CHECK(is_scalar(), "Series::HostValue: not scalar");
-      PLUSS_CHECK(arr_.data.size() == 1, "Series::HostValue: scalar payload must contain exactly one element");
+      PLUSS_CHECK(
+          arr_.data.size() == 1,
+          "Series::HostValue: scalar payload must contain exactly one element");
       return arr_.data.front();
     }
 
     std::vector<T> vector() const {
-      if (is_scalar()) return std::vector<T>{scalar()};
+      if (is_scalar())
+        return std::vector<T>{scalar()};
       return arr_.data;
     }
 
-    const HostArray<T>& array() const { return arr_; }
+    const HostArray<T> &array() const { return arr_; }
 
     operator T() const { return scalar(); }
     operator std::vector<T>() const { return vector(); }
     operator HostArray<T>() const { return arr_; }
 
-    friend std::ostream& operator<<(std::ostream& os, const HostValue& v) {
-      auto append_scalar = [&](const auto& x) {
+    friend std::ostream &operator<<(std::ostream &os, const HostValue &v) {
+      auto append_scalar = [&](const auto &x) {
         using U = std::remove_cv_t<std::remove_reference_t<decltype(x)>>;
         if constexpr (std::is_same_v<U, bool>) {
           os << (x ? "true" : "false");
@@ -379,10 +388,11 @@ public:
         }
       };
 
-      auto append_vector = [&](const std::vector<T>& vec) {
+      auto append_vector = [&](const std::vector<T> &vec) {
         os << "[";
         for (std::size_t i = 0; i < vec.size(); ++i) {
-          if (i) os << ", ";
+          if (i)
+            os << ", ";
           append_scalar(vec[i]);
         }
         os << "]";
@@ -396,10 +406,11 @@ public:
         append_vector(v.vector());
         return os;
       }
-      const auto& arr = v.array();
+      const auto &arr = v.array();
       os << "{shape=[";
       for (std::size_t i = 0; i < arr.sizes.size(); ++i) {
-        if (i) os << ",";
+        if (i)
+          os << ",";
         os << arr.sizes[i];
       }
       os << "], flat=";
@@ -422,16 +433,26 @@ public:
     bool contiguous{false};
     HostAny values{};
 
-    [[nodiscard]] std::span<const std::int64_t> shape_view() const noexcept { return shape; }
-    [[nodiscard]] std::span<const std::int64_t> stride_view() const noexcept { return strides; }
-    [[nodiscard]] std::int64_t rank() const noexcept { return static_cast<std::int64_t>(shape.size()); }
+    [[nodiscard]] std::span<const std::int64_t> shape_view() const noexcept {
+      return shape;
+    }
+    [[nodiscard]] std::span<const std::int64_t> stride_view() const noexcept {
+      return strides;
+    }
+    [[nodiscard]] std::int64_t rank() const noexcept {
+      return static_cast<std::int64_t>(shape.size());
+    }
     [[nodiscard]] ScalarType scalar_type() const noexcept { return dtype; }
     [[nodiscard]] Platform device() const noexcept { return platform; }
     [[nodiscard]] bool is_contiguous() const noexcept { return contiguous; }
     [[nodiscard]] bool is_scalar() const noexcept { return numel == 1; }
-    [[nodiscard]] bool is_vector() const noexcept { return rank() <= 1 && numel > 1; }
+    [[nodiscard]] bool is_vector() const noexcept {
+      return rank() <= 1 && numel > 1;
+    }
     [[nodiscard]] bool is_array() const noexcept { return rank() > 1; }
-    [[nodiscard]] HostAny::Kind value_kind() const noexcept { return values.kind(); }
+    [[nodiscard]] HostAny::Kind value_kind() const noexcept {
+      return values.kind();
+    }
 
     [[nodiscard]] std::string to_string(std::int64_t edge_items = 3) const {
       std::ostringstream oss;
@@ -447,17 +468,18 @@ public:
       return oss.str();
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Attr& a) {
+    friend std::ostream &operator<<(std::ostream &os, const Attr &a) {
       os << a.to_string();
       return os;
     }
 
   private:
-    static std::string dims_to_string_(const std::vector<std::int64_t>& xs) {
+    static std::string dims_to_string_(const std::vector<std::int64_t> &xs) {
       std::ostringstream oss;
       oss << "[";
       for (std::size_t i = 0; i < xs.size(); ++i) {
-        if (i) oss << ",";
+        if (i)
+          oss << ",";
         oss << xs[i];
       }
       oss << "]";
@@ -465,7 +487,7 @@ public:
     }
 
     template <class U>
-    static void append_scalar_(std::ostringstream& oss, const U& v) {
+    static void append_scalar_(std::ostringstream &oss, const U &v) {
       using V = std::remove_cv_t<std::remove_reference_t<U>>;
       if constexpr (std::is_same_v<V, bool>) {
         oss << (v ? "true" : "false");
@@ -479,42 +501,53 @@ public:
     }
 
     template <class VecT>
-    static void append_vector_preview_(std::ostringstream& oss, const VecT& v, std::int64_t edge_items) {
+    static void append_vector_preview_(std::ostringstream &oss, const VecT &v,
+                                       std::int64_t edge_items) {
       const std::size_t n = v.size();
-      const std::size_t k = static_cast<std::size_t>(std::max<std::int64_t>(1, edge_items));
+      const std::size_t k =
+          static_cast<std::size_t>(std::max<std::int64_t>(1, edge_items));
       oss << "[";
       if (n <= 2 * k) {
         for (std::size_t i = 0; i < n; ++i) {
-          if (i) oss << ", ";
+          if (i)
+            oss << ", ";
           append_scalar_(oss, v[i]);
         }
       } else {
         for (std::size_t i = 0; i < k; ++i) {
-          if (i) oss << ", ";
+          if (i)
+            oss << ", ";
           append_scalar_(oss, v[i]);
         }
         oss << ", ..., ";
         for (std::size_t i = n - k; i < n; ++i) {
-          if (i > n - k) oss << ", ";
+          if (i > n - k)
+            oss << ", ";
           append_scalar_(oss, v[i]);
         }
       }
       oss << "]";
     }
 
-    static std::string host_any_to_string_(const HostAny& any, std::int64_t edge_items) {
+    static std::string host_any_to_string_(const HostAny &any,
+                                           std::int64_t edge_items) {
       std::ostringstream oss;
       if (any.is_scalar()) {
-        std::visit([&](const auto& x) { append_scalar_(oss, x); }, any.scalar());
+        std::visit([&](const auto &x) { append_scalar_(oss, x); },
+                   any.scalar());
         return oss.str();
       }
       if (any.is_vector()) {
-        std::visit([&](const auto& v) { append_vector_preview_(oss, v, edge_items); }, any.vector());
+        std::visit(
+            [&](const auto &v) { append_vector_preview_(oss, v, edge_items); },
+            any.vector());
         return oss.str();
       }
-      const auto& arr = any.array();
+      const auto &arr = any.array();
       oss << "{shape=" << dims_to_string_(arr.sizes) << ", flat=";
-      std::visit([&](const auto& v) { append_vector_preview_(oss, v, edge_items); }, arr.data);
+      std::visit(
+          [&](const auto &v) { append_vector_preview_(oss, v, edge_items); },
+          arr.data);
       oss << "}";
       return oss.str();
     }
@@ -529,11 +562,12 @@ public:
   //   series1.stat({series2, series3}).call("some_op", ...)
   class SeriesStatProxy final {
   public:
-    explicit SeriesStatProxy(const Series& self) : self_(&self) {}
-    SeriesStatProxy(const Series& self, const Series& other) : self_(&self), peers_{other} {}
-    SeriesStatProxy(const Series& self, std::initializer_list<Series> others)
+    explicit SeriesStatProxy(const Series &self) : self_(&self) {}
+    SeriesStatProxy(const Series &self, const Series &other)
+        : self_(&self), peers_{other} {}
+    SeriesStatProxy(const Series &self, std::initializer_list<Series> others)
         : self_(&self), peers_(others.begin(), others.end()) {}
-    SeriesStatProxy(const Series& self, std::span<const Series> others)
+    SeriesStatProxy(const Series &self, std::span<const Series> others)
         : self_(&self), peers_(others.begin(), others.end()) {}
 
     // Central tendency / spread
@@ -541,12 +575,18 @@ public:
     Series mean(std::int64_t dim, bool keepdim = false) const {
       return pluss::subsp::stats::mean(self(), dim, keepdim);
     }
-    Series var(bool unbiased = true) const { return pluss::subsp::stats::var(self(), unbiased); }
-    Series var(std::int64_t dim, bool unbiased = true, bool keepdim = false) const {
+    Series var(bool unbiased = true) const {
+      return pluss::subsp::stats::var(self(), unbiased);
+    }
+    Series var(std::int64_t dim, bool unbiased = true,
+               bool keepdim = false) const {
       return pluss::subsp::stats::var(self(), dim, unbiased, keepdim);
     }
-    Series std(bool unbiased = true) const { return pluss::subsp::stats::std(self(), unbiased); }
-    Series std(std::int64_t dim, bool unbiased = true, bool keepdim = false) const {
+    Series std(bool unbiased = true) const {
+      return pluss::subsp::stats::std(self(), unbiased);
+    }
+    Series std(std::int64_t dim, bool unbiased = true,
+               bool keepdim = false) const {
       return pluss::subsp::stats::std(self(), dim, unbiased, keepdim);
     }
     Series nanvar() const { return pluss::subsp::stats::nanvar(self()); }
@@ -558,55 +598,87 @@ public:
       return pluss::subsp::stats::nanstd(self(), dim, keepdim);
     }
     Series skewness() const { return pluss::subsp::stats::skewness(self()); }
-    Series skewness(std::int64_t dim) const { return pluss::subsp::stats::skewness(self(), dim); }
+    Series skewness(std::int64_t dim) const {
+      return pluss::subsp::stats::skewness(self(), dim);
+    }
     Series kurtosis() const { return pluss::subsp::stats::kurtosis(self()); }
-    Series kurtosis(std::int64_t dim) const { return pluss::subsp::stats::kurtosis(self(), dim); }
+    Series kurtosis(std::int64_t dim) const {
+      return pluss::subsp::stats::kurtosis(self(), dim);
+    }
 
     // Distribution helpers (kept on stat surface; not on core Series surface).
     Series pdf() const { return _compat::invoke("pdf", self()); }
-    Series pdf(double sigma) const { return _compat::invoke("pdf", self(), {sigma}); }
-    Series pdf(double mu, double sigma) const { return _compat::invoke("pdf", self(), {mu, sigma}); }
+    Series pdf(double sigma) const {
+      return _compat::invoke("pdf", self(), {sigma});
+    }
+    Series pdf(double mu, double sigma) const {
+      return _compat::invoke("pdf", self(), {mu, sigma});
+    }
 
     Series logpdf() const { return _compat::invoke("logpdf", self()); }
-    Series logpdf(double sigma) const { return _compat::invoke("logpdf", self(), {sigma}); }
-    Series logpdf(double mu, double sigma) const { return _compat::invoke("logpdf", self(), {mu, sigma}); }
+    Series logpdf(double sigma) const {
+      return _compat::invoke("logpdf", self(), {sigma});
+    }
+    Series logpdf(double mu, double sigma) const {
+      return _compat::invoke("logpdf", self(), {mu, sigma});
+    }
 
     Series logcdf() const { return _compat::invoke("logcdf", self()); }
-    Series logcdf(double sigma) const { return _compat::invoke("logcdf", self(), {sigma}); }
-    Series logcdf(double mu, double sigma) const { return _compat::invoke("logcdf", self(), {mu, sigma}); }
+    Series logcdf(double sigma) const {
+      return _compat::invoke("logcdf", self(), {sigma});
+    }
+    Series logcdf(double mu, double sigma) const {
+      return _compat::invoke("logcdf", self(), {mu, sigma});
+    }
 
     Series cdf() const { return _compat::invoke("cdf", self()); }
-    Series cdf(double sigma) const { return _compat::invoke("cdf", self(), {sigma}); }
-    Series cdf(double mu, double sigma) const { return _compat::invoke("cdf", self(), {mu, sigma}); }
+    Series cdf(double sigma) const {
+      return _compat::invoke("cdf", self(), {sigma});
+    }
+    Series cdf(double mu, double sigma) const {
+      return _compat::invoke("cdf", self(), {mu, sigma});
+    }
 
     // Rolling stats
     Series movsum() const { return _compat::invoke("movsum", self()); }
-    Series movsum(std::int64_t window) const { return _compat::invoke("movsum", self(), {window}); }
+    Series movsum(std::int64_t window) const {
+      return _compat::invoke("movsum", self(), {window});
+    }
     Series movsum(std::int64_t window, std::int64_t dim) const {
       return _compat::invoke("movsum", self(), {window, dim});
     }
     Series movmean() const { return _compat::invoke("movmean", self()); }
-    Series movmean(std::int64_t window) const { return _compat::invoke("movmean", self(), {window}); }
+    Series movmean(std::int64_t window) const {
+      return _compat::invoke("movmean", self(), {window});
+    }
     Series movmean(std::int64_t window, std::int64_t dim) const {
       return _compat::invoke("movmean", self(), {window, dim});
     }
     Series movmax() const { return _compat::invoke("movmax", self()); }
-    Series movmax(std::int64_t window) const { return _compat::invoke("movmax", self(), {window}); }
+    Series movmax(std::int64_t window) const {
+      return _compat::invoke("movmax", self(), {window});
+    }
     Series movmax(std::int64_t window, std::int64_t dim) const {
       return _compat::invoke("movmax", self(), {window, dim});
     }
     Series movmin() const { return _compat::invoke("movmin", self()); }
-    Series movmin(std::int64_t window) const { return _compat::invoke("movmin", self(), {window}); }
+    Series movmin(std::int64_t window) const {
+      return _compat::invoke("movmin", self(), {window});
+    }
     Series movmin(std::int64_t window, std::int64_t dim) const {
       return _compat::invoke("movmin", self(), {window, dim});
     }
     Series movstd() const { return _compat::invoke("movstd", self()); }
-    Series movstd(std::int64_t window) const { return _compat::invoke("movstd", self(), {window}); }
+    Series movstd(std::int64_t window) const {
+      return _compat::invoke("movstd", self(), {window});
+    }
     Series movstd(std::int64_t window, std::int64_t dim) const {
       return _compat::invoke("movstd", self(), {window, dim});
     }
     Series movvar() const { return _compat::invoke("movvar", self()); }
-    Series movvar(std::int64_t window) const { return _compat::invoke("movvar", self(), {window}); }
+    Series movvar(std::int64_t window) const {
+      return _compat::invoke("movvar", self(), {window});
+    }
     Series movvar(std::int64_t window, std::int64_t dim) const {
       return _compat::invoke("movvar", self(), {window, dim});
     }
@@ -614,43 +686,57 @@ public:
     // Normalization-style stats
     Series normr() const { return pluss::subsp::stats::normr(self()); }
     Series normc() const { return pluss::subsp::stats::normc(self()); }
-    Series standardize() const { return pluss::subsp::stats::standardize(self()); }
+    Series standardize() const {
+      return pluss::subsp::stats::standardize(self());
+    }
     Series standardize(std::int64_t dim) const {
       return pluss::subsp::stats::standardize(self(), dim);
     }
     Series center() const { return pluss::subsp::stats::center(self()); }
-    Series center(std::int64_t dim) const { return pluss::subsp::stats::center(self(), dim); }
+    Series center(std::int64_t dim) const {
+      return pluss::subsp::stats::center(self(), dim);
+    }
 
-    // Pairwise stats (require one peer Series either bound via stat(peer) or passed directly).
-    Series pdist2() const { return pluss::subsp::stats::pdist2(self(), peer1()); }
-    Series pdist2(const Series& other) const { return pluss::subsp::stats::pdist2(self(), other); }
+    // Pairwise stats (require one peer Series either bound via stat(peer) or
+    // passed directly).
+    Series pdist2() const {
+      return pluss::subsp::stats::pdist2(self(), peer1());
+    }
+    Series pdist2(const Series &other) const {
+      return pluss::subsp::stats::pdist2(self(), other);
+    }
     Series cdist() const { return pluss::subsp::stats::cdist(self(), peer1()); }
-    Series cdist(const Series& other) const { return pluss::subsp::stats::cdist(self(), other); }
+    Series cdist(const Series &other) const {
+      return pluss::subsp::stats::cdist(self(), other);
+    }
 
   private:
-    const Series& self() const {
+    const Series &self() const {
       PLUSS_CHECK(self_ != nullptr, "Series.stat(): null self");
       return *self_;
     }
 
-    const Series& peer1() const {
-      PLUSS_CHECK(!peers_.empty(), "Series.stat(...): this operation requires one peer Series");
+    const Series &peer1() const {
+      PLUSS_CHECK(!peers_.empty(),
+                  "Series.stat(...): this operation requires one peer Series");
       return peers_.front();
     }
 
-    const Series* self_{nullptr};
+    const Series *self_{nullptr};
     std::vector<Series> peers_{};
   };
 
   class SeriesStatAccessor final {
   public:
     SeriesStatAccessor() = default;
-    explicit SeriesStatAccessor(Series& owner) : owner_(&owner) {}
+    explicit SeriesStatAccessor(Series &owner) : owner_(&owner) {}
 
-    void rebind(Series& owner) noexcept { owner_ = &owner; }
+    void rebind(Series &owner) noexcept { owner_ = &owner; }
 
     SeriesStatProxy operator()() const { return SeriesStatProxy(owner()); }
-    SeriesStatProxy operator()(const Series& other) const { return SeriesStatProxy(owner(), other); }
+    SeriesStatProxy operator()(const Series &other) const {
+      return SeriesStatProxy(owner(), other);
+    }
     SeriesStatProxy operator()(std::initializer_list<Series> others) const {
       return SeriesStatProxy(owner(), others);
     }
@@ -660,13 +746,17 @@ public:
 
     // Dot-style convenience for no-arg stat operations.
     Series mean() const { return (*this)().mean(); }
-    Series mean(std::int64_t dim, bool keepdim = false) const { return (*this)().mean(dim, keepdim); }
+    Series mean(std::int64_t dim, bool keepdim = false) const {
+      return (*this)().mean(dim, keepdim);
+    }
     Series var(bool unbiased = true) const { return (*this)().var(unbiased); }
-    Series var(std::int64_t dim, bool unbiased = true, bool keepdim = false) const {
+    Series var(std::int64_t dim, bool unbiased = true,
+               bool keepdim = false) const {
       return (*this)().var(dim, unbiased, keepdim);
     }
     Series std(bool unbiased = true) const { return (*this)().std(unbiased); }
-    Series std(std::int64_t dim, bool unbiased = true, bool keepdim = false) const {
+    Series std(std::int64_t dim, bool unbiased = true,
+               bool keepdim = false) const {
       return (*this)().std(dim, unbiased, keepdim);
     }
     Series nanvar() const { return (*this)().nanvar(); }
@@ -683,51 +773,86 @@ public:
     Series kurtosis(std::int64_t dim) const { return (*this)().kurtosis(dim); }
     Series pdf() const { return (*this)().pdf(); }
     Series pdf(double sigma) const { return (*this)().pdf(sigma); }
-    Series pdf(double mu, double sigma) const { return (*this)().pdf(mu, sigma); }
+    Series pdf(double mu, double sigma) const {
+      return (*this)().pdf(mu, sigma);
+    }
     Series logpdf() const { return (*this)().logpdf(); }
     Series logpdf(double sigma) const { return (*this)().logpdf(sigma); }
-    Series logpdf(double mu, double sigma) const { return (*this)().logpdf(mu, sigma); }
+    Series logpdf(double mu, double sigma) const {
+      return (*this)().logpdf(mu, sigma);
+    }
     Series logcdf() const { return (*this)().logcdf(); }
     Series logcdf(double sigma) const { return (*this)().logcdf(sigma); }
-    Series logcdf(double mu, double sigma) const { return (*this)().logcdf(mu, sigma); }
+    Series logcdf(double mu, double sigma) const {
+      return (*this)().logcdf(mu, sigma);
+    }
     Series cdf() const { return (*this)().cdf(); }
     Series cdf(double sigma) const { return (*this)().cdf(sigma); }
-    Series cdf(double mu, double sigma) const { return (*this)().cdf(mu, sigma); }
+    Series cdf(double mu, double sigma) const {
+      return (*this)().cdf(mu, sigma);
+    }
     Series movsum() const { return (*this)().movsum(); }
-    Series movsum(std::int64_t window) const { return (*this)().movsum(window); }
-    Series movsum(std::int64_t window, std::int64_t dim) const { return (*this)().movsum(window, dim); }
+    Series movsum(std::int64_t window) const {
+      return (*this)().movsum(window);
+    }
+    Series movsum(std::int64_t window, std::int64_t dim) const {
+      return (*this)().movsum(window, dim);
+    }
     Series movmean() const { return (*this)().movmean(); }
-    Series movmean(std::int64_t window) const { return (*this)().movmean(window); }
-    Series movmean(std::int64_t window, std::int64_t dim) const { return (*this)().movmean(window, dim); }
+    Series movmean(std::int64_t window) const {
+      return (*this)().movmean(window);
+    }
+    Series movmean(std::int64_t window, std::int64_t dim) const {
+      return (*this)().movmean(window, dim);
+    }
     Series movmax() const { return (*this)().movmax(); }
-    Series movmax(std::int64_t window) const { return (*this)().movmax(window); }
-    Series movmax(std::int64_t window, std::int64_t dim) const { return (*this)().movmax(window, dim); }
+    Series movmax(std::int64_t window) const {
+      return (*this)().movmax(window);
+    }
+    Series movmax(std::int64_t window, std::int64_t dim) const {
+      return (*this)().movmax(window, dim);
+    }
     Series movmin() const { return (*this)().movmin(); }
-    Series movmin(std::int64_t window) const { return (*this)().movmin(window); }
-    Series movmin(std::int64_t window, std::int64_t dim) const { return (*this)().movmin(window, dim); }
+    Series movmin(std::int64_t window) const {
+      return (*this)().movmin(window);
+    }
+    Series movmin(std::int64_t window, std::int64_t dim) const {
+      return (*this)().movmin(window, dim);
+    }
     Series movstd() const { return (*this)().movstd(); }
-    Series movstd(std::int64_t window) const { return (*this)().movstd(window); }
-    Series movstd(std::int64_t window, std::int64_t dim) const { return (*this)().movstd(window, dim); }
+    Series movstd(std::int64_t window) const {
+      return (*this)().movstd(window);
+    }
+    Series movstd(std::int64_t window, std::int64_t dim) const {
+      return (*this)().movstd(window, dim);
+    }
     Series movvar() const { return (*this)().movvar(); }
-    Series movvar(std::int64_t window) const { return (*this)().movvar(window); }
-    Series movvar(std::int64_t window, std::int64_t dim) const { return (*this)().movvar(window, dim); }
+    Series movvar(std::int64_t window) const {
+      return (*this)().movvar(window);
+    }
+    Series movvar(std::int64_t window, std::int64_t dim) const {
+      return (*this)().movvar(window, dim);
+    }
     Series normr() const { return (*this)().normr(); }
     Series normc() const { return (*this)().normc(); }
     Series standardize() const { return (*this)().standardize(); }
-    Series standardize(std::int64_t dim) const { return (*this)().standardize(dim); }
+    Series standardize(std::int64_t dim) const {
+      return (*this)().standardize(dim);
+    }
     Series center() const { return (*this)().center(); }
     Series center(std::int64_t dim) const { return (*this)().center(dim); }
     Series pdist2() const { return (*this)().pdist2(); }
-    Series pdist2(const Series& other) const { return (*this)().pdist2(other); }
+    Series pdist2(const Series &other) const { return (*this)().pdist2(other); }
     Series cdist() const { return (*this)().cdist(); }
-    Series cdist(const Series& other) const { return (*this)().cdist(other); }
+    Series cdist(const Series &other) const { return (*this)().cdist(other); }
+
   private:
-    Series& owner() const {
+    Series &owner() const {
       PLUSS_CHECK(owner_ != nullptr, "Series.stat: unbound accessor");
       return *owner_;
     }
 
-    Series* owner_{nullptr};
+    Series *owner_{nullptr};
   };
 
   // Linear algebra namespace-like proxy.
@@ -738,45 +863,84 @@ public:
   //   series1.linearalg(series2).matmul()
   class SeriesLinearAlgProxy final {
   public:
-    explicit SeriesLinearAlgProxy(const Series& self) : self_(&self) {}
-    SeriesLinearAlgProxy(const Series& self, const Series& other) : self_(&self), peers_{other} {}
-    SeriesLinearAlgProxy(const Series& self, pluss::msharp::RangeView::Series others)
+    explicit SeriesLinearAlgProxy(const Series &self) : self_(&self) {}
+    SeriesLinearAlgProxy(const Series &self, const Series &other)
+        : self_(&self), peers_{other} {}
+    SeriesLinearAlgProxy(const Series &self,
+                         pluss::msharp::RangeView::Series others)
         : self_(&self), peers_(others.begin(), others.end()) {}
 
-    Series matmul() const { return pluss::subsp::linearalg::matmul(self(), peer1()); }
-    Series matmul(const Series& other) const { return pluss::subsp::linearalg::matmul(self(), other); }
+    Series matmul() const {
+      return pluss::subsp::linearalg::matmul(self(), peer1());
+    }
+    Series matmul(const Series &other) const {
+      return pluss::subsp::linearalg::matmul(self(), other);
+    }
     Series mm() const { return pluss::subsp::linearalg::mm(self(), peer1()); }
-    Series mm(const Series& other) const { return pluss::subsp::linearalg::mm(self(), other); }
+    Series mm(const Series &other) const {
+      return pluss::subsp::linearalg::mm(self(), other);
+    }
     Series mv() const { return pluss::subsp::linearalg::mv(self(), peer1()); }
-    Series mv(const Series& other) const { return pluss::subsp::linearalg::mv(self(), other); }
+    Series mv(const Series &other) const {
+      return pluss::subsp::linearalg::mv(self(), other);
+    }
     Series dot() const { return pluss::subsp::linearalg::dot(self(), peer1()); }
-    Series dot(const Series& other) const { return pluss::subsp::linearalg::dot(self(), other); }
-    Series vdot() const { return pluss::subsp::linearalg::vdot(self(), peer1()); }
-    Series vdot(const Series& other) const { return pluss::subsp::linearalg::vdot(self(), other); }
+    Series dot(const Series &other) const {
+      return pluss::subsp::linearalg::dot(self(), other);
+    }
+    Series vdot() const {
+      return pluss::subsp::linearalg::vdot(self(), peer1());
+    }
+    Series vdot(const Series &other) const {
+      return pluss::subsp::linearalg::vdot(self(), other);
+    }
     Series norm() const { return pluss::subsp::linearalg::norm(self()); }
 
     Series det() const { return pluss::subsp::linearalg::det(self()); }
     Series inverse() const { return pluss::subsp::linearalg::inverse(self()); }
-    Series cholesky(bool upper = false) const { return pluss::subsp::linearalg::cholesky(self(), upper); }
+    Series cholesky(bool upper = false) const {
+      return pluss::subsp::linearalg::cholesky(self(), upper);
+    }
     Series logdet() const { return pluss::subsp::linearalg::logdet(self()); }
     Series slogdet() const { return pluss::subsp::linearalg::slogdet(self()); }
-    Series matrix_power(std::int64_t n) const { return pluss::subsp::linearalg::matrix_power(self(), n); }
-    Series matrix_exp() const { return pluss::subsp::linearalg::matrix_exp(self()); }
-    Series pinverse(double rcond = 1e-12) const { return pluss::subsp::linearalg::pinverse(self(), rcond); }
-    Series qr_q(bool reduced = true) const { return pluss::subsp::linearalg::qr_q(self(), reduced); }
-    Series qr_r(bool reduced = true) const { return pluss::subsp::linearalg::qr_r(self(), reduced); }
-    Series svd_u(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_u(self(), full_matrices); }
-    Series svd_s(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_s(self(), full_matrices); }
-    Series svd_vh(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_vh(self(), full_matrices); }
-    pluss::subsp::linearalg::SvdDecomposition svd(bool full_matrices = true) const;
+    Series matrix_power(std::int64_t n) const {
+      return pluss::subsp::linearalg::matrix_power(self(), n);
+    }
+    Series matrix_exp() const {
+      return pluss::subsp::linearalg::matrix_exp(self());
+    }
+    Series pinverse(double rcond = 1e-12) const {
+      return pluss::subsp::linearalg::pinverse(self(), rcond);
+    }
+    Series qr_q(bool reduced = true) const {
+      return pluss::subsp::linearalg::qr_q(self(), reduced);
+    }
+    Series qr_r(bool reduced = true) const {
+      return pluss::subsp::linearalg::qr_r(self(), reduced);
+    }
+    Series svd_u(bool full_matrices = true) const {
+      return pluss::subsp::linearalg::svd_u(self(), full_matrices);
+    }
+    Series svd_s(bool full_matrices = true) const {
+      return pluss::subsp::linearalg::svd_s(self(), full_matrices);
+    }
+    Series svd_vh(bool full_matrices = true) const {
+      return pluss::subsp::linearalg::svd_vh(self(), full_matrices);
+    }
+    pluss::subsp::linearalg::SvdDecomposition
+    svd(bool full_matrices = true) const;
 
-    Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
-      return pluss::subsp::linearalg::triangular_solve(self(), b, upper, unitriangular);
+    Series triangular_solve(const Series &b, bool upper = true,
+                            bool unitriangular = false) const {
+      return pluss::subsp::linearalg::triangular_solve(self(), b, upper,
+                                                       unitriangular);
     }
-    Series triangular_solve(bool upper = true, bool unitriangular = false) const {
-      return pluss::subsp::linearalg::triangular_solve(self(), peer1(), upper, unitriangular);
+    Series triangular_solve(bool upper = true,
+                            bool unitriangular = false) const {
+      return pluss::subsp::linearalg::triangular_solve(self(), peer1(), upper,
+                                                       unitriangular);
     }
-    Series cholesky_solve(const Series& b, bool upper = false) const {
+    Series cholesky_solve(const Series &b, bool upper = false) const {
       return pluss::subsp::linearalg::cholesky_solve(self(), b, upper);
     }
     Series cholesky_solve(bool upper = false) const {
@@ -785,72 +949,100 @@ public:
     Series cholesky_inverse(bool upper = false) const {
       return pluss::subsp::linearalg::cholesky_inverse(self(), upper);
     }
-    Series lu_solve(const Series& b) const { return pluss::subsp::linearalg::lu_solve(self(), b); }
-    Series lu_solve() const { return pluss::subsp::linearalg::lu_solve(self(), peer1()); }
+    Series lu_solve(const Series &b) const {
+      return pluss::subsp::linearalg::lu_solve(self(), b);
+    }
+    Series lu_solve() const {
+      return pluss::subsp::linearalg::lu_solve(self(), peer1());
+    }
 
   private:
-    const Series& self() const {
+    const Series &self() const {
       PLUSS_CHECK(self_ != nullptr, "Series.linearalg(): null self");
       return *self_;
     }
 
-    const Series& peer1() const {
-      PLUSS_CHECK(!peers_.empty(), "Series.linearalg(...): this operation requires one peer Series");
+    const Series &peer1() const {
+      PLUSS_CHECK(
+          !peers_.empty(),
+          "Series.linearalg(...): this operation requires one peer Series");
       return peers_.front();
     }
 
-    const Series* self_{nullptr};
+    const Series *self_{nullptr};
     std::vector<Series> peers_{};
   };
 
   class SeriesLinearAlgAccessor final {
   public:
     SeriesLinearAlgAccessor() = default;
-    explicit SeriesLinearAlgAccessor(Series& owner) : owner_(&owner) {}
+    explicit SeriesLinearAlgAccessor(Series &owner) : owner_(&owner) {}
 
-    void rebind(Series& owner) noexcept { owner_ = &owner; }
+    void rebind(Series &owner) noexcept { owner_ = &owner; }
 
-    SeriesLinearAlgProxy operator()() const { return SeriesLinearAlgProxy(owner()); }
-    SeriesLinearAlgProxy operator()(const Series& other) const { return SeriesLinearAlgProxy(owner(), other); }
-    SeriesLinearAlgProxy operator()(pluss::msharp::RangeView::Series others) const {
+    SeriesLinearAlgProxy operator()() const {
+      return SeriesLinearAlgProxy(owner());
+    }
+    SeriesLinearAlgProxy operator()(const Series &other) const {
+      return SeriesLinearAlgProxy(owner(), other);
+    }
+    SeriesLinearAlgProxy
+    operator()(pluss::msharp::RangeView::Series others) const {
       return SeriesLinearAlgProxy(owner(), others);
     }
 
-    Series matmul(const Series& other) const { return (*this)().matmul(other); }
-    Series mm(const Series& other) const { return (*this)().mm(other); }
-    Series mv(const Series& other) const { return (*this)().mv(other); }
-    Series dot(const Series& other) const { return (*this)().dot(other); }
-    Series vdot(const Series& other) const { return (*this)().vdot(other); }
+    Series matmul(const Series &other) const { return (*this)().matmul(other); }
+    Series mm(const Series &other) const { return (*this)().mm(other); }
+    Series mv(const Series &other) const { return (*this)().mv(other); }
+    Series dot(const Series &other) const { return (*this)().dot(other); }
+    Series vdot(const Series &other) const { return (*this)().vdot(other); }
     Series norm() const { return (*this)().norm(); }
     Series det() const { return (*this)().det(); }
     Series inverse() const { return (*this)().inverse(); }
-    Series cholesky(bool upper = false) const { return (*this)().cholesky(upper); }
+    Series cholesky(bool upper = false) const {
+      return (*this)().cholesky(upper);
+    }
     Series logdet() const { return (*this)().logdet(); }
     Series slogdet() const { return (*this)().slogdet(); }
-    Series matrix_power(std::int64_t n) const { return (*this)().matrix_power(n); }
+    Series matrix_power(std::int64_t n) const {
+      return (*this)().matrix_power(n);
+    }
     Series matrix_exp() const { return (*this)().matrix_exp(); }
-    Series pinverse(double rcond = 1e-12) const { return (*this)().pinverse(rcond); }
+    Series pinverse(double rcond = 1e-12) const {
+      return (*this)().pinverse(rcond);
+    }
     Series qr_q(bool reduced = true) const { return (*this)().qr_q(reduced); }
     Series qr_r(bool reduced = true) const { return (*this)().qr_r(reduced); }
-    Series svd_u(bool full_matrices = true) const { return (*this)().svd_u(full_matrices); }
-    Series svd_s(bool full_matrices = true) const { return (*this)().svd_s(full_matrices); }
-    Series svd_vh(bool full_matrices = true) const { return (*this)().svd_vh(full_matrices); }
-    pluss::subsp::linearalg::SvdDecomposition svd(bool full_matrices = true) const;
-    Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
+    Series svd_u(bool full_matrices = true) const {
+      return (*this)().svd_u(full_matrices);
+    }
+    Series svd_s(bool full_matrices = true) const {
+      return (*this)().svd_s(full_matrices);
+    }
+    Series svd_vh(bool full_matrices = true) const {
+      return (*this)().svd_vh(full_matrices);
+    }
+    pluss::subsp::linearalg::SvdDecomposition
+    svd(bool full_matrices = true) const;
+    Series triangular_solve(const Series &b, bool upper = true,
+                            bool unitriangular = false) const {
       return (*this)().triangular_solve(b, upper, unitriangular);
     }
-    Series cholesky_solve(const Series& b, bool upper = false) const {
+    Series cholesky_solve(const Series &b, bool upper = false) const {
       return (*this)().cholesky_solve(b, upper);
     }
-    Series cholesky_inverse(bool upper = false) const { return (*this)().cholesky_inverse(upper); }
-    Series lu_solve(const Series& b) const { return (*this)().lu_solve(b); }
+    Series cholesky_inverse(bool upper = false) const {
+      return (*this)().cholesky_inverse(upper);
+    }
+    Series lu_solve(const Series &b) const { return (*this)().lu_solve(b); }
+
   private:
-    Series& owner() const {
+    Series &owner() const {
       PLUSS_CHECK(owner_ != nullptr, "Series.linearalg: unbound accessor");
       return *owner_;
     }
 
-    Series* owner_{nullptr};
+    Series *owner_{nullptr};
   };
 
   // Series-native antiderivative accessor:
@@ -879,12 +1071,13 @@ public:
   // cannot provide.
   class SeriesAntidiffProxy final {
   public:
-    explicit SeriesAntidiffProxy(const Series& self) : self_(&self) {}
-    SeriesAntidiffProxy(const Series& self, const Series& other) : self_(&self), peers_{other} {}
+    explicit SeriesAntidiffProxy(const Series &self) : self_(&self) {}
+    SeriesAntidiffProxy(const Series &self, const Series &other)
+        : self_(&self), peers_{other} {}
 
     // Explicit-argument forms -- unambiguous regardless of how the proxy
     // was constructed.
-    Series trapezoid(const Series& x, std::int64_t dim = -1) const;
+    Series trapezoid(const Series &x, std::int64_t dim = -1) const;
     Series trapezoid(double dx, std::int64_t dim = -1) const;
     // Bound-or-default form: uses the peer x bound via `antidiff(x)` if
     // present, otherwise dx = 1.0 -- mirrors how stat/linearalg's own
@@ -893,80 +1086,241 @@ public:
       return peers_.empty() ? trapezoid(1.0, dim) : trapezoid(peer1(), dim);
     }
 
-    Series cumulative_trapezoid(const Series& x, std::int64_t dim = -1) const;
+    Series cumulative_trapezoid(const Series &x, std::int64_t dim = -1) const;
     Series cumulative_trapezoid(double dx, std::int64_t dim = -1) const;
     Series cumulative_trapezoid(std::int64_t dim = -1) const {
-      return peers_.empty() ? cumulative_trapezoid(1.0, dim) : cumulative_trapezoid(peer1(), dim);
+      return peers_.empty() ? cumulative_trapezoid(1.0, dim)
+                            : cumulative_trapezoid(peer1(), dim);
     }
 
   private:
-    const Series& self() const {
+    const Series &self() const {
       PLUSS_CHECK(self_ != nullptr, "Series.antidiff(): null self");
       return *self_;
     }
-    const Series& peer1() const {
+    const Series &peer1() const {
       PLUSS_CHECK(!peers_.empty(),
-                  "Series.antidiff(...): this operation requires one peer Series (the x coordinates)");
+                  "Series.antidiff(...): this operation requires one peer "
+                  "Series (the x coordinates)");
       return peers_.front();
     }
 
-    const Series* self_{nullptr};
+    const Series *self_{nullptr};
     std::vector<Series> peers_{};
   };
 
   class SeriesAntidiffAccessor final {
   public:
     SeriesAntidiffAccessor() = default;
-    explicit SeriesAntidiffAccessor(Series& owner) : owner_(&owner) {}
+    explicit SeriesAntidiffAccessor(Series &owner) : owner_(&owner) {}
 
-    void rebind(Series& owner) noexcept { owner_ = &owner; }
+    void rebind(Series &owner) noexcept { owner_ = &owner; }
 
-    SeriesAntidiffProxy operator()() const { return SeriesAntidiffProxy(owner()); }
-    SeriesAntidiffProxy operator()(const Series& x) const { return SeriesAntidiffProxy(owner(), x); }
+    SeriesAntidiffProxy operator()() const {
+      return SeriesAntidiffProxy(owner());
+    }
+    SeriesAntidiffProxy operator()(const Series &x) const {
+      return SeriesAntidiffProxy(owner(), x);
+    }
 
-    Series trapezoid(const Series& x, std::int64_t dim = -1) const { return (*this)().trapezoid(x, dim); }
-    Series trapezoid(double dx, std::int64_t dim = -1) const { return (*this)().trapezoid(dx, dim); }
-    Series trapezoid(std::int64_t dim = -1) const { return (*this)().trapezoid(dim); }
-    Series cumulative_trapezoid(const Series& x, std::int64_t dim = -1) const {
+    Series trapezoid(const Series &x, std::int64_t dim = -1) const {
+      return (*this)().trapezoid(x, dim);
+    }
+    Series trapezoid(double dx, std::int64_t dim = -1) const {
+      return (*this)().trapezoid(dx, dim);
+    }
+    Series trapezoid(std::int64_t dim = -1) const {
+      return (*this)().trapezoid(dim);
+    }
+    Series cumulative_trapezoid(const Series &x, std::int64_t dim = -1) const {
       return (*this)().cumulative_trapezoid(x, dim);
     }
     Series cumulative_trapezoid(double dx, std::int64_t dim = -1) const {
       return (*this)().cumulative_trapezoid(dx, dim);
     }
-    Series cumulative_trapezoid(std::int64_t dim = -1) const { return (*this)().cumulative_trapezoid(dim); }
+    Series cumulative_trapezoid(std::int64_t dim = -1) const {
+      return (*this)().cumulative_trapezoid(dim);
+    }
 
   private:
-    Series& owner() const {
+    Series &owner() const {
       PLUSS_CHECK(owner_ != nullptr, "Series.antidiff: unbound accessor");
       return *owner_;
     }
 
-    Series* owner_{nullptr};
+    Series *owner_{nullptr};
   };
 
-  // Factory helpers (Torch-style free-functions live elsewhere; keep these for convenience).
+  // Callable calculus on the receiver as the independent variable. Both
+  // directions live here (`diff` and `antidiff`) and share one set of options:
+  //   x.calc.diff(fn)                  first derivative of fn at x
+  //   x.calc.diff(fn, 3)               third derivative
+  //   x.calc({.order = 2, .lower = a, .initial = {f0, f1}}).antidiff(fn)
+  // The implementation stays centralized in subsp::math::diff (no second tape).
+  class SeriesCalcAccessor final {
+  public:
+    enum class Rule : std::uint8_t {
+      Trapezoid = 0,
+      Simpson = 1,
+    };
+
+    // Arguments bound by `x.calc(options)`; each method also accepts the
+    // pieces it needs directly, and an explicit argument wins over the option.
+    struct CalcOptions {
+      // diff: derivative order (0 returns fn(x)). antidiff: number of
+      // integrations (at least 1).
+      std::int64_t order{1};
+
+      // diff: derivatives are taken elementwise, d fn_i / d x_i, so the result
+      // has the shape of x (not the full derivative tensor with one copy of
+      // x's axes per order). Requires fn(x) to have the shape of x and to act
+      // elementwise; costs one reverse pass per order instead of N^order lanes.
+      bool elementwise{false};
+      // diff: fail instead of returning zeros when an output does not depend on
+      // x.
+      bool strict_dependency{false};
+
+      // antidiff: the anchor. F(lower) and its lower derivatives are `initial`.
+      std::optional<double> lower{};
+      // antidiff: for order n, initial[k] is F^(k)(lower), k = 0..n-1. Empty
+      // means all zero (the result then drops the Taylor part of F about
+      // lower).
+      std::vector<double> initial{};
+      Rule rule{Rule::Simpson};
+      std::int64_t intervals{256};
+      bool adaptive{true};
+      double atol{1e-10};
+      double rtol{1e-8};
+      std::int64_t max_refinements{8};
+      // antidiff: throw when adaptive refinement cannot reach the tolerance
+      // (otherwise the last estimate is returned).
+      bool require_convergence{true};
+    };
+    // The integration-only subset kept under its original name.
+    using AntidiffOptions = CalcOptions;
+
+    SeriesCalcAccessor() = default;
+    explicit SeriesCalcAccessor(Series &owner) : owner_(&owner) {}
+
+    void rebind(Series &owner) noexcept { owner_ = &owner; }
+
+    // `x.calc()` is the accessor itself; `x.calc(options)` is the same accessor
+    // with defaults bound, usable for one expression.
+    const SeriesCalcAccessor &operator()() const noexcept { return *this; }
+    [[nodiscard]] SeriesCalcAccessor
+    operator()(const CalcOptions &options) const {
+      SeriesCalcAccessor bound(*owner_ptr());
+      bound.options_ = options;
+      return bound;
+    }
+    [[nodiscard]] const CalcOptions &options() const noexcept {
+      return options_;
+    }
+
+    // Derivative of fn at the receiver. One name, one optional order.
+    template <class Fn> [[nodiscard]] Series diff(Fn &&fn) const {
+      return Series::calc_diff_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          options_.order, options_);
+    }
+    template <class Fn>
+    [[nodiscard]] Series diff(Fn &&fn, std::int64_t order) const {
+      CalcOptions o = options_;
+      o.order = order;
+      return Series::calc_diff_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          order, o);
+    }
+
+    // Named derivative shapes. These are constrained views of the same
+    // transform engine as diff(), not independent differentiation systems.
+    template <class Fn> [[nodiscard]] Series grad(Fn &&fn) const {
+      return Series::calc_grad_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          options_);
+    }
+    template <class Fn> [[nodiscard]] Series jac(Fn &&fn) const {
+      return Series::calc_jac_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          options_);
+    }
+    template <class Fn> [[nodiscard]] Series hess(Fn &&fn) const {
+      return Series::calc_hess_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          options_);
+    }
+
+    // Anchored (repeated) integral of fn from `lower` to the receiver.
+    template <class Fn> [[nodiscard]] Series antidiff(Fn &&fn) const {
+      PLUSS_CHECK(options_.lower.has_value(),
+                  "Series.calc.antidiff: no lower bound; pass one or bind it "
+                  "with x.calc({.lower = a})");
+      return Series::calc_antidiff_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          *options_.lower, options_);
+    }
+    template <class Fn>
+    [[nodiscard]] Series antidiff(Fn &&fn, double lower) const {
+      return Series::calc_antidiff_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          lower, options_);
+    }
+    template <class Fn>
+    [[nodiscard]] Series antidiff(Fn &&fn, double lower,
+                                  const CalcOptions &options) const {
+      return Series::calc_antidiff_(
+          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+          lower, options);
+    }
+
+  private:
+    Series *owner_ptr() const {
+      PLUSS_CHECK(owner_ != nullptr, "Series.calc: unbound accessor");
+      return owner_;
+    }
+    const Series &owner() const { return *owner_ptr(); }
+
+    Series *owner_{nullptr};
+    CalcOptions options_{};
+  };
+
+  // Factory helpers (Torch-style free-functions live elsewhere; keep these for
+  // convenience).
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
+  static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st,
+                      Platform platform);
   static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
+  static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st,
+                      Platform platform);
   static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st);
-  static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
-  static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st);
-  static Series full(pluss::msharp::RangeView::Int sizes, double value, ScalarType st, Platform platform);
-  static Series arange(double start, double end, double step, ScalarType dtype, Platform platform);
+  static Series ones(pluss::msharp::RangeView::Int sizes, ScalarType st,
+                     Platform platform);
+  static Series full(pluss::msharp::RangeView::Int sizes, double value,
+                     ScalarType st);
+  static Series full(pluss::msharp::RangeView::Int sizes, double value,
+                     ScalarType st, Platform platform);
+  static Series arange(double start, double end, double step, ScalarType dtype,
+                       Platform platform);
   static Series arange(double start, double end, double step, ScalarType dtype);
-  static Series linspace(double start, double end, std::int64_t steps, ScalarType dtype, Platform platform);
-  static Series linspace(double start, double end, std::int64_t steps, ScalarType dtype);
-  static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype, Platform platform);
+  static Series linspace(double start, double end, std::int64_t steps,
+                         ScalarType dtype, Platform platform);
+  static Series linspace(double start, double end, std::int64_t steps,
+                         ScalarType dtype);
+  static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype,
+                    Platform platform);
   static Series eye(std::int64_t n, std::int64_t m, ScalarType dtype);
-  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
-  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed);
-  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed, Platform platform);
-  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype, std::uint64_t seed);
-  static Series from_storage(const Storage& storage,
+  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                     std::uint64_t seed, Platform platform);
+  static Series rand(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                     std::uint64_t seed);
+  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                      std::uint64_t seed, Platform platform);
+  static Series randn(pluss::msharp::RangeView::Int sizes, ScalarType dtype,
+                      std::uint64_t seed);
+  static Series from_storage(const Storage &storage,
                              std::int64_t storage_offset,
-                             const std::vector<std::int64_t>& sizes,
-                             const std::vector<std::int64_t>& strides,
+                             const std::vector<std::int64_t> &sizes,
+                             const std::vector<std::int64_t> &strides,
                              ScalarType dtype,
                              Platform platform = Platform::CPU);
 
@@ -974,7 +1328,7 @@ public:
   Series contiguous() const;
   Series view(pluss::msharp::RangeView::Int new_sizes) const;
   Series reshape(pluss::msharp::RangeView::Int new_sizes) const;
-  Series reshape(const std::vector<std::int64_t>& new_sizes) const {
+  Series reshape(const std::vector<std::int64_t> &new_sizes) const {
     return reshape(pluss::msharp::RangeView::Int(
         std::span<const std::int64_t>(new_sizes.data(), new_sizes.size())));
   }
@@ -993,151 +1347,165 @@ public:
   Series squeeze() const;
   Series squeeze(std::int64_t dim) const;
   Series select(std::int64_t dim, std::int64_t index) const;
-  Series slice(std::int64_t dim, std::int64_t start, std::int64_t end, std::int64_t step) const;
-  Series gather(std::int64_t dim, const Series& index) const;
-  Series take(const Series& index) const;
+  Series slice(std::int64_t dim, std::int64_t start, std::int64_t end,
+               std::int64_t step) const;
+  Series gather(std::int64_t dim, const Series &index) const;
+  Series take(const Series &index) const;
   // `factorial()` (no-arg, elementwise integer factorial) is provided by the
   // generated method surface and routed through the compat op table.
-  Series scatter(std::int64_t dim, const Series& index, const Series& src) const;
-  Series& scatter_(std::int64_t dim, const Series& index, const Series& src);
-  Series scatter_add(std::int64_t dim, const Series& index, const Series& src) const;
-  Series& scatter_add_(std::int64_t dim, const Series& index, const Series& src);
-  Series scatter_reduce_sum(std::int64_t dim, const Series& index, const Series& src, bool include_self) const;
-  Series scatter_reduce_amax(std::int64_t dim, const Series& index, const Series& src, bool include_self) const;
-  Series scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self) const;
-  Series scatter_reduce_sum(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
-  Series scatter_reduce_amax(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
-  Series scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
+  Series scatter(std::int64_t dim, const Series &index,
+                 const Series &src) const;
+  Series &scatter_(std::int64_t dim, const Series &index, const Series &src);
+  Series scatter_add(std::int64_t dim, const Series &index,
+                     const Series &src) const;
+  Series &scatter_add_(std::int64_t dim, const Series &index,
+                       const Series &src);
+  Series scatter_reduce_sum(std::int64_t dim, const Series &index,
+                            const Series &src, bool include_self) const;
+  Series scatter_reduce_amax(std::int64_t dim, const Series &index,
+                             const Series &src, bool include_self) const;
+  Series scatter_reduce_amin(std::int64_t dim, const Series &index,
+                             const Series &src, bool include_self) const;
+  Series scatter_reduce_sum(std::int64_t dim, const Series &index,
+                            const Series &src, bool include_self,
+                            double initial_scalar) const;
+  Series scatter_reduce_amax(std::int64_t dim, const Series &index,
+                             const Series &src, bool include_self,
+                             double initial_scalar) const;
+  Series scatter_reduce_amin(std::int64_t dim, const Series &index,
+                             const Series &src, bool include_self,
+                             double initial_scalar) const;
   // Internal write kernel behind the autodiff-safe `put_()`/`index_put_()`
   // surface (see Invoke.cpp's put_dispatch_*). Not the public in-place API --
   // that's the generated `Series& put_(...) const` wrapper. Kept as its own
   // non-const, by-value-returning overload so it never shadows the public one.
-  Series put_raw_(const Series& index, const Series& source, bool accumulate=false);
+  Series put_raw_(const Series &index, const Series &source,
+                  bool accumulate = false);
   Series nonzero() const;
   Series unique(bool sorted) const;
-  Series isin(const Series& test_elements) const;
-  Series isin(const Series& test_elements, bool assume_unique) const;
-  Series isin(const Series& test_elements, bool assume_unique, bool invert) const;
-  Series union1d(const Series& other) const;
-  Series union1d(const Series& other, bool sorted) const;
-  Series unionize(pluss::msharp::RangeView::Of<Series> others, bool sorted=true) const;
-  Series intersect1d(const Series& other) const;
-  Series intersect1d(const Series& other, bool sorted) const;
-  Series intersect1d(const Series& other, bool sorted, bool assume_unique) const;
+  Series isin(const Series &test_elements) const;
+  Series isin(const Series &test_elements, bool assume_unique) const;
+  Series isin(const Series &test_elements, bool assume_unique,
+              bool invert) const;
+  Series union1d(const Series &other) const;
+  Series union1d(const Series &other, bool sorted) const;
+  Series unionize(pluss::msharp::RangeView::Of<Series> others,
+                  bool sorted = true) const;
+  Series intersect1d(const Series &other) const;
+  Series intersect1d(const Series &other, bool sorted) const;
+  Series intersect1d(const Series &other, bool sorted,
+                     bool assume_unique) const;
   Series intersection(pluss::msharp::RangeView::Of<Series> others,
-                      bool sorted=true,
-                      bool assume_unique=false) const;
-  Series setdiff1d(const Series& other) const;
-  Series setdiff1d(const Series& other, bool sorted) const;
-  Series setdiff1d(const Series& other, bool sorted, bool assume_unique) const;
-  Series setxor1d(const Series& other) const;
-  Series setxor1d(const Series& other, bool sorted) const;
-  Series setxor1d(const Series& other, bool sorted, bool assume_unique) const;
-  Series unionize_along(const Series& other, std::int64_t dim) const;
-  Series unionize_along(const Series& other, std::int64_t dim, bool sorted) const;
-  Series intersection_along(const Series& other, std::int64_t dim) const;
-  Series intersection_along(const Series& other, std::int64_t dim, bool sorted) const;
-  Series intersection_along(const Series& other,
-                            std::int64_t dim,
-                            bool sorted,
+                      bool sorted = true, bool assume_unique = false) const;
+  Series setdiff1d(const Series &other) const;
+  Series setdiff1d(const Series &other, bool sorted) const;
+  Series setdiff1d(const Series &other, bool sorted, bool assume_unique) const;
+  Series setxor1d(const Series &other) const;
+  Series setxor1d(const Series &other, bool sorted) const;
+  Series setxor1d(const Series &other, bool sorted, bool assume_unique) const;
+  Series unionize_along(const Series &other, std::int64_t dim) const;
+  Series unionize_along(const Series &other, std::int64_t dim,
+                        bool sorted) const;
+  Series intersection_along(const Series &other, std::int64_t dim) const;
+  Series intersection_along(const Series &other, std::int64_t dim,
+                            bool sorted) const;
+  Series intersection_along(const Series &other, std::int64_t dim, bool sorted,
                             bool assume_unique) const;
-  Series setdiff_along(const Series& other, std::int64_t dim) const;
-  Series setdiff_along(const Series& other, std::int64_t dim, bool sorted) const;
-  Series setdiff_along(const Series& other,
-                       std::int64_t dim,
-                       bool sorted,
+  Series setdiff_along(const Series &other, std::int64_t dim) const;
+  Series setdiff_along(const Series &other, std::int64_t dim,
+                       bool sorted) const;
+  Series setdiff_along(const Series &other, std::int64_t dim, bool sorted,
                        bool assume_unique) const;
-  Series setxor_along(const Series& other, std::int64_t dim) const;
-  Series setxor_along(const Series& other, std::int64_t dim, bool sorted) const;
-  Series setxor_along(const Series& other,
-                      std::int64_t dim,
-                      bool sorted,
+  Series setxor_along(const Series &other, std::int64_t dim) const;
+  Series setxor_along(const Series &other, std::int64_t dim, bool sorted) const;
+  Series setxor_along(const Series &other, std::int64_t dim, bool sorted,
                       bool assume_unique) const;
-  Series comp(const Series& universe) const;
-  Series comp(const Series& universe, bool sorted) const;
-  Series comp(const Series& universe, bool sorted, bool assume_unique) const;
-  Series cartprod(const Series& other) const;
+  Series comp(const Series &universe) const;
+  Series comp(const Series &universe, bool sorted) const;
+  Series comp(const Series &universe, bool sorted, bool assume_unique) const;
+  Series cartprod(const Series &other) const;
   Series cartprod(pluss::msharp::RangeView::Of<Series> others) const;
   Series is_prime() const;
   Series prime() const;
   Series factor() const;
   Series bincount(std::int64_t minlength) const;
   Series histc(std::int64_t bins, double min, double max) const;
-  Series masked_select(const Series& mask) const;
-  Series masked_scatter(const Series& mask, const Series& src) const;
-  Series& masked_scatter_(const Series& mask, const Series& src);
-  Series bitwise_and(const Series& rhs) const;
-  Series bitwise_or(const Series& rhs) const;
-  Series bitwise_xor(const Series& rhs) const;
+  Series masked_select(const Series &mask) const;
+  Series masked_scatter(const Series &mask, const Series &src) const;
+  Series &masked_scatter_(const Series &mask, const Series &src);
+  Series bitwise_and(const Series &rhs) const;
+  Series bitwise_or(const Series &rhs) const;
+  Series bitwise_xor(const Series &rhs) const;
   Series bitwise_not() const;
-  Series logical_and(const Series& rhs) const;
-  Series logical_or(const Series& rhs) const;
-  Series logical_xor(const Series& rhs) const;
+  Series logical_and(const Series &rhs) const;
+  Series logical_or(const Series &rhs) const;
+  Series logical_xor(const Series &rhs) const;
   Series logical_not() const;
-  Series& logical_not_();
-  Series where(const Series& condition, const Series& other) const;
-  Series& where_(const Series& condition, const Series& other);
-  Series where(const Series& condition, double other) const;
-  Series& where_(const Series& condition, double other);
+  Series &logical_not_();
+  Series where(const Series &condition, const Series &other) const;
+  Series &where_(const Series &condition, const Series &other);
+  Series where(const Series &condition, double other) const;
+  Series &where_(const Series &condition, double other);
   Series exp() const;
-  Series& exp_();
+  Series &exp_();
   Series log() const;
-  Series& log_();
+  Series &log_();
   Series sqrt() const;
-  Series& sqrt_();
+  Series &sqrt_();
   Series sin() const;
-  Series& sin_();
+  Series &sin_();
   Series cos() const;
-  Series& cos_();
+  Series &cos_();
   Series tan() const;
-  Series& tan_();
+  Series &tan_();
   Series tanh() const;
-  Series& tanh_();
+  Series &tanh_();
   Series sinh() const;
-  Series& sinh_();
+  Series &sinh_();
   Series cosh() const;
-  Series& cosh_();
+  Series &cosh_();
   Series asin() const;
-  Series& asin_();
+  Series &asin_();
   Series acos() const;
-  Series& acos_();
+  Series &acos_();
   Series atan() const;
-  Series& atan_();
+  Series &atan_();
   Series asinh() const;
-  Series& asinh_();
+  Series &asinh_();
   Series acosh() const;
-  Series& acosh_();
+  Series &acosh_();
   Series atanh() const;
-  Series& atanh_();
+  Series &atanh_();
   Series erf() const;
-  Series& erf_();
+  Series &erf_();
   Series erfc() const;
-  Series& erfc_();
+  Series &erfc_();
   Series lgamma() const;
-  Series& lgamma_();
+  Series &lgamma_();
   Series log1p() const;
-  Series& log1p_();
+  Series &log1p_();
   Series expm1() const;
-  Series& expm1_();
+  Series &expm1_();
   Series floor() const;
-  Series& floor_();
+  Series &floor_();
   Series ceil() const;
-  Series& ceil_();
+  Series &ceil_();
   Series round() const;
-  Series& round_();
+  Series &round_();
   Series trunc() const;
-  Series& trunc_();
+  Series &trunc_();
   Series reciprocal() const;
-  Series& reciprocal_();
+  Series &reciprocal_();
   Series sigmoid() const;
-  Series& sigmoid_();
+  Series &sigmoid_();
   Series relu() const;
-  Series& relu_();
+  Series &relu_();
   // Track B fused activations: forward-declared here so
   // subsp/math/diff.h's Trace/DualTrace formulas can call them as members
   // (matches at::elu's 3-parameter form; see OpsInternal.h for the shared
   // ops_internal::elu/celu/selu implementation the first three forward to).
-  Series elu(double alpha = 1.0, double scale = 1.0, double input_scale = 1.0) const;
+  Series elu(double alpha = 1.0, double scale = 1.0,
+             double input_scale = 1.0) const;
   Series celu(double alpha = 1.0) const;
   Series selu() const;
   Series hardsigmoid() const;
@@ -1147,11 +1515,11 @@ public:
   Series rrelu(double lower = 0.125, double upper = 0.3333333333333333,
                bool training = false) const;
   Series isnan() const;
-  Series& isnan_();
+  Series &isnan_();
   Series isinf() const;
-  Series& isinf_();
+  Series &isinf_();
   Series isfinite() const;
-  Series& isfinite_();
+  Series &isfinite_();
   Series invalid() const;
   Series invalid_index() const;
   Series mean() const;
@@ -1174,88 +1542,84 @@ public:
   // applies the per-feature affine `* weight + bias`. Single fused reverse
   // node (analytic VJP) rather than the ~7-op mean/sub/mul/rsqrt/mul/mul/add
   // composite chain this decomposes to -- see project memory for the formula.
-  Series layer_norm(pluss::msharp::RangeView::Int normalized_shape, const Series& weight,
-                     const Series& bias, double eps = 1e-5) const;
+  Series layer_norm(pluss::msharp::RangeView::Int normalized_shape,
+                    const Series &weight, const Series &bias,
+                    double eps = 1e-5) const;
   Series all(std::int64_t dim, bool keepdim) const;
   Series any(std::int64_t dim, bool keepdim) const;
   Series flatten(std::int64_t start_dim, std::int64_t end_dim) const;
   Series norm(double p) const;
   Series norm(double p, std::int64_t dim, bool keepdim) const;
   Series var(bool unbiased) const;
-  Series var(std::int64_t dim, bool unbiased = true, bool keepdim = false) const;
+  Series var(std::int64_t dim, bool unbiased = true,
+             bool keepdim = false) const;
   Series std(bool unbiased) const;
-  Series std(std::int64_t dim, bool unbiased = true, bool keepdim = false) const;
+  Series std(std::int64_t dim, bool unbiased = true,
+             bool keepdim = false) const;
   Series nan_to_num(double nan, double posinf, double neginf) const;
-  Series& nan_to_num_(double nan, double posinf, double neginf);
+  Series &nan_to_num_(double nan, double posinf, double neginf);
   Series cumsum(std::int64_t dim, bool keepdim) const;
-  Series& cumsum_(std::int64_t dim, bool keepdim);
+  Series &cumsum_(std::int64_t dim, bool keepdim);
   Series cumprod(std::int64_t dim, bool keepdim) const;
-  Series& cumprod_(std::int64_t dim, bool keepdim);
+  Series &cumprod_(std::int64_t dim, bool keepdim);
   Series pow(double rhs) const;
-  Series& pow_(double rhs);
+  Series &pow_(double rhs);
   Series minimum(double rhs) const;
-  Series& minimum_(double rhs);
+  Series &minimum_(double rhs);
   Series maximum(double rhs) const;
-  Series& maximum_(double rhs);
-  Series& add_(double rhs, double alpha);
-  Series& add_(const Series& rhs, double alpha);
-  Series& add_(const Series& other, double alpha, const Series& out);
-  Series& sub_(const Series& rhs, double alpha);
-  Series& sub_(const Series& other, double alpha, const Series& out);
-  Series& sub_(double rhs, double alpha);
-  Series& mul_(const Series& rhs);
-  Series& mul_(double rhs);
-  Series& div_(const Series& rhs);
-  Series& div_(double rhs);
+  Series &maximum_(double rhs);
+  Series &add_(double rhs, double alpha);
+  Series &add_(const Series &rhs, double alpha);
+  Series &add_(const Series &other, double alpha, const Series &out);
+  Series &sub_(const Series &rhs, double alpha);
+  Series &sub_(const Series &other, double alpha, const Series &out);
+  Series &sub_(double rhs, double alpha);
+  Series &mul_(const Series &rhs);
+  Series &mul_(double rhs);
+  Series &div_(const Series &rhs);
+  Series &div_(double rhs);
   Series clamp_min(double min) const;
-  Series& clamp_min_(double min);
+  Series &clamp_min_(double min);
   Series clamp_max(double max) const;
-  Series& clamp_max_(double max);
-  Series clamp_min(const Series& min) const;
-  Series& clamp_min_(const Series& min);
-  Series clamp_max(const Series& max) const;
-  Series& clamp_max_(const Series& max);
-  // Query current backend (Torch-like tensor.device() analog at Platform granularity).
+  Series &clamp_max_(double max);
+  Series clamp_min(const Series &min) const;
+  Series &clamp_min_(const Series &min);
+  Series clamp_max(const Series &max) const;
+  Series &clamp_max_(const Series &max);
+  // Query current backend (Torch-like tensor.device() analog at Platform
+  // granularity).
   Platform platform() const noexcept { return SeriesBase::platform(); }
   TernaryCompareBuilder tri() const noexcept;
-  Series grouped_count(const Series& group_ids,
-                       std::int64_t group_count) const;
-  Series grouped_sum(const Series& group_ids,
-                     std::int64_t group_count) const;
-  Series grouped_mean(const Series& group_ids,
-                      std::int64_t group_count) const;
-  Series grouped_var(const Series& group_ids,
-                     std::int64_t group_count,
+  Series grouped_count(const Series &group_ids, std::int64_t group_count) const;
+  Series grouped_sum(const Series &group_ids, std::int64_t group_count) const;
+  Series grouped_mean(const Series &group_ids, std::int64_t group_count) const;
+  Series grouped_var(const Series &group_ids, std::int64_t group_count,
                      std::int64_t ddof = 1) const;
-  Series grouped_std(const Series& group_ids,
-                     std::int64_t group_count,
+  Series grouped_std(const Series &group_ids, std::int64_t group_count,
                      std::int64_t ddof = 1) const;
-  Series grouped_min(const Series& group_ids,
-                     std::int64_t group_count) const;
-  Series grouped_max(const Series& group_ids,
-                     std::int64_t group_count) const;
-  Series grouped_median(const Series& group_ids,
+  Series grouped_min(const Series &group_ids, std::int64_t group_count) const;
+  Series grouped_max(const Series &group_ids, std::int64_t group_count) const;
+  Series grouped_median(const Series &group_ids,
                         std::int64_t group_count) const;
-  Series grouped_mode(const Series& group_ids,
-                      std::int64_t group_count) const;
+  Series grouped_mode(const Series &group_ids, std::int64_t group_count) const;
 
 #ifdef PLUSS_ENABLE_TORCH
   ::torch::Tensor tensor() const;
 #endif
 
-  void* raw_mutable_data() noexcept { return reinterpret_cast<void*>(raw_data()); }
+  void *raw_mutable_data() noexcept {
+    return reinterpret_cast<void *>(raw_data());
+  }
 
   // Materialize host data to a contiguous vector in row-major logical order.
   // For N-D shape-aware export, use host<T>().array().
   // Legacy user-facing API: prefer host<T>() / item<T>().
   // Retained during staged internal migration.
-  template <class T>
-  std::vector<T> to_vec() const {
+  template <class T> std::vector<T> to_vec() const {
     return detail_materialize_vec_<T>();
   }
 
-  template <class T>
-  T to_vec(std::int64_t index) const {
+  template <class T> T to_vec(std::int64_t index) const {
     auto data = detail_materialize_vec_<T>();
     std::int64_t idx = index;
     if (idx < 0) {
@@ -1269,49 +1633,58 @@ public:
 
   // Scalar extraction (Torch-style): requires exactly one element.
   // Returns a native C++ value of the requested type.
-  template <class T>
-  T item() const {
-    PLUSS_CHECK(numel() == 1, "Series::item<T>: expected tensor with exactly one element");
+  template <class T> T item() const {
+    PLUSS_CHECK(numel() == 1,
+                "Series::item<T>: expected tensor with exactly one element");
     return to_vec<T>(0);
   }
   // Dynamic scalar extraction: requires exactly one element.
-  // Returns a tagged Scalar when caller doesn't want to spell an explicit C++ type.
-  // Use item<T>() when exact native type extraction is required.
+  // Returns a tagged Scalar when caller doesn't want to spell an explicit C++
+  // type. Use item<T>() when exact native type extraction is required.
   Scalar item() const {
-    PLUSS_CHECK(numel() == 1, "Series::item(): expected tensor with exactly one element");
+    PLUSS_CHECK(numel() == 1,
+                "Series::item(): expected tensor with exactly one element");
     switch (scalar_type()) {
-      case ScalarType::Bool:
-        return Scalar(to_vec<bool>(0), ScalarType::Bool);
-      case ScalarType::UInt8:
-        return Scalar(static_cast<std::uint64_t>(to_vec<std::uint8_t>(0)), ScalarType::UInt8);
-      case ScalarType::UInt16:
-        return Scalar(static_cast<std::uint64_t>(to_vec<std::uint16_t>(0)), ScalarType::UInt16);
-      case ScalarType::UInt32:
-        return Scalar(static_cast<std::uint64_t>(to_vec<std::uint32_t>(0)), ScalarType::UInt32);
-      case ScalarType::UInt64:
-        return Scalar(to_vec<std::uint64_t>(0), ScalarType::UInt64);
-      case ScalarType::Int8:
-        return Scalar(static_cast<std::int64_t>(to_vec<std::int8_t>(0)), ScalarType::Int8);
-      case ScalarType::Int16:
-        return Scalar(static_cast<std::int64_t>(to_vec<std::int16_t>(0)), ScalarType::Int16);
-      case ScalarType::Int32:
-        return Scalar(static_cast<std::int64_t>(to_vec<std::int32_t>(0)), ScalarType::Int32);
-      case ScalarType::Int64:
-        return Scalar(to_vec<std::int64_t>(0), ScalarType::Int64);
-      case ScalarType::Float16:
-      case ScalarType::BFloat16:
-      case ScalarType::Float8E4M3FN:
-      case ScalarType::Float8E5M2:
-        return Scalar(to(ScalarType::Float64).to_vec<double>(0), scalar_type());
-      case ScalarType::Float32:
-        return Scalar(static_cast<double>(to_vec<float>(0)), ScalarType::Float32);
-      case ScalarType::Float64:
-        return Scalar(to_vec<double>(0), ScalarType::Float64);
-      case ScalarType::Complex64:
-      case ScalarType::Complex128:
-        PLUSS_FAIL("Series::item(): complex dtype requires explicit item<Complex64>() or item<Complex128>()");
-      default:
-        PLUSS_FAIL("Series::item(): unsupported dtype for dynamic scalar extraction");
+    case ScalarType::Bool:
+      return Scalar(to_vec<bool>(0), ScalarType::Bool);
+    case ScalarType::UInt8:
+      return Scalar(static_cast<std::uint64_t>(to_vec<std::uint8_t>(0)),
+                    ScalarType::UInt8);
+    case ScalarType::UInt16:
+      return Scalar(static_cast<std::uint64_t>(to_vec<std::uint16_t>(0)),
+                    ScalarType::UInt16);
+    case ScalarType::UInt32:
+      return Scalar(static_cast<std::uint64_t>(to_vec<std::uint32_t>(0)),
+                    ScalarType::UInt32);
+    case ScalarType::UInt64:
+      return Scalar(to_vec<std::uint64_t>(0), ScalarType::UInt64);
+    case ScalarType::Int8:
+      return Scalar(static_cast<std::int64_t>(to_vec<std::int8_t>(0)),
+                    ScalarType::Int8);
+    case ScalarType::Int16:
+      return Scalar(static_cast<std::int64_t>(to_vec<std::int16_t>(0)),
+                    ScalarType::Int16);
+    case ScalarType::Int32:
+      return Scalar(static_cast<std::int64_t>(to_vec<std::int32_t>(0)),
+                    ScalarType::Int32);
+    case ScalarType::Int64:
+      return Scalar(to_vec<std::int64_t>(0), ScalarType::Int64);
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Float8E4M3FN:
+    case ScalarType::Float8E5M2:
+      return Scalar(to(ScalarType::Float64).to_vec<double>(0), scalar_type());
+    case ScalarType::Float32:
+      return Scalar(static_cast<double>(to_vec<float>(0)), ScalarType::Float32);
+    case ScalarType::Float64:
+      return Scalar(to_vec<double>(0), ScalarType::Float64);
+    case ScalarType::Complex64:
+    case ScalarType::Complex128:
+      PLUSS_FAIL("Series::item(): complex dtype requires explicit "
+                 "item<Complex64>() or item<Complex128>()");
+    default:
+      PLUSS_FAIL(
+          "Series::item(): unsupported dtype for dynamic scalar extraction");
     }
   }
 
@@ -1320,11 +1693,12 @@ public:
   // - Scalar series materializes as scalar T
   // - 1-D series materializes as std::vector<T>
   // - N-D series materializes as HostArray<T> (data + sizes/strides)
-  template <class T>
-  HostValue<T> host() const {
+  template <class T> HostValue<T> host() const {
     auto arr = detail_host_array_impl_<T>();
-    if (numel() == 1) return HostValue<T>::from_scalar(std::move(arr));
-    if (dim() <= 1) return HostValue<T>::from_vector(std::move(arr));
+    if (numel() == 1)
+      return HostValue<T>::from_scalar(std::move(arr));
+    if (dim() <= 1)
+      return HostValue<T>::from_vector(std::move(arr));
     return HostValue<T>::from_array(std::move(arr));
   }
 
@@ -1336,25 +1710,42 @@ public:
   HostAny host() const {
     const auto st = scalar_type();
     switch (st) {
-      case ScalarType::Bool: return detail_host_any_impl_<bool>(st);
-      case ScalarType::UInt8: return detail_host_any_impl_<std::uint8_t>(st);
-      case ScalarType::UInt16: return detail_host_any_impl_<std::uint16_t>(st);
-      case ScalarType::UInt32: return detail_host_any_impl_<std::uint32_t>(st);
-      case ScalarType::UInt64: return detail_host_any_impl_<std::uint64_t>(st);
-      case ScalarType::Int8: return detail_host_any_impl_<std::int8_t>(st);
-      case ScalarType::Int16: return detail_host_any_impl_<std::int16_t>(st);
-      case ScalarType::Int32: return detail_host_any_impl_<std::int32_t>(st);
-      case ScalarType::Int64: return detail_host_any_impl_<std::int64_t>(st);
-      case ScalarType::Float16: return detail_host_any_impl_<Float16>(st);
-      case ScalarType::BFloat16: return detail_host_any_impl_<BFloat16>(st);
-      case ScalarType::Float32: return detail_host_any_impl_<float>(st);
-      case ScalarType::Float64: return detail_host_any_impl_<double>(st);
-      case ScalarType::Float8E4M3FN: return detail_host_any_float32_bridge_(st);
-      case ScalarType::Float8E5M2: return detail_host_any_float32_bridge_(st);
-      case ScalarType::Complex64: return detail_host_any_impl_<Complex64>(st);
-      case ScalarType::Complex128: return detail_host_any_impl_<Complex128>(st);
-      default:
-        PLUSS_FAIL("Series::host(): unsupported dtype");
+    case ScalarType::Bool:
+      return detail_host_any_impl_<bool>(st);
+    case ScalarType::UInt8:
+      return detail_host_any_impl_<std::uint8_t>(st);
+    case ScalarType::UInt16:
+      return detail_host_any_impl_<std::uint16_t>(st);
+    case ScalarType::UInt32:
+      return detail_host_any_impl_<std::uint32_t>(st);
+    case ScalarType::UInt64:
+      return detail_host_any_impl_<std::uint64_t>(st);
+    case ScalarType::Int8:
+      return detail_host_any_impl_<std::int8_t>(st);
+    case ScalarType::Int16:
+      return detail_host_any_impl_<std::int16_t>(st);
+    case ScalarType::Int32:
+      return detail_host_any_impl_<std::int32_t>(st);
+    case ScalarType::Int64:
+      return detail_host_any_impl_<std::int64_t>(st);
+    case ScalarType::Float16:
+      return detail_host_any_impl_<Float16>(st);
+    case ScalarType::BFloat16:
+      return detail_host_any_impl_<BFloat16>(st);
+    case ScalarType::Float32:
+      return detail_host_any_impl_<float>(st);
+    case ScalarType::Float64:
+      return detail_host_any_impl_<double>(st);
+    case ScalarType::Float8E4M3FN:
+      return detail_host_any_float32_bridge_(st);
+    case ScalarType::Float8E5M2:
+      return detail_host_any_float32_bridge_(st);
+    case ScalarType::Complex64:
+      return detail_host_any_impl_<Complex64>(st);
+    case ScalarType::Complex128:
+      return detail_host_any_impl_<Complex128>(st);
+    default:
+      PLUSS_FAIL("Series::host(): unsupported dtype");
     }
   }
 
@@ -1372,18 +1763,16 @@ public:
 
   // Native C++ introspection results. Elementwise predicates such as
   // isclose(), isnan(), and isfinite() intentionally continue to return Series.
-  bool equal(const Series& rhs) const;
-  bool allclose(const Series& rhs,
-                double rtol = 1e-5,
-                double atol = 1e-8,
+  bool equal(const Series &rhs) const;
+  bool allclose(const Series &rhs, double rtol = 1e-5, double atol = 1e-8,
                 bool equal_nan = false) const;
   bool is_leaf() const;
   bool is_nonzero() const;
-  bool is_same_size(const Series& rhs) const noexcept;
-  bool is_set_to(const Series& rhs) const noexcept;
+  bool is_same_size(const Series &rhs) const noexcept;
+  bool is_set_to(const Series &rhs) const noexcept;
 
 #if __has_include("CodeM/Series/SeriesOpsInternalMethods.inc")
-  #include "CodeM/Series/SeriesOpsInternalMethods.inc"
+#include "CodeM/Series/SeriesOpsInternalMethods.inc"
 #endif
 
 // ---------------------------------------------------------------------------
@@ -1399,13 +1788,12 @@ public:
 // CODEM_ASSERT_NO_SERIES_SURFACE before including Series.h (or include
 // SeriesSlim.h).
 #if !defined(CODEM_NO_SERIES_SURFACE)
-  #include "CodeM/core/SeriesSurface.h"
+#include "CodeM/core/SeriesSurface.h"
 #endif
 
-
   // ---- Core reductions / a small torch-compatible surface ----
-  // These are depended on internally (e.g. norm implementation) and are implemented
-  // in Series.cpp / OpsInternal.cpp
+  // These are depended on internally (e.g. norm implementation) and are
+  // implemented in Series.cpp / OpsInternal.cpp
 
   // Variance / std (dim overloads are used internally but not yet codegen'd).
   Series var() const { return var(true); }
@@ -1413,17 +1801,22 @@ public:
 
   // Value/index reductions. Returned as std::pair<values, indices> -- a fixed
   // arity of 2, so a pair rather than a variable-length container.
-  std::pair<Series, Series> max_pair(std::int64_t dim, bool keepdim=false) const;
-  std::pair<Series, Series> min_pair(std::int64_t dim, bool keepdim=false) const;
-  std::pair<Series, Series> sort_pair(std::int64_t dim=-1, bool descending=false, bool stable=false) const;
-  std::pair<Series, Series> topk_pair(std::int64_t k,
-                                      std::int64_t dim=-1,
-                                      bool largest=true,
-                                      bool sorted=true) const;
+  std::pair<Series, Series> max_pair(std::int64_t dim,
+                                     bool keepdim = false) const;
+  std::pair<Series, Series> min_pair(std::int64_t dim,
+                                     bool keepdim = false) const;
+  std::pair<Series, Series> sort_pair(std::int64_t dim = -1,
+                                      bool descending = false,
+                                      bool stable = false) const;
+  std::pair<Series, Series> topk_pair(std::int64_t k, std::int64_t dim = -1,
+                                      bool largest = true,
+                                      bool sorted = true) const;
 
-  // Log beta with a Series-valued second argument. The scalar overload is
-  // generated alongside the rest of the special-function surface.
-  Series betaln(const Series& other) const;
+  // Series-valued second arguments for the two-input special functions. The
+  // scalar overloads are generated alongside the rest of the surface.
+  Series beta(const Series &other) const;
+  Series betaln(const Series &other) const;
+  Series zeta(const Series &other) const;
 
   // Decompose each element x into (mantissa, exponent) with
   // x == mantissa * 2**exponent and 0.5 <= |mantissa| < 1 (both 0 when x == 0).
@@ -1436,27 +1829,35 @@ public:
   // dim form reduces that one axis. Both channels are differentiable (each
   // routes its gradient to the position of the extremum, ties shared).
   std::pair<Series, Series> aminmax() const;
-  std::pair<Series, Series> aminmax(std::int64_t dim, bool keepdim = false) const;
+  std::pair<Series, Series> aminmax(std::int64_t dim,
+                                    bool keepdim = false) const;
 
   // Bucket the values into `bins` equal-width bins and return
   // std::pair<hist, bin_edges>: `hist` holds the per-bin counts (float64, or a
   // probability density when `density` is true) and `bin_edges` the `bins + 1`
   // boundaries. With no range the bins span the finite [min, max] of the data.
   // Not differentiable.
-  std::pair<Series, Series> histogram(std::int64_t bins = 100, bool density = false) const;
+  std::pair<Series, Series> histogram(std::int64_t bins = 100,
+                                      bool density = false) const;
   std::pair<Series, Series> histogram(std::int64_t bins, double lo, double hi,
                                       bool density = false) const;
 
   // Split family: partition one axis into a variable-length list of pieces
   // (each a view). Returns std::vector<Series> because the piece count is a
   // runtime value -- the same choice torch makes for chunk/split/unbind.
-  std::vector<Series> chunk(std::int64_t chunks, std::int64_t dim=0) const;
-  std::vector<Series> split(std::int64_t split_size, std::int64_t dim=0) const;
-  std::vector<Series> split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
-  std::vector<Series> split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
-  std::vector<Series> unbind(std::int64_t dim=0) const;
-  std::vector<Series> tensor_split(std::int64_t sections, std::int64_t dim=0) const;
-  std::vector<Series> tensor_split(pluss::msharp::RangeView::Int indices, std::int64_t dim=0) const;
+  std::vector<Series> chunk(std::int64_t chunks, std::int64_t dim = 0) const;
+  std::vector<Series> split(std::int64_t split_size,
+                            std::int64_t dim = 0) const;
+  std::vector<Series> split(pluss::msharp::RangeView::Int split_sizes,
+                            std::int64_t dim = 0) const;
+  std::vector<Series>
+  split_with_sizes(pluss::msharp::RangeView::Int split_sizes,
+                   std::int64_t dim = 0) const;
+  std::vector<Series> unbind(std::int64_t dim = 0) const;
+  std::vector<Series> tensor_split(std::int64_t sections,
+                                   std::int64_t dim = 0) const;
+  std::vector<Series> tensor_split(pluss::msharp::RangeView::Int indices,
+                                   std::int64_t dim = 0) const;
   std::vector<Series> hsplit(std::int64_t sections) const;
   std::vector<Series> hsplit(pluss::msharp::RangeView::Int indices) const;
   std::vector<Series> vsplit(std::int64_t sections) const;
@@ -1464,39 +1865,55 @@ public:
   std::vector<Series> dsplit(std::int64_t sections) const;
   std::vector<Series> dsplit(pluss::msharp::RangeView::Int indices) const;
   // `unsafe_*` are the same operation here (every piece is already a view).
-  std::vector<Series> unsafe_chunk(std::int64_t chunks, std::int64_t dim=0) const;
-  std::vector<Series> unsafe_split(std::int64_t split_size, std::int64_t dim=0) const;
-  std::vector<Series> unsafe_split(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
-  std::vector<Series> unsafe_split_with_sizes(pluss::msharp::RangeView::Int split_sizes, std::int64_t dim=0) const;
+  std::vector<Series> unsafe_chunk(std::int64_t chunks,
+                                   std::int64_t dim = 0) const;
+  std::vector<Series> unsafe_split(std::int64_t split_size,
+                                   std::int64_t dim = 0) const;
+  std::vector<Series> unsafe_split(pluss::msharp::RangeView::Int split_sizes,
+                                   std::int64_t dim = 0) const;
+  std::vector<Series>
+  unsafe_split_with_sizes(pluss::msharp::RangeView::Int split_sizes,
+                          std::int64_t dim = 0) const;
 
   // Pluss autodiff entrypoint. This is a named wrapper over `_backward(...)`
   // so the public surface stays Pluss-native.
-  void reverse() const { (void)pluss::codem::_compat::invoke("_backward", *this); }
-  void reverse(bool keep_graph,
-               bool accumulate_sensitivity = false,
+  void reverse() const {
+    (void)pluss::codem::_compat::invoke("_backward", *this);
+  }
+  void reverse(bool keep_graph, bool accumulate_sensitivity = false,
                bool track_higher_order = false) const {
     (void)pluss::codem::_compat::invoke(
-        "_backward", *this, {keep_graph, accumulate_sensitivity, track_higher_order});
+        "_backward", *this,
+        {keep_graph, accumulate_sensitivity, track_higher_order});
   }
-  void reverse(const Series& sensitivity_output) const {
-    (void)pluss::codem::_compat::invoke("_backward", *this, {sensitivity_output});
+  void reverse(const Series &sensitivity_output) const {
+    (void)pluss::codem::_compat::invoke("_backward", *this,
+                                        {sensitivity_output});
   }
-  void reverse(const Series& sensitivity_output,
-               bool keep_graph,
+  void reverse(const Series &sensitivity_output, bool keep_graph,
                bool accumulate_sensitivity = false,
                bool track_higher_order = false) const {
-    (void)pluss::codem::_compat::invoke(
-        "_backward", *this, {sensitivity_output, keep_graph, accumulate_sensitivity, track_higher_order});
+    (void)pluss::codem::_compat::invoke("_backward", *this,
+                                        {sensitivity_output, keep_graph,
+                                         accumulate_sensitivity,
+                                         track_higher_order});
   }
 
-  bool tracks_slope() const { return pluss::codem::_compat::invoke("tracks_slope", *this).item<bool>(); }
+  bool tracks_slope() const {
+    return pluss::codem::_compat::invoke("tracks_slope", *this).item<bool>();
+  }
   bool has_sensitivity() const {
     return pluss::codem::_compat::invoke("has_sensitivity", *this).item<bool>();
   }
-  Series sensitivity() const { return pluss::codem::_compat::invoke("sensitivity", *this); }
-  void clear() const { (void)pluss::codem::_compat::invoke_("clear_sensitivity", *this); }
+  Series sensitivity() const {
+    return pluss::codem::_compat::invoke("sensitivity", *this);
+  }
+  void clear() const {
+    (void)pluss::codem::_compat::invoke_("clear_sensitivity", *this);
+  }
   std::int64_t storage_version() const {
-    return pluss::codem::_compat::invoke("_version", *this).item<std::int64_t>();
+    return pluss::codem::_compat::invoke("_version", *this)
+        .item<std::int64_t>();
   }
 
   Series count(bool count_true = true) const {
@@ -1507,19 +1924,21 @@ public:
     std::int64_t total = 0;
     if (cpu.scalar_type() == ScalarType::Bool) {
       const auto values = cpu.to_vec<bool>();
-      total = static_cast<std::int64_t>(std::count(values.begin(), values.end(), count_true));
+      total = static_cast<std::int64_t>(
+          std::count(values.begin(), values.end(), count_true));
     } else {
-      PLUSS_CHECK(count_true, "Series::count(false) is only valid for Bool Series");
+      PLUSS_CHECK(count_true,
+                  "Series::count(false) is only valid for Bool Series");
       total = cpu.numel();
     }
 
     auto out_cpu = Series::empty({1}, ScalarType::Int64, Platform::CPU);
-    reinterpret_cast<std::int64_t*>(out_cpu.raw_data())[0] = total;
-    return target_platform == Platform::CPU ? out_cpu : out_cpu.to(target_platform);
+    reinterpret_cast<std::int64_t *>(out_cpu.raw_data())[0] = total;
+    return target_platform == Platform::CPU ? out_cpu
+                                            : out_cpu.to(target_platform);
   }
 
 private:
-
 private:
   using ExtractSpec_ = ExtractSpec;
 
@@ -1530,27 +1949,30 @@ private:
     return out;
   }
 
-  static bool extract_consumes_dim_(const ExtractSpec_& s) {
+  static bool extract_consumes_dim_(const ExtractSpec_ &s) {
     return s.kind == ExtractSpec::Kind::Slice ||
            s.kind == ExtractSpec::Kind::ScalarIndex ||
            s.kind == ExtractSpec::Kind::AdvancedIndex;
   }
 
-  static std::vector<ExtractSpec_> normalize_extract_specs_(const std::vector<ExtractSpec_>& specs,
-                                                              std::int64_t rank) {
+  static std::vector<ExtractSpec_>
+  normalize_extract_specs_(const std::vector<ExtractSpec_> &specs,
+                           std::int64_t rank) {
     std::int64_t consumed_without_ellipsis = 0;
     std::int64_t ellipsis_count = 0;
-    for (const auto& s : specs) {
+    for (const auto &s : specs) {
       if (s.kind == ExtractSpec::Kind::Ellipsis) {
         ++ellipsis_count;
       } else if (extract_consumes_dim_(s)) {
         ++consumed_without_ellipsis;
       }
     }
-    PLUSS_CHECK(ellipsis_count <= 1, "Series::extract: at most one ellipsis is allowed");
+    PLUSS_CHECK(ellipsis_count <= 1,
+                "Series::extract: at most one ellipsis is allowed");
 
     std::vector<ExtractSpec_> out;
-    out.reserve(specs.size() + static_cast<std::size_t>(std::max<std::int64_t>(0, rank)));
+    out.reserve(specs.size() +
+                static_cast<std::size_t>(std::max<std::int64_t>(0, rank)));
 
     if (ellipsis_count == 0) {
       PLUSS_CHECK(consumed_without_ellipsis <= rank,
@@ -1564,8 +1986,9 @@ private:
     }
 
     const std::int64_t fill = rank - consumed_without_ellipsis;
-    PLUSS_CHECK(fill >= 0, "Series::extract: ellipsis cannot compensate for too many indexing specs");
-    for (const auto& s : specs) {
+    PLUSS_CHECK(fill >= 0, "Series::extract: ellipsis cannot compensate for "
+                           "too many indexing specs");
+    for (const auto &s : specs) {
       if (s.kind != ExtractSpec::Kind::Ellipsis) {
         out.push_back(s);
         continue;
@@ -1583,41 +2006,51 @@ private:
     std::int64_t step{1};
   };
 
-  static std::int64_t normalize_scalar_index_(std::int64_t i, std::int64_t dim_size) {
-    if (i < 0) i += dim_size;
-    PLUSS_CHECK(i >= 0 && i < dim_size, "Series::extract: scalar index out of range");
+  static std::int64_t normalize_scalar_index_(std::int64_t i,
+                                              std::int64_t dim_size) {
+    if (i < 0)
+      i += dim_size;
+    PLUSS_CHECK(i >= 0 && i < dim_size,
+                "Series::extract: scalar index out of range");
     return i;
   }
 
-  static ExtractSliceBounds_ normalize_slice_bounds_(const pluss::Slicing::Slice& s,
-                                                      std::int64_t dim_size) {
+  static ExtractSliceBounds_
+  normalize_slice_bounds_(const pluss::Slicing::Slice &s,
+                          std::int64_t dim_size) {
     PLUSS_CHECK(dim_size >= 0, "Series::extract: invalid dimension size");
     PLUSS_CHECK(s.step != 0, "Series::extract: step cannot be 0");
     ExtractSliceBounds_ b;
     b.step = s.step;
     if (s.step > 0) {
-      b.start =
-          (s.start == pluss::Slicing::Slice::kUnbounded) ? 0 : (s.start < 0 ? s.start + dim_size : s.start);
-      b.stop =
-          (s.stop == pluss::Slicing::Slice::kUnbounded) ? dim_size : (s.stop < 0 ? s.stop + dim_size : s.stop);
+      b.start = (s.start == pluss::Slicing::Slice::kUnbounded)
+                    ? 0
+                    : (s.start < 0 ? s.start + dim_size : s.start);
+      b.stop = (s.stop == pluss::Slicing::Slice::kUnbounded)
+                   ? dim_size
+                   : (s.stop < 0 ? s.stop + dim_size : s.stop);
       b.start = std::clamp<std::int64_t>(b.start, 0, dim_size);
       b.stop = std::clamp<std::int64_t>(b.stop, 0, dim_size);
     } else {
-      b.start = (s.start == pluss::Slicing::Slice::kUnbounded) ? (dim_size - 1)
-                                                                : (s.start < 0 ? s.start + dim_size : s.start);
-      b.stop = (s.stop == pluss::Slicing::Slice::kUnbounded) ? -1 : (s.stop < 0 ? s.stop + dim_size : s.stop);
+      b.start = (s.start == pluss::Slicing::Slice::kUnbounded)
+                    ? (dim_size - 1)
+                    : (s.start < 0 ? s.start + dim_size : s.start);
+      b.stop = (s.stop == pluss::Slicing::Slice::kUnbounded)
+                   ? -1
+                   : (s.stop < 0 ? s.stop + dim_size : s.stop);
       b.start = std::clamp<std::int64_t>(b.start, -1, dim_size - 1);
       b.stop = std::clamp<std::int64_t>(b.stop, -1, dim_size - 1);
     }
     return b;
   }
 
-  static bool is_identity_slice_(const ExtractSliceBounds_& b, std::int64_t dim_size) {
+  static bool is_identity_slice_(const ExtractSliceBounds_ &b,
+                                 std::int64_t dim_size) {
     return b.step == 1 && b.start == 0 && b.stop == dim_size;
   }
 
-  static std::vector<std::int64_t> materialize_dim_indices_(const ExtractSpec_& spec,
-                                                             std::int64_t dim_size) {
+  static std::vector<std::int64_t>
+  materialize_dim_indices_(const ExtractSpec_ &spec, std::int64_t dim_size) {
     PLUSS_CHECK(dim_size >= 0, "Series::extract: invalid dimension size");
 
     if (spec.kind == ExtractSpec::Kind::ScalarIndex) {
@@ -1628,10 +2061,12 @@ private:
       const auto b = normalize_slice_bounds_(spec.slice, dim_size);
 
       std::vector<std::int64_t> out;
-      if ((b.step > 0 && b.start >= b.stop) || (b.step < 0 && b.start <= b.stop)) {
+      if ((b.step > 0 && b.start >= b.stop) ||
+          (b.step < 0 && b.start <= b.stop)) {
         return out;
       }
-      for (std::int64_t i = b.start; (b.step > 0) ? (i < b.stop) : (i > b.stop); i += b.step) {
+      for (std::int64_t i = b.start; (b.step > 0) ? (i < b.stop) : (i > b.stop);
+           i += b.step) {
         out.push_back(i);
       }
       return out;
@@ -1647,47 +2082,58 @@ private:
     const Series idx_cpu = idx_series.to(Platform::CPU);
     if (idx_cpu.scalar_type() == ScalarType::Bool) {
       PLUSS_CHECK(idx_cpu.dim() == 1 && idx_cpu.size(0) == dim_size,
-                  "Series::extract: boolean advanced index must be 1D and match the indexed dimension size");
+                  "Series::extract: boolean advanced index must be 1D and "
+                  "match the indexed dimension size");
       const auto mask = idx_cpu.to_vec<bool>();
       std::vector<std::int64_t> out;
       out.reserve(mask.size());
-      for (std::int64_t i = 0; i < static_cast<std::int64_t>(mask.size()); ++i) {
-        if (mask[static_cast<std::size_t>(i)]) out.push_back(i);
+      for (std::int64_t i = 0; i < static_cast<std::int64_t>(mask.size());
+           ++i) {
+        if (mask[static_cast<std::size_t>(i)])
+          out.push_back(i);
       }
       return out;
     }
 
     const auto st = idx_cpu.scalar_type();
-    const bool is_integral = st == ScalarType::UInt8 || st == ScalarType::UInt16 ||
-                             st == ScalarType::UInt32 || st == ScalarType::UInt64 ||
-                             st == ScalarType::Int8 || st == ScalarType::Int16 ||
-                             st == ScalarType::Int32 || st == ScalarType::Int64;
-    PLUSS_CHECK(is_integral,
-                "Series::extract: advanced index Series must be bool or integer dtype");
-    const auto flat = idx_cpu.to(ScalarType::Int64).reshape({idx_cpu.numel()}).to_vec<std::int64_t>();
+    const bool is_integral =
+        st == ScalarType::UInt8 || st == ScalarType::UInt16 ||
+        st == ScalarType::UInt32 || st == ScalarType::UInt64 ||
+        st == ScalarType::Int8 || st == ScalarType::Int16 ||
+        st == ScalarType::Int32 || st == ScalarType::Int64;
+    PLUSS_CHECK(
+        is_integral,
+        "Series::extract: advanced index Series must be bool or integer dtype");
+    const auto flat = idx_cpu.to(ScalarType::Int64)
+                          .reshape({idx_cpu.numel()})
+                          .to_vec<std::int64_t>();
     std::vector<std::int64_t> out;
     out.reserve(flat.size());
     for (std::int64_t i : flat) {
-      if (i < 0) i += dim_size;
-      PLUSS_CHECK(i >= 0 && i < dim_size, "Series::extract: advanced index out of range");
+      if (i < 0)
+        i += dim_size;
+      PLUSS_CHECK(i >= 0 && i < dim_size,
+                  "Series::extract: advanced index out of range");
       out.push_back(i);
     }
     return out;
   }
 
-  static Series make_index_series_on_(std::int64_t dim_size, const ExtractSpec_& spec, Platform platform) {
+  static Series make_index_series_on_(std::int64_t dim_size,
+                                      const ExtractSpec_ &spec,
+                                      Platform platform) {
     if (spec.kind == ExtractSpec::Kind::Slice) {
       const auto b = normalize_slice_bounds_(spec.slice, dim_size);
-      const bool empty = (b.step > 0) ? (b.start >= b.stop) : (b.start <= b.stop);
+      const bool empty =
+          (b.step > 0) ? (b.start >= b.stop) : (b.start <= b.stop);
       if (empty) {
         Series out = Series::empty({0}, ScalarType::Int64, Platform::CPU);
-        return platform == Platform::CPU ? out : out.to(platform, ScalarType::Int64);
+        return platform == Platform::CPU ? out
+                                         : out.to(platform, ScalarType::Int64);
       }
       Series idx = Series::arange(
-          static_cast<double>(b.start),
-          static_cast<double>(b.stop),
-          static_cast<double>(b.step),
-          ScalarType::Int64);
+          static_cast<double>(b.start), static_cast<double>(b.stop),
+          static_cast<double>(b.step), ScalarType::Int64);
       if (platform != Platform::CPU) {
         idx = idx.to(platform, ScalarType::Int64);
       }
@@ -1695,33 +2141,34 @@ private:
     }
 
     const auto idx = materialize_dim_indices_(spec, dim_size);
-    Series out = Series::empty(
-        {static_cast<std::int64_t>(idx.size())},
-        ScalarType::Int64,
-        Platform::CPU);
-    auto* p = reinterpret_cast<std::int64_t*>(out.raw_data());
+    Series out = Series::empty({static_cast<std::int64_t>(idx.size())},
+                               ScalarType::Int64, Platform::CPU);
+    auto *p = reinterpret_cast<std::int64_t *>(out.raw_data());
     for (std::int64_t i = 0; i < static_cast<std::int64_t>(idx.size()); ++i) {
       p[i] = idx[static_cast<std::size_t>(i)];
     }
-    return platform == Platform::CPU ? out : out.to(platform, ScalarType::Int64);
+    return platform == Platform::CPU ? out
+                                     : out.to(platform, ScalarType::Int64);
   }
 
-  Series extract_from_specs_(const std::vector<ExtractSpec_>& specs) const {
+  Series extract_from_specs_(const std::vector<ExtractSpec_> &specs) const {
     PLUSS_CHECK(defined(), "Series::extract: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
 
     Series out = *this;
     std::int64_t dim_cursor = 0;
-    for (const auto& spec : normalized) {
+    for (const auto &spec : normalized) {
       if (spec.kind == ExtractSpec::Kind::NewAxis) {
         out = out.unsqueeze(dim_cursor);
         ++dim_cursor;
         continue;
       }
-      PLUSS_CHECK(dim_cursor < out.dim(), "Series::extract: internal dimension cursor overflow");
+      PLUSS_CHECK(dim_cursor < out.dim(),
+                  "Series::extract: internal dimension cursor overflow");
       const std::int64_t n = out.size(dim_cursor);
       if (spec.kind == ExtractSpec::Kind::ScalarIndex) {
-        out = out.select(dim_cursor, normalize_scalar_index_(spec.scalar_index, n));
+        out = out.select(dim_cursor,
+                         normalize_scalar_index_(spec.scalar_index, n));
         continue;
       }
       if (spec.kind == ExtractSpec::Kind::Slice) {
@@ -1737,44 +2184,50 @@ private:
         }
       }
       const Series idx = make_index_series_on_(n, spec, out.platform());
-      out = pluss::codem::_compat::invoke("index_select", out, {dim_cursor, idx});
+      out =
+          pluss::codem::_compat::invoke("index_select", out, {dim_cursor, idx});
       ++dim_cursor;
     }
     return out;
   }
 
-  static bool can_traverse_as_view_(const std::vector<ExtractSpec_>& normalized) {
-    for (const auto& spec : normalized) {
-      if (spec.kind == ExtractSpec::Kind::AdvancedIndex) return false;
-      if (spec.kind == ExtractSpec::Kind::Slice && spec.slice.step <= 0) return false;
+  static bool
+  can_traverse_as_view_(const std::vector<ExtractSpec_> &normalized) {
+    for (const auto &spec : normalized) {
+      if (spec.kind == ExtractSpec::Kind::AdvancedIndex)
+        return false;
+      if (spec.kind == ExtractSpec::Kind::Slice && spec.slice.step <= 0)
+        return false;
     }
     return true;
   }
 
-  Series traverse_slice_from_specs_(const std::vector<ExtractSpec_>& specs) const {
+  Series
+  traverse_slice_from_specs_(const std::vector<ExtractSpec_> &specs) const {
     PLUSS_CHECK(defined(), "Series::traverse_slice: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
 
     if (!can_traverse_as_view_(normalized)) {
-      PLUSS_FAIL(
-          "Series::traverse_slice: selector is not view-representable; "
-          "use extract() or extract_put_() for materializing paths");
+      PLUSS_FAIL("Series::traverse_slice: selector is not view-representable; "
+                 "use extract() or extract_put_() for materializing paths");
     }
 
     Series out = *this;
     std::int64_t dim_cursor = 0;
-    for (const auto& spec : normalized) {
+    for (const auto &spec : normalized) {
       if (spec.kind == ExtractSpec::Kind::NewAxis) {
         out = out.unsqueeze(dim_cursor);
         ++dim_cursor;
         continue;
       }
 
-      PLUSS_CHECK(dim_cursor < out.dim(), "Series::traverse_slice: internal dimension cursor overflow");
+      PLUSS_CHECK(dim_cursor < out.dim(),
+                  "Series::traverse_slice: internal dimension cursor overflow");
       const std::int64_t n = out.size(dim_cursor);
 
       if (spec.kind == ExtractSpec::Kind::ScalarIndex) {
-        out = out.select(dim_cursor, normalize_scalar_index_(spec.scalar_index, n));
+        out = out.select(dim_cursor,
+                         normalize_scalar_index_(spec.scalar_index, n));
         continue;
       }
 
@@ -1791,10 +2244,12 @@ private:
     return out;
   }
 
-  Series& extract_put_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) {
+  Series &extract_put_from_specs_(const std::vector<ExtractSpec_> &specs,
+                                  const Series &values) {
     PLUSS_CHECK(defined(), "Series::extract_put_: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
-    std::vector<Series> indices(static_cast<std::size_t>(dim()), pluss::series::undefined());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()),
+                                pluss::series::undefined());
     std::vector<Series> defined_raw;
     std::vector<std::int64_t> defined_dims;
     defined_raw.reserve(static_cast<std::size_t>(dim()));
@@ -1802,9 +2257,11 @@ private:
 
     std::int64_t selected_numel = 1;
     std::int64_t src_dim = 0;
-    for (const auto& spec : normalized) {
-      if (spec.kind == ExtractSpec::Kind::NewAxis) continue;
-      PLUSS_CHECK(src_dim < dim(), "Series::extract_put_: too many consuming specs");
+    for (const auto &spec : normalized) {
+      if (spec.kind == ExtractSpec::Kind::NewAxis)
+        continue;
+      PLUSS_CHECK(src_dim < dim(),
+                  "Series::extract_put_: too many consuming specs");
       const auto dim_size = size(src_dim);
 
       if (spec.kind == ExtractSpec::Kind::Slice) {
@@ -1825,11 +2282,11 @@ private:
       defined_dims.push_back(src_dim);
       ++src_dim;
     }
-    PLUSS_CHECK(
-        src_dim == dim(),
-        "Series::extract_put_: normalized specs did not consume all source dimensions");
+    PLUSS_CHECK(src_dim == dim(), "Series::extract_put_: normalized specs did "
+                                  "not consume all source dimensions");
 
-    if (selected_numel == 0) return *this;
+    if (selected_numel == 0)
+      return *this;
 
     if (!defined_raw.empty()) {
       const std::size_t k = defined_raw.size();
@@ -1837,7 +2294,8 @@ private:
         std::vector<std::int64_t> shape(k, 1);
         shape[i] = defined_raw[i].numel();
         indices[static_cast<std::size_t>(defined_dims[i])] =
-            defined_raw[i].reshape(std::span<const std::int64_t>(shape.data(), shape.size()));
+            defined_raw[i].reshape(
+                std::span<const std::int64_t>(shape.data(), shape.size()));
       }
     }
 
@@ -1845,24 +2303,25 @@ private:
     if (src.scalar_type() != scalar_type() || src.platform() != platform()) {
       src = src.to(platform(), scalar_type());
     }
-    PLUSS_CHECK(
-        src.numel() == 1 || src.numel() == selected_numel,
-        "Series::extract_put_: source must be scalar or match selected element count");
+    PLUSS_CHECK(src.numel() == 1 || src.numel() == selected_numel,
+                "Series::extract_put_: source must be scalar or match selected "
+                "element count");
     if (src.numel() != 1) {
       src = src.reshape({selected_numel});
     }
 
     pluss::codem::_compat::invoke_(
-        "index_put_",
-        *this,
+        "index_put_", *this,
         {pluss::msharp::RangeView::Of<Series>(indices), src, false});
     return *this;
   }
 
-  Series extract_put_copy_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) const {
+  Series extract_put_copy_from_specs_(const std::vector<ExtractSpec_> &specs,
+                                      const Series &values) const {
     PLUSS_CHECK(defined(), "Series::extract_put: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
-    std::vector<Series> indices(static_cast<std::size_t>(dim()), pluss::series::undefined());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()),
+                                pluss::series::undefined());
     std::vector<Series> defined_raw;
     std::vector<std::int64_t> defined_dims;
     defined_raw.reserve(static_cast<std::size_t>(dim()));
@@ -1870,9 +2329,11 @@ private:
 
     std::int64_t selected_numel = 1;
     std::int64_t src_dim = 0;
-    for (const auto& spec : normalized) {
-      if (spec.kind == ExtractSpec::Kind::NewAxis) continue;
-      PLUSS_CHECK(src_dim < dim(), "Series::extract_put: too many consuming specs");
+    for (const auto &spec : normalized) {
+      if (spec.kind == ExtractSpec::Kind::NewAxis)
+        continue;
+      PLUSS_CHECK(src_dim < dim(),
+                  "Series::extract_put: too many consuming specs");
       const auto dim_size = size(src_dim);
 
       if (spec.kind == ExtractSpec::Kind::Slice) {
@@ -1893,12 +2354,12 @@ private:
       defined_dims.push_back(src_dim);
       ++src_dim;
     }
-    PLUSS_CHECK(
-        src_dim == dim(),
-        "Series::extract_put: normalized specs did not consume all source dimensions");
+    PLUSS_CHECK(src_dim == dim(), "Series::extract_put: normalized specs did "
+                                  "not consume all source dimensions");
 
     Series out = clone();
-    if (selected_numel == 0) return out;
+    if (selected_numel == 0)
+      return out;
 
     if (!defined_raw.empty()) {
       const std::size_t k = defined_raw.size();
@@ -1906,7 +2367,8 @@ private:
         std::vector<std::int64_t> shape(k, 1);
         shape[i] = defined_raw[i].numel();
         indices[static_cast<std::size_t>(defined_dims[i])] =
-            defined_raw[i].reshape(std::span<const std::int64_t>(shape.data(), shape.size()));
+            defined_raw[i].reshape(
+                std::span<const std::int64_t>(shape.data(), shape.size()));
       }
     }
 
@@ -1914,16 +2376,15 @@ private:
     if (src.scalar_type() != scalar_type() || src.platform() != platform()) {
       src = src.to(platform(), scalar_type());
     }
-    PLUSS_CHECK(
-        src.numel() == 1 || src.numel() == selected_numel,
-        "Series::extract_put: source must be scalar or match selected element count");
+    PLUSS_CHECK(src.numel() == 1 || src.numel() == selected_numel,
+                "Series::extract_put: source must be scalar or match selected "
+                "element count");
     if (src.numel() != 1) {
       src = src.reshape({selected_numel});
     }
 
     return pluss::codem::_compat::invoke(
-        "index_put",
-        out,
+        "index_put", out,
         {pluss::msharp::RangeView::Of<Series>(indices), src, false});
   }
 
@@ -1933,13 +2394,13 @@ public:
     return traverse_slice_from_specs_({specs.begin(), specs.end()});
   }
 
-  Series& traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) {
+  Series &traverse_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs,
+                        const Series &values) {
     const std::vector<ExtractSpec> parsed(specs.begin(), specs.end());
     const auto normalized = normalize_extract_specs_(parsed, dim());
     if (!can_traverse_as_view_(normalized)) {
-      PLUSS_FAIL(
-          "Series::traverse_put_: selector is not view-representable; "
-          "use extract() or extract_put_() for materializing paths");
+      PLUSS_FAIL("Series::traverse_put_: selector is not view-representable; "
+                 "use extract() or extract_put_() for materializing paths");
     }
     Series view = traverse_slice_from_specs_(parsed);
     if (values.numel() == view.numel()) {
@@ -1954,13 +2415,13 @@ public:
     return extract_put_from_specs_(parsed, values);
   }
 
-  Series traverse_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const {
+  Series traverse_put(pluss::msharp::RangeView::Of<ExtractSpec> specs,
+                      const Series &values) const {
     const std::vector<ExtractSpec> parsed(specs.begin(), specs.end());
     const auto normalized = normalize_extract_specs_(parsed, dim());
     if (!can_traverse_as_view_(normalized)) {
-      PLUSS_FAIL(
-          "Series::traverse_put: selector is not view-representable; "
-          "use extract() or extract_put() for materializing paths");
+      PLUSS_FAIL("Series::traverse_put: selector is not view-representable; "
+                 "use extract() or extract_put() for materializing paths");
     }
     Series out = clone();
     Series view = out.traverse_slice_from_specs_(parsed);
@@ -1996,95 +2457,123 @@ public:
     return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
   }
 
-  Series extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2, ExtractSpec a3) const {
+  Series extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2,
+                 ExtractSpec a3) const {
     const std::array<ExtractSpec, 4> specs{a0, a1, a2, a3};
     return extract(pluss::msharp::RangeView::Of<ExtractSpec>(specs));
   }
 
-  Series& extract_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) {
+  Series &extract_put_(pluss::msharp::RangeView::Of<ExtractSpec> specs,
+                       const Series &values) {
     return extract_put_from_specs_({specs.begin(), specs.end()}, values);
   }
 
-
-  Series extract_put(pluss::msharp::RangeView::Of<ExtractSpec> specs, const Series& values) const {
+  Series extract_put(pluss::msharp::RangeView::Of<ExtractSpec> specs,
+                     const Series &values) const {
     return extract_put_copy_from_specs_({specs.begin(), specs.end()}, values);
   }
 
   // PlussQit naming deviations (method-first aliases).
-  Series pile(pluss::msharp::RangeView::Of<Series> others, std::int64_t dim=0) const;
-  Series unite(pluss::msharp::RangeView::Of<Series> others, std::int64_t dim=0, bool strict_dtype=true) const;
+  Series pile(pluss::msharp::RangeView::Of<Series> others,
+              std::int64_t dim = 0) const;
+  Series unite(pluss::msharp::RangeView::Of<Series> others,
+               std::int64_t dim = 0, bool strict_dtype = true) const;
 
   // Canonical indexing entrypoint. This accepts heterogeneous index specs
   // (advanced-index Series, scalar indices, SliceAll/SliceRange, NewAxis,
   // Ellipsis). Implementation lives in OpsInternal.cpp.
   Series index(pluss::msharp::RangeView::Of<ExtractSpec> specs) const;
-  Series index_put(pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate) const {
-    return pluss::codem::_compat::invoke("index_put", *this, {indices, values, accumulate});
+  Series index_put(pluss::msharp::RangeView::Of<Series> indices,
+                   const Series &values, bool accumulate) const {
+    return pluss::codem::_compat::invoke("index_put", *this,
+                                         {indices, values, accumulate});
   }
-  Series index_put(std::initializer_list<Series> indices, const Series& values, bool accumulate) const {
-    return index_put(pluss::msharp::RangeView::Of<Series>(indices), values, accumulate);
+  Series index_put(std::initializer_list<Series> indices, const Series &values,
+                   bool accumulate) const {
+    return index_put(pluss::msharp::RangeView::Of<Series>(indices), values,
+                     accumulate);
   }
-  Series index_put(std::int64_t index, const Series& values) const {
+  Series index_put(std::int64_t index, const Series &values) const {
     Series out = *this;
     out.index_put_(index, values, false);
     return out;
   }
-  Series& index_put_(pluss::msharp::RangeView::Of<Series> indices, const Series& values, bool accumulate) const {
-    return pluss::codem::_compat::invoke_("index_put_", *this, {indices, values, accumulate});
+  Series &index_put_(pluss::msharp::RangeView::Of<Series> indices,
+                     const Series &values, bool accumulate) const {
+    return pluss::codem::_compat::invoke_("index_put_", *this,
+                                          {indices, values, accumulate});
   }
-  Series& index_put_(std::initializer_list<Series> indices, const Series& values, bool accumulate) const {
-    return index_put_(pluss::msharp::RangeView::Of<Series>(indices), values, accumulate);
+  Series &index_put_(std::initializer_list<Series> indices,
+                     const Series &values, bool accumulate) const {
+    return index_put_(pluss::msharp::RangeView::Of<Series>(indices), values,
+                      accumulate);
   }
 
   // Torch-like scalar index convenience: x.index_put_(0, value)
   // This overload is intentionally 1D-only for explicitness.
-  Series& index_put_(std::int64_t index, const Series& values, bool accumulate=false) const {
+  Series &index_put_(std::int64_t index, const Series &values,
+                     bool accumulate = false) const {
     PLUSS_CHECK(dim() == 1,
-                "Series::index_put_(int64, value): only valid for 1D Series; for higher dimensions use index list or extract_put_");
-    PLUSS_CHECK(values.numel() == 1,
-                "Series::index_put_(int64, value): value must be scalar (numel==1)");
+                "Series::index_put_(int64, value): only valid for 1D Series; "
+                "for higher dimensions use index list or extract_put_");
+    PLUSS_CHECK(
+        values.numel() == 1,
+        "Series::index_put_(int64, value): value must be scalar (numel==1)");
     const std::int64_t i = normalize_scalar_index_(index, size(0));
     Series idx = Series::empty({1}, ScalarType::Int64, Platform::CPU);
-    reinterpret_cast<std::int64_t*>(idx.raw_data())[0] = i;
+    reinterpret_cast<std::int64_t *>(idx.raw_data())[0] = i;
     if (platform() != Platform::CPU) {
       idx = idx.to(platform(), ScalarType::Int64);
     }
     const std::array<Series, 1> idx_arr{{idx}};
-    return index_put_(pluss::msharp::RangeView::Of<Series>(idx_arr), values, accumulate);
+    return index_put_(pluss::msharp::RangeView::Of<Series>(idx_arr), values,
+                      accumulate);
   }
 
   // Slice-spec index convenience for common 1D/2D scalar assignment forms:
   // - 1D: x.index_put_({i}, value)
   // - 2D: x.index_put_({SliceAll(), j}, col_values)
   // For richer N-D slicing/writes use extract_put_ directly.
-  Series& index_put_(std::initializer_list<ExtractSpec> specs, const Series& values, bool accumulate=false) const {
+  Series &index_put_(std::initializer_list<ExtractSpec> specs,
+                     const Series &values, bool accumulate = false) const {
     PLUSS_CHECK(!accumulate,
-                "Series::index_put_(specs, value, accumulate): accumulate=true is unsupported for slice-spec indexing; use Series index list overload instead");
+                "Series::index_put_(specs, value, accumulate): accumulate=true "
+                "is unsupported for slice-spec indexing; use Series index list "
+                "overload instead");
     const std::vector<ExtractSpec> parsed(specs.begin(), specs.end());
     PLUSS_CHECK(!parsed.empty(),
                 "Series::index_put_(specs, value): specs cannot be empty");
-    PLUSS_CHECK(parsed.size() <= 2,
-                "Series::index_put_(specs, value): only 1D and 2D convenience specs are supported; use extract_put_ for higher-dimensional writes");
+    PLUSS_CHECK(
+        parsed.size() <= 2,
+        "Series::index_put_(specs, value): only 1D and 2D convenience specs "
+        "are supported; use extract_put_ for higher-dimensional writes");
 
     if (parsed.size() == 1) {
       PLUSS_CHECK(dim() == 1,
                   "Series::index_put_({i}, value): target must be 1D");
-      PLUSS_CHECK(parsed[0].kind == ExtractSpec::Kind::ScalarIndex,
-                  "Series::index_put_({i}, value): spec must be a scalar index");
-      PLUSS_CHECK(values.numel() == 1,
-                  "Series::index_put_({i}, value): value must be scalar (numel==1)");
-      return const_cast<Series*>(this)->extract_put_(parsed, values);
+      PLUSS_CHECK(
+          parsed[0].kind == ExtractSpec::Kind::ScalarIndex,
+          "Series::index_put_({i}, value): spec must be a scalar index");
+      PLUSS_CHECK(
+          values.numel() == 1,
+          "Series::index_put_({i}, value): value must be scalar (numel==1)");
+      return const_cast<Series *>(this)->extract_put_(parsed, values);
     }
 
-    PLUSS_CHECK(dim() == 2,
-                "Series::index_put_({SliceAll(), j}, value): target must be 2D");
-    PLUSS_CHECK(parsed[0].kind == ExtractSpec::Kind::Slice && parsed[0].slice.is_all(),
-                "Series::index_put_({SliceAll(), j}, value): first spec must be SliceAll()");
+    PLUSS_CHECK(
+        dim() == 2,
+        "Series::index_put_({SliceAll(), j}, value): target must be 2D");
+    PLUSS_CHECK(parsed[0].kind == ExtractSpec::Kind::Slice &&
+                    parsed[0].slice.is_all(),
+                "Series::index_put_({SliceAll(), j}, value): first spec must "
+                "be SliceAll()");
     PLUSS_CHECK(parsed[1].kind == ExtractSpec::Kind::ScalarIndex,
-                "Series::index_put_({SliceAll(), j}, value): second spec must be a scalar column index");
+                "Series::index_put_({SliceAll(), j}, value): second spec must "
+                "be a scalar column index");
     PLUSS_CHECK(values.dim() == 1 && values.numel() == size(0),
-                "Series::index_put_({SliceAll(), j}, value): value must be 1D with length equal to size(0)");
-    return const_cast<Series*>(this)->extract_put_(parsed, values);
+                "Series::index_put_({SliceAll(), j}, value): value must be 1D "
+                "with length equal to size(0)");
+    return const_cast<Series *>(this)->extract_put_(parsed, values);
   }
 
   Series slice(std::int64_t dim, std::int64_t start, std::int64_t end) const {
@@ -2105,6 +2594,7 @@ public:
   using StatAccessor = SeriesStatAccessor;
   using LinearAlgAccessor = SeriesLinearAlgAccessor;
   using AntidiffAccessor = SeriesAntidiffAccessor;
+  using CalcAccessor = SeriesCalcAccessor;
   using TraverseAccessor = SeriesTraverseAccessor;
 
   // Statistical accessor:
@@ -2120,6 +2610,12 @@ public:
   // - safe call style: `s.antidiff().trapezoid(x)`, `s.antidiff(x).trapezoid()`
   // - convenience dot style: `s.antidiff.trapezoid(x)`
   AntidiffAccessor antidiff;
+  // Callable calculus. `diff` differentiates a function at this Series;
+  // `antidiff` evaluates an anchored repeated integral ending at this Series.
+  // - safe call style: `x.calc().diff(fn, order)`
+  // - convenience dot style: `x.calc.diff(fn, order)`
+  // - bound arguments: `x.calc({.order = 2, .lower = a}).antidiff(fn)`
+  CalcAccessor calc;
   // Traverse/query accessor:
   // - dot style: `s.traverse.find_all(mask)`
   // - with explicit `on` selector: `s.traverse(specs).find_ge(...)`
@@ -2127,38 +2623,60 @@ public:
 
   // An empty handle, equivalent to pluss::series::undefined(). Defined Series
   // values remain constructible only through the public factory functions.
-  Series() : SeriesBase(), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
-  Series(const Series& other)
-      : SeriesBase(other), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
-  Series(Series&& other) noexcept
-      : SeriesBase(std::move(other)), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
-  Series& operator=(const Series& other) {
+  Series()
+      : SeriesBase(), stat(*this), linearalg(*this), antidiff(*this),
+        calc(*this), traverse(*this) {}
+  Series(const Series &other)
+      : SeriesBase(other), stat(*this), linearalg(*this), antidiff(*this),
+        calc(*this), traverse(*this) {}
+  Series(Series &&other) noexcept
+      : SeriesBase(std::move(other)), stat(*this), linearalg(*this),
+        antidiff(*this), calc(*this), traverse(*this) {}
+  Series &operator=(const Series &other) {
     if (this != &other) {
       SeriesBase::operator=(other);
     }
     stat.rebind(*this);
     linearalg.rebind(*this);
     antidiff.rebind(*this);
+    calc.rebind(*this);
     traverse.rebind(*this);
     return *this;
   }
-  Series& operator=(Series&& other) noexcept {
+  Series &operator=(Series &&other) noexcept {
     if (this != &other) {
       SeriesBase::operator=(std::move(other));
     }
     stat.rebind(*this);
     linearalg.rebind(*this);
     antidiff.rebind(*this);
+    calc.rebind(*this);
     traverse.rebind(*this);
     return *this;
   }
 
 private:
-  template <class>
-  struct detail_false_ : std::false_type {};
+  static Series calc_diff_(const Series &input,
+                           std::function<Series(const Series &)> callback,
+                           std::int64_t order,
+                           const SeriesCalcAccessor::CalcOptions &options);
+  static Series calc_grad_(const Series &input,
+                           std::function<Series(const Series &)> callback,
+                           const SeriesCalcAccessor::CalcOptions &options);
+  static Series calc_jac_(const Series &input,
+                          std::function<Series(const Series &)> callback,
+                          const SeriesCalcAccessor::CalcOptions &options);
+  static Series calc_hess_(const Series &input,
+                           std::function<Series(const Series &)> callback,
+                           const SeriesCalcAccessor::CalcOptions &options);
+  static Series
+  calc_antidiff_(const Series &upper,
+                 std::function<Series(const Series &)> callback, double lower,
+                 const SeriesCalcAccessor::AntidiffOptions &options);
 
-  template <class T>
-  HostArray<T> detail_host_array_impl_() const {
+  template <class> struct detail_false_ : std::false_type {};
+
+  template <class T> HostArray<T> detail_host_array_impl_() const {
     HostArray<T> out;
     out.sizes.assign(sizes().begin(), sizes().end());
     out.strides.assign(strides().begin(), strides().end());
@@ -2167,8 +2685,7 @@ private:
     return out;
   }
 
-  template <class T>
-  HostAny detail_host_any_impl_(ScalarType st) const {
+  template <class T> HostAny detail_host_any_impl_(ScalarType st) const {
     auto arr = detail_host_array_impl_<T>();
     if (numel() == 1) {
       PLUSS_CHECK(!arr.data.empty(), "Series::host(): scalar payload is empty");
@@ -2191,7 +2708,8 @@ private:
     auto arr = cpu_f32.detail_host_array_impl_<float>();
     if (cpu_f32.numel() == 1) {
       PLUSS_CHECK(!arr.data.empty(), "Series::host(): scalar payload is empty");
-      return HostAny::from_scalar(HostScalarAny{arr.data.front()}, original_dtype);
+      return HostAny::from_scalar(HostScalarAny{arr.data.front()},
+                                  original_dtype);
     }
     if (cpu_f32.dim() <= 1) {
       return HostAny::from_vector(HostVectorAny{arr.data}, original_dtype);
@@ -2205,8 +2723,7 @@ private:
     return HostAny::from_array(std::move(any_arr), original_dtype);
   }
 
-  template <class T>
-  std::vector<T> detail_materialize_vec_() const {
+  template <class T> std::vector<T> detail_materialize_vec_() const {
     if (platform() != Platform::CPU) {
       return to(Platform::CPU).template detail_materialize_vec_<T>();
     }
@@ -2226,7 +2743,7 @@ private:
 
     if (is_contiguous()) {
       if constexpr (std::is_same_v<std::remove_cv_t<T>, bool>) {
-        const auto* base = reinterpret_cast<const bool*>(raw_data());
+        const auto *base = reinterpret_cast<const bool *>(raw_data());
         for (std::size_t i = 0; i < out.size(); ++i) {
           out[i] = base[i];
         }
@@ -2236,7 +2753,7 @@ private:
       return out;
     }
 
-    const auto* base = reinterpret_cast<const T*>(raw_data());
+    const auto *base = reinterpret_cast<const T *>(raw_data());
     const std::vector<std::int64_t> sz(sizes().begin(), sizes().end());
     const std::vector<std::int64_t> st(strides().begin(), strides().end());
     const std::int64_t rank = static_cast<std::int64_t>(sz.size());
@@ -2261,8 +2778,7 @@ private:
     return out;
   }
 
-  template <class T>
-  static ScalarType detail_scalar_type_for_() {
+  template <class T> static ScalarType detail_scalar_type_for_() {
     using U = std::remove_cv_t<T>;
     if constexpr (std::is_same_v<U, bool>) {
       return ScalarType::Bool;
@@ -2295,22 +2811,24 @@ private:
     } else if constexpr (std::is_same_v<U, Complex128>) {
       return ScalarType::Complex128;
     } else {
-      static_assert(detail_false_<U>::value, "Series::to_vec<T>: unsupported element type");
+      static_assert(detail_false_<U>::value,
+                    "Series::to_vec<T>: unsupported element type");
     }
   }
 
   // Internal-only defined-state ctor. End users create defined Series values
   // through factories; public default construction creates no payload.
   explicit Series(pluss::msharp::intrusive_ptr<SeriesImpl> impl)
-      : SeriesBase(std::move(impl)), stat(*this), linearalg(*this), traverse(*this) {}
+      : SeriesBase(std::move(impl)), stat(*this), linearalg(*this),
+        antidiff(*this), calc(*this), traverse(*this) {}
 
   // Internal construction hook used by ops_internal implementations.
   friend struct ops_internal::SeriesFactoryAccess;
 };
 
-
-inline ExtractSpec::ExtractSpec(const Series& idx) : kind(Kind::AdvancedIndex) {
-  PLUSS_CHECK(idx.defined(), "Series::extract: advanced index Series is undefined");
+inline ExtractSpec::ExtractSpec(const Series &idx) : kind(Kind::AdvancedIndex) {
+  PLUSS_CHECK(idx.defined(),
+              "Series::extract: advanced index Series is undefined");
   advanced_impl = idx.impl();
 }
 

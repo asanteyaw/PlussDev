@@ -13,7 +13,7 @@ TimeSeriesAccessor::rolling_block(pluss::msharp::RangeView::Int windows, const T
 ## What It Does
 
 Computes several rolling window statistics, at several window sizes, of the
-bound thread all at once — each `{statistic, window}` combination becomes its
+bound slate all at once — each `{statistic, window}` combination becomes its
 own output column named `"roll_" + <statistic> + "_w" + <window>`. Requires at
 least one window.
 
@@ -44,14 +44,14 @@ example of this exact effect.
 - **`include_var`** (`bool`, default `false`)
 - **`min_periods`** (`std::int64_t`, default `1`): the minimum number of
   positions that must structurally exist in a window near the start of the
-  thread — see [`zscore_rolling()`](zscore_rolling.md)'s parameter note for why
+  slate — see [`zscore_rolling()`](zscore_rolling.md)'s parameter note for why
   this isn't the same as "non-missing observations."
 
 ## Returns
 
 `DataFrame`
     A new frame with one column per requested `{statistic, window}` pair, same
-    case labels as the bound thread. Columns are ordered by window (in the
+    case labels as the bound slate. Columns are ordered by window (in the
     order given), then by statistic in the fixed order mean, std, min, max,
     sum, var.
 

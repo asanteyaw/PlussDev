@@ -13,9 +13,9 @@ Slate::length() const -> Slate
 
 ## What It Does
 
-Replaces a `Note` (string) thread with its character count, as an `Int64`
-`Series`-kind thread — same row order, but the payload kind changes from `Note` to
-`Series`. Requires the thread to be `Note`-kind.
+Replaces a `Note` (string) slate with its character count, as an `Int64`
+`Series`-kind slate — same row order, but the payload kind changes from `Note` to
+`Series`. Requires the slate to be `Note`-kind.
 
 ```{important} Counts Unicode codepoints, not bytes
 `length()` counts *characters* (Unicode codepoints), not raw UTF-8 storage bytes.
@@ -31,12 +31,12 @@ byte in UTF-8 while still counting as exactly one character.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as `*this`, holding each
+    A new `Series`-kind (`Int64`) slate, same length as `*this`, holding each
     cell's character count.
 
 ## Examples
 
-Example 1. Character count of a plain ASCII text thread.
+Example 1. Character count of a plain ASCII text slate.
 
 ```cpp
 using namespace pluss::table;
@@ -58,7 +58,7 @@ ptype: Series
 
 `"Accra"` is 5 characters, `"Tema"` is 4, `"Kumasi"` is 6.
 
-Example 2. A non-`Note` thread throws.
+Example 2. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -78,7 +78,7 @@ Slate::length: expected Note payload
 
 ## Notes
 
-- Changes the thread's payload kind from `Note` to `Series` (`Int64`) — chain a
+- Changes the slate's payload kind from `Note` to `Series` (`Int64`) — chain a
   numeric operation (comparison, arithmetic) directly onto the result.
 - Counts Unicode codepoints, not raw UTF-8 storage bytes.
 - A null cell on input stays null on output.

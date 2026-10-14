@@ -5,6 +5,7 @@
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/TypePromotion.h"
 #include "CodeM/native/cpu/IndexingExtras.h"
+#include "CodeM/native/cpu/AdvancedIndexingKernels.h"
 
 #include <vector>
 #include <cstring>
@@ -267,21 +268,7 @@ Series put(const Series& a, const Series& index, const Series& src, bool accumul
                   sp + (std::ptrdiff_t)s_off * (std::ptrdiff_t)dt.itemsize,
                   dt.itemsize);
     } else {
-      if (out.scalar_type() == ScalarType::Float64) {
-        reinterpret_cast<double*>(op)[k] += reinterpret_cast<const double*>(sp)[s_off];
-      } else if (out.scalar_type() == ScalarType::Float32) {
-        reinterpret_cast<float*>(op)[k] += reinterpret_cast<const float*>(sp)[s_off];
-      } else if (out.scalar_type() == ScalarType::Int32) {
-        reinterpret_cast<std::int32_t*>(op)[k] += reinterpret_cast<const std::int32_t*>(sp)[s_off];
-      } else if (out.scalar_type() == ScalarType::Int64) {
-        reinterpret_cast<std::int64_t*>(op)[k] += reinterpret_cast<const std::int64_t*>(sp)[s_off];
-      } else if (out.scalar_type() == ScalarType::Complex64) {
-        reinterpret_cast<Complex64*>(op)[k] += reinterpret_cast<const Complex64*>(sp)[s_off];
-      } else if (out.scalar_type() == ScalarType::Complex128) {
-        reinterpret_cast<Complex128*>(op)[k] += reinterpret_cast<const Complex128*>(sp)[s_off];
-      } else {
-        throw_error("put: accumulate dtype not implemented");
-      }
+      add_inplace_at(out.scalar_type(), op, sp, k, s_off);
     }
   }
   return out;

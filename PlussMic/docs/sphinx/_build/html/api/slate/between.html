@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -60,9 +60,9 @@ logical AND (which, internally, is exactly what <code class="docutils literal no
 styles:</p>
 <ul class="simple">
 <li><p><strong>Numeric scalar bounds</strong> (<code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">a,</span> <span class="pre">double</span> <span class="pre">b</span></code>) — requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind
-thread; throws otherwise.</p></li>
+slate; throws otherwise.</p></li>
 <li><p><strong>Temporal/text scalar bounds</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span> <span class="pre">lo,</span> <span class="pre">std::string_view</span> <span class="pre">hi</span></code>) — requires a
-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread; the literals are parsed as timestamps.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind slate; the literals are parsed as timestamps.</p></li>
 <li><p><strong>Rowwise bounds</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span> <span class="pre">lo,</span> <span class="pre">const</span> <span class="pre">Slate&amp;</span> <span class="pre">hi</span></code>) — a different lower and upper
 bound per row, useful for grading bands or per-row tolerance envelopes.</p></li>
 </ul>
@@ -79,15 +79,15 @@ want to be certain rather than relying on the default. See Examples 1 and 5.</p>
 ## Parameters
 
 **a**, **b** (`double`)
-    Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind thread.
+    Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind slate.
 
 **lo**, **hi** (`std::string_view`)
     Lower and upper scalar temporal literals, parsed the same way
-    [`compare()`](compare.md)&#39;s text overload parses them against a temporal thread.
-    Requires a `Timeline`- or `TimeIndex`-kind thread.
+    [`compare()`](compare.md)&#39;s text overload parses them against a temporal slate.
+    Requires a `Timeline`- or `TimeIndex`-kind slate.
 
 **lo**, **hi** (`const Slate&amp;`)
-    Lower- and upper-bound threads, applied element by element (row `i`&#39;s value is tested
+    Lower- and upper-bound slates, applied element by element (row `i`&#39;s value is tested
     against `lo`&#39;s and `hi`&#39;s row `i`).
 
 **inclusive** (`bool`)
@@ -101,7 +101,7 @@ want to be certain rather than relying on the default. See Examples 1 and 5.</p>
 ## Returns
 
 `Slate`
-    A `Series`-kind thread of `Bool` values, one interval-membership result per row.
+    A `Series`-kind slate of `Bool` values, one interval-membership result per row.
 
 ## Examples
 
@@ -201,7 +201,7 @@ ptype: Series
 ptype: Series
 </pre></div>
 </div>
-<p>Example 6. Rowwise lower and upper bound threads — a different interval per row, useful
+<p>Example 6. Rowwise lower and upper bound slates — a different interval per row, useful
 for tolerance bands.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.0</span><span class="p">}));</span>
@@ -222,7 +222,7 @@ for tolerance bands.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 7. Calling the numeric-scalar overload on a non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<p>Example 7. Calling the numeric-scalar overload on a non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="p">.</span><span class="n">between</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
@@ -234,7 +234,7 @@ ptype: Series
 </section>
 <section id="id6">
 <h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::between(double,double,...): requires Series payload; use temporal overloads for date/time threads
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::between(double,double,...): requires Series payload; use temporal overloads for date/time slates
 </pre></div>
 </div>
 </section>

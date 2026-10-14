@@ -16,7 +16,7 @@ Computes a **calendar-duration trailing window statistic**: each position's wind
 is every position whose `axis` tick falls within `duration_nanos` nanoseconds of
 that position's own tick (per `closure`), rather than a fixed row count. `axis`
 can be a `Timeline`, a `TimeIndex`, or a plain `Int64` `Series` of nanosecond
-ticks; it must be the same length as the bound thread, contain no missing
+ticks; it must be the same length as the bound slate, contain no missing
 entries, and be sorted ascending (not necessarily evenly spaced — the window
 width is a genuine span of time, so it naturally covers a different *number* of
 positions at each row when ticks are irregular).
@@ -37,7 +37,7 @@ Only `Sum`, `Mean`, `Var`, and `Std` are supported.
 
 **axis** (`const Slate&`)
     A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Series`, the same length
-    as the bound thread, non-missing and sorted ascending.
+    as the bound slate, non-missing and sorted ascending.
 
 **duration_nanos** (`std::int64_t`)
     The window width, in nanoseconds. Must be positive.
@@ -56,7 +56,7 @@ Only `Sum`, `Mean`, `Var`, and `Std` are supported.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, holding the duration-window
+    A new slate, same length as the bound source, holding the duration-window
     statistic at each position.
 
 ## Examples
@@ -157,7 +157,7 @@ Slate::timed: axis must be monotonic
 - Only `Sum`, `Mean`, `Var`, and `Std` are supported (unlike the fixed-window
   [`rolling()`](rolling.md), which also supports `Minimum`/`Maximum`/`Sem`/
   `Skew`/`Kurtosis`).
-- A pre-existing missing entry in the bound thread (not the axis) is skipped
+- A pre-existing missing entry in the bound slate (not the axis) is skipped
   within any window that contains it, the same as [`rolling()`](rolling.md).
 
 ## See Also

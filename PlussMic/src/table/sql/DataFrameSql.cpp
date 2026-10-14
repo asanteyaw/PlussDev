@@ -338,10 +338,6 @@ std::string sql_param_token(const DataFrame::SqlOptions::SqlParam& value) {
 }
 
 std::string apply_sql_params(std::string_view statement, const DataFrame::SqlOptions& options) {
-  if (options.params.empty() && options.identifier_params.empty()) {
-    return std::string(statement);
-  }
-
   std::unordered_set<std::string> used_scalar;
   std::unordered_set<std::string> used_identifier;
   std::string out;

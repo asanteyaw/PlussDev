@@ -46,7 +46,7 @@ otherwise has no way to communicate.
 
 This determines which value gets code `0`, `1`, `2`, and so on — and, since `levels[i]`
 and code `i` always correspond, it also determines the order of the returned `levels`
-thread.
+slate.
 
 ## Returns
 

@@ -15,7 +15,7 @@ SlateTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const -
 
 ## What It Does
 
-Replaces the bound thread with the elapsed distance between it and `other`, in
+Replaces the bound slate with the elapsed distance between it and `other`, in
 `options.unit` (or plain `unit`) — same length, now a numeric `Series`.
 `other` can be another `Slate` or a bare `pluss::Timeline` scalar.
 
@@ -29,7 +29,7 @@ completed calendar periods or crossed calendar boundaries, per
 
 **other** (`const Slate&` / `const pluss::Timeline&`)
 
-The right-hand timestamp(s), paired row-by-row with the bound thread.
+The right-hand timestamp(s), paired row-by-row with the bound slate.
 
 **options** (`const TimelineSpanOptions&`)
 
@@ -38,7 +38,7 @@ units, default; or `Boundary` — crossed calendar labels; only affects
 `Months`/`Years`), `anchor` (`DayOfMonth` — strict day-of-month completion,
 default; or `MonthEnd` — treat matching month-end dates as equivalent),
 `signed_result` (default `true` — negative when `other` precedes the bound
-thread; `false` returns the absolute magnitude), and `calendar` (a
+slate; `false` returns the absolute magnitude), and `calendar` (a
 `BusinessCalendar`, only used for `BusinessDays`).
 
 **unit** (`TimeUnit`, convenience overload)
@@ -49,7 +49,7 @@ at its default.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread,
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
     holding each row's elapsed distance to `other`.
 
 ## Examples
@@ -282,7 +282,7 @@ on, as in Example 1) have no such requirement.
 ## Notes
 
 - Calendar units (`Months`/`Years`) and `BusinessDays` require the bound
-  thread and `other` to share the same timezone — mismatched timezones throw;
+  slate and `other` to share the same timezone — mismatched timezones throw;
   convert one side with [`tz()`](tz.md) first.
 - `anchor = TimelineSpanAnchor::MonthEnd` changes `Complete`-mode completion
   so that two month-end dates (e.g. January 31st and February 29th in a leap
@@ -295,7 +295,7 @@ on, as in Example 1) have no such requirement.
   `.tl().epoch(TimeUnit::Days)`), not epoch nanoseconds.
 - `signed_result = false` returns the absolute magnitude instead of a
   direction-sensitive (possibly negative) value.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - If either side is `NaT` for a row, that row's span displays as `"NULL"`.
 

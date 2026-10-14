@@ -7,3 +7,4 @@
 subdirs("table")
 subdirs("kindle")
 subdirs("scribble")
+subdirs("bundle")

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Rounds every row of the bound thread <em>down</em> to the nearest <code class="docutils literal notranslate"><span class="pre">unit</span></code> boundary, in
+<p>Rounds every row of the bound slate <em>down</em> to the nearest <code class="docutils literal notranslate"><span class="pre">unit</span></code> boundary, in
 local wall time — same length, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind.</p>
 </section>
 <section id="parameters">
@@ -61,7 +61,7 @@ empty. Coarser units (weeks, months) aren’t supported.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, same length as the bound thread,
+A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate, same length as the bound slate,
 floored to <code class="docutils literal notranslate"><span class="pre">unit</span></code>.</p>
 </section>
 <section id="examples">
@@ -134,12 +134,12 @@ January); floored in that local wall time, it lands on <code class="docutils lit
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Flooring happens in <strong>local wall time</strong> (per the thread’s current timezone),
+<li><p>Flooring happens in <strong>local wall time</strong> (per the slate’s current timezone),
 then maps back — so <code class="docutils literal notranslate"><span class="pre">floor(&quot;D&quot;)</span></code> aligns to local midnight, not necessarily
 UTC midnight, if the timezone isn’t <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">unit</span></code> cannot be empty, and only accepts the fixed clock units listed above —
 see <a class="reference internal" href="period.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">period()</span></code></span></a> for month/year truncation instead.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound slate to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (displays as <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>) regardless of <code class="docutils literal notranslate"><span class="pre">unit</span></code>.</p></li>
 </ul>

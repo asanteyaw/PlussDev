@@ -27,7 +27,7 @@ Same shape as [`sub()`](sub.md).
 ## Returns
 
 `Slate`
-    A new thread holding `other - (*this)`, elementwise.
+    A new slate holding `other - (*this)`, elementwise.
 
 ## Examples
 
@@ -54,7 +54,7 @@ ptype: Series
 `5 - 10`, `5 - 20`, `5 - 30` — the scalar comes first this time, the opposite of
 [`prices.sub(5.0)`](sub.md), which would give `5, 15, 25`.
 
-Example 2. Reflected against another thread — equivalent to calling `sub()` with the
+Example 2. Reflected against another slate — equivalent to calling `sub()` with the
 operands swapped.
 
 ```cpp

@@ -37,7 +37,7 @@ seeing before relying on either.
 
 `const DataFrame&` or `const Slate&` — identical shape requirements to
 [`land()`](land.md): same feature names in order and same case count for the
-`DataFrame` overload; one boolean thread matching `ncases()` for the `Slate` overload.
+`DataFrame` overload; one boolean slate matching `ncases()` for the `Slate` overload.
 
 ## Returns
 

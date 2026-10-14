@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -171,7 +171,7 @@ original stream’s own data, untouched. See
 <code class="docutils literal notranslate"><span class="pre">range()</span></code> overwrites an <em>existing custom</em> label too, not just an absent one.</p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">align(target_labels,</span> <span class="pre">options)</span></code> reorders/relabels by case label under
 <code class="docutils literal notranslate"><span class="pre">AlignBy::Caselbl</span></code>. An unmatched target label produces <code class="docutils literal notranslate"><span class="pre">NULL</span></code> unless <code class="docutils literal notranslate"><span class="pre">options.fill</span></code> is set
-— identical rules to <a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>, applied through the label
+— identical rules to <a class="reference internal" href="../slate/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>, applied through the label
 accessor.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 <span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignOptions</span><span class="p">;</span>
@@ -232,7 +232,7 @@ d            | -1
 </div>
 <p>Example 6. The default <code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code> ignores <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> for relabeling entirely —
 only its length is checked. The stream’s own current values and labels pass through
-unchanged, exactly as documented for <a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>.</p>
+unchanged, exactly as documented for <a class="reference internal" href="../slate/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
@@ -273,7 +273,7 @@ the <em>original</em> stream; don’t infer it from either method’s result.</p
 <li><p><code class="docutils literal notranslate"><span class="pre">set()</span></code>/<code class="docutils literal notranslate"><span class="pre">align()</span></code> both overload on <code class="docutils literal notranslate"><span class="pre">Stream</span></code> vs <code class="docutils literal notranslate"><span class="pre">Slate</span></code> — see the second important
 callout above for the <code class="docutils literal notranslate"><span class="pre">make_note(...)</span></code> ambiguity gotcha.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">align()</span></code> follows exactly the same <code class="docutils literal notranslate"><span class="pre">AlignBy</span></code>/<code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code> rules as
-<a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>; see that page for the full breakdown of
+<a class="reference internal" href="../slate/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>; see that page for the full breakdown of
 <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>/<code class="docutils literal notranslate"><span class="pre">Feature</span></code>/<code class="docutils literal notranslate"><span class="pre">Both</span></code> (note <code class="docutils literal notranslate"><span class="pre">Both</span></code> is rejected for a single <code class="docutils literal notranslate"><span class="pre">Stream</span></code>, same as for
 <code class="docutils literal notranslate"><span class="pre">Slate</span></code>).</p></li>
 </ul>
@@ -287,7 +287,7 @@ for the same underlying label axis, without <code class="docutils literal notran
 narrower set-only surface, equivalent to <code class="docutils literal notranslate"><span class="pre">lbl().set()</span></code> but strict about length matching.</p></li>
 <li><p><a class="reference internal" href="clear_label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::clear_label</span></code></span></a> / <a class="reference internal" href="clear_label_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::clear_label_</span></code></span></a>:
 equivalent to <code class="docutils literal notranslate"><span class="pre">lbl().reset()</span></code>, reached through the plain getter/setter surface.</p></li>
-<li><p><a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>: the underlying single-column alignment semantics
+<li><p><a class="reference internal" href="../slate/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>: the underlying single-column alignment semantics
 this accessor’s <code class="docutils literal notranslate"><span class="pre">align()</span></code> follows.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

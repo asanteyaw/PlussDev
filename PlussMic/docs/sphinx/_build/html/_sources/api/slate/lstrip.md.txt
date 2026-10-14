@@ -15,7 +15,7 @@ Slate::lstrip(std::string_view chars) const -> Slate
 ## What It Does
 
 The left-only half of [`strip()`](strip.md): trims characters from the **start** of
-a `Note` thread's cells, leaving the trailing end untouched. Same two policies as
+a `Note` slate's cells, leaving the trailing end untouched. Same two policies as
 `strip()` (whitespace by default, character-set membership with `chars`) — see that
 page for the full explanation of why the `chars` overload is set-membership, not
 literal substring matching.
@@ -29,7 +29,7 @@ The set of characters to strip from each cell's left edge only.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, with each cell's leading text
+    A new `Note`-kind slate, same length as `*this`, with each cell's leading text
     trimmed.
 
 ## Examples

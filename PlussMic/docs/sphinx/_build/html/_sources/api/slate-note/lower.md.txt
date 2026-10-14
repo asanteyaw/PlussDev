@@ -12,10 +12,10 @@ SlateNoteAccessor::lower() const -> Slate
 
 ## What It Does
 
-Lowercases every character in the bound thread's cells — the classic normalization
+Lowercases every character in the bound slate's cells — the classic normalization
 step before a case-insensitive comparison, a grouping key that shouldn't be split by
 casing accidents, or a lookup against a canonical lowercase reference list. A direct
-forward to [`Slate::lower()`](../thread/lower.md). Requires the bound thread to be
+forward to [`Slate::lower()`](../slate/lower.md). Requires the bound slate to be
 `Note`-kind.
 
 ```{note} ASCII vs. Unicode case mapping
@@ -31,12 +31,12 @@ libunistring).
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, with every character
+    A new `Note`-kind slate, same length as the bound slate, with every character
     lowercased.
 
 ## Examples
 
-Example 1. Lowercase a text thread via the accessor.
+Example 1. Lowercase a text slate via the accessor.
 
 ```cpp
 using namespace pluss::table;
@@ -56,8 +56,8 @@ std::cout << out;
 ptype: Note
 ```
 
-Example 2. A non-`Note` thread throws — the same message
-[`Slate::lower()`](../thread/lower.md) produces directly.
+Example 2. A non-`Note` slate throws — the same message
+[`Slate::lower()`](../slate/lower.md) produces directly.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -78,14 +78,14 @@ Slate::lower: expected Note payload
 ## Notes
 
 - `SlateNoteAccessor::lower()` is a one-line forward to
-  [`Slate::lower()`](../thread/lower.md) — identical behavior and throws.
+  [`Slate::lower()`](../slate/lower.md) — identical behavior and throws.
 - A null cell on input stays null on output.
 - For the opposite transform, see [`upper()`](upper.md). For a comparison-oriented
   case normalization, see [`casefold()`](casefold.md).
 
 ## See Also
 
-- [`Slate::lower`](../thread/lower.md): the direct, non-accessor form this method
+- [`Slate::lower`](../slate/lower.md): the direct, non-accessor form this method
   forwards to.
 - [`SlateNoteAccessor::upper`](upper.md): the inverse transform.
 - [`SlateNoteAccessor::casefold`](casefold.md): case folding intended for

@@ -14,9 +14,11 @@ Series::median(std::int64_t dim) const -> Series
 ## What It Does
 
 `median()` finds the centre of an ordered population. For an odd number of
-values, that is the one middle value. For an even number, there are two middle
-values and the result is their arithmetic mean. It therefore returns `float64`
-and may produce a number that did not occur in the source.
+values, that is the one middle value. For an even number there are two middle
+values and the result is the lower of them, as `torch.median` does, so the
+result is always a value that occurs in the source. Use
+[`quantile(0.5)`](quantile.md) for the interpolated midpoint of an even
+population. The result is `float64`.
 
 The no-argument overload uses every element as one population. The axis
 overload works independently along every lane of `dim`, then removes that axis
@@ -50,7 +52,7 @@ to use as a differentiable objective.
 
 ## Examples
 
-Example 1. An even population averages its two centre values.
+Example 1. An even population returns its lower centre value.
 
 ```cpp
 auto values = pluss::make_series({4.0, 1.0, 3.0, 2.0});
@@ -61,10 +63,11 @@ pluss::series::print(std::cout, values.median());
 
 ```text
 Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=2.5000
+data=2.0000
 ```
 
-Ordering gives `[1, 2, 3, 4]`; the result is `(2 + 3) / 2 = 2.5`.
+Ordering gives `[1, 2, 3, 4]`; the lower of the two centres is `2`, while
+`quantile(0.5)` would interpolate to `2.5`.
 
 Example 2. `dim=0` makes every column its own ordered population.
 
@@ -140,20 +143,21 @@ catch (const std::exception& error) { std::cout << error.what(); }
 ### Output
 
 ```text
-quantile: dim out of range
+median: dim out of range
 ```
 
 ## Gotchas And Failure Modes
 
 - This returns a value, not its source index.
 - NaN propagates; infinity remains an ordered endpoint.
-- The current axis diagnostic comes from the shared quantile kernel and says
-  `quantile: dim out of range`.
+- The axis diagnostic is `median: dim out of range`.
+- Even populations return the lower centre, not the mean of the two. The
+  difference from `quantile(0.5)` is intentional and matches libtorch.
 
 ## Summary
 
 Use `median()` for one robust centre or `median(dim)` for one per lane. It
-averages the two centres of even populations, removes the reduced axis, and
+returns the lower centre of even populations, removes the reduced axis, and
 preserves NaN rather than silently excluding it.
 
 ## See Also

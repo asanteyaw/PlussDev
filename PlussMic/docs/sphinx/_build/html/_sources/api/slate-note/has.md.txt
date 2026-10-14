@@ -12,7 +12,7 @@ SlateNoteAccessor::has(std::string_view needle, const TextOptions& options = {})
 
 ## What It Does
 
-Checks each cell of the bound thread for the presence of `needle` anywhere in the
+Checks each cell of the bound slate for the presence of `needle` anywhere in the
 cell, replacing each cell with a `Bool`. It's the general substring/pattern search on
 this accessor — where [`starts()`](starts.md) and [`ends()`](ends.md) only check the
 two ends of the string, `has()` looks everywhere, and it can be switched between a
@@ -70,7 +70,7 @@ ignores case.
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread: `true`
+    A new `Bool`-typed `Series` slate, same length as the bound slate: `true`
     where the cell contains a match, `false` where it doesn't.
 
 ## Examples
@@ -178,7 +178,7 @@ to show the call shape.
   called.
 - Changes the payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
-- Requires the bound thread to be `Note`-kind, or the call throws.
+- Requires the bound slate to be `Note`-kind, or the call throws.
 
 ## See Also
 

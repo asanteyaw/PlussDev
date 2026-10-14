@@ -13,7 +13,7 @@ SlateLabelAccessor::find(const Slate& targets) const -> Slate
 ## What It Does
 
 For each value in `targets`, looks up the position of its **first**
-occurrence among the bound thread's case labels — `-1` if that value never
+occurrence among the bound slate's case labels — `-1` if that value never
 appears. Unlike [`pos()`](pos.md), which returns every match for a single
 value, `find()` returns exactly one position (or `-1`) per target, for
 potentially many targets at once.

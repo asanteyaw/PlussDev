@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,8 +48,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces the bound thread’s case labels with <code class="docutils literal notranslate"><span class="pre">labels</span></code>, used as-is — a direct
-forward to <code class="docutils literal notranslate"><span class="pre">Slate::caselbl(labels)</span></code>. The thread’s own values are completely
+<p>Replaces the bound slate’s case labels with <code class="docutils literal notranslate"><span class="pre">labels</span></code>, used as-is — a direct
+forward to <code class="docutils literal notranslate"><span class="pre">Slate::caselbl(labels)</span></code>. The slate’s own values are completely
 unchanged; only the companion case-label sequence shown alongside them (and
 used by <a class="reference internal" href="sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort()</span></code></span></a>, <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, <a class="reference internal" href="pos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pos()</span></code></span></a>, and
 similar) is replaced.</p>
@@ -57,17 +57,17 @@ similar) is replaced.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)</p>
-<p>The replacement case labels. Must be the same length as the bound thread.</p>
+<p>The replacement case labels. Must be the same length as the bound slate.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with <code class="docutils literal notranslate"><span class="pre">labels</span></code> as its
+A new slate, holding the same values as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with <code class="docutils literal notranslate"><span class="pre">labels</span></code> as its
 case labels.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Attach text labels to a numeric thread.</p>
+<p>Example 1. Attach text labels to a numeric slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}));</span>
@@ -93,7 +93,7 @@ case labels) changed.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The thread’s own values and kind are never touched — only the case-label
+<li><p>The slate’s own values and kind are never touched — only the case-label
 companion sequence changes.</p></li>
 <li><p>Identical to calling <code class="docutils literal notranslate"><span class="pre">Slate::caselbl(labels)</span></code> directly.</p></li>
 <li><p>Unlike <code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::set</span></code>, there is no feature-promotion overload

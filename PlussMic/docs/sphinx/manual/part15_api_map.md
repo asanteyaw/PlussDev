@@ -94,13 +94,18 @@ See [Atlas API Reference](../atlas_api_reference.md).
 
 | Type | Reference |
 | --- | --- |
+| `Locus` | [Locus API Reference](../locus_api_reference.md) |
+| `LocusPull` | [LocusPull API Reference](../locus_pull_api_reference.md) |
+| `LocusQuery` | [LocusQuery API Reference](../locus_query_api_reference.md) |
+| `LocusQueryPrepared` | [LocusQueryPrepared API Reference](../locus_query_prepared_api_reference.md) |
+| `LocusTraverse` | [LocusTraverse API Reference](../locus_traverse_api_reference.md) |
 | `Nexus` | [Nexus API Reference](../nexus_api_reference.md) |
 | `NexusTraverse` | [NexusTraverse API Reference](../nexus_traverse_api_reference.md) |
 | `NexusQuery` | [NexusQuery API Reference](../nexus_query_api_reference.md) |
 
 ## Example source map
 
-| Example | What it teaches |
+| Example | What it shows |
 | --- | --- |
 | `dataframe_initial_demo.cpp` | loading, display, `head`, `tail`, `info`, `describe`, Atlas basics |
 | `dataframe_versatile_methods_demo.cpp` | query, transform, aggregate, arithmetic, missing data, casts, rolling |

@@ -77,7 +77,9 @@ namespace pluss::subsp::math::ode {
 // undefined Series if the right-hand side has no parameters the caller
 // wants gradients against (everything it needs already captured directly
 // in the closure).
-using OdeFn = std::function<Series(double, const Series&, const Series&)>;
+using OdeFn = std::function<Series(double, const Series &, const Series &)>;
+using OdeEventFn =
+    std::function<Series(double, const Series &, const Series &)>;
 
 enum class OdeMethod : std::uint8_t {
   RK4 = 0,
@@ -95,19 +97,41 @@ struct OdeResult {
   bool converged{false};
 };
 
+enum class OdeEventDirection : std::int8_t {
+  Any = 0,
+  Rising = 1,
+  Falling = -1,
+};
+
+struct OdeEventOptions {
+  OdeEventDirection direction{OdeEventDirection::Any};
+  double time_tolerance{1e-10};
+  double value_tolerance{1e-10};
+  std::int64_t max_refinements{48};
+};
+
+struct OdeEventResult : OdeResult {
+  bool triggered{false};
+  double t_final{0.0};
+  Series event_value = pluss::series::undefined();
+  std::int64_t event_evaluations{0};
+};
+
 struct OdeAdjointResult {
   Series y_final = pluss::series::undefined();
   Series grad_y0 = pluss::series::undefined();
-  Series grad_theta = pluss::series::undefined();   // undefined if `theta` was undefined
+  Series grad_theta =
+      pluss::series::undefined(); // undefined if `theta` was undefined
   std::int64_t forward_steps{0};
   std::int64_t backward_steps{0};
 };
 
 namespace detail {
 
-inline void require_defined_(const Series& x, const char* op) {
+inline void require_defined_(const Series &x, const char *op) {
   if (!x.defined()) {
-    ::pluss::throw_error(std::string("subsp::math::ode::") + op + ": expected defined Series");
+    ::pluss::throw_error(std::string("subsp::math::ode::") + op +
+                         ": expected defined Series");
   }
 }
 
@@ -115,7 +139,8 @@ inline void require_defined_(const Series& x, const char* op) {
 // f's own already-differentiable body -- no custom backward rule here
 // either, the same "compose, inherit" property everywhere else in this
 // file has).
-inline Series rk4_step_(const OdeFn& f, double t, double h, const Series& y, const Series& theta) {
+inline Series rk4_step_(const OdeFn &f, double t, double h, const Series &y,
+                        const Series &theta) {
   const Series k1 = f(t, y, theta);
   const Series k2 = f(t + h * 0.5, y.add(k1.mul(h * 0.5)), theta);
   const Series k3 = f(t + h * 0.5, y.add(k2.mul(h * 0.5)), theta);
@@ -123,12 +148,46 @@ inline Series rk4_step_(const OdeFn& f, double t, double h, const Series& y, con
   return y.add(k1.add(k2.mul(2.0)).add(k3.mul(2.0)).add(k4).mul(h / 6.0));
 }
 
-}  // namespace detail
+inline double event_scalar_(const OdeEventFn &event, double t,
+                            const Series &state, const Series &theta,
+                            Series *raw = nullptr) {
+  Series value = event(t, state, theta);
+  require_defined_(value, "fluxa_until event");
+  if (value.numel() != 1 || !value.dtype().is_floating()) {
+    ::pluss::throw_error("subsp::math::ode::fluxa_until: event must return one "
+                         "real floating value");
+  }
+  const double scalar =
+      value.to(pluss::pCPU, ScalarType::Float64).item<double>();
+  if (!std::isfinite(scalar)) {
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa_until: event returned a non-finite value");
+  }
+  if (raw)
+    *raw = std::move(value);
+  return scalar;
+}
 
-inline OdeResult fluxa(const OdeFn& f, const Series& y0, double t0, double t1, const Series& theta = pluss::series::undefined(),
-                       const OdeOptions& options = {}) {
+inline bool crosses_(double left, double right, OdeEventDirection direction) {
+  switch (direction) {
+  case OdeEventDirection::Rising:
+    return left < 0.0 && right >= 0.0;
+  case OdeEventDirection::Falling:
+    return left > 0.0 && right <= 0.0;
+  case OdeEventDirection::Any:
+    return (left < 0.0 && right >= 0.0) || (left > 0.0 && right <= 0.0);
+  }
+  return false;
+}
+
+} // namespace detail
+
+inline OdeResult fluxa(const OdeFn &f, const Series &y0, double t0, double t1,
+                       const Series &theta = pluss::series::undefined(),
+                       const OdeOptions &options = {}) {
   if (!f) {
-    ::pluss::throw_error("subsp::math::ode::fluxa: right-hand-side callback is required");
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa: right-hand-side callback is required");
   }
   detail::require_defined_(y0, "fluxa");
   if (options.steps <= 0) {
@@ -150,6 +209,104 @@ inline OdeResult fluxa(const OdeFn& f, const Series& y0, double t0, double t1, c
   return result;
 }
 
+inline OdeEventResult fluxa_until(
+    const OdeFn &f, const OdeEventFn &event, const Series &y0, double t0,
+    double t1, const Series &theta = pluss::series::undefined(),
+    const OdeOptions &options = {}, const OdeEventOptions &event_options = {}) {
+  if (!f || !event)
+    ::pluss::throw_error("subsp::math::ode::fluxa_until: derivative and event "
+                         "callbacks are required");
+  detail::require_defined_(y0, "fluxa_until");
+  if (options.steps <= 0)
+    ::pluss::throw_error("subsp::math::ode::fluxa_until: steps must be > 0");
+  if (!(event_options.time_tolerance > 0.0) ||
+      !std::isfinite(event_options.time_tolerance) ||
+      !(event_options.value_tolerance >= 0.0) ||
+      !std::isfinite(event_options.value_tolerance) ||
+      event_options.max_refinements < 0) {
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa_until: invalid event refinement options");
+  }
+
+  OdeEventResult result;
+  result.y_final = y0;
+  result.t_final = t0;
+  double left_value =
+      detail::event_scalar_(event, t0, y0, theta, &result.event_value);
+  ++result.event_evaluations;
+  if (std::abs(left_value) <= event_options.value_tolerance) {
+    result.triggered = true;
+    result.converged = true;
+    return result;
+  }
+
+  const double h = (t1 - t0) / static_cast<double>(options.steps);
+  Series left_state = y0;
+  double left_time = t0;
+  for (std::int64_t step = 0; step < options.steps; ++step) {
+    const double right_time = left_time + h;
+    Series right_state = detail::rk4_step_(f, left_time, h, left_state, theta);
+    result.function_evaluations += 4;
+    Series right_raw;
+    const double right_value = detail::event_scalar_(
+        event, right_time, right_state, theta, &right_raw);
+    ++result.event_evaluations;
+    result.steps = step + 1;
+
+    if (detail::crosses_(left_value, right_value, event_options.direction)) {
+      double lo_time = left_time;
+      double hi_time = right_time;
+      Series lo_state = left_state;
+      Series hi_state = std::move(right_state);
+      double lo_value = left_value;
+      double hi_value = right_value;
+      Series hi_raw = std::move(right_raw);
+
+      for (std::int64_t refinement = 0;
+           refinement < event_options.max_refinements &&
+           std::abs(hi_time - lo_time) > event_options.time_tolerance &&
+           std::abs(hi_value) > event_options.value_tolerance;
+           ++refinement) {
+        const double mid_time = lo_time + (hi_time - lo_time) * 0.5;
+        Series mid_state =
+            detail::rk4_step_(f, lo_time, mid_time - lo_time, lo_state, theta);
+        result.function_evaluations += 4;
+        Series mid_raw;
+        const double mid_value =
+            detail::event_scalar_(event, mid_time, mid_state, theta, &mid_raw);
+        ++result.event_evaluations;
+        if (std::abs(mid_value) <= event_options.value_tolerance ||
+            detail::crosses_(lo_value, mid_value, event_options.direction)) {
+          hi_time = mid_time;
+          hi_state = std::move(mid_state);
+          hi_value = mid_value;
+          hi_raw = std::move(mid_raw);
+        } else {
+          lo_time = mid_time;
+          lo_state = std::move(mid_state);
+          lo_value = mid_value;
+        }
+      }
+      result.y_final = std::move(hi_state);
+      result.t_final = hi_time;
+      result.event_value = std::move(hi_raw);
+      result.triggered = true;
+      result.converged = true;
+      return result;
+    }
+
+    left_time = right_time;
+    left_state = std::move(right_state);
+    left_value = right_value;
+    result.event_value = std::move(right_raw);
+  }
+
+  result.y_final = std::move(left_state);
+  result.t_final = left_time;
+  result.converged = true;
+  return result;
+}
+
 // Adjoint-sensitivity solve: forward-solves the ODE (storing the
 // trajectory's y values at every step boundary), then computes
 // d(loss)/d(y0) and, if `theta` is defined, d(loss)/d(theta) -- given a
@@ -160,10 +317,13 @@ inline OdeResult fluxa(const OdeFn& f, const Series& y0, double t0, double t1, c
 // value across multiple, separate reverse-mode passes needs the same
 // leaf-severing discipline Septima's own flatten/unflatten boundary uses,
 // PlussAI/NodeK/NN/optim/optim_base.h's `assign_parameter_`, etc.).
-inline OdeAdjointResult fluxa_adjoint(const OdeFn& f, const Series& y0, double t0, double t1, const Series& theta,
-                                     const Series& grad_y_final, const OdeOptions& options = {}) {
+inline OdeAdjointResult fluxa_adjoint(const OdeFn &f, const Series &y0,
+                                      double t0, double t1, const Series &theta,
+                                      const Series &grad_y_final,
+                                      const OdeOptions &options = {}) {
   if (!f) {
-    ::pluss::throw_error("subsp::math::ode::fluxa_adjoint: right-hand-side callback is required");
+    ::pluss::throw_error("subsp::math::ode::fluxa_adjoint: right-hand-side "
+                         "callback is required");
   }
   detail::require_defined_(y0, "fluxa_adjoint");
   detail::require_defined_(grad_y_final, "fluxa_adjoint");
@@ -195,7 +355,8 @@ inline OdeAdjointResult fluxa_adjoint(const OdeFn& f, const Series& y0, double t
 
   // Backward pass.
   Series a = grad_y_final;
-  Series theta_grad = pluss::series::undefined();  // accumulated lazily; stays undefined if !has_theta
+  Series theta_grad = pluss::series::undefined(); // accumulated lazily; stays
+                                                  // undefined if !has_theta
   double t = t1;
   for (std::int64_t i = options.steps; i > 0; --i) {
     t -= h;
@@ -210,7 +371,8 @@ inline OdeAdjointResult fluxa_adjoint(const OdeFn& f, const Series& y0, double t
     if (has_theta) {
       Series theta_leaf = theta.detach();
       pluss::codem::series_tape::clear_source_link(theta_leaf);
-      ttheta = pluss::subsp::math::diff::trace(theta_leaf, /*tracks_slope=*/true);
+      ttheta =
+          pluss::subsp::math::diff::trace(theta_leaf, /*tracks_slope=*/true);
       theta_tracked = ttheta.value();
     }
 
@@ -229,4 +391,4 @@ inline OdeAdjointResult fluxa_adjoint(const OdeFn& f, const Series& y0, double t
   return result;
 }
 
-}  // namespace pluss::subsp::math::ode
+} // namespace pluss::subsp::math::ode

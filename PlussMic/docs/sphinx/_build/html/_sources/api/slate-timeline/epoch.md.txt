@@ -12,7 +12,7 @@ SlateTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with its Unix epoch value in `unit`, as a numeric
+Replaces the bound slate with its Unix epoch value in `unit`, as a numeric
 `Series`.
 
 ## Parameters
@@ -27,7 +27,7 @@ a fixed epoch count) throws.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread,
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
     holding each row's epoch count in `unit`.
 
 ## Examples
@@ -97,9 +97,9 @@ outright — see [`span()`](span.md) for the method that does accept it.
 - The default unit is `Nanos`, not `Seconds`.
 - Only fixed-duration units are accepted (`Nanos`/`Micros`/`Millis`/`Seconds`/
   `Days`); passing `Weeks`, `Months`, `Years`, or `BusinessDays` throws.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A `NaT` row (or one already null on the underlying thread) displays as
+- A `NaT` row (or one already null on the underlying slate) displays as
   `"NULL"`, not a sentinel epoch value.
 
 ## See Also

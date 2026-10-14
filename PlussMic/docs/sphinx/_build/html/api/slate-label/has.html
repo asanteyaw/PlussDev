@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,11 +52,11 @@
 <p>Two unrelated questions share this name:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">has()</span></code></strong> (no arguments) answers a structural question: have case labels
-ever been explicitly attached to this thread (via <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a> or a
+ever been explicitly attached to this slate (via <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a> or a
 derived operation), as opposed to still sitting at the default integer
 range? A direct forward to <code class="docutils literal notranslate"><span class="pre">Slate::has_caselbl()</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">has(values)</span></code></strong> answers an elementwise membership question over the
-<strong>case labels themselves</strong> (not the thread’s own data): for each row, is
+<strong>case labels themselves</strong> (not the slate’s own data): for each row, is
 its case label equal to <em>any</em> of <code class="docutils literal notranslate"><span class="pre">values</span></code>? The result keeps the same case
 labels as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, <code class="docutils literal notranslate"><span class="pre">display_name</span></code> <code class="docutils literal notranslate"><span class="pre">&quot;has&quot;</span></code>.</p></li>
 </ul>
@@ -72,7 +72,7 @@ against all of them.</p>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
 (No-argument overload) Whether case labels have been explicitly set.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-(<code class="docutils literal notranslate"><span class="pre">values</span></code>-taking overload) A <code class="docutils literal notranslate"><span class="pre">Bool</span></code> thread, one entry per row, with the
+(<code class="docutils literal notranslate"><span class="pre">values</span></code>-taking overload) A <code class="docutils literal notranslate"><span class="pre">Bool</span></code> slate, one entry per row, with the
 same case labels as <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
 <section id="examples">
@@ -123,7 +123,7 @@ values.</p>
 <ul class="simple">
 <li><p>The no-argument overload is purely structural — it says nothing about
 whether any particular label value is present.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">has(values)</span></code> tests the case labels, not the thread’s own data — for a
+<li><p><code class="docutils literal notranslate"><span class="pre">has(values)</span></code> tests the case labels, not the slate’s own data — for a
 membership test over the data itself, use <code class="docutils literal notranslate"><span class="pre">Slate::has()</span></code> directly.</p></li>
 <li><p>Identical to calling <code class="docutils literal notranslate"><span class="pre">Slate::has_caselbl()</span></code> (no-argument overload)
 directly.</p></li>

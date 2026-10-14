@@ -13,7 +13,7 @@ SlateLabelAccessor::pos(std::string_view value) const -> Slate
 
 ## What It Does
 
-Returns **every** position where the bound thread's case label equals
+Returns **every** position where the bound slate's case label equals
 `value`. Throws if `value` never occurs. Unlike [`find()`](find.md), which
 returns only the first match for each of several targets, `pos()` returns
 *all* matches for a single target.

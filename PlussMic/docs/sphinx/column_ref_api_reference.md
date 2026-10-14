@@ -180,7 +180,7 @@ ColumnRef::slate() -> const Slate&
 
 #### What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns the referenced column as a `Slate` object.
 
 #### Parameters
 

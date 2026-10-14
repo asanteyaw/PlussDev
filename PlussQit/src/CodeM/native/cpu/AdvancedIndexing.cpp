@@ -54,7 +54,7 @@ static void copy_into(Series& dst, const Series& src) {
     return;
   }
 
-  // Generic strided copy (nd <= 7)
+  // Generic strided copy over dynamically sized metadata.
   const auto nd = (std::int64_t)dst.dim();
   PLUSS_CHECK(nd == (std::int64_t)src.dim(), "copy_into: dim mismatch");
   for (std::int64_t d=0; d<nd; ++d) {
@@ -362,7 +362,7 @@ static void lin_to_idx(std::int64_t lin, std::span<const std::int64_t> shape, st
   }
 }
 
-static inline void add_inplace_at(
+void add_inplace_at(
     ScalarType st,
     std::byte* dst_raw,
     const std::byte* src_raw,

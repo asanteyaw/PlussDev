@@ -54,10 +54,12 @@ static void unary_apply(const Series& a, Series& out, Fn&& fn) {
   }
 
 // psi(x) = d/dx ln|Gamma(x)|. Reflection for x <= 0, upward recurrence to the
-// asymptotic-series regime (x >= 6), then the standard Bernoulli tail. Poles at
-// 0 and the negative integers return NaN; NaN in maps to NaN out.
+// asymptotic-series regime (x >= 6), then the standard Bernoulli tail. The pole
+// at zero is signed like libtorch/SciPy (psi(+0) = -inf, psi(-0) = +inf);
+// negative integers return NaN; NaN in maps to NaN out.
 static double digamma_real_(double x) {
   if (std::isnan(x)) return x;
+  if (x == 0.0) return std::copysign(std::numeric_limits<double>::infinity(), -x);
   if (x <= 0.0) {
     const double frac = x - std::floor(x);
     if (frac == 0.0) return std::numeric_limits<double>::quiet_NaN();

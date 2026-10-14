@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,8 +52,8 @@
 <p>Exposes the underlying <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code> payload directly, by reference — the numeric escape
 hatch for when you need the full <code class="docutils literal notranslate"><span class="pre">Series</span></code> surface (native reductions, elementwise
 arithmetic, kernels that live below the table layer) rather than the curated subset
-<code class="docutils literal notranslate"><span class="pre">Slate</span></code> re-exposes as its own methods. Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind; calling it
-on a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread throws.</p>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> re-exposes as its own methods. Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind; calling it
+on a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> slate throws.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Returns a reference, not a copy — and does not rewrap into Slate
@@ -93,7 +93,7 @@ stays alive.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Calling <code class="docutils literal notranslate"><span class="pre">as_series()</span></code> on a non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread throws.</p>
+<p>Example 2. Calling <code class="docutils literal notranslate"><span class="pre">as_series()</span></code> on a non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">as_series</span><span class="p">();</span>
@@ -113,7 +113,7 @@ ptype: Series
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Returns a reference into the thread’s own storage — no copy, no allocation.</p></li>
+<li><p>Returns a reference into the slate’s own storage — no copy, no allocation.</p></li>
 <li><p>Requires <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind; throws on every other payload kind.</p></li>
 <li><p>The result does not automatically become a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> again — wrap it explicitly with
 <code class="docutils literal notranslate"><span class="pre">Slate(...)</span></code> when a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-only API needs it back.</p></li>

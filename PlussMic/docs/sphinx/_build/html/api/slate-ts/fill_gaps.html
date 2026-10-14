@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Fills missing entries in the bound thread using one of four strategies:</p>
+<p>Fills missing entries in the bound slate using one of four strategies:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">GapFillMode::Forward</span></code></strong> (the default): each missing position takes the
 nearest <strong>prior</strong> real value.</p></li>
@@ -73,7 +73,7 @@ required (throws if absent) when <code class="docutils literal notranslate"><spa
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as the bound source, with gaps filled per <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+A new slate, same length as the bound source, with gaps filled per <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -191,7 +191,7 @@ inventing a value — see Example 4.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GapFillMode::Constant</span></code> throws
 <code class="docutils literal notranslate"><span class="pre">&quot;subsp::stats::ts::fill_gaps:</span> <span class="pre">constant</span> <span class="pre">mode</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">value&quot;</span></code> if <code class="docutils literal notranslate"><span class="pre">constant</span></code>
 is absent.</p></li>
-<li><p>A pre-existing missing entry in the source thread is what gets filled — this
+<li><p>A pre-existing missing entry in the source slate is what gets filled — this
 method is specifically about closing gaps the mask already marks, not about
 detecting new ones.</p></li>
 </ul>
@@ -199,7 +199,7 @@ detecting new ones.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/ffill.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::ffill</span></code></span></a>, <a class="reference internal" href="#../thread/bfill.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::bfill</span></code></span></a>:
+<li><p><a class="reference internal" href="../slate/ffill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::ffill</span></code></span></a>, <a class="reference internal" href="../slate/bfill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::bfill</span></code></span></a>:
 the equivalent top-level operations outside the <code class="docutils literal notranslate"><span class="pre">ts()</span></code> accessor, with the same
 forward/backward semantics.</p></li>
 <li><p><a class="reference internal" href="align_to.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::align_to</span></code></span></a>: aligning onto a different time

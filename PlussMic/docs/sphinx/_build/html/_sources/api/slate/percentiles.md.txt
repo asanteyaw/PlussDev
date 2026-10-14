@@ -14,11 +14,11 @@ Slate::percentiles(pluss::RangeView<double> points = {0.25, 0.5, 0.75}, std::int
 ## What It Does
 
 Computes the value at each requested fractional position (`0.0` = minimum,
-`1.0` = maximum, `0.5` = median) among the thread's observed values, using the
+`1.0` = maximum, `0.5` = median) among the slate's observed values, using the
 same linear-interpolation-between-ranks convention as
 [`describe()`'s](describe.md) `25%`/`50%`/`75%` rows and
 [`median()`](median.md). Missing entries are dropped first (via
-[`dropnull()`](dropnull.md)). Returns a new thread — one entry per requested
+[`dropnull()`](dropnull.md)). Returns a new slate — one entry per requested
 point, in the order given — rather than a scalar `SlateValue`, so the
 `0.5` point (for example) computes exactly the same value
 [`median()`](median.md) would.
@@ -41,7 +41,7 @@ like any other missing entry.
 ## Returns
 
 `Slate`
-    A new thread, one entry per requested point (in the order given), holding
+    A new slate, one entry per requested point (in the order given), holding
     the interpolated value at each fractional position.
 
 ## Examples

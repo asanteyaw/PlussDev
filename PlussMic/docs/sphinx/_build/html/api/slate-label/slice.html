@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -60,7 +60,7 @@ both ends. If either value never occurs, or <code class="docutils literal notran
 after <code class="docutils literal notranslate"><span class="pre">stop</span></code>’s, it throws.</p></li>
 </ul>
 <p>Both overloads return the sliced case-label <strong>values</strong> as a bare <code class="docutils literal notranslate"><span class="pre">Slate</span></code> —
-not the bound thread’s own data.</p>
+not the bound slate’s own data.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -157,7 +157,7 @@ throws instead of silently returning nothing.</p>
 <li><p>The label-value overload’s <code class="docutils literal notranslate"><span class="pre">stop</span></code> bound is the <strong>last</strong>, not first,
 occurrence of that value — worth checking carefully when the slice value
 itself repeats, as in Example 2.</p></li>
-<li><p>Both overloads return values only, not the bound thread’s own data — pair
+<li><p>Both overloads return values only, not the bound slate’s own data — pair
 with <a class="reference internal" href="pos.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pos()</span></code></span></a>/<a class="reference internal" href="find.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">find()</span></code></span></a> and <code class="docutils literal notranslate"><span class="pre">Slate::take</span></code> if the
 corresponding data rows are needed instead.</p></li>
 </ul>

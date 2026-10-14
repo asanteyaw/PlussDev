@@ -37,8 +37,8 @@ Converts or reinterprets the current payload as another public Pluss type so dow
 Example 1. Convert the current object into the `duration` representation before continuing with another type-specific workflow.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.as_duration();
 ```
@@ -81,8 +81,8 @@ Converts the wrapped scalar-like value into a `pluss::Note`.
 Example 1. Convert the current object into the `note` representation before continuing with another type-specific workflow.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_note({"Accra"}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_note({"Accra"}));
+auto value = slate.value();
 
 auto out = value.as_note();
 ```
@@ -129,8 +129,8 @@ Converts the wrapped scalar-like value into a `pluss::Series`.
 Example 1. Convert the current object into the `series` representation before continuing with another type-specific workflow.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.as_series();
 ```
@@ -177,8 +177,8 @@ Converts the wrapped scalar-like value into a `pluss::Timeline`.
 Example 1. Convert the current object into the `timeline` representation before continuing with another type-specific workflow.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_timeline({"2024-01-01T09:10:00Z"}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_timeline({"2024-01-01T09:10:00Z"}));
+auto value = slate.value();
 
 auto out = value.as_timeline();
 ```
@@ -227,8 +227,8 @@ Reports whether the current object owns a concrete payload that can be used safe
 Example 1. Inspect the `defined` property of the current object.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.defined();
 ```
@@ -277,8 +277,8 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.host();
 ```
@@ -311,7 +311,7 @@ SlateValue::kind() -> SlateKind
 
 #### What It Does
 
-Returns the underlying thread kind carried by this value wrapper.
+Returns the underlying slate kind carried by this value wrapper.
 
 #### Parameters
 
@@ -327,8 +327,8 @@ Returns the underlying thread kind carried by this value wrapper.
 Example 1. Inspect the `kind` property of the current object.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.kind();
 ```
@@ -377,8 +377,8 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.payload();
 ```
@@ -425,8 +425,8 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.pluss::Duration();
 ```
@@ -473,8 +473,8 @@ Uses the implicit conversion operator to materialize the wrapped value as a `plu
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.pluss::Note();
 ```
@@ -521,8 +521,8 @@ Uses the implicit conversion operator to materialize the wrapped value as a `plu
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.pluss::Series();
 ```
@@ -569,8 +569,8 @@ Uses the implicit conversion operator to materialize the wrapped value as a `plu
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.pluss::Timeline();
 ```
@@ -603,7 +603,7 @@ SlateValue::slate() -> const Slate&
 
 #### What It Does
 
-Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+Returns the wrapped single-value `Slate` object.
 
 #### Parameters
 
@@ -619,8 +619,8 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.slate();
 ```
@@ -669,8 +669,8 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.to_dbl();
 ```
@@ -717,8 +717,8 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.to_int();
 ```
@@ -765,8 +765,8 @@ Uses the public contract shown above to inspect, transform, summarize, or combin
 Example 1. Call the simplest overload.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0}));
-auto value = thread.value();
+auto slate = pluss::table::Slate(pluss::make_series({10.0}));
+auto value = slate.value();
 
 auto out = value.to_str();
 ```

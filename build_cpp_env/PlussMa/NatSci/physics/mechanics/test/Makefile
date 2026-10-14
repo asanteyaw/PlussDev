@@ -206,6 +206,20 @@ mechanics_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/mechanics_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/mechanics_test.dir/build
 .PHONY : mechanics_test/fast
 
+# Convenience name for target.
+PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/rule
+.PHONY : PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/rule
+
+# Convenience name for target.
+variational_test: PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/rule
+.PHONY : variational_test
+
+# fast build rule for target.
+variational_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/build
+.PHONY : variational_test/fast
+
 mechanics_test.o: mechanics_test.cpp.o
 .PHONY : mechanics_test.o
 
@@ -230,6 +244,30 @@ mechanics_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/mechanics_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/mechanics_test.dir/mechanics_test.cpp.s
 .PHONY : mechanics_test.cpp.s
 
+variational_test.o: variational_test.cpp.o
+.PHONY : variational_test.o
+
+# target to build an object file
+variational_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/variational_test.cpp.o
+.PHONY : variational_test.cpp.o
+
+variational_test.i: variational_test.cpp.i
+.PHONY : variational_test.i
+
+# target to preprocess a source file
+variational_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/variational_test.cpp.i
+.PHONY : variational_test.cpp.i
+
+variational_test.s: variational_test.cpp.s
+.PHONY : variational_test.s
+
+# target to generate assembly for a file
+variational_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/build.make PlussMa/NatSci/physics/mechanics/test/CMakeFiles/variational_test.dir/variational_test.cpp.s
+.PHONY : variational_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,9 +284,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... mechanics_test"
+	@echo "... variational_test"
 	@echo "... mechanics_test.o"
 	@echo "... mechanics_test.i"
 	@echo "... mechanics_test.s"
+	@echo "... variational_test.o"
+	@echo "... variational_test.i"
+	@echo "... variational_test.s"
 .PHONY : help
 
 

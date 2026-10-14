@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+#include <complex>
 #include <cstdint>
 #include <vector>
 
@@ -32,16 +33,17 @@ TEST_CASE("expand_like and repeat_like", "[shape]") {
   const auto expanded = scalar.expand_like(like);
   REQUIRE(expanded.sizes()[0] == 2);
   REQUIRE(expanded.sizes()[1] == 6);
-  REQUIRE(expanded.scalar_type() == ScalarType::Int64);
-  REQUIRE(expanded.to_vec<std::int64_t>() == std::vector<std::int64_t>{7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7});
+  // std::vector<int> leaves are int32; expand_like and repeat_like keep the dtype.
+  REQUIRE(expanded.scalar_type() == ScalarType::Int32);
+  REQUIRE(expanded.to_vec<std::int32_t>() == std::vector<std::int32_t>{7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7});
 
   const auto base = pluss::make_series(std::vector<int>{1, 2, 3}, {3});
   const auto repeated = base.repeat_like(like);
   REQUIRE(repeated.sizes()[0] == 2);
   REQUIRE(repeated.sizes()[1] == 6);
-  REQUIRE(repeated.scalar_type() == ScalarType::Int64);
-  REQUIRE(repeated.to_vec<std::int64_t>() ==
-          std::vector<std::int64_t>{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3});
+  REQUIRE(repeated.scalar_type() == ScalarType::Int32);
+  REQUIRE(repeated.to_vec<std::int32_t>() ==
+          std::vector<std::int32_t>{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3});
 
   const auto bad_like = pluss::series::rand({2, 5}, ScalarType::Float32, 11);
   REQUIRE_THROWS(base.repeat_like(bad_like));
@@ -98,4 +100,63 @@ TEST_CASE("root rearrangement methods preserve their documented axes", "[shape]"
   REQUIRE(table.roll(-1, 1).to_vec<std::int64_t>() == std::vector<std::int64_t>{2, 3, 1, 5, 6, 4});
   REQUIRE(table.rot90().to_vec<std::int64_t>() == std::vector<std::int64_t>{3, 6, 2, 5, 1, 4});
   REQUIRE_THROWS(table.roll({1, 2}));
+}
+
+namespace {
+
+// Independent reference: out[j] = in[(j - shift) mod n] through index_select.
+Series roll_reference(const Series &x, std::int64_t shift, std::int64_t dim) {
+  const std::int64_t n = x.size(dim);
+  if (n <= 1) return x;
+  std::vector<std::int64_t> index(static_cast<std::size_t>(n));
+  for (std::int64_t j = 0; j < n; ++j)
+    index[static_cast<std::size_t>(j)] = (((j - shift) % n) + n) % n;
+  return x.index_select(
+      dim, pluss::make_series(index, {n}).to(ScalarType::Int64));
+}
+
+} // namespace
+
+TEST_CASE("roll matches an index_select reference across shapes, dims, shifts and dtypes", "[shape][roll]") {
+  const std::vector<std::vector<std::int64_t>> shapes{{5}, {3, 4}, {2, 3, 4}, {4, 1, 3}, {2, 0, 3}};
+  for (const auto &shape : shapes) {
+    std::int64_t numel = 1;
+    for (const auto extent : shape) numel *= extent;
+    std::vector<double> values(static_cast<std::size_t>(numel));
+    for (std::size_t i = 0; i < values.size(); ++i) values[i] = static_cast<double>(i) * 0.5 - 3.0;
+    const Series base = pluss::make_series(values, shape).to(ScalarType::Float64);
+    for (std::int64_t dim = -static_cast<std::int64_t>(shape.size());
+         dim < static_cast<std::int64_t>(shape.size()); ++dim) {
+      const std::int64_t axis = dim < 0 ? dim + static_cast<std::int64_t>(shape.size()) : dim;
+      for (const std::int64_t shift : {0, 1, 2, -1, -3, 7, 100, -100}) {
+        const Series got = base.roll(shift, dim);
+        const Series want = roll_reference(base, shift, axis);
+        REQUIRE(got.sizes() == base.sizes());
+        REQUIRE(got.equal(want));
+      }
+    }
+  }
+
+  // Non-contiguous input, integer, boolean and complex payloads (byte copies).
+  const Series transposed = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3})
+                                .to(ScalarType::Float64).transpose(0, 1);
+  REQUIRE(!transposed.is_contiguous());
+  REQUIRE(transposed.roll(1, 0).equal(roll_reference(transposed, 1, 0)));
+  REQUIRE(transposed.roll(-1, 1).equal(roll_reference(transposed, -1, 1)));
+  const Series ints = pluss::make_series(std::vector<std::int32_t>{1, 2, 3, 4}, {4});
+  REQUIRE(ints.roll(1, 0).to_vec<std::int32_t>() == std::vector<std::int32_t>{4, 1, 2, 3});
+  const Series flags = pluss::make_series(std::vector<double>{1, 0, 0}, {3}).to(ScalarType::Bool);
+  REQUIRE(flags.roll(1, 0).to(ScalarType::Float64).to_vec<double>() == std::vector<double>{0, 1, 0});
+  const Series z = pluss::make_series(std::vector<std::complex<double>>{{1, 2}, {3, 4}, {5, 6}}, {3});
+  REQUIRE(z.roll(1, 0).to_vec<std::complex<double>>() ==
+          std::vector<std::complex<double>>{{5, 6}, {1, 2}, {3, 4}});
+}
+
+TEST_CASE("roll reverse routes the sensitivity back by the opposite shift", "[shape][roll][autodiff]") {
+  Series x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5}, {5}).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Series weights = pluss::make_series(std::vector<double>{10, 20, 30, 40, 50}, {5}).to(ScalarType::Float64);
+  x.roll(2, 0).mul(weights).sum().reverse();
+  // out[j] = x[(j-2) mod 5] => d/dx[i] = weights[(i+2) mod 5]
+  REQUIRE(x.sensitivity().to_vec<double>() == std::vector<double>{30, 40, 50, 10, 20});
 }

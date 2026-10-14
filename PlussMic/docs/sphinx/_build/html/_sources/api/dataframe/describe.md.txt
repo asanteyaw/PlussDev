@@ -181,7 +181,7 @@ unassigned call would produce no output.
   instead of the full table.
 - [`DataFrame::corr`](corr.md): pairwise correlation between numeric features, a
   natural next step after `describe()`.
-- [`Slate::describe`](../thread/describe.md): the same summary for one already-extracted
+- [`Slate::describe`](../slate/describe.md): the same summary for one already-extracted
   feature.
 
 <div class="pluss-inline-prev-next">

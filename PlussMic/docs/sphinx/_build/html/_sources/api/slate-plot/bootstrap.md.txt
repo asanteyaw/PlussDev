@@ -13,14 +13,14 @@ SlatePlotAccessor::bootstrap(const BootstrapPlotOptions& options = {}) const -> 
 
 ## What It Does
 
-Draws a bootstrap sampling-distribution plot for the bound thread's values — the
+Draws a bootstrap sampling-distribution plot for the bound slate's values — the
 single-series specialization of
 [`DataFramePlotAccessor::bootstrap`](../../api/dataframe-plot/bootstrap.md), which on the
-2D accessor requires naming a feature; here the bound thread is always the one and only
+2D accessor requires naming a feature; here the bound slate is always the one and only
 feature bootstrapped.
 
 ```{note} At least two data points are required
-Same as the 2D accessor: a thread with fewer than two rows throws
+Same as the 2D accessor: a slate with fewer than two rows throws
 `"flash::bootstrapplot requires at least two points"`.
 ```
 
@@ -70,7 +70,7 @@ chart.show();
 
 ## Notes
 
-- The bound thread is always the single bootstrapped feature — there is no feature-name
+- The bound slate is always the single bootstrapped feature — there is no feature-name
   argument the way the 2D accessor's `bootstrap()` has.
 - `samples` is floored to `8`; `bins` is floored to `4`.
 - `seed` makes the resampling fully deterministic and reproducible across runs.

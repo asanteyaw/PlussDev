@@ -12,19 +12,19 @@ SlateNoteAccessor::matches(std::string_view pattern, bool full = false) const ->
 
 ## What It Does
 
-Checks each cell of the bound thread against a regular expression, replacing each
-cell with a `Bool`. Unlike [`Slate::matches()`](../thread/matches.md) (which always
+Checks each cell of the bound slate against a regular expression, replacing each
+cell with a `Bool`. Unlike [`Slate::matches()`](../slate/matches.md) (which always
 does a start-anchored, prefix-only search), this accessor method adds a `full`
 switch that dispatches between the two related checks:
 
 - **`full = false`** (the default): a **start-anchored search**, not a full-string
   match — reports `true` as soon as `pattern` matches a *prefix* of the cell's text.
-  Internally forwards to [`Slate::matches(pattern)`](../thread/matches.md).
+  Internally forwards to [`Slate::matches(pattern)`](../slate/matches.md).
 - **`full = true`**: requires `pattern` to consume the **entire** cell's text.
-  Internally forwards to [`Slate::fullmatch(pattern)`](../thread/fullmatch.md) —
+  Internally forwards to [`Slate::fullmatch(pattern)`](../slate/fullmatch.md) —
   identical to calling [`fullmatch()`](fullmatch.md) directly.
 
-Requires the bound thread to be `Note`-kind.
+Requires the bound slate to be `Note`-kind.
 
 ## Parameters
 
@@ -40,7 +40,7 @@ When `true`, require the pattern to match the whole cell (equivalent to calling
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread, holding the
+    A new `Bool`-typed `Series` slate, same length as the bound slate, holding the
     elementwise match result.
 
 ## Examples
@@ -89,7 +89,7 @@ ptype: Series
 
 Identical to calling `codes.nt().fullmatch("SKU-[0-9]{2}")` directly.
 
-Example 3. A non-`Note` thread throws.
+Example 3. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -118,7 +118,7 @@ Slate::matches: expected Note payload
 
 ## See Also
 
-- [`Slate::matches`](../thread/matches.md): the direct, non-accessor form, which has
+- [`Slate::matches`](../slate/matches.md): the direct, non-accessor form, which has
   no `full` parameter and always does the prefix-only check.
 - [`SlateNoteAccessor::fullmatch`](fullmatch.md): the same operation as
   `matches(pattern, true)`, under its own dedicated name.

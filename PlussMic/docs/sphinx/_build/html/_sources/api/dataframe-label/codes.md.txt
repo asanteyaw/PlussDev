@@ -17,7 +17,7 @@ Factorizes the case labels into integer codes, in first-occurrence order (the
 first distinct value seen gets code `0`, the next new value gets `1`, and so
 on). For a structured (multi-level) frame, each level is factorized
 **independently**, producing one integer column per level. For an unstructured
-frame, the whole flat case-label thread is factorized into a single `label`
+frame, the whole flat case-label slate is factorized into a single `label`
 column.
 
 ## Returns
@@ -106,7 +106,7 @@ r4   | 3
 `tagged`'s case labels came from `set(const Slate&)` — the raw-axis overload,
 which never populates `case_axis_` — so `.label().has()` is `false` here, and
 `codes()` takes the unstructured branch: one column, always named `"label"`,
-factorizing the whole flat thread. Contrast with a frame built by promoting a
+factorizing the whole flat slate. Contrast with a frame built by promoting a
 *named* feature (like `set("region")`), which — even with only one promoted
 name — still creates a genuine one-level `case_axis_`, so `codes()` takes the
 structured branch instead and names the column after that level (`"region"`,

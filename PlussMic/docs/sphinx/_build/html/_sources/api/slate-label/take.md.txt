@@ -14,7 +14,7 @@ SlateLabelAccessor::take(pluss::msharp::RangeView::Int indices) const -> Slate
 
 Selects case-label values at the given positions, in the order given —
 positions may repeat or appear out of order. Returns the selected **values**
-as a bare `Slate`, not the bound thread's own data at those positions.
+as a bare `Slate`, not the bound slate's own data at those positions.
 
 ## Parameters
 
@@ -58,7 +58,7 @@ doesn't appear.
 ## Notes
 
 - Returns the case-label **values** only — if the matching data rows are
-  needed, call `Slate::take` on the bound thread itself with the same
+  needed, call `Slate::take` on the bound slate itself with the same
   indices.
 - Positions may repeat; there's no requirement that `indices` be sorted or
   unique.

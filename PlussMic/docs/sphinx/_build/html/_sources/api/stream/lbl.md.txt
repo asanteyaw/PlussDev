@@ -143,7 +143,7 @@ original stream's own data, untouched. See
 
 Example 4. `align(target_labels, options)` reorders/relabels by case label under
 `AlignBy::Caselbl`. An unmatched target label produces `NULL` unless `options.fill` is set
-— identical rules to [`Slate::align`](../thread/align.md), applied through the label
+— identical rules to [`Slate::align`](../slate/align.md), applied through the label
 accessor.
 
 ```cpp
@@ -208,7 +208,7 @@ d            | -1
 
 Example 6. The default `AlignBy::Pos` ignores `target_labels` for relabeling entirely —
 only its length is checked. The stream's own current values and labels pass through
-unchanged, exactly as documented for [`Slate::align`](../thread/align.md).
+unchanged, exactly as documented for [`Slate::align`](../slate/align.md).
 
 ```cpp
 using pluss::table::Slate;
@@ -248,7 +248,7 @@ c            | 30
 - `set()`/`align()` both overload on `Stream` vs `Slate` — see the second important
   callout above for the `make_note(...)` ambiguity gotcha.
 - `align()` follows exactly the same `AlignBy`/`AlignOptions` rules as
-  [`Slate::align`](../thread/align.md); see that page for the full breakdown of
+  [`Slate::align`](../slate/align.md); see that page for the full breakdown of
   `Caselbl`/`Feature`/`Both` (note `Both` is rejected for a single `Stream`, same as for
   `Slate`).
 
@@ -260,7 +260,7 @@ c            | 30
   narrower set-only surface, equivalent to `lbl().set()` but strict about length matching.
 - [`Stream::clear_label`](clear_label.md) / [`Stream::clear_label_`](clear_label_.md):
   equivalent to `lbl().reset()`, reached through the plain getter/setter surface.
-- [`Slate::align`](../thread/align.md): the underlying single-column alignment semantics
+- [`Slate::align`](../slate/align.md): the underlying single-column alignment semantics
   this accessor's `align()` follows.
 
 <div class="pluss-inline-prev-next">

@@ -14,8 +14,8 @@ Slate::strip(std::string_view chars) const -> Slate
 
 ## What It Does
 
-Trims characters from both ends of a `Note` (string) thread's cells. Requires the
-thread to be `Note`-kind. Two distinct trimming policies:
+Trims characters from both ends of a `Note` (string) slate's cells. Requires the
+slate to be `Note`-kind. Two distinct trimming policies:
 
 - **No-argument overload**: trims the classic ASCII whitespace set — space, tab,
   newline, carriage return, form feed, vertical tab — from both ends of each cell.
@@ -34,7 +34,7 @@ The set of characters to strip from each cell's edges. Order doesn't matter.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, with each cell's text trimmed.
+    A new `Note`-kind slate, same length as `*this`, with each cell's text trimmed.
 
 ## Examples
 
@@ -83,7 +83,7 @@ character still gets stripped: `[`, `]`, `(`, and `)` are each individually memb
 of the `chars` set, so `strip("[]()")` peels off `[[[` from the front and `]]]`
 from the back, one character at a time, stopping the instant it reaches `S` or `1`.
 
-Example 3. A non-`Note` thread throws.
+Example 3. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));

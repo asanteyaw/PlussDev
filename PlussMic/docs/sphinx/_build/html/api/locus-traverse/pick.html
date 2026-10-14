@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LocusTraverse::pick &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="LocusTraverse::via" href="via.html" />
+    <link rel="prev" title="LocusTraverse::options" href="options.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locustraverse-pick">
+<h1>LocusTraverse::pick<a class="headerlink" href="#locustraverse-pick" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_traverse_api_reference.html"><span class="doc std std-doc">Back to LocusTraverse API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LocusTraverse</span><span class="w"> </span><span class="n">LocusTraverse</span><span class="o">::</span><span class="n">pick</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">LocusTraverse</span><span class="w"> </span><span class="n">LocusTraverse</span><span class="o">::</span><span class="n">pick</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="selecting-the-final-schema">
+<h2>Selecting The Final Schema<a class="headerlink" href="#selecting-the-final-schema" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pick()</span></code> records the exact streams and stream order wanted from the final
+materialized traversal. It is a positive projection: streams not named are
+excluded. Use <a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a> when nearly every stream is wanted and naming
+the exclusions is clearer.</p>
+<p>The initializer-list overload is intended for fixed names at the call site. The
+vector overload accepts names discovered at runtime. Both copy their names into
+the returned builder, so a temporary vector or temporary strings are safe.</p>
+<p>Selection occurs after all joins. A name may therefore refer to a stream added
+by a later <code class="docutils literal notranslate"><span class="pre">join()</span></code> or <code class="docutils literal notranslate"><span class="pre">via()</span></code>, and it may need the right-side suffix chosen for
+a collision. This also means <code class="docutils literal notranslate"><span class="pre">pick()</span></code> is not a request to avoid materializing
+unselected join streams.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pick()</span></code> replaces an earlier pick list. It does not append or intersect with it.
+When <code class="docutils literal notranslate"><span class="pre">drop()</span></code> is also set, the picked schema is formed first and the drop list is
+then applied. The explicit order of <code class="docutils literal notranslate"><span class="pre">features</span></code> becomes output stream order.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><strong>features</strong></dt><dd><p>Ordered final stream names. Each name must be non-empty and may appear only
+once in a call. An empty list is valid and produces a defined, empty Catalog
+when collected.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code></dt><dd><p>A new builder with its pick list replaced. The source builder and captured
+Locus are unchanged; no stream values are read.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>All outputs are emitted by
+<code class="docutils literal notranslate"><span class="pre">PlussMic/examples/bundle/locus_traverse_reference_demo.cpp</span></code>.</p>
+<p>Example 1. The literal overload can select streams from both sides of a join.
+The requested order becomes Catalog key order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_keys</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[name, order_id] rows=4
+</pre></div>
+</div>
+<p>Example 2. The vector overload accepts a runtime-owned list.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;state&quot;</span><span class="p">};</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">pick</span><span class="p">(</span><span class="n">names</span><span class="p">).</span><span class="n">collect</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[amount, state] rows=5
+</pre></div>
+</div>
+<p>Example 3. A second pick replaces the first list and establishes a new order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_keys</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;order_id&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;state&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[state, amount] rows=5
+</pre></div>
+</div>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">drop()</span></code> runs after <code class="docutils literal notranslate"><span class="pre">pick()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_keys</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;state&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">drop</span><span class="p">({</span><span class="s">&quot;state&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id] rows=5
+</pre></div>
+</div>
+<p>Example 5. Empty selection is defined and explicit. With no streams, the result
+has no stream from which to retain a record extent, so its row count is zero.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_keys</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">pick</span><span class="p">({}).</span><span class="n">collect</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[] rows=0
+</pre></div>
+</div>
+<p>Example 6. Structural name errors are immediate. Existence is deferred because
+the name may be introduced by a hop appended after <code class="docutils literal notranslate"><span class="pre">pick()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;duplicate&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">});</span>
+<span class="p">});</span>
+<span class="n">print_error</span><span class="p">(</span><span class="s">&quot;empty name&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">});</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">lazy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;absent&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;unknown pick built</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">print_error</span><span class="p">(</span><span class="s">&quot;unknown pick collect&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">lazy</span><span class="p">.</span><span class="n">collect</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>duplicate: LocusTraverse::pick: duplicate feature &#39;order_id&#39;
+empty name: LocusTraverse::pick: feature names cannot be empty
+unknown pick built
+unknown pick collect: Catalog::keys: unknown key &#39;absent&#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="shape-ownership-and-cost">
+<h2>Shape, Ownership, And Cost<a class="headerlink" href="#shape-ownership-and-cost" title="Link to this heading">¶</a></h2>
+<p>Picking does not alter any retained stream’s kind, values, validity, length, or
+ragged position. The output Catalog may remain ragged. The method itself copies
+only names and builder metadata. At collection, Catalog projection builds a new
+schema whose stream handles refer to the selected payloads. All joins still run
+before projection, so selecting fewer streams primarily reduces the returned
+schema, not relationship matching cost.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="options.html"><span class="label">Previous</span><span class="title">options</span></a>
+  <a class="next-link" href="via.html"><span class="label">Next</span><span class="title">via</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_traverse_api_reference.html">LocusTraverse API Reference</a><ul>
+      <li>Previous: <a href="options.html" title="previous chapter">LocusTraverse::options</a></li>
+      <li>Next: <a href="via.html" title="next chapter">LocusTraverse::via</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus-traverse/pick.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

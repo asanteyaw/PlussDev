@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,7 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the concrete dtype name of the underlying payload — one level more specific
-than <a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptype()</span></code></span></a>’s broad family name. For a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread this is
+than <a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptype()</span></code></span></a>’s broad family name. For a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate this is
 the scalar type’s own name (<code class="docutils literal notranslate"><span class="pre">&quot;float64&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, and so on); for <code class="docutils literal notranslate"><span class="pre">Note</span></code>
 it’s <code class="docutils literal notranslate"><span class="pre">&quot;utf8&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;bytes&quot;</span></code>, for byte-string payloads); for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
 it’s <code class="docutils literal notranslate"><span class="pre">&quot;datetime64[ns,</span> <span class="pre">&lt;tz&gt;]&quot;</span></code>, including the timezone.</p>
@@ -68,7 +68,7 @@ The concrete dtype name, formatted per payload kind as described above.</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. <code class="docutils literal notranslate"><span class="pre">dtype()</span></code> across the payload kinds — note how it differs from
 <a class="reference internal" href="ptype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptype()</span></code></span></a>, which would report <code class="docutils literal notranslate"><span class="pre">&quot;Series&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;Note&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;Timeline&quot;</span></code> for
-the same threads.</p>
+the same slates.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -95,12 +95,12 @@ carries the <code class="docutils literal notranslate"><span class="pre">UTC</sp
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind threads report their scalar type by name (<code class="docutils literal notranslate"><span class="pre">&quot;float64&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code>,
+<li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slates report their scalar type by name (<code class="docutils literal notranslate"><span class="pre">&quot;float64&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, etc.) — the same names <code class="docutils literal notranslate"><span class="pre">DataFrame::dtypes()</span></code> reports per feature.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads report <code class="docutils literal notranslate"><span class="pre">&quot;utf8&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;bytes&quot;</span></code> for a byte-string payload).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind threads report <code class="docutils literal notranslate"><span class="pre">&quot;datetime64[ns,</span> <span class="pre">&lt;tz&gt;]&quot;</span></code>, including the
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slates report <code class="docutils literal notranslate"><span class="pre">&quot;utf8&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;bytes&quot;</span></code> for a byte-string payload).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind slates report <code class="docutils literal notranslate"><span class="pre">&quot;datetime64[ns,</span> <span class="pre">&lt;tz&gt;]&quot;</span></code>, including the
 timezone.</p></li>
-<li><p>Calling <code class="docutils literal notranslate"><span class="pre">dtype()</span></code> on an undefined thread throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">dtype()</span></code> on an undefined slate throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">

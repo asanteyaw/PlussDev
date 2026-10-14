@@ -14,10 +14,10 @@ Slate::sum() const -> SlateValue
 ## What It Does
 
 Returns the sum of every observed (non-missing) value in a numeric `Series`
-thread, as a scalar `SlateValue`. Missing entries are excluded before the sum
+slate, as a scalar `SlateValue`. Missing entries are excluded before the sum
 is computed, not treated as zero. Restricted to `Series` payloads; every other
 kind throws, since "sum" has no defined meaning for `Note`/`Timeline`/`TimeIndex`
-data. A thread whose every entry is missing (or that is empty) also throws —
+data. A slate whose every entry is missing (or that is empty) also throws —
 there is no meaningful sum of zero observations to return.
 
 ```{note} printing a SlateValue directly
@@ -68,7 +68,7 @@ methods.
 
 ## Examples
 
-Example 1. Sum a numeric thread, extracting a clean scalar with `.to_dbl()`.
+Example 1. Sum a numeric slate, extracting a clean scalar with `.to_dbl()`.
 
 ```cpp
 using namespace pluss::table;
@@ -134,7 +134,7 @@ std::cout << out2.to_dbl();
 Only `10.0` and `30.0` (the two observed entries) contribute — `20.0` is
 excluded entirely, not counted as `0`.
 
-Example 5. A thread with no observed values throws — there is nothing to sum.
+Example 5. A slate with no observed values throws — there is nothing to sum.
 
 ```cpp
 auto all_missing = Slate(
@@ -174,7 +174,7 @@ Slate::sum is only valid for Series payload
 ## Notes
 
 - Missing entries are excluded before summing — never treated as `0`.
-- An empty thread, or one where every entry is missing, throws `"Slate::sum on
+- An empty slate, or one where every entry is missing, throws `"Slate::sum on
   an empty (all-null) selection"`.
 - Restricted to `Series` payloads; anything else throws `"Slate::sum is only
   valid for Series payload"`.

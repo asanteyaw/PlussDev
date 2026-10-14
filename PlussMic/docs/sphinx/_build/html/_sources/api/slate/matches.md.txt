@@ -13,12 +13,12 @@ Slate::matches(std::string_view pattern) const -> Slate
 
 ## What It Does
 
-Checks each cell of a `Note` (string) thread against a regular expression, replacing
+Checks each cell of a `Note` (string) slate against a regular expression, replacing
 each cell with a `Bool`. `matches()` is a **start-anchored search**, not a full-string
 match: it reports `true` as soon as `pattern` matches a *prefix* of the cell's text
 — anything left over after the match doesn't matter. For a check that requires the
 pattern to consume the entire string, see [`fullmatch()`](fullmatch.md). Requires the
-thread to be `Note`-kind.
+slate to be `Note`-kind.
 
 ## Parameters
 
@@ -30,7 +30,7 @@ A regular expression (ECMAScript-flavored, via `std::regex`). Internally,
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`, holding the
+    A new `Bool`-typed `Series` slate, same length as `*this`, holding the
     elementwise match result.
 
 ## Examples
@@ -62,7 +62,7 @@ satisfy even the two-digit prefix requirement, and comes back `false`. Compare w
 [`fullmatch()`](fullmatch.md), which requires the whole string to be consumed and
 would report `"SKU-1001"` as `false`.
 
-Example 2. A non-`Note` thread throws.
+Example 2. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -83,8 +83,8 @@ Slate::matches: expected Note payload
 ## Notes
 
 - An invalid regex pattern throws at call time (from the internal pattern
-  compilation), independent of the thread's contents.
-- Changes the thread's payload kind from `Note` to `Series` (`Bool`).
+  compilation), independent of the slate's contents.
+- Changes the slate's payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
 
 ## See Also

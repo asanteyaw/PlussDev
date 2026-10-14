@@ -19,7 +19,7 @@ Returns a copy of the bound atlas whose frames are reordered (and subset) to mat
 Frames whose depth label doesn't appear in `labels` are dropped from the result.
 
 ```{important} Throws on a target label with no match — does not fill with NULL
-Unlike [`Slate::align`](../thread/align.md) or
+Unlike [`Slate::align`](../slate/align.md) or
 [`SlateLabelAccessor::align`](../slate-label/align.md), which fill unmatched target
 positions with NULL, `AtlasLabelAccessor::align` (via
 [`Atlas::align_depth`](../atlas/align_depth.md)) **throws** if `labels` contains a value

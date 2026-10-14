@@ -12,7 +12,7 @@ SlateTimelineAccessor::year() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with its calendar year, as a numeric `Series`.
+Replaces the bound slate with its calendar year, as a numeric `Series`.
 
 ## Parameters
 
@@ -21,7 +21,7 @@ Replaces the bound thread with its calendar year, as a numeric `Series`.
 ## Returns
 
 `Slate`
-    A new `Series`-kind (`Int64`) thread, same length as the bound thread,
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
     holding each row's calendar year.
 
 ## Examples
@@ -52,13 +52,13 @@ ptype: Series
 
 ## Notes
 
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
-- A row whose underlying timestamp is `NaT` (or whose thread already carries a
+- A row whose underlying timestamp is `NaT` (or whose slate already carries a
   null mask) displays as `"NULL"` in the year output, not some sentinel
   number.
 - `year()` reads local calendar fields — i.e. relative to whatever timezone
-  the thread currently carries (`"UTC"` unless changed via
+  the slate currently carries (`"UTC"` unless changed via
   [`tz()`](tz.md)/[`localize()`](localize.md)).
 
 ## See Also

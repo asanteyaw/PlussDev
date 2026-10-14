@@ -104,12 +104,16 @@ TEST_CASE("index_reduce product reverse handles ordinary and zero factors", "[sc
   require_close(zero_source.sensitivity().to_vec<double>(), {0.0, 0.0});
 }
 
-TEST_CASE("index_reduce extrema ties exclude the receiver when requested", "[scatter-index-ii][autodiff]") {
+// With include_self=false the receiver's value still counts as a tie when it equals the
+// result (libtorch divides the gradient among all of them and then zeroes the
+// receiver's own share), so two source ties plus an equal receiver give 1/3 each.
+// Pinned against libtorch in test_patch177_cpu_torch_autograd_parity.cpp.
+TEST_CASE("index_reduce extrema ties divide among receiver and sources", "[scatter-index-ii][autodiff]") {
   const auto base = pluss::make_series({3.0});
   auto source = pluss::make_series({3.0, 3.0});
   source.tracks_slope_(true);
   base.index_reduce(0, pluss::make_series({0, 0}), source, "amax", false).sum().reverse();
-  require_close(source.sensitivity().to_vec<double>(), {0.5, 0.5});
+  require_close(source.sensitivity().to_vec<double>(), {1.0 / 3.0, 1.0 / 3.0});
 }
 
 TEST_CASE("masked_fill broadcasts and routes both reverse paths", "[scatter-index-ii][autodiff]") {

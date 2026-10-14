@@ -32,7 +32,7 @@ If `true`, the *last* occurrence is spared instead; every earlier one is
 ## Returns
 
 `Slate`
-    A `Bool` thread, one entry per row, `display_name` `"duplicated"`,
+    A `Bool` slate, one entry per row, `display_name` `"duplicated"`,
     displayed against the same case labels as `*this`.
 
 ## Examples

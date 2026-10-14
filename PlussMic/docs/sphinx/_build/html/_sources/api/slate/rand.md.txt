@@ -35,7 +35,7 @@ Same shape as [`land()`](land.md).
 ## Returns
 
 `Slate`
-    A new `Bool`-typed thread holding the same values [`land()`](land.md) would
+    A new `Bool`-typed slate holding the same values [`land()`](land.md) would
     produce for the same arguments — but with display labels carried from `other`
     instead of from `*this`.
 
@@ -78,7 +78,7 @@ row labels differ: `land()` shows `left`'s labels (`p, q, r`), `rand()` shows
 
 ## Notes
 
-- If neither thread has display labels set, this distinction is invisible — both
+- If neither slate has display labels set, this distinction is invisible — both
   methods fall back to the same default `0, 1, 2, ...` row index either way.
 - This label-carry difference is specific to `Slate`; the equivalent
   [`DataFrame::rand`](../dataframe/rand.md) was fixed in an earlier revision to

@@ -2,41 +2,37 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
-```cpp
-#include <pluss/tils/aux/data_loader.h>
-
-struct DataLoaderOptions {
-  std::int64_t batch_size{32};
-  bool shuffle{false};
-  bool drop_last{false};
-  std::uint64_t seed{0};
-  std::int64_t batch_dim{0};
-  bool reshuffle_each_epoch{true};
-  std::optional<Platform> target_platform{};
-  std::optional<ScalarType> target_dtype{};
-  std::function<DataBatch(DataBatch)> collate_fn{};
-  std::shared_ptr<Sampler> sampler{};
-  std::size_t num_workers{0};
-  std::optional<std::int64_t> prefetch_factor{};
-  bool persistent_workers{false};
-  bool pin_memory{false};
-  double timeout{0.0};
-  bool in_order{true};
-  std::function<void(std::size_t)> worker_init_fn{};
-};
-```
+## What It Does
 
 `DataLoaderOptions` configures everything about how a `DataLoader` turns a dataset into batches. The fields fall into five groups: how samples are grouped into batches (`batch_size`, `drop_last`, `batch_dim`), how they are ordered (`shuffle`, `seed`, `reshuffle_each_epoch`, `sampler`), what happens to a batch before it is delivered (`target_platform`, `target_dtype`, `collate_fn`), background computation (`num_workers`, `prefetch_factor`, `persistent_workers`, `pin_memory`, `timeout`, `in_order`, `worker_init_fn`), and `batch_dim` doubles as which axis of the input fields holds the samples.
 
 `sampler` and `shuffle` are mutually exclusive: setting both is refused. `prefetch_factor` and `persistent_workers` require `num_workers > 0`; setting either without workers is refused. `pin_memory` is accepted and applied, but is a documented no-op today, because the underlying tensor engine's own pin operation does not yet change a Series's pinned state.
 
-## Parameters
+## Fields
 
-See the field groups described above; each is demonstrated in its own example below.
-
-## Returns
-
-Not applicable; this page covers a group of fields on one struct.
+| Field | Meaning | Default |
+|---|---|---|
+| **Batching** | | |
+| `batch_size` | Samples per batch. | `32` |
+| `drop_last` | Whether a shorter final batch is dropped instead of delivered. | `false` |
+| `batch_dim` | Which axis of the input fields holds the samples. | `0` |
+| **Ordering** | | |
+| `shuffle` | Whether samples are visited in a shuffled order. Mutually exclusive with `sampler`. | `false` |
+| `seed` | The shuffle seed; combined with the epoch to vary per epoch. | `0` |
+| `reshuffle_each_epoch` | Whether `begin()` advances to the next epoch and reshuffles automatically. | `true` |
+| `sampler` | A custom [`Sampler`](loader-sampler.md) controlling visit order, instead of plain `shuffle`. | none |
+| **Delivery** | | |
+| `target_platform` | Platform every delivered batch is moved to, if set. | unset (source platform kept) |
+| `target_dtype` | Scalar type every delivered batch is converted to, if set. | unset (source dtype kept) |
+| `collate_fn` | A function that receives each assembled batch and may transform it before delivery. | none (batch delivered as assembled) |
+| **Background workers** | | |
+| `num_workers` | Background worker thread count; `0` runs synchronously on the calling thread. | `0` |
+| `prefetch_factor` | Batches to compute ahead per worker. Requires `num_workers > 0`. | unset |
+| `persistent_workers` | Whether worker threads stay alive between epochs instead of being joined and respawned. Requires `num_workers > 0`. | `false` |
+| `pin_memory` | Requests pinned-memory batches. Currently a documented no-op. | `false` |
+| `timeout` | Seconds to wait for a worker-produced batch before giving up. `0` waits indefinitely. | `0.0` |
+| `in_order` | Whether batches must arrive in strict index order, versus as soon as a worker finishes. | `true` |
+| `worker_init_fn` | Called once per worker thread, with that worker's index, when workers start. | none |
 
 ## Errors
 

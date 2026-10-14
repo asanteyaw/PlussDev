@@ -52,7 +52,7 @@ only want to cast specific streams, use [`Archive::keys(names)`](keys.md) follow
 **options** (`const pluss::table::SlateCastOptions&`, optional)
     For the direct root overload, conversion policy — `series_dtype` picks the numeric
     dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
-    [`Slate::cast`](../thread/cast.md) for the full breakdown.
+    [`Slate::cast`](../slate/cast.md) for the full breakdown.
 
 ## Returns
 
@@ -100,7 +100,7 @@ score                    | Series       | Series[float64]  | 2       | [1.5, 2.5
   in result; they differ only in surface style.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
 - Follows the same per-target conversion rules as
-  [`Catalog::cast`](../catalog/cast.md)/[`Slate::cast`](../thread/cast.md).
+  [`Catalog::cast`](../catalog/cast.md)/[`Slate::cast`](../slate/cast.md).
 
 ## See Also
 

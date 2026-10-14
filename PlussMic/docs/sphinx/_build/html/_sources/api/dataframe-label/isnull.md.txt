@@ -19,7 +19,7 @@ genuine value.
 ## Returns
 
 `Slate`
-    A boolean thread, one entry per row, `display_name` `"isnull"`, displayed
+    A boolean slate, one entry per row, `display_name` `"isnull"`, displayed
     against the case labels themselves.
 
 ## Examples
@@ -49,7 +49,7 @@ Name: isnull, ptype: Series
 ## Notes
 
 - Works regardless of whether the case labels are structured or a flat/default
-  axis — it always inspects the flat displayed case-label thread.
+  axis — it always inspects the flat displayed case-label slate.
 
 ## See Also
 

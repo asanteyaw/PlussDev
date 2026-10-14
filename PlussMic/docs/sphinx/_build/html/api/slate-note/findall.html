@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Finds every match of <code class="docutils literal notranslate"><span class="pre">pattern</span></code> in each cell of the bound thread and expands the
+<p>Finds every match of <code class="docutils literal notranslate"><span class="pre">pattern</span></code> in each cell of the bound slate and expands the
 result into one output column per match position — column <code class="docutils literal notranslate"><span class="pre">match_0</span></code> holds each
 row’s first match, <code class="docutils literal notranslate"><span class="pre">match_1</span></code> its second, and so on. Rows with fewer matches than
 another row have <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the columns beyond their own match count; the number of
@@ -201,7 +201,7 @@ use it).</p></li>
 <code class="docutils literal notranslate"><span class="pre">limit</span></code> is applied); rows with fewer matches get <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the extra columns.</p></li>
 <li><p>An invalid input cell contributes zero matches, the same as a cell with genuinely
 no matches.</p></li>
-<li><p>Requires the bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
+<li><p>Requires the bound slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, or the call throws.</p></li>
 </ul>
 </section>
 <section id="see-also">

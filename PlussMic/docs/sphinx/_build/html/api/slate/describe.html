@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns a compact statistical summary of one thread, as a <code class="docutils literal notranslate"><span class="pre">SlateView</span></code> whose case
+<p>Returns a compact statistical summary of one slate, as a <code class="docutils literal notranslate"><span class="pre">SlateView</span></code> whose case
 labels are the names of the computed statistics. The exact statistics depend on
 the payload kind:</p>
 <ul class="simple">
@@ -57,7 +57,7 @@ the payload kind:</p>
 <a class="reference internal" href="../dataframe/describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe()</span></code></span></a> computes per column —
 <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code> (sample standard deviation, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> denominator), <code class="docutils literal notranslate"><span class="pre">min</span></code>,
 <code class="docutils literal notranslate"><span class="pre">25%</span></code>, <code class="docutils literal notranslate"><span class="pre">50%</span></code>, <code class="docutils literal notranslate"><span class="pre">75%</span></code> (quantiles via linear interpolation between ranks), <code class="docutils literal notranslate"><span class="pre">max</span></code>.
-Internally this wraps the thread in a one-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, calls its
+Internally this wraps the slate in a one-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, calls its
 <code class="docutils literal notranslate"><span class="pre">describe()</span></code>, and extracts the single resulting column back out — so it’s the
 exact per-column counterpart of that method, not a separately implemented
 calculation.</p></li>
@@ -79,14 +79,14 @@ only; has no effect on what an explicit <code class="docutils literal notranslat
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SlateView</span></code>
 A summary view with one entry per statistic, labeled by statistic name. It is
-given a display name — the source thread’s own <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a>
+given a display name — the source slate’s own <a class="reference internal" href="name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">name()</span></code></span></a>
 if it has one, or <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> otherwise — so the render footer always reads
 <code class="docutils literal notranslate"><span class="pre">Name:</span> <span class="pre">{name},</span> <span class="pre">ptype:</span> <span class="pre">{kind}</span></code> rather than the plain <code class="docutils literal notranslate"><span class="pre">ptype:</span> <span class="pre">{kind}</span></code> a default
-thread shows.</p>
+slate shows.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Describe a numeric thread.</p>
+<p>Example 1. Describe a numeric slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
@@ -135,7 +135,7 @@ Name: value, ptype: Series
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">count</span></code> reports <code class="docutils literal notranslate"><span class="pre">3</span></code>, not <code class="docutils literal notranslate"><span class="pre">4</span></code> — the missing entry is dropped before any statistic
 is computed, not treated as <code class="docutils literal notranslate"><span class="pre">0</span></code> or left to propagate a <code class="docutils literal notranslate"><span class="pre">NaN</span></code> through the results.</p>
-<p>Example 3. Describe a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread — a frequency summary instead of
+<p>Example 3. Describe a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate — a frequency summary instead of
 numeric statistics.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">describe</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
@@ -182,9 +182,9 @@ is both first-seen and alphabetically first; that isn’t true in general.</p>
 exactly — <code class="docutils literal notranslate"><span class="pre">std</span></code> uses <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> (sample standard deviation), and quartiles use
 linear interpolation between the two closest ranks, so <code class="docutils literal notranslate"><span class="pre">50%</span></code> coincides with the
 median exactly, including for even-sized samples.</p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads, <code class="docutils literal notranslate"><span class="pre">top</span></code> comes from <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a>; ties for
+<li><p>For <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slates, <code class="docutils literal notranslate"><span class="pre">top</span></code> comes from <a class="reference internal" href="freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">freq()</span></code></span></a>; ties for
 <code class="docutils literal notranslate"><span class="pre">top</span></code> keep first-occurrence order, not alphabetical order.</p></li>
-<li><p>The returned view always has a display name (<code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> if the source thread
+<li><p>The returned view always has a display name (<code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> if the source slate
 didn’t already have one), so the render footer reads <code class="docutils literal notranslate"><span class="pre">Name:</span> <span class="pre">...,</span> <span class="pre">ptype:</span> <span class="pre">...</span></code>.</p></li>
 <li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> and <code class="docutils literal notranslate"><span class="pre">Note</span></code> payloads; <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, and
 non-numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> all throw <code class="docutils literal notranslate"><span class="pre">&quot;Slate::describe</span> <span class="pre">supports</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">and</span> <span class="pre">Note</span> <span class="pre">payloads&quot;</span></code>.</p></li>

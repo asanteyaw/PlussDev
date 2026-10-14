@@ -100,6 +100,35 @@ int main() {
   }
 
   // ---------------------------------------------------------------
+  // fluxa_until(): terminal event location and direction filtering.
+  // y(t) = exp(-k*t) crosses 0.5 at log(2)/k.
+  // ---------------------------------------------------------------
+  {
+    ode::OdeOptions event_solver;
+    event_solver.steps = 16;
+    ode::OdeEventOptions event_options;
+    event_options.direction = ode::OdeEventDirection::Falling;
+    event_options.time_tolerance = 1e-11;
+    event_options.value_tolerance = 1e-11;
+    const ode::OdeEventFn half = [](double, const Series &y, const Series &) {
+      return y.sub(0.5).reshape({});
+    };
+    const auto hit = ode::fluxa_until(decay, half, y0, 0.0, 2.0, theta0,
+                                      event_solver, event_options);
+    expect(hit.triggered, "fluxa_until detects a falling event", &failures);
+    expect_near(hit.t_final, std::log(2.0) / kv, 2e-7,
+                "fluxa_until refines the analytic event time", &failures);
+    expect_near(scalar_f64(hit.y_final), 0.5, 1e-9,
+                "fluxa_until returns the event state", &failures);
+
+    event_options.direction = ode::OdeEventDirection::Rising;
+    const auto ignored = ode::fluxa_until(decay, half, y0, 0.0, 2.0, theta0,
+                                          event_solver, event_options);
+    expect(!ignored.triggered && std::abs(ignored.t_final - 2.0) < 1e-12,
+           "fluxa_until rejects the opposite event direction", &failures);
+  }
+
+  // ---------------------------------------------------------------
   // fluxa_adjoint(): gradients, checked against BOTH the analytic closed
   // form AND direct autodiff through the same discretization.
   // ---------------------------------------------------------------

@@ -55,8 +55,8 @@ Timeline
 
 - `ptype()` is for dispatching or displaying by payload *family*. Use
   [`dtype()`](dtype.md) when you need the concrete storage detail within that
-  family (e.g. which numeric scalar type a `Series` thread holds).
-- Calling `ptype()` on an undefined thread throws `"Slate: undefined handle"`.
+  family (e.g. which numeric scalar type a `Series` slate holds).
+- Calling `ptype()` on an undefined slate throws `"Slate: undefined handle"`.
 
 ## See Also
 

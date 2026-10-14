@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,20 +50,20 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Computes the same fixed-row-count rolling window <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>
 does, but <strong>restarted independently within each group</strong> — positions are
-partitioned by <code class="docutils literal notranslate"><span class="pre">groups</span></code> (compared by value, any thread kind), and within each
+partitioned by <code class="docutils literal notranslate"><span class="pre">groups</span></code> (compared by value, any slate kind), and within each
 group the rolling window only ever sees that group’s own positions, in their
 original relative order, never crossing a group boundary.</p>
 <p>Every position whose <code class="docutils literal notranslate"><span class="pre">groups</span></code> entry is <strong>missing</strong> is treated as belonging to
 one single, shared “ungrouped” bucket — not its own separate group, and not
 excluded from the result. That bucket’s positions are windowed together, in
 their original relative order, even though they may be far apart (and separated
-by other groups’ positions) in the source thread. See Example 2.</p>
+by other groups’ positions) in the source slate. See Example 2.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>groups</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
-The grouping key, one entry per position, same length as the bound thread.
-Any thread kind; compared by value.</p>
+The grouping key, one entry per position, same length as the bound slate.
+Any slate kind; compared by value.</p>
 <p><strong>window</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
 The trailing window size, in positions, applied independently within each
 group.</p>
@@ -76,13 +76,13 @@ Same meaning as <a class="reference internal" href="rolling.html"><span class="s
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as the bound source, holding the per-group
+A new slate, same length as the bound source, holding the per-group
 rolling statistic at each position.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Two groups, each windowed independently — the window restarts at
-each group’s own first position, not the thread’s.</p>
+each group’s own first position, not the slate’s.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">}));</span>
@@ -110,7 +110,7 @@ order): its own rolling mean(2) is <code class="docutils literal notranslate"><s
 Group <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code> is positions <code class="docutils literal notranslate"><span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">5</span></code> (values <code class="docutils literal notranslate"><span class="pre">30,</span> <span class="pre">40,</span> <span class="pre">60</span></code>): its rolling mean(2) is
 <code class="docutils literal notranslate"><span class="pre">30</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(30,</span> <span class="pre">40)</span> <span class="pre">=</span> <span class="pre">35</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(40,</span> <span class="pre">60)</span> <span class="pre">=</span> <span class="pre">50</span></code> — landing at positions <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">5</span></code>. Position <code class="docutils literal notranslate"><span class="pre">4</span></code>’s window never sees position <code class="docutils literal notranslate"><span class="pre">2</span></code> or <code class="docutils literal notranslate"><span class="pre">3</span></code>’s values, even
-though they sit between position <code class="docutils literal notranslate"><span class="pre">1</span></code> and position <code class="docutils literal notranslate"><span class="pre">4</span></code> in the source thread —
+though they sit between position <code class="docutils literal notranslate"><span class="pre">1</span></code> and position <code class="docutils literal notranslate"><span class="pre">4</span></code> in the source slate —
 they belong to a different group.</p>
 <p>Example 2. Positions with a missing group key share one common “ungrouped”
 bucket, windowed together in their original relative order even when other
@@ -140,7 +140,7 @@ ptype: Series
 <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;y&quot;</span></code>, is irrelevant — a missing key is a missing key). They fall into the
 same shared bucket, windowed as if adjacent: <code class="docutils literal notranslate"><span class="pre">mean(20,</span> <span class="pre">40)</span> <span class="pre">=</span> <span class="pre">30</span></code> lands at
 position <code class="docutils literal notranslate"><span class="pre">3</span></code>, using position <code class="docutils literal notranslate"><span class="pre">1</span></code>’s value even though position <code class="docutils literal notranslate"><span class="pre">2</span></code> (a real,
-different group) sits between them in the source thread.</p>
+different group) sits between them in the source slate.</p>
 <p>Example 3. Mismatched <code class="docutils literal notranslate"><span class="pre">groups</span></code> length throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">short_groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -162,17 +162,17 @@ different group) sits between them in the source thread.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Groups are compared by value (via each group’s own display/string form), not
-identity — any thread kind works as <code class="docutils literal notranslate"><span class="pre">groups</span></code>.</p></li>
+identity — any slate kind works as <code class="docutils literal notranslate"><span class="pre">groups</span></code>.</p></li>
 <li><p>Every position with a missing <code class="docutils literal notranslate"><span class="pre">groups</span></code> entry shares one common bucket,
 windowed together in original relative order — it is not excluded from the
 result, and it is not treated as its own separate group per distinct missing
 cause. See Example 2.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">groups</span></code> must be the same length as the bound thread, or it throws
+<li><p><code class="docutils literal notranslate"><span class="pre">groups</span></code> must be the same length as the bound slate, or it throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Slate::grouped:</span> <span class="pre">group</span> <span class="pre">length</span> <span class="pre">mismatch&quot;</span></code>.</p></li>
-<li><p>A pre-existing missing entry in the <em>values</em> thread (as opposed to <code class="docutils literal notranslate"><span class="pre">groups</span></code>)
+<li><p>A pre-existing missing entry in the <em>values</em> slate (as opposed to <code class="docutils literal notranslate"><span class="pre">groups</span></code>)
 is skipped within any window that contains it, the same as
 <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>.</p></li>
-<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads for the values thread; anything else
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads for the values slate; anything else
 throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::grouped:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Slate&quot;</span></code>.</p></li>
 </ul>
 </section>
@@ -180,9 +180,9 @@ throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate:
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::rolling</span></code></span></a>: the same fixed-window engine,
-applied to the whole thread instead of independently per group.</p></li>
+applied to the whole slate instead of independently per group.</p></li>
 <li><p><a class="reference internal" href="expanding.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::expanding</span></code></span></a>: a growing (not fixed-width)
-window, applied to the whole thread.</p></li>
+window, applied to the whole slate.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ge.html">

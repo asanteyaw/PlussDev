@@ -39,8 +39,8 @@ kind throws.
 ## Returns
 
 `Slate`
-    A new thread with eligible interior gaps interpolated. A thread with no
-    missing values, or `limit == 0`, or an empty thread, is returned unchanged.
+    A new slate with eligible interior gaps interpolated. A slate with no
+    missing values, or `limit == 0`, or an empty slate, is returned unchanged.
 
 ## Examples
 
@@ -120,7 +120,7 @@ std::cout << out3;
 ptype: Series
 ```
 
-Example 4. Restricted to numeric `Series` — a `Note`-kind thread throws.
+Example 4. Restricted to numeric `Series` — a `Note`-kind slate throws.
 
 ```cpp
 auto words = Slate(pluss::make_note({"a", "b"}));

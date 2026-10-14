@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -82,7 +82,7 @@ order</strong>, and the <strong>same number of cases</strong>. Values are combin
 — there is no case-label alignment step; only the feature-name list and the case
 <em>count</em> are checked, not the case label values themselves.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>: a single boolean <code class="docutils literal notranslate"><span class="pre">Slate</span></code> whose length matches <code class="docutils literal notranslate"><span class="pre">ncases()</span></code>. The
-<em>same</em> thread is combined against <strong>every</strong> feature identically, position-by-position
+<em>same</em> slate is combined against <strong>every</strong> feature identically, position-by-position
 — there is no per-feature broadcast the way the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overloads of <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>
 or <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a> support via <code class="docutils literal notranslate"><span class="pre">axis</span></code>.</p></li>
 </ul>
@@ -165,8 +165,8 @@ themselves match.</p>
 <p>Example 2. AND a frame against a single shared <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, applied identically to every
 feature.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">land</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_slate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">land</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_slate</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>

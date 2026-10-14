@@ -106,7 +106,7 @@ assert(out.to_slate().as_duration().host() ==
        std::vector<std::int64_t>({1'000'000'000LL, 9, -2'000'000'000LL}));
 ```
 
-Same mechanics as [`Slate::fillnull(Duration)`](../thread/fillnull.md) — it also clears
+Same mechanics as [`Slate::fillnull(Duration)`](../slate/fillnull.md) — it also clears
 intrinsic `NaT` lanes, not just validity-mask-flagged ones.
 
 Example 4. Calling the `string_view` overload on a `Series`-kind stream throws — a kind

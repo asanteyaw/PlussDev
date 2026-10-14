@@ -55,8 +55,10 @@ api/stream/exp
 api/stream/ffill
 api/stream/fillnull
 api/stream/filter
+api/stream/fingerprint
 api/stream/freq
 api/stream/from_slate
+api/stream/gather
 api/stream/has_label
 api/stream/has_meta
 api/stream/head
@@ -77,6 +79,7 @@ api/stream/nrecords
 api/stream/nt
 api/stream/plot
 api/stream/ptype
+api/stream/reduce_groups
 api/stream/scribbelize
 api/stream/select
 api/stream/shape

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,10 +49,10 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Computes a <strong>growing (expanding) window statistic</strong>: position <code class="docutils literal notranslate"><span class="pre">i</span></code>’s window is
-every position from the very start of the thread through <code class="docutils literal notranslate"><span class="pre">i</span></code>, so the window
+every position from the very start of the slate through <code class="docutils literal notranslate"><span class="pre">i</span></code>, so the window
 widens by one position at a time rather than staying a fixed size. It’s
 implemented as <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a> with the window fixed at the full
-thread length (<code class="docutils literal notranslate"><span class="pre">max(1,</span> <span class="pre">size())</span></code>) and <code class="docutils literal notranslate"><span class="pre">centered</span> <span class="pre">=</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">closure</span> <span class="pre">=</span> <span class="pre">Right</span></code> — the
+slate length (<code class="docutils literal notranslate"><span class="pre">max(1,</span> <span class="pre">size())</span></code>) and <code class="docutils literal notranslate"><span class="pre">centered</span> <span class="pre">=</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">closure</span> <span class="pre">=</span> <span class="pre">Right</span></code> — the
 same trailing-window engine, just wide enough that every position’s window
 always starts at position <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </section>
@@ -69,7 +69,7 @@ output to be non-<code class="docutils literal notranslate"><span class="pre">NU
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as the bound source, holding the expanding
+A new slate, same length as the bound source, holding the expanding
 statistic at each position.</p>
 </section>
 <section id="examples">
@@ -167,7 +167,7 @@ Position <code class="docutils literal notranslate"><span class="pre">3</span></
 just wide enough to always start at position <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Std</span></code> additionally require the observation count to exceed <code class="docutils literal notranslate"><span class="pre">ddof</span></code>
 (default <code class="docutils literal notranslate"><span class="pre">1</span></code>), independent of <code class="docutils literal notranslate"><span class="pre">min_count</span></code>.</p></li>
-<li><p>A pre-existing missing entry in the source thread is skipped within every
+<li><p>A pre-existing missing entry in the source slate is skipped within every
 window that would otherwise contain it — see Example 4.</p></li>
 </ul>
 </section>
@@ -179,7 +179,7 @@ this method is a special case of.</p></li>
 <li><p><a class="reference internal" href="ewm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::ewm</span></code></span></a>: an alternative “everything seen so far”
 statistic that weights recent observations more heavily instead of weighting
 every observation equally.</p></li>
-<li><p><a class="reference internal" href="#../thread/cumsum.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cumsum</span></code></span></a>: the running total at every position —
+<li><p><a class="reference internal" href="../slate/cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::cumsum</span></code></span></a>: the running total at every position —
 <code class="docutils literal notranslate"><span class="pre">expanding(WindowStatistic::Sum)</span></code> computes the same thing through a different
 engine.</p></li>
 </ul>

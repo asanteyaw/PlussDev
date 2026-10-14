@@ -22,7 +22,7 @@ genuine value.
 ## Returns
 
 `Slate`
-    A `Bool` thread, one entry per row, `display_name` `"isnull"`, displayed
+    A `Bool` slate, one entry per row, `display_name` `"isnull"`, displayed
     against the case labels themselves.
 
 ## Examples
@@ -52,7 +52,7 @@ ptype: Series
 
 ## Notes
 
-- Inspects the case labels, not the thread's own data.
+- Inspects the case labels, not the slate's own data.
 
 ## See Also
 

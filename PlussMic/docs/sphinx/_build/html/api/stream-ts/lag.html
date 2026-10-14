@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -100,7 +100,7 @@ predecessor, so it’s <code class="docutils literal notranslate"><span class="p
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>No top-level Stream::shift(periods) — this accessor is the only path
-Unlike <a class="reference internal" href="#../thread/shift.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a>, which exists as a
+Unlike <a class="reference internal" href="../slate/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a>, which exists as a
 direct top-level method, <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no positional-shift method of its
 own outside this accessor — <code class="docutils literal notranslate"><span class="pre">Stream::shift(periods,</span> <span class="pre">freq)</span></code> is a completely
 different, unrelated method on <a class="reference internal" href="../stream-timeline/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimelineAccessor</span></code></span></a>
@@ -116,7 +116,7 @@ by row count.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">lag(periods)</span></code> with a negative <code class="docutils literal notranslate"><span class="pre">periods</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">lead(-periods)</span></code>.</p></li>
 <li><p>Vacated positions become <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, values shifted past the far edge are
 dropped, not wrapped around — the same semantics as
-<a class="reference internal" href="#../thread/shift.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a>, the table-layer primitive
+<a class="reference internal" href="../slate/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shift(periods)</span></code></span></a>, the table-layer primitive
 this method’s underlying engine shares.</p></li>
 <li><p>A pre-existing missing entry in the source stream is honored, not just the
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s the shift itself introduces.</p></li>
@@ -131,7 +131,7 @@ this method’s underlying engine shares.</p></li>
 lags of the same stream at once, each as its own <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> column.</p></li>
 <li><p><a class="reference internal" href="../stream-timeline/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimelineAccessor::shift</span></code></span></a>: an
 unrelated, calendar-duration shift — see the important callout above.</p></li>
-<li><p><a class="reference internal" href="#../thread/shift.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::shift</span></code></span></a>: the table-layer positional-shift
+<li><p><a class="reference internal" href="../slate/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shift</span></code></span></a>: the table-layer positional-shift
 primitive, which (unlike <code class="docutils literal notranslate"><span class="pre">Stream</span></code>) is reachable directly, not only through
 <code class="docutils literal notranslate"><span class="pre">ts()</span></code>.</p></li>
 <li><p><a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>: the entry point this accessor is reached from.</p></li>

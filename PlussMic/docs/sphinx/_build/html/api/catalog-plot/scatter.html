@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -68,9 +68,9 @@ distinctly colored/labeled point groups by a categorical <code class="docutils l
 fallback here.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Two entirely different code paths, chosen by x_key’s thread kind
+<p>Two entirely different code paths, chosen by x_key’s slate kind
 Unlike <code class="docutils literal notranslate"><span class="pre">line()</span></code>/<code class="docutils literal notranslate"><span class="pre">step()</span></code>/<code class="docutils literal notranslate"><span class="pre">area()</span></code>/<code class="docutils literal notranslate"><span class="pre">bar()</span></code> (which all share one x-axis-resolution helper),
-<code class="docutils literal notranslate"><span class="pre">scatter()</span></code> branches on <strong><code class="docutils literal notranslate"><span class="pre">x_key</span></code>’s own thread kind</strong>:</p>
+<code class="docutils literal notranslate"><span class="pre">scatter()</span></code> branches on <strong><code class="docutils literal notranslate"><span class="pre">x_key</span></code>’s own slate kind</strong>:</p>
 <ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">x_key</span></code> resolves to a <strong>Note, Timeline, or TimeIndex</strong> key, it’s treated as a <em>labeled
 axis</em>: positions are <code class="docutils literal notranslate"><span class="pre">0..n-1</span></code>, tick labels come from <code class="docutils literal notranslate"><span class="pre">x_key</span></code>’s own values, and <code class="docutils literal notranslate"><span class="pre">y_key</span></code>
@@ -97,7 +97,7 @@ Note-, Timeline-, or TimeIndex-kind — a plain numeric key throws <code class="
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x_key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, required)
-The key for the horizontal axis. Its thread kind decides which alignment path is taken
+The key for the horizontal axis. Its slate kind decides which alignment path is taken
 — see the important callout above.</p>
 <p><strong>y_key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, required)
 The key for the vertical axis.</p>
@@ -286,7 +286,7 @@ every <code class="docutils literal notranslate"><span class="pre">y_metric</spa
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">x_key</span></code>/<code class="docutils literal notranslate"><span class="pre">y_key</span></code> are required, non-optional arguments — there is no fallback the way
 <code class="docutils literal notranslate"><span class="pre">line()</span></code>/<code class="docutils literal notranslate"><span class="pre">bar()</span></code>/etc. have for a single axis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x_key</span></code>’s thread kind picks the code path — see the important callout above. This is a
+<li><p><code class="docutils literal notranslate"><span class="pre">x_key</span></code>’s slate kind picks the code path — see the important callout above. This is a
 meaningful difference from <code class="docutils literal notranslate"><span class="pre">DataFrame::plot().scatter</span></code>, which always treats both features
 as plain numeric columns.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">align</span></code>/<code class="docutils literal notranslate"><span class="pre">align_by</span></code> (via <code class="docutils literal notranslate"><span class="pre">CatalogScatterPlotOptions</span></code>) only take effect on the numeric-pair

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -64,7 +64,7 @@
 leaving every other row untouched — the whole-frame, mask-driven sibling of
 <a class="reference internal" href="mask.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mask()</span></code></span></a> (which nulls out cells rather than replacing them with a chosen
 value). It applies independently to each column, via that column’s own
-<a class="reference internal" href="#../thread/put.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::put()</span></code></span></a>: where <code class="docutils literal notranslate"><span class="pre">value</span></code> is itself a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> rather than a
+<a class="reference internal" href="../slate/put.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::put()</span></code></span></a>: where <code class="docutils literal notranslate"><span class="pre">value</span></code> is itself a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> rather than a
 scalar, each masked row is replaced by <strong>that same row’s own value</strong> in <code class="docutils literal notranslate"><span class="pre">value</span></code> — not
 one shared replacement broadcast to every masked cell.</p>
 <p><code class="docutils literal notranslate"><span class="pre">put()</span></code> carries no feature selector of its own: it writes <code class="docutils literal notranslate"><span class="pre">value</span></code> into every column on

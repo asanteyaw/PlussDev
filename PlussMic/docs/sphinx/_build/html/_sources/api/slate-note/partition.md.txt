@@ -13,10 +13,10 @@ SlateNoteAccessor::partition(std::string_view separator,
 
 ## What It Does
 
-Splits every cell of the bound thread at the *first* occurrence of a literal
+Splits every cell of the bound slate at the *first* occurrence of a literal
 `separator`, always producing exactly **three** output columns: the text before
 the separator, the separator itself, and the text after it — a direct forward to
-[`Slate::partition()`](../thread/partition.md). Requires the bound thread to be
+[`Slate::partition()`](../slate/partition.md). Requires the bound slate to be
 `Note`-kind. Narrower and simpler than [`split()`](split.md): always literal (no
 regex), always stops at the first match, always exactly three columns.
 
@@ -99,7 +99,7 @@ std::cout << out2;
 ```
 
 Example 3. An empty separator throws — the same message
-[`Slate::partition()`](../thread/partition.md) produces directly.
+[`Slate::partition()`](../slate/partition.md) produces directly.
 
 ```cpp
 try {
@@ -118,7 +118,7 @@ Slate::partition: separator cannot be empty
 ## Notes
 
 - `SlateNoteAccessor::partition()` is a one-line forward to
-  [`Slate::partition()`](../thread/partition.md) — identical behavior and
+  [`Slate::partition()`](../slate/partition.md) — identical behavior and
   throws.
 - Always literal (no regex) and always stops at the *first* occurrence — for a
   regex-aware or multi-way split, use [`split()`](split.md).
@@ -127,7 +127,7 @@ Slate::partition: separator cannot be empty
 
 ## See Also
 
-- [`Slate::partition`](../thread/partition.md): the direct, non-accessor form
+- [`Slate::partition`](../slate/partition.md): the direct, non-accessor form
   this method forwards to.
 - [`SlateNoteAccessor::split`](split.md): the more general, possibly-regex,
   unlimited-pieces sibling, with genuine `NULL`-padding instead of empty

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -121,7 +121,7 @@ One row per group. The group key column(s) come first, followed by one
 one <code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> and one <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code> — tied at one occurrence each — and <code class="docutils literal notranslate"><span class="pre">status_mode</span></code> picks
 <code class="docutils literal notranslate"><span class="pre">&quot;bad&quot;</span></code> because it appears first in the source data (row <code class="docutils literal notranslate"><span class="pre">2</span></code>), not because it sorts
 first alphabetically. This is the same first-occurrence tie-break used by
-<a class="reference internal" href="#../thread/freq.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>.</p>
+<a class="reference internal" href="../slate/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::freq()</span></code></span></a>.</p>
 <p>Example 2. Target one selected feature on a wider value side.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">wide</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;North&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;South&quot;</span><span class="p">}))},</span>

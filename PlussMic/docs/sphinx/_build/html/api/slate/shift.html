@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,9 +50,9 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Shifts every value forward (<code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>) or backward (<code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>) by
-<code class="docutils literal notranslate"><span class="pre">periods</span></code> positions, keeping the thread the same length — positions that shift in
+<code class="docutils literal notranslate"><span class="pre">periods</span></code> positions, keeping the slate the same length — positions that shift in
 from beyond either edge become <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and values shifted past the opposite edge
-are dropped entirely (not wrapped around). <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">=</span> <span class="pre">0</span></code> (or an empty thread) is a
+are dropped entirely (not wrapped around). <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">=</span> <span class="pre">0</span></code> (or an empty slate) is a
 no-op, returning <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged.</p>
 </section>
 <section id="parameters">
@@ -65,7 +65,7 @@ Number of positions to shift. Positive shifts values to later positions
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with values shifted and the vacated
+A new slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with values shifted and the vacated
 positions set to <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 </section>
 <section id="examples">
@@ -152,7 +152,7 @@ position, not from the shift itself vacating it.</p>
 <li><p>Values shifted past either edge are dropped, not wrapped around.</p></li>
 <li><p>Vacated positions (and any already-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> positions that moved) are <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in
 the result.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">=</span> <span class="pre">0</span></code>, or shifting an empty thread, returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">=</span> <span class="pre">0</span></code>, or shifting an empty slate, returns <code class="docutils literal notranslate"><span class="pre">*this</span></code> unchanged.</p></li>
 <li><p>Works on every payload kind, not just <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
 </ul>
 </section>

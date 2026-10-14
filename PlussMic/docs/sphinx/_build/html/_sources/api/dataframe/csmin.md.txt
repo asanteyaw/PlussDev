@@ -37,7 +37,7 @@ Missing-value policy while searching for the minimum.
 ## Returns
 
 `Slate`
-    A `Note`-typed label thread: case labels (`Axis::Case`) or feature names
+    A `Note`-typed label slate: case labels (`Axis::Case`) or feature names
     (`Axis::Feature`), one per participating numeric feature or case respectively.
 
 ## Examples

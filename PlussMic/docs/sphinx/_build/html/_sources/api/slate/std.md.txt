@@ -15,12 +15,12 @@ Slate::std(const StatisticOptions& options) const -> SlateValue
 ## What It Does
 
 Returns the standard deviation of every observed (non-missing) value in a
-numeric `Series` thread — the square root of [`var()`](var.md)'s result, with
+numeric `Series` slate — the square root of [`var()`](var.md)'s result, with
 the exact same overload split and failure-mode difference:
 
 - **`std(unbiased)`**: `unbiased = true` (the default) computes the sample
   standard deviation (`n - 1` divisor underneath); `unbiased = false` computes
-  the population standard deviation (`n` divisor). An empty thread, or one
+  the population standard deviation (`n` divisor). An empty slate, or one
   where every entry is missing, **throws**.
 - **`std(options)`**: takes a `StatisticOptions{ddof, min_count}`. Instead of
   throwing on an insufficient sample, this overload returns a result marked

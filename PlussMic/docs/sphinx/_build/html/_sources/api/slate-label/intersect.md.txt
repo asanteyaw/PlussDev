@@ -12,7 +12,7 @@ SlateLabelAccessor::intersect(const Slate& other) const -> Slate
 
 ## What It Does
 
-Treats the bound thread's case labels and `other` as two sets of values, and
+Treats the bound slate's case labels and `other` as two sets of values, and
 returns the values present in **both** — deduplicated, in the case labels'
 own first-occurrence order.
 

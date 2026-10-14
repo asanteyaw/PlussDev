@@ -91,7 +91,7 @@ That single call mixes row count, numeric reduction, and categorical mode under 
 stable grouping plan. `South`'s `status` values are `"bad"` and `"good"`, tied at one
 occurrence each; `status_mode` picks `"bad"` because it was seen first (row `2`), not
 because it sorts first alphabetically — the same first-occurrence tie-break
-[`Slate::freq()`](../thread/freq.md) uses.
+[`Slate::freq()`](../slate/freq.md) uses.
 
 Example 2. Let output names be inferred.
 

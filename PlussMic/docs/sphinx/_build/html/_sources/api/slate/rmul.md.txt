@@ -15,7 +15,7 @@ Slate::rmul(const Slate& other) const -> Slate
 ## What It Does
 
 The reflected form of [`mul()`](mul.md). Multiplication is commutative, so `rmul()`
-and `mul()` always agree — including for `Note`-thread repetition, since the
+and `mul()` always agree — including for `Note`-slate repetition, since the
 repetition special case never inspects operand order.
 
 ## Parameters

@@ -14,8 +14,8 @@ SlateNoteAccessor::lstrip(std::string_view chars) const -> Slate
 ## What It Does
 
 The left-only half of [`strip()`](strip.md): trims characters from the **start** of
-the bound thread's cells, leaving the trailing end untouched. A direct forward to
-[`Slate::lstrip()`](../thread/lstrip.md). Same two policies as `strip()` (whitespace
+the bound slate's cells, leaving the trailing end untouched. A direct forward to
+[`Slate::lstrip()`](../slate/lstrip.md). Same two policies as `strip()` (whitespace
 by default, character-set membership with `chars`).
 
 ## Parameters
@@ -27,7 +27,7 @@ The set of characters to strip from each cell's left edge only.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, with each cell's
+    A new `Note`-kind slate, same length as the bound slate, with each cell's
     leading text trimmed.
 
 ## Examples
@@ -57,13 +57,13 @@ Row `2`'s trailing `##` is untouched — only leading `#` characters are peeled 
 ## Notes
 
 - `SlateNoteAccessor::lstrip()` is a one-line forward to
-  [`Slate::lstrip()`](../thread/lstrip.md) — identical behavior and throws.
+  [`Slate::lstrip()`](../slate/lstrip.md) — identical behavior and throws.
 - See [`strip()`](strip.md) for the full explanation of the default-whitespace vs.
   `chars`-set-membership policies.
 
 ## See Also
 
-- [`Slate::lstrip`](../thread/lstrip.md): the direct, non-accessor form this
+- [`Slate::lstrip`](../slate/lstrip.md): the direct, non-accessor form this
   method forwards to.
 - [`SlateNoteAccessor::rstrip`](rstrip.md): the mirror image, trimming the
   trailing end only.

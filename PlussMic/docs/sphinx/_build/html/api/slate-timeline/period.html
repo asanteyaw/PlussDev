@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Truncates every row of the bound thread to the <em>start</em> of its enclosing <code class="docutils literal notranslate"><span class="pre">freq</span></code>
+<p>Truncates every row of the bound slate to the <em>start</em> of its enclosing <code class="docutils literal notranslate"><span class="pre">freq</span></code>
 period — same length, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind.</p>
 </section>
 <section id="parameters">
@@ -65,7 +65,7 @@ Cannot be empty.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, same length as the bound thread,
+A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate, same length as the bound slate,
 truncated to the start of its <code class="docutils literal notranslate"><span class="pre">freq</span></code> period.</p>
 </section>
 <section id="examples">
@@ -152,7 +152,7 @@ period; combine with <a class="reference internal" href="shift.html"><span class
 <a class="reference internal" href="floor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floor()</span></code></span></a> with the corresponding unit; <code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code> go
 further than <code class="docutils literal notranslate"><span class="pre">floor()</span></code> supports (<code class="docutils literal notranslate"><span class="pre">floor()</span></code> has no calendar-unit option).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">freq</span></code> cannot be empty, and an unrecognized string throws.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound slate to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (displays as <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>).</p></li>
 </ul>

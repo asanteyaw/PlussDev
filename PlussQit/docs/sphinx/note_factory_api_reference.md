@@ -4,7 +4,7 @@
 
 [Back to PlussQit API Reference](../api_reference.md)
 
-This reference teaches the free functions in `pluss::note`. They answer a
+This reference covers the free functions in `pluss::note`. They answer a
 different question from the [`Note` method reference](note_api_reference.md):
 how to **build** a text payload before there is a receiver to call a method
 on.

@@ -14,9 +14,9 @@ SlateNoteAccessor::pad(std::int64_t width,
 
 ## What It Does
 
-Grows every cell of the bound thread up to a target character `width` by adding
+Grows every cell of the bound slate up to a target character `width` by adding
 `fill` characters, positioning the original text according to `align` — a direct
-forward to [`Slate::pad()`](../thread/pad.md). Requires the bound thread to be
+forward to [`Slate::pad()`](../slate/pad.md). Requires the bound slate to be
 `Note`-kind.
 
 ```cpp
@@ -50,7 +50,7 @@ multi-byte UTF-8 fill sequences.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as the bound thread, holding the
+    A new `Note`-kind slate, same length as the bound slate, holding the
     padded (or unchanged) text.
 
 ## Examples
@@ -95,7 +95,7 @@ ptype: Note
 ```
 
 Example 3. A negative `width` throws — the same message
-[`Slate::pad()`](../thread/pad.md) produces directly.
+[`Slate::pad()`](../slate/pad.md) produces directly.
 
 ```cpp
 try {
@@ -114,7 +114,7 @@ Slate::pad: width must be >= 0
 ## Notes
 
 - `SlateNoteAccessor::pad()` is a one-line forward to
-  [`Slate::pad()`](../thread/pad.md) — identical behavior and throws.
+  [`Slate::pad()`](../slate/pad.md) — identical behavior and throws.
 - `pad()` only grows; a cell already at or beyond `width` is returned unchanged,
   never truncated.
 - `width` is measured in Unicode codepoints, the same unit
@@ -125,7 +125,7 @@ Slate::pad: width must be >= 0
 
 ## See Also
 
-- [`Slate::pad`](../thread/pad.md): the direct, non-accessor form this method
+- [`Slate::pad`](../slate/pad.md): the direct, non-accessor form this method
   forwards to.
 - [`SlateNoteAccessor::chars`](chars.md): the complementary shrink/slice
   operation.

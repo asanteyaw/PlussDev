@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -78,10 +78,10 @@ payload types (<code class="docutils literal notranslate"><span class="pre">Seri
 overload converges on the same row-by-row boolean result.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>A text literal against a Timeline thread is parsed as a date, not compared as text
-Calling the <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> overload on a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread does <strong>not</strong> perform
+<p>A text literal against a Timeline slate is parsed as a date, not compared as text
+Calling the <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> overload on a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate does <strong>not</strong> perform
 a lexical string comparison — the literal is parsed as a timestamp first (via
-<code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>), then compared temporally. Only <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads (and, as a
+<code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>), then compared temporally. Only <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slates (and, as a
 fallback, everything else) compare the literal as plain text. See Example 4.</p>
 </div>
 </section>
@@ -99,12 +99,12 @@ Which comparison to perform — <code class="docutils literal notranslate"><span
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread of <code class="docutils literal notranslate"><span class="pre">Bool</span></code> values, one per row. Rows that are invalid in the
-source thread compare <code class="docutils literal notranslate"><span class="pre">false</span></code> rather than propagating invalidity.</p>
+A <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate of <code class="docutils literal notranslate"><span class="pre">Bool</span></code> values, one per row. Rows that are invalid in the
+source slate compare <code class="docutils literal notranslate"><span class="pre">false</span></code> rather than propagating invalidity.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Broadcast one numeric scalar across a numeric thread.</p>
+<p>Example 1. Broadcast one numeric scalar across a numeric slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
@@ -122,7 +122,7 @@ source thread compare <code class="docutils literal notranslate"><span class="pr
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Compare a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-backed thread against a text literal — case-sensitive, exact
+<p>Example 2. Compare a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-backed slate against a text literal — case-sensitive, exact
 text comparison, since the source is <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;BOLA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cHeN&quot;</span><span class="p">}));</span>
 
@@ -139,7 +139,7 @@ text comparison, since the source is <code class="docutils literal notranslate">
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. Compare two numeric threads element by element — a positional, row-by-row
+<p>Example 3. Compare two numeric slates element by element — a positional, row-by-row
 comparison, not a broadcast.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.0</span><span class="p">}));</span>
@@ -158,7 +158,7 @@ comparison, not a broadcast.</p>
 ptype: Series
 </pre></div>
 </div>
-<p>Example 4. Against a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, a text literal is parsed as a date before
+<p>Example 4. Against a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate, a text literal is parsed as a date before
 comparing — see the important callout above.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stamps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
@@ -199,7 +199,7 @@ size mismatch throws rather than broadcasting or truncating.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Invalid (<code class="docutils literal notranslate"><span class="pre">NULL</span></code>) rows in the source thread compare <code class="docutils literal notranslate"><span class="pre">false</span></code>, not <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — <code class="docutils literal notranslate"><span class="pre">compare()</span></code>
+<li><p>Invalid (<code class="docutils literal notranslate"><span class="pre">NULL</span></code>) rows in the source slate compare <code class="docutils literal notranslate"><span class="pre">false</span></code>, not <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — <code class="docutils literal notranslate"><span class="pre">compare()</span></code>
 never propagates invalidity into the result.</p></li>
 <li><p>A scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code> payload (<code class="docutils literal notranslate"><span class="pre">dim()</span> <span class="pre">==</span> <span class="pre">0</span></code>) broadcasts; a 1D payload must match
 <code class="docutils literal notranslate"><span class="pre">size()</span></code> exactly or the call throws.</p></li>

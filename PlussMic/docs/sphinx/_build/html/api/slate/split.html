@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,9 +54,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread on a delimiter, expanding the result into
+<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate on a delimiter, expanding the result into
 one output column per split position — column <code class="docutils literal notranslate"><span class="pre">part_0</span></code> (or <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>) holds each
-row’s first piece, <code class="docutils literal notranslate"><span class="pre">part_1</span></code> its second, and so on. Requires the thread to be
+row’s first piece, <code class="docutils literal notranslate"><span class="pre">part_1</span></code> its second, and so on. Requires the slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. There are two overloads with different delimiter semantics:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">split(delimiter,</span> <span class="pre">limit,</span> <span class="pre">prefix)</span></code></strong>: always a literal substring split (never
@@ -77,7 +77,7 @@ the capped split stays joined, it isn’t dropped further).</p>
 The single-delimiter overload (<code class="docutils literal notranslate"><span class="pre">split(delimiter,</span> <span class="pre">limit,</span> <span class="pre">prefix)</span></code>) determines the
 output column count from <strong>every</strong> row’s underlying text — including rows marked
 invalid — because it works from a raw, validity-unaware split computed once over the
-whole thread. An invalid cell whose underlying stored text happens to contain many
+whole slate. An invalid cell whose underlying stored text happens to contain many
 delimiters can inflate the column count even though that row shows <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in every one
 of them. The <code class="docutils literal notranslate"><span class="pre">(pattern,</span> <span class="pre">options)</span></code> overload does not have this quirk: it only computes
 each row’s split (and therefore only contributes to the column count) for rows that
@@ -255,7 +255,7 @@ worth of delimiters, even though the cell is invisible as <code class="docutils 
 to contribute real data. The first overload’s column count (4) is driven by that
 invisible text; the second overload’s column count (2) is driven only by the two
 genuinely valid rows.</p>
-<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
@@ -276,7 +276,7 @@ genuinely valid rows.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
 <li><p>An empty delimiter/pattern throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the <em>number of splits</em>, not the <em>number of output columns</em> directly —
 the capped remainder stays joined in the last piece (Example 2).</p></li>

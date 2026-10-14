@@ -96,7 +96,7 @@ TimeSeriesAccessor::lag_block: expected at least one lag
   equivalent "several at once" pattern for rolling window statistics.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`TimeSeriesAccessor::lag_block`](../slate-ts/lag_block.md): the
-  underlying single-thread engine.
+  underlying single-slate engine.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lag.html">

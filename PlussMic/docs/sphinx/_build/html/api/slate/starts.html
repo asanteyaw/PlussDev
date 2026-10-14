@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,10 +49,10 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Checks a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread’s cells for a literal, case-sensitive prefix match,
+<p>Checks a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate’s cells for a literal, case-sensitive prefix match,
 replacing each cell with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> — <code class="docutils literal notranslate"><span class="pre">true</span></code> where the cell’s text begins with
 <code class="docutils literal notranslate"><span class="pre">prefix</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code> where it doesn’t. The payload kind changes from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code>
-(<code class="docutils literal notranslate"><span class="pre">Bool</span></code>). Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+(<code class="docutils literal notranslate"><span class="pre">Bool</span></code>). Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 <p><code class="docutils literal notranslate"><span class="pre">starts()</span></code> has exactly one overload and takes no options — always a plain,
 case-sensitive, literal check. There’s no regex mode; use <a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matches()</span></code></span></a>
 with a pattern anchored at the start for anything more flexible.</p>
@@ -66,12 +66,12 @@ every non-null cell.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the
 elementwise prefix check.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Check a text thread for a literal prefix.</p>
+<p>Example 1. Check a text slate for a literal prefix.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;SKU-1001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sku-1002&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;REF-2003&quot;</span><span class="p">}));</span>
@@ -90,7 +90,7 @@ ptype: Series
 </div>
 <p>Row <code class="docutils literal notranslate"><span class="pre">1</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;sku-1002&quot;</span></code>) doesn’t match — the comparison is case-sensitive, so a
 lowercase <code class="docutils literal notranslate"><span class="pre">&quot;sku-&quot;</span></code> isn’t a match for <code class="docutils literal notranslate"><span class="pre">&quot;SKU-&quot;</span></code>.</p>
-<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">starts</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">);</span>
@@ -114,7 +114,7 @@ lowercase <code class="docutils literal notranslate"><span class="pre">&quot;sku
 <li><p>Case-sensitive, literal comparison only — no regex mode, no case-insensitivity
 toggle. Normalize with <a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lower()</span></code></span></a>/<a class="reference internal" href="casefold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">casefold()</span></code></span></a> first, or
 use <a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matches()</span></code></span></a>, for anything more flexible.</p></li>
-<li><p>Changes the thread’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
+<li><p>Changes the slate’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
 <li><p>A null cell on input stays null on output.</p></li>
 </ul>
 </section>

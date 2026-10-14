@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -52,8 +52,8 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Replaces occurrences of a substring or regex pattern <em>within</em> each cell’s text —
-direct forwards to <a class="reference internal" href="#../thread/replace.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::replace(from,</span> <span class="pre">to[,</span> <span class="pre">options])</span></code></span></a>.
-Requires the bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+direct forwards to <a class="reference internal" href="../slate/replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::replace(from,</span> <span class="pre">to[,</span> <span class="pre">options])</span></code></span></a>.
+Requires the bound slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
 <p>Only the text-substring overloads are exposed here
@@ -88,7 +88,7 @@ cell; matches never overlap.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as the bound thread, with matching
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as the bound slate, with matching
 text replaced.</p>
 </section>
 <section id="examples">
@@ -146,7 +146,7 @@ ptype: Note
 </div>
 <p>Row 2 has no <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> at all, so the pattern doesn’t match and the text passes through
 unchanged.</p>
-<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 4. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">);</span>
@@ -168,7 +168,7 @@ unchanged.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::replace()</span></code> forwards straight to
-<a class="reference internal" href="#../thread/replace.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::replace()</span></code></span></a>’s text-substring overloads —
+<a class="reference internal" href="../slate/replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::replace()</span></code></span></a>’s text-substring overloads —
 identical behavior and throws.</p></li>
 <li><p>Only the two text-substring overloads are exposed here; see the danger box
 above for the 14 whole-value overloads only reachable via <code class="docutils literal notranslate"><span class="pre">Slate::replace()</span></code>
@@ -180,7 +180,7 @@ directly.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/replace.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::replace</span></code></span></a>: the direct, non-accessor form —
+<li><p><a class="reference internal" href="../slate/replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::replace</span></code></span></a>: the direct, non-accessor form —
 also exposes the whole-value replacement overloads this accessor omits.</p></li>
 <li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::has</span></code></span></a>: test for a substring/pattern without
 changing the text.</p></li>

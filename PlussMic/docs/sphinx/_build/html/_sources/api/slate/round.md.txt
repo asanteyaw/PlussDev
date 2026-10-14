@@ -14,7 +14,7 @@ Slate::round(std::int64_t decimals = 0) const -> Slate
 ## What It Does
 
 Rounds every element to `decimals` decimal places (`0` means the nearest whole
-number). Requires the thread to be `Series`-kind. For `decimals != 0`, the
+number). Requires the slate to be `Series`-kind. For `decimals != 0`, the
 implementation scales up by `10^decimals`, rounds to the nearest whole number, then
 scales back down — the same multiply/round/divide approach most numeric libraries
 use for decimal rounding.
@@ -28,7 +28,7 @@ use for decimal rounding.
 ## Returns
 
 `Slate`
-    A new `Series`-kind thread, same length as `*this`, holding the rounded values.
+    A new `Series`-kind slate, same length as `*this`, holding the rounded values.
 
 ## Examples
 
@@ -71,7 +71,7 @@ std::cout << out2;
 ptype: Series
 ```
 
-Example 3. A non-`Series` thread throws.
+Example 3. A non-`Series` slate throws.
 
 ```cpp
 auto notes = Slate(pluss::make_note({"a", "b"}));
@@ -90,7 +90,7 @@ Slate::round is only valid for Series payload
 
 ## Notes
 
-- Requires the calling thread to be `Series`-kind.
+- Requires the calling slate to be `Series`-kind.
 - `decimals != 0` is implemented as scale-up, round, scale-down — subject to the
   same floating-point representation limits as any multiply/divide-based rounding.
 - A `NULL` cell on input stays `NULL` on output.

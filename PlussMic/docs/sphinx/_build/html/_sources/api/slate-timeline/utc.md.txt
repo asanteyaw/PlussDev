@@ -12,7 +12,7 @@ SlateTimelineAccessor::utc() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread's display timezone with `"UTC"` — same length,
+Replaces the bound slate's display timezone with `"UTC"` — same length,
 still `Timeline`-kind. Exactly equivalent to [`tz("UTC")`](tz.md);
 like `tz()`, the underlying instant never changes, only the timezone used to
 display it and compute local calendar fields.
@@ -24,12 +24,12 @@ display it and compute local calendar fields.
 ## Returns
 
 `Slate`
-    A new `Timeline`-kind thread, same length as the bound
-    thread, with its display timezone switched to `"UTC"`.
+    A new `Timeline`-kind slate, same length as the bound
+    slate, with its display timezone switched to `"UTC"`.
 
 ## Examples
 
-Example 1. Convert an `"America/New_York"`-labeled thread back to UTC
+Example 1. Convert an `"America/New_York"`-labeled slate back to UTC
 display.
 
 ```cpp
@@ -72,7 +72,7 @@ same instants throughout, only the display timezone changes back.
 - Purely a display-timezone relabel — the underlying instant is unchanged, so
   chaining `.tz(name).utc()` always round-trips back to the original
   displayed values.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT`.
 

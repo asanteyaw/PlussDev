@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reinterprets the bound thread’s <em>current</em> clock reading as a naive local
+<p>Reinterprets the bound slate’s <em>current</em> clock reading as a naive local
 wall-clock time in <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>, and converts it to the true UTC instant that
 local reading corresponds to — same length, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind.
 <strong>This changes the underlying instant</strong> (unlike <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>, which only
@@ -71,7 +71,7 @@ a wall-clock reading that never actually occurred).</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, same length as the bound thread,
+A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind slate, same length as the bound slate,
 with its underlying instant recomputed as if its prior reading were local
 time in <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>.</p>
 </section>
@@ -218,7 +218,7 @@ a fall-back transition; outside that window it has no effect.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nonexistent</span></code> only recognizes <code class="docutils literal notranslate"><span class="pre">&quot;shift_forward&quot;</span></code> as an actual handling
 strategy; every other value (default <code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code> included) throws for a
 spring-forward-gap reading.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound slate to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> regardless of <code class="docutils literal notranslate"><span class="pre">options</span></code>.</p></li>
 </ul>

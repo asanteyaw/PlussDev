@@ -13,9 +13,9 @@ Slate::upper() const -> Slate
 
 ## What It Does
 
-Uppercases every character in a `Note` (string) thread's cells — the mirror image
+Uppercases every character in a `Note` (string) slate's cells — the mirror image
 of [`lower()`](lower.md). Common uses include normalizing free-typed codes or
-abbreviations before comparing or grouping by them. Requires the thread to be
+abbreviations before comparing or grouping by them. Requires the slate to be
 `Note`-kind.
 
 ```{note} ASCII vs. Unicode case mapping
@@ -31,12 +31,12 @@ whether this build links the optional Unicode backend.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, with every character
+    A new `Note`-kind slate, same length as `*this`, with every character
     uppercased; non-alphabetic characters are left exactly as they were.
 
 ## Examples
 
-Example 1. Uppercase a text thread.
+Example 1. Uppercase a text slate.
 
 ```cpp
 using namespace pluss::table;
@@ -59,7 +59,7 @@ ptype: Note
 `"gh"`, `"Gh"`, and `"GH"` all normalize to the same `"GH"` — the hyphen and digits
 are untouched throughout, since `upper()` only ever changes letters.
 
-Example 2. A non-`Note` thread throws.
+Example 2. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));

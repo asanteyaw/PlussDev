@@ -13,22 +13,22 @@ Slate::isnull() const -> Slate
 
 ## What It Does
 
-Returns a `Bool`-typed `Series` thread, same length as `*this`, marking `true`
-wherever the source thread is `NULL` and `false` everywhere else. Works on every
+Returns a `Bool`-typed `Series` slate, same length as `*this`, marking `true`
+wherever the source slate is `NULL` and `false` everywhere else. Works on every
 payload kind — `Series`, `Note`, `Timeline`, `TimeIndex` — with no kind restriction,
 unlike most of the payload-specific methods elsewhere in this API.
 
 ```{important} isnull() checks the validity mask, not the numeric value
-For a `Series`-kind thread, `isnull()` only looks at the thread's validity mask — a
+For a `Series`-kind slate, `isnull()` only looks at the slate's validity mask — a
 `NaN` value that's still marked *valid* is reported `false` by `isnull()`, not
 `true`. Use [`isnan()`](isnan.md) to check for `NaN` specifically, or
 [`invalid()`](invalid.md) to catch both `NULL` and non-finite values (`NaN`/`Inf`)
 in one call. See Example 2.
 ```
 
-For a `Timeline`/`TimeIndex`-kind thread, `isnull()` also folds in the payload's own
+For a `Timeline`/`TimeIndex`-kind slate, `isnull()` also folds in the payload's own
 internal validity signal (its own "not-a-time" sentinel), in addition to the
-thread's validity mask — so a timestamp that's intrinsically invalid is reported as
+slate's validity mask — so a timestamp that's intrinsically invalid is reported as
 `NULL` here even without an explicit mask entry.
 
 ## Parameters
@@ -38,7 +38,7 @@ thread's validity mask — so a timestamp that's intrinsically invalid is report
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as `*this`.
+    A new `Bool`-typed `Series` slate, same length as `*this`.
 
 ## Examples
 
@@ -97,16 +97,16 @@ the actual floating-point value, correctly flags it.
 - Checks the validity mask (plus, for `Timeline`/`TimeIndex`, the payload's own
   internal invalid-timestamp signal) — not the numeric value. See the important
   callout above.
-- A thread with no validity mask at all reports `false` (not null) at every
+- A slate with no validity mask at all reports `false` (not null) at every
   position.
 
 ## See Also
 
 - [`Slate::notnull`](notnull.md): the logical inverse.
 - [`Slate::isnan`](isnan.md): checks the floating-point value itself, for
-  `Series`-kind threads.
+  `Series`-kind slates.
 - [`Slate::invalid`](invalid.md): the union of `isnull()` and non-finite, for
-  `Series`-kind threads.
+  `Series`-kind slates.
 - [`Slate::dropnull`](dropnull.md): remove `NULL` rows instead of just flagging
   them.
 

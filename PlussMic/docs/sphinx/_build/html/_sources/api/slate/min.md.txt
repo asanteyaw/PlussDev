@@ -13,7 +13,7 @@ Slate::min() const -> SlateValue
 
 ## What It Does
 
-Returns the smallest observed value in the thread, as a scalar `SlateValue` —
+Returns the smallest observed value in the slate, as a scalar `SlateValue` —
 and unlike [`sum()`](sum.md)/[`mean()`](mean.md)/[`median()`](median.md), this
 works on **every** payload kind, not just numeric `Series`:
 
@@ -22,7 +22,7 @@ works on **every** payload kind, not just numeric `Series`:
 - **`Timeline`/`TimeIndex`**: the earliest timestamp.
 
 Missing entries are excluded first (via [`dropnull()`](dropnull.md) when a
-validity mask is present). An empty thread, or one where every entry is
+validity mask is present). An empty slate, or one where every entry is
 missing, throws.
 
 See [`Slate::sum`'s note on printing a `SlateValue`](sum.md) — the examples
@@ -36,12 +36,12 @@ results, rather than streaming the `SlateValue` directly.
 ## Returns
 
 `SlateValue`
-    A scalar holding the smallest observed value, in the source thread's own
+    A scalar holding the smallest observed value, in the source slate's own
     payload kind (a one-entry `Series`, `Note`, `Timeline`, or `TimeIndex`).
 
 ## Examples
 
-Example 1. Smallest value in a numeric thread.
+Example 1. Smallest value in a numeric slate.
 
 ```cpp
 using namespace pluss::table;
@@ -57,7 +57,7 @@ std::cout << out.to_dbl();
 10
 ```
 
-Example 2. Alphabetically-first value in a `Note`-kind thread.
+Example 2. Alphabetically-first value in a `Note`-kind slate.
 
 ```cpp
 auto words = Slate(pluss::make_note({"banana", "apple", "cherry"}));
@@ -71,7 +71,7 @@ std::cout << out2.to_str();
 apple
 ```
 
-Example 3. Earliest timestamp in a `Timeline`-kind thread.
+Example 3. Earliest timestamp in a `Timeline`-kind slate.
 
 ```cpp
 auto events = Slate(pluss::make_timeline({
@@ -107,7 +107,7 @@ std::cout << out4.to_dbl();
 The missing `5.0` — which would otherwise be the overall smallest — is
 excluded entirely, so `30.0` (the smaller of the two *observed* values) wins.
 
-Example 5. A thread with no observed values throws.
+Example 5. A slate with no observed values throws.
 
 ```cpp
 auto all_missing = Slate(
@@ -133,7 +133,7 @@ Slate::min on an empty (all-null) selection
   `TimeIndex` — unlike `sum()`/`mean()`/`median()`, which are `Series`-only.
 - Missing entries are excluded first, via the same mechanism as
   [`dropnull()`](dropnull.md).
-- An empty thread, or one where every entry is missing, throws `"Slate::min on
+- An empty slate, or one where every entry is missing, throws `"Slate::min on
   an empty (all-null) selection"`.
 
 ## See Also

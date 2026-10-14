@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,9 +49,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Checks each cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread against a regular expression, requiring
+<p>Checks each cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate against a regular expression, requiring
 <code class="docutils literal notranslate"><span class="pre">pattern</span></code> to match the <strong>entire</strong> cell’s text — not just a prefix, the way
-<a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matches()</span></code></span></a> does. Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+<a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matches()</span></code></span></a> does. Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -61,7 +61,7 @@
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the
 elementwise full-match result.</p>
 </section>
 <section id="examples">
@@ -88,7 +88,7 @@ leftover <code class="docutils literal notranslate"><span class="pre">&quot;01&q
 exactly two digits after <code class="docutils literal notranslate"><span class="pre">SKU-</span></code> with nothing left over, so it’s <code class="docutils literal notranslate"><span class="pre">true</span></code>. Compare with
 <a class="reference internal" href="matches.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matches()</span></code></span></a>, which reported <code class="docutils literal notranslate"><span class="pre">&quot;SKU-1001&quot;</span></code> as <code class="docutils literal notranslate"><span class="pre">true</span></code> for the same
 pattern since it only checks a prefix.</p>
-<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 2. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">);</span>
@@ -110,7 +110,7 @@ pattern since it only checks a prefix.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>An invalid regex pattern throws at call time.</p></li>
-<li><p>Changes the thread’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
+<li><p>Changes the slate’s payload kind from <code class="docutils literal notranslate"><span class="pre">Note</span></code> to <code class="docutils literal notranslate"><span class="pre">Series</span></code> (<code class="docutils literal notranslate"><span class="pre">Bool</span></code>).</p></li>
 <li><p>A null cell on input stays null on output.</p></li>
 </ul>
 </section>

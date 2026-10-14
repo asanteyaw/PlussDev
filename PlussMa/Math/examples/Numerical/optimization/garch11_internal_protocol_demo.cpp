@@ -177,8 +177,6 @@ void print_ip_options(const pluss::optim::InternalProtocolOptions& opt) {
   std::cout << "  minimum_barrier_parameter=" << opt.minimum_barrier_parameter << '\n';
   std::cout << "  barrier_decay=" << opt.barrier_decay << '\n';
   std::cout << "  equality_penalty=" << opt.equality_penalty << '\n';
-  std::cout << "  centrality_fraction=" << opt.centrality_fraction << '\n';
-  std::cout << "  dual_recentering_fraction=" << opt.dual_recentering_fraction << '\n';
   std::cout << "  feasibility_activation_factor=" << opt.feasibility_activation_factor << '\n';
   std::cout << "  constraint_tolerance=" << opt.constraint_tolerance << '\n';
   std::cout << "  optimality_tolerance=" << opt.optimality_tolerance << '\n';

@@ -22,17 +22,17 @@ from `*this`. Unlike AND/OR, XOR reports `true` exactly where the two operands
 
 **other** (`const Slate&`)
 
-A `Bool`-typed `Series` thread, the same length as `*this`.
+A `Bool`-typed `Series` slate, the same length as `*this`.
 
 ## Returns
 
 `Slate`
-    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    A new `Bool`-typed slate, same length as `*this`, holding the elementwise
     logical XOR.
 
 ## Examples
 
-Example 1. XOR two boolean threads.
+Example 1. XOR two boolean slates.
 
 ```cpp
 using namespace pluss::table;

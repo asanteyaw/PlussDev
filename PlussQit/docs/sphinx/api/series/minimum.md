@@ -179,7 +179,7 @@ data=[[1, 4, 3],
   [4, 2, 4]]
 ```
 
-This verified result teaches the same quirk as `maximum()`:
+This verified result shows the same quirk as `maximum()`:
 
 - the output remains `int32`
 - the scalar does not force a floating destination

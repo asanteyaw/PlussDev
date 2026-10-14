@@ -15,16 +15,16 @@ Slate::chars(std::int64_t start,
 
 ## What It Does
 
-Slices every cell of a `Note` (string) thread the same way Python slices a string —
+Slices every cell of a `Note` (string) slate the same way Python slices a string —
 `chars(start, stop, step)` mirrors `s[start:stop:step]` exactly, including negative
 indices (counted from the end) and a negative step (walking the string backwards).
-Requires the thread to be `Note`-kind. Each cell is split into individual characters
+Requires the slate to be `Note`-kind. Each cell is split into individual characters
 (Unicode codepoints, the same unit [`length()`](length.md) counts), the slice is
 applied per-cell using that cell's own length, and the selected characters are
 rejoined into the output string.
 
 Because the slice bounds are evaluated per-cell using each cell's own length, cells of
-different lengths in the same thread can each keep a different *number* of characters
+different lengths in the same slate can each keep a different *number* of characters
 from the same `(start, stop, step)` call — exactly as it would if you ran the
 equivalent Python slice separately over each string.
 
@@ -49,11 +49,11 @@ equivalent Python slice separately over each string.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, holding the sliced text.
+    A new `Note`-kind slate, same length as `*this`, holding the sliced text.
 
 ## Examples
 
-The examples below share one input thread:
+The examples below share one input slate:
 
 ```cpp
 using namespace pluss::table;
@@ -183,7 +183,7 @@ try {
 Slate::chars: step cannot be zero
 ```
 
-Example 6. A non-`Note` thread throws.
+Example 6. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -203,7 +203,7 @@ Slate::chars: expected Note payload
 
 ## Notes
 
-- Requires the calling thread to be `Note`-kind.
+- Requires the calling slate to be `Note`-kind.
 - Slices by Unicode codepoint, the same unit [`length()`](length.md) counts.
 - Out-of-range `start`/`stop` values are clamped rather than throwing — only
   `step == 0` throws.

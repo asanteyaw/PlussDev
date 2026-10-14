@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::select" href="select.html" />
-    <link rel="prev" title="Stream::ptype" href="ptype.html" />
+    <link rel="prev" title="Stream::reduce_groups" href="reduce_groups.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -128,8 +128,8 @@ built here via <code class="docutils literal notranslate"><span class="pre">Slat
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">raw_series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mask_values</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">};</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">mask_series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">mask_values</span><span class="p">);</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="w"> </span><span class="nf">thread_with_nulls</span><span class="p">(</span><span class="n">raw_series</span><span class="p">,</span><span class="w"> </span><span class="n">mask_series</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">::</span><span class="n">from_slate</span><span class="p">(</span><span class="n">thread_with_nulls</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="w"> </span><span class="nf">slate_with_nulls</span><span class="p">(</span><span class="n">raw_series</span><span class="p">,</span><span class="w"> </span><span class="n">mask_series</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">::</span><span class="n">from_slate</span><span class="p">(</span><span class="n">slate_with_nulls</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">scribbelize</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">holds_alternative</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">monostate</span><span class="o">&gt;</span><span class="p">(</span><span class="n">slot</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">holds_alternative</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">monostate</span><span class="o">&gt;</span><span class="p">(</span><span class="n">slot</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -258,7 +258,7 @@ bridge from Kindle into the table model, instead of the scribble model.</p></li>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../stream_api_reference.html">Stream API Reference</a><ul>
-      <li>Previous: <a href="ptype.html" title="previous chapter">Stream::ptype</a></li>
+      <li>Previous: <a href="reduce_groups.html" title="previous chapter">Stream::reduce_groups</a></li>
       <li>Next: <a href="select.html" title="next chapter">Stream::select</a></li>
   </ul></li>
   </ul></li>

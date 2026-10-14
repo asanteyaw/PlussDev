@@ -5,6 +5,7 @@
 #include "CodeM/compat/Invoke.h"
 #include "CodeM/core/OpsInternal.h"
 #include "CodeM/core/SeriesTape.h"
+#include "CodeM/core/TypePromotion.h"
 
 #include <cmath>
 #include <cstddef>
@@ -82,6 +83,31 @@ inline bool has_reverse_path_(const Series& value) {
   return value.tracks_slope() ||
          pluss::codem::series_tape::source_info(value).has_value();
 }
+
+class SensitivityRetentionScope final {
+public:
+  explicit SensitivityRetentionScope(const std::vector<Series>& values) {
+    retained_.reserve(values.size());
+    for (const auto& value : values) {
+      retained_.emplace_back(
+          value, pluss::codem::series_tape::keeps_sensitivity(value));
+      pluss::codem::series_tape::set_keep_sensitivity(value, true);
+    }
+  }
+
+  SensitivityRetentionScope(const SensitivityRetentionScope&) = delete;
+  SensitivityRetentionScope& operator=(const SensitivityRetentionScope&) =
+      delete;
+
+  ~SensitivityRetentionScope() {
+    for (const auto& [series, previous] : retained_) {
+      pluss::codem::series_tape::set_keep_sensitivity(series, previous);
+    }
+  }
+
+private:
+  std::vector<std::pair<Series, bool>> retained_;
+};
 
 inline void reverse_with_context_(const Series& output, const char* op) {
   try {
@@ -1780,6 +1806,7 @@ std::pair<Series, std::vector<Series>> value_and_grad(
     vars.emplace_back(p);
     detail::ensure_tracks_slope_(vars.back().value());
   }
+  detail::SensitivityRetentionScope retain_inputs(params);
 
   Trace loss = std::forward<Fn>(fn)(vars);
   if (!loss.defined()) {
@@ -2967,9 +2994,9 @@ std::pair<Series, std::vector<Series>> hvp_lanes(
   }
 }
 
-// Higher-order helper built on top of transform semantics.
-// `nth_diff` mirrors repeated first-derivative composition while preserving
-// graph requirements (keep_graph / higher-order tracking) automatically.
+// Full derivative tensors use output axes first, followed by one copy of the
+// input axes for every derivative order. Reverse passes produce one complete
+// final input axis at a time, avoiding a redundant scalar pass for that axis.
 template <class Fn>
 Series nth_diff(Fn&& fn,
                 const Series& param,
@@ -2980,94 +3007,223 @@ Series nth_diff(Fn&& fn,
   if (order < 0) {
     ::pluss::throw_error("subsp::math::diff::nth_diff: order must be non-negative");
   }
-
-  auto reverse_chain = [&](Series leaf, const Series& objective_value) -> Series {
-    detail::require_defined_(objective_value, "nth_diff");
-    PLUSS_CHECK(objective_value.numel() > 0, "subsp::math::diff::nth_diff: objective must not be empty");
-    if (order == 0) return objective_value;
-
-    // egrad-style reduction for non-scalar outputs: VJP against ones.
-    Series current = (objective_value.numel() == 1) ? objective_value : objective_value.sum();
-    for (std::int64_t k = 1; k <= order; ++k) {
-      pluss::codem::series_tape::clear_sensitivity(leaf);
-      const bool interior_order_step = (k < order);
-      ReversePolicy reverse_policy{};
-      reverse_policy.keep_graph = policy.keep_graph || interior_order_step;
-      reverse_policy.accumulate_sensitivity = false;
-      reverse_policy.track_higher_order = policy.track_higher_order || interior_order_step;
-      if (detail::has_reverse_path_(current)) {
-        current.reverse(
-            reverse_policy.keep_graph,
-            reverse_policy.accumulate_sensitivity,
-            reverse_policy.track_higher_order);
-      }
-
-      if (!leaf.has_sensitivity()) {
-        if (policy.strict_dependency) {
-          ::pluss::throw_error(
-              "subsp::math::diff::nth_diff: objective is disconnected from input");
-        }
-        if (policy.warn_on_disconnected) {
-          PLUSS_WARN(
-              "subsp::math::diff::nth_diff: objective disconnected from input; "
-              "materializing disconnected derivative according to policy "
-              "(set strict_dependency=true to fail loud).");
-        }
-        if (policy.disconnected_sensitivity == DisconnectedSensitivity::Undefined) {
-          return pluss::series::undefined();
-        }
-        return detail::zeros_like_(leaf);
-      }
-      current = leaf.sensitivity();
-      if (k < order && current.numel() > 1) current = current.sum();
-    }
-    return current;
-  };
+  (void)opt;
 
   using FnType = std::decay_t<Fn>;
-  if constexpr (std::is_invocable_v<FnType&, const Trace&>) {
+  if constexpr (std::is_invocable_v<FnType&, const Series&>) {
     FnType fn_copy(std::forward<Fn>(fn));
     Series leaf = param.detach();
     detail::set_tracks_slope_(leaf, true);
-    Trace out = fn_copy(Trace(leaf));
-    if (!out.defined()) {
+
+    Series output = fn_copy(leaf);
+    if (!output.defined()) {
       ::pluss::throw_error(
-          "subsp::math::diff::nth_diff: objective returned undefined Trace");
+          "subsp::math::diff::nth_diff: objective returned undefined output");
     }
-    return reverse_chain(std::move(leaf), out.value());
-  } else if constexpr (std::is_invocable_v<FnType&, const Series&>) {
+    if (order == 0) return output;
+
+    if (param.dim() > 0 &&
+        order > (static_cast<std::int64_t>(pluss::codem::kMaxSeriesRank) -
+                 output.dim()) /
+                    param.dim()) {
+      ::pluss::throw_error(
+          "subsp::math::diff::nth_diff: derivative tensor rank exceeds the "
+          "64-dimensional Series limit; use JVP, VJP, or HVP products instead");
+    }
+    std::vector<std::int64_t> result_shape(output.sizes().begin(),
+                                           output.sizes().end());
+    for (std::int64_t level = 0; level < order; ++level) {
+      result_shape.insert(result_shape.end(), param.sizes().begin(),
+                          param.sizes().end());
+    }
+    if (output.numel() == 0 || param.numel() == 0) {
+      return pluss::series::empty(result_shape, param.scalar_type())
+          .to(param.platform());
+    }
+
+    std::vector<Series> branches;
+    branches.reserve(static_cast<std::size_t>(output.numel()));
+    const Series flat_output = output.reshape({output.numel()});
+    for (std::int64_t lane = 0; lane < output.numel(); ++lane) {
+      branches.push_back(flat_output.select(0, lane));
+    }
+
+    bool warned_disconnected = false;
+    for (std::int64_t level = 1; level <= order; ++level) {
+      const bool interior = level < order;
+      std::vector<Series> next;
+      std::vector<Series> rows;
+      if (interior) {
+        next.reserve(static_cast<std::size_t>(branches.size()) *
+                     static_cast<std::size_t>(param.numel()));
+      } else {
+        rows.reserve(branches.size());
+      }
+
+      for (const Series& branch : branches) {
+        pluss::codem::series_tape::clear_sensitivity(leaf);
+        if (detail::has_reverse_path_(branch)) {
+          branch.reverse(/*keep_graph=*/policy.keep_graph || interior ||
+                             branches.size() > 1,
+                         /*accumulate_sensitivity=*/false,
+                         /*track_higher_order=*/policy.track_higher_order ||
+                             interior);
+        }
+
+        Series gradient = pluss::series::undefined();
+        if (leaf.has_sensitivity()) {
+          gradient = leaf.sensitivity();
+        } else {
+          if (level == 1 && policy.strict_dependency) {
+            ::pluss::throw_error(
+                "subsp::math::diff::nth_diff: an output lane is disconnected "
+                "from the input");
+          }
+          if (level == 1 && policy.warn_on_disconnected &&
+              !warned_disconnected) {
+            PLUSS_WARN(
+                "subsp::math::diff::nth_diff: one or more output lanes are "
+                "disconnected from the input; materializing zeros according "
+                "to policy (set strict_dependency=true to fail loud).");
+            warned_disconnected = true;
+          }
+          if (policy.disconnected_sensitivity ==
+              DisconnectedSensitivity::Undefined) {
+            return pluss::series::undefined();
+          }
+          gradient = detail::zeros_like_(leaf);
+        }
+
+        if (interior) {
+          const Series flat_gradient = gradient.reshape({param.numel()});
+          for (std::int64_t lane = 0; lane < param.numel(); ++lane) {
+            next.push_back(flat_gradient.select(0, lane));
+          }
+        } else {
+          rows.push_back(gradient.reshape({1, param.numel()}));
+        }
+      }
+
+      if (interior) {
+        branches = std::move(next);
+      } else {
+        return detail::stack_rows_(rows, param.numel(), param.scalar_type(),
+                                   param.platform())
+            .reshape(result_shape);
+      }
+    }
+    return pluss::series::undefined();
+  } else if constexpr (std::is_invocable_v<FnType&, const Trace&>) {
     FnType fn_copy(std::forward<Fn>(fn));
-    Series leaf = param.detach();
-    detail::set_tracks_slope_(leaf, true);
-    Series out = fn_copy(leaf);
-    if (!out.defined()) {
-      ::pluss::throw_error(
-          "subsp::math::diff::nth_diff: objective returned undefined Series");
-    }
-    return reverse_chain(std::move(leaf), out);
+    auto series_callback = [&fn_copy](const Series& value) {
+      Trace output = fn_copy(Trace(value));
+      if (!output.defined()) {
+        ::pluss::throw_error(
+            "subsp::math::diff::nth_diff: objective returned undefined Trace");
+      }
+      return output.value();
+    };
+    return nth_diff(series_callback, param, order, opt, policy);
   } else if constexpr (std::is_invocable_v<FnType&, const DualTrace&>) {
     if (order == 0) {
       const Series tangent = detail::zeros_like_(param);
       return jvp(std::forward<Fn>(fn), param, tangent).first;
     }
     if (order == 1) {
-      return grad(
-          [&](const Trace& z) -> Trace {
-            return fn(trace(z.value(), detail::zeros_like_(z.value()))).value();
-          },
-          param,
-          policy);
-    }
-    if (order == 2) {
-      const Series tangent = detail::ones_like_(param);
-      return hvp(std::forward<Fn>(fn), param, tangent, opt, policy).second;
+      auto [value, derivative] = jacfwd(std::forward<Fn>(fn), param);
+      std::vector<std::int64_t> shape(value.sizes().begin(), value.sizes().end());
+      shape.insert(shape.end(), param.sizes().begin(), param.sizes().end());
+      return derivative.reshape(shape);
     }
     ::pluss::throw_error(
-        "subsp::math::diff::nth_diff: order > 2 requires a Trace-callable or Series-callable objective");
+        "subsp::math::diff::nth_diff: order > 1 requires a Trace-callable or "
+        "Series-callable objective");
   } else {
     ::pluss::throw_error(
         "subsp::math::diff::nth_diff: objective must be callable with Trace, Series, or DualTrace");
   }
+}
+
+// Treat several independently shaped Series as one ordered coordinate space.
+// Every derivative axis has length sum(params[i].numel()); coordinates are
+// assigned by argument order, then row-major flat position within an argument.
+// Packing and reconstruction use Series operations so the implementation stays
+// on the selected backend and delegates all derivative traversal to the
+// canonical single-input engine above.
+template <class Fn>
+Series nth_diff(Fn&& fn,
+                const std::vector<Series>& params,
+                std::int64_t order,
+                const HvpOptions& opt = {},
+                const DerivativePolicy& policy = {}) {
+  if (params.empty()) {
+    ::pluss::throw_error(
+        "subsp::math::diff::nth_diff: expected at least one independent Series");
+  }
+
+  const auto platform = params.front().platform();
+  ScalarType joint_dtype = params.front().scalar_type();
+  std::int64_t joint_size = 0;
+  std::vector<std::vector<std::int64_t>> shapes;
+  std::vector<ScalarType> dtypes;
+  std::vector<std::int64_t> offsets;
+  shapes.reserve(params.size());
+  dtypes.reserve(params.size());
+  offsets.reserve(params.size() + 1);
+  offsets.push_back(0);
+
+  for (const Series& param : params) {
+    detail::require_defined_(param, "nth_diff");
+    detail::require_float_dtype_(param, "nth_diff");
+    if (param.platform() != platform) {
+      ::pluss::throw_error(
+          "subsp::math::diff::nth_diff: all independent Series must use the same platform");
+    }
+    if (param.numel() > std::numeric_limits<std::int64_t>::max() - joint_size) {
+      ::pluss::throw_error(
+          "subsp::math::diff::nth_diff: joint coordinate count overflows int64");
+    }
+    joint_size += param.numel();
+    joint_dtype = promote_types(joint_dtype, param.scalar_type());
+    shapes.emplace_back(param.sizes().begin(), param.sizes().end());
+    dtypes.push_back(param.scalar_type());
+    offsets.push_back(joint_size);
+  }
+
+  std::vector<Series> flat_parts;
+  flat_parts.reserve(params.size());
+  for (const Series& param : params) {
+    if (param.numel() == 0) continue;
+    Series flat = param.reshape({param.numel()});
+    if (flat.scalar_type() != joint_dtype) flat = flat.to(joint_dtype);
+    flat_parts.push_back(std::move(flat));
+  }
+
+  Series joint = pluss::series::empty({0}, joint_dtype).to(platform);
+  if (!flat_parts.empty()) {
+    joint = flat_parts.front();
+    if (flat_parts.size() > 1) {
+      joint = joint.unite(
+          std::vector<Series>(flat_parts.begin() + 1, flat_parts.end()), 0);
+    }
+  }
+
+  using FnType = std::decay_t<Fn>;
+  FnType fn_copy(std::forward<Fn>(fn));
+  auto packed_fn = [fn_copy = std::move(fn_copy), shapes = std::move(shapes),
+                    dtypes = std::move(dtypes), offsets = std::move(offsets)](
+                       const Series& packed) mutable -> Series {
+    std::vector<Series> unpacked;
+    unpacked.reserve(shapes.size());
+    for (std::size_t i = 0; i < shapes.size(); ++i) {
+      Series value = packed.slice(0, offsets[i], offsets[i + 1]).reshape(shapes[i]);
+      if (value.scalar_type() != dtypes[i]) value = value.to(dtypes[i]);
+      unpacked.push_back(std::move(value));
+    }
+    return fn_copy(unpacked);
+  };
+
+  return nth_diff(std::move(packed_fn), joint, order, opt, policy);
 }
 
 template <class Fn>

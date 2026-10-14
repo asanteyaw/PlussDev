@@ -16,15 +16,15 @@ SlatePlotAccessor::pie(const Slate& labels, const PiePlotOptions& options) const
 
 ## What It Does
 
-Draws a pie chart from the bound thread's values, with slice labels coming either from an
-explicit companion `labels` thread or (if omitted) from the wrapped frame's own row
+Draws a pie chart from the bound slate's values, with slice labels coming either from an
+explicit companion `labels` slate or (if omitted) from the wrapped frame's own row
 labels — the single-series specialization of
 [`DataFramePlotAccessor::pie`](../../api/dataframe-plot/pie.md).
 
 ```{important} Non-positive and non-finite values are silently dropped, not zero-sized slices
 Exactly like [`DataFramePlotAccessor::pie`](../../api/dataframe-plot/pie.md), only rows
-where the bound thread's value is both finite and strictly greater than zero survive. A
-thread with no positive finite values throws `"DataFrame::plot().pie: feature 'value' has
+where the bound slate's value is both finite and strictly greater than zero survive. A
+slate with no positive finite values throws `"DataFrame::plot().pie: feature 'value' has
 no positive finite values"` — see that page's important callout for the full rule,
 including how percentages are computed against the filtered total.
 ```
@@ -32,8 +32,8 @@ including how percentages are computed against the filtered total.
 ## Parameters
 
 **labels** (`const Slate&`, optional)
-    A companion thread whose values label each slice. Must match the bound thread's size,
-    or the call throws `"Slate::plot: thread size mismatch"`. Omitted falls back to the
+    A companion slate whose values label each slice. Must match the bound slate's size,
+    or the call throws `"Slate::plot: slate size mismatch"`. Omitted falls back to the
     wrapped frame's own row labels — see [`line()`](line.md)'s row-label inheritance rule.
 
 **options** (`PiePlotOptions`)
@@ -48,7 +48,7 @@ including how percentages are computed against the filtered total.
 
 ## Examples
 
-Example 1. An explicit `labels` thread.
+Example 1. An explicit `labels` slate.
 
 ```cpp
 using namespace pluss::table;
@@ -65,7 +65,7 @@ chart.show();
 
 ![Output of Example 1](img/pie-1.svg)
 
-Example 2. No `labels`: falls back to the bound thread's own row labels.
+Example 2. No `labels`: falls back to the bound slate's own row labels.
 
 ```cpp
 auto labeled_spend = Slate(pluss::make_series({420.0, 180.0, 90.0, 130.0}))
@@ -97,7 +97,7 @@ chart.show();
   see the important callout above.
 - `labels` omitted falls back to the wrapped frame's own row labels — see
   [`line()`](line.md)'s row-label inheritance rule.
-- An entirely-filtered-out thread throws rather than producing an empty chart.
+- An entirely-filtered-out slate throws rather than producing an empty chart.
 - Returns a `pluss::pl::Studio` — see [`line()`](line.md) for how to view or save the
   result.
 

@@ -16,7 +16,7 @@ Slate::corr_with(const Slate& other, SlateCorrMethod method = SlateCorrMethod::P
 Computes the same correlation [`corr()`](corr.md) does, but returns it as a
 scalar `SlateValue` gated by `min_count` instead of a raw `double` — below
 `min_count` valid pairs, the result is marked *invalid* rather than returning
-`NaN` as a plain, unflagged value. Both threads must be numeric `Series`; case
+`NaN` as a plain, unflagged value. Both slates must be numeric `Series`; case
 labels align the pairing exactly as they do for [`corr()`](corr.md).
 
 ```{note} invalid whenever the underlying correlation isn't finite
@@ -33,7 +33,7 @@ result. You never need to separately guard against a `NaN` hiding behind a
 ## Parameters
 
 **other** (`const Slate&`)
-    The numeric `Series` thread to correlate with.
+    The numeric `Series` slate to correlate with.
 
 **method** (`SlateCorrMethod`, default `Pearson`)
     `Pearson`, `Spearman`, or `KendallTau` — same semantics as
@@ -123,7 +123,7 @@ false
 - See the important callout above: validity covers both the `min_count` gate
   and whether the underlying correlation itself came out finite, across all
   three methods.
-- Both threads must already share the same platform, or it throws
+- Both slates must already share the same platform, or it throws
   `"Slate::corr_with: operands must share a platform"`.
 - Restricted to numeric `Series` payloads; anything else throws
   `"Slate::corr_with: expected a real numeric Series Slate"`.

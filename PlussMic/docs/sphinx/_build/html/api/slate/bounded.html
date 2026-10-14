@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes a window statistic over the thread using <strong>custom, per-row window
+<p>Computes a window statistic over the slate using <strong>custom, per-row window
 boundaries</strong> you supply — the general-purpose escape hatch behind
 <a class="reference internal" href="weigh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weigh()</span></code></span></a> and the fixed-width rolling window methods on
 <a class="reference internal" href="ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::ts()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code> (<code class="docutils literal notranslate"><span class="pre">rolling()</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding()</span></code>,
@@ -57,7 +57,7 @@ boundaries</strong> you supply — the general-purpose escape hatch behind
 internally and delegate to the same machinery this method exposes directly).
 Reach for <code class="docutils literal notranslate"><span class="pre">bounded()</span></code> when a fixed rolling width isn’t expressive enough and
 each output row needs its own, independently-computed window.</p>
-<p><code class="docutils literal notranslate"><span class="pre">bounds</span></code> is called once, given the thread’s <code class="docutils literal notranslate"><span class="pre">size()</span></code> and the active
+<p><code class="docutils literal notranslate"><span class="pre">bounds</span></code> is called once, given the slate’s <code class="docutils literal notranslate"><span class="pre">size()</span></code> and the active
 <code class="docutils literal notranslate"><span class="pre">WindowOptions</span></code>, and must return a <code class="docutils literal notranslate"><span class="pre">{starts,</span> <span class="pre">ends}</span></code> pair of equal-length
 vectors — one <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code> half-open interval per output row. Restricted to
 numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; every other kind or dtype throws.</p>
@@ -81,7 +81,7 @@ window’s shape.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread the same length as the source, holding the requested
+A new slate the same length as the source, holding the requested
 statistic evaluated over each row’s custom window.</p>
 </section>
 <section id="examples">
@@ -159,7 +159,7 @@ window: <code class="docutils literal notranslate"><span class="pre">15</span> <
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">bounds</span></code> must return <code class="docutils literal notranslate"><span class="pre">starts</span></code>/<code class="docutils literal notranslate"><span class="pre">ends</span></code> vectors the same length as the source
-thread; each row’s window is <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code>, half-open.</p></li>
+slate; each row’s window is <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code>, half-open.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">centered</span></code> and <code class="docutils literal notranslate"><span class="pre">closure</span></code> in <code class="docutils literal notranslate"><span class="pre">options</span></code> have no effect here, since your
 <code class="docutils literal notranslate"><span class="pre">bounds</span></code> callback already fully controls each window’s shape — they only
 matter for the fixed-width wrappers built on top of this method.</p></li>

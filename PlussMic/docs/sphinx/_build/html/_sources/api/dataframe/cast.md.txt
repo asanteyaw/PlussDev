@@ -142,7 +142,7 @@ becomes `NULL`, matching the normal `Note -> Series` conversion path.
 - [`DataFrame::astype`](astype.md): the dtype-only shorthand when the target is
   definitely `Series`.
 - [`DataFrameLabelAccessor::values`](../dataframe-label/values.md): pull the case-label
-  thread when you need to cast labels explicitly and then reattach them with
+  slate when you need to cast labels explicitly and then reattach them with
   [`set(...)`](../dataframe-label/set.md).
 
 <div class="pluss-inline-prev-next">

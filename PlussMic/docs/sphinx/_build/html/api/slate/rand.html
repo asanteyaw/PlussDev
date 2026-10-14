@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -71,7 +71,7 @@ observable difference from <code class="docutils literal notranslate"><span clas
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed thread holding the same values <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a> would
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed slate holding the same values <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a> would
 produce for the same arguments — but with display labels carried from <code class="docutils literal notranslate"><span class="pre">other</span></code>
 instead of from <code class="docutils literal notranslate"><span class="pre">*this</span></code>.</p>
 </section>
@@ -113,7 +113,7 @@ row labels differ: <code class="docutils literal notranslate"><span class="pre">
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>If neither thread has display labels set, this distinction is invisible — both
+<li><p>If neither slate has display labels set, this distinction is invisible — both
 methods fall back to the same default <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code> row index either way.</p></li>
 <li><p>This label-carry difference is specific to <code class="docutils literal notranslate"><span class="pre">Slate</span></code>; the equivalent
 <a class="reference internal" href="../dataframe/rand.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::rand</span></code></span></a> was fixed in an earlier revision to

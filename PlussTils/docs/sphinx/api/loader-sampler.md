@@ -2,31 +2,24 @@
 
 [Back to Loaders](loaders.md) · [Loader API Reference](../api_reference.md)
 
+## Signature
+
 ```cpp
 #include <pluss/tils/aux/sampler.h>
 
-class Sampler {
-public:
-  virtual std::vector<std::int64_t> sample(std::int64_t size, std::uint64_t epoch_seed) const = 0;
-};
+virtual std::vector<std::int64_t> Sampler::sample(std::int64_t size, std::uint64_t epoch_seed) const = 0;
 
-class SequentialSampler final : public Sampler {};
-
-class RandomSampler final : public Sampler {
-public:
-  explicit RandomSampler(bool replacement = false, std::int64_t num_samples = -1);
-};
-
-class SubsetRandomSampler final : public Sampler {
-public:
-  explicit SubsetRandomSampler(std::vector<std::int64_t> indices);
-};
-
-class WeightedRandomSampler final : public Sampler {
-public:
-  explicit WeightedRandomSampler(std::vector<double> weights, std::int64_t num_samples, bool replacement = true);
-};
+SequentialSampler::SequentialSampler();
+explicit RandomSampler::RandomSampler(bool replacement = false, std::int64_t num_samples = -1);
+explicit SubsetRandomSampler::SubsetRandomSampler(std::vector<std::int64_t> indices);
+explicit WeightedRandomSampler::WeightedRandomSampler(std::vector<double> weights, std::int64_t num_samples, bool replacement = true);
 ```
+
+`SequentialSampler`, `RandomSampler`, `SubsetRandomSampler`, and
+`WeightedRandomSampler` each derive from `Sampler` and implement `sample`
+with their own strategy; none adds any member beyond its own constructor.
+
+## What It Does
 
 A `Sampler` decides the order `DataLoader` visits a dataset's indices in, for one epoch. `sample` returns the whole order up front, as a plain vector, rather than producing one index at a time; the caller passes `epoch_seed`, already offset for the current epoch, so the same sampler instance gives a different but reproducible order each epoch. Set one on `DataLoaderOptions::sampler`; it is mutually exclusive with the plain `shuffle` flag.
 

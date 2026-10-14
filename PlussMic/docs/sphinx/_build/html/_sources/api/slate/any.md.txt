@@ -13,7 +13,7 @@ Slate::any(bool skipnull = true) const -> SlateValue
 
 ## What It Does
 
-Returns whether **at least one** entry in a `Bool` `Series` thread is `true` —
+Returns whether **at least one** entry in a `Bool` `Series` slate is `true` —
 a scalar existence test. Restricted to `Bool` `Series` payloads; any other kind
 or dtype throws. With a validity mask present, missing entries are excluded
 from consideration entirely (their underlying stored value, whatever it happens
@@ -28,7 +28,7 @@ the `SlateValue` directly.
 ## Parameters
 
 **skipnull** (`bool`, default `true`)
-    Must stay `true` when the thread has a validity mask — missing entries are
+    Must stay `true` when the slate has a validity mask — missing entries are
     always excluded from the reduction when a mask is present. `skipnull =
     false` together with a validity mask throws.
 
@@ -36,7 +36,7 @@ the `SlateValue` directly.
 
 `SlateValue`
     A scalar `Bool`: `true` if any observed entry is `true`, `false` otherwise
-    (including for an all-`false` or entirely-missing thread).
+    (including for an all-`false` or entirely-missing slate).
 
 ## Examples
 

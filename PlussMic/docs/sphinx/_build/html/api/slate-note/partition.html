@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,10 +49,10 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Splits every cell of the bound thread at the <em>first</em> occurrence of a literal
+<p>Splits every cell of the bound slate at the <em>first</em> occurrence of a literal
 <code class="docutils literal notranslate"><span class="pre">separator</span></code>, always producing exactly <strong>three</strong> output columns: the text before
 the separator, the separator itself, and the text after it — a direct forward to
-<a class="reference internal" href="#../thread/partition.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::partition()</span></code></span></a>. Requires the bound thread to be
+<a class="reference internal" href="../slate/partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::partition()</span></code></span></a>. Requires the bound slate to be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Narrower and simpler than <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>: always literal (no
 regex), always stops at the first match, always exactly three columns.</p>
 <div class="admonition important">
@@ -127,7 +127,7 @@ genuinely <code class="docutils literal notranslate"><span class="pre">NULL</spa
 </pre></div>
 </div>
 <p>Example 3. An empty separator throws — the same message
-<a class="reference internal" href="#../thread/partition.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::partition()</span></code></span></a> produces directly.</p>
+<a class="reference internal" href="../slate/partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::partition()</span></code></span></a> produces directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entries</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">partition</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -147,7 +147,7 @@ genuinely <code class="docutils literal notranslate"><span class="pre">NULL</spa
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::partition()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/partition.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::partition()</span></code></span></a> — identical behavior and
+<a class="reference internal" href="../slate/partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::partition()</span></code></span></a> — identical behavior and
 throws.</p></li>
 <li><p>Always literal (no regex) and always stops at the <em>first</em> occurrence — for a
 regex-aware or multi-way split, use <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>.</p></li>
@@ -158,7 +158,7 @@ regex-aware or multi-way split, use <a class="reference internal" href="split.ht
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/partition.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::partition</span></code></span></a>: the direct, non-accessor form
+<li><p><a class="reference internal" href="../slate/partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::partition</span></code></span></a>: the direct, non-accessor form
 this method forwards to.</p></li>
 <li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::split</span></code></span></a>: the more general, possibly-regex,
 unlimited-pieces sibling, with genuine <code class="docutils literal notranslate"><span class="pre">NULL</span></code>-padding instead of empty

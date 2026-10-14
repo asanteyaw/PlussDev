@@ -39,8 +39,8 @@ own once the missing position scrolls out of the trailing window. See Example 2.
 
 **min_periods** (`std::int64_t`, default `1`)
     The minimum number of positions that must actually exist in a window near
-    the start of the thread (a purely structural count based on how much of the
-    thread has been seen so far — see the important callout above for why this
+    the start of the slate (a purely structural count based on how much of the
+    slate has been seen so far — see the important callout above for why this
     is *not* the same as "non-missing observations").
 
 **epsilon** (`double`, default `1e-12`)
@@ -50,12 +50,12 @@ own once the missing position scrolls out of the trailing window. See Example 2.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, holding the rolling z-score
+    A new slate, same length as the bound source, holding the rolling z-score
     at each position.
 
 ## Examples
 
-Example 1. A rolling z-score over a clean (no missing values) thread.
+Example 1. A rolling z-score over a clean (no missing values) slate.
 
 ```cpp
 using namespace pluss::table;

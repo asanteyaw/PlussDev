@@ -123,7 +123,7 @@ one. Use `keep_extension=true` or narrower `load`/`ignore` filters when you need
 
 Every example below writes its own real files to a scratch directory first
 (via `DataFrame::save_csv`/`save_json`/`save_parquet`), so each one is a
-complete, self-contained, copy-pasteable teaching unit rather than assuming
+complete, self-contained, copy-pasteable unit rather than assuming
 files already exist somewhere. Each example uses its own directory, so
 running them in any order (or more than once) never leaves stale files from
 one example interfering with another.
@@ -320,7 +320,7 @@ valid, regardless of what files it actually contains.
 - `parallel=true` means outer file-level concurrency across the discovered tables, not
   “parallel parsing inside one csv file”.
 - Actual per-file parsing still remains delegated to `DataFrame::load(...)`.
-- The `config` field lets you stay format-flexible without teaching Nexus parser-specific knobs.
+- The `config` field lets you stay format-flexible without exposing Nexus parser-specific knobs.
 - Validation order: `directory` must exist and be an actual directory first;
   only then is the `load`/`ignore` mutual-exclusivity check applied; only
   after both pass does the directory actually get scanned.

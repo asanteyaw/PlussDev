@@ -199,7 +199,7 @@ engine this method delegates to internally.
   exposes the calendar-duration overload — see the important callout above.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
 - [`TimeSeriesAccessor::rolling`](../slate-ts/rolling.md): the underlying
-  single-thread engine this method's fixed-window form delegates to.
+  single-slate engine this method's fixed-window form delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="returns.html">

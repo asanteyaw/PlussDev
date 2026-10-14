@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -56,7 +56,7 @@ the <code class="docutils literal notranslate"><span class="pre">Slate</span></c
 Subtraction is not commutative, so — unlike <code class="docutils literal notranslate"><span class="pre">add()</span></code> — <code class="docutils literal notranslate"><span class="pre">sub()</span></code> and its reflected form
 <a class="reference internal" href="rsub.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rsub()</span></code></span></a> genuinely produce different results, even for plain numbers.</p>
 <p>Unlike <code class="docutils literal notranslate"><span class="pre">add()</span></code>, there is no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-payload special case for <code class="docutils literal notranslate"><span class="pre">sub()</span></code> — subtracting one
-string thread from another always throws.</p>
+string slate from another always throws.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -67,7 +67,7 @@ string thread from another always throws.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise difference.</p>
+A new slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise difference.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -88,7 +88,7 @@ A new thread, same length as <code class="docutils literal notranslate"><span cl
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. Subtract two threads positionally.</p>
+<p>Example 2. Subtract two slates positionally.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">boost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">boost</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
@@ -114,7 +114,7 @@ calling <code class="docutils literal notranslate"><span class="pre">prices.sub(
 <li><p>See <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> for the family-wide mechanics: positional matching, the
 length-mismatch throw (<code class="docutils literal notranslate"><span class="pre">&quot;Slate::sub(Slate):</span> <span class="pre">positional</span> <span class="pre">operation</span> <span class="pre">requires</span> <span class="pre">identical</span> <span class="pre">lengths&quot;</span></code>), and how display labels carry through.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sub()</span></code> has no <code class="docutils literal notranslate"><span class="pre">Note</span></code>-payload special case — subtraction between two <code class="docutils literal notranslate"><span class="pre">Note</span></code>
-threads throws <code class="docutils literal notranslate"><span class="pre">&quot;unsupported</span> <span class="pre">payload</span> <span class="pre">combination&quot;</span></code>, unlike <code class="docutils literal notranslate"><span class="pre">add()</span></code>’s
+slates throws <code class="docutils literal notranslate"><span class="pre">&quot;unsupported</span> <span class="pre">payload</span> <span class="pre">combination&quot;</span></code>, unlike <code class="docutils literal notranslate"><span class="pre">add()</span></code>’s
 concatenation exception.</p></li>
 </ul>
 </section>

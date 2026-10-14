@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -62,8 +62,8 @@ mechanics; this page covers what’s specific to the <code class="docutils liter
 <p class="admonition-title">Important</p>
 <p>Stream has no name() — every chart is column-named “value”/”x”/”hue”
 <code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::line</span></code>’s naming rule names the wrapped column after the source
-<code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one, falling back to <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> (the bound thread) or
-<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> (a companion thread) otherwise. <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code> never sets a name on the
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one, falling back to <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> (the bound slate) or
+<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> (a companion slate) otherwise. <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code> never sets a name on the
 <code class="docutils literal notranslate"><span class="pre">Slate</span></code> it produces — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no <code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> concept at all — so every
 <code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor</span></code> chart’s axis labels are <strong>always</strong> the generic fallback names: <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>
 for the bound stream, <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> for a companion stream (other methods on this accessor use
@@ -84,7 +84,7 @@ label, otherwise a plain case index. See Examples 1 and 2.</p>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>, optional)
 A companion stream used as the x-axis. Must be the same size as the bound stream — a
-mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code> (the message still refers
+mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">slate</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code> (the message still refers
 to <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, since that’s where the size check actually runs after both streams
 convert). Omitted means the x-axis falls back to the bound stream’s own label, or a
 plain case index if it has none — see the important callout above.</p>
@@ -188,7 +188,7 @@ overload.</p>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::plot: thread size mismatch
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::plot: slate size mismatch
 </pre></div>
 </div>
 </section>

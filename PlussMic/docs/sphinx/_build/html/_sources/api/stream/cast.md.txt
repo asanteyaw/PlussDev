@@ -15,7 +15,7 @@ Stream::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCast
 ## What It Does
 
 Converts the stream to a different payload kind (`Series`, `Note`, `Timeline`,
-`TimeIndex`), delegating to `Slate::cast()`; see [`Slate::cast`](../thread/cast.md) for
+`TimeIndex`), delegating to `Slate::cast()`; see [`Slate::cast`](../slate/cast.md) for
 the full breakdown of what each `SlateCastTarget` means and how `SlateCastOptions`
 (dtype selection, parse-failure handling) affects the conversion. The first overload is a
 convenience shorthand accepting just a `series_dtype` directly instead of a full
@@ -41,7 +41,7 @@ the primary, most commonly used path.
 
 **options** (`const pluss::table::SlateCastOptions&`, second overload)
     The full conversion policy — `series_dtype` and `invalid` (parse-failure handling). See
-    [`Slate::cast`](../thread/cast.md) for the complete breakdown.
+    [`Slate::cast`](../slate/cast.md) for the complete breakdown.
 
 ## Returns
 
@@ -124,7 +124,7 @@ label        | value
 
 ## Notes
 
-- Follows the same per-target conversion rules as [`Slate::cast`](../thread/cast.md),
+- Follows the same per-target conversion rules as [`Slate::cast`](../slate/cast.md),
   including its documented quirk that `SlateCastOptions::invalid` only actually takes
   effect for the `Timeline` target.
 - The no-argument `cast()`/`cast(options)` accessor overloads (returning
@@ -135,7 +135,7 @@ label        | value
 ## See Also
 
 - [`Stream::astype`](astype.md): the shorthand for `cast(Series, {.series_dtype = dtype})`.
-- [`Slate::cast`](../thread/cast.md): the underlying single-stream conversion this method
+- [`Slate::cast`](../slate/cast.md): the underlying single-stream conversion this method
   delegates to.
 
 <div class="pluss-inline-prev-next">

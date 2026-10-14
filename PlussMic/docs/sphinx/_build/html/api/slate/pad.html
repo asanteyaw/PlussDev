@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,9 +51,9 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Grows every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread up to a target character <code class="docutils literal notranslate"><span class="pre">width</span></code> by
+<p>Grows every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) slate up to a target character <code class="docutils literal notranslate"><span class="pre">width</span></code> by
 adding <code class="docutils literal notranslate"><span class="pre">fill</span></code> characters, positioning the original text according to <code class="docutils literal notranslate"><span class="pre">align</span></code>.
-Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+Requires the slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TextAlign</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">Right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">Center</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">};</span>
 </pre></div>
 </div>
@@ -89,7 +89,7 @@ The single character used to pad. Note this is a <code class="docutils literal n
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the padded text (or
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the padded text (or
 left unchanged, for cells already at or beyond <code class="docutils literal notranslate"><span class="pre">width</span></code>).</p>
 </section>
 <section id="examples">
@@ -212,7 +212,7 @@ shorter than 3, so they’re padded as usual.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::pad: width must be &gt;= 0
 </pre></div>
 </div>
-<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
@@ -233,7 +233,7 @@ shorter than 3, so they’re padded as usual.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>Requires the calling slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pad()</span></code> only grows; a cell already at or beyond <code class="docutils literal notranslate"><span class="pre">width</span></code> is returned unchanged,
 never truncated.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">width</span></code> is measured in Unicode codepoints, the same unit <a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">length()</span></code></span></a>

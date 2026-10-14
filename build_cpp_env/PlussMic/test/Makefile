@@ -221,6 +221,20 @@ plussmic_kindle_catalog_tests/fast:
 .PHONY : plussmic_kindle_catalog_tests/fast
 
 # Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/rule
+
+# Convenience name for target.
+plussmic_bundle_locus_tests: PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/rule
+.PHONY : plussmic_bundle_locus_tests
+
+# fast build rule for target.
+plussmic_bundle_locus_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/build
+.PHONY : plussmic_bundle_locus_tests/fast
+
+# Convenience name for target.
 PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/rule
 .PHONY : PlussMic/test/CMakeFiles/plussmic_scribble_model_tests.dir/rule
@@ -261,6 +275,20 @@ plussmic_table_ts_accessor_tests: PlussMic/test/CMakeFiles/plussmic_table_ts_acc
 plussmic_table_ts_accessor_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build
 .PHONY : plussmic_table_ts_accessor_tests/fast
+
+# Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/rule
+
+# Convenience name for target.
+plussmic_table_ts_unsorted_axis_tests: PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/rule
+.PHONY : plussmic_table_ts_unsorted_axis_tests
+
+# fast build rule for target.
+plussmic_table_ts_unsorted_axis_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/build
+.PHONY : plussmic_table_ts_unsorted_axis_tests/fast
 
 # Convenience name for target.
 PlussMic/test/CMakeFiles/plussmic_table_axis_match_tests.dir/rule:
@@ -305,6 +333,20 @@ plussmic_table_flash_dataset_bridge_tests/fast:
 .PHONY : plussmic_table_flash_dataset_bridge_tests/fast
 
 # Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/rule
+
+# Convenience name for target.
+plussmic_temporal_core_migration_tests: PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/rule
+.PHONY : plussmic_temporal_core_migration_tests
+
+# fast build rule for target.
+plussmic_temporal_core_migration_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/build
+.PHONY : plussmic_temporal_core_migration_tests/fast
+
+# Convenience name for target.
 PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule
 .PHONY : PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule
@@ -317,6 +359,20 @@ plussmic_bi_tests: PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/rule
 plussmic_bi_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_tests.dir/build
 .PHONY : plussmic_bi_tests/fast
+
+# Convenience name for target.
+PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/rule
+.PHONY : PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/rule
+
+# Convenience name for target.
+plussmic_bi_serve_tests: PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/rule
+.PHONY : plussmic_bi_serve_tests
+
+# fast build rule for target.
+plussmic_bi_serve_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/build
+.PHONY : plussmic_bi_serve_tests/fast
 
 # Convenience name for target.
 PlussMic/test/CMakeFiles/plussmic_table_gap_benchmark.dir/rule:
@@ -346,6 +402,30 @@ plussmic_scribble_gap_benchmark/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/build.make PlussMic/test/CMakeFiles/plussmic_scribble_gap_benchmark.dir/build
 .PHONY : plussmic_scribble_gap_benchmark/fast
 
+bundle_locus_tests.o: bundle_locus_tests.cpp.o
+.PHONY : bundle_locus_tests.o
+
+# target to build an object file
+bundle_locus_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/bundle_locus_tests.cpp.o
+.PHONY : bundle_locus_tests.cpp.o
+
+bundle_locus_tests.i: bundle_locus_tests.cpp.i
+.PHONY : bundle_locus_tests.i
+
+# target to preprocess a source file
+bundle_locus_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/bundle_locus_tests.cpp.i
+.PHONY : bundle_locus_tests.cpp.i
+
+bundle_locus_tests.s: bundle_locus_tests.cpp.s
+.PHONY : bundle_locus_tests.s
+
+# target to generate assembly for a file
+bundle_locus_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bundle_locus_tests.dir/bundle_locus_tests.cpp.s
+.PHONY : bundle_locus_tests.cpp.s
+
 kindle_catalog_tests.o: kindle_catalog_tests.cpp.o
 .PHONY : kindle_catalog_tests.o
 
@@ -369,6 +449,30 @@ kindle_catalog_tests.s: kindle_catalog_tests.cpp.s
 kindle_catalog_tests.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_kindle_catalog_tests.dir/kindle_catalog_tests.cpp.s
 .PHONY : kindle_catalog_tests.cpp.s
+
+pluss_bi_serve_test.o: pluss_bi_serve_test.cpp.o
+.PHONY : pluss_bi_serve_test.o
+
+# target to build an object file
+pluss_bi_serve_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/pluss_bi_serve_test.cpp.o
+.PHONY : pluss_bi_serve_test.cpp.o
+
+pluss_bi_serve_test.i: pluss_bi_serve_test.cpp.i
+.PHONY : pluss_bi_serve_test.i
+
+# target to preprocess a source file
+pluss_bi_serve_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/pluss_bi_serve_test.cpp.i
+.PHONY : pluss_bi_serve_test.cpp.i
+
+pluss_bi_serve_test.s: pluss_bi_serve_test.cpp.s
+.PHONY : pluss_bi_serve_test.s
+
+# target to generate assembly for a file
+pluss_bi_serve_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_bi_serve_tests.dir/pluss_bi_serve_test.cpp.s
+.PHONY : pluss_bi_serve_test.cpp.s
 
 pluss_bi_tests.o: pluss_bi_tests.cpp.o
 .PHONY : pluss_bi_tests.o
@@ -610,6 +714,54 @@ table_ts_accessor_tests.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_accessor_tests.dir/table_ts_accessor_tests.cpp.s
 .PHONY : table_ts_accessor_tests.cpp.s
 
+table_ts_unsorted_axis_tests.o: table_ts_unsorted_axis_tests.cpp.o
+.PHONY : table_ts_unsorted_axis_tests.o
+
+# target to build an object file
+table_ts_unsorted_axis_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/table_ts_unsorted_axis_tests.cpp.o
+.PHONY : table_ts_unsorted_axis_tests.cpp.o
+
+table_ts_unsorted_axis_tests.i: table_ts_unsorted_axis_tests.cpp.i
+.PHONY : table_ts_unsorted_axis_tests.i
+
+# target to preprocess a source file
+table_ts_unsorted_axis_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/table_ts_unsorted_axis_tests.cpp.i
+.PHONY : table_ts_unsorted_axis_tests.cpp.i
+
+table_ts_unsorted_axis_tests.s: table_ts_unsorted_axis_tests.cpp.s
+.PHONY : table_ts_unsorted_axis_tests.s
+
+# target to generate assembly for a file
+table_ts_unsorted_axis_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_table_ts_unsorted_axis_tests.dir/table_ts_unsorted_axis_tests.cpp.s
+.PHONY : table_ts_unsorted_axis_tests.cpp.s
+
+temporal_core_migration_tests.o: temporal_core_migration_tests.cpp.o
+.PHONY : temporal_core_migration_tests.o
+
+# target to build an object file
+temporal_core_migration_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/temporal_core_migration_tests.cpp.o
+.PHONY : temporal_core_migration_tests.cpp.o
+
+temporal_core_migration_tests.i: temporal_core_migration_tests.cpp.i
+.PHONY : temporal_core_migration_tests.i
+
+# target to preprocess a source file
+temporal_core_migration_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/temporal_core_migration_tests.cpp.i
+.PHONY : temporal_core_migration_tests.cpp.i
+
+temporal_core_migration_tests.s: temporal_core_migration_tests.cpp.s
+.PHONY : temporal_core_migration_tests.s
+
+# target to generate assembly for a file
+temporal_core_migration_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/build.make PlussMic/test/CMakeFiles/plussmic_temporal_core_migration_tests.dir/temporal_core_migration_tests.cpp.s
+.PHONY : temporal_core_migration_tests.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -625,7 +777,9 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussmic_bi_serve_tests"
 	@echo "... plussmic_bi_tests"
+	@echo "... plussmic_bundle_locus_tests"
 	@echo "... plussmic_kindle_catalog_tests"
 	@echo "... plussmic_scribble_gap_benchmark"
 	@echo "... plussmic_scribble_model_tests"
@@ -636,9 +790,17 @@ help:
 	@echo "... plussmic_table_gap_benchmark"
 	@echo "... plussmic_table_statistics_window_tests"
 	@echo "... plussmic_table_ts_accessor_tests"
+	@echo "... plussmic_table_ts_unsorted_axis_tests"
+	@echo "... plussmic_temporal_core_migration_tests"
+	@echo "... bundle_locus_tests.o"
+	@echo "... bundle_locus_tests.i"
+	@echo "... bundle_locus_tests.s"
 	@echo "... kindle_catalog_tests.o"
 	@echo "... kindle_catalog_tests.i"
 	@echo "... kindle_catalog_tests.s"
+	@echo "... pluss_bi_serve_test.o"
+	@echo "... pluss_bi_serve_test.i"
+	@echo "... pluss_bi_serve_test.s"
 	@echo "... pluss_bi_tests.o"
 	@echo "... pluss_bi_tests.i"
 	@echo "... pluss_bi_tests.s"
@@ -669,6 +831,12 @@ help:
 	@echo "... table_ts_accessor_tests.o"
 	@echo "... table_ts_accessor_tests.i"
 	@echo "... table_ts_accessor_tests.s"
+	@echo "... table_ts_unsorted_axis_tests.o"
+	@echo "... table_ts_unsorted_axis_tests.i"
+	@echo "... table_ts_unsorted_axis_tests.s"
+	@echo "... temporal_core_migration_tests.o"
+	@echo "... temporal_core_migration_tests.i"
+	@echo "... temporal_core_migration_tests.s"
 .PHONY : help
 
 

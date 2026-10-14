@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes several <a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag()</span></code></span></a> shifts of the bound thread at once, each as
+<p>Computes several <a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag()</span></code></span></a> shifts of the bound slate at once, each as
 its own output column named <code class="docutils literal notranslate"><span class="pre">&quot;lag&quot;</span> <span class="pre">+</span> <span class="pre">&lt;lag</span> <span class="pre">value&gt;</span></code>. Requires at least one lag.</p>
 </section>
 <section id="parameters">
@@ -61,11 +61,11 @@ throws.</p>
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 A new frame with one column per requested lag (named <code class="docutils literal notranslate"><span class="pre">&quot;lag1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;lag2&quot;</span></code>, and
-so on), same case labels as the bound thread.</p>
+so on), same case labels as the bound slate.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Compute two lags of the same thread at once.</p>
+<p>Example 1. Compute two lags of the same slate at once.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
@@ -111,11 +111,11 @@ position <code class="docutils literal notranslate"><span class="pre">2</span></
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Each requested lag becomes its own output column, letting you compare several
-lag depths of the same thread side by side in one call, rather than calling
+lag depths of the same slate side by side in one call, rather than calling
 <a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag()</span></code></span></a> repeatedly and combining the results yourself.</p></li>
 <li><p>Output columns are always named <code class="docutils literal notranslate"><span class="pre">&quot;lag&quot;</span> <span class="pre">+</span> <span class="pre">&lt;value&gt;</span></code> — there’s no way to
 customize the column names from this method directly.</p></li>
-<li><p>A pre-existing missing entry in the source thread is honored in every lag
+<li><p>A pre-existing missing entry in the source slate is honored in every lag
 column, the same as <a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag()</span></code></span></a> itself.</p></li>
 </ul>
 </section>

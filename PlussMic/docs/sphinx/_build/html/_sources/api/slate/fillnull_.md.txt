@@ -18,9 +18,9 @@ Slate& Slate::fillnull_(const pluss::Duration& value)
 
 The mutating counterpart to [`fillnull()`](fillnull.md): fills `NULL` cells with
 `value` and updates `*this` in place, returning a reference to it, instead of
-returning a new `Slate`. Copy-on-write applies — if this thread's storage is shared
+returning a new `Slate`. Copy-on-write applies — if this slate's storage is shared
 with another `Slate` (from a copy via the copy constructor or `operator=`), the
-mutation clones the storage first, so the other thread is unaffected. See Example 2.
+mutation clones the storage first, so the other slate is unaffected. See Example 2.
 
 ```{note} Only the double overload is genuinely in-place
 The `double` overload mutates the underlying `Series` storage directly through the
@@ -63,7 +63,7 @@ std::cout << readings;
 ptype: Series
 ```
 
-Example 2. Copy-on-write: mutating a copy leaves the original thread untouched.
+Example 2. Copy-on-write: mutating a copy leaves the original slate untouched.
 
 ```cpp
 auto original = Slate(pluss::make_series({1.0, 2.0}),
@@ -109,8 +109,8 @@ Slate::fillnull_(double) is only valid for Series payload
 
 ## Notes
 
-- Copy-on-write: mutating a thread that shares storage with another (from a copy)
-  detaches it first, leaving the other thread untouched. See Example 2.
+- Copy-on-write: mutating a slate that shares storage with another (from a copy)
+  detaches it first, leaving the other slate untouched. See Example 2.
 - Only the `double` overload mutates storage directly; the others reassign `*this`
   via the functional [`fillnull()`](fillnull.md). See the note above.
 - The `double` overload's error message includes the underscore:

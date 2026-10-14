@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,11 +49,11 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Converts a thread to a different concrete scalar dtype, staying on the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> surface
+<p>Converts a slate to a different concrete scalar dtype, staying on the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> surface
 throughout — a thin, single-argument shorthand for
 <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast(options).series()</span></code></span></a> with <code class="docutils literal notranslate"><span class="pre">options.series_dtype</span> <span class="pre">=</span> <span class="pre">dtype</span></code>. Works from any
-payload kind: a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread simply reinterprets its values at the new dtype;
-<code class="docutils literal notranslate"><span class="pre">Note</span></code>-, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-, and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind threads first parse or convert to numeric
+payload kind: a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate simply reinterprets its values at the new dtype;
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-, and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind slates first parse or convert to numeric
 before landing at the requested dtype, following the same rules described on
 <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a>’s page (including that page’s important callout about
 <code class="docutils literal notranslate"><span class="pre">SlateCastOptions::invalid</span></code> only actually taking effect for the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> target — an
@@ -69,12 +69,12 @@ downstream operation you plan to run.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind thread holding the converted values. The row validity mask is
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind slate holding the converted values. The row validity mask is
 preserved (or, for <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind sources, extended to mark unparseable entries <code class="docutils literal notranslate"><span class="pre">NULL</span></code>).</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Convert a <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code> numeric thread into a boolean thread.</p>
+<p>Example 1. Convert a <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code> numeric slate into a boolean slate.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}));</span>
@@ -91,7 +91,7 @@ preserved (or, for <code class="docutils literal notranslate"><span class="pre">
 ptype: Series
 </pre></div>
 </div>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">astype()</span></code> also works starting from a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread — it parses the text
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">astype()</span></code> also works starting from a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate — it parses the text
 first, exactly like <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast(...).series()</span></code></span></a> would.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">texts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;3&quot;</span><span class="p">}));</span>
 

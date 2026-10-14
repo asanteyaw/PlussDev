@@ -16,7 +16,7 @@ SlateLabelAccessor::fillnull(const pluss::TimeIndex& value) const -> Slate
 ## What It Does
 
 Replaces every null case label with `value` and applies the result back to
-the bound thread directly, returning the full thread (same values, filled
+the bound slate directly, returning the full slate (same values, filled
 case labels) — a direct forward to
 `Slate::caselbl(Slate::caselbl().fillnull(value))`.
 
@@ -41,7 +41,7 @@ own kind.
 ## Returns
 
 `Slate`
-    A new thread, holding the same values as `*this`, with null case labels
+    A new slate, holding the same values as `*this`, with null case labels
     replaced by `value`.
 
 ## Examples
@@ -81,7 +81,7 @@ ptype: Series
 ```
 
 The middle case label's `NULL` became `0`, and — unlike the DataFrame-level
-version — `filled` is already the complete, updated thread; no separate
+version — `filled` is already the complete, updated slate; no separate
 `set()` call was needed.
 
 Example 2. Fill a `NaT` in a `Timeline` case-label axis.
@@ -118,7 +118,7 @@ ptype: Series
 
 ## Notes
 
-- Applies immediately — the returned thread already carries the filled
+- Applies immediately — the returned slate already carries the filled
   labels; no follow-up `set()` call is needed (contrast with
   `DataFrameLabelAccessor::fillnull`, see the note above).
 - Choose the overload matching the case labels' own kind — passing a

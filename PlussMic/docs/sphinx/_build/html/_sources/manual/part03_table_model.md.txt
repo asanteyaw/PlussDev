@@ -17,21 +17,21 @@ pluss::table::Slate dates(pluss::make_timeline({
 }));
 ```
 
-Inspect a thread:
+Inspect a slate:
 
 ```cpp
-thread.defined();
-thread.size();
-thread.kind();
-thread.dtype();
-thread.info();
+slate.defined();
+slate.size();
+slate.kind();
+slate.dtype();
+slate.info();
 ```
 
 Access the payload only after you know the kind:
 
 ```cpp
-if (thread.kind() == pluss::table::SlateKind::Series) {
-  auto values = thread.as_series();
+if (slate.kind() == pluss::table::SlateKind::Series) {
+  auto values = slate.as_series();
 }
 ```
 
@@ -41,13 +41,13 @@ if (thread.kind() == pluss::table::SlateKind::Series) {
 missing values from input files.
 
 ```cpp
-auto missing = thread.isnull();
-auto present = thread.notnull();
-auto filled = thread.fillnull(0.0);
-auto complete = thread.dropnull();
+auto missing = slate.isnull();
+auto present = slate.notnull();
+auto filled = slate.fillnull(0.0);
+auto complete = slate.dropnull();
 ```
 
-Numeric threads also support `isnan` and `isfinite`.
+Numeric slates also support `isnan` and `isfinite`.
 
 ## DataFrame
 

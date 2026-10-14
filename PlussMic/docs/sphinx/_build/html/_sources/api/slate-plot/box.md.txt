@@ -13,7 +13,7 @@ SlatePlotAccessor::box(const BoxPlotOptions& options = {}) const -> pluss::pl::S
 
 ## What It Does
 
-Draws a single box-and-whisker distribution summary for the bound thread's values — the
+Draws a single box-and-whisker distribution summary for the bound slate's values — the
 single-series specialization of
 [`DataFramePlotAccessor::box`](../../api/dataframe-plot/box.md). Unlike the 2D accessor's
 `box()`, which can summarize several features side by side in one pane, this overload
@@ -31,7 +31,7 @@ always draws exactly one box, since a `Slate` is always exactly one series; ther
 
 `pluss::pl::Studio`
     A figure with one pane containing a single box, x-axis tick labeled with the bound
-    thread's `name()` (or the fallback `"value"`).
+    slate's `name()` (or the fallback `"value"`).
 
 ## Examples
 

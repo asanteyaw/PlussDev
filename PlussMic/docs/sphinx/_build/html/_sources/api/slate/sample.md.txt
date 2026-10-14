@@ -65,7 +65,7 @@ cross-platform guarantee of the exact indices drawn.
 ## Returns
 
 `Slate`
-    A new thread holding the drawn entries, length `n` (or the rounded `frac *
+    A new slate holding the drawn entries, length `n` (or the rounded `frac *
     size()`, capped as described above when `replace = false`).
 
 ## Examples
@@ -124,7 +124,7 @@ std::cout << out3.size();
 8
 ```
 
-Example 4. `frac = 0.4` on a 5-element thread draws `round(0.4 * 5) = 2` entries.
+Example 4. `frac = 0.4` on a 5-element slate draws `round(0.4 * 5) = 2` entries.
 
 ```cpp
 auto out4 = scores.sample(0.4, 11, false);

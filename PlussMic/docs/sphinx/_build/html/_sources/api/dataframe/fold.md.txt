@@ -26,7 +26,7 @@ hook for a callback that returns a whole `DataFrame` instead of a `Slate`.
 The callback to run. It receives the current frame by `const` reference and must
 return a defined `Slate`. Throws `"DataFrame::fold: callback is empty"` if `fn` holds
 no target, and `"DataFrame::fold: callback returned undefined"` if it returns an
-undefined thread.
+undefined slate.
 
 **shape** (`ResultShape`, default `ResultShape::Reduce`)
 
@@ -93,7 +93,7 @@ o3  1150
 ptype: Series
 ```
 
-The callback multiplies two feature threads elementwise, producing one value per case
+The callback multiplies two feature slates elementwise, producing one value per case
 — `2 * 1200 = 2400`, `5 * 45.5 = 227.5`, `1 * 1150 = 1150` — which satisfies
 `Preserve`'s "exactly `ncases()` entries" requirement (`3` rows in, `3` values out).
 Each case keeps the case label carried by `features("units")` (`o1`, `o2`, `o3`).

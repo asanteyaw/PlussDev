@@ -12,7 +12,7 @@ SlateTimelineAccessor::valid() const -> Slate
 
 ## What It Does
 
-Replaces the bound thread with a boolean `Series` flagging whether each row is
+Replaces the bound slate with a boolean `Series` flagging whether each row is
 a real (non-`NaT`) timestamp — the logical inverse of [`isnat()`](isnat.md).
 
 ## Parameters
@@ -22,7 +22,7 @@ a real (non-`NaT`) timestamp — the logical inverse of [`isnat()`](isnat.md).
 ## Returns
 
 `Slate`
-    A new `Bool`-typed `Series` thread, same length as the bound thread:
+    A new `Bool`-typed `Series` slate, same length as the bound slate:
     `true` where the row is a real timestamp, `false` where it's `NaT`.
 
 ## Examples
@@ -57,7 +57,7 @@ Row `1` — the missing timestamp — flags `false` here.
   the `NaT` row shows `false`, not `NULL`. Nearly every other `.tl()` method
   (the calendar-field extractors, `fmt()`, `epoch()`, and so on) instead shows
   `"NULL"` for a `NaT` row.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 
 ## See Also

@@ -13,9 +13,9 @@ Slate::encode(std::string_view encoding = "base64") const -> Slate
 
 ## What It Does
 
-Replaces every cell of a `Note` (string) thread with an encoded form of its raw
+Replaces every cell of a `Note` (string) slate with an encoded form of its raw
 bytes, choosing between three schemes via the `encoding` argument: `"base64"` (the
-default), `"hex"`, or `"url"`. Requires the thread to be `Note`-kind. Unlike most
+default), `"hex"`, or `"url"`. Requires the slate to be `Note`-kind. Unlike most
 methods in this family, `encode()` doesn't validate its argument against an enum —
 any other string throws.
 
@@ -41,11 +41,11 @@ to reverse the transform on a `Slate`.
 ## Returns
 
 `Slate`
-    A new `Note`-kind thread, same length as `*this`, holding the encoded text.
+    A new `Note`-kind slate, same length as `*this`, holding the encoded text.
 
 ## Examples
 
-The examples below share one input thread containing a mix of plain text,
+The examples below share one input slate containing a mix of plain text,
 punctuation, and a space:
 
 ```cpp
@@ -151,7 +151,7 @@ try {
 Slate::encode: encoding must be base64, hex, or url
 ```
 
-Example 5. A non-`Note` thread throws.
+Example 5. A non-`Note` slate throws.
 
 ```cpp
 auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
@@ -171,7 +171,7 @@ Slate::encode: expected Note payload
 
 ## Notes
 
-- Requires the calling thread to be `Note`-kind.
+- Requires the calling slate to be `Note`-kind.
 - Encodes raw bytes, not Unicode codepoints — for ASCII text, "bytes" and
   "characters" coincide, but multi-byte UTF-8 characters encode as their full
   multi-byte sequence, not as one unit.

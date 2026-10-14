@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,7 +50,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Picks a chart type automatically for the bound thread and delegates to the corresponding
+<p>Picks a chart type automatically for the bound slate and delegates to the corresponding
 method on this same accessor — a much smaller decision tree than
 <a class="reference internal" href="../dataframe-plot/auto_plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::auto_plot</span></code></span></a>’s, since a
 single <code class="docutils literal notranslate"><span class="pre">Slate</span></code> has none of the multi-feature routing questions (feature count, hue
@@ -59,12 +59,12 @@ candidates, non-negativity) the 2D accessor’s tree branches on.</p>
 <p class="admonition-title">Important</p>
 <p>The full decision tree — just two rules</p>
 <ol class="arabic simple">
-<li><p><strong>The bound thread has explicit row labels, and 16 or fewer rows.</strong> Routes to
+<li><p><strong>The bound slate has explicit row labels, and 16 or fewer rows.</strong> Routes to
 <a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bar()</span></code></span></a>.</p></li>
 <li><p><strong>Everything else</strong> (no explicit row labels, or more than 16 rows). Routes to
 <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>.</p></li>
 </ol>
-<p>Both routed-to calls use their own zero-argument overload — no companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread is
+<p>Both routed-to calls use their own zero-argument overload — no companion <code class="docutils literal notranslate"><span class="pre">x</span></code> slate is
 ever passed through, even when one exists conceptually.</p>
 </div>
 <p>The two-argument overload’s <code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code> is the same currently-empty struct

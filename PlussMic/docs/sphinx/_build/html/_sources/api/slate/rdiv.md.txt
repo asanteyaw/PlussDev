@@ -26,7 +26,7 @@ Same shape as [`div()`](div.md).
 ## Returns
 
 `Slate`
-    A new thread holding `other / (*this)`, elementwise.
+    A new slate holding `other / (*this)`, elementwise.
 
 ## Examples
 
@@ -53,7 +53,7 @@ ptype: Series
 `4 / 10`, `4 / 20`, `4 / 30` — the opposite of [`prices.div(4.0)`](div.md), which
 would give `2.5, 5, 7.5`.
 
-Example 2. Reflected against another thread.
+Example 2. Reflected against another slate.
 
 ```cpp
 auto splits = Slate(pluss::make_series({4.0, 8.0, 9.0}));

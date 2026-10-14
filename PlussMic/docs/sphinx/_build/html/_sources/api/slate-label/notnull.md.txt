@@ -23,7 +23,7 @@ Marks each row `true` where its case label is a genuine (non-null) value,
 ## Returns
 
 `Slate`
-    A `Bool` thread, one entry per row, `display_name` `"notnull"`, displayed
+    A `Bool` slate, one entry per row, `display_name` `"notnull"`, displayed
     against the case labels themselves.
 
 ## Examples
@@ -53,7 +53,7 @@ ptype: Series
 
 ## Notes
 
-- Inspects the case labels, not the thread's own data.
+- Inspects the case labels, not the slate's own data.
 - The exact logical negation of [`isnull()`](isnull.md).
 
 ## See Also

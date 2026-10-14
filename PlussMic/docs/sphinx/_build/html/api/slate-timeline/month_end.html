@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,7 +48,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces the bound thread with a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> flagging whether each row
+<p>Replaces the bound slate with a boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> flagging whether each row
 falls on the last day of its month.</p>
 </section>
 <section id="parameters">
@@ -58,7 +58,7 @@ falls on the last day of its month.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, same length as the bound thread:
+A new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, same length as the bound slate:
 <code class="docutils literal notranslate"><span class="pre">true</span></code> when the row’s day-of-month is its month’s last valid day, <code class="docutils literal notranslate"><span class="pre">false</span></code>
 otherwise.</p>
 </section>
@@ -96,9 +96,9 @@ day in this leap year — both flag <code class="docutils literal notranslate"><
 leap), but a February 28th in a non-leap year would also flag <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
 <li><p>Only checks the date portion — the time-of-day (if any) doesn’t affect the
 result.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound slate to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
-<li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row (or one already null on the underlying thread) displays as
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row (or one already null on the underlying slate) displays as
 <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
 </ul>
 </section>

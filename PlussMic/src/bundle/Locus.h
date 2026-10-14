@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
+#include "MSharp/RangeView.h"
 #include "bundle/Nexus.h"
 #include "relational/Match.h"
 #include "kindle/Archive.h"
@@ -100,16 +101,10 @@ using LocusJoinResult = pluss::kindle::CatalogJoinResult;
 // A named, heterogeneous workspace of Catalogs with declared relationships:
 // the Catalog counterpart of Nexus (which does the same for DataFrames).
 //
-// Catalogs hold ragged Streams, so anything relational first aligns each
-// catalog into a rectangular table with the Locus's TabelizePolicy. The
-// relational work itself (joins, pulls, traversal, SQL, audits, saved plans,
-// persistence) is done by Nexus over those aligned tables, so Locus carries no
-// second copy of that engine; data results come back as Catalogs and reports as
-// DataFrames. Alignment must not lose data silently: Catalog's own default
-// (Align::Inner) drops every record whose label is missing from any stream, so
-// a Locus defaults to Align::Outer with null fill. Use with_policy() to change
-// it (Align::Strict makes ragged input an error), or pass a policy to a call
-// that accepts one.
+// Native joins, pulls and traversal retain Catalog/Stream semantics and use the
+// shared relationship resolver plus Catalog's ragged relational kernels. The
+// nexus() bridge provides an explicitly aligned DataFrame workspace for APIs
+// that require rectangular data, reports and SQL.
 //
 // Locus values are immutable handles; mutators return a new Locus and the
 // trailing-underscore forms update in place.
@@ -139,7 +134,6 @@ public:
   bool unique() const noexcept;
   bool empty() const;
 
-  std::int64_t size() const;
   std::int64_t ntables() const;
   std::int64_t nrelationships() const;
   std::pair<std::int64_t, std::int64_t> shape() const;  // {tables, relationships}
@@ -155,12 +149,10 @@ public:
 
   // Catalogs.
   const std::vector<std::string>& keys() const;
-  const std::vector<std::string>& names() const;
   const std::vector<pluss::kindle::Catalog>& catalogs() const;
   bool has(std::string_view name) const;
   pluss::kindle::Catalog catalog(std::string_view name) const;
   pluss::kindle::Catalog catalog(std::int64_t index) const;
-  pluss::kindle::Catalog dloc(std::int64_t index) const;
   std::optional<pluss::kindle::Catalog> get(std::string_view name) const;
 
   Locus head(std::int64_t n = 5) const;
@@ -189,7 +181,6 @@ public:
   Locus apply(std::string_view name, const CatalogFn& fn) const;
   Locus& apply_(std::string_view name, const CatalogFn& fn);
   Locus apply_all(const CatalogFn& fn) const;
-  Locus map_catalogs(const CatalogFn& fn) const;
   Locus flow(const std::function<Locus(const Locus&)>& fn) const;
 
   // Table metadata (grain, keys, time field, provenance...), shared with Nexus.
@@ -243,9 +234,6 @@ public:
   // Records whose key (the table's declared primary key unless given) repeats.
   pluss::kindle::Catalog duplicates(std::string_view table) const;
   pluss::kindle::Catalog duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const;
-  pluss::kindle::Catalog detect_duplicates(std::string_view table) const;
-  pluss::kindle::Catalog detect_duplicates(std::string_view table,
-                                           std::initializer_list<std::string_view> keys) const;
   bool validate_relationship(std::string_view name) const;
   // Records on one side of a link that find no partner on the other.
   pluss::kindle::Catalog detect_orphans(
@@ -306,15 +294,19 @@ public:
   LocusQuery query() const;
   LocusQuery query(pluss::table::DataFrame::SqlOptions options) const;
 
+  // (hits, misses) of the per-catalog alignment cache behind nexus(): a catalog is
+  // padded once per policy and reused by every Locus derived from this one until
+  // that catalog itself changes. This counts per-catalog alignments, not nexus()
+  // calls: a second nexus() on the same Locus is answered from that Locus's own
+  // cached Nexus and records nothing. Hits appear when a derived Locus (with_,
+  // link_, ...) rebuilds and finds catalogs it shares with the original.
+  std::pair<std::int64_t, std::int64_t> alignment_cache_stats() const;
+
   // Persistence is ragged-native: each catalog is stored stream by stream
   // (Catalog::save_streams), so extents, nulls, kinds and labels round-trip
   // exactly. Links, table metadata and saved plans round-trip too. read() also
   // accepts a store written by Nexus (rectangular tables). load() reads a
   // directory of loose table files through the DataFrame loaders.
-  // (hits, misses) of the per-catalog alignment cache behind nexus(): a catalog is
-  // padded once per policy and reused by every Locus derived from this one until
-  // that catalog itself changes.
-  std::pair<std::int64_t, std::int64_t> alignment_cache_stats() const;
   void save(std::string_view directory, const locus::StoreOptions& options = {}) const;
   static Locus load(std::string_view directory, const locus::LoadOptions& options = {});
   static Locus read(std::string_view directory, const locus::StoreOptions& options = {});
@@ -345,10 +337,20 @@ public:
   LocusPull& options(const locus::PullOptions& options);
   LocusPull& add(const locus::PullSpec& spec);
   LocusPull& add(std::initializer_list<locus::PullSpec> specs);
-  LocusPull& take(std::initializer_list<std::string_view> sources);
-  LocusPull& take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
+  LocusPull& take(pluss::msharp::RangeView::Of<std::string_view> sources);
+  LocusPull& take(std::initializer_list<std::string_view> sources) {
+    return take(pluss::msharp::RangeView::Of<std::string_view>(sources));
+  }
+  LocusPull& take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  LocusPull& take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   LocusPull& take(std::string_view table,
-                  std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
+                  pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields);
+  LocusPull& take(std::string_view table,
+                  std::initializer_list<std::pair<std::string_view, std::string_view>> fields) {
+    return take(table, pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields));
+  }
   LocusPull& take(std::string_view source, std::string_view alias = {});
   LocusPull& count(std::string_view source, std::string_view alias = {});
   LocusPull& ndistinct(std::string_view source, std::string_view alias = {});
@@ -381,24 +383,22 @@ class LocusPullAgg {
 public:
   LocusPullAgg(LocusPull& pull, std::string table);
 
-  LocusPullAgg& count(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& count(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& ndistinct(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& ndistinct(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& sum(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& sum(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& mean(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& mean(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& median(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& median(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& min(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& min(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& max(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& max(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& std(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& std(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
-  LocusPullAgg& var(std::string_view feature, std::string_view alias = {});
-  LocusPullAgg& var(std::initializer_list<std::pair<std::string_view, std::string_view>> fields);
+#define PLUSS_LOCUS_PULL_AGG_DECL(NAME)                                                            \
+  LocusPullAgg& NAME(std::string_view feature, std::string_view alias = {});                       \
+  LocusPullAgg& NAME(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields); \
+  LocusPullAgg& NAME(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) { \
+    return NAME(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>>(fields)); \
+  }
+  PLUSS_LOCUS_PULL_AGG_DECL(count)
+  PLUSS_LOCUS_PULL_AGG_DECL(ndistinct)
+  PLUSS_LOCUS_PULL_AGG_DECL(sum)
+  PLUSS_LOCUS_PULL_AGG_DECL(mean)
+  PLUSS_LOCUS_PULL_AGG_DECL(median)
+  PLUSS_LOCUS_PULL_AGG_DECL(min)
+  PLUSS_LOCUS_PULL_AGG_DECL(max)
+  PLUSS_LOCUS_PULL_AGG_DECL(std)
+  PLUSS_LOCUS_PULL_AGG_DECL(var)
+#undef PLUSS_LOCUS_PULL_AGG_DECL
   LocusPull& end() const;
 
 private:

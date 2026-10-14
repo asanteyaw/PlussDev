@@ -16,7 +16,7 @@ Slate::mul(const Slate& other) const -> Slate
 
 Elementwise multiplication, following [`add()`](add.md)'s shared mechanics. `mul()`
 has its own payload special case, parallel to `add()`'s `Note`-concatenation
-exception: multiplying a `Note` (string) thread by a non-negative integral scalar
+exception: multiplying a `Note` (string) slate by a non-negative integral scalar
 **repeats** each string that many times — `"ab".mul(3.0)` behaves like Python's
 `"ab" * 3`, giving `"ababab"`. This only works for the scalar overload; there is no
 `Note`-times-`Note` multiplication.
@@ -25,13 +25,13 @@ exception: multiplying a `Note` (string) thread by a non-negative integral scala
 
 **other** (`double` or `const Slate&`)
 
-The value(s) to multiply by. For a `Note` thread, `double` must be a non-negative
+The value(s) to multiply by. For a `Note` slate, `double` must be a non-negative
 integral value (`3.0`, not `3.5`).
 
 ## Returns
 
 `Slate`
-    A new thread holding the elementwise product — or, for a `Note` thread multiplied
+    A new slate holding the elementwise product — or, for a `Note` slate multiplied
     by a scalar, each string repeated that many times.
 
 ## Examples
@@ -56,7 +56,7 @@ std::cout << out;
 ptype: Series
 ```
 
-Example 2. Multiply two threads positionally.
+Example 2. Multiply two slates positionally.
 
 ```cpp
 auto boost = Slate(pluss::make_series({2.0, 4.0, 5.0}));
@@ -73,7 +73,7 @@ std::cout << out_pair;
 ptype: Series
 ```
 
-Example 3. A `Note` thread multiplied by a scalar repeats each string.
+Example 3. A `Note` slate multiplied by a scalar repeats each string.
 
 ```cpp
 auto word = Slate(pluss::make_note({"ab", "xy", "q"}));
@@ -99,8 +99,8 @@ a non-integral or negative scalar (like `2.5` or `-1.0`) throws
 
 - See [`add()`](add.md) for the family-wide mechanics: positional matching, the
   length-mismatch throw, and how display labels carry through.
-- Note repetition only exists on the scalar overload — there is no `Note`-thread
-  equivalent of `mul(const Slate&)`; multiplying two `Note` threads throws.
+- Note repetition only exists on the scalar overload — there is no `Note`-slate
+  equivalent of `mul(const Slate&)`; multiplying two `Note` slates throws.
 - [`rmul()`](rmul.md) produces identical results to `mul()` in every case, including
   `Note` repetition — multiplication is commutative for numbers, and the repetition
   special case doesn't check operand order at all.

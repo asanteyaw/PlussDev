@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,12 +48,12 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Rewrites each cell of the bound thread into a canonical Unicode normalization
+<p>Rewrites each cell of the bound slate into a canonical Unicode normalization
 form — the standard fix for text that looks identical on screen but compares
 unequal because it was encoded with a different sequence of combining characters
 (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;é&quot;</span></code> as one precomposed codepoint vs. <code class="docutils literal notranslate"><span class="pre">&quot;e&quot;</span></code> + a combining acute accent). A
-direct forward to <a class="reference internal" href="#../thread/normalize.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::normalize()</span></code></span></a>. Requires the
-bound thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+direct forward to <a class="reference internal" href="../slate/normalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::normalize()</span></code></span></a>. Requires the
+bound slate to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -66,7 +66,7 @@ bound thread to be <code class="docutils literal notranslate"><span class="pre">
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as the bound thread, with each cell
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate, same length as the bound slate, with each cell
 rewritten into the requested normalization form.</p>
 </section>
 <section id="examples">
@@ -102,8 +102,8 @@ ptype: Series
 ptype: Series
 </pre></div>
 </div>
-<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws — the same message
-<a class="reference internal" href="#../thread/normalize.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::normalize()</span></code></span></a> produces directly.</p>
+<p>Example 3. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> slate throws — the same message
+<a class="reference internal" href="../slate/normalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::normalize()</span></code></span></a> produces directly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">normalize</span><span class="p">();</span>
@@ -125,7 +125,7 @@ ptype: Series
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::normalize()</span></code> is a one-line forward to
-<a class="reference internal" href="#../thread/normalize.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::normalize()</span></code></span></a> — identical behavior and throws.</p></li>
+<a class="reference internal" href="../slate/normalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::normalize()</span></code></span></a> — identical behavior and throws.</p></li>
 <li><p>Requires the optional Unicode backend (GNU libunistring) to be linked into this
 build; without it, non-ASCII normalization is unavailable.</p></li>
 <li><p>A null cell on input stays null on output.</p></li>
@@ -136,7 +136,7 @@ search, or grouping key built from user-entered or externally-sourced text.</p><
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../thread/normalize.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::normalize</span></code></span></a>: the direct, non-accessor form
+<li><p><a class="reference internal" href="../slate/normalize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::normalize</span></code></span></a>: the direct, non-accessor form
 this method forwards to.</p></li>
 <li><p><a class="reference internal" href="casefold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlateNoteAccessor::casefold</span></code></span></a>: case-insensitive comparison
 normalization — a complementary, not overlapping, concern.</p></li>

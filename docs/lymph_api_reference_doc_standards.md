@@ -12,7 +12,7 @@ Use it before and during every Lymph docs pass so the quality does not drift.
 
 ## Core Rule
 
-Teach Lymph like a serious production ML system, not like a bag of loose code
+Present Lymph like a serious production ML system, not like a bag of loose code
 fragments.
 
 The reader should be able to study the API reference and leave knowing:
@@ -29,7 +29,7 @@ reader could write a book on Lymph by studying them carefully.
 
 ## Example Standard
 
-Every practical example must be a real teaching unit, not a detached fragment.
+Every practical example must be a real, complete unit, not a detached fragment.
 
 That means:
 
@@ -200,7 +200,7 @@ namespace pluss::ai::lymph::metrics {
 }
 ```
 
-That is not how the public reference should teach an options object.
+That is not how the public reference should explain an options object.
 
 Instead:
 
@@ -219,7 +219,7 @@ Preferred pattern:
 - `shuffle`
   description, legal contexts, and default value
 
-The goal is to teach the public contract, not to dump internal-looking code.
+The goal is to explain the public contract, not to dump internal-looking code.
 
 ## Signature Standard
 
@@ -259,7 +259,7 @@ Rules:
 4. object pages should include a signature section when the public entry surface
    is important to understanding how the object is obtained or used
 5. never present a `class` or `struct` definition as a public signature
-6. never list an options object by dumping its struct body; teach fields in prose
+6. never list an options object by dumping its struct body; explain fields in prose
 
 Template:
 
@@ -387,7 +387,7 @@ For small doc examples:
 
 - prefer `pluss::make_series({...})`
 - prefer direct literals where clear
-- avoid bulky setup that teaches nothing
+- avoid bulky setup that adds nothing
 
 For real-data examples:
 
@@ -400,7 +400,7 @@ For real-data examples:
 
 The prose should be rich, deliberate, and instructional.
 
-Do not merely name parameters. Teach them.
+Do not merely name parameters. Explain them.
 
 For each important option or toggle, explain:
 
@@ -446,7 +446,7 @@ If a doc example has not been run, treat it as untrusted until verified.
 ## Writing Style Guardrails
 
 - prefer explicit type names when they improve pedagogy
-- avoid unexplained `auto` in teaching-first examples
+- avoid unexplained `auto` in example-first pages
 - keep examples self-contained enough to read in isolation
 - use short helper-free examples unless the helper itself is the subject
 - do not hide essential setup in unnamed external context
@@ -461,7 +461,7 @@ Before considering a Lymph docs page done, check:
 - was the output actually run and copied?
 - are there multiple examples where the object deserves them?
 - is there at least one end-to-end example when appropriate?
-- does the prose teach option effects and tradeoffs?
+- does the prose explain option effects and tradeoffs?
 - did any internal-only naming leak into the public page?
 - is the code using concise public-facing syntax where possible?
 - would a serious reader be able to reproduce and understand the example without

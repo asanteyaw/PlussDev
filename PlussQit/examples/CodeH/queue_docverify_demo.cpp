@@ -14,14 +14,15 @@ int main() {
   // ===================== construction =====================
   std::cout << "=== construction ===\n";
   {
-    pluss::Queue from_series(pluss::make_series({1.0, 2.0, 3.0}));
-    pluss::Queue from_note(pluss::make_note({"a", "b"}));
-    pluss::Queue from_timeline(pluss::timeline::make("1999-04-17T21:15:23Z"));
-    pluss::Queue from_duration(pluss::duration::days(3));
-    std::cout << "from_series.kind_name()=" << from_series.kind_name() << '\n';
-    std::cout << "from_note.kind_name()=" << from_note.kind_name() << '\n';
-    std::cout << "from_timeline.kind_name()=" << from_timeline.kind_name() << '\n';
-    std::cout << "from_duration.kind_name()=" << from_duration.kind_name() << '\n';
+    const auto measurements = pluss::Queue{pluss::make_series({1.0, 2.0, 3.0})};
+    const auto labels = pluss::Queue{pluss::make_note({"a", "b"})};
+    const auto observed_at =
+        pluss::Queue{pluss::timeline::make("1999-04-17T21:15:23Z")};
+    const auto timeout = pluss::Queue{pluss::duration::days(3)};
+    std::cout << "measurements.kind_name()=" << measurements.kind_name() << '\n';
+    std::cout << "labels.kind_name()=" << labels.kind_name() << '\n';
+    std::cout << "observed_at.kind_name()=" << observed_at.kind_name() << '\n';
+    std::cout << "timeout.kind_name()=" << timeout.kind_name() << '\n';
   }
 
   // ===================== kind =====================

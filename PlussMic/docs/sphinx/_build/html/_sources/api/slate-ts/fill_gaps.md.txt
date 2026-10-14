@@ -12,7 +12,7 @@ TimeSeriesAccessor::fill_gaps(GapFillMode mode = GapFillMode::Forward, std::opti
 
 ## What It Does
 
-Fills missing entries in the bound thread using one of four strategies:
+Fills missing entries in the bound slate using one of four strategies:
 
 - **`GapFillMode::Forward`** (the default): each missing position takes the
   nearest **prior** real value.
@@ -38,7 +38,7 @@ to fill it with.
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, with gaps filled per `mode`.
+    A new slate, same length as the bound source, with gaps filled per `mode`.
 
 ## Examples
 
@@ -167,13 +167,13 @@ subsp::stats::ts::fill_gaps: constant mode requires a value
 - `GapFillMode::Constant` throws
   `"subsp::stats::ts::fill_gaps: constant mode requires a value"` if `constant`
   is absent.
-- A pre-existing missing entry in the source thread is what gets filled — this
+- A pre-existing missing entry in the source slate is what gets filled — this
   method is specifically about closing gaps the mask already marks, not about
   detecting new ones.
 
 ## See Also
 
-- [`Slate::ffill`](../thread/ffill.md), [`Slate::bfill`](../thread/bfill.md):
+- [`Slate::ffill`](../slate/ffill.md), [`Slate::bfill`](../slate/bfill.md):
   the equivalent top-level operations outside the `ts()` accessor, with the same
   forward/backward semantics.
 - [`TimeSeriesAccessor::align_to`](align_to.md): aligning onto a different time

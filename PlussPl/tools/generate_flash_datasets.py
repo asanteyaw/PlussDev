@@ -113,7 +113,7 @@ def build_flights() -> DatasetSpec:
             "north_atlantic" if month_idx % 2 == 0 else "domestic_connector",
             season_map[month],
         ])
-    return DatasetSpec("flights", "Monthly airline time series for seasonality, joint, and lag-style teaching.", schema, rows)
+    return DatasetSpec("flights", "Monthly airline time series for seasonality, joint, and lag-style analysis.", schema, rows)
 
 
 def build_petals() -> DatasetSpec:
@@ -355,7 +355,7 @@ def build_sensor64() -> DatasetSpec:
             "alert" if i % 23 == 0 else "nominal",
         ])
         rows.append(row)
-    return DatasetSpec("sensor64", "High-dimensional sensor frame for parallel coordinates, radviz, and dimensional teaching.", schema, rows)
+    return DatasetSpec("sensor64", "High-dimensional sensor frame for parallel coordinates, radviz, and dimensional analysis.", schema, rows)
 
 
 def build_options_chain() -> DatasetSpec:
@@ -418,7 +418,7 @@ def build_options_chain() -> DatasetSpec:
             "ACME",
             "short" if days <= 30 else "mid" if days <= 90 else "long",
         ])
-    return DatasetSpec("options_chain", "Options-surface teaching data with temporals, smiles, and Greeks for 2D/3D views.", schema, rows)
+    return DatasetSpec("options_chain", "Options-surface sample data with temporals, smiles, and Greeks for 2D/3D views.", schema, rows)
 
 
 def build_customer_funnel() -> DatasetSpec:
@@ -469,7 +469,7 @@ def build_customer_funnel() -> DatasetSpec:
             plans[(i // 11) % len(plans)],
             outcome,
         ])
-    return DatasetSpec("customer_funnel", "Lifecycle-style customer data for count, bar, and class-conditioned teaching.", schema, rows)
+    return DatasetSpec("customer_funnel", "Lifecycle-style customer data for count, bar, and class-conditioned plots.", schema, rows)
 
 
 def build_commute_modes() -> DatasetSpec:

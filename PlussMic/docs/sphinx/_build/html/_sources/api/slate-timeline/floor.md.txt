@@ -12,7 +12,7 @@ SlateTimelineAccessor::floor(std::string_view unit) const -> Slate
 
 ## What It Does
 
-Rounds every row of the bound thread *down* to the nearest `unit` boundary, in
+Rounds every row of the bound slate *down* to the nearest `unit` boundary, in
 local wall time — same length, still `Timeline`-kind.
 
 ## Parameters
@@ -26,7 +26,7 @@ empty. Coarser units (weeks, months) aren't supported.
 ## Returns
 
 `Slate`
-    A new `Timeline`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind slate, same length as the bound slate,
     floored to `unit`.
 
 ## Examples
@@ -104,12 +104,12 @@ Timeline: unsupported unit (expected S/min/H/D)
 
 ## Notes
 
-- Flooring happens in **local wall time** (per the thread's current timezone),
+- Flooring happens in **local wall time** (per the slate's current timezone),
   then maps back — so `floor("D")` aligns to local midnight, not necessarily
   UTC midnight, if the timezone isn't `"UTC"`.
 - `unit` cannot be empty, and only accepts the fixed clock units listed above —
   see [`period()`](period.md) for month/year truncation instead.
-- `.tl()` requires the bound thread to already be `Timeline`-kind —
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` (displays as `"NULL"`) regardless of `unit`.
 

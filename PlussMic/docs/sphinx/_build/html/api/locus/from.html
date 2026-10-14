@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Locus::from &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Locus::query" href="query.html" />
+    <link rel="prev" title="Locus::pull" href="pull.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locus-from">
+<h1>Locus::from<a class="headerlink" href="#locus-from" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_api_reference.html"><span class="doc std std-doc">Back to Locus API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LocusTraverse</span><span class="w"> </span><span class="n">Locus</span><span class="o">::</span><span class="n">from</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-establishes">
+<h2>What It Establishes<a class="headerlink" href="#what-it-establishes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">from()</span></code> binds one existing catalog as the anchor of an immutable relational
+plan. It validates the anchor immediately, then returns a <code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code> without
+joining, projecting, or aligning data. This separation matters when plans are
+built conditionally: all calls before <code class="docutils literal notranslate"><span class="pre">collect()</span></code> manipulate plan metadata, while
+the terminal performs catalog alignment and relationship matching once.</p>
+<p>The complete continuation surface lives in the
+<a class="reference internal" href="../../locus_traverse_api_reference.html"><span class="std std-doc">LocusTraverse API Reference</span></a>. Use its
+<code class="docutils literal notranslate"><span class="pre">join()</span></code> method when the next hop is known, <code class="docutils literal notranslate"><span class="pre">via()</span></code> when the relationship graph
+should find a shortest route, <code class="docutils literal notranslate"><span class="pre">pick()</span></code> or <code class="docutils literal notranslate"><span class="pre">drop()</span></code> for the final stream set, and
+<code class="docutils literal notranslate"><span class="pre">collect()</span></code> to execute.</p>
+<p>The returned builder owns a cheap Locus handle. It is therefore valid after the
+source expression or local variable goes out of scope; it does not retain a raw
+reference to the caller.</p>
+</section>
+<section id="parameter">
+<h2>Parameter<a class="headerlink" href="#parameter" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><strong>table</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</dt><dd><p>The exact key of the anchor catalog. The key must already exist. Empty and
+unknown names fail before a builder is returned.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code></dt><dd><p>A zero-hop plan anchored at <code class="docutils literal notranslate"><span class="pre">table</span></code>. Calling <code class="docutils literal notranslate"><span class="pre">collect()</span></code> immediately returns
+that catalog through the normal materialization path.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A zero-hop traversal materializes the anchor unchanged.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">traversed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">traversed</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">traversed</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order_id&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id, customer_id, amount, state] rows=4
+order_id=[100, 101, 102, 103]
+</pre></div>
+</div>
+<p>Example 2. The builder owns its workspace, so it may be retained from a temporary
+Locus and refined later.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">retained_walk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">shop</span><span class="p">().</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">);</span>
+<span class="n">print_words</span><span class="p">(</span><span class="n">retained_walk</span><span class="p">.</span><span class="n">pick</span><span class="p">({</span><span class="s">&quot;state&quot;</span><span class="p">}).</span><span class="n">collect</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;state&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>state=[paid, paid, held, void]
+</pre></div>
+</div>
+<p>Example 3. Anchor validation is eager.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;absent&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>unknown: Locus::from: unknown catalog &#39;absent&#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="execution-and-cost">
+<h2>Execution And Cost<a class="headerlink" href="#execution-and-cost" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">from()</span></code> performs a key lookup and copies a reference-counted Locus handle. Its
+cost does not depend on record count. Alignment, path execution, and output
+allocation belong to <code class="docutils literal notranslate"><span class="pre">LocusTraverse::collect()</span></code>.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../locus_api_reference.html"><span class="label">Previous</span><span class="title">Locus API Reference</span></a>
+  <a class="next-link" href="pull.html"><span class="label">Next</span><span class="title">pull</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_api_reference.html">Locus API Reference</a><ul>
+      <li>Previous: <a href="pull.html" title="previous chapter">Locus::pull</a></li>
+      <li>Next: <a href="query.html" title="next chapter">Locus::query</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus/from.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -31,7 +31,7 @@ Same shape as [`eq()`](eq.md).
 ## Returns
 
 `Slate`
-    A new `Bool`-typed thread, same length as `*this`, holding the elementwise
+    A new `Bool`-typed slate, same length as `*this`, holding the elementwise
     "greater than" result.
 
 ## Examples
@@ -58,7 +58,7 @@ ptype: Series
 
 The exact negation of [`scores.le(85.0)`](le.md)'s `true, true, false`.
 
-Example 2. Compare two threads positionally.
+Example 2. Compare two slates positionally.
 
 ```cpp
 auto targets = Slate(pluss::make_series({72.0, 80.0, 95.0}));
@@ -76,7 +76,7 @@ std::cout << out_pair;
 ptype: Series
 ```
 
-Example 3. String comparison on a `Note` thread.
+Example 3. String comparison on a `Note` slate.
 
 ```cpp
 auto names = Slate(pluss::make_note({"Ada", "Bola", "Chen"}));

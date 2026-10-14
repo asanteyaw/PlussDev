@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,13 +50,13 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Counts how often each distinct value occurs in the thread, and returns the
+<p>Counts how often each distinct value occurs in the slate, and returns the
 counts as a new <code class="docutils literal notranslate"><span class="pre">Slate</span></code> whose case labels are the distinct source values —
 the 1D value-count surface. Counts are sorted by frequency descending by
 default; ties keep the values’ original <strong>first-occurrence</strong> relative order
 (a stable sort), not alphabetical order.</p>
 <p>Use <a class="reference internal" href="../dataframe/freq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::freq</span></code></span></a> for grouped frequencies across
-one or more <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> features instead of a single thread.</p>
+one or more <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> features instead of a single slate.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -93,13 +93,13 @@ value. Must be <code class="docutils literal notranslate"><span class="pre">&gt;
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A numeric thread — <code class="docutils literal notranslate"><span class="pre">Int64</span></code> when <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Float64</span></code> when
+A numeric slate — <code class="docutils literal notranslate"><span class="pre">Int64</span></code> when <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">Count</span></code>, <code class="docutils literal notranslate"><span class="pre">Float64</span></code> when
 <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">Prop</span></code> — with the distinct source values as its case labels, named
 <code class="docutils literal notranslate"><span class="pre">&quot;count&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;prop&quot;</span></code> to match <code class="docutils literal notranslate"><span class="pre">kind</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Default counts, sorted descending, for a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread with a
+<p>Example 1. Default counts, sorted descending, for a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate with a
 repeated value.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
@@ -187,7 +187,7 @@ alphabetically by key.</p></li>
 highest-count rows, never an arbitrary prefix of the unsorted data.</p></li>
 <li><p>A negative <code class="docutils literal notranslate"><span class="pre">top</span></code> throws.</p></li>
 <li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::describe()</span></code></span></a> uses <code class="docutils literal notranslate"><span class="pre">freq()</span></code> internally to compute a
-<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread’s <code class="docutils literal notranslate"><span class="pre">top</span></code>/<code class="docutils literal notranslate"><span class="pre">freq</span></code> summary fields, and inherits this same
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slate’s <code class="docutils literal notranslate"><span class="pre">top</span></code>/<code class="docutils literal notranslate"><span class="pre">freq</span></code> summary fields, and inherits this same
 tie-break behavior.</p></li>
 </ul>
 </section>
@@ -199,7 +199,7 @@ counterpart.</p></li>
 <li><p><a class="reference internal" href="distinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::distinct</span></code></span></a>: the same set of unique values, without
 counts, in first-occurrence order.</p></li>
 <li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::describe</span></code></span></a>: a fuller summary that uses <code class="docutils literal notranslate"><span class="pre">freq()</span></code>
-internally for <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads.</p></li>
+internally for <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind slates.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fold.html">

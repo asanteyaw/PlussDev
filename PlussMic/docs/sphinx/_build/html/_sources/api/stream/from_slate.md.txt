@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-static Stream Stream::from_slate(const pluss::table::Slate& thread, std::optional<pluss::table::Slate> cases = std::nullopt) -> Stream
+static Stream Stream::from_slate(const pluss::table::Slate& slate, std::optional<pluss::table::Slate> cases = std::nullopt) -> Stream
 ```
 
 ## What It Does
@@ -21,8 +21,8 @@ table stack (e.g. a `DataFrame` column extraction) into `Stream`'s API. The opti
 
 ## Parameters
 
-**thread** (`const pluss::table::Slate&`)
-    The source thread. Its payload kind becomes the resulting stream's kind.
+**slate** (`const pluss::table::Slate&`)
+    The source slate. Its payload kind becomes the resulting stream's kind.
 
 **cases** (`std::optional<pluss::table::Slate>`, defaults to `std::nullopt`)
     An optional row-label axis to attach — see [`has_label()`](has_label.md)/
@@ -31,7 +31,7 @@ table stack (e.g. a `DataFrame` column extraction) into `Stream`'s API. The opti
 ## Returns
 
 `Stream`
-    A new stream wrapping `thread`'s payload, with `cases` attached as its label axis if
+    A new stream wrapping `slate`'s payload, with `cases` attached as its label axis if
     supplied.
 
 ## Examples
@@ -39,9 +39,9 @@ table stack (e.g. a `DataFrame` column extraction) into `Stream`'s API. The opti
 Example 1. Build a stream from a plain `Slate`.
 
 ```cpp
-auto thread = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto slate = pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto stream = pluss::kindle::Stream::from_slate(thread);
+auto stream = pluss::kindle::Stream::from_slate(slate);
 std::cout << stream;
 ```
 
@@ -65,10 +65,10 @@ Example 2. Attach a row-label axis in the same call via `cases`.
 ```cpp
 using pluss::table::Slate;
 
-auto thread = Slate(pluss::make_series({10.0, 20.0}));
+auto slate = Slate(pluss::make_series({10.0, 20.0}));
 auto cases = Slate(pluss::make_note({"a", "b"}));
 
-auto stream = pluss::kindle::Stream::from_slate(thread, cases);
+auto stream = pluss::kindle::Stream::from_slate(slate, cases);
 std::cout << "has_label: " << stream.has_label();
 ```
 
@@ -80,7 +80,7 @@ has_label: 1
 
 ## Notes
 
-- `cases`, when supplied, must match `thread`'s length — the same requirement documented
+- `cases`, when supplied, must match `slate`'s length — the same requirement documented
   for [`with_label()`](with_label.md).
 - A static method; call it as `Stream::from_slate(...)`, not on an existing instance.
 - Round-trips with [`to_slate()`](to_slate.md): `Stream::from_slate(stream.to_slate())`

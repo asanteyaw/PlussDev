@@ -211,7 +211,7 @@ a chance to run at all.
 
 - [`DataFrame::cast`](cast.md): the broader casting route — change a feature's payload
   family (`Series`/`Note`/etc.), not just its scalar dtype within the current family.
-- [`Slate::astype`](../thread/astype.md): cast one thread directly outside a frame.
+- [`Slate::astype`](../slate/astype.md): cast one slate directly outside a frame.
 - [`DataFrame::features`](features.md): narrow the frame to the feature(s) the
   shared-dtype overload should cast.
 - [`DataFrame::update`](update.md): merge a narrowed, cast-only result back into the

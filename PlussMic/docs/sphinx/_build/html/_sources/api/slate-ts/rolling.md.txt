@@ -13,7 +13,7 @@ TimeSeriesAccessor::rolling(const Slate& axis, std::string_view duration, Window
 
 ## What It Does
 
-Computes a **trailing rolling window statistic** over the bound thread, in one of
+Computes a **trailing rolling window statistic** over the bound slate, in one of
 two shapes:
 
 - **Fixed row count** (`rolling(window, statistic, options)`): each position's
@@ -27,7 +27,7 @@ two shapes:
   the same trailing-window idea, but each position's window spans a fixed span of
   time (like `"2D"`) looked up against an explicit time `axis`, rather than a
   fixed row count. `axis` must be `Timeline` or `TimeIndex`, the same length as
-  the bound thread, non-missing, and sorted ascending.
+  the bound slate, non-missing, and sorted ascending.
 
 ## Parameters
 
@@ -51,7 +51,7 @@ two shapes:
 
 **axis** (`const Slate&`, calendar-duration overload)
     An explicit time axis (`Timeline` or `TimeIndex`), the same length as the
-    bound thread, non-missing and sorted ascending.
+    bound slate, non-missing and sorted ascending.
 
 **duration** (`std::string_view`, calendar-duration overload)
     A duration string (for example `"2D"`, `"12H"`, `"30min"`) defining each
@@ -67,7 +67,7 @@ two shapes:
 ## Returns
 
 `Slate`
-    A new thread, same length as the bound source, holding the rolling statistic
+    A new slate, same length as the bound source, holding the rolling statistic
     at each position.
 
 ## Examples
@@ -203,7 +203,7 @@ method (and [`expanding()`](expanding.md)) delegate to internally.
   require a full window everywhere instead.
 - `Var`/`Std` additionally require the window's observation count to exceed
   `ddof` (default `1`), independent of `min_count`.
-- A pre-existing missing entry in the source thread is skipped within any window
+- A pre-existing missing entry in the source slate is skipped within any window
   that contains it (it doesn't count toward `min_count`, and doesn't contribute
   to the statistic) — see Example 4.
 - The calendar-duration overload requires `axis` to already be `Timeline` or
@@ -218,9 +218,9 @@ method (and [`expanding()`](expanding.md)) delegate to internally.
 - [`TimeSeriesAccessor::timed`](timed.md): the calendar-duration engine this
   overload's second signature delegates to, with a fully worked example.
 - [`TimeSeriesAccessor::grouped`](grouped.md): the same fixed-window statistic,
-  computed independently per group instead of over the whole thread.
+  computed independently per group instead of over the whole slate.
 - [`TimeSeriesAccessor::expanding`](expanding.md): the same engine with the
-  window growing from the start of the thread instead of a fixed size.
+  window growing from the start of the slate instead of a fixed size.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="returns.html">

@@ -32,7 +32,7 @@ partially-derived frames out of named variables you would otherwise have to trac
 
 **assignments**
 
-Collection of `(feature_name, thread)` pairs.
+Collection of `(feature_name, slate)` pairs.
 
 - Use this overload when each output feature is already computed.
 - If a feature name already exists, the existing feature is replaced.
@@ -70,8 +70,8 @@ A callback receiving the current frame and returning the derived `Slate` — equ
 
 ## See Also
 
-- <a href="transform.html"><code>DataFrame::transform</code></a>: compute one derived thread from a callback when you are working row-wise or feature-wise.
-- <a href="set.html"><code>DataFrame::set</code></a>: write one feature directly when you already have the final thread.
+- <a href="transform.html"><code>DataFrame::transform</code></a>: compute one derived slate from a callback when you are working row-wise or feature-wise.
+- <a href="set.html"><code>DataFrame::set</code></a>: write one feature directly when you already have the final slate.
 - <a href="put.html"><code>DataFrame::put</code></a>: update selected cells rather than constructing whole derived features.
 
 ## Notes
@@ -86,7 +86,7 @@ The two single-feature overloads (`assign(name, value)` and `assign(name, expr)`
 
 ## Examples
 
-Example 1. Assign a feature from a thread you already computed.
+Example 1. Assign a feature from a slate you already computed.
 
 ```cpp
 using namespace pluss::table;
@@ -176,8 +176,8 @@ auto grades = DataFrame({
     {"final", pluss::make_series({28.0, 24.0, 21.5})},
 }, pluss::make_note({"s1", "s2", "s3"})).title("grades");
 
-auto total_thread = Slate(pluss::make_series({37.5, 32.0, 29.0}));
-auto out1 = grades.assign("total", total_thread);
+auto total_slate = Slate(pluss::make_series({37.5, 32.0, 29.0}));
+auto out1 = grades.assign("total", total_slate);
 std::cout << out1;
 
 auto out2 = grades.assign("total", [](const DataFrame& df) {

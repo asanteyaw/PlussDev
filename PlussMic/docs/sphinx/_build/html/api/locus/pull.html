@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Locus::pull &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Locus::from" href="from.html" />
+    <link rel="prev" title="Locus::to_string, Locus::show, operator&lt;&lt;(Locus)" href="stream.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="locus-pull">
+<h1>Locus::pull<a class="headerlink" href="#locus-pull" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../locus_api_reference.html"><span class="doc std std-doc">Back to Locus API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LocusPull</span><span class="w"> </span><span class="n">Locus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-establishes">
+<h2>What It Establishes<a class="headerlink" href="#what-it-establishes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pull()</span></code> starts a root-grain feature plan. The root decides what one output
+record means and fixes the output record count; later <code class="docutils literal notranslate"><span class="pre">take()</span></code> calls lift plain
+streams through root-preserving links, while reducers collapse related records
+back to one value per root record.</p>
+<p>The complete builder surface lives in the
+<a class="reference internal" href="../../locus_pull_api_reference.html"><span class="std std-doc">LocusPull API Reference</span></a>. This root method
+only validates and binds the catalog. It does not require metadata for plain root
+streams. Aggregating a related catalog is stricter: the root needs a complete,
+unique primary key so records can be grouped without changing their grain.</p>
+<p>Unlike <code class="docutils literal notranslate"><span class="pre">LocusTraverse</span></code>, <code class="docutils literal notranslate"><span class="pre">LocusPull</span></code> is a mutable plan. Its planning methods append
+specifications and return the same builder by reference, making it suitable for a
+named plan assembled across conditionals. <code class="docutils literal notranslate"><span class="pre">collect()</span></code> is the only terminal.</p>
+</section>
+<section id="parameter">
+<h2>Parameter<a class="headerlink" href="#parameter" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><strong>root</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</dt><dd><p>The exact key of the catalog whose records define the output grain. It is
+validated immediately.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">LocusPull</span></code></dt><dd><p>An empty feature plan owning a cheap Locus handle and the root key.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Pull two streams that already live on the root catalog.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">pulled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">take</span><span class="p">({</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">}).</span><span class="n">collect</span><span class="p">();</span>
+<span class="n">print_keys</span><span class="p">(</span><span class="n">pulled</span><span class="p">);</span>
+<span class="n">print_numbers</span><span class="p">(</span><span class="n">pulled</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>keys=[order_id, amount] rows=4
+amount=[50, 75, 20, 90]
+</pre></div>
+</div>
+<p>Example 2. A named builder exposes its root and specification count without
+executing, and an alias changes the output stream name rather than its values.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">pull_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;root=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pull_plan</span><span class="p">.</span><span class="n">root</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; specs=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pull_plan</span><span class="p">.</span><span class="n">specs</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pull_plan</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;state&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order_state&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;root=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pull_plan</span><span class="p">.</span><span class="n">root</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; specs=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pull_plan</span><span class="p">.</span><span class="n">specs</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">print_words</span><span class="p">(</span><span class="n">pull_plan</span><span class="p">.</span><span class="n">collect</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;order_state&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>root=orders specs=0
+root=orders specs=1
+order_state=[paid, paid, held, void]
+</pre></div>
+</div>
+<p>Example 3. An unknown root fails before any specification is added.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">print_error</span><span class="p">(</span><span class="s">&quot;unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">data</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;absent&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>unknown: Locus::pull: unknown catalog &#39;absent&#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="execution-and-cost">
+<h2>Execution And Cost<a class="headerlink" href="#execution-and-cost" title="Link to this heading">¶</a></h2>
+<p>The entry call is a key lookup plus cheap handle ownership. A pull allocates its
+result only at <code class="docutils literal notranslate"><span class="pre">collect()</span></code>. Reuse one named builder when specifications are added
+incrementally; construct separate builders when plans must remain independent.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="from.html"><span class="label">Previous</span><span class="title">from</span></a>
+  <a class="next-link" href="query.html"><span class="label">Next</span><span class="title">query</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../locus_api_reference.html">Locus API Reference</a><ul>
+      <li>Previous: <a href="stream.html" title="previous chapter">Locus::to_string, Locus::show, operator&lt;&lt;(Locus)</a></li>
+      <li>Next: <a href="from.html" title="next chapter">Locus::from</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/locus/pull.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

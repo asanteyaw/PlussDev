@@ -2431,7 +2431,7 @@ DataFrame::text_upper(features: RangeView<string_view> = {}) -> DataFrame
 
 ### Notes
 
-Delegates Unicode uppercase conversion to selected text Threads.
+Delegates Unicode uppercase conversion to selected text Slates.
 
 ### Inputs
 
@@ -2519,7 +2519,7 @@ DataFrame::text_casefold(features: RangeView<string_view> = {}) -> DataFrame
 
 ### Notes
 
-Delegates Unicode case folding to selected text Threads.
+Delegates Unicode case folding to selected text Slates.
 
 ### Inputs
 
@@ -2607,7 +2607,7 @@ DataFrame::text_title(features: RangeView<string_view> = {}) -> DataFrame
 
 ### Notes
 
-Delegates title casing to selected text Threads.
+Delegates title casing to selected text Slates.
 
 ### Inputs
 
@@ -2783,7 +2783,7 @@ DataFrame::text_starts_with(prefix: string_view, features: RangeView<string_view
 
 ### Notes
 
-Delegates prefix testing to selected text Threads.
+Delegates prefix testing to selected text Slates.
 
 ### Inputs
 
@@ -2874,7 +2874,7 @@ DataFrame::text_ends_with(suffix: string_view, features: RangeView<string_view> 
 
 ### Notes
 
-Delegates suffix testing to selected text Threads.
+Delegates suffix testing to selected text Slates.
 
 ### Inputs
 
@@ -2965,7 +2965,7 @@ DataFrame::text_matches(pattern: string_view, full: bool = false, features: Rang
 
 ### Notes
 
-Delegates prefix or full regular-expression matching to selected text Threads.
+Delegates prefix or full regular-expression matching to selected text Slates.
 
 ### Inputs
 
@@ -3059,7 +3059,7 @@ DataFrame::text_pad(width: int64, align: TextAlign = Left, fill: char = ' ', fea
 
 ### Notes
 
-Delegates text padding to selected text Threads.
+Delegates text padding to selected text Slates.
 
 ### Inputs
 
@@ -3156,7 +3156,7 @@ DataFrame::text_slice(start: int64, stop: optional<int64> = nullopt, step: int64
 
 ### Notes
 
-Delegates Unicode character slicing to selected text Threads.
+Delegates Unicode character slicing to selected text Slates.
 
 ### Inputs
 
@@ -3253,7 +3253,7 @@ DataFrame::text_normalize(form: UnicodeForm = NFC, features: RangeView<string_vi
 
 ### Notes
 
-Delegates Unicode normalization to selected text Threads.
+Delegates Unicode normalization to selected text Slates.
 
 ### Inputs
 
@@ -3344,7 +3344,7 @@ DataFrame::text_encode(encoding: string_view = "base64", features: RangeView<str
 
 ### Notes
 
-Delegates text encoding to selected text Threads.
+Delegates text encoding to selected text Slates.
 
 ### Inputs
 

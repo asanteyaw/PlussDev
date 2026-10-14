@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -71,7 +71,7 @@ positive operands only, where the convention is unambiguous.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
-A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise remainder.</p>
+A new slate, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise remainder.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -93,7 +93,7 @@ ptype: Series
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">17</span> <span class="pre">=</span> <span class="pre">5*3</span> <span class="pre">+</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">26</span> <span class="pre">=</span> <span class="pre">5*5</span> <span class="pre">+</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">33</span> <span class="pre">=</span> <span class="pre">5*6</span> <span class="pre">+</span> <span class="pre">3</span></code> — matching
 <a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">amounts.floordiv(5.0)</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">3,</span> <span class="pre">5,</span> <span class="pre">6</span></code> from the same dividends.</p>
-<p>Example 2. Remainder against another thread, positionally.</p>
+<p>Example 2. Remainder against another slate, positionally.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">divisors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">mod</span><span class="p">(</span><span class="n">divisors</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>

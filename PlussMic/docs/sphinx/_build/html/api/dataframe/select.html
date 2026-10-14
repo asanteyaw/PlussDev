@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -87,7 +87,7 @@ first.</p>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>conditions</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView::Of&lt;Slate&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;Slate&gt;</span></code>)</p>
 <p>An ordered, non-empty list of boolean masks, one per candidate in <code class="docutils literal notranslate"><span class="pre">choices</span></code>. Each
-<code class="docutils literal notranslate"><span class="pre">Slate</span></code> must be a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-scalar-type thread with one value per case —
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> must be a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-scalar-type slate with one value per case —
 the same requirement <code class="docutils literal notranslate"><span class="pre">land()</span></code>/<code class="docutils literal notranslate"><span class="pre">lor()</span></code>/<code class="docutils literal notranslate"><span class="pre">lxor()</span></code> place on their operands (see
 <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a>). <code class="docutils literal notranslate"><span class="pre">conditions</span></code> and <code class="docutils literal notranslate"><span class="pre">choices</span></code> must have the same length; each
 position pairs one condition with the candidate frame it “unlocks.”</p>

@@ -35,7 +35,7 @@ The divisor(s). For the `Slate` overload, must be the same length as `*this`.
 ## Returns
 
 `Slate`
-    A new thread, same length as `*this`, holding the elementwise remainder.
+    A new slate, same length as `*this`, holding the elementwise remainder.
 
 ## Examples
 
@@ -61,7 +61,7 @@ ptype: Series
 `17 = 5*3 + 2`, `26 = 5*5 + 1`, `33 = 5*6 + 3` — matching
 [`amounts.floordiv(5.0)`](floordiv.md)'s `3, 5, 6` from the same dividends.
 
-Example 2. Remainder against another thread, positionally.
+Example 2. Remainder against another slate, positionally.
 
 ```cpp
 auto divisors = Slate(pluss::make_series({4.0, 7.0, 9.0}));

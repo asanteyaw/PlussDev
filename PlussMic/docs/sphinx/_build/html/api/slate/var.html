@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -51,13 +51,13 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the variance of every observed (non-missing) value in a numeric
-<code class="docutils literal notranslate"><span class="pre">Series</span></code> thread, as a scalar <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>. There are two overloads, and they
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> slate, as a scalar <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>. There are two overloads, and they
 handle an insufficient sample differently:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">var(unbiased)</span></code></strong>: the simple form. <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default)
 computes the <strong>sample</strong> variance (dividing by <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code>, Bessel’s correction);
 <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">false</span></code> computes the <strong>population</strong> variance (dividing by <code class="docutils literal notranslate"><span class="pre">n</span></code>).
-An empty thread, or one where every entry is missing, <strong>throws</strong>.</p></li>
+An empty slate, or one where every entry is missing, <strong>throws</strong>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">var(options)</span></code></strong>: the general form, taking a <code class="docutils literal notranslate"><span class="pre">StatisticOptions{ddof,</span> <span class="pre">min_count}</span></code>. <code class="docutils literal notranslate"><span class="pre">ddof</span></code> (delta degrees of freedom) generalizes the divisor to
 <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">ddof</span></code> — <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> matches <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">0</span></code> matches
 <code class="docutils literal notranslate"><span class="pre">unbiased</span> <span class="pre">=</span> <span class="pre">false</span></code>, and any other non-negative value is accepted too.
@@ -145,7 +145,7 @@ the result is valid. Check validity through <code class="docutils literal notran
 </pre></div>
 </div>
 <p>Only two observations are present, below the required <code class="docutils literal notranslate"><span class="pre">min_count</span> <span class="pre">=</span> <span class="pre">5</span></code>, so the
-single-entry result thread is marked invalid at position <code class="docutils literal notranslate"><span class="pre">0</span></code> — no exception is
+single-entry result slate is marked invalid at position <code class="docutils literal notranslate"><span class="pre">0</span></code> — no exception is
 thrown, but <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code> would still hand back whatever number the arithmetic
 happened to produce underneath (<code class="docutils literal notranslate"><span class="pre">50</span></code>, in this case: <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>
 printing has no concept of nullness, only the wrapping <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own validity

@@ -15,7 +15,7 @@ Slate::cast(const SlateCastOptions& options) const -> SlateCastAccessor
 ## What It Does
 
 Enters the casting accessor — `cast()` itself performs no conversion; it binds the
-current thread (and, optionally, a `SlateCastOptions` policy) and hands back a
+current slate (and, optionally, a `SlateCastOptions` policy) and hands back a
 `SlateCastAccessor` whose four methods each convert to one target payload family:
 
 ```cpp
@@ -28,8 +28,8 @@ public:
 };
 ```
 
-Calling the target that matches the source thread's own [`kind()`](kind.md) is always a
-cheap identity — `Slate(...).cast().series()` on an already-`Series`-kind thread just
+Calling the target that matches the source slate's own [`kind()`](kind.md) is always a
+cheap identity — `Slate(...).cast().series()` on an already-`Series`-kind slate just
 returns `*this` unchanged (subject to `options.series_dtype`, if you're also asking for a
 different numeric dtype). Converting *between* kinds follows these rules:
 
@@ -76,7 +76,7 @@ sides of this.
 ## Returns
 
 `SlateCastAccessor`
-    A lightweight accessor bound to the current thread (and `options`, if given). Each of
+    A lightweight accessor bound to the current slate (and `options`, if given). Each of
     its four methods performs one conversion and returns a `Slate`.
 
 ## Examples
@@ -173,7 +173,7 @@ ptype: Timeline
 Setting `invalid = ParseInvalid::Null` avoids the throw and marks the unparseable row
 `NULL` instead.
 
-Example 5. Cast a numeric thread to text with `note()`.
+Example 5. Cast a numeric slate to text with `note()`.
 
 ```cpp
 auto amounts = Slate(pluss::make_series({1.5, 2.5}));
@@ -197,7 +197,7 @@ ptype: Note
 - `SlateCastOptions::invalid` only actually affects the `Timeline`/`TimeIndex` targets —
   see the important callout above. `astype()`, which delegates to `cast().series()`
   internally, inherits this same "always null on unparseable text" behavior.
-- Converting to a thread's own current kind is a cheap identity (subject to
+- Converting to a slate's own current kind is a cheap identity (subject to
   `series_dtype`, if a different numeric dtype is also requested).
 
 ## See Also
