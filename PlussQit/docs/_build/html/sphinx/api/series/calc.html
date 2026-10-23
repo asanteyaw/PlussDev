@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::calc &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::cartprod" href="cartprod.html" />
+    <link rel="prev" title="Series::broadcast_to" href="broadcast_to.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-calc">
+<h1>Series::calc<a class="headerlink" href="#series-calc" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="std std-doc">Back to Series API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">CalcAccessor</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">calc</span>
+<span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">CalcAccessor</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">calc</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span>
+<span class="n">Series</span><span class="o">::</span><span class="n">CalcAccessor</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">calc</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">CalcAccessor</span><span class="o">::</span><span class="n">CalcOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">calc</span></code> is the entrypoint for calculus on a callable. The owning <code class="docutils literal notranslate"><span class="pre">Series</span></code> has a
+different role in the two directions:</p>
+<ul class="simple">
+<li><p>for <code class="docutils literal notranslate"><span class="pre">diff()</span></code>, <code class="docutils literal notranslate"><span class="pre">grad()</span></code>, <code class="docutils literal notranslate"><span class="pre">jac()</span></code>, and <code class="docutils literal notranslate"><span class="pre">hess()</span></code>, it is the independent value at
+which the callable is differentiated;</p></li>
+<li><p>for <code class="docutils literal notranslate"><span class="pre">antidiff()</span></code>, it is the upper endpoint of an anchored integral.</p></li>
+</ul>
+<p>Accessing <code class="docutils literal notranslate"><span class="pre">calc</span></code> does not evaluate the callback, record a persistent graph, or
+copy the receiver. A terminal method selects the operation and invokes the
+callback with a temporary differentiable or quadrature-node <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p>Open the dedicated <a class="reference internal" href="../../series_calc_accessor_api_reference.html"><span class="std std-doc">Series::CalcAccessor API Reference</span></a>
+for the complete method family, tensor-shape conventions, and option table.</p>
+</section>
+<section id="why-this-is-separate">
+<h2>Why This Is Separate<a class="headerlink" href="#why-this-is-separate" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> already has two similarly named sequence operations, but neither takes
+a callable:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diff()</span></code></span></a> subtracts adjacent stored samples.</p></li>
+<li><p><a class="reference internal" href="antidiff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::antidiff</span></code></span></a> integrates stored samples with trapezoids.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">calc</span></code> instead asks a function for values as needed. <code class="docutils literal notranslate"><span class="pre">x.calc.diff(fn)</span></code>
+differentiates the expression built by <code class="docutils literal notranslate"><span class="pre">fn(x)</span></code>, while
+<code class="docutils literal notranslate"><span class="pre">upper.calc.antidiff(fn,</span> <span class="pre">lower)</span></code> evaluates <code class="docutils literal notranslate"><span class="pre">fn</span></code> at quadrature nodes between two
+endpoints. The separation prevents a sampled sequence from being mistaken for
+the function that generated it.</p>
+</section>
+<section id="calling-styles">
+<h2>Calling Styles<a class="headerlink" href="#calling-styles" title="Link to this heading">¶</a></h2>
+<p>The member and zero-argument call forms are equivalent:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">fn</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">call</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">calc</span><span class="p">().</span><span class="n">diff</span><span class="p">(</span><span class="n">fn</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">CalcOptions</span></code> creates a lightweight accessor with those defaults bound:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">CalcAccessor</span><span class="o">::</span><span class="n">CalcOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">calc</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">second</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">fn</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The receiver and its numeric storage are not copied. The returned accessor
+keeps the receiver binding plus its own option record, so separate configured
+accessors may be used independently.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Dot and call syntax select the same first derivative.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">z</span><span class="p">.</span><span class="n">sin</span><span class="p">();</span><span class="w"> </span><span class="p">};</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">calc</span><span class="p">().</span><span class="n">diff</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data=0.87758256
+data=0.87758256
+</pre></div>
+</div>
+<p>Example 2. Bound options organize several calls around one calculus policy.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">::</span><span class="n">CalcAccessor</span><span class="o">::</span><span class="n">CalcOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">configured</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">calc</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">configured</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">z</span><span class="p">.</span><span class="n">sin</span><span class="p">();</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;order=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">configured</span><span class="p">.</span><span class="n">options</span><span class="p">().</span><span class="n">order</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data=-0.47942554
+order=2
+</pre></div>
+</div>
+<p>Example 3. The same entrypoint makes the receiver an integration endpoint.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">upper</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">antidiff</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">square</span><span class="p">();</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data=[0.041666667, 0.33333333, 2.6666667]
+</pre></div>
+</div>
+<p>Each endpoint is independent: the result is
+<code class="docutils literal notranslate"><span class="pre">[integral_0^0.5</span> <span class="pre">t^2</span> <span class="pre">dt,</span> <span class="pre">integral_0^1</span> <span class="pre">t^2</span> <span class="pre">dt,</span> <span class="pre">integral_0^2</span> <span class="pre">t^2</span> <span class="pre">dt]</span></code> and keeps
+the receiver’s shape.</p>
+</section>
+</section>
+<section id="lifetime-and-mutation">
+<h2>Lifetime And Mutation<a class="headerlink" href="#lifetime-and-mutation" title="Link to this heading">¶</a></h2>
+<p>The accessor is cheap, but it remains bound to its receiver. Do not retain an
+accessor beyond the lifetime of the <code class="docutils literal notranslate"><span class="pre">Series</span></code> that created it. Terminal methods
+return new <code class="docutils literal notranslate"><span class="pre">Series</span></code> values and do not mutate the receiver.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../series_calc_accessor_api_reference.html"><span class="std std-doc">Series::CalcAccessor API Reference</span></a></p></li>
+<li><p><a class="reference internal" href="diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diff</span></code></span></a>: adjacent-sample differences, not callable
+differentiation.</p></li>
+<li><p><a class="reference internal" href="antidiff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::antidiff</span></code></span></a>: sampled-data trapezoidal integration.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="broadcast_to.html"><span class="label">Previous</span><span class="title">broadcast_to</span></a>
+  <a class="next-link" href="cartprod.html"><span class="label">Next</span><span class="title">cartprod</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="broadcast_to.html" title="previous chapter">Series::broadcast_to</a></li>
+      <li>Next: <a href="cartprod.html" title="next chapter">Series::cartprod</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/calc.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

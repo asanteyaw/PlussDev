@@ -1,0 +1,11 @@
+# Tests of a distribution
+
+[Back to Ranks, Distributions and Tables](../inference_02_ranks_distributions_and_tables.md)
+
+
+@@example Stats/inference/guide/1105_distribution_tests.cpp@@
+
+- **Kolmogorov–Smirnov, one sample.** `kstest(x, mean0, stddev0)` measures the largest gap between the sample's cumulative distribution and the normal one. The reported statistic is D, with D⁺ and D⁻ the gaps in each direction. The null parameters must be fixed beforehand: if the mean and standard deviation are estimated from the same data, the test is conservative and its p-value too large. At n = 8 the exact p-value (0.7316) and the Kolmogorov-series approximation (0.7534) differ in the second digit.
+- **Kolmogorov–Smirnov, two samples.** `kstest2(x, y)` asks whether two samples have the same distribution, detecting differences in location, spread or shape. Here the machines are not distinguishable (p = 0.14, exact).
+- **Jarque–Bera.** `jbtest(x)` tests normality from the skewness and kurtosis. The 30 values here have a kurtosis of 1.70 (flat compared with the normal's 3) but the sample is too small to reject.
+- **Chi-squared goodness of fit.** `chisq_gof(observed, expected, options)` compares counts with expected counts; `ChiGofOptions::ddof` removes degrees of freedom for estimated parameters. 18, 22, 31, 29 against a fair die's 25 each gives chi² = 4.4 on 3 degrees of freedom, p = 0.22: no evidence of bias.

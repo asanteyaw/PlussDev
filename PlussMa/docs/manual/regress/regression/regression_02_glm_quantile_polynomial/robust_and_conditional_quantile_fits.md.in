@@ -1,0 +1,8 @@
+# Robust and conditional-quantile fits
+
+[Back to Generalised Linear, Quantile and Polynomial Regression](../regression_02_glm_quantile_polynomial.md)
+
+
+@@example Stats/regression/guide/1006_quantile_regression.cpp@@
+
+One wild observation drags least squares far from the truth (the intercept goes from 1 to −6.8, the slope from 2 to 4.1) because squared error gives it enormous weight; the median fit is unmoved, and its standard error is not inflated by the outlier either. For data whose spread grows with `x`, different quantiles have different slopes: the lower quantile line is flatter and the upper steeper than the median line, which describes the *spread* of the response, something no mean regression can.

@@ -2,7 +2,7 @@
 // standalone Ito/Stratonovich stochastic-integral primitives.
 //
 // Verification strategy, mirroring this program's established discipline:
-//  - ito_integral()/stratonovich_integral() are checked against EXACT
+//  - ito_integral()/strat_integral() are checked against EXACT
 //    discrete algebraic identities (not approximations, not statistics):
 //    for f(t, W_t) = W_t, the discrete Ito sum equals EXACTLY
 //    0.5*(W_T^2 - realized_quadratic_variation), the discrete
@@ -88,7 +88,7 @@ int main() {
     sde::WienerIntegrandFn f_w = [](double, const Series& w) { return w; };
 
     const auto ito = sde::ito_integral(f_w, path);
-    const auto strat = sde::stratonovich_integral(f_w, path);
+    const auto strat = sde::strat_integral(f_w, path);
 
     const double w_T = scalar_f64(path.w.select(0, steps));
     const double qv = scalar_f64(ito.realized_quadratic_variation);
@@ -277,6 +277,154 @@ int main() {
     expect_near(scalar_f64(adj_auto.grad_theta), grad_fd, 1e-4,
                "fluctua_adjoint(LossFn)'s auto-derived grad_theta matches an independent finite-difference oracle",
                &failures);
+  }
+
+  // ---- path diagnostics --------------------------------------------------
+  {
+    const Series like = real_series({0.0, 0.0, 0.0}, {3});
+    const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, 400, /*seed=*/5);
+    const auto r = sde::ito_integral([](double, const Series& w) { return w; }, path);
+    expect(r.warnings.empty(), "a standard Wiener path raises no warning", &failures);
+    expect_near(r.quadratic_variation_ratio, 1.0, 0.2, "the quadratic variation ratio of a Wiener path is about 1",
+               &failures);
+    sde::WienerPath scaled = path;
+    scaled.w = path.w.mul(3.0);
+    const auto s = sde::ito_integral([](double, const Series& w) { return w; }, scaled);
+    expect(!s.warnings.empty(), "a path with the wrong volatility is flagged", &failures);
+    expect_near(s.quadratic_variation_ratio, 9.0, 1.5, "the ratio reflects the volatility (9 for a tripled path)", &failures);
+  }
+
+  // ---- adaptedness probe for integrands computed from the whole path ----------
+  {
+    const Series like = real_series({0.0, 0.0}, {2});
+    const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, 120, /*seed=*/9);
+    // adapted: the value of the path, and a running maximum
+    auto identity = [](const Series& w) { return w; };
+    auto running_max = [](const Series& w) {
+      std::vector<Series> rows;
+      Series best = w.select(0, 0);
+      rows.push_back(best.unsqueeze(0));
+      for (std::int64_t i = 1; i < w.size(0); ++i) {
+        best = best.maximum(w.select(0, i));
+        rows.push_back(best.unsqueeze(0));
+      }
+      Series out = rows[0];
+      for (std::size_t i = 1; i < rows.size(); ++i) out = out.unite({rows[i]}, 0);
+      return out;
+    };
+    const auto a = sde::ito_integral(sde::SampledIntegrandFn(identity), path);
+    const auto b = sde::ito_integral([](double, const Series& w) { return w; }, path);
+    const auto vec_a = vec_f64(a.value), vec_b = vec_f64(b.value);
+    for (std::size_t i = 0; i < vec_a.size(); ++i)
+      expect_near(vec_a[i], vec_b[i], 1e-12, "a sampled integrand gives the same Ito sum as the pointwise form", &failures);
+    const auto sa = sde::strat_integral(sde::SampledIntegrandFn(identity), path);
+    const auto sb = sde::strat_integral([](double, const Series& w) { return w; }, path);
+    expect_near(vec_f64(sa.value)[0], vec_f64(sb.value)[0], 1e-12, "the sampled Stratonovich sum matches", &failures);
+    bool ok = true;
+    try { (void)sde::ito_integral(sde::SampledIntegrandFn(running_max), path); } catch (...) { ok = false; }
+    expect(ok, "a running maximum (adapted) passes the probe", &failures);
+
+    // anticipating: a centered moving average uses the next sample; the terminal value uses all of them
+    auto centered = [](const Series& w) {
+      const std::int64_t n = w.size(0);
+      const Series prev = w.slice(0, 0, 1, 1).unite({w.slice(0, 0, n - 1, 1)}, 0);
+      const Series next = w.slice(0, 1, n, 1).unite({w.slice(0, n - 1, n, 1)}, 0);
+      return prev.add(w).add(next).div(3.0);
+    };
+    auto terminal = [](const Series& w) {
+      return w.select(0, w.size(0) - 1).unsqueeze(0).expand({w.size(0), w.size(1)});
+    };
+    for (auto* name : {"centered moving average", "terminal value"}) {
+      bool caught = false;
+      std::string message;
+      try {
+        (void)sde::ito_integral(std::string(name) == "terminal value" ? sde::SampledIntegrandFn(terminal)
+                                                                      : sde::SampledIntegrandFn(centered), path);
+      } catch (const std::exception& e) { caught = true; message = e.what(); }
+      expect(caught, std::string(name) + " is rejected as anticipating", &failures);
+      expect(message.find("not adapted") != std::string::npos, std::string(name) + ": the message says why", &failures);
+    }
+  }
+
+  // ---- Marcus integral on a jump-diffusion path --------------------------------
+  {
+    const Series like = real_series({0.0, 0.0, 0.0}, {3});
+    const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 500, /*seed=*/17, /*drift=*/0.1,
+                                                      /*volatility=*/0.4, /*jump_rate=*/12.0, /*jump_mean=*/0.4,
+                                                      /*jump_stddev=*/0.1);
+    expect(jp.jump_mask.sum().item<double>() > 3.0, "the jump path contains jumps", &failures);
+    const auto marcus = sde::marcus_integral([](double, const Series& x) { return x; }, jp.path, jp.jump_mask);
+    const auto ito = sde::ito_integral([](double, const Series& x) { return x; }, jp.path);
+    const Series xt = jp.path.w.select(0, 500);
+    const auto m = vec_f64(marcus.value), i = vec_f64(ito.value), x = vec_f64(xt);
+    const auto q = vec_f64(marcus.realized_quadratic_variation);
+    for (std::size_t k = 0; k < 3; ++k) {
+      expect_near(m[k], 0.5 * x[k] * x[k], 1e-9, "Marcus integral of X dX is X_T^2 / 2 along a jump path (Newton-Leibniz)", &failures);
+      expect_near(i[k], 0.5 * (x[k] * x[k] - q[k]), 1e-9, "the Ito sum pays the full quadratic variation, jumps included", &failures);
+    }
+    const auto auto_flagged = sde::marcus_integral([](double, const Series& xx) { return xx; }, jp.path, 5.0);
+    expect(auto_flagged.warnings.size() <= 1, "automatic jump detection runs", &failures);
+    bool too_coarse = false;
+    try { (void)sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 10, 1, 0.0, 0.1, 5.0, 0.0, 0.1); } catch (...) { too_coarse = true; }
+    expect(too_coarse, "a step too coarse for the jump rate is rejected", &failures);
+  }
+
+  // ---- Milstein and Heun: strong convergence orders --------------------------------
+  {
+    const double mu_c = 0.2, sg = 0.8, T = 1.0;
+    const std::int64_t paths = 6000;
+    const Series y0 = constant_series(1.0, paths);
+    auto mu_ito = [&](double, const Series& y, const Series&) { return y.mul(mu_c); };
+    auto sigma_f = [&](double, const Series& y, const Series&) { return y.mul(sg); };
+    auto mu_strat = [&](double, const Series& y, const Series&) { return y.mul(mu_c - 0.5 * sg * sg); };
+    auto strong_error = [&](sde::SdeMethod method, std::int64_t steps, bool strat) {
+      sde::SdeOptions o;
+      o.method = method; o.steps = steps; o.seed = 77;
+      const auto r = sde::fluctua(strat ? sde::DriftFn(mu_strat) : sde::DriftFn(mu_ito), sigma_f, y0, 0.0, T,
+                                  pluss::series::undefined(), o);
+      // Ito GBM: X_T = exp((mu - s^2/2) T + s W_T).  The Stratonovich SDE with drift (mu - s^2/2) has the same law
+      // path by path: X_T = exp(mu_s T + s W_T + ...) -- both reduce to the same closed form here.
+      const Series exact = r.wiener_final.mul(sg).add((mu_c - 0.5 * sg * sg) * T).exp();
+      return scalar_f64(r.y_final.sub(exact).abs().mean());
+    };
+    const double em_coarse = strong_error(sde::SdeMethod::EulerMaruyama, 20, false);
+    const double em_fine = strong_error(sde::SdeMethod::EulerMaruyama, 80, false);
+    const double mi_coarse = strong_error(sde::SdeMethod::Milstein, 20, false);
+    const double mi_fine = strong_error(sde::SdeMethod::Milstein, 80, false);
+    const double he_coarse = strong_error(sde::SdeMethod::StratonovichHeun, 20, true);
+    const double he_fine = strong_error(sde::SdeMethod::StratonovichHeun, 80, true);
+    expect(em_coarse / em_fine > 1.5 && em_coarse / em_fine < 2.8, "Euler-Maruyama halves its error when the step is cut 4x (order 1/2)", &failures);
+    expect(mi_coarse / mi_fine > 3.0 && mi_coarse / mi_fine < 5.5, "Milstein cuts its error ~4x when the step is cut 4x (order 1)", &failures);
+    expect(he_coarse / he_fine > 3.0 && he_coarse / he_fine < 5.5, "the Stratonovich Heun scheme is of order 1 as well", &failures);
+    expect(mi_fine < em_fine, "Milstein beats Euler-Maruyama at the same step", &failures);
+  }
+
+  // ---- pathwise adjoint through Milstein and Heun, against finite differences -----------
+  for (auto method : {sde::SdeMethod::Milstein, sde::SdeMethod::StratonovichHeun}) {
+    const Series y0 = real_series({1.0, 1.4}, {2});
+    auto mu = [](double, const Series& y, const Series& th) { return y.mul(th.select(0, 0)); };
+    auto sigma = [](double, const Series& y, const Series& th) { return y.mul(th.select(0, 1)).add(y.mul(y).mul(0.05)); };
+    const sde::LossFn loss = [](const Series& y) { return y.mul(y).sum(); };
+    sde::SdeOptions o;
+    o.method = method; o.steps = 40; o.seed = 4;
+    const Series theta = real_series({0.3, 0.5}, {2});
+    const auto adj = sde::fluctua_adjoint(mu, sigma, y0, 0.0, 1.0, theta, loss, o);
+    for (std::int64_t k = 0; k < 2; ++k) {
+      auto value = [&](double shift) {
+        std::vector<double> th = {0.3, 0.5};
+        th[static_cast<std::size_t>(k)] += shift;
+        const auto f = sde::fluctua(mu, sigma, y0, 0.0, 1.0, real_series(th, {2}), o);
+        return scalar_f64(f.y_final.mul(f.y_final).sum());
+      };
+      const double eps = 1e-6;
+      const double fd = (value(eps) - value(-eps)) / (2 * eps);
+      expect_near(vec_f64(adj.grad_theta)[static_cast<std::size_t>(k)], fd, 1e-4 * (1.0 + std::abs(fd)),
+                 std::string("adjoint gradient matches finite differences for ") +
+                     (method == sde::SdeMethod::Milstein ? "Milstein" : "Heun") + ", parameter " + std::to_string(k),
+                 &failures);
+    }
+    const auto fwd = sde::fluctua(mu, sigma, y0, 0.0, 1.0, theta, o);
+    expect_near(vec_f64(adj.y_final)[0], vec_f64(fwd.y_final)[0], 1e-12, "adjoint forward pass equals fluctua", &failures);
   }
 
   if (failures != 0) {

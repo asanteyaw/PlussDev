@@ -1,0 +1,24 @@
+# `pluss::subsp::stats::ts::SsmModel`
+
+The matrices and initial moments of a linear Gaussian state-space model.
+
+`SsmModel` describes `x_{t+1} = A x_t + B w_t`, `y_t = C x_t + D v_t` for `m` state variables, `n` observed series, `k` state shocks and `h` observation shocks.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `transition` | `pluss::Series` | — | `A`, `m × m`: how the state evolves. |
+| `state_loading` | `pluss::Series` | — | `B`, `m × k`: how the state shocks enter; its columns are standard deviations, so the state noise covariance is `B B'`. |
+| `observation` | `pluss::Series` | — | `C`, `n × m`: how the state shows in the observations. |
+| `innovation_loading` | `pluss::Series` | — | `D`, `n × h`: observation noise; covariance `D D'`. |
+| `mean0` | `pluss::Series` | — | Mean of the state *before* the first observation (a vector of length `m`). |
+| `cov0` | `pluss::Series` | — | Covariance of that state, `m × m`; make it large to express ignorance of the starting level. |
+
+## Guidance
+
+Because the initial moments describe the state one step before the first observation, the first forecast of the state is `A mean0` with covariance `A cov0 A' + B B'`.
+
+## See Also
+
+- [`Ssm`](Ssm.md)

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fitting a curve &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Verifying an answer" href="verifying_an_answer.html" />
+    <link rel="prev" title="Derivative-Free Optimization 5: Worked Problems and Checking Answers" href="../dfo_05_worked_problems.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from fitting_a_curve.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="fitting-a-curve">
+<h1>Fitting a curve<a class="headerlink" href="#fitting-a-curve" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../dfo_05_worked_problems.html"><span class="std std-doc">Back to Worked Problems and Checking Answers</span></a></p>
+<p>Fit <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">exp(-b</span> <span class="pre">t)</span> <span class="pre">+</span> <span class="pre">c</span></code> to eight measurements. The objective is the sum of squared residuals, written as ordinary Series arithmetic, with bounds that keep the parameters physical.</p>
+<p>The strategy is two stages. A cheap local method (<code class="docutils literal notranslate"><span class="pre">NelderMead</span></code>) gets close. A second, different method (<code class="docutils literal notranslate"><span class="pre">OrthoMads</span></code>) restarts from that answer and polishes it. Starting the second stage from the first stage’s <code class="docutils literal notranslate"><span class="pre">minimizer</span></code> costs only the polish, and the second method’s different stopping rule goes further than the first.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cmath&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">dfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">optimization</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">vec</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">())}).</span><span class="n">to</span><span class="p">(</span><span class="n">f64</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">});</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">yv</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">ti</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">})</span><span class="w"> </span><span class="n">yv</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="mf">-0.7</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ti</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.5</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">(</span><span class="n">yv</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">sse</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">)).</span><span class="n">exp</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">model</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">y</span><span class="p">).</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">();</span>
+<span class="w">  </span><span class="p">};</span>
+
+<span class="w">  </span><span class="n">dfo</span><span class="o">::</span><span class="n">DfoProblem</span><span class="w"> </span><span class="n">prob</span><span class="p">;</span>
+<span class="w">  </span><span class="n">prob</span><span class="p">.</span><span class="n">initial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">});</span>
+<span class="w">  </span><span class="n">prob</span><span class="p">.</span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sse</span><span class="p">;</span>
+<span class="w">  </span><span class="n">prob</span><span class="p">.</span><span class="n">lower_bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
+<span class="w">  </span><span class="n">prob</span><span class="p">.</span><span class="n">upper_bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">show</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">DfoResult</span><span class="o">&amp;</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">minimizer</span><span class="p">.</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">status</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;a &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  b &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  c &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">scientific</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  sse &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">minimum</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">defaultfloat</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  evals &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">diagnostics</span><span class="p">.</span><span class="n">evaluations</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+
+<span class="w">  </span><span class="n">dfo</span><span class="o">::</span><span class="n">DfoOptions</span><span class="w"> </span><span class="n">first</span><span class="p">;</span>
+<span class="w">  </span><span class="n">first</span><span class="p">.</span><span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">DfoSolverKind</span><span class="o">::</span><span class="n">NelderMead</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">DFO</span><span class="o">::</span><span class="n">solve</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">first</span><span class="p">);</span>
+<span class="w">  </span><span class="n">show</span><span class="p">(</span><span class="s">&quot;1. Nelder-Mead&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r1</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">prob</span><span class="p">.</span><span class="n">initial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r1</span><span class="p">.</span><span class="n">minimizer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">dfo</span><span class="o">::</span><span class="n">DfoOptions</span><span class="w"> </span><span class="n">polish</span><span class="p">;</span>
+<span class="w">  </span><span class="n">polish</span><span class="p">.</span><span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">DfoSolverKind</span><span class="o">::</span><span class="n">OrthoMads</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">DFO</span><span class="o">::</span><span class="n">solve</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">polish</span><span class="p">);</span>
+<span class="w">  </span><span class="n">show</span><span class="p">(</span><span class="s">&quot;2. OrthoMads from (1)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r2</span><span class="p">);</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;true values               a 2.0000  b 0.7000  c 0.5000</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1. Nelder-Mead            Converged                 a 1.9999  b 0.7000  c 0.5000  sse 2.5e-09  evals 253
+2. OrthoMads from (1)     Converged                 a 2.0000  b 0.7000  c 0.5000  sse 1.1e-24  evals 614
+true values               a 2.0000  b 0.7000  c 0.5000
+</pre></div>
+</div>
+<p>Both stages end <code class="docutils literal notranslate"><span class="pre">Converged</span></code>. The first is accurate to about four digits, the second to machine precision. The fit is exact because the data contain no noise; with noisy data the final sum of squares would be the noise level, and the parameters would be wrong by about as much as the data allow, whatever the solver. If the starting point were far from this basin (many local minima), replace stage one by <code class="docutils literal notranslate"><span class="pre">DifferentialEvolutionPrmm</span></code> as in Chapter 2.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/optim/dfo/dfo_05_worked_problems/fitting_a_curve.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

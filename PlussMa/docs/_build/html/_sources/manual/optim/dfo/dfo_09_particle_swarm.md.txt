@@ -1,0 +1,67 @@
+<!-- generated from dfo_09_particle_swarm.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Derivative-Free Optimization 9: The Particle Swarm Minimisers
+
+Particle swarm imitates a flock: many particles move through the search region, each pulled toward the best place it has seen itself and the best place any particle has seen. It needs only function values, scales better with the number of variables than a simplex, and is the usual choice for rugged functions in a box. Two standalone minimisers exist: `particle_swarm_minimizer`, the classic scheme, and `particle_swarm_dv_minimizer`, a variant that mixes in differential evolution. After this chapter you can run either, set its parameters on purpose, stop it sensibly and judge which to use.
+
+Every program is complete and its output is the output of that program. Counts are evaluations of the objective; a "generation" is one move of every particle.
+
+## The method
+
+Each particle has a position and a velocity. In every generation each velocity becomes
+
+> inertia × velocity + cognitive × (random) × (own best − position) + social × (random) × (swarm best − position)
+
+and the particle moves by it. Three forces: **inertia** keeps the particle going, **cognitive** pulls it back toward its own best, **social** pulls it toward the swarm's best. By default the inertia falls linearly from `inertia_max` (0.99) to `inertia_min` (0.1) over the run: wide exploration first, fine search at the end. With bounds, particles are kept inside the box.
+
+## The calls
+
+```cpp
+PopulationSolverOutcome particle_swarm_minimizer(objective, initial, ParticleSwarmConfig config = {});
+PopulationSolverOutcome particle_swarm_dv_minimizer(objective, initial, ParticleSwarmDvConfig config = {});
+```
+
+| `ParticleSwarmConfig` | Meaning | Default |
+|---|---|---|
+| `population_size` | particles | 200 |
+| `cognitive`, `social` | pull toward own best / swarm best | 2, 2 |
+| `inertia`, `linear_inertia_schedule` | constant inertia, or (schedule on) the schedule below | 1, on |
+| `inertia_max`, `inertia_min` | start and end of the schedule | 0.99, 0.1 |
+| `time_varying_acceleration`, `final_cognitive`, `final_social` | move the pulls to these values over the run | off, 0.5, 2.5 |
+| `velocity_clamp_ratio` | speed limit as a fraction of the box width (0 = none) | 0 |
+| `center_particle` | include a particle at the centre of the region | on |
+| `initial_radius` | initial positions are drawn from start ± this, cut to the bounds; infinite means the whole box when bounded, ±0.5 around the start otherwise. The start is always one particle | infinite |
+| `lower_bounds`, `upper_bounds` | optional box | none |
+| `max_generations`, `max_evaluations` | budgets (0 means 1000 generations, and a derived evaluation budget) | 1000, 0 |
+| `check_every`, `relative_improvement_tolerance` | early-stop test (`check_every` 0 turns it off) | 0, 1e-8 |
+| `rng_seed`, `execution_mode`, `display` | as for differential evolution | 5489, `Vectorized`, `None` |
+
+`ParticleSwarmDvConfig` has the common fields plus `inertia`, `inertia_damp` (inertia is multiplied by it each generation), `beta`, `social`, `crossover_rate` and `stagnation_limit` (a particle with no improvement for that many generations is re-seeded, uniformly over the region the swarm started in). The facade's `DfoOptions::particle_swarm` and `particle_swarm_dv` hold the same structures.
+
+## Programs
+
+- [A direct call](dfo_09_particle_swarm/a_direct_call.md)
+- [The parameters](dfo_09_particle_swarm/the_parameters.md)
+- [The differential-evolution variant](dfo_09_particle_swarm/the_differential_evolution_variant.md)
+- [Stopping and execution modes](dfo_09_particle_swarm/stopping_and_execution_modes.md)
+
+## Checklist
+
+1. Give bounds, and let the swarm cover them (the default).
+2. Use at least 5 to 10 particles per variable.
+3. Keep the linear inertia schedule for full precision.
+4. Budget by evaluations; use the early-stop test only on unimodal functions.
+5. Try the differential-evolution variant when the classic swarm stagnates, not as the first choice.
+6. Fix `rng_seed` to reproduce; use several seeds to judge a rugged problem.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_09_particle_swarm/a_direct_call
+dfo_09_particle_swarm/the_parameters
+dfo_09_particle_swarm/the_differential_evolution_variant
+dfo_09_particle_swarm/stopping_and_execution_modes
+```
+<!-- apiref:toctree:end -->

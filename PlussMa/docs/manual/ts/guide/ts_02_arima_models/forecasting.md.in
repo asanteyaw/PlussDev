@@ -1,0 +1,8 @@
+# Forecasting
+
+[Back to ARIMA Models](../ts_02_arima_models.md)
+
+
+@@example Stats/time_series/guide/1206_forecasting.cpp@@
+
+For an AR(1) the h-step forecast has a closed form, μ + φʰ (xₙ − μ), where μ = mean + intercept/(1 − φ) is the level the series reverts to; the library's forecasts agree with it to rounding. The forecasts decay geometrically toward the mean at the rate φ. A longer horizon says less: the forecast is the mean, and its uncertainty is the variance of the series.

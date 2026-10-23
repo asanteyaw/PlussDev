@@ -1,0 +1,27 @@
+<!-- generated from LagPlan.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::LagPlan`
+
+A normalised lag plan: the result of `build_lag_plan`.
+
+`LagPlan` is plain data describing the feature columns for each horizon.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `horizon` | `std::vector<std::int64_t>` | — | The horizons. |
+| `response_lags` | `std::vector<std::int64_t>` | — | Response lags. |
+| `nonleading_predictor_indices, leading_predictor_indices` | `std::vector<std::int64_t>` | — | Predictor columns of each kind. |
+| `predictor_lags, leading_unique_lags` | `vectors of vectors` | — | Per-predictor lags; for leading predictors the distinct (possibly negative) offsets in use. |
+| `prepared_predictors_per_horizon` | `pluss::Series` | — | A Boolean horizon × feature mask of the features active for each horizon. |
+| `max_lag, max_lead` | `std::int64_t` | — | The longest lag and the number of steps the largest horizon looks ahead. |
+| `feature_count` | `std::int64_t` | — | The number of feature columns. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`build_lag_plan`](build_lag_plan.md)

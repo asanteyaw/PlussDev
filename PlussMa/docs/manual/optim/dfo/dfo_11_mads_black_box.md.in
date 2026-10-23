@@ -1,0 +1,47 @@
+# Derivative-Free Optimization 11: The Black-Box MADS Minimisers
+
+Chapter 4 used the black-box interface through the facade. Called directly, `mads_blackbox_minimizer`, `orthomads_blackbox_minimizer` and `ltmads_blackbox_minimizer` expose every setting: how several objectives are combined, how violations are priced, what counts against the budget, the cache, the surrogate and the Pareto archive. After this chapter you can set each deliberately and read everything the outcome reports.
+
+Every program is complete and its output is the output of that program. Counts are evaluations of the objective.
+
+## The calls
+
+```cpp
+BlackboxAdvancedOutcome mads_blackbox_minimizer(blackbox, initial, MadsBlackboxAdvancedConfig config = {});
+BlackboxAdvancedOutcome orthomads_blackbox_minimizer(blackbox, initial, MadsBlackboxAdvancedConfig config = {});
+BlackboxAdvancedOutcome ltmads_blackbox_minimizer(blackbox, initial, MadsBlackboxAdvancedConfig config = {});
+```
+
+`blackbox` is a function from a point to a `BlackboxEvaluation` (`objectives`, `constraints`, `evaluation_ok`, `count_evaluation`; see Chapter 4). The three entry points differ only in the poll scheme. `MadsBlackboxAdvancedConfig` extends the scalar `MadsBlackboxConfig` of Chapter 10 (frame and mesh settings, budgets, bounds, `search_points`, window test) with:
+
+| Field | Meaning | Default |
+|---|---|---|
+| `constraint_handling`, `constraint_tolerance`, `progressive_barrier_penalty` | `Ignore`, `ExtremeBarrier` or `ProgressiveBarrier`; a violation up to the tolerance counts as feasible; penalty per unit of violation | `Ignore`, 1e-12, 100 |
+| `multiobjective_scalarization`, `objective_weights`, `objective_reference` | `WeightedSum` or `Chebyshev`; weights and Chebyshev reference point | `WeightedSum`, 1/m each for m objectives, zeros |
+| `enable_cache`, `cache_max_entries`, `cache_round_digits` | cache of evaluated points, its size, and the rounding that decides two points are the same | on, 200000, 12 |
+| `count_cache_hits_in_total_evaluations`, `max_total_evaluations` | whether repeats count toward the total, and the total cap (0 means four times `max_evaluations`) | true, 0 |
+| `surrogate_mode`, `surrogate_min_points`, `surrogate_max_points`, `surrogate_bandwidth` | `Off` or `CandidateOrdering`; model size and smoothing | `Off`, 24, 512, 0 (automatic) |
+| `pareto_epsilon`, `pareto_archive_limit` | tolerance for domination; archive size | 1e-12, 256 |
+| `accelerate_heavy_kernels`, `auto_heavy_platform`, `heavy_platform`, `heavy_dtype` | where the model computations run | on, on, CPU, Float32 |
+
+`BlackboxAdvancedOutcome` holds `minimizer`, `objective_vector` (all objectives at the minimiser), `scalarized_minimum`, `status`, `pareto_points`, `pareto_objectives`, and `diagnostics`: `iterations`, `evaluations`, `total_evaluations`, `cache_hits`, `surrogate_orderings`, `pareto_size`, `objective_dimension`, `constraint_dimension`, `last_phase`, `mesh_size`, `frame_size`. The facade's `DfoOptions::mads` is the same `MadsBlackboxAdvancedConfig`.
+
+## Programs
+
+- [A direct call](dfo_11_mads_black_box/a_direct_call.md)
+- [Weighted sum or Chebyshev](dfo_11_mads_black_box/weighted_sum_or_chebyshev.md)
+- [The surrogate](dfo_11_mads_black_box/the_surrogate.md)
+- [What counts as an evaluation](dfo_11_mads_black_box/what_counts_as_an_evaluation.md)
+- [The Pareto archive](dfo_11_mads_black_box/the_pareto_archive.md)
+
+## Checklist
+
+1. Report failures with `evaluation_ok`, cheap checks with `count_evaluation = false`.
+2. Choose the scalarization to match the front: weighted sum for convex, Chebyshev otherwise.
+3. Turn the surrogate on when evaluations are expensive and the function is smooth.
+4. Keep the cache on for deterministic functions.
+5. Set `max_total_evaluations` when the free calls could add up.
+6. Check feasibility at the returned point yourself.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

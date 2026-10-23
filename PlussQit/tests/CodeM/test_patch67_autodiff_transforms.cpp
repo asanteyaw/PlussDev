@@ -2997,6 +2997,12 @@ TEST_CASE("Series calc antidiff evaluates anchored repeated integrals",
   REQUIRE_THROWS_WITH(
       x.calc.antidiff([](const Series &t) { return t; }, 0.0, options),
       Catch::Matchers::ContainsSubstring("one value per order"));
+
+  options.initial = {0.0, 0.0};
+  options.rule = static_cast<Series::CalcAccessor::Rule>(255);
+  REQUIRE_THROWS_WITH(
+      x.calc.antidiff([](const Series &t) { return t; }, 0.0, options),
+      Catch::Matchers::ContainsSubstring("rule is not recognized"));
 }
 
 TEST_CASE("Series calc accessor is bound on values straight from a factory",

@@ -124,6 +124,9 @@ The current handwritten shape and slice/indexing cluster now covers:
 - antiderivative accessor entrypoint: `antidiff`, with its `trapezoid` and
   `cumulative_trapezoid` methods documented in the dedicated accessor
   reference
+- callable calculus accessor entrypoint: `calc`, with arbitrary-order
+  differentiation, named gradient/Jacobian/Hessian forms, and anchored repeated
+  integration documented in the dedicated accessor reference
 
 The complete handwritten `Series::StatAccessor` reference covers:
 
@@ -144,15 +147,19 @@ The complete handwritten `Series::StatAccessor` reference covers:
   [`Series::TraverseAccessor`](series_traverse_accessor_api_reference.md)
 - `antidiff` ->
   [`Series::AntidiffAccessor`](series_antidiff_accessor_api_reference.md)
+- `calc` ->
+  [`Series::CalcAccessor`](series_calc_accessor_api_reference.md)
 
-All four accessor references are complete across their public surfaces. Start
+All five accessor references are complete across their public surfaces. Start
 with [`Series::stat`](api/series/stat.md),
 [`Series::linearalg`](api/series/linearalg.md),
 [`Series::traverse`](api/series/traverse.md), or
-[`Series::antidiff`](api/series/antidiff.md) for the entrypoint itself, or jump
-straight to a dedicated accessor reference from the sidebar. `traverse` is the
+[`Series::antidiff`](api/series/antidiff.md), or
+[`Series::calc`](api/series/calc.md) for an entrypoint itself. `traverse` is the
 value-driven search family — one call from a condition to the coordinates,
-matched values, and flat offsets of every position that satisfies it.
+matched values, and flat offsets of every position that satisfies it. `calc`
+owns callable calculus; it is distinct from both adjacent-sample `diff()` and
+sampled-data `antidiff`.
 
 ```{toctree}
 :hidden:
@@ -162,6 +169,7 @@ series_stat_accessor_api_reference
 series_linearalg_accessor_api_reference
 series_traverse_accessor_api_reference
 series_antidiff_accessor_api_reference
+series_calc_accessor_api_reference
 api/series/abs
 api/series/abs2
 api/series/acos
@@ -211,6 +219,7 @@ api/series/bitwise_xor
 api/series/block
 api/series/bmm
 api/series/broadcast_to
+api/series/calc
 api/series/cartprod
 api/series/cauchy_
 api/series/cbrt
@@ -277,6 +286,7 @@ api/series/extract_put
 api/series/extract_put_
 api/series/factor
 api/series/factorial
+api/series/fft
 api/series/fftshift
 api/series/fill
 api/series/fill_diagonal
@@ -321,6 +331,7 @@ api/series/hypot
 api/series/i0
 api/series/idct
 api/series/idst
+api/series/ifft
 api/series/ifftshift
 api/series/igamma
 api/series/igammac
@@ -339,6 +350,7 @@ api/series/intersection
 api/series/intersection_along
 api/series/invalid
 api/series/invalid_index
+api/series/irfft
 api/series/is_complex
 api/series/is_contiguous
 api/series/is_cpu
@@ -456,6 +468,7 @@ api/series/resize_as
 api/series/retain_grad
 api/series/retains_grad
 api/series/reverse
+api/series/rfft
 api/series/roll
 api/series/rot90
 api/series/round

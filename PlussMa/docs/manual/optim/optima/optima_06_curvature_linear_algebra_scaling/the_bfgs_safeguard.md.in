@@ -1,0 +1,10 @@
+# The BFGS safeguard
+
+[Back to Curvature, Linear Algebra and Scaling](../optima_06_curvature_linear_algebra_scaling.md)
+
+
+A BFGS update is only valid when the step and the change in gradient point the same way (the curvature condition). A pair that fails it is skipped, and `bfgs_curvature_tolerance` sets how strict that test is.
+
+@@example Numerical/optimization/guide/optima/74_bfgs_safeguard.cpp@@
+
+From 1e-12 to 1e-4 the result is identical: the default is far below anything that matters. At 0.1 the cost shows (89 and 93 iterations against 85 and 88), and at 1 neither algorithm converges in 300 iterations, with an objective of 11.0 left. Do not raise this tolerance to "make the model more cautious": it makes the model stop learning.

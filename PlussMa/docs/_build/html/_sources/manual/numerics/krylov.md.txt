@@ -1,0 +1,18 @@
+<!-- generated from krylov.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Large linear systems
+
+Chapters, in reading order:
+
+- [Large Linear Systems 1: Symmetric Systems](krylov/krylov_01_symmetric_systems.md)
+- [Large Linear Systems 2: General Systems and Exponentials](krylov/krylov_02_general_systems_and_exponentials.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+krylov/krylov_01_symmetric_systems
+krylov/krylov_02_general_systems_and_exponentials
+```
+<!-- apiref:toctree:end -->

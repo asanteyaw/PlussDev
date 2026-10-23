@@ -4,6 +4,7 @@
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
 #include "pluss/subsp/stats/distr.h"
+#include "pluss/subsp/stats/tails.h"
 
 #include <algorithm>
 #include <chrono>
@@ -134,34 +135,6 @@ std::string fmt_short_(double x) {
   return oss.str();
 }
 
-std::string now_date_() {
-  const auto now = std::chrono::system_clock::now();
-  const std::time_t tt = std::chrono::system_clock::to_time_t(now);
-  std::tm tm{};
-#if defined(_WIN32)
-  localtime_s(&tm, &tt);
-#else
-  localtime_r(&tt, &tm);
-#endif
-  std::ostringstream oss;
-  oss << std::put_time(&tm, "%a, %d %b %Y");
-  return oss.str();
-}
-
-std::string now_time_() {
-  const auto now = std::chrono::system_clock::now();
-  const std::time_t tt = std::chrono::system_clock::to_time_t(now);
-  std::tm tm{};
-#if defined(_WIN32)
-  localtime_s(&tm, &tt);
-#else
-  localtime_r(&tt, &tm);
-#endif
-  std::ostringstream oss;
-  oss << std::put_time(&tm, "%H:%M:%S");
-  return oss.str();
-}
-
 struct CleanData {
   Series y = pluss::series::undefined();
   Series x = pluss::series::undefined();
@@ -180,7 +153,7 @@ CleanData sanitize_inputs_(const Series& y, const Series& x, const OLSOptions& o
   PLUSS_CHECK(xm.sizes()[0] == n, std::string(op) + ": row mismatch between y and X");
 
   const std::int64_t p = xm.sizes()[1];
-  PLUSS_CHECK(n > 0 && p > 0, std::string(op) + ": empty y or X");
+  PLUSS_CHECK(n > 0 && p >= 0, std::string(op) + ": empty y or X");
 
   const Series row_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false));
   const std::int64_t n_clean = static_cast<std::int64_t>(std::llround(scalar_(row_ok.to(ScalarType::Float64).sum())));
@@ -238,6 +211,7 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
   PLUSS_CHECK(std::isfinite(options.rcond) && options.rcond > 0.0, std::string(op) + ": rcond must be > 0");
 
   const auto clean = sanitize_inputs_(y, x, options, cfg);
+  PLUSS_CHECK(clean.p > 0 || options.add_intercept, "ols_fit: a model needs at least one predictor or an intercept");
   const auto out_cfg = f64_cfg_like_(clean.x, cfg);
 
   const Series X = build_design_(clean.x, options.add_intercept, out_cfg);
@@ -286,7 +260,7 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
   double f_pvalue = std::numeric_limits<double>::quiet_NaN();
   if (df_model > 0 && df_resid > 0 && mse > kEps) {
     f_stat = (ssr / static_cast<double>(df_model)) / mse;
-    f_pvalue = 1.0 - f_cdf_(f_stat, static_cast<double>(df_model), static_cast<double>(df_resid), out_cfg);
+    f_pvalue = pluss::subsp::stats::tails::f_sf(f_stat, static_cast<double>(df_model), static_cast<double>(df_resid));
     f_pvalue = clamp01_(f_pvalue);
   }
 
@@ -318,9 +292,13 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
   const Series t_v = coef.div(std_err.maximum(std::sqrt(kEps)));
   Series p_v = pluss::series::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   if (df_resid > 0) {
-    const Series p_raw = pluss::subsp::stats::distr::StudentT{static_cast<double>(df_resid), 0.0, 1.0}
-                             .cdf(t_v.abs());
-    p_v = pluss::series::ones({k}, out_cfg).sub(p_raw).mul(2.0).clamp(0.0, 1.0);
+    // Two-sided tail probability evaluated directly, so a very large t keeps a small nonzero p-value.
+    const auto tv = t_v.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    std::vector<double> pv(tv.size());
+    for (std::size_t i = 0; i < tv.size(); ++i) {
+      pv[i] = pluss::subsp::stats::tails::student_t_two_sided(tv[i], static_cast<double>(df_resid));
+    }
+    p_v = pluss::make_series(pv, {k}, out_cfg);
   }
   Series ci_lo = pluss::series::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   Series ci_hi = pluss::series::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
@@ -355,11 +333,41 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
     kurt = m4 / (m2 * m2);
     const double n_d = static_cast<double>(n);
     jb = n_d * (skew * skew + 0.25 * (kurt - 3.0) * (kurt - 3.0)) / 6.0;
-    jb_p = clamp01_(1.0 - chi2_cdf_(jb, 2, out_cfg));
+    jb_p = clamp01_(pluss::subsp::stats::tails::chi2_sf(jb, 2.0));
   }
 
-  const double omnibus = jb;
-  const double omnibus_p = jb_p;
+  // D'Agostino-Pearson omnibus test: K2 = Z(skewness)^2 + Z(kurtosis)^2, chi-squared with 2 degrees of freedom, using the
+  // transformations of D'Agostino (1970) and Anscombe & Glynn (1983). Defined for n >= 8.
+  double omnibus = std::numeric_limits<double>::quiet_NaN();
+  double omnibus_p = std::numeric_limits<double>::quiet_NaN();
+  if (m2 > kEps && n >= 8) {
+    const double nd = static_cast<double>(n);
+    const double y_s = skew * std::sqrt(((nd + 1.0) * (nd + 3.0)) / (6.0 * (nd - 2.0)));
+    const double beta2 = 3.0 * (nd * nd + 27.0 * nd - 70.0) * (nd + 1.0) * (nd + 3.0) / ((nd - 2.0) * (nd + 5.0) * (nd + 7.0) * (nd + 9.0));
+    const double w2 = -1.0 + std::sqrt(2.0 * (beta2 - 1.0));
+    const double delta = 1.0 / std::sqrt(0.5 * std::log(w2));
+    const double alpha_s = std::sqrt(2.0 / (w2 - 1.0));
+    const double ys = (y_s == 0.0) ? 1.0 : y_s;
+    const double z_skew = delta * std::log(ys / alpha_s + std::sqrt((ys / alpha_s) * (ys / alpha_s) + 1.0));
+
+    const double expected = 3.0 * (nd - 1.0) / (nd + 1.0);
+    const double var_b2 = 24.0 * nd * (nd - 2.0) * (nd - 3.0) / ((nd + 1.0) * (nd + 1.0) * (nd + 3.0) * (nd + 5.0));
+    const double xk = (kurt - expected) / std::sqrt(var_b2);
+    const double sqrt_beta1 = 6.0 * (nd * nd - 5.0 * nd + 2.0) / ((nd + 7.0) * (nd + 9.0)) *
+                              std::sqrt(6.0 * (nd + 3.0) * (nd + 5.0) / (nd * (nd - 2.0) * (nd - 3.0)));
+    const double a_k = 6.0 + 8.0 / sqrt_beta1 * (2.0 / sqrt_beta1 + std::sqrt(1.0 + 4.0 / (sqrt_beta1 * sqrt_beta1)));
+    const double term1 = 1.0 - 2.0 / (9.0 * a_k);
+    const double denom = 1.0 + xk * std::sqrt(2.0 / (a_k - 4.0));
+    double z_kurt = std::numeric_limits<double>::quiet_NaN();
+    if (denom != 0.0) {
+      const double term2 = (denom > 0.0 ? 1.0 : -1.0) * std::cbrt((1.0 - 2.0 / a_k) / std::abs(denom));
+      z_kurt = (term1 - term2) / std::sqrt(2.0 / (9.0 * a_k));
+    }
+    omnibus = z_skew * z_skew + z_kurt * z_kurt;
+    if (std::isfinite(omnibus)) {
+      omnibus_p = clamp01_(pluss::subsp::stats::tails::chi2_sf(omnibus, 2.0));
+    }
+  }
 
   const double cond_no = (smin > kEps) ? (smax / smin) : std::numeric_limits<double>::infinity();
   const double smallest_eig = smin * smin;
@@ -368,10 +376,16 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
   if (rank < k) {
     warnings.push_back("The design matrix is singular or rank deficient; coefficients were estimated using a pseudoinverse.");
   }
-  if (smallest_eig < 1e-12) {
+  // Same rules as the usual statistical packages: a tiny smallest eigenvalue of X'X, else a condition number above 1000.
+  if (smallest_eig < 1e-10) {
     std::ostringstream oss;
     oss << "The smallest eigenvalue is " << fmt_short_(smallest_eig)
         << ". This might indicate strong multicollinearity or a singular design matrix.";
+    warnings.push_back(oss.str());
+  } else if (cond_no > 1000.0) {
+    std::ostringstream oss;
+    oss << "The condition number is large, " << fmt_short_(cond_no)
+        << ". This might indicate strong multicollinearity or other numerical problems.";
     warnings.push_back(oss.str());
   }
   if (!options.add_intercept) {
@@ -474,8 +488,8 @@ std::ostream& print_ols_summary(std::ostream& os, const OLSFitResult& fit) {
   row("Dep. Variable:", fit.response_name, "R-squared:", fmt_short_(fit.rsquared));
   row("Model:", "OLS", "Adj. R-squared:", fmt_short_(fit.adj_rsquared));
   row("Method:", "Least Squares", "F-statistic:", fmt_short_(fit.f_stat));
-  row("Date:", now_date_(), "Prob (F-statistic):", fmt_short_(fit.f_pvalue));
-  row("Time:", now_time_(), "Log-Likelihood:", fmt_short_(fit.log_likelihood));
+  row("Rank:", std::to_string(fit.rank), "Prob (F-statistic):", fmt_short_(fit.f_pvalue));
+  row("Alpha:", fmt_short_(fit.alpha), "Log-Likelihood:", fmt_short_(fit.log_likelihood));
   row("No. Observations:", std::to_string(fit.nobs), "AIC:", fmt_short_(fit.aic));
   row("Df Residuals:", std::to_string(fit.df_resid), "BIC:", fmt_short_(fit.bic));
   row("Df Model:", std::to_string(fit.df_model), "Covariance Type:", "nonrobust");

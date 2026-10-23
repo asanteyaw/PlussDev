@@ -1,0 +1,258 @@
+# `pluss::subsp::stats::ts::Sarima`
+
+Fits a seasonal ARIMA model by maximum likelihood, in the notation `(p, d, q)(P, D, Q)s`.
+
+## Signature
+
+```cpp
+ts::SarimaFit ts::Sarima::fit_mle(const pluss::Series& y, const ts::SarimaOptions& options = {}, pluss::codem::Config cfg = {});
+ts::SarimaFit ts::Sarima::fit_mle(const pluss::Series& y, const pluss::Series& x, const ts::SarimaOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## Construction
+
+`Sarima` has no instances: it is a namespace for the static `fit_mle`, which returns a [`SarimaFit`](SarimaFit.md).
+
+## Methods
+
+### `fit_mle`
+
+```cpp
+ts::SarimaFit ts::Sarima::fit_mle(const pluss::Series& y, const ts::SarimaOptions& options = {}, pluss::codem::Config cfg = {});
+ts::SarimaFit ts::Sarima::fit_mle(const pluss::Series& y, const pluss::Series& x, const ts::SarimaOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+Fits the seasonal model `(p, d, q)(P, D, Q)s`: the regular and seasonal polynomials multiply, so a model with `p = 1`, `P = 1`, `s = 12` has coefficients at lags 1, 12 and 13 (the lag-13 coefficient is the product of the other two, with its sign). Differencing is applied regularly `d` times and seasonally `D` times before the ARMA part is fitted. The form with `x` adds exogenous regressors as in [`Arima::fit_mle`](Arima.md).
+
+`const pluss::Series& y`
+: The observed series in time order (a vector or an `n × 1` matrix).
+
+`const pluss::Series& x`
+: Exogenous regressors: an `n × k` matrix (or a vector) with one row per observation of `y`.
+
+`const ts::SarimaOptions& options`
+: Orders, season length, starting values and search settings; see [`SarimaOptions`](SarimaOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the fit itself runs in double precision.
+
+**Returns.** A [`SarimaFit`](SarimaFit.md) wrapping an [`ArimaFit`](ArimaFit.md) in `core`, with the same evaluation methods.
+
+**Errors.** A seasonal order without `s > 1` is rejected: *seasonal_period must be > 1 for SARIMA terms*. The effective sample must be longer than the number of parameters.
+
+## Practical Examples
+
+### Example 1
+
+A multiplicative seasonal autoregression with period 12: the regular and the seasonal coefficient are both recovered.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  std::vector<double> x(240, 0.0);
+  const auto e = noise(240);
+  for (int t = 0; t < 240; ++t) {
+    x[t] = e[t] + (t >= 1 ? 0.4 * x[t - 1] : 0.0) + (t >= 12 ? 0.5 * x[t - 12] : 0.0) - (t >= 13 ? 0.2 * x[t - 13] : 0.0);
+  }
+  const Series y = pluss::make_series(x, {240}, f64);
+  ts::SarimaOptions options;
+  options.p = 1;
+  options.P = 1;
+  options.s = 12;
+  const auto fit = ts::Sarima::fit_mle(y, options);
+  std::cout << std::fixed << std::setprecision(4) << "ar = " << fit.core.ar[0] << ", seasonal ar = " << fit.core.sar[0] << ", log-likelihood = " << fit.loglik(y) << "\n";
+  show("forecast", fit.forecast(6, y));
+}
+```
+
+### Example 2
+
+An 'airline' model with regular and seasonal differencing and one moving-average term of each kind.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  std::vector<double> x(240, 0.0);
+  const auto e = noise(240);
+  for (int t = 0; t < 240; ++t) {
+    x[t] = e[t] + (t >= 1 ? 0.4 * x[t - 1] : 0.0) + (t >= 12 ? 0.5 * x[t - 12] : 0.0) - (t >= 13 ? 0.2 * x[t - 13] : 0.0);
+  }
+  const Series y = pluss::make_series(x, {240}, f64);
+  ts::SarimaOptions options;
+  options.p = 0;
+  options.d = 1;
+  options.q = 1;
+  options.D = 1;
+  options.Q = 1;
+  options.s = 12;
+  const auto fit = ts::Sarima::fit_mle(y, options);
+  std::cout << std::fixed << std::setprecision(4) << "ma = " << fit.core.ma[0] << ", seasonal ma = " << fit.core.sma[0] << "\n";
+}
+```
+
+### Example 3
+
+Seasonal terms need a season length.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(100, 0.5);
+  ts::SarimaOptions options;
+  options.P = 1;  // no season length given
+  try {
+    ts::Sarima::fit_mle(y, options);
+  } catch (const std::exception&) {
+    std::cout << "seasonal terms without s are rejected\n";
+  }
+}
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`SarimaOptions`](SarimaOptions.md)
+- [`SarimaFit`](SarimaFit.md)
+- [`Arima`](Arima.md)

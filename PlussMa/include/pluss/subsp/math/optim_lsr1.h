@@ -946,7 +946,10 @@ inline Lsr1Result l_sr1_trust_region_core_(
       Series y_leaf = pluss::make_series(y_new, {n}, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
       state.s_history.push_back(s_leaf);
       state.y_history.push_back(y_leaf);
-      if (static_cast<std::int64_t>(state.s_history.size()) > opts.memory_size) {
+      // At most n pairs can be kept: n+1 vectors in R^n are linearly dependent, so the n x k matrix Psi would have more columns
+      // than rows. Its reduced QR factor then has only n columns, while the subproblem solver indexes it as n x k and would read
+      // past its end (the result varied from run to run). Capping the memory at n keeps every history matrix n x k with k <= n.
+      if (static_cast<std::int64_t>(state.s_history.size()) > std::min(opts.memory_size, n)) {
         state.s_history.erase(state.s_history.begin());
         state.y_history.erase(state.y_history.begin());
       }

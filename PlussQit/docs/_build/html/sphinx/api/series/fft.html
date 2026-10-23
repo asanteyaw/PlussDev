@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::fft &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::fftshift" href="fftshift.html" />
+    <link rel="prev" title="Series::factorial" href="factorial.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-fft">
+<h1>Series::fft<a class="headerlink" href="#series-fft" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">fft</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">                   </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;backward&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-computes">
+<h2>What It Computes<a class="headerlink" href="#what-it-computes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">fft()</span></code> is the discrete Fourier transform along one axis. For a signal <code class="docutils literal notranslate"><span class="pre">x</span></code> of
+length <code class="docutils literal notranslate"><span class="pre">n</span></code>, the result has entries</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>X[k] = sum over j = 0 .. n-1 of  x[j] * exp(-2 pi i j k / n),      k = 0 .. n-1
+</pre></div>
+</div>
+<p>Entry <code class="docutils literal notranslate"><span class="pre">k</span></code> measures how much of the signal oscillates <code class="docutils literal notranslate"><span class="pre">k</span></code> times over the <code class="docutils literal notranslate"><span class="pre">n</span></code>
+samples. Entry <code class="docutils literal notranslate"><span class="pre">0</span></code> is the sum of the samples (the zero-frequency or DC term).
+Entries <code class="docutils literal notranslate"><span class="pre">1</span></code> to <code class="docutils literal notranslate"><span class="pre">n/2</span></code> are the positive frequencies. The remaining entries hold
+the negative frequencies in wrapped order: entry <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">k</span></code> is the frequency <code class="docutils literal notranslate"><span class="pre">-k</span></code>.
+<a class="reference internal" href="fftshift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fftshift()</span></code></span></a> reorders an axis so that zero frequency sits in the
+middle when a centred display or a centred filter is wanted.</p>
+<p>The result is always complex, even for real input. Every transform is computed
+in <code class="docutils literal notranslate"><span class="pre">O(n</span> <span class="pre">log</span> <span class="pre">n)</span></code> operations, for every length: powers of two use an iterative
+radix-2 algorithm, and any other length, including primes, uses a chirp-z
+(Bluestein) convolution built on the same radix-2 core. Twiddle factors and
+chirp sequences are computed directly rather than by repeated multiplication,
+and the chirp exponent is reduced exactly modulo <code class="docutils literal notranslate"><span class="pre">2n</span></code>, so accuracy does not
+degrade with the length. Measured against an independent double-precision
+implementation across lengths from 1 to a million, the relative error stays near
+<code class="docutils literal notranslate"><span class="pre">1e-15</span></code> for double precision and near <code class="docutils literal notranslate"><span class="pre">4e-7</span></code> for single precision.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">n</span></code></strong> is the transform length along <code class="docutils literal notranslate"><span class="pre">dim</span></code>. The default <code class="docutils literal notranslate"><span class="pre">-1</span></code> uses the length
+the input already has. A different positive <code class="docutils literal notranslate"><span class="pre">n</span></code> first resizes the axis: if
+<code class="docutils literal notranslate"><span class="pre">n</span></code> is smaller, only the first <code class="docutils literal notranslate"><span class="pre">n</span></code> samples are used; if <code class="docutils literal notranslate"><span class="pre">n</span></code> is larger, the
+signal is padded with zeros at the end. Padding does not add information, but
+it samples the spectrum more finely, which is the usual way to interpolate a
+spectrum or to reach a length that suits other code. <code class="docutils literal notranslate"><span class="pre">n</span></code> must be positive.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">dim</span></code></strong> is the axis to transform. Negative values count from the last axis,
+and the default is the last axis. Every other axis is a batch axis: each lane
+along <code class="docutils literal notranslate"><span class="pre">dim</span></code> is transformed independently, in parallel. The input must have at
+least one dimension. Inputs that are not contiguous, such as a transposed
+matrix, are accepted.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">norm</span></code></strong> selects where the factor <code class="docutils literal notranslate"><span class="pre">1/n</span></code> goes. The same string must be given
+to <a class="reference internal" href="ifft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ifft()</span></code></span></a> for the pair to undo each other.</p></li>
+</ul>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">norm</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">fft()</span></code> scales by</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">ifft()</span></code> scales by</p></th>
+<th class="head"><p>Use it when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;backward&quot;</span></code> (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1/n</span></code></p></td>
+<td><p>the spectrum should be the plain sum above</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;forward&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1/n</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>entry 0 should be the mean of the signal</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;ortho&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1/sqrt(n)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1/sqrt(n)</span></code></p></td>
+<td><p>the transform should preserve energy (it is then unitary)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Any other string, including the empty string, is rejected.</p>
+</section>
+<section id="dtype-and-shape">
+<h2>Dtype And Shape<a class="headerlink" href="#dtype-and-shape" title="Link to this heading">¶</a></h2>
+<p>The output has the shape of the input, with <code class="docutils literal notranslate"><span class="pre">dim</span></code> resized to <code class="docutils literal notranslate"><span class="pre">n</span></code>. The output
+dtype follows the input: <code class="docutils literal notranslate"><span class="pre">Float64</span></code> and <code class="docutils literal notranslate"><span class="pre">Complex128</span></code> give <code class="docutils literal notranslate"><span class="pre">Complex128</span></code>; every
+other input, including <code class="docutils literal notranslate"><span class="pre">Float32</span></code>, <code class="docutils literal notranslate"><span class="pre">Bool</span></code> and the integer types, gives
+<code class="docutils literal notranslate"><span class="pre">Complex64</span></code>. <code class="docutils literal notranslate"><span class="pre">Float16</span></code> and <code class="docutils literal notranslate"><span class="pre">BFloat16</span></code> input is rejected; convert it to <code class="docutils literal notranslate"><span class="pre">Float32</span></code>
+first. Complex input is transformed as given; real input is
+treated as a signal with zero imaginary part.</p>
+<p>For real input the spectrum is conjugate-symmetric, <code class="docutils literal notranslate"><span class="pre">X[n-k]</span> <span class="pre">=</span> <span class="pre">conj(X[k])</span></code>. The
+result is built so that this holds exactly, not just to rounding: the zero
+frequency, and for even <code class="docutils literal notranslate"><span class="pre">n</span></code> the Nyquist entry <code class="docutils literal notranslate"><span class="pre">n/2</span></code>, have an imaginary part of
+exactly zero, and the entries above <code class="docutils literal notranslate"><span class="pre">n/2</span></code> are exact conjugates of those below.
+If only the non-redundant half is needed, <a class="reference internal" href="rfft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rfft()</span></code></span></a> returns it.</p>
+<p>Small integer data transforms to exact small integers, because the trigonometric
+factors at multiples of a quarter turn are exactly <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">±1</span></code>.</p>
+</section>
+<section id="platform">
+<h2>Platform<a class="headerlink" href="#platform" title="Link to this heading">¶</a></h2>
+<p>The transform runs on the host. A tensor on another device is copied to the host
+and the result is moved back. A device without complex storage cannot receive the
+result: on MPS the call fails while converting to a complex dtype, and the input
+should be moved to the CPU first.</p>
+</section>
+<section id="reverse-mode">
+<h2>Reverse Mode<a class="headerlink" href="#reverse-mode" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">fft()</span></code> is linear, so its reverse rule is the adjoint transform: the incoming
+sensitivity is passed through the inverse transform and multiplied by <code class="docutils literal notranslate"><span class="pre">n</span></code>
+(for the default normalization). Gradients flow through the resizing implied by
+<code class="docutils literal notranslate"><span class="pre">n</span></code> and through the <code class="docutils literal notranslate"><span class="pre">norm</span></code> scaling. A real input receives a real sensitivity; a
+complex input receives the sensitivity <code class="docutils literal notranslate"><span class="pre">dL/dRe</span> <span class="pre">+</span> <span class="pre">i</span> <span class="pre">dL/dIm</span></code> of a real loss <code class="docutils literal notranslate"><span class="pre">L</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The transform of four samples. The entries are exact: entry 0 is the
+sum, and the rest follow from the quarter-turn factors.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=complex128, platform=cpu, numel=4, contiguous=true)
+data=[(10.0000+0.0000j), (-2.0000+2.0000j), (-2.0000+0.0000j), (-2.0000-2.0000j)]
+</pre></div>
+</div>
+<p>Example 2. A pure oscillation lands in one pair of bins. This signal completes
+two cycles over eight samples, so its energy is in bins 2 and 6 (frequencies
+<code class="docutils literal notranslate"><span class="pre">+2</span></code> and <code class="docutils literal notranslate"><span class="pre">-2</span></code>). For a sine of unit amplitude the imaginary parts are <code class="docutils literal notranslate"><span class="pre">-n/2</span></code> and
+<code class="docutils literal notranslate"><span class="pre">+n/2</span></code>, and every real part is zero.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">wave</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">spectrum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wave</span><span class="p">.</span><span class="n">fft</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">spectrum</span><span class="p">.</span><span class="n">imag</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">largest real part: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spectrum</span><span class="p">.</span><span class="n">real</span><span class="p">().</span><span class="n">abs</span><span class="p">().</span><span class="n">max</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[0.0000, 0.0000, -4.0000, 0.0000, 0.0000, -0.0000, 4.0000, -0.0000]
+largest real part: 0
+</pre></div>
+</div>
+<p>Example 3. Resizing with <code class="docutils literal notranslate"><span class="pre">n</span></code>. A smaller <code class="docutils literal notranslate"><span class="pre">n</span></code> keeps the leading samples; a larger
+<code class="docutils literal notranslate"><span class="pre">n</span></code> pads with zeros. Both resize the signal before transforming.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;n = 2 matches the transform of the first two samples: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">equal</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">fft</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">abs</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>n = 2 matches the transform of the first two samples: true
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[10.0000, 5.5678, 2.6458, 2.0000, 2.6458, 5.5678]
+</pre></div>
+</div>
+<p>Example 4. The three normalizations on the same input. <code class="docutils literal notranslate"><span class="pre">&quot;forward&quot;</span></code> makes entry 0
+the mean, and <code class="docutils literal notranslate"><span class="pre">&quot;ortho&quot;</span></code> preserves the sum of squared magnitudes (Parseval).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;backward&quot;</span><span class="p">).</span><span class="n">real</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;forward&quot;</span><span class="p">).</span><span class="n">real</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ortho&quot;</span><span class="p">).</span><span class="n">real</span><span class="p">());</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ortho</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ortho&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">energy of the signal:   &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;energy of the spectrum: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ortho</span><span class="p">.</span><span class="n">abs</span><span class="p">().</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[10.0000, -2.0000, -2.0000, -2.0000]
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[2.5000, -0.5000, -0.5000, -0.5000]
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[5.0000, -1.0000, -1.0000, -1.0000]
+energy of the signal:   30
+energy of the spectrum: 30
+</pre></div>
+</div>
+<p>Example 5. A length that is not a power of two. Six samples are transformed
+exactly as four are. The result is conjugate-symmetric, so entry 5 is the
+conjugate of entry 1, and entry 3 (the Nyquist entry) is real.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">spectrum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;&gt;</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;entry 5 is the conjugate of entry 1: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">spectrum</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">conj</span><span class="p">(</span><span class="n">spectrum</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;entry 3 has zero imaginary part:     &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">spectrum</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">imag</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>entry 5 is the conjugate of entry 1: true
+entry 3 has zero imaginary part:     true
+Series(shape=[6], strides=[1], dtype=complex128, platform=cpu, numel=6, contiguous=true)
+data=[(7.0000+0.0000j), (3.0000+6.9282j), (-2.0000+1.7321j), (-3.0000+0.0000j), (-2.0000-1.7321j), (3.0000-6.9282j)]
+</pre></div>
+</div>
+<p>Example 6. Axes and batches. Each row of a matrix is its own signal along the last
+axis; <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">0</span></code> transforms the columns instead.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">).</span><span class="n">real</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">).</span><span class="n">real</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=
+⎡ 10.0000 -2.0000 -2.0000 -2.0000 ⎤
+⎣ 26.0000 -2.0000 -2.0000 -2.0000 ⎦
+Series(shape=[2,4], strides=[4,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=
+⎡  6.0000  8.0000  10.0000  12.0000 ⎤
+⎣ -4.0000 -4.0000  -4.0000  -4.0000 ⎦
+</pre></div>
+</div>
+<p>Example 7. Dtypes. Double precision gives <code class="docutils literal notranslate"><span class="pre">Complex128</span></code>, single precision and
+integers give <code class="docutils literal notranslate"><span class="pre">Complex64</span></code>, and complex input keeps its precision.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">f32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f64</span><span class="p">.</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">i64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;float64 -&gt; complex128:    &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">f64</span><span class="p">.</span><span class="n">fft</span><span class="p">().</span><span class="n">scalar_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Complex128</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;float32 -&gt; complex64:     &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">f32</span><span class="p">.</span><span class="n">fft</span><span class="p">().</span><span class="n">scalar_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Complex64</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;int64 -&gt; complex64:       &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i64</span><span class="p">.</span><span class="n">fft</span><span class="p">().</span><span class="n">scalar_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Complex64</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;complex64 stays complex64: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">f32</span><span class="p">.</span><span class="n">fft</span><span class="p">().</span><span class="n">fft</span><span class="p">().</span><span class="n">scalar_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Complex64</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>float64 -&gt; complex128:    true
+float32 -&gt; complex64:     true
+int64 -&gt; complex64:       true
+complex64 stays complex64: true
+</pre></div>
+</div>
+<p>Example 8. Reverse mode. By Parseval, the loss <code class="docutils literal notranslate"><span class="pre">sum(|X|^2)</span></code> equals <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">sum(x^2)</span></code>
+for the plain transform, so its gradient with respect to <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">n</span> <span class="pre">x</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">spectrum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">();</span>
+<span class="n">spectrum</span><span class="p">.</span><span class="n">real</span><span class="p">().</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">add</span><span class="p">(</span><span class="n">spectrum</span><span class="p">.</span><span class="n">imag</span><span class="p">().</span><span class="n">square</span><span class="p">().</span><span class="n">sum</span><span class="p">()).</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[10.0000, -20.0000, 5.0000, 30.0000, 40.0000]
+</pre></div>
+</div>
+<p>Example 9. Invalid requests are rejected with a message that names the problem.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">call</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="p">{</span>
+<span class="w">         </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="p">},</span>
+<span class="w">         </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"> </span><span class="p">},</span>
+<span class="w">         </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;unitary&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">},</span>
+<span class="w">         </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">).</span><span class="n">fft</span><span class="p">();</span><span class="w"> </span><span class="p">}})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">call</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>fft: transform length must be greater than zero
+fft: dim out of range
+fft: norm must be &#39;backward&#39;, &#39;forward&#39;, or &#39;ortho&#39;
+fft: input must have at least one dimension
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Truncation drops the end, not the middle.</strong> <code class="docutils literal notranslate"><span class="pre">fft(n)</span></code> with a smaller <code class="docutils literal notranslate"><span class="pre">n</span></code> keeps
+the first <code class="docutils literal notranslate"><span class="pre">n</span></code> samples. To transform a different window, slice first.</p></li>
+<li><p><strong>The two normalization strings must match.</strong> <code class="docutils literal notranslate"><span class="pre">fft()</span></code> with <code class="docutils literal notranslate"><span class="pre">&quot;ortho&quot;</span></code> is undone
+only by <code class="docutils literal notranslate"><span class="pre">ifft()</span></code> with <code class="docutils literal notranslate"><span class="pre">&quot;ortho&quot;</span></code>; mixing them scales the result by a power of <code class="docutils literal notranslate"><span class="pre">n</span></code>
+(<code class="docutils literal notranslate"><span class="pre">n</span></code>, <code class="docutils literal notranslate"><span class="pre">1/n</span></code> or <code class="docutils literal notranslate"><span class="pre">sqrt(n)</span></code>) and raises no error.</p></li>
+<li><p><strong>Bin <code class="docutils literal notranslate"><span class="pre">k</span></code> is not a frequency in hertz.</strong> It is <code class="docutils literal notranslate"><span class="pre">k</span></code> cycles per <code class="docutils literal notranslate"><span class="pre">n</span></code> samples. For
+a sampling interval <code class="docutils literal notranslate"><span class="pre">dt</span></code>, bin <code class="docutils literal notranslate"><span class="pre">k</span></code> is <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">/</span> <span class="pre">(n</span> <span class="pre">dt)</span></code> hertz, with <code class="docutils literal notranslate"><span class="pre">k</span></code> above <code class="docutils literal notranslate"><span class="pre">n/2</span></code>
+meaning <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">-</span> <span class="pre">n</span></code>.</p></li>
+<li><p><strong>Padding refines, it does not resolve.</strong> Zero-padding to a larger <code class="docutils literal notranslate"><span class="pre">n</span></code> samples
+the same underlying spectrum more densely; two close frequencies do not
+separate because the padded transform has more bins.</p></li>
+<li><p><strong>Real input yields redundant output.</strong> About half the entries repeat as
+conjugates. <a class="reference internal" href="rfft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rfft()</span></code></span></a> returns only the non-redundant half and is the
+natural pair of <a class="reference internal" href="irfft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">irfft()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">fft()</span></code> returns the complex spectrum of each lane along <code class="docutils literal notranslate"><span class="pre">dim</span></code>, of length <code class="docutils literal notranslate"><span class="pre">n</span></code>,
+for every length in <code class="docutils literal notranslate"><span class="pre">O(n</span> <span class="pre">log</span> <span class="pre">n)</span></code>, with the normalization chosen by <code class="docutils literal notranslate"><span class="pre">norm</span></code> and
+exact conjugate symmetry for real input. It is differentiable.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ifft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ifft()</span></code></span></a> is the inverse and must use the same <code class="docutils literal notranslate"><span class="pre">norm</span></code>.</p></li>
+<li><p><a class="reference internal" href="rfft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rfft()</span></code></span></a> and <a class="reference internal" href="irfft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">irfft()</span></code></span></a> are the real-signal forms.</p></li>
+<li><p><a class="reference internal" href="fftshift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fftshift()</span></code></span></a> moves zero frequency to the centre of an axis.</p></li>
+<li><p><a class="reference internal" href="stft.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stft()</span></code></span></a> applies the transform to overlapping windows of a signal.</p></li>
+<li><p><a class="reference internal" href="dct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dct()</span></code></span></a> and <a class="reference internal" href="dst.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dst()</span></code></span></a> compute real-valued transforms.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="factorial.html">
+    <span class="label">Previous</span>
+    <span class="title">factorial</span>
+  </a>
+  <a class="next-link" href="fftshift.html">
+    <span class="label">Next</span>
+    <span class="title">fftshift</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="factorial.html" title="previous chapter">Series::factorial</a></li>
+      <li>Next: <a href="fftshift.html" title="next chapter">Series::fftshift</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/fft.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,10 @@
+# Seeds and repeatability
+
+[Back to First Problems](../dfo_01_first_problems.md)
+
+
+Methods that use random numbers read them from `rng_seed`. Same seed, same everything; different seed, different path.
+
+@@example Numerical/optimization/guide/dfo/305_seeds.cpp@@
+
+Rows 1 and 3 are identical, and so are rows 4 and 5. The Rastrigin function used here has many local minima, so different seeds end in different ones; with a fixed budget, running several seeds and keeping the best is a legitimate strategy for such problems.

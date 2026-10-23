@@ -1,0 +1,213 @@
+# apiref_manifest_stochastic.toml -- the `Stochastic processes` guides of PlussMa.
+
+[framework.stochastic]
+nav_title = "Stochastic processes guide"
+nav_prefix = "manual/stochastic/"
+root_page = "manual/stochastic.html"
+title = "Stochastic processes"
+summary = "Stochastic integrals, Itô calculus, jump processes, SDE simulation and Malliavin calculus."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals.md"
+title = "Stochastic Integrals"
+maxdepth = 2
+children = ["stochastic_01_integrals/a_wiener_path", "stochastic_01_integrals/ito_and_stratonovich_on_the_same_path", "stochastic_01_integrals/the_family_in_between", "stochastic_01_integrals/the_forms_of_the_call", "stochastic_01_integrals/values_that_were_not_simulated", "stochastic_01_integrals/integrands_that_look_into_the_future", "stochastic_01_integrals/is_it_a_standard_wiener_path"]
+
+[[family]]
+path = "stochastic/stochastic/stochastic_02_ito_lemma"
+page = "manual/stochastic/stochastic/stochastic_02_ito_lemma.md"
+title = "Differentials and Ito's Lemma"
+maxdepth = 2
+children = ["stochastic_02_ito_lemma/ito_s_lemma_for_three_functions", "stochastic_02_ito_lemma/several_sources_of_noise", "stochastic_02_ito_lemma/products_and_quotients", "stochastic_02_ito_lemma/explicit_time_dependence", "stochastic_02_ito_lemma/the_stratonovich_convention", "stochastic_02_ito_lemma/checking_a_prediction_by_simulation"]
+
+[[family]]
+path = "stochastic/stochastic/stochastic_03_jumps_and_marcus"
+page = "manual/stochastic/stochastic/stochastic_03_jumps_and_marcus.md"
+title = "Jumps and the Marcus Integral"
+maxdepth = 2
+children = ["stochastic_03_jumps_and_marcus/a_levy_measure_as_atoms", "stochastic_03_jumps_and_marcus/a_path_with_jumps", "stochastic_03_jumps_and_marcus/the_marcus_integral", "stochastic_03_jumps_and_marcus/what_a_jump_does_to_the_state", "stochastic_03_jumps_and_marcus/the_marcus_differential"]
+
+[[family]]
+path = "stochastic/stochastic/stochastic_04_simulating_sdes"
+page = "manual/stochastic/stochastic/stochastic_04_simulating_sdes.md"
+title = "Simulating and Differentiating SDEs"
+maxdepth = 2
+children = ["stochastic_04_simulating_sdes/convergence_on_geometric_brownian_motion", "stochastic_04_simulating_sdes/pathwise_delta"]
+
+[[family]]
+path = "stochastic/stochastic/stochastic_05_malliavin"
+page = "manual/stochastic/stochastic/stochastic_05_malliavin.md"
+title = "Malliavin Calculus"
+maxdepth = 2
+children = ["stochastic_05_malliavin/the_derivative_of_two_functionals", "stochastic_05_malliavin/the_skorokhod_integral", "stochastic_05_malliavin/a_digital_option_s_delta"]
+
+[[family]]
+path = "stochastic/stochastic"
+page = "manual/stochastic/stochastic.md"
+title = "stochastic"
+maxdepth = 2
+children = ["stochastic/stochastic_01_integrals", "stochastic/stochastic_02_ito_lemma", "stochastic/stochastic_03_jumps_and_marcus", "stochastic/stochastic_04_simulating_sdes", "stochastic/stochastic_05_malliavin"]
+
+[[symbol]]
+qualname = "stochastic::stochastic_01_integrals::A Wiener path"
+kind = "page"
+family = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals/a_wiener_path.md"
+summary = "A Wiener path"
+
+[[symbol]]
+qualname = "stochastic::stochastic_01_integrals::Ito and Stratonovich on the same path"
+kind = "page"
+family = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals/ito_and_stratonovich_on_the_same_path.md"
+summary = "Ito and Stratonovich on the same path"
+
+[[symbol]]
+qualname = "stochastic::stochastic_01_integrals::The family in between"
+kind = "page"
+family = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals/the_family_in_between.md"
+summary = "The family in between"
+
+[[symbol]]
+qualname = "stochastic::stochastic_01_integrals::The forms of the call"
+kind = "page"
+family = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals/the_forms_of_the_call.md"
+summary = "The forms of the call"
+
+[[symbol]]
+qualname = "stochastic::stochastic_01_integrals::Values that were not simulated"
+kind = "page"
+family = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals/values_that_were_not_simulated.md"
+summary = "Values that were not simulated"
+
+[[symbol]]
+qualname = "stochastic::stochastic_01_integrals::Integrands that look into the future"
+kind = "page"
+family = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals/integrands_that_look_into_the_future.md"
+summary = "Integrands that look into the future"
+
+[[symbol]]
+qualname = "stochastic::stochastic_01_integrals::Is it a standard Wiener path?"
+kind = "page"
+family = "stochastic/stochastic/stochastic_01_integrals"
+page = "manual/stochastic/stochastic/stochastic_01_integrals/is_it_a_standard_wiener_path.md"
+summary = "Is it a standard Wiener path?"
+
+[[symbol]]
+qualname = "stochastic::stochastic_02_ito_lemma::Ito's lemma for three functions"
+kind = "page"
+family = "stochastic/stochastic/stochastic_02_ito_lemma"
+page = "manual/stochastic/stochastic/stochastic_02_ito_lemma/ito_s_lemma_for_three_functions.md"
+summary = "Ito's lemma for three functions"
+
+[[symbol]]
+qualname = "stochastic::stochastic_02_ito_lemma::Several sources of noise"
+kind = "page"
+family = "stochastic/stochastic/stochastic_02_ito_lemma"
+page = "manual/stochastic/stochastic/stochastic_02_ito_lemma/several_sources_of_noise.md"
+summary = "Several sources of noise"
+
+[[symbol]]
+qualname = "stochastic::stochastic_02_ito_lemma::Products and quotients"
+kind = "page"
+family = "stochastic/stochastic/stochastic_02_ito_lemma"
+page = "manual/stochastic/stochastic/stochastic_02_ito_lemma/products_and_quotients.md"
+summary = "Products and quotients"
+
+[[symbol]]
+qualname = "stochastic::stochastic_02_ito_lemma::Explicit time dependence"
+kind = "page"
+family = "stochastic/stochastic/stochastic_02_ito_lemma"
+page = "manual/stochastic/stochastic/stochastic_02_ito_lemma/explicit_time_dependence.md"
+summary = "Explicit time dependence"
+
+[[symbol]]
+qualname = "stochastic::stochastic_02_ito_lemma::The Stratonovich convention"
+kind = "page"
+family = "stochastic/stochastic/stochastic_02_ito_lemma"
+page = "manual/stochastic/stochastic/stochastic_02_ito_lemma/the_stratonovich_convention.md"
+summary = "The Stratonovich convention"
+
+[[symbol]]
+qualname = "stochastic::stochastic_02_ito_lemma::Checking a prediction by simulation"
+kind = "page"
+family = "stochastic/stochastic/stochastic_02_ito_lemma"
+page = "manual/stochastic/stochastic/stochastic_02_ito_lemma/checking_a_prediction_by_simulation.md"
+summary = "Checking a prediction by simulation"
+
+[[symbol]]
+qualname = "stochastic::stochastic_03_jumps_and_marcus::A Levy measure as atoms"
+kind = "page"
+family = "stochastic/stochastic/stochastic_03_jumps_and_marcus"
+page = "manual/stochastic/stochastic/stochastic_03_jumps_and_marcus/a_levy_measure_as_atoms.md"
+summary = "A Levy measure as atoms"
+
+[[symbol]]
+qualname = "stochastic::stochastic_03_jumps_and_marcus::A path with jumps"
+kind = "page"
+family = "stochastic/stochastic/stochastic_03_jumps_and_marcus"
+page = "manual/stochastic/stochastic/stochastic_03_jumps_and_marcus/a_path_with_jumps.md"
+summary = "A path with jumps"
+
+[[symbol]]
+qualname = "stochastic::stochastic_03_jumps_and_marcus::The Marcus integral"
+kind = "page"
+family = "stochastic/stochastic/stochastic_03_jumps_and_marcus"
+page = "manual/stochastic/stochastic/stochastic_03_jumps_and_marcus/the_marcus_integral.md"
+summary = "The Marcus integral"
+
+[[symbol]]
+qualname = "stochastic::stochastic_03_jumps_and_marcus::What a jump does to the state"
+kind = "page"
+family = "stochastic/stochastic/stochastic_03_jumps_and_marcus"
+page = "manual/stochastic/stochastic/stochastic_03_jumps_and_marcus/what_a_jump_does_to_the_state.md"
+summary = "What a jump does to the state"
+
+[[symbol]]
+qualname = "stochastic::stochastic_03_jumps_and_marcus::The Marcus differential"
+kind = "page"
+family = "stochastic/stochastic/stochastic_03_jumps_and_marcus"
+page = "manual/stochastic/stochastic/stochastic_03_jumps_and_marcus/the_marcus_differential.md"
+summary = "The Marcus differential"
+
+[[symbol]]
+qualname = "stochastic::stochastic_04_simulating_sdes::Convergence on geometric Brownian motion"
+kind = "page"
+family = "stochastic/stochastic/stochastic_04_simulating_sdes"
+page = "manual/stochastic/stochastic/stochastic_04_simulating_sdes/convergence_on_geometric_brownian_motion.md"
+summary = "Convergence on geometric Brownian motion"
+
+[[symbol]]
+qualname = "stochastic::stochastic_04_simulating_sdes::Pathwise delta"
+kind = "page"
+family = "stochastic/stochastic/stochastic_04_simulating_sdes"
+page = "manual/stochastic/stochastic/stochastic_04_simulating_sdes/pathwise_delta.md"
+summary = "Pathwise delta"
+
+[[symbol]]
+qualname = "stochastic::stochastic_05_malliavin::The derivative of two functionals"
+kind = "page"
+family = "stochastic/stochastic/stochastic_05_malliavin"
+page = "manual/stochastic/stochastic/stochastic_05_malliavin/the_derivative_of_two_functionals.md"
+summary = "The derivative of two functionals"
+
+[[symbol]]
+qualname = "stochastic::stochastic_05_malliavin::The Skorokhod integral"
+kind = "page"
+family = "stochastic/stochastic/stochastic_05_malliavin"
+page = "manual/stochastic/stochastic/stochastic_05_malliavin/the_skorokhod_integral.md"
+summary = "The Skorokhod integral"
+
+[[symbol]]
+qualname = "stochastic::stochastic_05_malliavin::A digital option's delta"
+kind = "page"
+family = "stochastic/stochastic/stochastic_05_malliavin"
+page = "manual/stochastic/stochastic/stochastic_05_malliavin/a_digital_option_s_delta.md"
+summary = "A digital option's delta"

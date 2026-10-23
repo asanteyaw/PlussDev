@@ -1,0 +1,10 @@
+# A model from an MPS file
+
+[Back to Large Sparse Models](../linprog_04_large_sparse_models.md)
+
+
+Models usually arrive as MPS files. `read_mps` reads fixed or free format, with objective senses, ranges, bounds, and integer markers.
+
+@@example Numerical/optimization/guide/lp/215_mps_file.cpp@@
+
+The file is held in a string here and read through a stream; `read_mps_file(path)` reads from disk. The model has 3 rows, 2 columns and 6 non-zeros, and the names from the file come back with it. The file asks to *maximize*, and the reader returns the negated minimization with `negated_objective` set, so the program flips the sign back: the profit is 800, at 25 chairs (at their upper bound) and 10 tables. You can check it by hand: the 25 chairs use 75 of the 120 machine hours and 50 of the 100 labour hours, and the labour limit then allows 10 tables.

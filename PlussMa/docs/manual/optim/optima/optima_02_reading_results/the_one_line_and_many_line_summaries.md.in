@@ -1,0 +1,10 @@
+# The one-line and many-line summaries
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+Two ready-made reports describe a finished run. `compact_summary` (also reachable as `print_summary`) is one line for logs. `detailed_summary` is one field per line.
+
+@@example Numerical/optimization/guide/optima/30_summaries.cpp@@
+
+Both print the same facts. The compact form is the one to put in a log line; the detailed form is for a terminal, and its field names match the `output` table above.

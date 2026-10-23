@@ -46,10 +46,10 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
-auto out = grouped.label().swap("region", "city");
+auto out = grouped.labels().swap("region", "city");
 std::cout << out;
 ```
 
@@ -93,10 +93,10 @@ auto sales3 = DataFrame(
      {"city",    Slate(pluss::make_note({"Boston", "LA"}))},
      {"quarter", Slate(pluss::make_note({"Q1", "Q2"}))},
      {"sales",   Slate(pluss::make_series({10.0, 20.0}))}});
-auto grouped3 = sales3.label().set({"region", "city", "quarter"}, true, "/");
+auto grouped3 = sales3.labels().set({"region", "city", "quarter"}, true, "/");
 std::cout << grouped3;
 
-auto swapped3 = grouped3.label().swap("region", "quarter");
+auto swapped3 = grouped3.labels().swap("region", "quarter");
 std::cout << swapped3;
 ```
 
@@ -136,14 +136,14 @@ level name, to see each throw.
 
 ```cpp
 try {
-  auto out = grouped.label().swap("region", "region");
+  auto out = grouped.labels().swap("region", "region");
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
-  auto out = grouped.label().swap("region", "country");
+  auto out = grouped.labels().swap("region", "country");
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
@@ -153,8 +153,8 @@ try {
 ### Output
 
 ```text
-DataFrame::label().swap: label names must differ
-DataFrame::label().swap: unknown label 'country'
+DataFrame::labels().swap: label names must differ
+DataFrame::labels().swap: unknown label 'country'
 ```
 
 `swap("region", "region")` names the same level twice, which isn't a

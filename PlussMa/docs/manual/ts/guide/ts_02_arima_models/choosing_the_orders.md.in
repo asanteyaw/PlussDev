@@ -1,0 +1,8 @@
+# Choosing the orders
+
+[Back to ARIMA Models](../ts_02_arima_models.md)
+
+
+@@example Stats/time_series/guide/1207_choosing_orders.cpp@@
+
+The two criteria need not agree. Here Akaike's picks ARMA(1, 2) and Schwarz's picks AR(1), the model that generated the series. Akaike's criterion penalises each parameter by 2 and tends to choose larger models; Schwarz's penalty of log n is heavier and favours the true order as the sample grows. When they disagree, prefer the smaller model unless the residual checks of Program 4 say otherwise.

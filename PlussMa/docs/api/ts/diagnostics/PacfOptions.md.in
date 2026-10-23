@@ -1,0 +1,21 @@
+# `pluss::subsp::stats::ts::PacfOptions`
+
+Options of `ts::pacf`.
+
+`PacfOptions` selects how many lags are computed, how the autocovariances are normalised and whether the mean is removed.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `max_lag` | `std::int64_t` | 20 | The highest lag computed; the result has `max_lag + 1` entries, lag 0 first. A value larger than the series allows is clamped. |
+| `norm` | `ts::AcfNorm` | `Biased` | `Biased` divides each autocovariance by `n` (a valid autocorrelation sequence); `Unbiased` divides by `n − k`. |
+| `demean` | `bool` | true | Subtract the sample mean before computing; turn it off only for a series that already has mean zero. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`pacf`](pacf.md)

@@ -10,7 +10,10 @@
 //  * Fisher-KPP  du/dt = D u_xx + r u (1 - u): minimum front speed
 //    c = 2 sqrt(r D); Ablowitz-Zeppetella closed form
 //    u = (1 + C exp((x - c t)/(sqrt(6)) sqrt(r/D)))^-2 at the special speed
-//    c = 5/sqrt(6) sqrt(r D)   (Wikipedia "Fisher's equation").
+//    c = 5/sqrt(6) sqrt(r D)   (Ablowitz & Zeppetella, Bull. Math. Biol. 41 (1979) 835; the speed and profile are restated in
+//    Roques, arXiv:2511.10104 Thm 2.1, c_AZ = 5 sqrt(r0/6), read; the residual of the formula above vanishes identically under SymPy).
+//    Front position from a step start: 2 sqrt(rD) t - 3/(2 sqrt(r/D)) log t + O(1) (Bramson, Mem. AMS 285 (1983), as quoted in
+//    arXiv:1510.03329; the memoir itself was not obtained).
 //  * Free-space heat kernel (4 pi D t)^(-d/2) exp(-|x|^2 / 4 D t).
 
 #include "pluss/subsp/natsci/biology/dynamics.h"

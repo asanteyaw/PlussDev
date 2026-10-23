@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Derivative-Free Optimization 7: The Pattern Search Minimiser &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="A direct call" href="dfo_07_pattern_search/a_direct_call.html" />
+    <link rel="prev" title="Shapes and dtypes" href="dfo_06_nelder_mead/shapes_and_dtypes.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from dfo_07_pattern_search.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="derivative-free-optimization-7-the-pattern-search-minimiser">
+<h1>Derivative-Free Optimization 7: The Pattern Search Minimiser<a class="headerlink" href="#derivative-free-optimization-7-the-pattern-search-minimiser" title="Link to this heading">¶</a></h1>
+<p>Pattern search is the method behind constrained derivative-free problems in the facade. Called directly with <code class="docutils literal notranslate"><span class="pre">pattern_search_minimizer</span></code>, it exposes the poll, the search step, the mesh, linear constraints written as matrices, and three policies for nonlinear constraints. After this chapter you can choose each of these deliberately and read the diagnostics that tell you what the run did.</p>
+<p>Every program is complete and its output is the output of that program. Counts are evaluations of the objective.</p>
+<section id="the-method">
+<h2>The method<a class="headerlink" href="#the-method" title="Link to this heading">¶</a></h2>
+<p>Pattern search keeps a <strong>mesh size</strong> and a best point. Each iteration:</p>
+<ol class="arabic simple">
+<li><p><strong>Search (optional).</strong> Try a few extra points chosen to jump ahead. If one improves, accept it and skip the poll.</p></li>
+<li><p><strong>Poll.</strong> Evaluate points at distance <code class="docutils literal notranslate"><span class="pre">mesh</span></code> along a set of directions around the best point. If one improves, move there and grow the mesh by <code class="docutils literal notranslate"><span class="pre">mesh_expansion</span></code>.</p></li>
+<li><p>If nothing improves, shrink the mesh by <code class="docutils literal notranslate"><span class="pre">mesh_contraction</span></code>.</p></li>
+</ol>
+<p>The run ends with <code class="docutils literal notranslate"><span class="pre">Converged</span></code> when the mesh is below <code class="docutils literal notranslate"><span class="pre">mesh_tolerance</span></code> and the last step or value change was small. Because the poll directions positively span the space, a failed poll at a small mesh says no direction improves the point at that scale, which is the derivative-free analogue of a zero gradient.</p>
+<p>With constraints, the directions are adapted to the constraints active at the current point, and the feasible cone’s edges are added to the poll, so the method can slide along a face and leave a vertex.</p>
+</section>
+<section id="the-call">
+<h2>The call<a class="headerlink" href="#the-call" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">PSOutcome</span><span class="w"> </span><span class="nf">pattern_search_minimizer</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="n">initial</span><span class="p">,</span><span class="w"> </span><span class="n">PSConfig</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">PSConfig</span></code> group</p></th>
+<th class="head"><p>Fields</p></th>
+<th class="head"><p>Defaults</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>tolerances</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mesh_tolerance</span></code>, <code class="docutils literal notranslate"><span class="pre">step_tolerance</span></code>, <code class="docutils literal notranslate"><span class="pre">value_tolerance</span></code>, <code class="docutils literal notranslate"><span class="pre">constraint_tolerance</span></code></p></td>
+<td><p>1e-6 each</p></td>
+</tr>
+<tr class="row-odd"><td><p>budgets</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code> (0 = 100 × variables), <code class="docutils literal notranslate"><span class="pre">max_evaluations</span></code> (0 = 2000 × variables), <code class="docutils literal notranslate"><span class="pre">time_limit_seconds</span></code></p></td>
+<td><p>0, 0, none</p></td>
+</tr>
+<tr class="row-even"><td><p>mesh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">initial_mesh_size</span></code>, <code class="docutils literal notranslate"><span class="pre">max_mesh_size</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh_expansion</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh_contraction</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh_scaling</span></code></p></td>
+<td><p>1, none, 2, 0.5, <code class="docutils literal notranslate"><span class="pre">RangeLog</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>poll</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">poll_pattern</span></code>, <code class="docutils literal notranslate"><span class="pre">polling_order</span></code>, <code class="docutils literal notranslate"><span class="pre">complete_poll</span></code>, <code class="docutils literal notranslate"><span class="pre">basis_family</span></code>, <code class="docutils literal notranslate"><span class="pre">basis_refresh_interval</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PositiveBasis2N</span></code>, <code class="docutils literal notranslate"><span class="pre">Consecutive</span></code>, false, <code class="docutils literal notranslate"><span class="pre">RandomOrtho</span></code>, 1</p></td>
+</tr>
+<tr class="row-even"><td><p>search</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">search_strategy</span></code>, <code class="docutils literal notranslate"><span class="pre">search_expansion</span></code>, <code class="docutils literal notranslate"><span class="pre">search_trials</span></code>, <code class="docutils literal notranslate"><span class="pre">search_complete</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ExpandAlongSuccess</span></code>, 2, 12, false</p></td>
+</tr>
+<tr class="row-odd"><td><p>constraints</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lower_bounds</span></code>, <code class="docutils literal notranslate"><span class="pre">upper_bounds</span></code>, <code class="docutils literal notranslate"><span class="pre">linear_ineq_matrix/rhs</span></code>, <code class="docutils literal notranslate"><span class="pre">linear_eq_matrix/rhs</span></code>, <code class="docutils literal notranslate"><span class="pre">nonlinear_constraints</span></code>, <code class="docutils literal notranslate"><span class="pre">constraint_policy</span></code></p></td>
+<td><p>none; <code class="docutils literal notranslate"><span class="pre">AugmentedLagrangian</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>cache</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">enable_cache</span></code>, <code class="docutils literal notranslate"><span class="pre">cache_max_entries</span></code>, <code class="docutils literal notranslate"><span class="pre">cache_tolerance</span></code></p></td>
+<td><p>on, 10000, 1e-12</p></td>
+</tr>
+<tr class="row-odd"><td><p>other</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rng_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">promote_cpu_to_float64</span></code>, <code class="docutils literal notranslate"><span class="pre">display</span></code></p></td>
+<td><p>5489, true, <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">PSOutcome</span></code> has <code class="docutils literal notranslate"><span class="pre">minimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">minimum</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code> and <code class="docutils literal notranslate"><span class="pre">diagnostics</span></code>: <code class="docutils literal notranslate"><span class="pre">iterations</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluations</span></code>, <code class="docutils literal notranslate"><span class="pre">cache_hits</span></code>, <code class="docutils literal notranslate"><span class="pre">search_trials</span></code>, <code class="docutils literal notranslate"><span class="pre">search_successes</span></code>, <code class="docutils literal notranslate"><span class="pre">outer_iterations</span></code> (augmented Lagrangian rounds), <code class="docutils literal notranslate"><span class="pre">mesh_size</span></code>, <code class="docutils literal notranslate"><span class="pre">penalty</span></code>, <code class="docutils literal notranslate"><span class="pre">max_constraint_violation</span></code>, <code class="docutils literal notranslate"><span class="pre">last_step</span></code>. The facade’s <code class="docutils literal notranslate"><span class="pre">DfoOptions::pattern_search</span></code> is the same <code class="docutils literal notranslate"><span class="pre">PSConfig</span></code>.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dfo_07_pattern_search/a_direct_call.html"><span class="std std-doc">A direct call</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_07_pattern_search/the_poll.html"><span class="std std-doc">The poll</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_07_pattern_search/the_search_step.html"><span class="std std-doc">The search step</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_07_pattern_search/the_mesh.html"><span class="std std-doc">The mesh</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_07_pattern_search/linear_constraints.html"><span class="std std-doc">Linear constraints</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_07_pattern_search/nonlinear_constraints_and_their_policies.html"><span class="std std-doc">Nonlinear constraints and their policies</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_07_pattern_search/budgets_and_the_cache.html"><span class="std std-doc">Budgets and the cache</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Leave the rotating basis (<code class="docutils literal notranslate"><span class="pre">RandomOrtho</span></code>) on unless the coordinate axes are meaningful.</p></li>
+<li><p>Keep the search step on for smooth functions.</p></li>
+<li><p>Give bounds whenever you know them: they enable the scaling and keep every trial in range.</p></li>
+<li><p>Write linear restrictions as matrices, not as nonlinear constraints; they are enforced exactly.</p></li>
+<li><p>For equalities and the most accurate boundary answers, use <code class="docutils literal notranslate"><span class="pre">AugmentedLagrangian</span></code>; for the cheapest feasible answer, <code class="docutils literal notranslate"><span class="pre">ExtremeBarrier</span></code>.</p></li>
+<li><p>Read <code class="docutils literal notranslate"><span class="pre">status</span></code>, then <code class="docutils literal notranslate"><span class="pre">max_constraint_violation</span></code>.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/dfo/dfo_07_pattern_search.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

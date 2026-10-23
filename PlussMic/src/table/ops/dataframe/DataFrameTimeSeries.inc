@@ -90,10 +90,10 @@ TimeAxis require_time_axis_index_(const DataFrame& frame, std::string_view time_
 }
 
 TimeAxis require_case_time_axis_index_(const DataFrame& frame, std::string_view where) {
-  const auto axis = frame.label().values();
+  const auto axis = frame.labels().values();
   PLUSS_CHECK(axis.defined(), std::string(where) + ": cases are undefined");
   PLUSS_CHECK(axis.kind() == SlateKind::Timeline,
-              std::string(where) + ": cases must be Timeline. Use df.label().set(\"date\") first");
+              std::string(where) + ": cases must be Timeline. Use df.labels().set(\"date\") first");
   return TimeAxis(axis);
 }
 
@@ -181,7 +181,7 @@ Slate ts_source_axis_(const DataFrame& frame, const TsOptions& options, std::str
     return require_time_axis_slate_(options.axis, where);
   }
   (void)require_case_time_axis_index_(frame, where);
-  return frame.label().values();
+  return frame.labels().values();
 }
 
 Slate ts_timed_axis_(const DataFrame& frame, const TsOptions& options, std::string_view where) {
@@ -378,8 +378,8 @@ DataFrame DataFrameTsAccessor::binary_(const DataFrame& left,
                                        const Slate& explicit_left_axis,
                                        TsAlignMode mode,
                                        int op) {
-  const auto left_axis = explicit_left_axis.defined() ? explicit_left_axis : left.label().values();
-  const auto right_axis = right.label().values();
+  const auto left_axis = explicit_left_axis.defined() ? explicit_left_axis : left.labels().values();
+  const auto right_axis = right.labels().values();
   const auto left_axis_ta = time_axis_to_index_(left_axis, "DataFrameTsAccessor::binary");
   const auto right_axis_ta = time_axis_to_index_(right_axis, "DataFrameTsAccessor::binary");
   const pluss::Timeline::TimelineIndexAccessor* left_index = nullptr;
@@ -460,7 +460,7 @@ DataFrame DataFrameTsAccessor::returns(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().returns(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::log_returns(std::int64_t periods) const {
@@ -469,7 +469,7 @@ DataFrame DataFrameTsAccessor::log_returns(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().log_returns(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::diff(std::int64_t periods) const {
@@ -478,7 +478,7 @@ DataFrame DataFrameTsAccessor::diff(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().diff(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::lag(std::int64_t periods) const {
@@ -487,7 +487,7 @@ DataFrame DataFrameTsAccessor::lag(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().lag(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::lead(std::int64_t periods) const {
@@ -496,7 +496,7 @@ DataFrame DataFrameTsAccessor::lead(std::int64_t periods) const {
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().lead(periods));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::rolling(
@@ -508,7 +508,7 @@ DataFrame DataFrameTsAccessor::rolling(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().rolling(window, statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::rolling(
@@ -548,7 +548,7 @@ DataFrame DataFrameTsAccessor::grouped(std::int64_t window,
                                statistic,
                                options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::grouped(std::string_view group_feature,
@@ -572,7 +572,7 @@ DataFrame DataFrameTsAccessor::grouped(const Slate& groups,
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().grouped(groups, window, statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrameTsWindowAccessor DataFrameTsAccessor::window(std::string_view duration,
@@ -589,7 +589,7 @@ DataFrame DataFrameTsAccessor::weigh(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).weigh(weights, statistic, min_count));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::bounded(
@@ -603,7 +603,7 @@ DataFrame DataFrameTsAccessor::bounded(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).bounded(bounds, statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::window(
@@ -626,7 +626,7 @@ DataFrame DataFrameTsAccessor::expanding(
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().expanding(statistic, options));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::ewm(
@@ -642,7 +642,7 @@ DataFrame DataFrameTsAccessor::ewm(
     out.emplace_back(name, frame_.features(name).ts().ewm(
         alpha, statistic, adjusted, bias_corrected, min_count, ignore_nulls));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::timed(
@@ -691,7 +691,7 @@ DataFrame DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t 
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().zscore_rolling(window, min_periods, epsilon));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode, std::optional<double> constant) const {
@@ -700,7 +700,7 @@ DataFrame DataFrameTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mo
   for (const auto& name : features_) {
     out.emplace_back(name, frame_.features(name).ts().fill_gaps(mode, constant));
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::sort(bool ascending, bool nulls_last) const {
@@ -1213,7 +1213,7 @@ DataFrame DataFrameTsAccessor::calendar(std::string_view time_feature) const {
   out.emplace_back(feature_suffix_(time_feature, "day"), calendar.features("axis_day"));
   out.emplace_back(feature_suffix_(time_feature, "hour"), calendar.features("axis_hour"));
   out.emplace_back(feature_suffix_(time_feature, "weekday"), calendar.features("axis_weekday"));
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::calendar() const {
@@ -1232,7 +1232,7 @@ DataFrame DataFrameTsAccessor::lag_block(pluss::msharp::RangeView::Int lags) con
       out.emplace_back(std::string(name) + "_" + block_name, block.features(block_name));
     }
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }
 
 DataFrame DataFrameTsAccessor::rolling_block(pluss::msharp::RangeView::Int windows,
@@ -1245,5 +1245,5 @@ DataFrame DataFrameTsAccessor::rolling_block(pluss::msharp::RangeView::Int windo
       out.emplace_back(std::string(name) + "_" + block_name, block.features(block_name));
     }
   }
-  return make_frame_from_columns_(std::move(out), frame_.label().values());
+  return make_frame_from_columns_(std::move(out), frame_.labels().values());
 }

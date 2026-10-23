@@ -34,7 +34,7 @@ int main() {
       {"price", make_series({3.0, 4.0, 2.5, 5.0})},
   }).title("sales");
 
-  auto labeled = sales.label().set(Slate(make_note({"A100", "B200", "B200", "D400"})));
+  auto labeled = sales.labels().set(Slate(make_note({"A100", "B200", "B200", "D400"})));
 
   auto numeric_cases = DataFrame({
       {"student", make_note({"Ada", "Bola", "Chen"})},
@@ -95,7 +95,7 @@ int main() {
       {"campus", make_note({"north", "north", "south", "south"})},
       {"term", make_note({"fall", "spring", "fall", "spring"})},
       {"score", make_series({80.0, 82.0, 78.0, 88.0})},
-  }).label().set({"campus", "term"}, true).title("levels");
+  }).labels().set({"campus", "term"}, true).title("levels");
 
   auto duplicates = DataFrame({
       {"student", make_note({"Ada", "Bola", "Ada", "Chen", "Bola"})},
@@ -116,17 +116,17 @@ int main() {
               labeled.case_study().where(labeled.features("region") == "south")
                   .features({"city", "price"}).to_string());
 
-  print_block("CASES", labeled.label().values().to_string());
+  print_block("CASES", labeled.labels().values().to_string());
   print_block("LABEL_SET_NOTE",
-              sales.label().set(make_note({"row-a", "row-b", "row-c", "row-d"})).to_string());
+              sales.labels().set(make_note({"row-a", "row-b", "row-c", "row-d"})).to_string());
   try {
-    (void)sales.label().set(make_note({"row-a", "row-b"}));
+    (void)sales.labels().set(make_note({"row-a", "row-b"}));
   } catch (const std::exception& e) {
     const std::string message(e.what());
     std::cout << "LABEL_SET_NOTE_SIZE_ERROR\n"
               << message.substr(0, message.find('\n')) << "\n\n";
   }
-  print_block("CASES_AS_SERIES", Slate(numeric_cases.label().values().as_series()).to_string());
+  print_block("CASES_AS_SERIES", Slate(numeric_cases.labels().values().as_series()).to_string());
 
   print_block("CAST_DTYPES", raw.astype({
       {"student_id", ScalarType::Int64},
@@ -194,7 +194,7 @@ int main() {
   print_block("DROP_DUPLICATES_KEEP_LAST",
               duplicates.features({"student"}).drop_duplicates(false, true).to_string());
 
-  print_block("DROP_LEVELS", levels.label().drop({"term"}).to_string());
+  print_block("DROP_LEVELS", levels.labels().drop({"term"}).to_string());
   print_block("DROPNULL", missing.dropnull({"quiz", "final"}).to_string());
 
   print_dtypes("DTYPES", raw.dtypes());

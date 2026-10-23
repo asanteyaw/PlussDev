@@ -604,7 +604,7 @@ TableMatrix build_dataframe_matrix(
 
   const auto names = frame.features();
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.label().values());
+  const auto display_cases = display_slate(frame.labels().values());
   std::vector<Slate> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
@@ -1416,7 +1416,7 @@ std::string render_html_table_body_(const DataFrame& frame,
                                     const DisplayOptions& options,
                                     std::string_view table_id) {
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.label().values());
+  const auto display_cases = display_slate(frame.labels().values());
   std::vector<Slate> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
@@ -1433,7 +1433,7 @@ std::string render_html_table_body_(const DataFrame& frame,
                   frame.nfeatures());
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype(frame.label().values())));
+      escape_html_(logical_dtype(frame.labels().values())));
   body += "</div>";
 
   body += "<div class=\"table-wrap\"><div class=\"table-scroll\">";
@@ -1466,7 +1466,7 @@ std::string render_html_table_body_(const DataFrame& frame,
 
   std::size_t column_index = 0;
   if (options.show_case_index) {
-    const auto case_numeric = is_numeric_slate(frame.label().values());
+    const auto case_numeric = is_numeric_slate(frame.labels().values());
     body += fmt::format(
         "<th class=\"sortable sticky-left{}\" data-column-index=\"{}\" data-kind=\"{}\">case</th>",
         case_numeric ? " num" : "",
@@ -1488,7 +1488,7 @@ std::string render_html_table_body_(const DataFrame& frame,
     body += fmt::format("<tr data-row-index=\"{}\">", row);
     if (options.show_case_index) {
       const auto case_value = slate_value_at(display_cases, row);
-      const auto case_numeric = is_numeric_slate(frame.label().values());
+      const auto case_numeric = is_numeric_slate(frame.labels().values());
       body += fmt::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
                           case_numeric ? " num" : "",
                           case_value == "NULL" ? " missing" : "",
@@ -1515,7 +1515,7 @@ class DataFrameVirtualTableModel final
     : public pluss::view::VirtualTableModel {
  public:
   explicit DataFrameVirtualTableModel(const DataFrame& frame)
-      : cases_(display_slate(frame.label().values())),
+      : cases_(display_slate(frame.labels().values())),
         columns_(dataframe_columns_(frame)),
         names_(frame.features()),
         rows_(frame.ncases()) {
@@ -1634,7 +1634,7 @@ std::string render_virtual_html_table_(const DataFrame& frame,
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div "
       "class=\"value\">{}</div></div>",
-      escape_html_(logical_dtype(frame.label().values())));
+      escape_html_(logical_dtype(frame.labels().values())));
   body += "</div>";
   body +=
       "<div class=\"table-wrap\"><div class=\"table-scroll\"><table "
@@ -1709,11 +1709,11 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.label().values());
+  const auto display_cases = display_slate(frame.labels().values());
   const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
-  std::uint64_t memory_bytes = estimate_bytes(frame.label().values());
+  std::uint64_t memory_bytes = estimate_bytes(frame.labels().values());
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto dtype = logical_dtype(cols[i]);
     dtype_counts[dtype] += 1;
@@ -1926,11 +1926,11 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
 
   const auto cols = dataframe_columns_(frame);
-  const auto display_cases = display_slate(frame.label().values());
+  const auto display_cases = display_slate(frame.labels().values());
   const auto names = frame.features();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
-  std::uint64_t memory_bytes = estimate_bytes(frame.label().values());
+  std::uint64_t memory_bytes = estimate_bytes(frame.labels().values());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto dtype = logical_dtype(cols[i]);

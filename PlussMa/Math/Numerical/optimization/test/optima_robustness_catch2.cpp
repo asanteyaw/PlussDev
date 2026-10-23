@@ -256,3 +256,51 @@ TEST_CASE("Optima autodiff stays connected through staged copy_ objectives", "[o
   REQUIRE(std::isfinite(as_f64_scalar(result.evaluation.value)));
   REQUIRE(std::isfinite(result.output.first_order_optimality));
 }
+
+TEST_CASE("analytic nonlinear callbacks may leave an unused residual kind undefined", "[optima][analytic]") {
+  // minimize x^2 + y^2 subject to 4 - x*y <= 0; the callback defines only the inequality.
+  const auto scalar = [](double v) { return pluss::make_series(v).to(ScalarType::Float64); };
+  const auto pair = [&](double x, double y) { return pluss::optim::pack_scalars({{"x", scalar(x)}, {"y", scalar(y)}}); };
+  const auto block = [&](double v) { return pluss::make_series(std::vector<double>{v}, {1, 1}).to(ScalarType::Float64); };
+
+  for (const auto algorithm :
+       {OptimaAlgorithm::SequentialQP, OptimaAlgorithm::WorkingSet, OptimaAlgorithm::InternalProtocol}) {
+    ConstrainedProblem problem;
+    problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
+      return square(p.at("x")) + square(p.at("y"));
+    };
+    problem.nonlinear.analytic = [&](const ParameterPack<Series>& p) {
+      const double x = p.at("x").item<double>(), y = p.at("y").item<double>();
+      pluss::optim::NonlinearConstraintEvaluation e;
+      e.inequality = pluss::make_series(std::vector<double>{4.0 - x * y}, {1}).to(ScalarType::Float64);
+      e.inequality_jacobian = ParameterPack<Series>(std::vector<ParameterPack<Series>::Block>{{"x", block(-y)}, {"y", block(-x)}});
+      return e;
+    };
+    problem.bounds.lower = pair(0.1, 0.1);
+    problem.bounds.upper = pair(10, 10);
+    OptimaOptions options;
+    options.algorithm = algorithm;
+    const auto result = optima(problem, pair(1, 3), options);
+    REQUIRE(result.exit_flag == OptimaExitFlag::Converged);
+    REQUIRE(result.params.at("x").item<double>() == Approx(2.0).margin(1e-4));
+    REQUIRE(result.params.at("y").item<double>() == Approx(2.0).margin(1e-4));
+  }
+}
+
+TEST_CASE("the elastic QP solver recovers when its default start stalls", "[optima][qp]") {
+  // A step with two boxed variables whose bounds are far from the iterate: the minimizer of the model is the interior
+  // point d = -g (curvature 1), every bound is slack and every elastic variable is zero. With the default start the
+  // interior iteration cycled for penalty weights between 100 and 10^6 and returned a wrong step.
+  using pluss::optim::detail::QpLinearSolverSettings;
+  using pluss::optim::detail::solve_elastic_qp_;
+  const std::vector<double> B = {1, 0, 0, 1}, g = {-11.39554, -0.61824};
+  const std::vector<double> Ai = {-1, 0, 0, -1, 1, 0, 0, 1}, c = {-0.9, -49.0, -19.0, -950.0}, Ae, h;
+  for (const double rho : {10.0, 100.0, 1e3, 1e4, 1e5, 1e6}) {
+    const auto result = solve_elastic_qp_(B, g, Ae, h, Ai, c, rho, QpLinearSolverSettings{});
+    INFO("rho = " << rho);
+    REQUIRE(result.ok);
+    REQUIRE(result.d[0] == Approx(11.39554).margin(1e-6));
+    REQUIRE(result.d[1] == Approx(0.61824).margin(1e-6));
+    REQUIRE(result.elastic_max < 1e-7);
+  }
+}

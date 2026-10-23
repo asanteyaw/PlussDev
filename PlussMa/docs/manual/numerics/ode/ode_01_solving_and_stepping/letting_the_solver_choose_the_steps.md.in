@@ -1,0 +1,10 @@
+# Letting the solver choose the steps
+
+[Back to Solving and Stepping](../ode_01_solving_and_stepping.md)
+
+
+@@example Numerical/ode/guide/702_adaptive_steps.cpp@@
+
+An adaptive method puts steps where they are needed and keeps the **local** error of each step near the tolerance. The **global** error after many steps is larger than the tolerance per step (the 1e-4 row ends at 9e-4), because errors accumulate over the 10 periods: ask for a tolerance a few orders tighter than the accuracy you need at the end.
+
+Compare the last RK45 row with RK4 at 2000 steps. RK45 takes about the same number of steps, spends about 1.8 times the function evaluations, and is about 700 times more accurate. The fifth-order method is far cheaper for a given accuracy, and it reports the effort honestly: 7 evaluations per attempted step, rejected steps included. Use a fixed-step method when you need the same grid every run (for example to compare with another computation, or for the adjoint of Chapter 2); use RK45 otherwise.

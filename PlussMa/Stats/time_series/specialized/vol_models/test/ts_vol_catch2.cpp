@@ -218,3 +218,41 @@ TEST_CASE("ts vol egarch/gjr: crash checks", "[ts][vol][egarch][gjr][crash]") {
   REQUIRE_THROWS(efit.forecast(0, y, cfg));
   REQUIRE_THROWS(gfit.forecast(0, y, cfg));
 }
+
+namespace {
+// Deterministic clustered returns: h_t = 0.05 + 0.15 r_{t-1}^2 + 0.75 h_{t-1}, shocks from a fixed pseudo-random sequence.
+Series clustered_returns() {
+  std::vector<double> r(1000);
+  double h = 0.5, prev = 0.0;
+  for (int t = 0; t < 1000; ++t) {
+    double u = std::sin(12.9898 * (t + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    h = 0.05 + 0.15 * prev * prev + 0.75 * h;
+    r[static_cast<std::size_t>(t)] = std::sqrt(h) * (u - 0.5) * std::sqrt(12.0);
+    prev = r[static_cast<std::size_t>(t)];
+  }
+  return pluss::make_series(r, {1000}).to(ScalarType::Float64);
+}
+}  // namespace
+
+// Reference values: an independent Gaussian maximum-likelihood fit with the pre-sample variance set to the mean squared residual.
+TEST_CASE("volatility fits match independent reference optima", "[ts][vol][reference]") {
+  const Series y = clustered_returns();
+  const auto g = Garch11::fit_mle(y);
+  REQUIRE(g.omega == Approx(0.0892933).epsilon(2e-3));
+  REQUIRE(g.alpha == Approx(0.143366).epsilon(2e-3));
+  REQUIRE(g.beta == Approx(0.673283).epsilon(2e-3));
+  REQUIRE(g.loglik(y) == Approx(-1047.15168).margin(1e-3));
+
+  const auto e = Egarch::fit_mle(y);
+  REQUIRE(e.omega == Approx(-0.141203).epsilon(5e-3));
+  REQUIRE(e.arch[0] == Approx(0.23641).epsilon(5e-3));
+  REQUIRE(e.garch[0] == Approx(0.831443).epsilon(5e-3));
+  REQUIRE(e.loglik(y) == Approx(-1047.8754).margin(5e-3));
+  // Exact expected variances (checked against a two-million-draw simulation from the last state): one step is deterministic, later steps
+  // include the log-normal convexity of the unknown shocks.
+  const auto f = e.forecast(3, y).to_vec<double>();
+  REQUIRE(f[0] == Approx(0.395693).epsilon(1e-3));
+  REQUIRE(f[1] == Approx(0.406003).epsilon(1e-3));
+  REQUIRE(f[2] == Approx(0.414136).epsilon(1e-3));
+}

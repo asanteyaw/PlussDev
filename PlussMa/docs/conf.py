@@ -11,7 +11,7 @@ source_suffix = {
 
 master_doc = 'index'
 exclude_patterns = [
-    '_build', 'Thumbs.db', '.DS_Store',
+    '_build', '_local', 'Thumbs.db', '.DS_Store', '*.md.in',
     # Internal engineering notes (parity benchmarks/scorecards/todos against
     # a reference implementation) -- not end-user documentation, kept out of
     # the built site.
@@ -21,11 +21,20 @@ exclude_patterns = [
     'optima_structured_clone_parity_benchmarks.md',
 ]
 
+templates_path = ['_templates']
 html_theme = 'alabaster'
+html_theme_options = {
+    'sidebar_collapse': False,
+    'globaltoc_includehidden': True,
+}
+html_sidebars = {
+    '**': ['globaltoc.html', 'searchbox.html'],
+}
 html_static_path = ['_static']
 html_css_files = ['api_ref.css']
-html_js_files = ['layout.js']
+html_js_files = ['api_nav.js', 'layout.js', 'prevnext_labels.js']
 
+myst_heading_anchors = 3
 myst_enable_extensions = [
     'colon_fence',
     'deflist',

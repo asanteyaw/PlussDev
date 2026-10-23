@@ -98,11 +98,15 @@ struct MadsBlackboxConfig {
 
   double initial_mesh_size{0.0};
   double initial_frame_size{0.0};
-  double mesh_refine_factor{0.5};
+  // After an unsuccessful iteration the poll (frame) size is multiplied by frame_refine_factor and the mesh by
+  // mesh_refine_factor; after a success they are enlarged by the expand factors. The mesh refines faster than the frame (the
+  // mesh shrinks like the square of the poll size in the MADS theory) and is never larger than the frame, which is what makes
+  // the poll directions dense as the iteration converges.
+  double mesh_refine_factor{0.25};
   double frame_refine_factor{0.5};
-  double mesh_expand_factor{2.0};
+  double mesh_expand_factor{4.0};
   double frame_expand_factor{2.0};
-  double mesh_tolerance{1e-8};
+  double mesh_tolerance{1e-8};  // the iteration has converged when the poll (frame) size, the accuracy it can still resolve, is this small
   double min_improvement{0.0};
   bool opportunistic{true};
   MadsPollScheme poll_scheme{MadsPollScheme::Ortho2N};
@@ -147,6 +151,9 @@ struct MadsBlackboxAdvancedConfig : MadsBlackboxConfig {
 struct CoopMadsConfig {
   MadsBlackboxAdvancedConfig base{};
   std::int64_t cooperative_rounds{4};
+  // Share of the budget kept for a final full-space run from the best point (0 = none); blocks cannot see the coupling
+  // between variables in different blocks, and this run removes the error that coupling leaves.
+  double polish_fraction{0.25};
   std::int64_t subproblem_size{0};
   std::int64_t subproblems_per_round{0};
   bool randomized_subproblems{true};
@@ -156,6 +163,7 @@ struct CoopMadsConfig {
 struct PsdMadsConfig {
   MadsBlackboxAdvancedConfig base{};
   std::int64_t rounds{5};
+  double polish_fraction{0.25};  // share of the budget kept for a final full-space run from the best point (0 = none)
   std::int64_t min_subproblem_size{2};
   std::int64_t max_subproblem_size{0};
   std::int64_t subproblems_per_round{4};
@@ -166,6 +174,9 @@ struct PsdMadsConfig {
 struct DiscoMadsConfig {
   MadsBlackboxAdvancedConfig base{};
   std::int64_t rescue_trials{8};
+  // The rescue only runs once this share of the evaluations has failed (after a warm-up of 20 calls); below it, plain MADS
+  // copes with the failures and the extra calls would be wasted. 0 rescues every failure.
+  double rescue_failure_rate{0.5};
   double rescue_radius{0.25};
   double rescue_radius_decay{0.75};
   std::uint64_t rng_seed{5489ULL};

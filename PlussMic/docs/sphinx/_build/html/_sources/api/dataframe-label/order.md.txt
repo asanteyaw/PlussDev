@@ -47,10 +47,10 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
-auto out = grouped.label().order({"city", "region"});
+auto out = grouped.labels().order({"city", "region"});
 std::cout << out;
 ```
 
@@ -92,7 +92,7 @@ the call throw.
 
 ```cpp
 try {
-  auto out = grouped.label().order({"city"});
+  auto out = grouped.labels().order({"city"});
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
@@ -114,7 +114,7 @@ other — to see a different throw.
 
 ```cpp
 try {
-  auto out = grouped.label().order({"city", "city"});
+  auto out = grouped.labels().order({"city", "city"});
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

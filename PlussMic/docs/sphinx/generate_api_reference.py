@@ -209,8 +209,8 @@ CLASS_CONFIG = {
         'output': DOCS / 'dataframe_label_accessor_api_reference.md',
         'title': 'DataFrameLabelAccessor API Reference',
         'subtitle': 'Practical DataFrameLabelAccessor API Reference',
-        'intro': 'This page documents the public case-label accessor returned by `DataFrame::label()`.',
-        'binder': 'label()',
+        'intro': 'This page documents the public case-label accessor returned by `DataFrame::labels()`.',
+        'binder': 'labels()',
     },
     'DataFrameFeatureAxisAccessor': {
         'header': ROOT / 'PlussMic/src/table/DataFrame.h',
@@ -1947,9 +1947,9 @@ def params_doc(params: list[tuple[str, str]], class_name: str | None = None, met
             'SQL execution options such as engine or binding policy for the returned SQL accessor.',
         ('DataFrame', 'sort_values', 'features'):
             'Feature names used as sort keys when you want the same ascending/null policy for every key.',
-        ('DataFrame', 'label().sort', 'ascending'):
+        ('DataFrame', 'labels().sort', 'ascending'):
             'When `true`, case labels are sorted ascending. When `false`, they are sorted descending.',
-        ('DataFrame', 'label().sort', 'nulls_last'):
+        ('DataFrame', 'labels().sort', 'nulls_last'):
             'When `true`, null case labels are placed after observed labels. When `false`, they are placed first.',
         ('DataFrame', 'tail', 'n'):
             'Number of trailing rows to keep from the bottom of the frame.',
@@ -2231,7 +2231,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'csmax': 'Computes one row-wise maximum across the selected numeric features.',
             'csmin': 'Computes one row-wise minimum across the selected numeric features.',
             'drop_duplicates': 'Removes duplicate rows, optionally considering only a selected feature subset.',
-            'label().drop': 'Removes one or more named case labels from a multi-label case axis.',
+            'labels().drop': 'Removes one or more named case labels from a multi-label case axis.',
             'dropnull': 'Drops rows according to an explicit missing-data policy object.',
             'dtypes': 'Returns the public dtype summary for each current feature.',
             'duplicated': 'Builds a boolean mask marking which rows are duplicates of earlier or later rows under the selected keep policy.',
@@ -2304,8 +2304,8 @@ def generic_note(class_name: str, method: Method) -> str:
             'nfeatures': 'Returns the number of features in the current frame.',
             'nt': 'Opens the note/text surface for the current selected DataFrame. Every selected feature must be Note-backed; select text feature(s) first with `df.features({...}).nt()`.',
             'observe': 'Returns a `DataFrameView` over a positional row window so you can preview rows from the middle of a frame without materializing a new working copy.',
-            'label().align': 'Reorders rows so their case labels match the supplied `new_label` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
-            'label().sort': 'Sorts rows by the current case-label axis rather than by a data feature.',
+            'labels().align': 'Reorders rows so their case labels match the supplied `new_label` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
+            'labels().sort': 'Sorts rows by the current case-label axis rather than by a data feature.',
             'add_prefix': 'Prepends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
             'add_suffix': 'Appends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
             'max': 'Computes per-feature maxima for the selected numeric features.',
@@ -2327,10 +2327,10 @@ def generic_note(class_name: str, method: Method) -> str:
             'rename': 'Renames one feature without changing its values.',
             'rename_': 'Renames one feature in place without changing its values.',
             'rename': 'Renames one feature, several features, or the full feature axis without changing row values.',
-            'label().rename': 'Renames one or more structured case labels without changing row order or row values.',
+            'labels().rename': 'Renames one or more structured case labels without changing row order or row values.',
             'reorder': 'Moves selected features into a new relative position while preserving row data and the untouched feature order.',
-            'label().order': 'Reorders the current structured case labels and recomputes the composite row labels from that new order.',
-            'label().repeated': 'Returns a boolean mask whose true values mark duplicate case labels.',
+            'labels().order': 'Reorders the current structured case labels and recomputes the composite row labels from that new order.',
+            'labels().repeated': 'Returns a boolean mask whose true values mark duplicate case labels.',
             'replace': 'Replaces matched scalar or pluss-typed values across selected compatible features and returns the updated frame.',
             'rolling': 'Computes rolling-window features and returns them as a derived frame.',
             'reshuffle': 'Randomly permutes rows or features, depending on the selected axis.',
@@ -3011,7 +3011,7 @@ def example_caption(class_name: str, method: Method) -> str:
             return 'Study one row by position.'
         if n == 'drop':
             return 'Drop the named columns and keep the remaining schema unchanged.'
-        if n == 'label().drop':
+        if n == 'labels().drop':
             if 'initializer_list<std::string_view>' in sig:
                 return 'Drop one or more structured case labels by naming them inline.'
             return 'Drop one or more structured case labels from a reusable name range.'
@@ -3447,10 +3447,10 @@ DF_SUFFIX_OUT = """id_2024  sales_2024  city_2024
 2        120.0       Tema
 3         90.0       Kumasi"""
 
-DF_WITH_CASES_OUT = """df.label().values():
+DF_WITH_CASES_OUT = """df.labels().values():
 [0, 1, 2]
 
-out.label().values():
+out.labels().values():
 ["cs0", "cs1", "cs2"]
 
 out.head():
@@ -3465,7 +3465,7 @@ id  sales  city
 2   120.0  Tema
 3    90.0  Kumasi
 
-out.label().values():
+out.labels().values():
 ["Accra", "Tema", "Kumasi"]
 
 out.head():
@@ -3474,10 +3474,10 @@ id  sales
 2   120.0
 3    90.0"""
 
-DF_RESET_CASES_OUT = """with_cases.label().values():
+DF_RESET_CASES_OUT = """with_cases.labels().values():
 ["Accra", "Tema", "Kumasi"]
 
-out.label().values():
+out.labels().values():
 [0, 1, 2]
 
 out.head():
@@ -3486,10 +3486,10 @@ id  sales  case
 2   120.0  Tema
 3    90.0  Kumasi"""
 
-DF_ALIGN_CASES_OUT = """df.label().values():
+DF_ALIGN_CASES_OUT = """df.labels().values():
 ["cs0", "cs1", "cs2"]
 
-out.label().values():
+out.labels().values():
 ["cs1", "cs0", "cs2"]
 
 out.head():
@@ -4241,7 +4241,7 @@ summary | 8.333333333      1.040833
             ],
         )
 
-    if name == 'label().align':
+    if name == 'labels().align':
         return render_custom_method_page(
             class_name,
             name,
@@ -4258,7 +4258,7 @@ summary | 8.333333333      1.040833
             [
                 (
                     'Match one frame to the case order of another frame.',
-                    df_a_scratch_base() + '\n\nauto out = scratch.label().align(grades.label().values());',
+                    df_a_scratch_base() + '\n\nauto out = scratch.labels().align(grades.labels().values());',
                     """============
      | score
 ------------
@@ -5346,14 +5346,14 @@ Sheet2 -> [3 cs x 3 feat]"""
             return '["student", "term"]'
         if n == 'caselbl':
             if 'const Slate& labels' in method.signature:
-                return """df.label().values():
+                return """df.labels().values():
 ["r0", "r1", "r2"]
 
-out.label().values():
+out.labels().values():
 ["cs0", "cs1", "cs2"]"""
             return '["r0", "r1", "r2"]'
         if n == 'caselbl_':
-            return """df.label().values():
+            return """df.labels().values():
 ["cs0", "cs1", "cs2"]
 
 df.head():
@@ -5383,7 +5383,7 @@ id  sales  city
         if n in {'with_cases'}:
             return DF_WITH_CASES_OUT
         if n in {'with_cases_'}:
-            return """df.label().values():
+            return """df.labels().values():
 ["cs0", "cs1", "cs2"]
 
 df.head():
@@ -5484,10 +5484,10 @@ sales  city
 North   Ada      88.0
 West    Esi      84.0"""
             return DF_FILTER_OUT if n in {'where', 'filter', 'take'} else DF_BASE_OUT
-        if n in {'label().align'}:
+        if n in {'labels().align'}:
             return DF_ALIGN_CASES_OUT
         if n == 'match':
-            return """matched.left.label().values():
+            return """matched.left.labels().values():
 ["A", "C", "B"]
 
 matched.left.features():
@@ -5504,19 +5504,19 @@ r1  a        1.0
 r2  a        2.0
 r1  b        3.0
 r2  b        4.0"""
-        if n == 'label().repeated':
+        if n == 'labels().repeated':
             return '[false, true, false]'
-        if n in {'sort_values', 'label().sort', 'reindex_like', 'reindex_cases', 'conform'}:
+        if n in {'sort_values', 'labels().sort', 'reindex_like', 'reindex_cases', 'conform'}:
             if n == 'sort_values':
                 return """id  sales  city
 2   120.0  Tema
 1   100.0  Accra
 3    90.0  Kumasi"""
-            if n == 'label().sort':
-                return """with_cases.label().values():
+            if n == 'labels().sort':
+                return """with_cases.labels().values():
 ["cs2", "cs0", "cs1"]
 
-out.label().values():
+out.labels().values():
 ["cs0", "cs1", "cs2"]
 
 out.head():
@@ -6470,7 +6470,7 @@ def df_case_levels_base() -> str:
     {\"term\", pluss::table::Slate(pluss::make_note({\"mid\", \"final\", \"mid\", \"final\"}))},
     {\"score\", pluss::table::Slate(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
 });
-auto indexed = grades.label().set({\"student\", \"term\"}, true, \"|\");"""
+auto indexed = grades.labels().set({\"student\", \"term\"}, true, \"|\");"""
 
 
 def slate_series() -> str:
@@ -6619,7 +6619,7 @@ def label_accessor_base() -> str:
     {\"city\", pluss::table::Slate(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"}))},
     {\"sales\", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
 }, pluss::make_note({\"r1\", \"r2\", \"r3\"}));
-auto labels = df.label();"""
+auto labels = df.labels();"""
 
 
 def feataxis_accessor_base() -> str:
@@ -7361,11 +7361,11 @@ def example_for(class_name: str, method: Method) -> str:
         if n == 'caselbl':
             if 'const Slate& labels' in sig:
                 return df_base() + '\n\nauto labels = pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.caselbl(labels);'
-            return df_base() + '\n\nauto out = df.label().values();'
+            return df_base() + '\n\nauto out = df.labels().values();'
         if n == 'caselbl_':
             return df_base() + '\n\nauto labels = pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.caselbl_(labels);'
         if n == 'caselbls':
-            return df_case_levels_base() + '\n\nauto out = indexed.label().names();'
+            return df_case_levels_base() + '\n\nauto out = indexed.labels().names();'
         if n == 'caselbl':
             if 'std::string_view name' in sig:
                 return df_case_levels_base() + '\n\nauto out = indexed.caselbl("student");'
@@ -7528,23 +7528,23 @@ def example_for(class_name: str, method: Method) -> str:
             if 'std::int64_t start, std::int64_t stop' in sig:
                 return df_base() + '\n\nauto preview = df.observe(0, 2, false);\npreview.show();'
             return df_base() + '\n\nauto preview = df.observe(1, false);\npreview.show();'
-        if n in {'arrange','label().sort','top','bottom','label().repeated','unique_cases','label().align'}:
+        if n in {'arrange','labels().sort','top','bottom','labels().repeated','unique_cases','labels().align'}:
             if n == 'arrange':
                 if 'ArrangeSpec' in sig:
                     return df_base() + '\n\nauto out = df.arrange({{.feature = "sales", .ascending = false}});'
                 return df_base() + '\n\nauto out = df.arrange({"sales"}, false, true);'
-            if n == 'label().sort':
-                return df_base() + '\n\nauto with_cases = df.with_cases(pluss::table::Slate(pluss::make_note({"cs2", "cs0", "cs1"})));\nauto out = with_cases.label().sort(true, true);'
+            if n == 'labels().sort':
+                return df_base() + '\n\nauto with_cases = df.with_cases(pluss::table::Slate(pluss::make_note({"cs2", "cs0", "cs1"})));\nauto out = with_cases.labels().sort(true, true);'
             if n == 'top':
                 return df_base() + '\n\nauto out = df.top("sales", 2);'
             if n == 'bottom':
                 return df_base() + '\n\nauto out = df.bottom("sales", 2);'
-            if n == 'label().repeated':
-                return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Slate(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.label().repeated();'
+            if n == 'labels().repeated':
+                return df_base() + '\n\nauto dup = df.with_cases(pluss::table::Slate(pluss::make_note({"cs0", "cs0", "cs2"})));\nauto out = dup.labels().repeated();'
             if n == 'unique_cases':
                 return df_unique_subset() + '\n\nauto out = df.drop_duplicates({"campus"});'
-            if n == 'label().align':
-                return df_base() + '\n\ndf = df.with_cases(pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_label = pluss::table::Slate(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.label().align(new_label);'
+            if n == 'labels().align':
+                return df_base() + '\n\ndf = df.with_cases(pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_label = pluss::table::Slate(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.labels().align(new_label);'
         if n == 'match':
             return (
                 'auto left = pluss::table::DataFrame(\n'
@@ -9075,9 +9075,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
                 'Count, sum, mean, minimum, maximum, sample standard deviation, and sample variance use vectorized Series scatter reductions.',
                 'Numeric payloads and validity masks stay on their source platform; key hashing and arbitrary-value distinct counting require one bulk host materialization.',
             ])
-        if class_name == 'DataFrame' and n == 'label().align':
+        if class_name == 'DataFrame' and n == 'labels().align':
             return bullets('Practical Behavior', [
-                '`label().align(new_label)` reorders rows by matching the existing case labels against `new_label`.',
+                '`labels().align(new_label)` reorders rows by matching the existing case labels against `new_label`.',
                 'Every requested case label must already exist or the call throws.',
                 'The output case axis is rewritten to `new_label`, so both the row order and the labels now follow that target order.',
             ])
@@ -9176,7 +9176,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             ])
         if class_name == 'DataFrame' and n == 'conform':
             return bullets('Practical Behavior', [
-                '`conform(other)` first reorders features to match `other.features()` and then aligns the case axis to `other.label().values()`.',
+                '`conform(other)` first reorders features to match `other.features()` and then aligns the case axis to `other.labels().values()`.',
                 'Both frames must have the same feature count and the same feature name set.',
                 'Use this before arithmetic or updates when structure compatibility matters more than preserving the current order.',
             ])
@@ -9382,7 +9382,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
             return bullets('Practical Behavior', [
                 '`unique_cases(features)` keeps only the first row for each distinct key combination defined by `features`.',
                 'With no feature list, the full row payload is used as the duplicate key.',
-                'This is the row-filtering companion to `label().repeated(...)`.',
+                'This is the row-filtering companion to `labels().repeated(...)`.',
             ])
         if class_name == 'DataFrame' and n == 'unify':
             return bullets('Join Semantics', [

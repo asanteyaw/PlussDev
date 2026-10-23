@@ -1,0 +1,73 @@
+# apiref_manifest_infer.toml -- the `Inference` guides of PlussMa.
+
+[framework.infer]
+nav_title = "Inference guide"
+nav_prefix = "manual/infer/"
+root_page = "manual/infer.html"
+title = "Inference"
+summary = "Tests of means, variances, ranks, distributions and tables."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "infer/hypothesis/inference_01_means_and_variances"
+page = "manual/infer/hypothesis/inference_01_means_and_variances.md"
+title = "Means and Variances"
+maxdepth = 2
+children = ["inference_01_means_and_variances/tests_of_means", "inference_01_means_and_variances/a_known_standard_deviation_and_tests_of_variance", "inference_01_means_and_variances/one_sided_alternatives_and_the_level"]
+
+[[family]]
+path = "infer/hypothesis/inference_02_ranks_distributions_and_tables"
+page = "manual/infer/hypothesis/inference_02_ranks_distributions_and_tables.md"
+title = "Ranks, Distributions and Tables"
+maxdepth = 2
+children = ["inference_02_ranks_distributions_and_tables/rank_and_sign_tests", "inference_02_ranks_distributions_and_tables/tests_of_a_distribution", "inference_02_ranks_distributions_and_tables/several_groups_and_tables"]
+
+[[family]]
+path = "infer/hypothesis"
+page = "manual/infer/hypothesis.md"
+title = "hypothesis"
+maxdepth = 2
+children = ["hypothesis/inference_01_means_and_variances", "hypothesis/inference_02_ranks_distributions_and_tables"]
+
+[[symbol]]
+qualname = "infer::inference_01_means_and_variances::Tests of means"
+kind = "page"
+family = "infer/hypothesis/inference_01_means_and_variances"
+page = "manual/infer/hypothesis/inference_01_means_and_variances/tests_of_means.md"
+summary = "Tests of means"
+
+[[symbol]]
+qualname = "infer::inference_01_means_and_variances::A known standard deviation, and tests of variances"
+kind = "page"
+family = "infer/hypothesis/inference_01_means_and_variances"
+page = "manual/infer/hypothesis/inference_01_means_and_variances/a_known_standard_deviation_and_tests_of_variance.md"
+summary = "A known standard deviation, and tests of variances"
+
+[[symbol]]
+qualname = "infer::inference_01_means_and_variances::One-sided alternatives and the level"
+kind = "page"
+family = "infer/hypothesis/inference_01_means_and_variances"
+page = "manual/infer/hypothesis/inference_01_means_and_variances/one_sided_alternatives_and_the_level.md"
+summary = "One-sided alternatives and the level"
+
+[[symbol]]
+qualname = "infer::inference_02_ranks_distributions_and_tables::Rank and sign tests"
+kind = "page"
+family = "infer/hypothesis/inference_02_ranks_distributions_and_tables"
+page = "manual/infer/hypothesis/inference_02_ranks_distributions_and_tables/rank_and_sign_tests.md"
+summary = "Rank and sign tests"
+
+[[symbol]]
+qualname = "infer::inference_02_ranks_distributions_and_tables::Tests of a distribution"
+kind = "page"
+family = "infer/hypothesis/inference_02_ranks_distributions_and_tables"
+page = "manual/infer/hypothesis/inference_02_ranks_distributions_and_tables/tests_of_a_distribution.md"
+summary = "Tests of a distribution"
+
+[[symbol]]
+qualname = "infer::inference_02_ranks_distributions_and_tables::Several groups, and tables"
+kind = "page"
+family = "infer/hypothesis/inference_02_ranks_distributions_and_tables"
+page = "manual/infer/hypothesis/inference_02_ranks_distributions_and_tables/several_groups_and_tables.md"
+summary = "Several groups, and tables"

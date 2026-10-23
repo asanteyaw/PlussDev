@@ -1,0 +1,14 @@
+# Plots of the residuals
+
+[Back to Plots](../ts_07_plots.md)
+
+
+@@example Stats/time_series/guide/1223_residual_plots.cpp@@
+
+![Autocorrelation of the residuals of a model without an autoregressive term](assets/ts_resid_acf_ar0.svg)
+
+![Autocorrelation of the residuals of the AR(1) model](assets/ts_resid_acf_ar1.svg)
+
+![Residuals of the AR(1) model](assets/ts_residuals_ar1.svg)
+
+A model without an autoregressive term leaves the full autocorrelation of the series in its residuals: seven of the first 20 bars are outside the band and the first is 0.70. After the AR(1) fit one bar of 20 lies just outside (0.124), as expected by chance, and the residuals are scattered evenly around zero with no visible pattern.

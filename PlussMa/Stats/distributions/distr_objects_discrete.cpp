@@ -911,74 +911,11 @@ Series NegativeBinomialFit::nll(const Series& x) const {
   return loglik(x).neg();
 }
 
-Series NegativeBinomialFit::score(const Series& x) const {
-  const auto values = fit_data_f64_(x, "NegativeBinomialFit::score");
-  const auto fn = [&values](const std::vector<double>& params) -> double {
-    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
-    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
-    if (!valid) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
-  };
-  return fit_detail::vec_series(fit_detail::fd_grad({r, p}, fn), {2}, x);
-}
+PLUSS_DISTR_FIT_STATS(NegativeBinomialFit,
+                      (std::vector<double>{r, p}),
+                      (std::vector<bool>{true, true}),
+                      fit_detail::negbin_loglik)
 
-Series NegativeBinomialFit::fisher_inf(const Series& x) const {
-  return observed_inf(x);
-}
-
-Series NegativeBinomialFit::observed_inf(const Series& x) const {
-  const auto values = fit_data_f64_(x, "NegativeBinomialFit::observed_inf");
-  const auto fn = [&values](const std::vector<double>& params) -> double {
-    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
-    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
-    if (!valid) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
-  };
-  return info_diag_matrix_series_(info_diag_from_loglik_({r, p}, fn), x);
-}
-
-Series NegativeBinomialFit::vcov(const Series& x) const {
-  const auto values = fit_data_f64_(x, "NegativeBinomialFit::vcov");
-  const auto fn = [&values](const std::vector<double>& params) -> double {
-    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
-    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
-    if (!valid) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
-  };
-  return vcov_diag_matrix_series_(info_diag_from_loglik_({r, p}, fn), x, "NegativeBinomialFit::vcov");
-}
-
-Series NegativeBinomialFit::stderr(const Series& x) const {
-  const auto values = fit_data_f64_(x, "NegativeBinomialFit::stderr");
-  const auto fn = [&values](const std::vector<double>& params) -> double {
-    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
-    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
-    if (!valid) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
-  };
-  return fit_detail::vec_series(stderr_from_info_diag_(info_diag_from_loglik_({r, p}, fn)), {2}, x);
-}
-
-Series NegativeBinomialFit::confint(const Series& x, double level) const {
-  const auto values = fit_data_f64_(x, "NegativeBinomialFit::confint");
-  const auto fn = [&values](const std::vector<double>& params) -> double {
-    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
-    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
-    if (!valid) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> params = {r, p};
-  auto ci = confint_matrix_series_(params, stderr_from_info_diag_(info_diag_from_loglik_(params, fn)), x, level, "NegativeBinomialFit::confint");
-  auto flat = ci.to(ScalarType::Float64).to_vec<double>();
-  flat[2] = std::clamp(flat[2], 0.0, 1.0);
-  flat[3] = std::clamp(flat[3], 0.0, 1.0);
-  return fit_detail::vec_series_cpu(flat, {2, 2}).to(x.platform(), ScalarType::Float64);
-}
 
 NegativeBinomialFit NegativeBinomial::MLE(const Series& x) const {
   const auto values = fit_data_f64_(x, "NegativeBinomial::MLE");
@@ -986,18 +923,36 @@ NegativeBinomialFit NegativeBinomial::MLE(const Series& x) const {
   PLUSS_CHECK(valid, "NegativeBinomial::MLE: x must contain non-negative integer counts");
   const double n = static_cast<double>(values.size());
   const double mean = std::accumulate(values.begin(), values.end(), 0.0) / n;
-  const double var = std::transform_reduce(values.begin(),
-                                           values.end(),
-                                           0.0,
-                                           std::plus<>{},
-                                           [mean](double v) {
-                                             const double d = v - mean;
-                                             return d * d;
-                                           }) /
-                     n;
-  const double r_hat = (var > mean + 1e-9) ? std::max(1e-8, mean * mean / (var - mean)) : 1e6;
-  const double p_hat = std::clamp(r_hat / (r_hat + std::max(mean, 1e-12)), 1e-8, 1.0 - 1e-8);
-  return NegativeBinomialFit{r_hat, p_hat};
+  PLUSS_CHECK(mean > 0.0, "NegativeBinomial::MLE: the counts are all zero");
+  const double var = std::transform_reduce(values.begin(), values.end(), 0.0, std::plus<>{}, [mean](double v) {
+                       const double d = v - mean;
+                       return d * d;
+                     }) / n;
+  // Given r the estimate of p is r / (r + mean); r solves the profile score  sum(digamma(x + r) - digamma(r)) + n log(r / (r + mean)) = 0.
+  // Counts that are not over-dispersed (variance <= mean) have no finite maximum: r is then returned at a large cap (the Poisson limit).
+  constexpr double kMaxR = 1e8;
+  double r = (var > mean + 1e-9) ? mean * mean / (var - mean) : kMaxR;
+  if (r < kMaxR) {
+    const auto score = [&](double rr) {
+      double acc = 0.0;
+      for (double v : values) acc += fit_detail::digamma(v + rr) - fit_detail::digamma(rr);
+      return acc + n * std::log(rr / (rr + mean));
+    };
+    // bracket the root, then bisect on log r (the score is positive left of the maximum and negative right of it)
+    double lo = std::log(1e-6), hi = std::log(kMaxR);
+    if (score(std::exp(hi)) > 0.0) {
+      r = kMaxR;
+    } else {
+      for (int it = 0; it < 200; ++it) {
+        const double mid = 0.5 * (lo + hi);
+        if (score(std::exp(mid)) > 0.0) lo = mid; else hi = mid;
+        if (hi - lo < 1e-14) break;
+      }
+      r = std::exp(0.5 * (lo + hi));
+    }
+  }
+  const double p_hat = std::clamp(r / (r + mean), 1e-12, 1.0 - 1e-12);
+  return NegativeBinomialFit{r, p_hat};
 }
 
 } // namespace pluss::subsp::stats::distr

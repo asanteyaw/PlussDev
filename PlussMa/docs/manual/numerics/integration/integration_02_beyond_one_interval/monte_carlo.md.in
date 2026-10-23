@@ -1,0 +1,10 @@
+# Monte Carlo
+
+[Back to Beyond One Interval](../integration_02_beyond_one_interval.md)
+
+
+`aleatoria(f, a, b, options)` averages the integrand over random points. `AleatoriaOptions` has `samples` (default 1,000,000), `seed`, `stratified` and `infinite_domain_epsilon`. The result carries `value`, `standard_error` and `samples`.
+
+@@example Numerical/integration/guide/614_monte_carlo.cpp@@
+
+The plain estimator's error shrinks like one over the square root of the samples (a hundred times the samples for ten times the accuracy), and the reported standard error tracks the actual error. Stratified sampling places one point per stratum and is far more accurate on a smooth integrand at the same cost, but the standard error it reports is the plain formula and so overstates its real error; treat it as an upper bound. The same seed gives the same answer.

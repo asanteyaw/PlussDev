@@ -295,8 +295,12 @@ std::vector<std::vector<double>> sample_population_host(
           std::min(center[static_cast<std::size_t>(j)],
                    bounds.upper[static_cast<std::size_t>(j)]));
     }
-    lb[static_cast<std::size_t>(j)] = center[static_cast<std::size_t>(j)] - initial_radius;
-    ub[static_cast<std::size_t>(j)] = center[static_cast<std::size_t>(j)] + initial_radius;
+    // An infinite radius (the default) means: the whole box where both bounds are finite, otherwise start +- 0.5.
+    const bool whole_box = !std::isfinite(initial_radius) && bounds.enabled &&
+        std::isfinite(bounds.lower[static_cast<std::size_t>(j)]) && std::isfinite(bounds.upper[static_cast<std::size_t>(j)]);
+    const double radius = std::isfinite(initial_radius) ? initial_radius : (whole_box ? 1e300 : 0.5);
+    lb[static_cast<std::size_t>(j)] = center[static_cast<std::size_t>(j)] - radius;
+    ub[static_cast<std::size_t>(j)] = center[static_cast<std::size_t>(j)] + radius;
     if (bounds.enabled) {
       lb[static_cast<std::size_t>(j)] = std::max(
           lb[static_cast<std::size_t>(j)], bounds.lower[static_cast<std::size_t>(j)]);
@@ -314,6 +318,9 @@ std::vector<std::vector<double>> sample_population_host(
       row[static_cast<std::size_t>(j)] =
           lb[static_cast<std::size_t>(j)] +
           u * (ub[static_cast<std::size_t>(j)] - lb[static_cast<std::size_t>(j)]);
+    }
+    if (i == 0) {
+      row = center;  // the starting point itself is always a member, so the population never starts without it
     }
     if (bounds.enabled) {
       row = transform_host_vec(row, bounds);
@@ -450,12 +457,33 @@ Series crossover_mask_per_row_rate(
   return mask;
 }
 
+// Spread (largest minus smallest finite value) of the objective values of the current population.
+double population_spread(const std::vector<double>& values) {
+  double lo = std::numeric_limits<double>::infinity();
+  double hi = -std::numeric_limits<double>::infinity();
+  for (const double v : values) {
+    if (!std::isfinite(v)) continue;
+    lo = std::min(lo, v);
+    hi = std::max(hi, v);
+  }
+  return hi >= lo ? hi - lo : 0.0;
+}
+
+double population_spread(const Series& values) {
+  const std::vector<double> host = values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  return population_spread(host);
+}
+
+// A population method has converged when its best value has stopped improving AND the population itself has collapsed onto
+// it. A plateau of the best value alone is not convergence: a swarm or a differential-evolution population can sit on a
+// plateau for a whole check window while still exploring, and calling that "converged" returns a poor point.
 bool converged_by_relative_improvement(
     std::int64_t iter,
     std::int64_t check_every,
     double current_best,
     double* check_best,
-    double tol) {
+    double tol,
+    double spread) {
   if (check_every < 1 || iter % check_every != 0) {
     return false;
   }
@@ -467,7 +495,8 @@ bool converged_by_relative_improvement(
     *check_best = current_best;
   }
 
-  return rel_change <= tol;
+  const bool collapsed = spread <= std::sqrt(std::max(tol, 0.0)) * (1.0 + std::abs(current_best));
+  return rel_change <= tol && collapsed;
 }
 
 Series sample_population(
@@ -483,10 +512,16 @@ Series sample_population(
     center = center.maximum(bounds.lower).minimum(bounds.upper);
   }
 
-  Series lb = center.sub(initial_radius);
-  Series ub = center.add(initial_radius);
+  // An infinite radius (the default) means: the whole box where both bounds are finite, otherwise start +- 0.5.
+  Series lb = center.sub(std::isfinite(initial_radius) ? initial_radius : 0.5);
+  Series ub = center.add(std::isfinite(initial_radius) ? initial_radius : 0.5);
 
   if (bounds.enabled) {
+    if (!std::isfinite(initial_radius)) {
+      const Series box_is_finite = bounds.lower.abs().lt(1e100).logical_and(bounds.upper.abs().lt(1e100));
+      lb = box_is_finite.where(bounds.lower, lb);
+      ub = box_is_finite.where(bounds.upper, ub);
+    }
     lb = lb.maximum(bounds.lower);
     ub = ub.minimum(bounds.upper);
   }
@@ -496,6 +531,10 @@ Series sample_population(
 
   Series sampled = lb.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim})
       .add(rand_u.mul(width.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim})));
+  if (n_pop > 1) {
+    // the starting point itself is always a member, so the population never starts without it
+    sampled = center.reshape({1, n_dim}).unite({sampled.slice(0, 1, n_pop, 1)}, 0);
+  }
   if (bounds.enabled) {
     sampled = transform_box_matrix(sampled, bounds, n_pop, n_dim);
   }
@@ -544,6 +583,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
   const std::int64_t max_generations = (config.max_generations > 0) ? config.max_generations : 800;
 
   std::int64_t max_evaluations = config.max_evaluations;
+  const bool eval_budget_derived = max_evaluations <= 0;  // a generation limit then ends the run, not the evaluation budget
   if (max_evaluations <= 0) {
     max_evaluations = n_pop * (max_generations + 1);
   }
@@ -645,7 +685,8 @@ PopulationSolverOutcome differential_evolution_minimizer(
 
       if (converged_by_relative_improvement(
               iterations, config.check_every, best_val, &check_best,
-              config.relative_improvement_tolerance)) {
+              config.relative_improvement_tolerance,
+              population_spread(fit))) {
         converged = true;
         break;
       }
@@ -653,7 +694,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
 
     const PopulationSolverStatus status = converged
         ? PopulationSolverStatus::Converged
-        : ((evaluations >= max_evaluations)
+        : ((evaluations >= max_evaluations && !(eval_budget_derived && iterations >= max_generations))
                ? PopulationSolverStatus::ReachedEvaluationBudget
                : PopulationSolverStatus::ReachedIterationBudget);
 
@@ -709,14 +750,14 @@ PopulationSolverOutcome differential_evolution_minimizer(
         n_pop, n_dim, config.crossover_rate,
         setup.work_cfg, setup.idx_cfg, setup.bool_cfg, &rng);
 
-    Series trial = mutant.where(cross, base);
+    Series trial = cross.where(mutant, base);
     Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
     const Series improved = trial_fit.le(base_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
-    const Series base_next = trial.where(improved_2d, base);
-    const Series fit_next = trial_fit.where(improved, base_fit);
+    const Series base_next = improved_2d.where(trial, base);
+    const Series fit_next = improved.where(trial_fit, base_fit);
 
     pop = base_next.index_select(0, inv_perm);
     fit = fit_next.index_select(0, inv_perm);
@@ -733,7 +774,8 @@ PopulationSolverOutcome differential_evolution_minimizer(
 
     if (converged_by_relative_improvement(
             iterations, config.check_every, best_val, &check_best,
-            config.relative_improvement_tolerance)) {
+            config.relative_improvement_tolerance,
+              population_spread(fit))) {
       converged = true;
       break;
     }
@@ -741,7 +783,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
 
   const PopulationSolverStatus status = converged
       ? PopulationSolverStatus::Converged
-      : ((evaluations >= max_evaluations)
+      : ((evaluations >= max_evaluations && !(eval_budget_derived && iterations >= max_generations))
              ? PopulationSolverStatus::ReachedEvaluationBudget
              : PopulationSolverStatus::ReachedIterationBudget);
 
@@ -1031,7 +1073,8 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
 
       if (converged_by_relative_improvement(
               iterations, config.check_every, best_val, &check_best,
-              config.relative_improvement_tolerance)) {
+              config.relative_improvement_tolerance,
+              population_spread(fit))) {
         converged = true;
         break;
       }
@@ -1102,10 +1145,10 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
       const Series keep_a = fit_a.lt(fit_b);
       const Series keep_a_2d = keep_a.reshape({half, 1}).expand(std::vector<std::int64_t>{half, n_dim});
 
-      pop = pop_a.where(keep_a_2d, pop_b).contiguous();
-      fit = fit_a.where(keep_a, fit_b).contiguous();
-      f_vec = f_a.where(keep_a, f_b).contiguous();
-      cr_vec = cr_a.where(keep_a, cr_b).contiguous();
+      pop = keep_a_2d.where(pop_a, pop_b).contiguous();
+      fit = keep_a.where(fit_a, fit_b).contiguous();
+      f_vec = keep_a.where(f_a, f_b).contiguous();
+      cr_vec = keep_a.where(cr_a, cr_b).contiguous();
       n_pop = half;
       ++reductions_done;
 
@@ -1134,11 +1177,11 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
     const Series adapt_new_f = pluss::series::rand({n_pop}, setup.work_cfg, rng.next())
         .mul(config.mutation_upper - config.mutation_lower)
         .add(config.mutation_lower);
-    f_vec = adapt_new_f.where(adapt_u_f.lt(config.tau_mutation), f_vec);
+    f_vec = adapt_u_f.lt(config.tau_mutation).where(adapt_new_f, f_vec);
 
     const Series adapt_u_cr = pluss::series::rand({n_pop}, setup.work_cfg, rng.next());
     const Series adapt_new_cr = pluss::series::rand({n_pop}, setup.work_cfg, rng.next());
-    cr_vec = adapt_new_cr.where(adapt_u_cr.lt(config.tau_crossover), cr_vec);
+    cr_vec = adapt_u_cr.lt(config.tau_crossover).where(adapt_new_cr, cr_vec);
 
     const Series perm = random_permutation(n_pop, setup.work_cfg, &rng);
     const Series inv_perm = inverse_permutation(perm, setup.idx_cfg);
@@ -1162,7 +1205,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
     if (n_pop < 100) {
       const Series main_selector = pluss::series::rand({n_pop, n_dim}, setup.work_cfg, rng.next())
           .lt(config.random_main_strategy_probability);
-      mutant_main = mutant_main_rand.where(main_selector, mutant_main_best);
+      mutant_main = main_selector.where(mutant_main_rand, mutant_main_best);
     }
     const Series mutant_elite = best_best_expand.add(f_mat.mul(r1.sub(r2)));
 
@@ -1172,20 +1215,20 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
         .lt(split)
         .reshape({n_pop, 1})
         .expand(std::vector<std::int64_t>{n_pop, n_dim});
-    const Series mutant = mutant_main.where(group_main, mutant_elite);
+    const Series mutant = group_main.where(mutant_main, mutant_elite);
 
     const Series cross = crossover_mask_per_row_rate(
         n_pop, n_dim, cr_base,
         setup.work_cfg, setup.idx_cfg, setup.bool_cfg, &rng);
 
-    Series trial = mutant.where(cross, base);
+    Series trial = cross.where(mutant, base);
     const Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
     const Series improved = trial_fit.le(base_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
-    const Series base_next = trial.where(improved_2d, base);
-    const Series fit_next = trial_fit.where(improved, base_fit);
+    const Series base_next = improved_2d.where(trial, base);
+    const Series fit_next = improved.where(trial_fit, base_fit);
 
     if (split > 0) {
       const Series main_idx = pluss::series::arange(0, split, setup.idx_cfg);
@@ -1254,7 +1297,8 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
 
     if (converged_by_relative_improvement(
             iterations, config.check_every, best_val, &check_best,
-            config.relative_improvement_tolerance)) {
+            config.relative_improvement_tolerance,
+              population_spread(fit))) {
       converged = true;
       break;
     }
@@ -1287,6 +1331,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
   const std::int64_t max_generations = (config.max_generations > 0) ? config.max_generations : 1000;
 
   std::int64_t max_evaluations = config.max_evaluations;
+  const bool eval_budget_derived = max_evaluations <= 0;  // a generation limit then ends the run, not the evaluation budget
   if (max_evaluations <= 0) {
     max_evaluations = n_pop * (max_generations + 1) + max_generations;
   }
@@ -1452,7 +1497,8 @@ PopulationSolverOutcome particle_swarm_minimizer(
 
       if (converged_by_relative_improvement(
               iterations, config.check_every, gbest_val, &check_best,
-              config.relative_improvement_tolerance)) {
+              config.relative_improvement_tolerance,
+              population_spread(fit))) {
         converged = true;
         break;
       }
@@ -1460,7 +1506,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
 
     const PopulationSolverStatus status = converged
         ? PopulationSolverStatus::Converged
-        : ((evaluations >= max_evaluations)
+        : ((evaluations >= max_evaluations && !(eval_budget_derived && iterations >= max_generations))
                ? PopulationSolverStatus::ReachedEvaluationBudget
                : PopulationSolverStatus::ReachedIterationBudget);
 
@@ -1554,8 +1600,8 @@ PopulationSolverOutcome particle_swarm_minimizer(
 
     const Series improved = fit.lt(pbest_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
-    pbest = pop.where(improved_2d, pbest);
-    pbest_fit = fit.where(improved, pbest_fit);
+    pbest = improved_2d.where(pop, pbest);
+    pbest_fit = improved.where(fit, pbest_fit);
 
     if (config.center_particle && evaluations < max_evaluations) {
       const Series center = pop.mean(0, false);
@@ -1584,7 +1630,8 @@ PopulationSolverOutcome particle_swarm_minimizer(
 
     if (converged_by_relative_improvement(
             iterations, config.check_every, gbest_val, &check_best,
-            config.relative_improvement_tolerance)) {
+            config.relative_improvement_tolerance,
+              population_spread(fit))) {
       converged = true;
       break;
     }
@@ -1592,7 +1639,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
 
   const PopulationSolverStatus status = converged
       ? PopulationSolverStatus::Converged
-      : ((evaluations >= max_evaluations)
+      : ((evaluations >= max_evaluations && !(eval_budget_derived && iterations >= max_generations))
              ? PopulationSolverStatus::ReachedEvaluationBudget
              : PopulationSolverStatus::ReachedIterationBudget);
 
@@ -1617,6 +1664,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
   const std::int64_t max_generations = (config.max_generations > 0) ? config.max_generations : 1000;
 
   std::int64_t max_evaluations = config.max_evaluations;
+  const bool eval_budget_derived = max_evaluations <= 0;  // a generation limit then ends the run, not the evaluation budget
   if (max_evaluations <= 0) {
     max_evaluations = n_pop * (max_generations + 1);
   }
@@ -1740,7 +1788,8 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
 
       if (converged_by_relative_improvement(
               iterations, config.check_every, best_val, &check_best,
-              config.relative_improvement_tolerance)) {
+              config.relative_improvement_tolerance,
+              population_spread(fit))) {
         converged = true;
         break;
       }
@@ -1748,7 +1797,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
 
     const PopulationSolverStatus status = converged
         ? PopulationSolverStatus::Converged
-        : ((evaluations >= max_evaluations)
+        : ((evaluations >= max_evaluations && !(eval_budget_derived && iterations >= max_generations))
                ? PopulationSolverStatus::ReachedEvaluationBudget
                : PopulationSolverStatus::ReachedIterationBudget);
 
@@ -1777,6 +1826,10 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
   double check_best = best_val;
 
   Series stagnation = pluss::series::zeros({n_pop}, setup.idx_cfg);
+  // A stagnant particle is re-seeded over the region the swarm started in, not over the box the swarm has collapsed to:
+  // re-seeding inside the collapsed box adds no diversity and the swarm stays where it is.
+  const Series region_min = pop.amin(0, false).reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
+  const Series region_max = pop.amax(0, false).reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
   std::int64_t iterations = 0;
   std::string last_step = "initial_population";
@@ -1788,8 +1841,6 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
   while (iterations < max_generations && evaluations < max_evaluations) {
     ++iterations;
 
-    const Series pmax = pop.amax(0, false).reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
-    const Series pmin = pop.amin(0, false).reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
     const Series p1 = pop.index_select(0, random_permutation(n_pop, setup.work_cfg, &rng));
     const Series p2 = pop.index_select(0, random_permutation(n_pop, setup.work_cfg, &rng));
@@ -1803,26 +1854,26 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
         .add(rand_u.mul(config.social).mul(best_expand.sub(pop)));
 
     const Series apply_mask = pluss::series::rand({n_pop, n_dim}, setup.work_cfg, rng.next()).le(config.crossover_rate);
-    vel = v_prop.where(apply_mask, vel);
+    vel = apply_mask.where(v_prop, vel);
 
     Series trial = pop.add(vel);
     const Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
     const Series improved = trial_fit.lt(fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
-    pop = trial.where(improved_2d, pop);
-    fit = trial_fit.where(improved, fit);
+    pop = improved_2d.where(trial, pop);
+    fit = improved.where(trial_fit, fit);
 
     const Series stagnation_inc = stagnation.add(1);
-    stagnation = pluss::series::zeros({n_pop}, setup.idx_cfg).where(improved, stagnation_inc);
+    stagnation = improved.where(pluss::series::zeros({n_pop}, setup.idx_cfg), stagnation_inc);
 
     const Series reset = stagnation.ge(config.stagnation_limit);
     const auto reset_host = reset.to(ScalarType::Bool).to_vec<bool>();
     if (std::any_of(reset_host.begin(), reset_host.end(), [](bool v) { return v; })) {
-      const Series reseed = pmin.add(pluss::series::rand({n_pop, n_dim}, setup.work_cfg, rng.next()).mul(pmax.sub(pmin)));
+      const Series reseed = region_min.add(pluss::series::rand({n_pop, n_dim}, setup.work_cfg, rng.next()).mul(region_max.sub(region_min)));
       const Series reset_2d = reset.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
-      pop = reseed.where(reset_2d, pop);
-      stagnation = pluss::series::zeros({n_pop}, setup.idx_cfg).where(reset, stagnation);
+      pop = reset_2d.where(reseed, pop);
+      stagnation = reset.where(pluss::series::zeros({n_pop}, setup.idx_cfg), stagnation);
 
       for (std::int64_t i = 0; i < n_pop; ++i) {
         if (!reset_host[static_cast<std::size_t>(i)]) {
@@ -1854,7 +1905,8 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
 
     if (converged_by_relative_improvement(
             iterations, config.check_every, best_val, &check_best,
-            config.relative_improvement_tolerance)) {
+            config.relative_improvement_tolerance,
+              population_spread(fit))) {
       converged = true;
       break;
     }
@@ -1862,7 +1914,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
 
   const PopulationSolverStatus status = converged
       ? PopulationSolverStatus::Converged
-      : ((evaluations >= max_evaluations)
+      : ((evaluations >= max_evaluations && !(eval_budget_derived && iterations >= max_generations))
              ? PopulationSolverStatus::ReachedEvaluationBudget
              : PopulationSolverStatus::ReachedIterationBudget);
 

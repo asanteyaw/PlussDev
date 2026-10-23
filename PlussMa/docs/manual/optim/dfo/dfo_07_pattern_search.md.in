@@ -1,0 +1,58 @@
+# Derivative-Free Optimization 7: The Pattern Search Minimiser
+
+Pattern search is the method behind constrained derivative-free problems in the facade. Called directly with `pattern_search_minimizer`, it exposes the poll, the search step, the mesh, linear constraints written as matrices, and three policies for nonlinear constraints. After this chapter you can choose each of these deliberately and read the diagnostics that tell you what the run did.
+
+Every program is complete and its output is the output of that program. Counts are evaluations of the objective.
+
+## The method
+
+Pattern search keeps a **mesh size** and a best point. Each iteration:
+
+1. **Search (optional).** Try a few extra points chosen to jump ahead. If one improves, accept it and skip the poll.
+2. **Poll.** Evaluate points at distance `mesh` along a set of directions around the best point. If one improves, move there and grow the mesh by `mesh_expansion`.
+3. If nothing improves, shrink the mesh by `mesh_contraction`.
+
+The run ends with `Converged` when the mesh is below `mesh_tolerance` and the last step or value change was small. Because the poll directions positively span the space, a failed poll at a small mesh says no direction improves the point at that scale, which is the derivative-free analogue of a zero gradient.
+
+With constraints, the directions are adapted to the constraints active at the current point, and the feasible cone's edges are added to the poll, so the method can slide along a face and leave a vertex.
+
+## The call
+
+```cpp
+PSOutcome pattern_search_minimizer(objective, initial, PSConfig config = {});
+```
+
+| `PSConfig` group | Fields | Defaults |
+|---|---|---|
+| tolerances | `mesh_tolerance`, `step_tolerance`, `value_tolerance`, `constraint_tolerance` | 1e-6 each |
+| budgets | `max_iterations` (0 = 100 × variables), `max_evaluations` (0 = 2000 × variables), `time_limit_seconds` | 0, 0, none |
+| mesh | `initial_mesh_size`, `max_mesh_size`, `mesh_expansion`, `mesh_contraction`, `mesh_scaling` | 1, none, 2, 0.5, `RangeLog` |
+| poll | `poll_pattern`, `polling_order`, `complete_poll`, `basis_family`, `basis_refresh_interval` | `PositiveBasis2N`, `Consecutive`, false, `RandomOrtho`, 1 |
+| search | `search_strategy`, `search_expansion`, `search_trials`, `search_complete` | `ExpandAlongSuccess`, 2, 12, false |
+| constraints | `lower_bounds`, `upper_bounds`, `linear_ineq_matrix/rhs`, `linear_eq_matrix/rhs`, `nonlinear_constraints`, `constraint_policy` | none; `AugmentedLagrangian` |
+| cache | `enable_cache`, `cache_max_entries`, `cache_tolerance` | on, 10000, 1e-12 |
+| other | `rng_seed`, `promote_cpu_to_float64`, `display` | 5489, true, `None` |
+
+`PSOutcome` has `minimizer`, `minimum`, `status` and `diagnostics`: `iterations`, `evaluations`, `cache_hits`, `search_trials`, `search_successes`, `outer_iterations` (augmented Lagrangian rounds), `mesh_size`, `penalty`, `max_constraint_violation`, `last_step`. The facade's `DfoOptions::pattern_search` is the same `PSConfig`.
+
+## Programs
+
+- [A direct call](dfo_07_pattern_search/a_direct_call.md)
+- [The poll](dfo_07_pattern_search/the_poll.md)
+- [The search step](dfo_07_pattern_search/the_search_step.md)
+- [The mesh](dfo_07_pattern_search/the_mesh.md)
+- [Linear constraints](dfo_07_pattern_search/linear_constraints.md)
+- [Nonlinear constraints and their policies](dfo_07_pattern_search/nonlinear_constraints_and_their_policies.md)
+- [Budgets and the cache](dfo_07_pattern_search/budgets_and_the_cache.md)
+
+## Checklist
+
+1. Leave the rotating basis (`RandomOrtho`) on unless the coordinate axes are meaningful.
+2. Keep the search step on for smooth functions.
+3. Give bounds whenever you know them: they enable the scaling and keep every trial in range.
+4. Write linear restrictions as matrices, not as nonlinear constraints; they are enforced exactly.
+5. For equalities and the most accurate boundary answers, use `AugmentedLagrangian`; for the cheapest feasible answer, `ExtremeBarrier`.
+6. Read `status`, then `max_constraint_violation`.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

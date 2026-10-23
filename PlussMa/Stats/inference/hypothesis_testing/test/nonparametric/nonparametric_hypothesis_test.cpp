@@ -85,6 +85,21 @@ int main() {
       expect(r.effective_n == 6, "signtest paired n");
     }
 
+    {
+      // exact small-sample p-values, hand derived
+      const auto v = [](std::vector<double> d) { return pluss::make_series(d, {static_cast<std::int64_t>(d.size())}).to(ScalarType::Float64); };
+      // rank sum: x = {1, 2}, y = {3, 4, 5}; Rx = 3 is the smallest of C(5,2) = 10 equally likely subsets, so the left tail is 0.1
+      hyp::TestOptions left;
+      left.tail = hyp::Tail::Left;
+      expect(std::abs(hyp::ranksum(v({1, 2}), v({3, 4, 5}), left).pvalue - 0.1) < 1e-12, "exact rank-sum left tail");
+      expect(std::abs(hyp::ranksum(v({1, 2}), v({3, 4, 5})).pvalue - 0.2) < 1e-12, "exact rank-sum two-sided p");
+      // signed rank: four positive differences, W+ = 10 is the largest of 2^4 = 16 sign patterns, so the two-sided p is 2/16
+      expect(std::abs(hyp::signrank(v({1, 2, 3, 4}), 0.0).pvalue - 0.125) < 1e-12, "exact signed-rank two-sided p");
+      hyp::TestOptions approx;
+      approx.method = hyp::PValueMethod::Approximate;
+      expect(std::abs(hyp::signrank(v({1, 2, 3, 4}), 0.0, approx).pvalue - 0.125) > 1e-3, "approximate signed-rank p differs from the exact one at n = 4");
+    }
+
     std::cout << "nonparametric_hypothesis_test passed\n";
     return 0;
   } catch (const std::exception& e) {

@@ -30,6 +30,8 @@ source.
 | Molecular biophysics | [OpenMM](https://docs.openmm.org/latest/userguide/) | GROMACS | Force systems, integrators, constraints, trajectories, accelerated simulation |
 | Control systems | [python-control](https://python-control.readthedocs.io/en/latest/statesp.html) | [MATLAB Control System Toolbox](https://www.mathworks.com/help/control/index.html) | State-space systems, LQR, Riccati equations, stability and responses |
 | MPC and optimal control | [CasADi](https://web.casadi.org/docs/) | acados, MATLAB MPC Toolbox | Dynamic optimization, shooting, collocation, constraints, sensitivities |
+| Electric power systems | [MATPOWER](https://matpower.org/documentation/) | PowerModels.jl, PSERC publications | AC/DC network models, power flow, continuation, state estimation, OPF variables/constraints, derivatives, multipliers and benchmark cases |
+| Structural mechanics and FEM | [OpenSees](https://github.com/OpenSees/OpenSees), [DOLFINx](https://docs.fenicsproject.org/dolfinx/) | PETSc KSP, CALFEM, MATLAB PDE Toolbox | Elements, degree maps, constraints, assembly, matrix-free solves, reactions, derived stress, null modes, dynamics and nonlinear continuation |
 | Signal processing | `scipy.signal` | [MATLAB Signal Processing](https://www.mathworks.com/help/overview/signal-processing.html) | Filtering, spectral estimation, transforms, windows, multirate processing |
 | Bayesian statistics | [Stan Math](https://github.com/stan-dev/math) and Stan | PyMC, Turing.jl | Log-density conventions, autodiff, HMC/NUTS, diagnostics, variational inference |
 | Abstract algebra | [GAP](https://docs.gap-system.org/doc/ref/manual.pdf) | SageMath | Groups, permutations, actions, representations, canonical forms |

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -58,7 +58,7 @@ Index-style set operations between two label slates (<code class="docutils liter
 <code class="docutils literal notranslate"><span class="pre">.diff()</span></code>, <code class="docutils literal notranslate"><span class="pre">.symdiff()</span></code>), positional lookup (<code class="docutils literal notranslate"><span class="pre">.find()</span></code>, <code class="docutils literal notranslate"><span class="pre">.pos()</span></code>, <code class="docutils literal notranslate"><span class="pre">.slice()</span></code>), and
 missing-label handling (<code class="docutils literal notranslate"><span class="pre">.fillnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">.isnull()</span></code>, <code class="docutils literal notranslate"><span class="pre">.notnull()</span></code>).</p>
 <p><code class="docutils literal notranslate"><span class="pre">Slate::label()</span></code> is the 1D foundation this machinery is built on — a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s
-own case-label axis is itself a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, and <a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label()</span></code></span></a>
+own case-label axis is itself a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, and <a class="reference internal" href="../dataframe/labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::labels()</span></code></span></a>
 adds frame-specific concerns (multi-level names, ordering, renaming, dropping,
 <code class="docutils literal notranslate"><span class="pre">codes()</span></code>/<code class="docutils literal notranslate"><span class="pre">levels()</span></code>) on top of this same 1D surface.</p>
 <p>This page previews the accessor’s most common entry points. Every one of its methods
@@ -141,7 +141,7 @@ ptype: Note
 labels), not merely whether the slate itself is defined.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.set()</span></code>, <code class="docutils literal notranslate"><span class="pre">.range()</span></code>, <code class="docutils literal notranslate"><span class="pre">.reset()</span></code>, <code class="docutils literal notranslate"><span class="pre">.align()</span></code>, and <code class="docutils literal notranslate"><span class="pre">.fillnull()</span></code> are non-mutating —
 each returns a new <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().values()</span></code> returns the frame’s case-label slate as a whole;
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::labels().values()</span></code> returns the frame’s case-label slate as a whole;
 <code class="docutils literal notranslate"><span class="pre">Slate::label()</span></code> is where 1D relabeling and 1D label alignment actually live —
 the frame-level accessor delegates to this one under the hood.</p></li>
 </ul>
@@ -151,7 +151,7 @@ the frame-level accessor delegates to this one under the hood.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::nt</span></code></span></a>, <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::tl</span></code></span></a>: the dedicated accessors for a
 slate’s own <em>payload</em>, as opposed to its case-label axis.</p></li>
-<li><p><a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label</span></code></span></a>: the frame-level counterpart, which adds
+<li><p><a class="reference internal" href="../dataframe/labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::labels</span></code></span></a>: the frame-level counterpart, which adds
 multi-level naming, ordering, and codes/levels machinery on top of this 1D surface.</p></li>
 <li><p><a class="reference internal" href="append.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::append</span></code></span></a>: case-label handling during concatenation depends
 directly on <code class="docutils literal notranslate"><span class="pre">.label().has()</span></code>’s corrected semantics — both operands must agree on

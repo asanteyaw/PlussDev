@@ -106,6 +106,44 @@ int main() {
       expect(!fit.warnings.empty(), "rank-deficient warning check");
     }
 
+    {
+      // intercept-only model: the single coefficient is the sample mean
+      const std::vector<double> yv{1.0, 2.0, 6.0, 3.0};
+      const Series y = pluss::make_series(yv, {4}).to(ScalarType::Float64);
+      const Series none = Series::zeros({4, 0}, ScalarType::Float64);
+      const auto fit = reg::ols_fit(y, none);
+      expect(fit.k_params == 1 && std::abs(fit.coefficients.item<double>() - 3.0) < 1e-12, "intercept-only OLS gives the mean");
+      bool threw = false;
+      try {
+        reg::OLSOptions o;
+        o.add_intercept = false;
+        (void)reg::ols_fit(y, none, o);
+      } catch (const std::exception&) {
+        threw = true;
+      }
+      expect(threw, "a model with no predictors and no intercept is rejected");
+    }
+    {
+      // nearly collinear predictors are flagged through the condition number
+      std::vector<double> flat, yv;
+      for (int i = 0; i < 10; ++i) {
+        flat.push_back(i + 1.0);
+        flat.push_back(2.0 * (i + 1.0) + (i % 2 ? 1e-4 : -1e-4));
+        yv.push_back(2.0 * i + 0.1 * (i % 3));
+      }
+      const auto fit = reg::ols_fit(pluss::make_series(yv, {10}).to(ScalarType::Float64), pluss::make_series(flat, {10, 2}).to(ScalarType::Float64));
+      expect(fit.rank == fit.k_params && fit.condition_number > 1e4 && !fit.warnings.empty(), "near-collinear design warns about the condition number");
+    }
+
+    {
+      // reference values from an independent implementation: omnibus (D'Agostino-Pearson) 2.3395, p = 0.31044
+      const std::vector<double> xs{1, 2, 3, 4, 5, 6, 7, 8}, ys{2.1, 3.9, 6.2, 7.8, 10.1, 12.2, 13.8, 16.1};
+      const auto fit = reg::ols_fit(pluss::make_series(ys, {8}).to(ScalarType::Float64), pluss::make_series(xs, {8, 1}).to(ScalarType::Float64));
+      expect(std::abs(fit.omnibus - 2.3395305) < 1e-4 && std::abs(fit.omnibus_pvalue - 0.3104398) < 1e-4, "omnibus test matches the reference");
+      expect(std::abs(fit.jarque_bera - 0.9501294) < 1e-5 && std::abs(fit.durbin_watson - 3.2862673) < 1e-5, "Jarque-Bera and Durbin-Watson match");
+      expect(fit.warnings.empty(), "a well-conditioned fit has no warnings");
+    }
+
     std::cout << "ols_regression_test passed\n";
     return 0;
   } catch (const std::exception& e) {

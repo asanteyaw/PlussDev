@@ -4,7 +4,7 @@
 
 [Back to PlussQit API Reference](../api_reference.md)
 
-This reference teaches the free functions in `pluss::timeline`. They answer a
+This reference covers the free functions in `pluss::timeline`. They answer a
 different question from the [`Timeline` method reference](timeline_api_reference.md):
 how to create, combine, choose, or render instants before there is a receiver on
 which to call a method.

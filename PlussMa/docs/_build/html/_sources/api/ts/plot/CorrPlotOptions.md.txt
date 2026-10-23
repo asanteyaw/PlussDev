@@ -1,0 +1,27 @@
+<!-- generated from CorrPlotOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::CorrPlotOptions`
+
+Options of the autocorrelation plots and payloads.
+
+`CorrPlotOptions` selects the lags, the estimator and the confidence band.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `max_lag` | `std::int64_t` | 20 | The highest lag plotted. |
+| `norm` | `ts::AcfNorm` | `Biased` | Normalisation of the autocovariances (`Biased` or `Unbiased`). |
+| `demean` | `bool` | true | Subtract the sample mean first. |
+| `include_zero_lag` | `bool` | false | Include lag 0 (always 1) in the payload and the plot. |
+| `show_confidence_band` | `bool` | true | Draw the white-noise band; with false the band limits in the payload are 0. |
+| `confidence_level` | `double` | 0.95 | Level of the band: `±z/√n` with `z` the normal quantile. |
+| `trace_width` | `float` | 1.2 | Line width of the drawn stems. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`acf_payload`](plot_acf_payload.md)

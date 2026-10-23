@@ -61,7 +61,7 @@ All current backends reuse the same evaluation layer and diagnostics:
 - `WorkingSet`
 - `InternalProtocol`
 
-The primary MATLAB-inspired constrained NLP backends are `SequentialQP` and `InternalProtocol`.
+The primary constrained nonlinear programming backends are `SequentialQP` and `InternalProtocol`.
 This document focuses on those two:
 
 - [Sequential QP](optima_sequential_qp.md)
@@ -143,7 +143,7 @@ Returning `true` requests an orderly stop.
 `reports::iter(std::ostream&, precision)` and `reports::iteration_only_trace(...)`
 are convenience factories for per-iteration output.
 
-For a MATLAB `OutputFcn`-style intercept, use a custom hook and return `true`
+To intercept the run after each iteration, use a custom hook and return `true`
 when you want to stop before the next iteration.
 
 ## Internal Protocol Presets

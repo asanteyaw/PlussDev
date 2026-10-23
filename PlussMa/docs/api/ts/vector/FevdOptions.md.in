@@ -1,0 +1,20 @@
+# `pluss::subsp::stats::ts::FevdOptions`
+
+Options of `VarFit::fevd`.
+
+`FevdOptions` selects the horizon and the shock identification of the variance decomposition.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `horizon` | `std::int64_t` | 20 | Number of steps; it must be greater than 0. |
+| `method` | `ts::IrfMethod` | `Orthogonalized` | As in `IrfOptions`. For `Generalized` the shares are normalised so each series' shares add up to one. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`VarFit`](VarFit.md)

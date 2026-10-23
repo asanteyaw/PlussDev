@@ -58,7 +58,7 @@ int main() {
       .dropnull = true,
   });
   auto ranked_agencies = pluss::table::DataFrame({{"count", top_agencies}})
-                             .label().set(top_agencies.label().values());
+                             .labels().set(top_agencies.label().values());
   auto fig_bar = ranked_agencies.plot().bar("count");
   fig_bar.headline("Top Agencies by count");
   fig_bar.save_pdf("plot_df_bar.pdf");
@@ -72,7 +72,7 @@ int main() {
       {"sales", pluss::table::Slate(pluss::make_series({120.0, 135.0, 128.0, 150.0, 162.0, 171.0}))},
       {"forecast", pluss::table::Slate(pluss::make_series({118.0, 130.0, 132.0, 147.0, 158.0, 168.0}))},
       {"month", pluss::table::Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr", "May", "Jun"}))},
-  }).label().set("month", /*drop_feature=*/false);
+  }).labels().set("month", /*drop_feature=*/false);
 
   auto fig_monthly = monthly.plot().line({"sales", "forecast"});
   fig_monthly.headline("Sales vs forecast by month");

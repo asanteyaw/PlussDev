@@ -142,7 +142,7 @@ void test_comma_fixture_load_and_cases() {
   const auto agency_project = df.features("Agency Project ID");
   expect(pluss::table::detail::has_validity_mask(agency_project), "comma fixture: Agency Project ID should carry null mask");
 
-  const auto idx = df.label().values().as_series().to_vec<std::int64_t>();
+  const auto idx = df.labels().values().as_series().to_vec<std::int64_t>();
   expect(!idx.empty(), "comma fixture: cases unexpectedly empty");
   expect(idx.front() == 0, "comma fixture: cases must start at 0");
   expect(idx.back() == 63, "comma fixture: cases last value mismatch");
@@ -439,10 +439,10 @@ void test_semicolon_fixture_with_case_col() {
 
   expect(df.ncases() == 40, "semicolon fixture: nrows mismatch");
   expect(df.nfeatures() == 3, "semicolon fixture: ncols mismatch when case_col is selected");
-  expect(df.label().values().kind() == SlateKind::Note, "semicolon fixture: expected text case axis");
+  expect(df.labels().values().kind() == SlateKind::Note, "semicolon fixture: expected text case axis");
   expect(df.features("age").kind() == SlateKind::Series, "semicolon fixture: age should parse as Series");
 
-  expect(df.label().values().kind() == SlateKind::Note,
+  expect(df.labels().values().kind() == SlateKind::Note,
          "text-backed case axes should remain note-backed and require explicit conversion");
 
   pluss::table::display::DisplayOptions show_opts;
@@ -667,11 +667,11 @@ void test_describe_numeric_summary() {
 
   expect(desc.ncases() == 8, "describe should emit 8 statistic rows");
   expect(desc.nfeatures() == 4, "describe should include all numeric/bool columns");
-  expect(desc.label().values().kind() == SlateKind::Note, "describe cases should be textual labels");
+  expect(desc.labels().values().kind() == SlateKind::Note, "describe cases should be textual labels");
   expect(desc.features("age").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "describe stats should be float64");
 
-  const auto labels = desc.label().values().as_note();
+  const auto labels = desc.labels().values().as_note();
   expect(labels.at(0) == "count", "describe cases label[0] mismatch");
   expect(labels.at(1) == "mean", "describe cases label[1] mismatch");
   expect(labels.at(7) == "max", "describe cases label[7] mismatch");
@@ -839,11 +839,11 @@ void test_dataframe_equals_and_reflected_logicals() {
   const auto reflected_or = left.ror(right);
   const auto reflected_xor = left.rxor(right);
 
-  expect(reflected_and.label().values().as_note().vector() == left.label().values().as_note().vector(),
+  expect(reflected_and.labels().values().as_note().vector() == left.labels().values().as_note().vector(),
          "rand(frame) should preserve caller case labels");
-  expect(reflected_or.label().values().as_note().vector() == left.label().values().as_note().vector(),
+  expect(reflected_or.labels().values().as_note().vector() == left.labels().values().as_note().vector(),
          "ror(frame) should preserve caller case labels");
-  expect(reflected_xor.label().values().as_note().vector() == left.label().values().as_note().vector(),
+  expect(reflected_xor.labels().values().as_note().vector() == left.labels().values().as_note().vector(),
          "rxor(frame) should preserve caller case labels");
   expect(reflected_and.title() == "lhs", "rand(frame) should preserve caller title");
   expect(reflected_or.title() == "lhs", "ror(frame) should preserve caller title");
@@ -970,7 +970,7 @@ void test_first_class_loader_entrypoints() {
       "auto",
       8);
   expect(df_positional.ncases() == 8, "DataFrame::load_csv positional ncases mismatch");
-  expect(df_positional.label().values().kind() == SlateKind::Note, "DataFrame::load_csv positional case feature mismatch");
+  expect(df_positional.labels().values().kind() == SlateKind::Note, "DataFrame::load_csv positional case feature mismatch");
 
   const auto df_positional_short = DataFrame::load_csv(
       fixture_path("bank-full.csv").string(),
@@ -1415,9 +1415,9 @@ void test_transpose_shape_and_axes() {
 
   expect(t.ncases() == df.nfeatures(), "transpose should swap row/feature dimensions (rows)");
   expect(t.nfeatures() == df.ncases(), "transpose should swap row/feature dimensions (features)");
-  expect(t.label().values().kind() == SlateKind::Note, "transpose case axis should be Note-backed feature labels");
+  expect(t.labels().values().kind() == SlateKind::Note, "transpose case axis should be Note-backed feature labels");
 
-  const auto tcases = t.label().values().as_note();
+  const auto tcases = t.labels().values().as_note();
   expect(std::string(tcases.at(0)) == "a", "transpose cases[0] should equal first source feature name");
   expect(std::string(tcases.at(2)) == "c", "transpose cases[last] should equal last source feature name");
 
@@ -1834,7 +1834,7 @@ void test_versatile_dataframe_families() {
   const auto one_column_by_pos = df.case_study().at(0).features({df.features()[1]});
   expect(one_column_by_pos.nfeatures() == 1, "case_study(row, feature(pos)) should project one feature");
   auto labeled_source = df.case_study().slice(0, 8);
-  auto labeled = labeled_source.label().set(
+  auto labeled = labeled_source.labels().set(
       pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs1", "cs3", "cs4", "cs5", "cs6", "cs7"})));
   const auto label_match = labeled.case_study().labels("cs1");
   expect(label_match.ncases() == 2, "case_study(labels(...)) should return every matching case label");
@@ -1869,7 +1869,7 @@ void test_versatile_dataframe_families() {
     expect(sorted_age_values[i - 1] <= sorted_age_values[i],
            "arrange(feature) should sort ascending by default");
   }
-  const auto sorted_cases = df.label().sort(false, true);
+  const auto sorted_cases = df.labels().sort(false, true);
   expect(sorted_cases.ncases() == df.ncases(), "label().sort should preserve shape");
 
   const auto top_age = df.top("age", 3);
@@ -1907,8 +1907,8 @@ void test_versatile_dataframe_families() {
   expect(pivoted.ncases() == 2 && pivoted.nfeatures() == 2, "pivot should reshape rows x unique feature labels");
   const auto pivot_features = pivoted.features();
   expect(pivot_features.size() == 2, "pivot output should expose two pivoted features");
-  expect(pivoted.label().values().kind() == SlateKind::Note, "pivot should set cases to the pivot case feature values");
-  const auto pivot_cases = pivoted.label().values().as_note();
+  expect(pivoted.labels().values().kind() == SlateKind::Note, "pivot should set cases to the pivot case feature values");
+  const auto pivot_cases = pivoted.labels().values().as_note();
   std::int64_t row_ca = -1;
   std::int64_t row_tx = -1;
   for (std::int64_t i = 0; i < pivoted.ncases(); ++i) {
@@ -1954,12 +1954,12 @@ void test_versatile_dataframe_families() {
       pivot_dup.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Median, true, false);
   const auto dm = pivot_dup_median.features(pivot_dup_median.features().front()).as_series().to_vec<double>();
   expect(std::fabs(dm[0] - 11.0) < 1e-9, "pivot_table(median) should aggregate duplicates correctly");
-  const auto case_df = df.features({"job", "age"}).label().set("job", true);
+  const auto case_df = df.features({"job", "age"}).labels().set("job", true);
   expect(case_df.nfeatures() == 1 && case_df.features()[0] == "age",
          "label().set(drop_feature=true) should move feature to case axis");
-  const auto case_reset = case_df.label().reset("job_case");
+  const auto case_reset = case_df.labels().reset("job_case");
   expect(case_reset.get("job_case").has_value(), "label().reset should restore previous case axis as feature");
-  const auto re_aligned = case_reset.label().align(case_reset.label().values());
+  const auto re_aligned = case_reset.labels().align(case_reset.labels().values());
   expect(re_aligned.ncases() == case_reset.ncases(), "label().align should conform to provided case labels");
   const auto jleft = df.features({"age", "job"}).head(6, false);
   const auto jright = df.features({"age", "balance"}).head(6, false);
@@ -1984,19 +1984,19 @@ void test_versatile_dataframe_families() {
   const auto conformed = jleft.conform(reordered);
   expect(conformed.features() == reordered.features(),
          "conform should reorder features to match target frame");
-  expect(conformed.label().values().size() == reordered.label().values().size(),
+  expect(conformed.labels().values().size() == reordered.labels().values().size(),
          "conform should align case axis to target frame");
   const auto reindexed_like = jleft.conform(reordered);
   expect(reindexed_like.features() == reordered.features(),
          "conform should provide frame-shape matching");
-  const auto reindexed_cases = jleft.label().align(jleft.label().values());
+  const auto reindexed_cases = jleft.labels().align(jleft.labels().values());
   expect(reindexed_cases.ncases() == jleft.ncases(),
          "label().align should preserve existing labels when target matches");
   const auto align_base = DataFrame({
       {"A", pluss::table::Slate(pluss::make_series({10.0, 20.0}))},
       {"B", pluss::table::Slate(pluss::make_series({100.0, 200.0}))},
   }, pluss::make_note({"r1", "r2"}));
-  const auto aligned_labels = align_base.label().align(pluss::table::Slate(pluss::make_note({"r2", "missing", "r1"})));
+  const auto aligned_labels = align_base.labels().align(pluss::table::Slate(pluss::make_note({"r2", "missing", "r1"})));
   expect(aligned_labels.ncases() == 3 &&
              pluss::table::detail::valid_at(aligned_labels.features("A"), 0) &&
              !pluss::table::detail::valid_at(aligned_labels.features("A"), 1) &&
@@ -3729,7 +3729,7 @@ void test_select_and_place_helpers() {
              frame_selected.features("grade").as_note().vector() ==
                  std::vector<std::string_view>({"A", "B", "C", "NA"}),
          "DataFrame::select should delegate multi-branch feature selection through Slate::select");
-  expect(frame_selected.label().values().as_note().vector() ==
+  expect(frame_selected.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r0", "r1", "r2", "r3"}),
          "DataFrame::select should preserve default case labels");
 
@@ -3859,10 +3859,10 @@ void test_dataframe_shownull_and_zoom() {
       {"x", pluss::make_series(std::vector<std::int64_t>{5, 6, 7, 8})},
       {"y", pluss::make_series(std::vector<std::int64_t>{9, 10, 11, 12})},
       {"z", pluss::make_series(std::vector<std::int64_t>{13, 14, 15, 16})},
-  }).label().set(pluss::make_note({"r0", "r1", "r2", "r3"}));
-  expect(!grid.label().has(),
+  }).labels().set(pluss::make_note({"r0", "r1", "r2", "r3"}));
+  expect(!grid.labels().has(),
          "label().set(Note) should install flat labels rather than a structured case axis");
-  expect(grid.label().values().as_note().vector() ==
+  expect(grid.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r0", "r1", "r2", "r3"}),
          "label().set(Note) should preserve each supplied label");
 
@@ -3873,7 +3873,7 @@ void test_dataframe_shownull_and_zoom() {
          "DataFrame::zoom should project the requested feature block");
   expect(zoomed.features("y").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({10, 11}),
          "DataFrame::zoom should preserve the values inside the carved block");
-  expect(zoomed.label().values().as_note().vector() == std::vector<std::string_view>({"r1", "r2"}),
+  expect(zoomed.labels().values().as_note().vector() == std::vector<std::string_view>({"r1", "r2"}),
          "DataFrame::zoom should preserve the matching case labels for the carved block");
 }
 

@@ -2,7 +2,11 @@
 
 namespace pluss::subsp::eng {
 
+namespace circuit {}
 namespace control {}
-namespace signal_proc {}
+namespace lti {}
+namespace power {}
+namespace signal {}
+namespace structure {}
 
 } // namespace pluss::subsp::eng

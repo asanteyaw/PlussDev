@@ -132,7 +132,10 @@ TEST_CASE("ts direct forecaster: stress and crash checks", "[ts][direct][stress]
   const Series pred = mdl.predict(x, y, cfg);
   REQUIRE(pred.sizes()[0] == n);
   REQUIRE(pred.sizes()[1] == 3);
-  REQUIRE(pred.isfinite().all().item<double>() == Approx(1.0));
+  // Only the first rows, which lack some lagged value, have no prediction (the longest history needed is 8 + 4 steps).
+  const Series late = pred.index_select(0, pluss::series::arange(16, n, Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU)));
+  REQUIRE(late.isfinite().all().item<double>() == Approx(1.0));
+  REQUIRE(pred.isfinite().to(ScalarType::Float64).sum().item<double>() < static_cast<double>(3 * n));
 
   DirectForecasterOptions bad = opt;
   bad.ridge_lambda = -0.5;
@@ -216,4 +219,77 @@ TEST_CASE("ts direct cv forecaster: stress and crash checks", "[ts][direct][cv][
 
   REQUIRE_THROWS(cv.cvpredict(x, pluss::series::rand({n + 1}, cfg, 101ULL), cfg));
   REQUIRE_THROWS(cv.fold_model(-1));
+}
+
+// Reference values: ordinary least squares on the rows that have a complete set of lagged predictors, computed independently.
+TEST_CASE("direct forecaster fits only complete rows and blanks the rest", "[ts][direct][reference]") {
+  const int n = 30;
+  std::vector<double> x(2 * n), y(n);
+  for (int i = 0; i < n; ++i) {
+    const double x1 = std::sin(0.7 * i) + 0.1 * i, x2 = std::cos(0.4 * i * i * 0.1) + i % 3;
+    x[static_cast<std::size_t>(2 * i)] = x1;
+    x[static_cast<std::size_t>(2 * i + 1)] = x2;
+    y[static_cast<std::size_t>(i)] = 0.5 * x1 + std::sin(1.3 * i) + 0.05 * i * i * 0.1;
+  }
+  const Series xs = pluss::make_series(x, {n, 2}).to(ScalarType::Float64);
+  const Series ys = pluss::make_series(y, {n}).to(ScalarType::Float64);
+
+  DirectForecasterOptions o;
+  o.lag.horizon = {1, 3};
+  o.lag.response_lags = {1, 2};
+  o.lag.predictor_lags = {{1, 2}, {1}};
+  const auto f = DirectForecaster::fit(xs, ys, o);
+
+  const std::vector<std::vector<double>> beta{{0.257642, 0.434179, 0.108200, -0.183314, 1.077306, -0.427419},
+                                              {1.180341, 0.369032, -0.640171, -0.314757, -0.230175, 1.365510}};
+  for (int s = 0; s < 2; ++s) {
+    const auto b = f.step(s).beta.to_vec<double>();
+    for (std::size_t j = 0; j < beta[static_cast<std::size_t>(s)].size(); ++j) REQUIRE(b[j] == Approx(beta[static_cast<std::size_t>(s)][j]).epsilon(1e-5));
+  }
+
+  // The first rows lack some lag: their prepared predictors and predictions are NaN, not zero-filled.
+  const auto prepared = f.prepared_predictors(xs, ys, 1).to_vec<double>();
+  REQUIRE(std::isnan(prepared[1]));
+  const auto pred = f.predict(xs, ys).to_vec<double>();
+  REQUIRE(std::isnan(pred[0]));
+  REQUIRE(std::isfinite(pred[2 * (n - 1)]));
+  // The loss averages over the rows that have a prediction.
+  REQUIRE(std::isfinite(f.loss(xs, ys).to_vec<double>()[0]));
+}
+
+// A forecast is made from the last observation: with the coefficients above, the one-step forecast of Y(n + 1) uses the last observed values as the first lags.
+TEST_CASE("direct forecaster forecasts from the last observation", "[ts][direct][forecast][reference]") {
+  const int n = 30;
+  std::vector<double> x(2 * n), y(n);
+  for (int i = 0; i < n; ++i) {
+    const double x1 = std::sin(0.7 * i) + 0.1 * i, x2 = std::cos(0.4 * i * i * 0.1) + i % 3;
+    x[static_cast<std::size_t>(2 * i)] = x1;
+    x[static_cast<std::size_t>(2 * i + 1)] = x2;
+    y[static_cast<std::size_t>(i)] = 0.5 * x1 + std::sin(1.3 * i) + 0.05 * i * i * 0.1;
+  }
+  const Series xs = pluss::make_series(x, {n, 2}).to(ScalarType::Float64);
+  const Series ys = pluss::make_series(y, {n}).to(ScalarType::Float64);
+
+  DirectForecasterOptions o;
+  o.lag.horizon = {1, 3};
+  o.lag.response_lags = {1, 2};
+  o.lag.predictor_lags = {{1, 2}, {1}};
+  const auto f = DirectForecaster::fit(xs, ys, o).forecast(xs, ys).to_vec<double>();
+  REQUIRE(f.size() == 2);
+  REQUIRE(f[0] == Approx(6.689346).epsilon(1e-5));
+  REQUIRE(f[1] == Approx(4.948242).epsilon(1e-5));
+
+  // Leading predictor with lags 0 and 1: its values at the forecast times are supplied as x_future.
+  DirectForecasterOptions lead;
+  lead.lag.horizon = {1, 2};
+  lead.lag.response_lags = {1, 3};
+  lead.lag.leading_predictors = {0};
+  lead.lag.predictor_lags = {{1}};
+  lead.lag.leading_predictor_lags = {{0, 1}};
+  const auto model = DirectForecaster::fit(xs, ys, lead);
+  REQUIRE_THROWS(model.forecast(xs, ys));
+  const Series future = pluss::make_series(std::vector<double>{1.7, 0.4, 2.2, 0.9}, {2, 2}).to(ScalarType::Float64);
+  const auto g = model.forecast(xs, ys, future).to_vec<double>();
+  REQUIRE(g[0] == Approx(4.958580).epsilon(1e-5));
+  REQUIRE(g[1] == Approx(4.801808).epsilon(1e-5));
 }

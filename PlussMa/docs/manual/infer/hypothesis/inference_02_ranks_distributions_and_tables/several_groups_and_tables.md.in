@@ -1,0 +1,10 @@
+# Several groups, and tables
+
+[Back to Ranks, Distributions and Tables](../inference_02_ranks_distributions_and_tables.md)
+
+
+@@example Stats/inference/guide/1106_anova_and_independence.cpp@@
+
+One-way analysis of variance splits the variation into between-group and within-group parts. The F statistic is their ratio of mean squares; a large F says the group means differ more than the scatter within groups explains. Here F = 11.5 on (2, 9) degrees of freedom, p = 0.003: the three fertilisers do not all give the same mean yield (5.28, 6.55, 7.58). The test says *that* the means differ, not *which*; follow it with pairwise comparisons, adjusted for the number of comparisons. `groups` holds a label for each observation, and `group_means` and `group_counts` come back in the order of the labels.
+
+The chi-squared test of independence compares a table of counts with the counts expected if rows and columns were independent (row total times column total over the grand total). The statistic 10.9 on 2 degrees of freedom gives p = 0.004: the outcome depends on the row. The expected counts are returned so you can see where the table departs from independence; expected counts below about 5 make the chi-squared approximation unreliable.

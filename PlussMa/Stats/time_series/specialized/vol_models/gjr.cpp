@@ -262,15 +262,13 @@ std::vector<double> sigma2_path_(const std::vector<double>& e,
   std::vector<double> out(static_cast<std::size_t>(n), variance_floor);
   if (n == 0) return out;
 
-  const double persist = persistence_(p);
-  const double var_uncond = (persist < 1.0 - stationarity_margin)
-                                ? (p.omega / std::max(1e-15, 1.0 - persist))
-                                : std::numeric_limits<double>::quiet_NaN();
-  const double var0 = (std::isfinite(var_uncond) && var_uncond > variance_floor)
-                          ? var_uncond
-                          : std::max(variance_floor,
-                                     std::accumulate(e.begin(), e.end(), 0.0, [](double acc, double v) { return acc + v * v; }) /
-                                         static_cast<double>(e.size()));
+  // Pre-sample variance: the mean squared residual, independent of the candidate parameters.
+  double mean_sq = 0.0;
+  for (const double v : e) {
+    mean_sq += v * v;
+  }
+  const double var0 = std::max(mean_sq / static_cast<double>(n), variance_floor);
+  (void)stationarity_margin;
 
   const std::int64_t m = static_cast<std::int64_t>(p.arch.size());
   const std::int64_t q = static_cast<std::int64_t>(p.garch.size());

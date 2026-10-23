@@ -1,0 +1,22 @@
+<!-- generated from ResidualPlotPayload.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::ResidualPlotPayload`
+
+The numbers behind a residual plot.
+
+`ResidualPlotPayload` is plain data.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `index` | `pluss::Series` | — | Time index `0 … n − 1`. |
+| `residuals` | `pluss::Series` | — | The residuals. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`residuals_payload`](plot_residuals_payload.md)

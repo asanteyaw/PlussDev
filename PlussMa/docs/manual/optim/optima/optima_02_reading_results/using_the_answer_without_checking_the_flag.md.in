@@ -1,0 +1,10 @@
+# Using the answer without checking the flag
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+The result always holds a point. After a failure that point is just wherever the solver ended. Using it as if it were a solution is the most common mistake in code that calls a solver.
+
+@@example Numerical/optimization/guide/optima/32_pitfall_unchecked_answer.cpp@@
+
+The impossible problem returns the start point, `[0, 0]`, which looks like a perfectly good answer. Only the flag (`-6`) and the violation (`1`) reveal that it is not. Check the flag before reading `params`.

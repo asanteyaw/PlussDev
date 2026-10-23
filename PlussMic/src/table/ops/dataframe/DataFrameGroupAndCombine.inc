@@ -770,7 +770,7 @@ DataFrame pivot_group_optional_keys_(const DataFrame& frame,
   columns.emplace_back(
       synthetic_name,
       make_note_slate(std::vector<std::string>(static_cast<std::size_t>(frame.ncases()), "__all__")));
-  auto keyed = DataFrame(std::move(columns), frame.label().values()).title(frame.title());
+  auto keyed = DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
   return keyed.group(group_options)
       .by({synthetic_name})
       .agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpec>(
@@ -1283,7 +1283,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
     set_options.features = plan.index;
     set_options.drop = true;
     set_options.separator = options.index_separator;
-    out = out.label().set(set_options);
+    out = out.labels().set(set_options);
   }
 
   return DataFrameView(std::move(out).title(title()), options.render, "pivot_table", title());

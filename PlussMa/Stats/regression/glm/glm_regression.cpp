@@ -4,6 +4,7 @@
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
 #include "pluss/subsp/stats/distr.h"
+#include "pluss/subsp/stats/tails.h"
 
 #include <algorithm>
 #include <chrono>
@@ -125,34 +126,6 @@ std::string fmt_short_(double x) {
   return oss.str();
 }
 
-std::string now_date_() {
-  const auto now = std::chrono::system_clock::now();
-  const std::time_t tt = std::chrono::system_clock::to_time_t(now);
-  std::tm tm{};
-#if defined(_WIN32)
-  localtime_s(&tm, &tt);
-#else
-  localtime_r(&tt, &tm);
-#endif
-  std::ostringstream oss;
-  oss << std::put_time(&tm, "%a, %d %b %Y");
-  return oss.str();
-}
-
-std::string now_time_() {
-  const auto now = std::chrono::system_clock::now();
-  const std::time_t tt = std::chrono::system_clock::to_time_t(now);
-  std::tm tm{};
-#if defined(_WIN32)
-  localtime_s(&tm, &tt);
-#else
-  localtime_r(&tt, &tm);
-#endif
-  std::ostringstream oss;
-  oss << std::put_time(&tm, "%H:%M:%S");
-  return oss.str();
-}
-
 struct CleanData {
   Series y = pluss::series::undefined();
   Series x = pluss::series::undefined();
@@ -169,7 +142,7 @@ CleanData sanitize_inputs_(const Series& y, const Series& x, bool drop_missing, 
   const std::int64_t n = yv.numel();
   PLUSS_CHECK(xm.sizes()[0] == n, std::string(op) + ": row mismatch between y and X");
   const std::int64_t p = xm.sizes()[1];
-  PLUSS_CHECK(n > 0 && p > 0, std::string(op) + ": empty y or X");
+  PLUSS_CHECK(n > 0 && p >= 0, std::string(op) + ": empty y or X");
 
   const Series row_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false));
   const std::int64_t n_clean = static_cast<std::int64_t>(std::llround(scalar_(row_ok.to(ScalarType::Float64).sum())));
@@ -346,6 +319,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   PLUSS_CHECK(std::isfinite(options.tol) && options.tol > 0.0, std::string(op) + ": tol must be > 0");
 
   const auto clean = sanitize_inputs_(y, x, options.drop_missing, cfg, op);
+  PLUSS_CHECK(clean.p > 0 || options.add_intercept, std::string(op) + ": a model needs at least one predictor or an intercept");
   const auto out_cfg = f64_cfg_like_(clean.x, cfg);
 
   const GLMLink resolved_link = resolve_link_(options.family, options.link);
@@ -469,10 +443,12 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
 
   const Series coef = beta.reshape({k});
   const Series z_v = coef.div(std_err.maximum(std::sqrt(kEps)));
-  const Series p_v = pluss::series::ones({k}, out_cfg)
-                         .sub(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(z_v.abs()))
-                         .mul(2.0)
-                         .clamp(0.0, 1.0);
+  const auto zv = z_v.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  std::vector<double> pv(zv.size());
+  for (std::size_t i = 0; i < zv.size(); ++i) {
+    pv[i] = std::min(1.0, 2.0 * pluss::subsp::stats::tails::normal_sf(std::abs(zv[i])));
+  }
+  const Series p_v = pluss::make_series(pv, {k}, out_cfg);
   const double zcrit = norm_quantile_(1.0 - options.alpha * 0.5, out_cfg);
   const Series delta = std_err.mul(zcrit);
   const Series ci = coef.sub(delta).reshape({k, 1}).unite({coef.add(delta).reshape({k, 1})}, 1);
@@ -575,8 +551,8 @@ std::ostream& print_glm_summary(std::ostream& os, const GLMFitResult& fit) {
   row("Dep. Variable:", fit.response_name, "Family:", family_name_(fit.family));
   row("Model:", "GLM", "Link:", link_name_(fit.link));
   row("Method:", "IRLS", "Pseudo R-squared:", fmt_short_(fit.pseudo_rsquared));
-  row("Date:", now_date_(), "No. Iterations:", std::to_string(fit.iterations));
-  row("Time:", now_time_(), "Converged:", fit.converged ? "true" : "false");
+  row("Rank:", std::to_string(fit.rank), "No. Iterations:", std::to_string(fit.iterations));
+  row("Alpha:", fmt_short_(fit.alpha), "Converged:", fit.converged ? "true" : "false");
   row("No. Observations:", std::to_string(fit.nobs), "Df Residuals:", std::to_string(fit.df_resid));
   row("Df Model:", std::to_string(fit.df_model), "Log-Likelihood:", fmt_short_(fit.log_likelihood));
   row("Deviance:", fmt_short_(fit.deviance), "AIC:", fmt_short_(fit.aic));

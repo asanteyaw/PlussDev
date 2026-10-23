@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Distributions 1: Evaluating and Sampling &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Densities, distribution functions and tails" href="dist_01_evaluating_and_sampling/densities_distribution_functions_and_tails.html" />
+    <link rel="prev" title="Distributions and maximum likelihood" href="../distributions.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from dist_01_evaluating_and_sampling.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="distributions-1-evaluating-and-sampling">
+<h1>Distributions 1: Evaluating and Sampling<a class="headerlink" href="#distributions-1-evaluating-and-sampling" title="Link to this heading">¶</a></h1>
+<p>A distribution answers four questions about a variable: how dense is the probability at a point (<code class="docutils literal notranslate"><span class="pre">pdf</span></code>), how much probability lies below it (<code class="docutils literal notranslate"><span class="pre">cdf</span></code>), what are their logarithms (<code class="docutils literal notranslate"><span class="pre">logpdf</span></code>, <code class="docutils literal notranslate"><span class="pre">logcdf</span></code>), and what do random draws from it look like (<code class="docutils literal notranslate"><span class="pre">sample</span></code>). Here every such function works on a whole <code class="docutils literal notranslate"><span class="pre">Series</span></code> at once, so a grid of a million points is one call. After this chapter you can evaluate and draw from any of the sixty families, keep accuracy far in the tails, give each point its own parameters, and look up a family’s parameters in the table below.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="two-ways-in">
+<h2>Two ways in<a class="headerlink" href="#two-ways-in" title="Link to this heading">¶</a></h2>
+<p><strong>Distribution objects.</strong> The common families are structs holding their parameters, with the same methods: <code class="docutils literal notranslate"><span class="pre">Normal{mean,</span> <span class="pre">stddev}</span></code>, <code class="docutils literal notranslate"><span class="pre">Lognormal{mean_log,</span> <span class="pre">stddev_log}</span></code>, <code class="docutils literal notranslate"><span class="pre">Uniform{low,</span> <span class="pre">high}</span></code>, <code class="docutils literal notranslate"><span class="pre">Exponential{rate}</span></code>, <code class="docutils literal notranslate"><span class="pre">Laplace{location,</span> <span class="pre">scale}</span></code>, <code class="docutils literal notranslate"><span class="pre">Logistic{location,</span> <span class="pre">scale}</span></code>, <code class="docutils literal notranslate"><span class="pre">Rayleigh{sigma}</span></code>, <code class="docutils literal notranslate"><span class="pre">Gamma{shape,</span> <span class="pre">scale,</span> <span class="pre">location}</span></code>, <code class="docutils literal notranslate"><span class="pre">ChiSquare{degrees_of_freedom}</span></code>, <code class="docutils literal notranslate"><span class="pre">InverseGaussian{theta,</span> <span class="pre">chi}</span></code> (mean and shape), <code class="docutils literal notranslate"><span class="pre">StudentT{degrees_of_freedom,</span> <span class="pre">location,</span> <span class="pre">scale}</span></code>, <code class="docutils literal notranslate"><span class="pre">FDistribution{numerator,</span> <span class="pre">denominator}</span></code>, <code class="docutils literal notranslate"><span class="pre">Weibull{shape,</span> <span class="pre">scale}</span></code>, <code class="docutils literal notranslate"><span class="pre">Beta{low,</span> <span class="pre">high,</span> <span class="pre">alpha,</span> <span class="pre">beta}</span></code>, <code class="docutils literal notranslate"><span class="pre">NormalTrunc{lower,</span> <span class="pre">upper,</span> <span class="pre">mean,</span> <span class="pre">stddev}</span></code>, <code class="docutils literal notranslate"><span class="pre">Nig</span></code> and <code class="docutils literal notranslate"><span class="pre">Gh</span></code> (Chapter 3), and the discrete <code class="docutils literal notranslate"><span class="pre">Bernoulli{p}</span></code>, <code class="docutils literal notranslate"><span class="pre">Binomial{count,</span> <span class="pre">p}</span></code>, <code class="docutils literal notranslate"><span class="pre">Poisson{lambda}</span></code>, <code class="docutils literal notranslate"><span class="pre">Geometric{p}</span></code>, <code class="docutils literal notranslate"><span class="pre">NegativeBinomial{r,</span> <span class="pre">p}</span></code>, <code class="docutils literal notranslate"><span class="pre">Skellam{lambda1,</span> <span class="pre">lambda2}</span></code>. For a discrete family <code class="docutils literal notranslate"><span class="pre">pdf</span></code> is the probability mass function (a count <code class="docutils literal notranslate"><span class="pre">k</span></code> outside the support has probability 0).</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pdf(x)</span></code>, <code class="docutils literal notranslate"><span class="pre">logpdf(x)</span></code></p></td>
+<td><p>density (mass) and its logarithm</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cdf(x)</span></code>, <code class="docutils literal notranslate"><span class="pre">logcdf(x)</span></code></p></td>
+<td><p>distribution function and its logarithm</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sample(sizes,</span> <span class="pre">cfg,</span> <span class="pre">seed)</span></code>, <code class="docutils literal notranslate"><span class="pre">sample_like(like,</span> <span class="pre">seed)</span></code></p></td>
+<td><p>random draws (Chapter below)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cgf(t)</span></code>, <code class="docutils literal notranslate"><span class="pre">cumulant(order)</span></code></p></td>
+<td><p>cumulant generating function, and the cumulant of a given order (the first is the mean, the second the variance)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MLE(x)</span></code></p></td>
+<td><p>maximum likelihood fit (Chapter 2)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>By kind.</strong> All families, including the less common ones, are reached through <code class="docutils literal notranslate"><span class="pre">dst::Kind</span></code> values (<code class="docutils literal notranslate"><span class="pre">dst::Weibull</span></code>, <code class="docutils literal notranslate"><span class="pre">dst::StudentT</span></code>, <code class="docutils literal notranslate"><span class="pre">dst::Yule</span></code> …) and the free functions <code class="docutils literal notranslate"><span class="pre">pdf(kind,</span> <span class="pre">x,</span> <span class="pre">params)</span></code>, <code class="docutils literal notranslate"><span class="pre">logpdf</span></code>, <code class="docutils literal notranslate"><span class="pre">cdf</span></code>, <code class="docutils literal notranslate"><span class="pre">sample(kind,</span> <span class="pre">params,</span> <span class="pre">sizes,</span> <span class="pre">cfg,</span> <span class="pre">seed)</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_like(kind,</span> <span class="pre">params,</span> <span class="pre">like,</span> <span class="pre">seed)</span></code>, with <code class="docutils literal notranslate"><span class="pre">params</span></code> a list of the parameters in the order of the table. <code class="docutils literal notranslate"><span class="pre">supports(kind)</span></code> tells whether a kind is implemented. The namespace aliases used in the programs are <code class="docutils literal notranslate"><span class="pre">namespace</span> <span class="pre">distr</span> <span class="pre">=</span> <span class="pre">pluss::subsp::stats::distr;</span></code> and <code class="docutils literal notranslate"><span class="pre">namespace</span> <span class="pre">dst</span> <span class="pre">=</span> <span class="pre">distr::dst;</span></code>.</p>
+</section>
+<section id="accuracy">
+<h2>Accuracy<a class="headerlink" href="#accuracy" title="Link to this heading">¶</a></h2>
+<p>The densities and distribution functions are accurate to rounding over the usual range and far into the tails, where the logarithmic forms matter: <code class="docutils literal notranslate"><span class="pre">cdf</span></code> of a normal rounds to exactly 0 below about −38, <code class="docutils literal notranslate"><span class="pre">logcdf</span></code> carries on (−1805 at −60). The densities of the normal inverse Gaussian and generalised hyperbolic families use the modified Bessel function of the second kind of any real order, evaluated to about 12 digits (it is also exact in its logarithm for large arguments).</p>
+</section>
+<section id="parameters-as-series">
+<h2>Parameters as Series<a class="headerlink" href="#parameters-as-series" title="Link to this heading">¶</a></h2>
+<p>Any parameter of an object may be a <code class="docutils literal notranslate"><span class="pre">Series</span></code> instead of a number. The points and the parameters are then paired element by element, so one call evaluates a different distribution at every point: this is how a model with a mean and a variance per observation is evaluated.</p>
+</section>
+<section id="random-draws">
+<h2>Random draws<a class="headerlink" href="#random-draws" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">sample({n})</span></code> draws <code class="docutils literal notranslate"><span class="pre">n</span></code> independent values; <code class="docutils literal notranslate"><span class="pre">sample({rows,</span> <span class="pre">cols},</span> <span class="pre">cfg,</span> <span class="pre">seed)</span></code> fills an array of any shape; <code class="docutils literal notranslate"><span class="pre">sample_like(like)</span></code> matches the shape, dtype and platform of an existing array. A given <code class="docutils literal notranslate"><span class="pre">seed</span></code> always produces the same numbers (a seed of 0 is a fixed default, not a random one); different seeds give different, independent streams. <code class="docutils literal notranslate"><span class="pre">cfg</span></code> selects the dtype and platform of the result (default: Float32 on the CPU).</p>
+</section>
+<section id="the-families-and-their-parameters">
+<h2>The families and their parameters<a class="headerlink" href="#the-families-and-their-parameters" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">params</span></code> lists of the kind-based functions (a list with fewer entries selects the default parameters where the family has a short form):</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Kind</p></th>
+<th class="head"><p>Parameters</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Normal</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code> or <code class="docutils literal notranslate"><span class="pre">{mean,</span> <span class="pre">sd}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Lognormal</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{mean_log,</span> <span class="pre">sd_log}</span></code></p></td>
+<td><p>log of the variable is normal</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Uniform</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{a,</span> <span class="pre">b}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Exponential</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{rate}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Gamma</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{shape}</span></code> or <code class="docutils literal notranslate"><span class="pre">{location,</span> <span class="pre">scale,</span> <span class="pre">shape}</span></code></p></td>
+<td><p>note the order of the long form</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ChiSquare</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{nu}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ChiSquareNoncentral</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{lambda,</span> <span class="pre">nu}</span></code></p></td>
+<td><p>non-centrality first</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Chi</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{nu}</span></code> or <code class="docutils literal notranslate"><span class="pre">{location,</span> <span class="pre">scale,</span> <span class="pre">nu}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Beta</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{a,</span> <span class="pre">b}</span></code> or <code class="docutils literal notranslate"><span class="pre">{low,</span> <span class="pre">high,</span> <span class="pre">a,</span> <span class="pre">b}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StudentT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{nu}</span></code> or <code class="docutils literal notranslate"><span class="pre">{nu,</span> <span class="pre">location,</span> <span class="pre">scale}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">F</span></code>, <code class="docutils literal notranslate"><span class="pre">FNoncentral</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{df1,</span> <span class="pre">df2}</span></code>, <code class="docutils literal notranslate"><span class="pre">{lambda,</span> <span class="pre">df1,</span> <span class="pre">df2}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Cauchy</span></code>, <code class="docutils literal notranslate"><span class="pre">Laplace</span></code>, <code class="docutils literal notranslate"><span class="pre">Logistic</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{location,</span> <span class="pre">scale}</span></code> (Cauchy also <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ExtremeValue</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{location,</span> <span class="pre">scale}</span></code></p></td>
+<td><p>the Gumbel law of maxima</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Weibull</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{shape,</span> <span class="pre">scale}</span></code> or <code class="docutils literal notranslate"><span class="pre">{theta,</span> <span class="pre">alpha,</span> <span class="pre">beta}</span></code></p></td>
+<td><p>long form: location, shape, scale</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Rayleigh</span></code>, <code class="docutils literal notranslate"><span class="pre">Maxwell</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{scale}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Rice</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{nu,</span> <span class="pre">sigma}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Nakagami</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{m,</span> <span class="pre">omega}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">InverseGaussian</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{mean,</span> <span class="pre">shape}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Wald</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{chi}</span></code></p></td>
+<td><p>inverse Gaussian with mean 1 and shape <code class="docutils literal notranslate"><span class="pre">chi</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Gig</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{lambda,</span> <span class="pre">chi,</span> <span class="pre">psi}</span></code></p></td>
+<td><p>generalised inverse Gaussian</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Pareto</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{xm,</span> <span class="pre">alpha}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Lomax</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{scale,</span> <span class="pre">alpha}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Burr</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{c,</span> <span class="pre">k}</span></code></p></td>
+<td><p>Burr type III</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Gompertz</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{b,</span> <span class="pre">c}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>; density <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">c^x</span> <span class="pre">exp(−b</span> <span class="pre">(c^x</span> <span class="pre">−</span> <span class="pre">1)/ln</span> <span class="pre">c)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Bradford</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{c}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Erlang</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{scale,</span> <span class="pre">k}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Alpha</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{a,</span> <span class="pre">b}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NormalTrunc</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{lower,</span> <span class="pre">upper,</span> <span class="pre">mean,</span> <span class="pre">sd}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Triangular</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{a,</span> <span class="pre">c,</span> <span class="pre">b}</span></code></p></td>
+<td><p>minimum, mode, maximum</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VonMises</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{mu,</span> <span class="pre">kappa}</span></code></p></td>
+<td><p>on the circle around <code class="docutils literal notranslate"><span class="pre">mu</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Semicircle</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{center,</span> <span class="pre">radius}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TukeyLambda</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{lambda}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Planck</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{a,</span> <span class="pre">b}</span></code></p></td>
+<td><p>density proportional to <code class="docutils literal notranslate"><span class="pre">x^a</span> <span class="pre">/</span> <span class="pre">(exp(b</span> <span class="pre">x)</span> <span class="pre">−</span> <span class="pre">1)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Cosine</span></code>, <code class="docutils literal notranslate"><span class="pre">HalfCosine</span></code>, <code class="docutils literal notranslate"><span class="pre">HyperbolicSecant</span></code>, <code class="docutils literal notranslate"><span class="pre">Quadratic</span></code>, <code class="docutils literal notranslate"><span class="pre">UShape</span></code>, <code class="docutils literal notranslate"><span class="pre">Anglit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code> or <code class="docutils literal notranslate"><span class="pre">{t,</span> <span class="pre">s}</span></code></p></td>
+<td><p>centre <code class="docutils literal notranslate"><span class="pre">t</span></code> and half-width (or scale) <code class="docutils literal notranslate"><span class="pre">s</span></code>; the defaults are <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">π</span></code> for <code class="docutils literal notranslate"><span class="pre">Cosine</span></code> and <code class="docutils literal notranslate"><span class="pre">HalfCosine</span></code>, π/4 for <code class="docutils literal notranslate"><span class="pre">Anglit</span></code>, 1 for the others; <code class="docutils literal notranslate"><span class="pre">Arcsin</span></code> takes <code class="docutils literal notranslate"><span class="pre">{}</span></code> only (a beta(½, ½) on (0, 1))</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Nig</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{alpha,</span> <span class="pre">beta,</span> <span class="pre">mu,</span> <span class="pre">delta}</span></code></p></td>
+<td><p>`</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Gh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{lambda,</span> <span class="pre">alpha,</span> <span class="pre">beta,</span> <span class="pre">mu,</span> <span class="pre">delta}</span></code></p></td>
+<td><p>`</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Bernoulli</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{p}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Binomial</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{n,</span> <span class="pre">p}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Poisson</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{lambda}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Geometric</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{p}</span></code></p></td>
+<td><p>support 1, 2, …</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NegativeBinomial</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{r,</span> <span class="pre">p}</span></code></p></td>
+<td><p>successes <code class="docutils literal notranslate"><span class="pre">r</span></code>, success probability <code class="docutils literal notranslate"><span class="pre">p</span></code>, support 0, 1, …</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Hypergeometric</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{N,</span> <span class="pre">M,</span> <span class="pre">n}</span></code></p></td>
+<td><p>population, successes in it, draws</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Skellam</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{mu1,</span> <span class="pre">mu2}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Bessel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{nu,</span> <span class="pre">a}</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Yule</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{p}</span></code></p></td>
+<td><p>mass <code class="docutils literal notranslate"><span class="pre">(p</span> <span class="pre">−</span> <span class="pre">1)</span> <span class="pre">B(k,</span> <span class="pre">p)</span></code> on 1, 2, …, <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> (the Yule–Simon law)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Zeta</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{s}</span></code></p></td>
+<td><p>mass <code class="docutils literal notranslate"><span class="pre">k^(−s)</span> <span class="pre">/</span> <span class="pre">zeta(s)</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">&gt;</span> <span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Rademacher</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
+<td><p>±1 with probability ½</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dist_01_evaluating_and_sampling/densities_distribution_functions_and_tails.html"><span class="std std-doc">Densities, distribution functions and tails</span></a></p></li>
+<li><p><a class="reference internal" href="dist_01_evaluating_and_sampling/random_draws.html"><span class="std std-doc">Random draws</span></a></p></li>
+<li><p><a class="reference internal" href="dist_01_evaluating_and_sampling/families_by_kind.html"><span class="std std-doc">Families by kind</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">logpdf</span></code> and <code class="docutils literal notranslate"><span class="pre">logcdf</span></code> for anything that is multiplied or compared far in the tails; the plain forms underflow.</p></li>
+<li><p>Pass the parameters in the order of the table (the long form of the gamma is <code class="docutils literal notranslate"><span class="pre">{location,</span> <span class="pre">scale,</span> <span class="pre">shape}</span></code>).</p></li>
+<li><p>Give a <code class="docutils literal notranslate"><span class="pre">seed</span></code> whenever a result must be reproducible; use a different seed for each independent stream.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">sample_like</span></code> to match the shape, dtype and device of an array you already have.</p></li>
+<li><p>Use Series parameters to evaluate one distribution per point in a single call.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/distr/distributions/dist_01_evaluating_and_sampling.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

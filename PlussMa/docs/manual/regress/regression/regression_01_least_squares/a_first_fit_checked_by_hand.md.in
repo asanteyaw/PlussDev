@@ -1,0 +1,8 @@
+# A first fit, checked by hand
+
+[Back to Least Squares](../regression_01_least_squares.md)
+
+
+@@example Stats/regression/guide/1001_first_regression.cpp@@
+
+The coefficients match the textbook formulas (slope = S<sub>xy</sub> / S<sub>xx</sub>, intercept = ȳ − slope · x̄) to the printed digits. The slope is 71.9 standard errors from zero (p ≈ 5e-10); the intercept, at 0.25 standard errors, is not distinguishable from zero. The 95% interval for the slope, [1.930, 2.066], is the estimate plus or minus the 97.5% point of Student's t distribution on 6 degrees of freedom (2.447) times its standard error. Note that the degrees of freedom are n minus the parameters, and the residual standard deviation `rmse` uses them.

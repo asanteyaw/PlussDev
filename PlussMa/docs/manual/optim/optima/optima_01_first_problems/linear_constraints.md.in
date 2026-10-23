@@ -1,0 +1,10 @@
+# Linear constraints
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+Linear constraints are matrices. `ln_eq(Aeq, beq)` means `Aeq x = beq` and `ln_ineq(Aineq, bineq)` means `Aineq x <= bineq`, row by row. Each matrix has one column per unknown. This program keeps three numbers summing to 3 while preferring them near 2, and also requires `x1 - x2 <= -0.5`.
+
+@@example Numerical/optimization/guide/optima/05_linear_constraints.cpp@@
+
+The sum is exactly the target, and `x1 - x2` sits at its limit of `-0.5`: the inequality is active, which is why the answer is not the symmetric point `(1, 1, 1)`.

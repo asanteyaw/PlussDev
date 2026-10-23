@@ -1,0 +1,1487 @@
+# apiref_manifest_optim.toml -- the `Optimization` guides of PlussMa.
+
+[framework.optim]
+nav_title = "Optimization guide"
+nav_prefix = "manual/optim/"
+root_page = "manual/optim.html"
+title = "Optimization"
+summary = "Constrained and unconstrained optimization, linear and mixed-integer programming, derivative-free search and root finding."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems.md"
+title = "Your First Constrained Problems"
+maxdepth = 2
+children = ["optima_01_first_problems/the_smallest_call", "optima_01_first_problems/bounds", "optima_01_first_problems/a_nonlinear_inequality", "optima_01_first_problems/a_nonlinear_equality", "optima_01_first_problems/linear_constraints", "optima_01_first_problems/every_constraint_family_at_once", "optima_01_first_problems/named_blocks_and_a_model", "optima_01_first_problems/a_problem_as_a_value", "optima_01_first_problems/analytic_gradients", "optima_01_first_problems/reading_the_result", "optima_01_first_problems/bounds_that_do_not_match_the_blocks", "optima_01_first_problems/an_objective_that_returns_more_than_one_number"]
+
+[[family]]
+path = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results.md"
+title = "Reading Results and Watching a Run"
+maxdepth = 2
+children = ["optima_02_reading_results/the_four_algorithms_side_by_side", "optima_02_reading_results/the_flags_that_mean_a_healthy_run", "optima_02_reading_results/the_five_failure_flags", "optima_02_reading_results/the_ten_stall_categories", "optima_02_reading_results/every_field_of_the_report", "optima_02_reading_results/printing_progress", "optima_02_reading_results/writing_your_own_hook", "optima_02_reading_results/which_hook_runs", "optima_02_reading_results/the_best_feasible_checkpoint", "optima_02_reading_results/reading_the_multipliers", "optima_02_reading_results/the_one_line_and_many_line_summaries", "optima_02_reading_results/using_the_answer_without_checking_the_flag"]
+
+[[family]]
+path = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm.md"
+title = "Choosing and Tuning an Algorithm"
+maxdepth = 2
+children = ["optima_03_choosing_an_algorithm/the_same_problem_four_algorithms", "optima_03_choosing_an_algorithm/what_happens_to_the_constraints_on_the_way", "optima_03_choosing_an_algorithm/where_you_start_decides_where_you_end", "optima_03_choosing_an_algorithm/when_the_objective_is_not_a_number", "optima_03_choosing_an_algorithm/the_curvature_model", "optima_03_choosing_an_algorithm/badly_scaled_problems", "optima_03_choosing_an_algorithm/the_options_that_decide_the_outcome", "optima_03_choosing_an_algorithm/growing_the_problem", "optima_03_choosing_an_algorithm/the_ready_made_option_sets", "optima_03_choosing_an_algorithm/setting_an_option_on_the_wrong_struct"]
+
+[[family]]
+path = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp.md"
+title = "Sequential QP in Depth"
+maxdepth = 2
+children = ["optima_04_sequential_qp/watching_the_loop", "optima_04_sequential_qp/the_penalty_weight", "optima_04_sequential_qp/the_line_search", "optima_04_sequential_qp/curved_constraints_and_the_second_order_correcti", "optima_04_sequential_qp/restoration_the_last_resort", "optima_04_sequential_qp/the_subproblem_solvers", "optima_04_sequential_qp/stopping_tolerances"]
+
+[[family]]
+path = "optim/optima/optima_05_working_set_and_interior"
+page = "manual/optim/optima/optima_05_working_set_and_interior.md"
+title = "The Working-Set and Interior Methods"
+maxdepth = 2
+children = ["optima_05_working_set_and_interior/watching_the_active_set", "optima_05_working_set_and_interior/does_the_active_list_pay_off", "optima_05_working_set_and_interior/the_working_set_options", "optima_05_working_set_and_interior/watching_the_barrier", "optima_05_working_set_and_interior/the_barrier_schedule", "optima_05_working_set_and_interior/what_interior_buys"]
+
+[[family]]
+path = "optim/optima/optima_06_curvature_linear_algebra_scaling"
+page = "manual/optim/optima/optima_06_curvature_linear_algebra_scaling.md"
+title = "Curvature, Linear Algebra and Scaling"
+maxdepth = 2
+children = ["optima_06_curvature_linear_algebra_scaling/how_the_model_scales_with_the_problem", "optima_06_curvature_linear_algebra_scaling/the_memory_of_the_limited_memory_model", "optima_06_curvature_linear_algebra_scaling/every_algorithm_every_model", "optima_06_curvature_linear_algebra_scaling/the_bfgs_safeguard", "optima_06_curvature_linear_algebra_scaling/the_step_s_linear_system", "optima_06_curvature_linear_algebra_scaling/units_measured"]
+
+[[family]]
+path = "optim/optima/optima_07_derivatives"
+page = "manual/optim/optima/optima_07_derivatives.md"
+title = "Derivatives"
+maxdepth = 2
+children = ["optima_07_derivatives/the_same_problem_three_ways", "optima_07_derivatives/the_audit", "optima_07_derivatives/analytic_constraints_and_their_audit", "optima_07_derivatives/gradients_jacobians_and_products_on_their_own", "optima_07_derivatives/counting_the_calls", "optima_07_derivatives/long_loops_without_a_tape"]
+
+[[family]]
+path = "optim/optima/optima_08_worked_problems"
+page = "manual/optim/optima/optima_08_worked_problems.md"
+title = "Worked Problems"
+maxdepth = 2
+children = ["optima_08_worked_problems/a_minimum_variance_portfolio", "optima_08_worked_problems/a_design_with_a_closed_form_answer", "optima_08_worked_problems/a_design_that_cannot_be_built", "optima_08_worked_problems/a_maximum_likelihood_fit_and_what_a_flag_cannot", "optima_08_worked_problems/a_plant_with_every_kind_of_constraint"]
+
+[[family]]
+path = "optim/optima"
+page = "manual/optim/optima.md"
+title = "optima"
+maxdepth = 2
+children = ["optima/optima_01_first_problems", "optima/optima_02_reading_results", "optima/optima_03_choosing_an_algorithm", "optima/optima_04_sequential_qp", "optima/optima_05_working_set_and_interior", "optima/optima_06_curvature_linear_algebra_scaling", "optima/optima_07_derivatives", "optima/optima_08_worked_problems", "optima/optima_algorithms", "optima/optima_sequential_qp", "optima/optimizer_surfaces", "optima/optima_internal_protocol"]
+
+[[family]]
+path = "optim/septima/septima_01_first_problems"
+page = "manual/optim/septima/septima_01_first_problems.md"
+title = "First Problems"
+maxdepth = 2
+children = ["septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no", "septima_01_first_problems/a_curved_valley", "septima_01_first_problems/three_ways_to_hand_over_the_same_objective", "septima_01_first_problems/reading_the_result", "septima_01_first_problems/how_a_run_ends", "septima_01_first_problems/watching_a_run"]
+
+[[family]]
+path = "optim/septima/septima_02_constraints"
+page = "manual/optim/septima/septima_02_constraints.md"
+title = "Constraints"
+maxdepth = 2
+children = ["septima_02_constraints/bounds", "septima_02_constraints/an_equality_constraint", "septima_02_constraints/an_inequality_constraint", "septima_02_constraints/the_same_problem_in_both_solvers"]
+
+[[family]]
+path = "optim/septima/septima_03_tuning_and_robustness"
+page = "manual/optim/septima/septima_03_tuning_and_robustness.md"
+title = "Tuning and Robustness"
+maxdepth = 2
+children = ["septima_03_tuning_and_robustness/the_learning_rate", "septima_03_tuning_and_robustness/the_other_adam_settings", "septima_03_tuning_and_robustness/the_l_bfgs_settings", "septima_03_tuning_and_robustness/an_objective_that_is_undefined_in_part_of_the_sp", "septima_03_tuning_and_robustness/what_stops_a_run", "septima_03_tuning_and_robustness/precision_and_complex_parameters"]
+
+[[family]]
+path = "optim/septima/septima_04_lsr1_trust_region"
+page = "manual/optim/septima/septima_04_lsr1_trust_region.md"
+title = "The L-SR1 Trust-Region Optimizer"
+maxdepth = 2
+children = ["septima_04_lsr1_trust_region/a_first_run_and_a_comparison", "septima_04_lsr1_trust_region/saddles", "septima_04_lsr1_trust_region/the_settings_that_matter", "septima_04_lsr1_trust_region/several_blocks_and_a_complex_parameter"]
+
+[[family]]
+path = "optim/septima/septima_05_choosing_and_worked_problems"
+page = "manual/optim/septima/septima_05_choosing_and_worked_problems.md"
+title = "Choosing a Solver, and Worked Problems"
+maxdepth = 2
+children = ["septima_05_choosing_and_worked_problems/a_model_fitted_to_data", "septima_05_choosing_and_worked_problems/constrained_least_squares_checked_against_optima", "septima_05_choosing_and_worked_problems/one_function_every_solver"]
+
+[[family]]
+path = "optim/septima"
+page = "manual/optim/septima.md"
+title = "septima"
+maxdepth = 2
+children = ["septima/septima_01_first_problems", "septima/septima_02_constraints", "septima/septima_03_tuning_and_robustness", "septima/septima_04_lsr1_trust_region", "septima/septima_05_choosing_and_worked_problems"]
+
+[[family]]
+path = "optim/linprog/linprog_01_first_programs"
+page = "manual/optim/linprog/linprog_01_first_programs.md"
+title = "First Programs"
+maxdepth = 2
+children = ["linprog_01_first_programs/a_first_linear_program", "linprog_01_first_programs/the_shapes_a_requirement_can_take", "linprog_01_first_programs/reading_the_result", "linprog_01_first_programs/how_a_solve_ends", "linprog_01_first_programs/the_default_bounds"]
+
+[[family]]
+path = "optim/linprog/linprog_02_prices_and_certificates"
+page = "manual/optim/linprog/linprog_02_prices_and_certificates.md"
+title = "Prices and Certificates"
+maxdepth = 2
+children = ["linprog_02_prices_and_certificates/prices_checked_by_re_solving", "linprog_02_prices_and_certificates/certificates_you_can_check"]
+
+[[family]]
+path = "optim/linprog/linprog_03_methods_warm_starts_and_sweeps"
+page = "manual/optim/linprog/linprog_03_methods_warm_starts_and_sweeps.md"
+title = "Methods, Warm Starts and Sweeps"
+maxdepth = 2
+children = ["linprog_03_methods_warm_starts_and_sweeps/the_two_methods_on_a_tie", "linprog_03_methods_warm_starts_and_sweeps/restarting_from_a_previous_answer", "linprog_03_methods_warm_starts_and_sweeps/many_programs_in_one_call"]
+
+[[family]]
+path = "optim/linprog/linprog_04_large_sparse_models"
+page = "manual/optim/linprog/linprog_04_large_sparse_models.md"
+title = "Large Sparse Models"
+maxdepth = 2
+children = ["linprog_04_large_sparse_models/a_transportation_model", "linprog_04_large_sparse_models/a_model_from_an_mps_file", "linprog_04_large_sparse_models/what_presolve_removes"]
+
+[[family]]
+path = "optim/linprog"
+page = "manual/optim/linprog.md"
+title = "linprog"
+maxdepth = 2
+children = ["linprog/linprog_01_first_programs", "linprog/linprog_02_prices_and_certificates", "linprog/linprog_03_methods_warm_starts_and_sweeps", "linprog/linprog_04_large_sparse_models"]
+
+[[family]]
+path = "optim/milp/milp_01_integer_programs"
+page = "manual/optim/milp/milp_01_integer_programs.md"
+title = "Choosing Whole Things"
+maxdepth = 2
+children = ["milp_01_integer_programs/choosing_projects_under_a_budget", "milp_01_integer_programs/integers_that_are_not_0_or_1_and_when_the_relaxa", "milp_01_integer_programs/how_a_search_ends"]
+
+[[family]]
+path = "optim/milp/milp_02_larger_integer_models"
+page = "manual/optim/milp/milp_02_larger_integer_models.md"
+title = "Larger Models and Worked Problems"
+maxdepth = 2
+children = ["milp_02_larger_integer_models/where_to_open_warehouses", "milp_02_larger_integer_models/a_weekly_staff_schedule"]
+
+[[family]]
+path = "optim/milp"
+page = "manual/optim/milp.md"
+title = "milp"
+maxdepth = 2
+children = ["milp/milp_01_integer_programs", "milp/milp_02_larger_integer_models"]
+
+[[family]]
+path = "optim/dfo/dfo_01_first_problems"
+page = "manual/optim/dfo/dfo_01_first_problems.md"
+title = "First Problems"
+maxdepth = 2
+children = ["dfo_01_first_problems/a_first_solve", "dfo_01_first_problems/three_ways_to_call", "dfo_01_first_problems/what_auto_chooses", "dfo_01_first_problems/budgets_and_the_five_statuses", "dfo_01_first_problems/seeds_and_repeatability"]
+
+[[family]]
+path = "optim/dfo/dfo_02_the_solvers"
+page = "manual/optim/dfo/dfo_02_the_solvers.md"
+title = "Choosing a Solver"
+maxdepth = 2
+children = ["dfo_02_the_solvers/seven_methods_four_problems", "dfo_02_the_solvers/restarting_a_local_method"]
+
+[[family]]
+path = "optim/dfo/dfo_03_bounds_and_constraints"
+page = "manual/optim/dfo/dfo_03_bounds_and_constraints.md"
+title = "Bounds and Constraints"
+maxdepth = 2
+children = ["dfo_03_bounds_and_constraints/bounds_only", "dfo_03_bounds_and_constraints/inequality_constraints", "dfo_03_bounds_and_constraints/equality_constraints", "dfo_03_bounds_and_constraints/mesh_methods_with_constraints", "dfo_03_bounds_and_constraints/no_feasible_point"]
+
+[[family]]
+path = "optim/dfo/dfo_04_black_boxes"
+page = "manual/optim/dfo/dfo_04_black_boxes.md"
+title = "Black Boxes"
+maxdepth = 2
+children = ["dfo_04_black_boxes/a_function_that_fails", "dfo_04_black_boxes/the_cache", "dfo_04_black_boxes/two_objectives", "dfo_04_black_boxes/constraint_handling"]
+
+[[family]]
+path = "optim/dfo/dfo_05_worked_problems"
+page = "manual/optim/dfo/dfo_05_worked_problems.md"
+title = "Worked Problems and Checking Answers"
+maxdepth = 2
+children = ["dfo_05_worked_problems/fitting_a_curve", "dfo_05_worked_problems/verifying_an_answer"]
+
+[[family]]
+path = "optim/dfo/dfo_06_nelder_mead"
+page = "manual/optim/dfo/dfo_06_nelder_mead.md"
+title = "The Nelder\u2013Mead Minimiser"
+maxdepth = 2
+children = ["dfo_06_nelder_mead/a_direct_call", "dfo_06_nelder_mead/the_settings_one_at_a_time", "dfo_06_nelder_mead/forbidden_regions", "dfo_06_nelder_mead/shapes_and_dtypes"]
+
+[[family]]
+path = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search.md"
+title = "The Pattern Search Minimiser"
+maxdepth = 2
+children = ["dfo_07_pattern_search/a_direct_call", "dfo_07_pattern_search/the_poll", "dfo_07_pattern_search/the_search_step", "dfo_07_pattern_search/the_mesh", "dfo_07_pattern_search/linear_constraints", "dfo_07_pattern_search/nonlinear_constraints_and_their_policies", "dfo_07_pattern_search/budgets_and_the_cache"]
+
+[[family]]
+path = "optim/dfo/dfo_08_differential_evolution"
+page = "manual/optim/dfo/dfo_08_differential_evolution.md"
+title = "The Differential Evolution Minimisers"
+maxdepth = 2
+children = ["dfo_08_differential_evolution/a_direct_call", "dfo_08_differential_evolution/the_parameters", "dfo_08_differential_evolution/seeds_and_execution_modes", "dfo_08_differential_evolution/where_the_population_starts", "dfo_08_differential_evolution/stopping", "dfo_08_differential_evolution/the_self_adapting_variant"]
+
+[[family]]
+path = "optim/dfo/dfo_09_particle_swarm"
+page = "manual/optim/dfo/dfo_09_particle_swarm.md"
+title = "The Particle Swarm Minimisers"
+maxdepth = 2
+children = ["dfo_09_particle_swarm/a_direct_call", "dfo_09_particle_swarm/the_parameters", "dfo_09_particle_swarm/the_differential_evolution_variant", "dfo_09_particle_swarm/stopping_and_execution_modes"]
+
+[[family]]
+path = "optim/dfo/dfo_10_mesh_adaptive_search"
+page = "manual/optim/dfo/dfo_10_mesh_adaptive_search.md"
+title = "Mesh Adaptive Direct Search"
+maxdepth = 2
+children = ["dfo_10_mesh_adaptive_search/a_direct_call", "dfo_10_mesh_adaptive_search/the_two_poll_schemes", "dfo_10_mesh_adaptive_search/the_mesh_and_the_frame", "dfo_10_mesh_adaptive_search/the_search_step_and_bounds", "dfo_10_mesh_adaptive_search/stopping"]
+
+[[family]]
+path = "optim/dfo/dfo_11_mads_black_box"
+page = "manual/optim/dfo/dfo_11_mads_black_box.md"
+title = "The Black-Box MADS Minimisers"
+maxdepth = 2
+children = ["dfo_11_mads_black_box/a_direct_call", "dfo_11_mads_black_box/weighted_sum_or_chebyshev", "dfo_11_mads_black_box/the_surrogate", "dfo_11_mads_black_box/what_counts_as_an_evaluation", "dfo_11_mads_black_box/the_pareto_archive"]
+
+[[family]]
+path = "optim/dfo/dfo_12_mads_variants"
+page = "manual/optim/dfo/dfo_12_mads_variants.md"
+title = "The MADS Variants"
+maxdepth = 2
+children = ["dfo_12_mads_variants/cooperative_mads", "dfo_12_mads_variants/partial_space_decomposition", "dfo_12_mads_variants/disco_mads", "dfo_12_mads_variants/variable_neighbourhood_mads"]
+
+[[family]]
+path = "optim/dfo"
+page = "manual/optim/dfo.md"
+title = "dfo"
+maxdepth = 2
+children = ["dfo/dfo_01_first_problems", "dfo/dfo_02_the_solvers", "dfo/dfo_03_bounds_and_constraints", "dfo/dfo_04_black_boxes", "dfo/dfo_05_worked_problems", "dfo/dfo_06_nelder_mead", "dfo/dfo_07_pattern_search", "dfo/dfo_08_differential_evolution", "dfo/dfo_09_particle_swarm", "dfo/dfo_10_mesh_adaptive_search", "dfo/dfo_11_mads_black_box", "dfo/dfo_12_mads_variants"]
+
+[[family]]
+path = "optim/roots/roots_01_solving_equations"
+page = "manual/optim/roots/roots_01_solving_equations.md"
+title = "Root Finding: Solving Equations"
+maxdepth = 2
+children = ["roots_01_solving_equations/a_first_root", "roots_01_solving_equations/many_equations_at_once", "roots_01_solving_equations/the_methods_compared", "roots_01_solving_equations/tolerances_check_cadence_and_brackets", "roots_01_solving_equations/a_fourth_order_solver_and_the_derivative_of_the"]
+
+[[family]]
+path = "optim/roots"
+page = "manual/optim/roots.md"
+title = "roots"
+maxdepth = 2
+children = ["roots/roots_01_solving_equations"]
+
+[[family]]
+path = "optim/qp/qp_01_quadratic_programs"
+page = "manual/optim/qp/qp_01_quadratic_programs.md"
+title = "Quadratic Programming"
+maxdepth = 2
+children = ["qp_01_quadratic_programs/a_first_qp", "qp_01_quadratic_programs/the_constraint_forms", "qp_01_quadratic_programs/batches_and_reuse", "qp_01_quadratic_programs/warm_starts_and_options"]
+
+[[family]]
+path = "optim/qp"
+page = "manual/optim/qp.md"
+title = "qp"
+maxdepth = 2
+children = ["qp/qp_01_quadratic_programs"]
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::The smallest call"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/the_smallest_call.md"
+summary = "The smallest call"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Bounds"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/bounds.md"
+summary = "Bounds"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::A nonlinear inequality"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/a_nonlinear_inequality.md"
+summary = "A nonlinear inequality"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::A nonlinear equality"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/a_nonlinear_equality.md"
+summary = "A nonlinear equality"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Linear constraints"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/linear_constraints.md"
+summary = "Linear constraints"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Every constraint family at once"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/every_constraint_family_at_once.md"
+summary = "Every constraint family at once"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Named blocks and a model"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/named_blocks_and_a_model.md"
+summary = "Named blocks and a model"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::A problem as a value"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/a_problem_as_a_value.md"
+summary = "A problem as a value"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Analytic gradients"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/analytic_gradients.md"
+summary = "Analytic gradients"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Reading the result"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/reading_the_result.md"
+summary = "Reading the result"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Bounds that do not match the blocks"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/bounds_that_do_not_match_the_blocks.md"
+summary = "Bounds that do not match the blocks"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::An objective that returns more than one number"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/an_objective_that_returns_more_than_one_number.md"
+summary = "An objective that returns more than one number"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::The four algorithms side by side"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/the_four_algorithms_side_by_side.md"
+summary = "The four algorithms side by side"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::The flags that mean a healthy run"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/the_flags_that_mean_a_healthy_run.md"
+summary = "The flags that mean a healthy run"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::The five failure flags"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/the_five_failure_flags.md"
+summary = "The five failure flags"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::The ten stall categories"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/the_ten_stall_categories.md"
+summary = "The ten stall categories"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::Every field of the report"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/every_field_of_the_report.md"
+summary = "Every field of the report"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::Printing progress"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/printing_progress.md"
+summary = "Printing progress"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::Writing your own hook"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/writing_your_own_hook.md"
+summary = "Writing your own hook"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::Which hook runs"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/which_hook_runs.md"
+summary = "Which hook runs"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::The best feasible checkpoint"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/the_best_feasible_checkpoint.md"
+summary = "The best feasible checkpoint"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::Reading the multipliers"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/reading_the_multipliers.md"
+summary = "Reading the multipliers"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::The one-line and many-line summaries"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/the_one_line_and_many_line_summaries.md"
+summary = "The one-line and many-line summaries"
+
+[[symbol]]
+qualname = "optim::optima_02_reading_results::Using the answer without checking the flag"
+kind = "page"
+family = "optim/optima/optima_02_reading_results"
+page = "manual/optim/optima/optima_02_reading_results/using_the_answer_without_checking_the_flag.md"
+summary = "Using the answer without checking the flag"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::The same problem, four algorithms"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/the_same_problem_four_algorithms.md"
+summary = "The same problem, four algorithms"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::What happens to the constraints on the way"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/what_happens_to_the_constraints_on_the_way.md"
+summary = "What happens to the constraints on the way"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::Where you start decides where you end"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/where_you_start_decides_where_you_end.md"
+summary = "Where you start decides where you end"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::When the objective is not a number"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/when_the_objective_is_not_a_number.md"
+summary = "When the objective is not a number"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::The curvature model"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/the_curvature_model.md"
+summary = "The curvature model"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::Badly scaled problems"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/badly_scaled_problems.md"
+summary = "Badly scaled problems"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::The options that decide the outcome"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/the_options_that_decide_the_outcome.md"
+summary = "The options that decide the outcome"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::Growing the problem"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/growing_the_problem.md"
+summary = "Growing the problem"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::The ready-made option sets"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/the_ready_made_option_sets.md"
+summary = "The ready-made option sets"
+
+[[symbol]]
+qualname = "optim::optima_03_choosing_an_algorithm::Setting an option on the wrong struct"
+kind = "page"
+family = "optim/optima/optima_03_choosing_an_algorithm"
+page = "manual/optim/optima/optima_03_choosing_an_algorithm/setting_an_option_on_the_wrong_struct.md"
+summary = "Setting an option on the wrong struct"
+
+[[symbol]]
+qualname = "optim::optima_04_sequential_qp::Watching the loop"
+kind = "page"
+family = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp/watching_the_loop.md"
+summary = "Watching the loop"
+
+[[symbol]]
+qualname = "optim::optima_04_sequential_qp::The penalty weight"
+kind = "page"
+family = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp/the_penalty_weight.md"
+summary = "The penalty weight"
+
+[[symbol]]
+qualname = "optim::optima_04_sequential_qp::The line search"
+kind = "page"
+family = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp/the_line_search.md"
+summary = "The line search"
+
+[[symbol]]
+qualname = "optim::optima_04_sequential_qp::Curved constraints and the second-order correction"
+kind = "page"
+family = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp/curved_constraints_and_the_second_order_correcti.md"
+summary = "Curved constraints and the second-order correction"
+
+[[symbol]]
+qualname = "optim::optima_04_sequential_qp::Restoration, the last resort"
+kind = "page"
+family = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp/restoration_the_last_resort.md"
+summary = "Restoration, the last resort"
+
+[[symbol]]
+qualname = "optim::optima_04_sequential_qp::The subproblem solvers"
+kind = "page"
+family = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp/the_subproblem_solvers.md"
+summary = "The subproblem solvers"
+
+[[symbol]]
+qualname = "optim::optima_04_sequential_qp::Stopping tolerances"
+kind = "page"
+family = "optim/optima/optima_04_sequential_qp"
+page = "manual/optim/optima/optima_04_sequential_qp/stopping_tolerances.md"
+summary = "Stopping tolerances"
+
+[[symbol]]
+qualname = "optim::optima_05_working_set_and_interior::Watching the active set"
+kind = "page"
+family = "optim/optima/optima_05_working_set_and_interior"
+page = "manual/optim/optima/optima_05_working_set_and_interior/watching_the_active_set.md"
+summary = "Watching the active set"
+
+[[symbol]]
+qualname = "optim::optima_05_working_set_and_interior::Does the active list pay off?"
+kind = "page"
+family = "optim/optima/optima_05_working_set_and_interior"
+page = "manual/optim/optima/optima_05_working_set_and_interior/does_the_active_list_pay_off.md"
+summary = "Does the active list pay off?"
+
+[[symbol]]
+qualname = "optim::optima_05_working_set_and_interior::The working-set options"
+kind = "page"
+family = "optim/optima/optima_05_working_set_and_interior"
+page = "manual/optim/optima/optima_05_working_set_and_interior/the_working_set_options.md"
+summary = "The working-set options"
+
+[[symbol]]
+qualname = "optim::optima_05_working_set_and_interior::Watching the barrier"
+kind = "page"
+family = "optim/optima/optima_05_working_set_and_interior"
+page = "manual/optim/optima/optima_05_working_set_and_interior/watching_the_barrier.md"
+summary = "Watching the barrier"
+
+[[symbol]]
+qualname = "optim::optima_05_working_set_and_interior::The barrier schedule"
+kind = "page"
+family = "optim/optima/optima_05_working_set_and_interior"
+page = "manual/optim/optima/optima_05_working_set_and_interior/the_barrier_schedule.md"
+summary = "The barrier schedule"
+
+[[symbol]]
+qualname = "optim::optima_05_working_set_and_interior::What \"interior\" buys"
+kind = "page"
+family = "optim/optima/optima_05_working_set_and_interior"
+page = "manual/optim/optima/optima_05_working_set_and_interior/what_interior_buys.md"
+summary = "What \"interior\" buys"
+
+[[symbol]]
+qualname = "optim::optima_06_curvature_linear_algebra_scaling::How the model scales with the problem"
+kind = "page"
+family = "optim/optima/optima_06_curvature_linear_algebra_scaling"
+page = "manual/optim/optima/optima_06_curvature_linear_algebra_scaling/how_the_model_scales_with_the_problem.md"
+summary = "How the model scales with the problem"
+
+[[symbol]]
+qualname = "optim::optima_06_curvature_linear_algebra_scaling::The memory of the limited-memory model"
+kind = "page"
+family = "optim/optima/optima_06_curvature_linear_algebra_scaling"
+page = "manual/optim/optima/optima_06_curvature_linear_algebra_scaling/the_memory_of_the_limited_memory_model.md"
+summary = "The memory of the limited-memory model"
+
+[[symbol]]
+qualname = "optim::optima_06_curvature_linear_algebra_scaling::Every algorithm, every model"
+kind = "page"
+family = "optim/optima/optima_06_curvature_linear_algebra_scaling"
+page = "manual/optim/optima/optima_06_curvature_linear_algebra_scaling/every_algorithm_every_model.md"
+summary = "Every algorithm, every model"
+
+[[symbol]]
+qualname = "optim::optima_06_curvature_linear_algebra_scaling::The BFGS safeguard"
+kind = "page"
+family = "optim/optima/optima_06_curvature_linear_algebra_scaling"
+page = "manual/optim/optima/optima_06_curvature_linear_algebra_scaling/the_bfgs_safeguard.md"
+summary = "The BFGS safeguard"
+
+[[symbol]]
+qualname = "optim::optima_06_curvature_linear_algebra_scaling::The step's linear system"
+kind = "page"
+family = "optim/optima/optima_06_curvature_linear_algebra_scaling"
+page = "manual/optim/optima/optima_06_curvature_linear_algebra_scaling/the_step_s_linear_system.md"
+summary = "The step's linear system"
+
+[[symbol]]
+qualname = "optim::optima_06_curvature_linear_algebra_scaling::Units, measured"
+kind = "page"
+family = "optim/optima/optima_06_curvature_linear_algebra_scaling"
+page = "manual/optim/optima/optima_06_curvature_linear_algebra_scaling/units_measured.md"
+summary = "Units, measured"
+
+[[symbol]]
+qualname = "optim::optima_07_derivatives::The same problem, three ways"
+kind = "page"
+family = "optim/optima/optima_07_derivatives"
+page = "manual/optim/optima/optima_07_derivatives/the_same_problem_three_ways.md"
+summary = "The same problem, three ways"
+
+[[symbol]]
+qualname = "optim::optima_07_derivatives::The audit"
+kind = "page"
+family = "optim/optima/optima_07_derivatives"
+page = "manual/optim/optima/optima_07_derivatives/the_audit.md"
+summary = "The audit"
+
+[[symbol]]
+qualname = "optim::optima_07_derivatives::Analytic constraints and their audit"
+kind = "page"
+family = "optim/optima/optima_07_derivatives"
+page = "manual/optim/optima/optima_07_derivatives/analytic_constraints_and_their_audit.md"
+summary = "Analytic constraints and their audit"
+
+[[symbol]]
+qualname = "optim::optima_07_derivatives::Gradients, Jacobians and products on their own"
+kind = "page"
+family = "optim/optima/optima_07_derivatives"
+page = "manual/optim/optima/optima_07_derivatives/gradients_jacobians_and_products_on_their_own.md"
+summary = "Gradients, Jacobians and products on their own"
+
+[[symbol]]
+qualname = "optim::optima_07_derivatives::Counting the calls"
+kind = "page"
+family = "optim/optima/optima_07_derivatives"
+page = "manual/optim/optima/optima_07_derivatives/counting_the_calls.md"
+summary = "Counting the calls"
+
+[[symbol]]
+qualname = "optim::optima_07_derivatives::Long loops without a tape"
+kind = "page"
+family = "optim/optima/optima_07_derivatives"
+page = "manual/optim/optima/optima_07_derivatives/long_loops_without_a_tape.md"
+summary = "Long loops without a tape"
+
+[[symbol]]
+qualname = "optim::optima_08_worked_problems::A minimum-variance portfolio"
+kind = "page"
+family = "optim/optima/optima_08_worked_problems"
+page = "manual/optim/optima/optima_08_worked_problems/a_minimum_variance_portfolio.md"
+summary = "A minimum-variance portfolio"
+
+[[symbol]]
+qualname = "optim::optima_08_worked_problems::A design with a closed-form answer"
+kind = "page"
+family = "optim/optima/optima_08_worked_problems"
+page = "manual/optim/optima/optima_08_worked_problems/a_design_with_a_closed_form_answer.md"
+summary = "A design with a closed-form answer"
+
+[[symbol]]
+qualname = "optim::optima_08_worked_problems::A design that cannot be built"
+kind = "page"
+family = "optim/optima/optima_08_worked_problems"
+page = "manual/optim/optima/optima_08_worked_problems/a_design_that_cannot_be_built.md"
+summary = "A design that cannot be built"
+
+[[symbol]]
+qualname = "optim::optima_08_worked_problems::A maximum-likelihood fit, and what a flag cannot tell you"
+kind = "page"
+family = "optim/optima/optima_08_worked_problems"
+page = "manual/optim/optima/optima_08_worked_problems/a_maximum_likelihood_fit_and_what_a_flag_cannot.md"
+summary = "A maximum-likelihood fit, and what a flag cannot tell you"
+
+[[symbol]]
+qualname = "optim::optima_08_worked_problems::A plant with every kind of constraint"
+kind = "page"
+family = "optim/optima/optima_08_worked_problems"
+page = "manual/optim/optima/optima_08_worked_problems/a_plant_with_every_kind_of_constraint.md"
+summary = "A plant with every kind of constraint"
+
+[[symbol]]
+qualname = "optim::septima_01_first_problems::The smallest problem, and why the defaults are not enough"
+kind = "page"
+family = "optim/septima/septima_01_first_problems"
+page = "manual/optim/septima/septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no.md"
+summary = "The smallest problem, and why the defaults are not enough"
+
+[[symbol]]
+qualname = "optim::septima_01_first_problems::A curved valley"
+kind = "page"
+family = "optim/septima/septima_01_first_problems"
+page = "manual/optim/septima/septima_01_first_problems/a_curved_valley.md"
+summary = "A curved valley"
+
+[[symbol]]
+qualname = "optim::septima_01_first_problems::Three ways to hand over the same objective"
+kind = "page"
+family = "optim/septima/septima_01_first_problems"
+page = "manual/optim/septima/septima_01_first_problems/three_ways_to_hand_over_the_same_objective.md"
+summary = "Three ways to hand over the same objective"
+
+[[symbol]]
+qualname = "optim::septima_01_first_problems::Reading the result"
+kind = "page"
+family = "optim/septima/septima_01_first_problems"
+page = "manual/optim/septima/septima_01_first_problems/reading_the_result.md"
+summary = "Reading the result"
+
+[[symbol]]
+qualname = "optim::septima_01_first_problems::How a run ends"
+kind = "page"
+family = "optim/septima/septima_01_first_problems"
+page = "manual/optim/septima/septima_01_first_problems/how_a_run_ends.md"
+summary = "How a run ends"
+
+[[symbol]]
+qualname = "optim::septima_01_first_problems::Watching a run"
+kind = "page"
+family = "optim/septima/septima_01_first_problems"
+page = "manual/optim/septima/septima_01_first_problems/watching_a_run.md"
+summary = "Watching a run"
+
+[[symbol]]
+qualname = "optim::septima_02_constraints::Bounds"
+kind = "page"
+family = "optim/septima/septima_02_constraints"
+page = "manual/optim/septima/septima_02_constraints/bounds.md"
+summary = "Bounds"
+
+[[symbol]]
+qualname = "optim::septima_02_constraints::An equality constraint"
+kind = "page"
+family = "optim/septima/septima_02_constraints"
+page = "manual/optim/septima/septima_02_constraints/an_equality_constraint.md"
+summary = "An equality constraint"
+
+[[symbol]]
+qualname = "optim::septima_02_constraints::An inequality constraint"
+kind = "page"
+family = "optim/septima/septima_02_constraints"
+page = "manual/optim/septima/septima_02_constraints/an_inequality_constraint.md"
+summary = "An inequality constraint"
+
+[[symbol]]
+qualname = "optim::septima_02_constraints::The same problem in both solvers"
+kind = "page"
+family = "optim/septima/septima_02_constraints"
+page = "manual/optim/septima/septima_02_constraints/the_same_problem_in_both_solvers.md"
+summary = "The same problem in both solvers"
+
+[[symbol]]
+qualname = "optim::septima_03_tuning_and_robustness::The learning rate"
+kind = "page"
+family = "optim/septima/septima_03_tuning_and_robustness"
+page = "manual/optim/septima/septima_03_tuning_and_robustness/the_learning_rate.md"
+summary = "The learning rate"
+
+[[symbol]]
+qualname = "optim::septima_03_tuning_and_robustness::The other Adam settings"
+kind = "page"
+family = "optim/septima/septima_03_tuning_and_robustness"
+page = "manual/optim/septima/septima_03_tuning_and_robustness/the_other_adam_settings.md"
+summary = "The other Adam settings"
+
+[[symbol]]
+qualname = "optim::septima_03_tuning_and_robustness::The L-BFGS settings"
+kind = "page"
+family = "optim/septima/septima_03_tuning_and_robustness"
+page = "manual/optim/septima/septima_03_tuning_and_robustness/the_l_bfgs_settings.md"
+summary = "The L-BFGS settings"
+
+[[symbol]]
+qualname = "optim::septima_03_tuning_and_robustness::An objective that is undefined in part of the space"
+kind = "page"
+family = "optim/septima/septima_03_tuning_and_robustness"
+page = "manual/optim/septima/septima_03_tuning_and_robustness/an_objective_that_is_undefined_in_part_of_the_sp.md"
+summary = "An objective that is undefined in part of the space"
+
+[[symbol]]
+qualname = "optim::septima_03_tuning_and_robustness::What stops a run"
+kind = "page"
+family = "optim/septima/septima_03_tuning_and_robustness"
+page = "manual/optim/septima/septima_03_tuning_and_robustness/what_stops_a_run.md"
+summary = "What stops a run"
+
+[[symbol]]
+qualname = "optim::septima_03_tuning_and_robustness::Precision and complex parameters"
+kind = "page"
+family = "optim/septima/septima_03_tuning_and_robustness"
+page = "manual/optim/septima/septima_03_tuning_and_robustness/precision_and_complex_parameters.md"
+summary = "Precision and complex parameters"
+
+[[symbol]]
+qualname = "optim::septima_04_lsr1_trust_region::A first run, and a comparison"
+kind = "page"
+family = "optim/septima/septima_04_lsr1_trust_region"
+page = "manual/optim/septima/septima_04_lsr1_trust_region/a_first_run_and_a_comparison.md"
+summary = "A first run, and a comparison"
+
+[[symbol]]
+qualname = "optim::septima_04_lsr1_trust_region::Saddles"
+kind = "page"
+family = "optim/septima/septima_04_lsr1_trust_region"
+page = "manual/optim/septima/septima_04_lsr1_trust_region/saddles.md"
+summary = "Saddles"
+
+[[symbol]]
+qualname = "optim::septima_04_lsr1_trust_region::The settings that matter"
+kind = "page"
+family = "optim/septima/septima_04_lsr1_trust_region"
+page = "manual/optim/septima/septima_04_lsr1_trust_region/the_settings_that_matter.md"
+summary = "The settings that matter"
+
+[[symbol]]
+qualname = "optim::septima_04_lsr1_trust_region::Several blocks, and a complex parameter"
+kind = "page"
+family = "optim/septima/septima_04_lsr1_trust_region"
+page = "manual/optim/septima/septima_04_lsr1_trust_region/several_blocks_and_a_complex_parameter.md"
+summary = "Several blocks, and a complex parameter"
+
+[[symbol]]
+qualname = "optim::septima_05_choosing_and_worked_problems::A model fitted to data"
+kind = "page"
+family = "optim/septima/septima_05_choosing_and_worked_problems"
+page = "manual/optim/septima/septima_05_choosing_and_worked_problems/a_model_fitted_to_data.md"
+summary = "A model fitted to data"
+
+[[symbol]]
+qualname = "optim::septima_05_choosing_and_worked_problems::Constrained least squares, checked against Optima"
+kind = "page"
+family = "optim/septima/septima_05_choosing_and_worked_problems"
+page = "manual/optim/septima/septima_05_choosing_and_worked_problems/constrained_least_squares_checked_against_optima.md"
+summary = "Constrained least squares, checked against Optima"
+
+[[symbol]]
+qualname = "optim::septima_05_choosing_and_worked_problems::One function, every solver"
+kind = "page"
+family = "optim/septima/septima_05_choosing_and_worked_problems"
+page = "manual/optim/septima/septima_05_choosing_and_worked_problems/one_function_every_solver.md"
+summary = "One function, every solver"
+
+[[symbol]]
+qualname = "optim::linprog_01_first_programs::A first linear program"
+kind = "page"
+family = "optim/linprog/linprog_01_first_programs"
+page = "manual/optim/linprog/linprog_01_first_programs/a_first_linear_program.md"
+summary = "A first linear program"
+
+[[symbol]]
+qualname = "optim::linprog_01_first_programs::The shapes a requirement can take"
+kind = "page"
+family = "optim/linprog/linprog_01_first_programs"
+page = "manual/optim/linprog/linprog_01_first_programs/the_shapes_a_requirement_can_take.md"
+summary = "The shapes a requirement can take"
+
+[[symbol]]
+qualname = "optim::linprog_01_first_programs::Reading the result"
+kind = "page"
+family = "optim/linprog/linprog_01_first_programs"
+page = "manual/optim/linprog/linprog_01_first_programs/reading_the_result.md"
+summary = "Reading the result"
+
+[[symbol]]
+qualname = "optim::linprog_01_first_programs::How a solve ends"
+kind = "page"
+family = "optim/linprog/linprog_01_first_programs"
+page = "manual/optim/linprog/linprog_01_first_programs/how_a_solve_ends.md"
+summary = "How a solve ends"
+
+[[symbol]]
+qualname = "optim::linprog_01_first_programs::The default bounds"
+kind = "page"
+family = "optim/linprog/linprog_01_first_programs"
+page = "manual/optim/linprog/linprog_01_first_programs/the_default_bounds.md"
+summary = "The default bounds"
+
+[[symbol]]
+qualname = "optim::linprog_02_prices_and_certificates::Prices, checked by re-solving"
+kind = "page"
+family = "optim/linprog/linprog_02_prices_and_certificates"
+page = "manual/optim/linprog/linprog_02_prices_and_certificates/prices_checked_by_re_solving.md"
+summary = "Prices, checked by re-solving"
+
+[[symbol]]
+qualname = "optim::linprog_02_prices_and_certificates::Certificates you can check"
+kind = "page"
+family = "optim/linprog/linprog_02_prices_and_certificates"
+page = "manual/optim/linprog/linprog_02_prices_and_certificates/certificates_you_can_check.md"
+summary = "Certificates you can check"
+
+[[symbol]]
+qualname = "optim::linprog_03_methods_warm_starts_and_sweeps::The two methods on a tie"
+kind = "page"
+family = "optim/linprog/linprog_03_methods_warm_starts_and_sweeps"
+page = "manual/optim/linprog/linprog_03_methods_warm_starts_and_sweeps/the_two_methods_on_a_tie.md"
+summary = "The two methods on a tie"
+
+[[symbol]]
+qualname = "optim::linprog_03_methods_warm_starts_and_sweeps::Restarting from a previous answer"
+kind = "page"
+family = "optim/linprog/linprog_03_methods_warm_starts_and_sweeps"
+page = "manual/optim/linprog/linprog_03_methods_warm_starts_and_sweeps/restarting_from_a_previous_answer.md"
+summary = "Restarting from a previous answer"
+
+[[symbol]]
+qualname = "optim::linprog_03_methods_warm_starts_and_sweeps::Many programs in one call"
+kind = "page"
+family = "optim/linprog/linprog_03_methods_warm_starts_and_sweeps"
+page = "manual/optim/linprog/linprog_03_methods_warm_starts_and_sweeps/many_programs_in_one_call.md"
+summary = "Many programs in one call"
+
+[[symbol]]
+qualname = "optim::linprog_04_large_sparse_models::A transportation model"
+kind = "page"
+family = "optim/linprog/linprog_04_large_sparse_models"
+page = "manual/optim/linprog/linprog_04_large_sparse_models/a_transportation_model.md"
+summary = "A transportation model"
+
+[[symbol]]
+qualname = "optim::linprog_04_large_sparse_models::A model from an MPS file"
+kind = "page"
+family = "optim/linprog/linprog_04_large_sparse_models"
+page = "manual/optim/linprog/linprog_04_large_sparse_models/a_model_from_an_mps_file.md"
+summary = "A model from an MPS file"
+
+[[symbol]]
+qualname = "optim::linprog_04_large_sparse_models::What presolve removes"
+kind = "page"
+family = "optim/linprog/linprog_04_large_sparse_models"
+page = "manual/optim/linprog/linprog_04_large_sparse_models/what_presolve_removes.md"
+summary = "What presolve removes"
+
+[[symbol]]
+qualname = "optim::milp_01_integer_programs::Choosing projects under a budget"
+kind = "page"
+family = "optim/milp/milp_01_integer_programs"
+page = "manual/optim/milp/milp_01_integer_programs/choosing_projects_under_a_budget.md"
+summary = "Choosing projects under a budget"
+
+[[symbol]]
+qualname = "optim::milp_01_integer_programs::Integers that are not 0 or 1, and when the relaxation is enough"
+kind = "page"
+family = "optim/milp/milp_01_integer_programs"
+page = "manual/optim/milp/milp_01_integer_programs/integers_that_are_not_0_or_1_and_when_the_relaxa.md"
+summary = "Integers that are not 0 or 1, and when the relaxation is enough"
+
+[[symbol]]
+qualname = "optim::milp_01_integer_programs::How a search ends"
+kind = "page"
+family = "optim/milp/milp_01_integer_programs"
+page = "manual/optim/milp/milp_01_integer_programs/how_a_search_ends.md"
+summary = "How a search ends"
+
+[[symbol]]
+qualname = "optim::milp_02_larger_integer_models::Where to open warehouses"
+kind = "page"
+family = "optim/milp/milp_02_larger_integer_models"
+page = "manual/optim/milp/milp_02_larger_integer_models/where_to_open_warehouses.md"
+summary = "Where to open warehouses"
+
+[[symbol]]
+qualname = "optim::milp_02_larger_integer_models::A weekly staff schedule"
+kind = "page"
+family = "optim/milp/milp_02_larger_integer_models"
+page = "manual/optim/milp/milp_02_larger_integer_models/a_weekly_staff_schedule.md"
+summary = "A weekly staff schedule"
+
+[[symbol]]
+qualname = "optim::dfo_01_first_problems::A first solve"
+kind = "page"
+family = "optim/dfo/dfo_01_first_problems"
+page = "manual/optim/dfo/dfo_01_first_problems/a_first_solve.md"
+summary = "A first solve"
+
+[[symbol]]
+qualname = "optim::dfo_01_first_problems::Three ways to call"
+kind = "page"
+family = "optim/dfo/dfo_01_first_problems"
+page = "manual/optim/dfo/dfo_01_first_problems/three_ways_to_call.md"
+summary = "Three ways to call"
+
+[[symbol]]
+qualname = "optim::dfo_01_first_problems::What Auto chooses"
+kind = "page"
+family = "optim/dfo/dfo_01_first_problems"
+page = "manual/optim/dfo/dfo_01_first_problems/what_auto_chooses.md"
+summary = "What Auto chooses"
+
+[[symbol]]
+qualname = "optim::dfo_01_first_problems::Budgets and the five statuses"
+kind = "page"
+family = "optim/dfo/dfo_01_first_problems"
+page = "manual/optim/dfo/dfo_01_first_problems/budgets_and_the_five_statuses.md"
+summary = "Budgets and the five statuses"
+
+[[symbol]]
+qualname = "optim::dfo_01_first_problems::Seeds and repeatability"
+kind = "page"
+family = "optim/dfo/dfo_01_first_problems"
+page = "manual/optim/dfo/dfo_01_first_problems/seeds_and_repeatability.md"
+summary = "Seeds and repeatability"
+
+[[symbol]]
+qualname = "optim::dfo_02_the_solvers::Seven methods, four problems"
+kind = "page"
+family = "optim/dfo/dfo_02_the_solvers"
+page = "manual/optim/dfo/dfo_02_the_solvers/seven_methods_four_problems.md"
+summary = "Seven methods, four problems"
+
+[[symbol]]
+qualname = "optim::dfo_02_the_solvers::Restarting a local method"
+kind = "page"
+family = "optim/dfo/dfo_02_the_solvers"
+page = "manual/optim/dfo/dfo_02_the_solvers/restarting_a_local_method.md"
+summary = "Restarting a local method"
+
+[[symbol]]
+qualname = "optim::dfo_03_bounds_and_constraints::Bounds only"
+kind = "page"
+family = "optim/dfo/dfo_03_bounds_and_constraints"
+page = "manual/optim/dfo/dfo_03_bounds_and_constraints/bounds_only.md"
+summary = "Bounds only"
+
+[[symbol]]
+qualname = "optim::dfo_03_bounds_and_constraints::Inequality constraints"
+kind = "page"
+family = "optim/dfo/dfo_03_bounds_and_constraints"
+page = "manual/optim/dfo/dfo_03_bounds_and_constraints/inequality_constraints.md"
+summary = "Inequality constraints"
+
+[[symbol]]
+qualname = "optim::dfo_03_bounds_and_constraints::Equality constraints"
+kind = "page"
+family = "optim/dfo/dfo_03_bounds_and_constraints"
+page = "manual/optim/dfo/dfo_03_bounds_and_constraints/equality_constraints.md"
+summary = "Equality constraints"
+
+[[symbol]]
+qualname = "optim::dfo_03_bounds_and_constraints::Mesh methods with constraints"
+kind = "page"
+family = "optim/dfo/dfo_03_bounds_and_constraints"
+page = "manual/optim/dfo/dfo_03_bounds_and_constraints/mesh_methods_with_constraints.md"
+summary = "Mesh methods with constraints"
+
+[[symbol]]
+qualname = "optim::dfo_03_bounds_and_constraints::No feasible point"
+kind = "page"
+family = "optim/dfo/dfo_03_bounds_and_constraints"
+page = "manual/optim/dfo/dfo_03_bounds_and_constraints/no_feasible_point.md"
+summary = "No feasible point"
+
+[[symbol]]
+qualname = "optim::dfo_04_black_boxes::A function that fails"
+kind = "page"
+family = "optim/dfo/dfo_04_black_boxes"
+page = "manual/optim/dfo/dfo_04_black_boxes/a_function_that_fails.md"
+summary = "A function that fails"
+
+[[symbol]]
+qualname = "optim::dfo_04_black_boxes::The cache"
+kind = "page"
+family = "optim/dfo/dfo_04_black_boxes"
+page = "manual/optim/dfo/dfo_04_black_boxes/the_cache.md"
+summary = "The cache"
+
+[[symbol]]
+qualname = "optim::dfo_04_black_boxes::Two objectives"
+kind = "page"
+family = "optim/dfo/dfo_04_black_boxes"
+page = "manual/optim/dfo/dfo_04_black_boxes/two_objectives.md"
+summary = "Two objectives"
+
+[[symbol]]
+qualname = "optim::dfo_04_black_boxes::Constraint handling"
+kind = "page"
+family = "optim/dfo/dfo_04_black_boxes"
+page = "manual/optim/dfo/dfo_04_black_boxes/constraint_handling.md"
+summary = "Constraint handling"
+
+[[symbol]]
+qualname = "optim::dfo_05_worked_problems::Fitting a curve"
+kind = "page"
+family = "optim/dfo/dfo_05_worked_problems"
+page = "manual/optim/dfo/dfo_05_worked_problems/fitting_a_curve.md"
+summary = "Fitting a curve"
+
+[[symbol]]
+qualname = "optim::dfo_05_worked_problems::Verifying an answer"
+kind = "page"
+family = "optim/dfo/dfo_05_worked_problems"
+page = "manual/optim/dfo/dfo_05_worked_problems/verifying_an_answer.md"
+summary = "Verifying an answer"
+
+[[symbol]]
+qualname = "optim::dfo_06_nelder_mead::A direct call"
+kind = "page"
+family = "optim/dfo/dfo_06_nelder_mead"
+page = "manual/optim/dfo/dfo_06_nelder_mead/a_direct_call.md"
+summary = "A direct call"
+
+[[symbol]]
+qualname = "optim::dfo_06_nelder_mead::The settings, one at a time"
+kind = "page"
+family = "optim/dfo/dfo_06_nelder_mead"
+page = "manual/optim/dfo/dfo_06_nelder_mead/the_settings_one_at_a_time.md"
+summary = "The settings, one at a time"
+
+[[symbol]]
+qualname = "optim::dfo_06_nelder_mead::Forbidden regions"
+kind = "page"
+family = "optim/dfo/dfo_06_nelder_mead"
+page = "manual/optim/dfo/dfo_06_nelder_mead/forbidden_regions.md"
+summary = "Forbidden regions"
+
+[[symbol]]
+qualname = "optim::dfo_06_nelder_mead::Shapes and dtypes"
+kind = "page"
+family = "optim/dfo/dfo_06_nelder_mead"
+page = "manual/optim/dfo/dfo_06_nelder_mead/shapes_and_dtypes.md"
+summary = "Shapes and dtypes"
+
+[[symbol]]
+qualname = "optim::dfo_07_pattern_search::A direct call"
+kind = "page"
+family = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search/a_direct_call.md"
+summary = "A direct call"
+
+[[symbol]]
+qualname = "optim::dfo_07_pattern_search::The poll"
+kind = "page"
+family = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search/the_poll.md"
+summary = "The poll"
+
+[[symbol]]
+qualname = "optim::dfo_07_pattern_search::The search step"
+kind = "page"
+family = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search/the_search_step.md"
+summary = "The search step"
+
+[[symbol]]
+qualname = "optim::dfo_07_pattern_search::The mesh"
+kind = "page"
+family = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search/the_mesh.md"
+summary = "The mesh"
+
+[[symbol]]
+qualname = "optim::dfo_07_pattern_search::Linear constraints"
+kind = "page"
+family = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search/linear_constraints.md"
+summary = "Linear constraints"
+
+[[symbol]]
+qualname = "optim::dfo_07_pattern_search::Nonlinear constraints and their policies"
+kind = "page"
+family = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search/nonlinear_constraints_and_their_policies.md"
+summary = "Nonlinear constraints and their policies"
+
+[[symbol]]
+qualname = "optim::dfo_07_pattern_search::Budgets and the cache"
+kind = "page"
+family = "optim/dfo/dfo_07_pattern_search"
+page = "manual/optim/dfo/dfo_07_pattern_search/budgets_and_the_cache.md"
+summary = "Budgets and the cache"
+
+[[symbol]]
+qualname = "optim::dfo_08_differential_evolution::A direct call"
+kind = "page"
+family = "optim/dfo/dfo_08_differential_evolution"
+page = "manual/optim/dfo/dfo_08_differential_evolution/a_direct_call.md"
+summary = "A direct call"
+
+[[symbol]]
+qualname = "optim::dfo_08_differential_evolution::The parameters"
+kind = "page"
+family = "optim/dfo/dfo_08_differential_evolution"
+page = "manual/optim/dfo/dfo_08_differential_evolution/the_parameters.md"
+summary = "The parameters"
+
+[[symbol]]
+qualname = "optim::dfo_08_differential_evolution::Seeds and execution modes"
+kind = "page"
+family = "optim/dfo/dfo_08_differential_evolution"
+page = "manual/optim/dfo/dfo_08_differential_evolution/seeds_and_execution_modes.md"
+summary = "Seeds and execution modes"
+
+[[symbol]]
+qualname = "optim::dfo_08_differential_evolution::Where the population starts"
+kind = "page"
+family = "optim/dfo/dfo_08_differential_evolution"
+page = "manual/optim/dfo/dfo_08_differential_evolution/where_the_population_starts.md"
+summary = "Where the population starts"
+
+[[symbol]]
+qualname = "optim::dfo_08_differential_evolution::Stopping"
+kind = "page"
+family = "optim/dfo/dfo_08_differential_evolution"
+page = "manual/optim/dfo/dfo_08_differential_evolution/stopping.md"
+summary = "Stopping"
+
+[[symbol]]
+qualname = "optim::dfo_08_differential_evolution::The self-adapting variant"
+kind = "page"
+family = "optim/dfo/dfo_08_differential_evolution"
+page = "manual/optim/dfo/dfo_08_differential_evolution/the_self_adapting_variant.md"
+summary = "The self-adapting variant"
+
+[[symbol]]
+qualname = "optim::dfo_09_particle_swarm::A direct call"
+kind = "page"
+family = "optim/dfo/dfo_09_particle_swarm"
+page = "manual/optim/dfo/dfo_09_particle_swarm/a_direct_call.md"
+summary = "A direct call"
+
+[[symbol]]
+qualname = "optim::dfo_09_particle_swarm::The parameters"
+kind = "page"
+family = "optim/dfo/dfo_09_particle_swarm"
+page = "manual/optim/dfo/dfo_09_particle_swarm/the_parameters.md"
+summary = "The parameters"
+
+[[symbol]]
+qualname = "optim::dfo_09_particle_swarm::The differential-evolution variant"
+kind = "page"
+family = "optim/dfo/dfo_09_particle_swarm"
+page = "manual/optim/dfo/dfo_09_particle_swarm/the_differential_evolution_variant.md"
+summary = "The differential-evolution variant"
+
+[[symbol]]
+qualname = "optim::dfo_09_particle_swarm::Stopping and execution modes"
+kind = "page"
+family = "optim/dfo/dfo_09_particle_swarm"
+page = "manual/optim/dfo/dfo_09_particle_swarm/stopping_and_execution_modes.md"
+summary = "Stopping and execution modes"
+
+[[symbol]]
+qualname = "optim::dfo_10_mesh_adaptive_search::A direct call"
+kind = "page"
+family = "optim/dfo/dfo_10_mesh_adaptive_search"
+page = "manual/optim/dfo/dfo_10_mesh_adaptive_search/a_direct_call.md"
+summary = "A direct call"
+
+[[symbol]]
+qualname = "optim::dfo_10_mesh_adaptive_search::The two poll schemes"
+kind = "page"
+family = "optim/dfo/dfo_10_mesh_adaptive_search"
+page = "manual/optim/dfo/dfo_10_mesh_adaptive_search/the_two_poll_schemes.md"
+summary = "The two poll schemes"
+
+[[symbol]]
+qualname = "optim::dfo_10_mesh_adaptive_search::The mesh and the frame"
+kind = "page"
+family = "optim/dfo/dfo_10_mesh_adaptive_search"
+page = "manual/optim/dfo/dfo_10_mesh_adaptive_search/the_mesh_and_the_frame.md"
+summary = "The mesh and the frame"
+
+[[symbol]]
+qualname = "optim::dfo_10_mesh_adaptive_search::The search step and bounds"
+kind = "page"
+family = "optim/dfo/dfo_10_mesh_adaptive_search"
+page = "manual/optim/dfo/dfo_10_mesh_adaptive_search/the_search_step_and_bounds.md"
+summary = "The search step and bounds"
+
+[[symbol]]
+qualname = "optim::dfo_10_mesh_adaptive_search::Stopping"
+kind = "page"
+family = "optim/dfo/dfo_10_mesh_adaptive_search"
+page = "manual/optim/dfo/dfo_10_mesh_adaptive_search/stopping.md"
+summary = "Stopping"
+
+[[symbol]]
+qualname = "optim::dfo_11_mads_black_box::A direct call"
+kind = "page"
+family = "optim/dfo/dfo_11_mads_black_box"
+page = "manual/optim/dfo/dfo_11_mads_black_box/a_direct_call.md"
+summary = "A direct call"
+
+[[symbol]]
+qualname = "optim::dfo_11_mads_black_box::Weighted sum or Chebyshev"
+kind = "page"
+family = "optim/dfo/dfo_11_mads_black_box"
+page = "manual/optim/dfo/dfo_11_mads_black_box/weighted_sum_or_chebyshev.md"
+summary = "Weighted sum or Chebyshev"
+
+[[symbol]]
+qualname = "optim::dfo_11_mads_black_box::The surrogate"
+kind = "page"
+family = "optim/dfo/dfo_11_mads_black_box"
+page = "manual/optim/dfo/dfo_11_mads_black_box/the_surrogate.md"
+summary = "The surrogate"
+
+[[symbol]]
+qualname = "optim::dfo_11_mads_black_box::What counts as an evaluation"
+kind = "page"
+family = "optim/dfo/dfo_11_mads_black_box"
+page = "manual/optim/dfo/dfo_11_mads_black_box/what_counts_as_an_evaluation.md"
+summary = "What counts as an evaluation"
+
+[[symbol]]
+qualname = "optim::dfo_11_mads_black_box::The Pareto archive"
+kind = "page"
+family = "optim/dfo/dfo_11_mads_black_box"
+page = "manual/optim/dfo/dfo_11_mads_black_box/the_pareto_archive.md"
+summary = "The Pareto archive"
+
+[[symbol]]
+qualname = "optim::dfo_12_mads_variants::Cooperative MADS"
+kind = "page"
+family = "optim/dfo/dfo_12_mads_variants"
+page = "manual/optim/dfo/dfo_12_mads_variants/cooperative_mads.md"
+summary = "Cooperative MADS"
+
+[[symbol]]
+qualname = "optim::dfo_12_mads_variants::Partial-space decomposition"
+kind = "page"
+family = "optim/dfo/dfo_12_mads_variants"
+page = "manual/optim/dfo/dfo_12_mads_variants/partial_space_decomposition.md"
+summary = "Partial-space decomposition"
+
+[[symbol]]
+qualname = "optim::dfo_12_mads_variants::Disco MADS"
+kind = "page"
+family = "optim/dfo/dfo_12_mads_variants"
+page = "manual/optim/dfo/dfo_12_mads_variants/disco_mads.md"
+summary = "Disco MADS"
+
+[[symbol]]
+qualname = "optim::dfo_12_mads_variants::Variable-neighbourhood MADS"
+kind = "page"
+family = "optim/dfo/dfo_12_mads_variants"
+page = "manual/optim/dfo/dfo_12_mads_variants/variable_neighbourhood_mads.md"
+summary = "Variable-neighbourhood MADS"
+
+[[symbol]]
+qualname = "optim::roots_01_solving_equations::A first root"
+kind = "page"
+family = "optim/roots/roots_01_solving_equations"
+page = "manual/optim/roots/roots_01_solving_equations/a_first_root.md"
+summary = "A first root"
+
+[[symbol]]
+qualname = "optim::roots_01_solving_equations::Many equations at once"
+kind = "page"
+family = "optim/roots/roots_01_solving_equations"
+page = "manual/optim/roots/roots_01_solving_equations/many_equations_at_once.md"
+summary = "Many equations at once"
+
+[[symbol]]
+qualname = "optim::roots_01_solving_equations::The methods compared"
+kind = "page"
+family = "optim/roots/roots_01_solving_equations"
+page = "manual/optim/roots/roots_01_solving_equations/the_methods_compared.md"
+summary = "The methods compared"
+
+[[symbol]]
+qualname = "optim::roots_01_solving_equations::Tolerances, check cadence and brackets"
+kind = "page"
+family = "optim/roots/roots_01_solving_equations"
+page = "manual/optim/roots/roots_01_solving_equations/tolerances_check_cadence_and_brackets.md"
+summary = "Tolerances, check cadence and brackets"
+
+[[symbol]]
+qualname = "optim::roots_01_solving_equations::A fourth-order solver and the derivative of the root"
+kind = "page"
+family = "optim/roots/roots_01_solving_equations"
+page = "manual/optim/roots/roots_01_solving_equations/a_fourth_order_solver_and_the_derivative_of_the.md"
+summary = "A fourth-order solver and the derivative of the root"
+
+[[symbol]]
+qualname = "optim::qp_01_quadratic_programs::A first QP"
+kind = "page"
+family = "optim/qp/qp_01_quadratic_programs"
+page = "manual/optim/qp/qp_01_quadratic_programs/a_first_qp.md"
+summary = "A first QP"
+
+[[symbol]]
+qualname = "optim::qp_01_quadratic_programs::The constraint forms"
+kind = "page"
+family = "optim/qp/qp_01_quadratic_programs"
+page = "manual/optim/qp/qp_01_quadratic_programs/the_constraint_forms.md"
+summary = "The constraint forms"
+
+[[symbol]]
+qualname = "optim::qp_01_quadratic_programs::Batches and reuse"
+kind = "page"
+family = "optim/qp/qp_01_quadratic_programs"
+page = "manual/optim/qp/qp_01_quadratic_programs/batches_and_reuse.md"
+summary = "Batches and reuse"
+
+[[symbol]]
+qualname = "optim::qp_01_quadratic_programs::Warm starts and options"
+kind = "page"
+family = "optim/qp/qp_01_quadratic_programs"
+page = "manual/optim/qp/qp_01_quadratic_programs/warm_starts_and_options.md"
+summary = "Warm starts and options"
+
+[[symbol]]
+qualname = "optim::Optima algorithms"
+kind = "page"
+family = "optim/optima"
+page = "manual/optim/optima/optima_algorithms.md"
+summary = "Optima algorithms"
+
+[[symbol]]
+qualname = "optim::Optima sequential QP"
+kind = "page"
+family = "optim/optima"
+page = "manual/optim/optima/optima_sequential_qp.md"
+summary = "Optima sequential QP"
+
+[[symbol]]
+qualname = "optim::Optimizer surfaces"
+kind = "page"
+family = "optim/optima"
+page = "manual/optim/optima/optimizer_surfaces.md"
+summary = "Optimizer surfaces"
+
+[[symbol]]
+qualname = "optim::Optima internal protocol"
+kind = "page"
+family = "optim/optima"
+page = "manual/optim/optima/optima_internal_protocol.md"
+summary = "Optima internal protocol"

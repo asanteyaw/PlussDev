@@ -197,10 +197,57 @@ void maybe_print_iteration(const MadsState& state, BlackboxSolverDisplay display
   std::cout << oss.str() << "\n";
 }
 
-Series poll_offsets_ortho_2n(std::int64_t n_dim, double frame_size, const Config& cfg) {
-  const Series basis = pluss::series::eye(n_dim, n_dim, cfg).mul(frame_size);
-  const Series opposite = basis.neg();
-  return basis.unite(std::vector<Series>{opposite}, 0);
+// Radical inverse of `index` in the given prime base: the van der Corput digit reversal that Halton sequences are built from.
+double radical_inverse(std::int64_t index, std::int64_t base) {
+  double result = 0.0;
+  double fraction = 1.0 / static_cast<double>(base);
+  while (index > 0) {
+    result += fraction * static_cast<double>(index % base);
+    index /= base;
+    fraction /= static_cast<double>(base);
+  }
+  return result;
+}
+
+std::int64_t nth_prime(std::int64_t n) {  // n = 0 is 2
+  std::int64_t count = -1;
+  for (std::int64_t candidate = 2;; ++candidate) {
+    bool prime = true;
+    for (std::int64_t d = 2; d * d <= candidate; ++d) {
+      if (candidate % d == 0) { prime = false; break; }
+    }
+    if (prime && ++count == n) return candidate;
+  }
+}
+
+// The poll directions of OrthoMADS: an orthonormal basis (and its negatives), different at every iteration. A point of the
+// Halton sequence gives a direction u in the unit sphere, and the Householder reflection  Q = I - 2 u u'  turns the
+// coordinate axes into an orthonormal basis that is turned a little further at each iteration, so that the directions
+// polled become dense in the sphere as the poll size shrinks. A fixed set of coordinate axes would be coordinate
+// pattern search: it cannot move along a diagonal constraint boundary, whatever the mesh.
+Series poll_offsets_ortho_2n(std::int64_t n_dim, double frame_size, const Config& cfg, std::int64_t halton_index) {
+  std::vector<double> u(static_cast<std::size_t>(n_dim));
+  double norm2 = 0.0;
+  for (std::int64_t i = 0; i < n_dim; ++i) {
+    u[static_cast<std::size_t>(i)] = 2.0 * radical_inverse(halton_index, nth_prime(i)) - 1.0;
+    norm2 += u[static_cast<std::size_t>(i)] * u[static_cast<std::size_t>(i)];
+  }
+  if (norm2 < 1e-12) {
+    std::fill(u.begin(), u.end(), 0.0);
+    u[0] = 1.0;
+    norm2 = 1.0;
+  }
+  const double norm = std::sqrt(norm2);
+  for (double& v : u) v /= norm;
+  std::vector<double> offsets(static_cast<std::size_t>(2 * n_dim * n_dim), 0.0);
+  for (std::int64_t i = 0; i < n_dim; ++i) {      // row i of Q is the image of axis i (Q is symmetric)
+    for (std::int64_t j = 0; j < n_dim; ++j) {
+      const double q = (i == j ? 1.0 : 0.0) - 2.0 * u[static_cast<std::size_t>(i)] * u[static_cast<std::size_t>(j)];
+      offsets[static_cast<std::size_t>(i * n_dim + j)] = frame_size * q;
+      offsets[static_cast<std::size_t>((i + n_dim) * n_dim + j)] = -frame_size * q;
+    }
+  }
+  return pluss::make_series(offsets, {2 * n_dim, n_dim}, cfg).to(cfg.platform, cfg.dtype);
 }
 
 Series poll_offsets_ltmads_random_2n(
@@ -295,7 +342,11 @@ CandidateBatchOutcome evaluate_offsets(
     const double value = eval_candidate(objective, point, original_shape, op);
     ++out.evaluations;
 
-    if (value + min_improvement < out.best_value) {
+    // An improvement smaller than rounding error in the objective is not progress; without this floor the last digits of a
+    // flat minimum keep registering as successes, the frame keeps growing back, and the run never reaches `mesh_tolerance`.
+    const double rounding_floor = std::isfinite(out.best_value)
+        ? 8.0 * std::numeric_limits<double>::epsilon() * std::abs(out.best_value) : 0.0;
+    if (value + std::max(min_improvement, rounding_floor) < out.best_value) {
       out.best_value = value;
       out.best_point = point;
       out.improved = true;
@@ -433,7 +484,7 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
     if (!improved && next.evaluations < max_evaluations) {
       Series poll_offsets = pluss::series::undefined();
       if (config.poll_scheme == MadsPollScheme::Ortho2N) {
-        poll_offsets = poll_offsets_ortho_2n(n_dim, next.frame_size, setup.work_cfg);
+        poll_offsets = poll_offsets_ortho_2n(n_dim, next.frame_size, setup.work_cfg, next.iterations);
       } else {
         poll_offsets = poll_offsets_ltmads_random_2n(
             n_dim, next.frame_size, setup.work_cfg, &host_rng);
@@ -464,23 +515,24 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
     }
 
     if (improved) {
-      next.mesh_size *= config.mesh_expand_factor;
       next.frame_size *= config.frame_expand_factor;
+      next.mesh_size = std::min(next.mesh_size * config.mesh_expand_factor, next.frame_size);
     } else {
-      next.mesh_size *= config.mesh_refine_factor;
       next.frame_size *= config.frame_refine_factor;
+      next.mesh_size = std::min(next.mesh_size * config.mesh_refine_factor, next.frame_size);
       next.last_phase = "refine_mesh";
     }
 
     maybe_print_iteration(next, config.display);
 
-    const bool rel_conv = converged_by_relative_improvement(
+    // check_every < 1 switches the improvement-window test off, leaving the frame size as the only convergence test
+    const bool rel_conv = config.check_every < 1 || converged_by_relative_improvement(
         next.iterations,
         config.check_every,
         next.best_value,
         &next.check_best,
         config.relative_improvement_tolerance);
-    const bool mesh_conv = next.mesh_size <= config.mesh_tolerance;
+    const bool mesh_conv = next.frame_size <= config.mesh_tolerance;  // the poll size is the accuracy reached
     state = std::move(next);
     if (rel_conv && mesh_conv) {
       converged = true;
@@ -826,6 +878,16 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
         dominated = true;
         break;
       }
+      // A point with the same objective vector as an archived one adds nothing; without this the archive fills with
+      // repeats of the point the search keeps returning to, and the size limit then pushes the real front out.
+      bool same = old.size() == obj_values.size();
+      for (std::size_t k = 0; same && k < old.size(); ++k) {
+        same = std::abs(old[k] - obj_values[k]) <= config.pareto_epsilon;
+      }
+      if (same) {
+        dominated = true;
+        break;
+      }
     }
     if (dominated) {
       return;
@@ -859,9 +921,30 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
 
     if (config.pareto_archive_limit > 0 &&
         static_cast<std::int64_t>(new_points.size()) > config.pareto_archive_limit) {
-      new_points.erase(new_points.begin());
-      new_objs.erase(new_objs.begin());
-      new_vals.erase(new_vals.begin());
+      // Over the limit: drop the most crowded entry, the one whose nearest neighbour in objective space is closest, so the
+      // archive keeps its spread along the front. (Dropping the oldest instead would leave only the cluster of points
+      // the search converged on.)
+      std::size_t crowded = 0;
+      double crowded_gap = std::numeric_limits<double>::infinity();
+      for (std::size_t i = 0; i < new_vals.size(); ++i) {
+        double nearest = std::numeric_limits<double>::infinity();
+        for (std::size_t j = 0; j < new_vals.size(); ++j) {
+          if (i == j) continue;
+          double d2 = 0.0;
+          for (std::size_t k = 0; k < new_vals[i].size(); ++k) {
+            const double dk = new_vals[i][k] - new_vals[j][k];
+            d2 += dk * dk;
+          }
+          nearest = std::min(nearest, d2);
+        }
+        if (nearest < crowded_gap) {
+          crowded_gap = nearest;
+          crowded = i;
+        }
+      }
+      new_points.erase(new_points.begin() + static_cast<std::ptrdiff_t>(crowded));
+      new_objs.erase(new_objs.begin() + static_cast<std::ptrdiff_t>(crowded));
+      new_vals.erase(new_vals.begin() + static_cast<std::ptrdiff_t>(crowded));
     }
 
     pareto_points = std::move(new_points);
@@ -984,8 +1067,10 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     }
 
     const Series base = anchor.reshape({1, n_cols}).expand(std::vector<std::int64_t>{n_rows, n_cols});
+    // Cast to the heavy dtype BEFORE moving to the heavy platform: an accelerator that has no float64 rejects a float64 transfer.
     const Series candidates = base.add(offsets)
-                                .to(heavy_cfg.platform, heavy_cfg.dtype)
+                                .to(heavy_cfg.dtype)
+                                .to(heavy_cfg.platform)
                                 .contiguous();
 
     std::vector<double> train_flat(
@@ -1000,14 +1085,16 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     const Series train_points = pluss::make_series(
                                     train_flat,
                                     {static_cast<std::int64_t>(train_x.size()), n_cols},
-                                    Config{}.with_dtype(ScalarType::Float64).with_platform(heavy_cfg.platform))
-                                    .to(heavy_cfg.platform, heavy_cfg.dtype)
+                                    Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
+                                    .to(heavy_cfg.dtype)
+                                    .to(heavy_cfg.platform)
                                     .contiguous();
     const Series train_merit = pluss::make_series(
                                    train_y,
                                    {static_cast<std::int64_t>(train_y.size()), 1},
-                                   Config{}.with_dtype(ScalarType::Float64).with_platform(heavy_cfg.platform))
-                                   .to(heavy_cfg.platform, heavy_cfg.dtype)
+                                   Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
+                                   .to(heavy_cfg.dtype)
+                                   .to(heavy_cfg.platform)
                                    .contiguous();
 
     const double bw = (config.surrogate_bandwidth > 0.0)
@@ -1023,7 +1110,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     const Series wsum = weights.sum(1, true).maximum(1e-20);
     const Series predicted = weights.matmul(train_merit).div(wsum).reshape({n_rows});
 
-    const Series order_series = predicted.to(ScalarType::Float64).argsort(0, false);
+    const Series order_series = predicted.to(pluss::pCPU).to(ScalarType::Float64).argsort(0, false);  // leave the accelerator before widening
     const std::vector<std::int64_t> order =
         order_series.to(ScalarType::Int64).to_vec<std::int64_t>();
 
@@ -1080,7 +1167,9 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       const Series candidate = project_to_bounds_and_mesh(
           candidates.select(0, i), bounds, anchor, state.mesh_size);
       const AdvancedEvalRecord eval = evaluate_point(candidate);
-      if (eval.merit + config.min_improvement < out.best_merit) {
+      const double merit_floor = std::isfinite(out.best_merit)
+          ? 8.0 * std::numeric_limits<double>::epsilon() * std::abs(out.best_merit) : 0.0;
+      if (eval.merit + std::max(config.min_improvement, merit_floor) < out.best_merit) {
         out.best_merit = eval.merit;
         out.best_point = candidate;
         out.best_objectives = eval.objectives.to(setup.work_cfg.platform, setup.work_cfg.dtype);
@@ -1126,7 +1215,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
         state.total_evaluations < max_total_evaluations) {
       Series poll_offsets = pluss::series::undefined();
       if (config.poll_scheme == MadsPollScheme::Ortho2N) {
-        poll_offsets = poll_offsets_ortho_2n(n_dim, state.frame_size, setup.work_cfg);
+        poll_offsets = poll_offsets_ortho_2n(n_dim, state.frame_size, setup.work_cfg, state.iterations);
       } else {
         poll_offsets = poll_offsets_ltmads_random_2n(
             n_dim, state.frame_size, setup.work_cfg, &host_rng);
@@ -1144,11 +1233,11 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     }
 
     if (improved) {
-      state.mesh_size *= config.mesh_expand_factor;
       state.frame_size *= config.frame_expand_factor;
+      state.mesh_size = std::min(state.mesh_size * config.mesh_expand_factor, state.frame_size);
     } else {
-      state.mesh_size *= config.mesh_refine_factor;
       state.frame_size *= config.frame_refine_factor;
+      state.mesh_size = std::min(state.mesh_size * config.mesh_refine_factor, state.frame_size);
       state.last_phase = "refine_mesh";
     }
 
@@ -1164,13 +1253,14 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
             .last_phase = state.last_phase},
         config.display);
 
-    const bool rel_conv = converged_by_relative_improvement(
+    // check_every < 1 switches the improvement-window test off, leaving the frame size as the only convergence test
+    const bool rel_conv = config.check_every < 1 || converged_by_relative_improvement(
         state.iterations,
         config.check_every,
         state.best_merit,
         &state.check_best,
         config.relative_improvement_tolerance);
-    const bool mesh_conv = state.mesh_size <= config.mesh_tolerance;
+    const bool mesh_conv = state.frame_size <= config.mesh_tolerance;  // the poll size is the accuracy reached
     if (rel_conv && mesh_conv) {
       converged = true;
       break;
@@ -1262,6 +1352,35 @@ double outcome_score(const BlackboxAdvancedOutcome& out) {
   return out.scalarized_minimum;
 }
 
+
+// A decomposition solver spends part of the budget on its blocks and the rest on a final full-space run from the best point,
+// because blocks cannot see the coupling between variables in different blocks; that last run is what removes the error the
+// coupling leaves behind. The budgets are resolved first, so that an unset budget is divided too, not multiplied.
+struct DecompositionBudget {
+  std::int64_t iterations{0};
+  std::int64_t evaluations{0};
+  std::int64_t total{0};
+  MadsBlackboxAdvancedConfig polish{};
+  bool has_polish{false};
+};
+
+DecompositionBudget split_decomposition_budget(const MadsBlackboxAdvancedConfig& base, std::int64_t n, double polish_fraction) {
+  const double frac = std::clamp(polish_fraction, 0.0, 0.9);
+  const std::int64_t evals = (base.max_evaluations > 0) ? base.max_evaluations : (500 * n);
+  const std::int64_t iters = (base.max_iterations > 0) ? base.max_iterations : (250 * n);
+  const std::int64_t total = (base.max_total_evaluations > 0) ? base.max_total_evaluations : (4 * evals);
+  DecompositionBudget out;
+  out.iterations = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::llround(static_cast<double>(iters) * (1.0 - frac))));
+  out.evaluations = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::llround(static_cast<double>(evals) * (1.0 - frac))));
+  out.total = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::llround(static_cast<double>(total) * (1.0 - frac))));
+  out.polish = base;
+  out.polish.max_iterations = std::max<std::int64_t>(1, iters - out.iterations);
+  out.polish.max_evaluations = std::max<std::int64_t>(1, evals - out.evaluations);
+  out.polish.max_total_evaluations = std::max<std::int64_t>(1, total - out.total);
+  out.has_polish = frac > 0.0;
+  return out;
+}
+
 bool better_outcome(const BlackboxAdvancedOutcome& a, const BlackboxAdvancedOutcome& b) {
   const double sa = outcome_score(a);
   const double sb = outcome_score(b);
@@ -1315,6 +1434,7 @@ BlackboxAdvancedOutcome coopmads_blackbox_minimizer(
           ? config.subproblems_per_round
           : ((n + subsize - 1) / subsize));
 
+  const DecompositionBudget budget = split_decomposition_budget(config.base, n, config.polish_fraction);
   Series incumbent = setup.flat_initial;
   if (bounds.enabled) {
     incumbent = project_flat_to_bounds(incumbent, bounds.lower, bounds.upper);
@@ -1351,15 +1471,9 @@ BlackboxAdvancedOutcome coopmads_blackbox_minimizer(
       const Series anchor_full = incumbent;
       const Series sub_initial = subset_from_indices(anchor_full, idx, setup.work_cfg);
       MadsBlackboxAdvancedConfig sub_cfg = config.base;
-      if (sub_cfg.max_iterations > 0) {
-        sub_cfg.max_iterations = std::max<std::int64_t>(1, sub_cfg.max_iterations / (rounds * subproblems_per_round));
-      }
-      if (sub_cfg.max_evaluations > 0) {
-        sub_cfg.max_evaluations = std::max<std::int64_t>(1, sub_cfg.max_evaluations / (rounds * subproblems_per_round));
-      }
-      if (sub_cfg.max_total_evaluations > 0) {
-        sub_cfg.max_total_evaluations = std::max<std::int64_t>(1, sub_cfg.max_total_evaluations / (rounds * subproblems_per_round));
-      }
+      sub_cfg.max_iterations = std::max<std::int64_t>(1, budget.iterations / (rounds * subproblems_per_round));
+      sub_cfg.max_evaluations = std::max<std::int64_t>(1, budget.evaluations / (rounds * subproblems_per_round));
+      sub_cfg.max_total_evaluations = std::max<std::int64_t>(1, budget.total / (rounds * subproblems_per_round));
       if (bounds.enabled) {
         sub_cfg.lower_bounds = subset_from_indices(bounds.lower, idx, setup.work_cfg);
         sub_cfg.upper_bounds = subset_from_indices(bounds.upper, idx, setup.work_cfg);
@@ -1399,6 +1513,15 @@ BlackboxAdvancedOutcome coopmads_blackbox_minimizer(
     }
   }
 
+  if (budget.has_polish) {
+    const Series start = best.minimizer;
+    const BlackboxAdvancedOutcome polished = mads_blackbox_minimizer(blackbox, start, budget.polish);
+    merge_advanced_diagnostics(&agg, polished.diagnostics);
+    if (better_outcome(polished, best)) {
+      best = polished;
+    }
+  }
+
   best.diagnostics = agg;
   best.diagnostics.last_phase = "coop_complete";
   return best;
@@ -1422,6 +1545,7 @@ BlackboxAdvancedOutcome psdmads_blackbox_minimizer(
       n);
   const std::int64_t subproblems_per_round = std::max<std::int64_t>(1, config.subproblems_per_round);
 
+  const DecompositionBudget budget = split_decomposition_budget(config.base, n, config.polish_fraction);
   Series incumbent = setup.flat_initial;
   if (bounds.enabled) {
     incumbent = project_flat_to_bounds(incumbent, bounds.lower, bounds.upper);
@@ -1451,15 +1575,9 @@ BlackboxAdvancedOutcome psdmads_blackbox_minimizer(
       const Series anchor_full = incumbent;
       const Series sub_initial = subset_from_indices(anchor_full, idx, setup.work_cfg);
       MadsBlackboxAdvancedConfig sub_cfg = config.base;
-      if (sub_cfg.max_iterations > 0) {
-        sub_cfg.max_iterations = std::max<std::int64_t>(1, sub_cfg.max_iterations / (rounds * subproblems_per_round));
-      }
-      if (sub_cfg.max_evaluations > 0) {
-        sub_cfg.max_evaluations = std::max<std::int64_t>(1, sub_cfg.max_evaluations / (rounds * subproblems_per_round));
-      }
-      if (sub_cfg.max_total_evaluations > 0) {
-        sub_cfg.max_total_evaluations = std::max<std::int64_t>(1, sub_cfg.max_total_evaluations / (rounds * subproblems_per_round));
-      }
+      sub_cfg.max_iterations = std::max<std::int64_t>(1, budget.iterations / (rounds * subproblems_per_round));
+      sub_cfg.max_evaluations = std::max<std::int64_t>(1, budget.evaluations / (rounds * subproblems_per_round));
+      sub_cfg.max_total_evaluations = std::max<std::int64_t>(1, budget.total / (rounds * subproblems_per_round));
       if (bounds.enabled) {
         sub_cfg.lower_bounds = subset_from_indices(bounds.lower, idx, setup.work_cfg);
         sub_cfg.upper_bounds = subset_from_indices(bounds.upper, idx, setup.work_cfg);
@@ -1499,6 +1617,15 @@ BlackboxAdvancedOutcome psdmads_blackbox_minimizer(
     }
   }
 
+  if (budget.has_polish) {
+    const Series start = best.minimizer;
+    const BlackboxAdvancedOutcome polished = mads_blackbox_minimizer(blackbox, start, budget.polish);
+    merge_advanced_diagnostics(&agg, polished.diagnostics);
+    if (better_outcome(polished, best)) {
+      best = polished;
+    }
+  }
+
   best.diagnostics = agg;
   best.diagnostics.last_phase = "psd_complete";
   return best;
@@ -1515,28 +1642,53 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
   const BoundsPack bounds = prepare_bounds(config.base.lower_bounds, config.base.upper_bounds, setup, op);
   const std::int64_t n = setup.dimension;
 
+  // A failed evaluation stays a failure for the search: the value of a different point is never reported as the value of the
+  // point asked for, which would corrupt the mesh logic and the reported minimum. What Disco does with a failure is look
+  // around it: up to `rescue_trials` nearby points (random offsets of radius `rescue_radius`, shrinking by
+  // `rescue_radius_decay`) are evaluated, and any valid, feasible, single-objective result is remembered as a candidate answer.
+  // At the end the best remembered candidate replaces the search result if it is better.
   std::uint64_t rescue_counter = 0ULL;
-  auto wrapped = [&](const Series& x) -> BlackboxEvaluation {
-    auto valid_eval = [&](const BlackboxEvaluation& ev) {
-      if (!ev.evaluation_ok || !ev.objectives.defined() || ev.objectives.numel() < 1) {
+  bool have_rescue = false;
+  double rescue_value = std::numeric_limits<double>::infinity();
+  Series rescue_point = setup.flat_initial;
+  Series rescue_objectives = Series::zeros({1}, ScalarType::Float64);
+  std::int64_t rescue_calls = 0;
+  std::int64_t observed_calls = 0;
+  std::int64_t observed_failures = 0;
+
+  auto valid_eval = [&](const BlackboxEvaluation& ev) {
+    if (!ev.evaluation_ok || !ev.objectives.defined() || ev.objectives.numel() < 1) {
+      return false;
+    }
+    for (double v : ev.objectives.to(ScalarType::Float64).to_vec<double>()) {
+      if (!std::isfinite(v)) {
         return false;
       }
-      const std::vector<double> vals = ev.objectives.to(ScalarType::Float64).to_vec<double>();
-      for (double v : vals) {
-        if (!std::isfinite(v)) {
+    }
+    if (ev.constraints.defined()) {
+      for (double v : ev.constraints.to(ScalarType::Float64).to_vec<double>()) {
+        if (!std::isfinite(v) || v > config.base.constraint_tolerance) {
           return false;
         }
       }
-      return true;
-    };
+    }
+    return true;
+  };
 
+  auto wrapped = [&](const Series& x) -> BlackboxEvaluation {
     const BlackboxEvaluation base_eval = blackbox(x);
+    ++observed_calls;
     if (valid_eval(base_eval)) {
       return base_eval;
     }
+    ++observed_failures;
 
+    // Looking around failures costs extra calls, and plain MADS copes with an occasional failure on its own, so the rescue
+    // only starts once the observed failure rate has reached `rescue_failure_rate` (after a short warm-up of 20 calls).
+    const bool rescue_active = observed_calls >= 20 &&
+        static_cast<double>(observed_failures) >= config.rescue_failure_rate * static_cast<double>(observed_calls);
     const Series x_flat = x.reshape({x.numel()}).to(setup.work_cfg.platform, setup.work_cfg.dtype).contiguous();
-    const std::int64_t trials = std::max<std::int64_t>(0, config.rescue_trials);
+    const std::int64_t trials = rescue_active ? std::max<std::int64_t>(0, config.rescue_trials) : 0;
     for (std::int64_t t = 0; t < trials; ++t) {
       const double radius = config.rescue_radius * std::pow(config.rescue_radius_decay, static_cast<double>(t));
       Series noise = pluss::series::randn({n}, setup.work_cfg, config.rng_seed + rescue_counter++)
@@ -1548,14 +1700,34 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
       const Series shaped = cand.reshape(
           std::span<const std::int64_t>(setup.original_shape.data(), setup.original_shape.size()));
       const BlackboxEvaluation rescue = blackbox(shaped);
-      if (valid_eval(rescue)) {
-        return rescue;
+      ++rescue_calls;
+      if (valid_eval(rescue) && rescue.objectives.numel() == 1) {
+        const double value = rescue.objectives.to(ScalarType::Float64).item<double>();
+        if (value < rescue_value) {
+          have_rescue = true;
+          rescue_value = value;
+          rescue_point = cand;
+          rescue_objectives = rescue.objectives.to(ScalarType::Float64).reshape({1});
+        }
       }
     }
-    return base_eval;
+    BlackboxEvaluation failed = base_eval;
+    failed.evaluation_ok = false;
+    if (!failed.objectives.defined()) {
+      failed.objectives = Series::zeros({1}, ScalarType::Float64);
+    }
+    return failed;
   };
 
   BlackboxAdvancedOutcome out = mads_blackbox_minimizer(wrapped, initial, config.base);
+  if (have_rescue && rescue_value < out.scalarized_minimum) {
+    out.minimizer = rescue_point
+        .reshape(std::span<const std::int64_t>(setup.original_shape.data(), setup.original_shape.size()))
+        .to(setup.flat_initial.platform(), setup.flat_initial.scalar_type());
+    out.objective_vector = rescue_objectives;
+    out.scalarized_minimum = rescue_value;
+  }
+  out.diagnostics.total_evaluations += rescue_calls;
   out.diagnostics.last_phase += "|disco";
   return out;
 }

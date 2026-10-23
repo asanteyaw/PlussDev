@@ -1,0 +1,58 @@
+# Time Series 4: Vector Autoregressions and Cointegration
+
+Several series observed together can influence each other. A vector autoregression (VAR) models each series by the past of all of them; impulse responses and variance decompositions then describe how a shock travels through the system, and Granger tests ask whether one series helps predict another. When the series have unit roots but share a long-run relation, the error-correction form (VECM) and Johansen's test describe that relation. After this chapter you can fit and select a VAR, trace shocks through it, test for predictive content, and find and estimate cointegrating relations.
+
+Every program is complete and its output is the output of that program.
+
+## The VAR
+
+For a `k`-dimensional series `y_t` the VAR(p) is
+
+> y_t = c + A₁ y_{t−1} + … + A_p y_{t−p} + e_t,   Cov(e_t) = Σ.
+
+`Var::fit_mle(y, VarOptions)` takes `y` as an `n × k` matrix (one column per series) and fits it by least squares, which is the Gaussian maximum-likelihood estimate. `VarOptions`: `lag_order` (p, default 1), `include_intercept` (true), `include_trend` (false), `ridge` (0) and `pinv_rcond`. A second overload, `fit_mle(y, x, options)`, adds exogenous regressors `x`.
+
+`VarFit` holds `constant` (k), `ar` (p × k × k), `covariance` (k × k, the maximum-likelihood estimate: the residual cross-products divided by the number of fitted rows `sample_size = n − p`) and, with exogenous variables, `beta`. **Layout:** `ar[l][j][i]` is the coefficient of series `j` at lag `l + 1` in the equation of series `i`, so row `j` of each matrix lists the effects of series `j` on all series. The same row-vector convention is used by `irf` and `fevd` below: the first index after the step is the *shock*, the last the *response*.
+
+Methods: `infer(y)` (residuals), `loglik(y)`, `loglik_per_obs(y)`, `forecast(h, y)` (an `h × k` matrix of point forecasts), `simulate(n, cfg, seed)`, `irf`, `fevd` and `granger_test`.
+
+## Impulse responses and variance decompositions
+
+Write the VAR as an infinite moving average `y_t = Σ Ψ_s e_{t−s}`. The *orthogonalised* responses use the Cholesky factor `P` of `Σ` (so `Σ = P P'`) to get uncorrelated shocks: the response of the system `s` steps after a one-standard-deviation shock to series `j` is the `j`-th column of `Ψ_s P`. The first series is thereby treated as not reacting to the others in the same period, so the order of the columns of `y` matters. The *generalised* responses (`IrfMethod::Generalized`) instead shock series `j` alone and let the other series respond through the correlation in `Σ` (`Ψ_s Σ e_j / √σ_jj`); they do not depend on the ordering.
+
+The forecast-error variance decomposition `fevd` gives, for each series and horizon, the fraction of its forecast-error variance due to each shock. For the generalised method the shares are normalised to add up to one for each series.
+
+## Granger causality
+
+Series `j` does not Granger-cause series `i` when the lags of `j` have zero coefficients in the equation of `i`. `granger_test(y, GrangerOptions)` tests this by the Wald statistic (`GrangerStat::ChiSquare`, referred to a chi-squared distribution with one degree of freedom per restricted coefficient) or its `F` form (referred to `F(dof1, dof2)` with `dof2` the residual degrees of freedom of the equation). `type` selects the tests: every ordered pair (`LeaveOneOut`, the default; `cause` and `effect` index lists restrict it), each effect against all other series together (`ExcludeAll`), or the series in `cause` jointly against each series in `effect` (`BlockWise`). A joint test reports `-1` in the `cause` field.
+
+## Cointegration
+
+Series that each have a unit root can still have a stationary linear combination: they are *cointegrated*. Their error-correction form is
+
+> Δy_t = c + y_{t−1} β α' + Γ₁ Δy_{t−1} + … + Γ_{p−1} Δy_{t−p+1} + e_t,
+
+where the columns of `β` (k × r) are the cointegrating vectors (`y_{t−1} β` is stationary), the columns of `α` (k × r) say how each series adjusts to a deviation, and `r`, the *rank*, is the number of independent relations. Johansen's procedure finds `r` from the squared canonical correlations between the changes and the lagged levels, after the constant, the trend and the lagged differences have been removed.
+
+`johansen_test(y, JohansenOptions)` tests the sequence "rank ≤ r" for r = 0, 1, …, either by the *trace* statistic (against any larger rank) or the *maximum-eigenvalue* statistic (against rank r + 1). Neither follows a chi-squared law; the limiting distributions are non-standard functionals of Brownian motion and depend on the deterministic terms and on the number `m = k − r` of series still tested. The library compares the statistics with simulated limiting distributions for three specifications (selected by the options): no deterministic terms, an unrestricted constant (`include_intercept`), and an unrestricted constant with a trend (`include_trend`), for up to 12 series. `selected_rank` is the first `r` that is not rejected.
+
+`Vecm::fit_mle(y, VecmOptions)` fits the error-correction model for a given `rank` (negative: chosen by the trace test at level `alpha`). Its `beta` is normalised so that its leading `r × r` block is the identity, its `alpha` holds the adjustment loadings, and `impact = β α'`. For `0 < rank < k` the estimate is Johansen's maximum-likelihood one, for `rank = k` it is least squares, and for `rank = 0` it is the VAR in differences. In both functions `lag_order` is the order p of the VAR in levels.
+
+## Programs
+
+- [Fitting a VAR and choosing the lag order](ts_04_vector_models/fitting_a_var_and_choosing_the_lag_order.md)
+- [Impulse responses and variance decompositions](ts_04_vector_models/impulse_responses_and_variance_decompositions.md)
+- [Granger tests](ts_04_vector_models/granger_tests.md)
+- [The rank of a cointegrated system](ts_04_vector_models/the_rank_of_a_cointegrated_system.md)
+- [The error-correction model](ts_04_vector_models/the_error_correction_model.md)
+
+## Checklist
+
+1. Use levels for the VAR only if the series are stationary; otherwise difference them or test for cointegration first (Chapter 1: ADF and KPSS).
+2. Choose the lag order by Akaike's or Schwarz's criterion from `loglik`, with `k (k p + 1)` parameters.
+3. Order the series before orthogonalising impulse responses; use the generalised version when there is no natural order.
+4. For a cointegration test pass the *levels*, state the deterministic terms honestly, and read `selected_rank` from the sequence of tests.
+5. Fit the VECM with the chosen rank; read `beta` as the long-run relation and `alpha` as the speed of adjustment.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

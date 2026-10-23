@@ -1,0 +1,10 @@
+# The dispatcher and the closed forms
+
+[Back to Beyond One Interval](../integration_02_beyond_one_interval.md)
+
+
+`integra(f, a, b, options)` tries quadrature first. If quadrature misses its tolerance, it also runs Monte Carlo and returns whichever answer has the smaller error estimate; `strategy_used` says which, and `converged` is true only if the chosen method met its target. `analytica` holds exact integrals of common families: `gaussian`, `gaussian_probability`, `gaussian_moment`, `polynomial`, `exponential`, `power`, `sine`, `cosine`, `lorentzian`, `hyperbolic_sine`, `hyperbolic_cosine`, `hyperbolic_tangent`, `sigmoid`, `arcsine_kernel`. It is called by name when you know the form, never chosen automatically.
+
+@@example Numerical/integration/guide/615_dispatcher_and_closed_forms.cpp@@
+
+The jump cannot reach 1e-10 by quadrature, and the dispatcher compares the two error estimates and keeps the better answer (quadrature's 2e-5 beats Monte Carlo's). The closed forms agree with quadrature to ten digits and serve as independent checks.

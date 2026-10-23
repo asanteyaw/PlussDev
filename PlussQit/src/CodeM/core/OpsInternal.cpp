@@ -1,3 +1,4 @@
+#include "MSharp/Parallel.h"
 #include "CodeM/core/OpsInternal.h"
 
 // OpsInternal.cpp defines Series member functions; it requires the full Series type.
@@ -37,6 +38,14 @@
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/ViewInvariants.h"
 #include "CodeM/core/SeriesTape.h"
+#if __has_include(<execinfo.h>)
+#include <execinfo.h>
+#define PLUSS_HAVE_EXECINFO 1
+#endif
+#include <cstdio>
+#include <cstdlib>
+#include <mutex>
+#include <set>
 #include "CodeM/native/cpu/KernelTable.h"
 #include "CodeM/native/cpu/ArithmeticKernels.h"
 #include "CodeM/native/cpu/BitwiseKernels.h"
@@ -8041,6 +8050,57 @@ Series Series::to(ScalarType dst) const {
     return bridged;
   }
 
+  // Typed fast path for the floating-point and complex pairs (the hot casts: promotion to a complex dtype for the
+  // Fourier transforms, and f32 <-> f64). Complex -> real keeps the generic path below.
+  {
+    const auto from = src.scalar_type();
+    const auto is_float = [](ScalarType t) { return t == ScalarType::Float32 || t == ScalarType::Float64; };
+    const auto is_cplx = [](ScalarType t) { return t == ScalarType::Complex64 || t == ScalarType::Complex128; };
+    const bool fast_pair = (is_float(from) || is_cplx(from)) && (is_float(dst) || is_cplx(dst)) &&
+                           !(is_cplx(from) && is_float(dst));
+    if (fast_pair) {
+      const auto convert = [&](auto src_tag, auto dst_tag) {
+        using S = decltype(src_tag);
+        using D = decltype(dst_tag);
+        const auto* in = reinterpret_cast<const S*>(src.raw_data());
+        auto* res = reinterpret_cast<D*>(out.raw_data());
+        pluss::msharp::parallel_for(0, n, 1 << 16, [&](std::int64_t begin, std::int64_t end) {
+          for (std::int64_t i = begin; i < end; ++i) {
+            if constexpr (std::is_floating_point_v<D> && std::is_floating_point_v<S>) {
+              res[i] = static_cast<D>(in[i]);
+            } else if constexpr (std::is_floating_point_v<D>) {
+              res[i] = static_cast<D>(in[i].real());  // unreachable: complex -> real takes the generic path
+            } else if constexpr (std::is_floating_point_v<S>) {
+              res[i] = D(static_cast<typename D::value_type>(in[i]), 0);
+            } else {
+              res[i] = D(static_cast<typename D::value_type>(in[i].real()),
+                         static_cast<typename D::value_type>(in[i].imag()));
+            }
+          }
+        });
+      };
+      const auto with_source = [&](auto src_tag) {
+        switch (dst) {
+          case ScalarType::Float32: convert(src_tag, float{}); break;
+          case ScalarType::Float64: convert(src_tag, double{}); break;
+          case ScalarType::Complex64: convert(src_tag, Complex64{}); break;
+          default: convert(src_tag, Complex128{}); break;
+        }
+      };
+      switch (from) {
+        case ScalarType::Float32: with_source(float{}); break;
+        case ScalarType::Float64: with_source(double{}); break;
+        case ScalarType::Complex64: with_source(Complex64{}); break;
+        default: with_source(Complex128{}); break;
+      }
+      maybe_link_transport_op_(
+          out,
+          *this,
+          std::string("to(") + std::to_string(static_cast<int>(dst)) + ")");
+      return out;
+    }
+  }
+
   auto store_bool = [&](std::int64_t i, bool v) {
     reinterpret_cast<std::uint8_t*>(out.raw_data())[i] = v ? 1 : 0;
   };
@@ -10459,6 +10519,50 @@ Series Series::mean() const {
   return ops_internal::mean(*this);
 }
 
+
+namespace ops_internal {
+
+// Debug aid for the two call styles of Series::where. With the environment variable PLUSS_WARN_LEGACY_WHERE set, every
+// distinct caller that reaches the legacy path (a.where(cond, b): b where cond is TRUE, the reverse of torch) is reported once
+// on stderr with a short stack, so a torch-style call written by habit can be found by running any test or program. A Bool
+// receiver whose first argument is also Bool is marked AMBIGUOUS: it takes the legacy path although it may be written
+// torch-style. Off by default and free when off (one cached flag check).
+void warn_legacy_where_(bool receiver_is_bool) {
+  static const bool enabled = [] {
+    const char* v = std::getenv("PLUSS_WARN_LEGACY_WHERE");
+    return v != nullptr && v[0] != '\0' && v[0] != '0';
+  }();
+  if (!enabled) {
+    return;
+  }
+#ifndef PLUSS_HAVE_EXECINFO
+  return;
+#else
+  void* frames[8];
+  const int depth = ::backtrace(frames, 8);
+  if (depth < 3) {
+    return;
+  }
+  static std::mutex mutex;
+  static std::set<void*> seen;
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (!seen.insert(frames[2]).second) {
+      return;
+    }
+  }
+  char** names = ::backtrace_symbols(frames, depth);
+  std::fprintf(stderr, "[where-legacy]%s a.where(cond, b) selects b where cond is TRUE; called from:\n",
+               receiver_is_bool ? " AMBIGUOUS (Bool receiver and Bool condition)" : "");
+  for (int i = 2; i < std::min(depth, 5); ++i) {
+    std::fprintf(stderr, "    %s\n", names != nullptr ? names[i] : "?");
+  }
+  std::free(names);
+#endif
+}
+
+} // namespace ops_internal
+
 Series Series::where(const Series& condition, const Series& other) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
@@ -10468,6 +10572,7 @@ Series Series::where(const Series& condition, const Series& other) const {
   if (scalar_type() == ScalarType::Bool && condition.scalar_type() != ScalarType::Bool) {
     return ops_internal::where(*this, condition, other);
   }
+  ops_internal::warn_legacy_where_(scalar_type() == ScalarType::Bool);
   return ops_internal::where(condition, other, *this);
 }
 

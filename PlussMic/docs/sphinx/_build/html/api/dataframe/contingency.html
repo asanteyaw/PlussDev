@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -224,7 +224,7 @@ the grouping</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">slice(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">marginalize(...)</span></code> work on the retained object rather than walking
 the source frame again</p></li>
 </ul>
-<p>But it is still a <strong>dense</strong> retained tensor. That is the important tradeoff to teach.</p>
+<p>But it is still a <strong>dense</strong> retained tensor. That is the important tradeoff to understand.</p>
 <p>If you cross-classify dimensions with extremely high cardinality, the dense cell count
 can explode even when many combinations never occur. That is why this API is excellent
 for genuinely categorical/discrete dimensions and much less appropriate for raw
@@ -380,7 +380,7 @@ changed.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">faceted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">facet</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;channel&quot;</span><span class="p">});</span>
 </pre></div>
 </div>
-<p>That is the teaching sequence to internalize:</p>
+<p>That is the sequence to internalize:</p>
 <ul class="simple">
 <li><p>build once</p></li>
 <li><p>choose whether you want counts or shares</p></li>

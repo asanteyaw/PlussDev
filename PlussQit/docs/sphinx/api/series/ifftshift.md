@@ -206,3 +206,5 @@ fftshift/ifftshift: dim out of range
 - [`fftshift()`](fftshift.md) moves index-zero frequency layout to the centre.
 - [`roll()`](roll.md) performs arbitrary circular shifts.
 - [`idct()`](idct.md) and [`idst()`](idst.md) reconstruct samples rather than reorder bins.
+- [`fft()`](fft.md), [`ifft()`](ifft.md), [`rfft()`](rfft.md) and [`irfft()`](irfft.md) produce the spectra that this reorders.
+

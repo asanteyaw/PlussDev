@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -50,9 +50,11 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">median()</span></code> finds the centre of an ordered population. For an odd number of
-values, that is the one middle value. For an even number, there are two middle
-values and the result is their arithmetic mean. It therefore returns <code class="docutils literal notranslate"><span class="pre">float64</span></code>
-and may produce a number that did not occur in the source.</p>
+values, that is the one middle value. For an even number there are two middle
+values and the result is the lower of them, as <code class="docutils literal notranslate"><span class="pre">torch.median</span></code> does, so the
+result is always a value that occurs in the source. Use
+<a class="reference internal" href="quantile.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">quantile(0.5)</span></code></span></a> for the interpolated midpoint of an even
+population. The result is <code class="docutils literal notranslate"><span class="pre">float64</span></code>.</p>
 <p>The no-argument overload uses every element as one population. The axis
 overload works independently along every lane of <code class="docutils literal notranslate"><span class="pre">dim</span></code>, then removes that axis
 from the result shape. NaN is not treated as missing: it propagates through a
@@ -99,7 +101,7 @@ to use as a differentiable objective.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. An even population averages its two centre values.</p>
+<p>Example 1. An even population returns its lower centre value.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">median</span><span class="p">());</span>
 </pre></div>
@@ -107,10 +109,11 @@ to use as a differentiable objective.</p>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
-data=2.5000
+data=2.0000
 </pre></div>
 </div>
-<p>Ordering gives <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4]</span></code>; the result is <code class="docutils literal notranslate"><span class="pre">(2</span> <span class="pre">+</span> <span class="pre">3)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">=</span> <span class="pre">2.5</span></code>.</p>
+<p>Ordering gives <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4]</span></code>; the lower of the two centres is <code class="docutils literal notranslate"><span class="pre">2</span></code>, while
+<code class="docutils literal notranslate"><span class="pre">quantile(0.5)</span></code> would interpolate to <code class="docutils literal notranslate"><span class="pre">2.5</span></code>.</p>
 <p>Example 2. <code class="docutils literal notranslate"><span class="pre">dim=0</span></code> makes every column its own ordered population.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
@@ -174,7 +177,7 @@ data=5
 </section>
 <section id="id5">
 <h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>quantile: dim out of range
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>median: dim out of range
 </pre></div>
 </div>
 </section>
@@ -184,14 +187,15 @@ data=5
 <ul class="simple">
 <li><p>This returns a value, not its source index.</p></li>
 <li><p>NaN propagates; infinity remains an ordered endpoint.</p></li>
-<li><p>The current axis diagnostic comes from the shared quantile kernel and says
-<code class="docutils literal notranslate"><span class="pre">quantile:</span> <span class="pre">dim</span> <span class="pre">out</span> <span class="pre">of</span> <span class="pre">range</span></code>.</p></li>
+<li><p>The axis diagnostic is <code class="docutils literal notranslate"><span class="pre">median:</span> <span class="pre">dim</span> <span class="pre">out</span> <span class="pre">of</span> <span class="pre">range</span></code>.</p></li>
+<li><p>Even populations return the lower centre, not the mean of the two. The
+difference from <code class="docutils literal notranslate"><span class="pre">quantile(0.5)</span></code> is intentional and matches libtorch.</p></li>
 </ul>
 </section>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">median()</span></code> for one robust centre or <code class="docutils literal notranslate"><span class="pre">median(dim)</span></code> for one per lane. It
-averages the two centres of even populations, removes the reduced axis, and
+returns the lower centre of even populations, removes the reduced axis, and
 preserves NaN rather than silently excluding it.</p>
 </section>
 <section id="see-also">

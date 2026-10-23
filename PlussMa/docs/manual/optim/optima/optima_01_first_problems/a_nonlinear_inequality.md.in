@@ -1,0 +1,10 @@
+# A nonlinear inequality
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+A nonlinear inequality returns `g(x)`, required to be at most zero. Here `g(x) = x0^2 + x1^2 - 1`, so the answer must lie inside the unit disc. The target `(1, 2)` is outside the disc, so the best feasible point is the point of the disc closest to the target, on the circle.
+
+@@example Numerical/optimization/guide/optima/03_nonlinear_inequality.cpp@@
+
+The solver lands on the circle at the direction of the target, matching `(1, 2) / sqrt(5)` to five digits. When the unconstrained minimum is outside the feasible region, the answer sits on the boundary, and the constraint is said to be active there.

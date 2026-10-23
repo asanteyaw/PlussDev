@@ -199,7 +199,7 @@ try {
 ### Output
 
 ```text
-DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.label().set("date") first
+DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.labels().set("date") first
 ```
 
 `untimed`'s case labels are the default integer index — no `Timeline`/
@@ -211,7 +211,7 @@ time axis to sort by.
 - With no explicit `TsOptions.axis`, this method requires the frame's own case
   labels to already be `Timeline`/`TimeIndex` — it throws if they're a plain
   numeric or `Note` index instead.
-- This is distinct from [`DataFrame::label().sort()`](../dataframe/label.md),
+- This is distinct from [`DataFrame::labels().sort()`](../dataframe/labels.md),
   which sorts by whatever kind the case labels happen to be; `ts().sort()` is
   specifically the time-axis-aware entry point within the `ts()` accessor.
 
@@ -220,7 +220,7 @@ time axis to sort by.
 - [`DataFrameTsAccessor::rolling`](rolling.md) (calendar-duration overload),
   [`DataFrameTsAccessor::resample`](resample.md): other methods that rely on the
   same time-axis requirement this method sorts by.
-- [`DataFrame::label`](../dataframe/label.md): the general case-label accessor,
+- [`DataFrame::labels`](../dataframe/labels.md): the general case-label accessor,
   including its own `sort()`.
 
 <div class="pluss-inline-prev-next">

@@ -1,0 +1,10 @@
+# A path with jumps
+
+[Back to Jumps and the Marcus Integral](../stochastic_03_jumps_and_marcus.md)
+
+
+`simulate_jump_diffusion_path` builds `X = drift · t + volatility · W + jumps` on a grid, with Gaussian jump sizes, and returns the mask of the steps that contain a jump. At most one jump is simulated per step, and the call refuses a grid on which that would not be a good approximation.
+
+@@example Probability/random_processes/guide/sde/21_jump_path.cpp@@
+
+Five of the 4000 steps contain a jump, and they dominate the quadratic variation: 0.7548, against 0.04 for a continuous path with volatility 0.2. The diagnostics of chapter 1 notice this and warn. A path like this is a legitimate integrator; the warning only says that Ito and Stratonovich values are not the standard ones.

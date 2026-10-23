@@ -203,3 +203,69 @@ TEST_CASE("ts arimax: exogenous regression path", "[ts][arimax][accuracy]") {
   REQUIRE_THROWS(fit.loglik(y));
   REQUIRE_THROWS(fit.forecast(16, y, cfg));
 }
+
+// Reference values from an independent implementation of the exact Gaussian likelihood (Kalman filter, stationary start) on a
+// deterministic series: e_t = frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5.
+namespace {
+std::vector<double> reference_noise(int n) {
+  std::vector<double> e(static_cast<std::size_t>(n));
+  for (int i = 0; i < n; ++i) {
+    const double t = i + 1.0;
+    double u = std::sin(12.9898 * t + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[static_cast<std::size_t>(i)] = u - 0.5;
+  }
+  return e;
+}
+} // namespace
+
+TEST_CASE("arima maximises the exact likelihood and matches reference estimates", "[ts][arima][exact]") {
+  namespace ts = pluss::subsp::stats::ts;
+  const auto e = reference_noise(200);
+  std::vector<double> x(200);
+  double carry = 0.0;
+  for (int i = 0; i < 200; ++i) {
+    carry = 0.7 * carry + e[static_cast<std::size_t>(i)];
+    x[static_cast<std::size_t>(i)] = carry;
+  }
+  const auto y = pluss::make_series(x, {200}).to(pluss::ScalarType::Float64);
+
+  // started from the default (all coefficients zero), the fit must still find the autoregressive coefficient
+  ts::ArimaOptions options;
+  options.ar_order = 1;
+  const auto ar1 = ts::Arima::fit_mle(y, options);
+  REQUIRE(ar1.ar[0] == Catch::Approx(0.650630).margin(5e-4));
+  REQUIRE(ar1.sigma * ar1.sigma == Catch::Approx(0.080685).margin(2e-4));
+  REQUIRE(ar1.loglik(y) == Catch::Approx(-32.346807).margin(2e-3));
+
+  options.ar_order = 1;
+  options.ma_order = 1;
+  const auto arma = ts::Arima::fit_mle(y, options);
+  REQUIRE(arma.loglik(y) == Catch::Approx(-32.039876).margin(2e-3));
+
+  // the conditional likelihood is a different (larger) number: it leaves out the first observation
+  options.ma_order = 0;
+  options.exact_likelihood = false;
+  const auto conditional = ts::Arima::fit_mle(y, options);
+  REQUIRE(conditional.loglik(y) > ar1.loglik(y));
+}
+
+TEST_CASE("sarima multiplies the seasonal and non-seasonal factors", "[ts][sarima][exact]") {
+  namespace ts = pluss::subsp::stats::ts;
+  const auto e = reference_noise(240);
+  std::vector<double> y(240, 0.0);
+  for (int i = 0; i < 240; ++i) {
+    y[static_cast<std::size_t>(i)] = e[static_cast<std::size_t>(i)] + (i >= 1 ? 0.5 * y[static_cast<std::size_t>(i - 1)] : 0.0) +
+                                     (i >= 12 ? 0.6 * y[static_cast<std::size_t>(i - 12)] : 0.0) -
+                                     (i >= 13 ? 0.3 * y[static_cast<std::size_t>(i - 13)] : 0.0);
+  }
+  const auto series = pluss::make_series(y, {240}).to(pluss::ScalarType::Float64);
+  ts::SarimaOptions options;
+  options.p = 1;
+  options.P = 1;
+  options.s = 12;
+  const auto fit = ts::Sarima::fit_mle(series, options);
+  REQUIRE(fit.core.ar[0] == Catch::Approx(0.449195).margin(2e-3));
+  REQUIRE(fit.core.sar[0] == Catch::Approx(0.562212).margin(2e-3));
+  REQUIRE(fit.loglik(series) == Catch::Approx(-40.128722).margin(5e-3));
+}

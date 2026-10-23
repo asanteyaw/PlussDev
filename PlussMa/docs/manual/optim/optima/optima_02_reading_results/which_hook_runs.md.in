@@ -1,0 +1,10 @@
+# Which hook runs
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+You can set one hook on `OptimaOptions::progress_hook` and have it apply to whichever algorithm you choose, or set a hook on one algorithm's own options. When both are set the specific one wins.
+
+@@example Numerical/optimization/guide/optima/31_hook_precedence.cpp@@
+
+With only the general hook set it received all four snapshots. After adding a sequential QP hook, the specific hook received them and the general one received none. Choosing a different algorithm falls back to the general hook, because the sequential QP hook belongs to a method that is not running.

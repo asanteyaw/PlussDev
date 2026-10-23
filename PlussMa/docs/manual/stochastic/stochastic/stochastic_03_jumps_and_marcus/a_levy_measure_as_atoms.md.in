@@ -1,0 +1,10 @@
+# A Levy measure as atoms
+
+[Back to Jumps and the Marcus Integral](../stochastic_03_jumps_and_marcus.md)
+
+
+The program discretizes a double-exponential measure (up-jumps with probability 0.4 and rate parameter 10, down-jumps with probability 0.6 and rate parameter 5, total rate 3) into 4000 atoms, and computes the drift of `x²` and `exp(x)` under compensated jumps, then the raw form.
+
+@@example Probability/random_processes/guide/sde/16_levy_jumps.cpp@@
+
+The atom rates add to 2.99997, the quadrature of the total rate 3. For `x²` the compensated drift is 0.35800, equal to the continuous part 0.19000 plus the second moment of the measure; for `exp(x)` it matches the exact value 0.35997, and the quadrature error is below the printed digits. The raw form keeps the continuous drift 0.19000 and returns 4000 jump sizes of `g(x + z) − g(x)`, the first being 0.00075 for `z = 0.00075`, which is `2xz + z²`.

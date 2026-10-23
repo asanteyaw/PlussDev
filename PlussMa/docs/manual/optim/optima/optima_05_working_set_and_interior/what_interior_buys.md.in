@@ -1,0 +1,10 @@
+# What "interior" buys
+
+[Back to The Working-Set and Interior Methods](../optima_05_working_set_and_interior.md)
+
+
+Bounds and linear rows are kept strictly satisfied at every iterate of the interior method. The program minimizes a function that contains a logarithm, so it is defined only for positive arguments, from a start far from the minimum, and records the smallest value any iterate takes.
+
+@@example Numerical/optimization/guide/optima/66_interior_stays_inside.cpp@@
+
+The interior method converges in 11 iterations to 0.660517, and its smallest iterate is 3.06e-02: it never reaches the boundary. Sequential QP projects its steps onto the bounds and lands on `x = 0` to within rounding (5.40e-12), where the logarithm is huge. Its line search then fails (flag `-6`, objective 5.189051). If your objective is undefined outside the feasible region, this is the reason to use the interior method with `independent_nonlinear_slacks = false` for nonlinear inequalities as well (chapter 3, Program 2).

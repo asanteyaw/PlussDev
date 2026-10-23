@@ -1,0 +1,8 @@
+# Batches, complex values and gradients
+
+[Back to Linear Interpolation](../interp_01_linear.md)
+
+
+@@example Numerical/interpolation/guide/803_batches_and_gradients.cpp@@
+
+Each curve in the batch is read at the same queries in one call, and the result keeps the batch axes. Complex values are interpolated componentwise. The result is built from differentiable operations, so a Series marked `tracks_slope_(true)` receives its gradient: the interpolation weights of the two samples that bracket the query, and zero for all others. This makes an interpolated table usable inside a fitted model.

@@ -6,3 +6,5 @@
 # testing this directory and lists subdirectories to be tested as well.
 add_test([=[chem_quantum_qc_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/chemistry/quantum/test/chem_quantum_qc_test")
 set_tests_properties([=[chem_quantum_qc_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/chemistry/quantum/test/CMakeLists.txt;18;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/chemistry/quantum/test/CMakeLists.txt;0;")
+add_test([=[chem_quantum_uhf_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/chemistry/quantum/test/chem_quantum_uhf_test")
+set_tests_properties([=[chem_quantum_uhf_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/chemistry/quantum/test/CMakeLists.txt;18;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/chemistry/quantum/test/CMakeLists.txt;0;")

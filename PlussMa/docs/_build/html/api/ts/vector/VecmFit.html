@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pluss::subsp::stats::ts::VecmFit &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="pluss::subsp::stats::ts::VecmOptions" href="VecmOptions.html" />
+    <link rel="prev" title="pluss::subsp::stats::ts::vecm_to_var" href="vecm_to_var.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from VecmFit.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="pluss-subsp-stats-ts-vecmfit">
+<h1><code class="docutils literal notranslate"><span class="pre">pluss::subsp::stats::ts::VecmFit</span></code><a class="headerlink" href="#pluss-subsp-stats-ts-vecmfit" title="Link to this heading">¶</a></h1>
+<p>The result of a vector error-correction fit.</p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ts</span><span class="o">::</span><span class="n">VecmFit</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ts</span><span class="o">::</span><span class="n">Vecm</span><span class="o">::</span><span class="n">fit_mle</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="construction">
+<h2>Construction<a class="headerlink" href="#construction" title="Link to this heading">¶</a></h2>
+<p>Obtained from <a class="reference internal" href="Vecm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Vecm::fit_mle</span></code></span></a>.</p>
+</section>
+<section id="state">
+<h2>State<a class="headerlink" href="#state" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lag_order</span></code>, <code class="docutils literal notranslate"><span class="pre">rank</span></code>, <code class="docutils literal notranslate"><span class="pre">include_intercept</span></code>, <code class="docutils literal notranslate"><span class="pre">include_trend</span></code></p></td>
+<td><p>how the model was fitted</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">beta</span></code></p></td>
+<td><p>the cointegrating vectors, <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span> <span class="pre">r</span></code>, normalised so the leading <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">×</span> <span class="pre">r</span></code> block is the identity (<code class="docutils literal notranslate"><span class="pre">y_{t−1}</span> <span class="pre">β</span></code> is stationary)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p>the adjustment loadings, <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span> <span class="pre">r</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">impact</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">β</span> <span class="pre">α'</span></code>: in <code class="docutils literal notranslate"><span class="pre">Δy_t</span> <span class="pre">=</span> <span class="pre">y_{t−1}</span> <span class="pre">impact</span> <span class="pre">+</span> <span class="pre">…</span></code> (row convention)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code></p></td>
+<td><p>the short-run matrices, <code class="docutils literal notranslate"><span class="pre">(p</span> <span class="pre">−</span> <span class="pre">1)</span> <span class="pre">×</span> <span class="pre">k</span> <span class="pre">×</span> <span class="pre">k</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">constant</span></code>, <code class="docutils literal notranslate"><span class="pre">trend</span></code></p></td>
+<td><p>the deterministic terms</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">covariance</span></code></p></td>
+<td><p>the maximum-likelihood covariance of the errors</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sample_size</span></code></p></td>
+<td><p>the number of fitted rows</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h2>
+<section id="infer">
+<h3><code class="docutils literal notranslate"><span class="pre">infer</span></code><a class="headerlink" href="#infer" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">infer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The one-step errors of the differenced equations, <code class="docutils literal notranslate"><span class="pre">(n</span> <span class="pre">−</span> <span class="pre">p)</span> <span class="pre">×</span> <span class="pre">k</span></code>.</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span> <span class="pre">y</span></code></dt><dd><p>The series as an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">×</span> <span class="pre">k</span></code> matrix, one column per series (a vector is a single series).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pluss::codem::Config</span> <span class="pre">cfg</span></code></dt><dd><p>Output configuration (dtype and platform of the returned series).</p>
+</dd>
+</dl>
+<p><strong>Returns.</strong> A <code class="docutils literal notranslate"><span class="pre">Series</span></code> of residuals.</p>
+</section>
+<section id="loglik">
+<h3><code class="docutils literal notranslate"><span class="pre">loglik</span></code><a class="headerlink" href="#loglik" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">double</span><span class="w"> </span><span class="nf">loglik</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The joint Gaussian log-likelihood of the fitted rows.</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span> <span class="pre">y</span></code></dt><dd><p>The series as an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">×</span> <span class="pre">k</span></code> matrix, one column per series (a vector is a single series).</p>
+</dd>
+</dl>
+<p><strong>Returns.</strong> A <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
+</section>
+<section id="loglik-per-obs">
+<h3><code class="docutils literal notranslate"><span class="pre">loglik_per_obs</span></code><a class="headerlink" href="#loglik-per-obs" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">loglik_per_obs</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The log-likelihood contribution of each fitted row.</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span> <span class="pre">y</span></code></dt><dd><p>The series as an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">×</span> <span class="pre">k</span></code> matrix, one column per series (a vector is a single series).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pluss::codem::Config</span> <span class="pre">cfg</span></code></dt><dd><p>Output configuration (dtype and platform of the returned series).</p>
+</dd>
+</dl>
+<p><strong>Returns.</strong> A <code class="docutils literal notranslate"><span class="pre">Series</span></code> of length <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">−</span> <span class="pre">p</span></code>.</p>
+</section>
+<section id="forecast">
+<h3><code class="docutils literal notranslate"><span class="pre">forecast</span></code><a class="headerlink" href="#forecast" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">forecast</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">horizon</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Forecasts of the levels <code class="docutils literal notranslate"><span class="pre">horizon</span></code> steps ahead: the series stay tied by the long-run relations while wandering at the estimated drift.</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">horizon</span></code></dt><dd><p>Number of steps (greater than 0).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span> <span class="pre">y</span></code></dt><dd><p>The series as an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">×</span> <span class="pre">k</span></code> matrix, one column per series (a vector is a single series).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pluss::codem::Config</span> <span class="pre">cfg</span></code></dt><dd><p>Output configuration (dtype and platform of the returned series).</p>
+</dd>
+</dl>
+<p><strong>Returns.</strong> A <code class="docutils literal notranslate"><span class="pre">horizon</span> <span class="pre">×</span> <span class="pre">k</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p><strong>Errors.</strong> <code class="docutils literal notranslate"><span class="pre">horizon</span></code> must be positive.</p>
+</section>
+<section id="simulate">
+<h3><code class="docutils literal notranslate"><span class="pre">simulate</span></code><a class="headerlink" href="#simulate" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">num_observations</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Draws a path of the levels from the fitted model, starting from zero.</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">std::int64_t</span> <span class="pre">num_observations</span></code></dt><dd><p>Length of the path.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pluss::codem::Config</span> <span class="pre">cfg</span></code></dt><dd><p>Output configuration (dtype and platform of the returned series).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">std::uint64_t</span> <span class="pre">seed</span></code></dt><dd><p>Seed (default 0).</p>
+</dd>
+</dl>
+<p><strong>Returns.</strong> A <code class="docutils literal notranslate"><span class="pre">num_observations</span> <span class="pre">×</span> <span class="pre">k</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+</section>
+</section>
+<section id="practical-examples">
+<h2>Practical Examples<a class="headerlink" href="#practical-examples" title="Link to this heading">¶</a></h2>
+<section id="example-1">
+<h3>Example 1<a class="headerlink" href="#example-1" title="Link to this heading">¶</a></h3>
+<p>Forecast the levels from a fitted rank-1 model: the first two series stay tied.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cmath&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">stats</span><span class="o">::</span><span class="nn">ts</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">right</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">())</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">noise</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">offset</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">e</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="mf">12.9898</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">78.233</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">43758.5453</span><span class="p">;</span>
+<span class="w">    </span><span class="n">u</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">floor</span><span class="p">(</span><span class="n">u</span><span class="p">);</span>
+<span class="w">    </span><span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// Three series: x is a random walk, y = x + a stationary AR(1) (so y is tied to x), w is an unrelated random walk.</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">three</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">e1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">noise</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">e2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">noise</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">5000</span><span class="p">),</span><span class="w"> </span><span class="n">e3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">noise</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">9000</span><span class="p">);</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y</span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">e1</span><span class="p">[</span><span class="n">t</span><span class="p">];</span>
+<span class="w">    </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.6</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">e2</span><span class="p">[</span><span class="n">t</span><span class="p">];</span>
+<span class="w">    </span><span class="n">w</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">e3</span><span class="p">[</span><span class="n">t</span><span class="p">];</span>
+<span class="w">    </span><span class="n">y</span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="n">y</span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">u</span><span class="p">;</span>
+<span class="w">    </span><span class="n">y</span><span class="p">[</span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">w</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">f64</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">three</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+<span class="w">  </span><span class="n">ts</span><span class="o">::</span><span class="n">VecmOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">rank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ts</span><span class="o">::</span><span class="n">Vecm</span><span class="o">::</span><span class="n">fit_mle</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">forecast</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="n">show</span><span class="p">(</span><span class="s">&quot;forecast&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">h</span><span class="p">));</span>
+<span class="w">  </span><span class="n">show</span><span class="p">(</span><span class="s">&quot;last observed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">399</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>forecast         4.9015   4.9188   2.5817
+forecast         4.9139   4.9437   2.5866
+forecast         4.9259   4.9628   2.5920
+last observed    4.8885   4.8833   2.5779
+</pre></div>
+</div>
+</section>
+</section>
+<section id="changelog">
+<h2>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>0.1</strong> — Initial documented surface.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="Vecm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Vecm</span></code></span></a></p></li>
+</ul>
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../manual/index.html">Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/api/ts/vector/VecmFit.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

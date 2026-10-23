@@ -1,0 +1,24 @@
+# `pluss::subsp::stats::ts::AdfResult`
+
+Result of `ts::adf_test`.
+
+`AdfResult` carries the statistic and what is needed to read it.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `stat` | `double` | — | The t-ratio of the lagged level's coefficient. |
+| `pvalue` | `double` | — | Probability under the null of a unit root, from the response-surface approximation. |
+| `critical` | `double` | — | Critical value at `alpha` for the sample size and model. |
+| `reject` | `bool` | — | True when the statistic is below the critical value: the unit root is rejected. |
+| `lags` | `std::int64_t` | — | Augmentation lags used. |
+| `effective_n` | `std::int64_t` | — | Observations in the test regression. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`adf_test`](adf_test.md)

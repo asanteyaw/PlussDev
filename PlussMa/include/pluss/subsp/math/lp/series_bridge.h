@@ -32,7 +32,8 @@ inline void append_dense_rows_(const Series &a, std::int32_t n, std::int32_t row
 
 [[nodiscard]] inline std::vector<double> dense_vec_(const Series &s) { return s.to(pluss::ScalarType::Float64).contiguous().to_vec<double>(); }
 
-// Single-lane conversion: c must be [n]; rows are a_ub x <= b_ub then a_eq x == b_eq. Missing bounds default to [0, +inf).
+// Single-lane conversion: c must be [n]; rows are a_ub x <= b_ub then a_eq x == b_eq. Missing bounds mean -inf / +inf, exactly as in
+// linprog::solve (a variable with no `lower` is free), so one Problem has one meaning in both solvers.
 [[nodiscard]] inline Model to_sparse(const linprog::Problem &p, const Series &integer = pluss::series::undefined()) {
   Model M;
   M.cost = dense_vec_(p.c);
@@ -61,7 +62,7 @@ inline void append_dense_rows_(const Series &a, std::int32_t n, std::int32_t row
   }
   M.rows = rows;
   M.a = SparseMatrix::from_triplets(rows, n, r, c, v);
-  M.col_lo = p.lower ? dense_vec_(*p.lower) : std::vector<double>(static_cast<std::size_t>(n), 0.0);
+  M.col_lo = p.lower ? dense_vec_(*p.lower) : std::vector<double>(static_cast<std::size_t>(n), -kInf);
   M.col_hi = p.upper ? dense_vec_(*p.upper) : std::vector<double>(static_cast<std::size_t>(n), kInf);
   if (integer.defined()) {
     const auto flags = dense_vec_(integer);

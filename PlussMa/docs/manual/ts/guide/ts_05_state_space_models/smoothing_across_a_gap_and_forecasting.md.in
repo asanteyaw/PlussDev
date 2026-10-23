@@ -1,0 +1,8 @@
+# Smoothing across a gap, and forecasting
+
+[Back to State-Space Models](../ts_05_state_space_models.md)
+
+
+@@example Stats/time_series/guide/1220_smoothing_and_forecasting.cpp@@
+
+Five observations are missing (`used` is "no"). Inside the gap the filtered level simply extrapolates the trend, while the smoothed level also uses the data after the gap and ends up closer to the truth (6.779 against 6.663 at time 19, truth 6.700). The smoothed standard deviation rises in the middle of the gap (0.31) and returns to 0.17 where data are dense: the smoother reports honestly how little it knows where data are missing. The forecast carries the trend forward with intervals that widen with the horizon, because both the level and the slope are uncertain.

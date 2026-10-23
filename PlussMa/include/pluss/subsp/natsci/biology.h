@@ -9,3 +9,5 @@
 #include "pluss/subsp/natsci/biology/pharmacokinetics.h"
 #include "pluss/subsp/natsci/biology/systems.h"
 #include "pluss/subsp/natsci/biology/biophysics.h"
+#include "pluss/subsp/natsci/biology/spatial.h"
+#include "pluss/subsp/natsci/biology/biomechanics.h"

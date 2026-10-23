@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optima 1: Your First Constrained Problems &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="The smallest call" href="optima_01_first_problems/the_smallest_call.html" />
+    <link rel="prev" title="Optima: constrained optimization" href="../optima.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from optima_01_first_problems.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="optima-1-your-first-constrained-problems">
+<h1>Optima 1: Your First Constrained Problems<a class="headerlink" href="#optima-1-your-first-constrained-problems" title="Link to this heading">¶</a></h1>
+<p>You have a quantity to make as small as possible, and some rules the answer must obey: it has to stay inside a box, on one side of a curve, or satisfy a few linear equations. This chapter shows how to state such a problem to <code class="docutils literal notranslate"><span class="pre">optima</span></code>, how to read what comes back, and which of the call shapes to choose. By the end you can solve a problem with any mix of bounds, linear constraints and nonlinear constraints, with or without hand-written gradients.</p>
+<p>Every program in this chapter is complete. Copy one into a file, add <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;pluss/ma.h&gt;</span></code> if it is not already there, and it builds as shown. The output under each program is the exact output of that program.</p>
+<section id="the-mental-model">
+<h2>The mental model<a class="headerlink" href="#the-mental-model" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">optima</span></code> solves</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>minimize    f(x)
+subject to  lower &lt;= x &lt;= upper              (bounds)
+            Aeq x  = beq                     (linear equalities)
+            Aineq x &lt;= bineq                 (linear inequalities)
+            h(x)   = 0                       (nonlinear equalities)
+            g(x)  &lt;= 0                       (nonlinear inequalities)
+</pre></div>
+</div>
+<p>Four ideas carry the rest of the chapter.</p>
+<ul class="simple">
+<li><p><strong>The unknown is a pack of named blocks.</strong> A problem with one vector of unknowns has a single block called <code class="docutils literal notranslate"><span class="pre">x</span></code>. A problem with several quantities of different shapes uses one block per quantity, such as <code class="docutils literal notranslate"><span class="pre">slope</span></code> and <code class="docutils literal notranslate"><span class="pre">intercept</span></code>. Blocks keep their names and shapes in the answer, so you read results back by name.</p></li>
+<li><p><strong>Derivatives are exact and automatic.</strong> You write <code class="docutils literal notranslate"><span class="pre">f</span></code>, <code class="docutils literal notranslate"><span class="pre">g</span></code> and <code class="docutils literal notranslate"><span class="pre">h</span></code> with the <code class="docutils literal notranslate"><span class="pre">Trace</span></code> type, a number that remembers how it was computed. The solver then has exact gradients and Jacobians without you deriving them. If you already have a gradient, you can hand it over instead (program 9).</p></li>
+<li><p><strong>Inequalities are written “at most zero”.</strong> A nonlinear inequality returns <code class="docutils literal notranslate"><span class="pre">g(x)</span></code>, and the constraint holds when <code class="docutils literal notranslate"><span class="pre">g(x)</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>. To require <code class="docutils literal notranslate"><span class="pre">x0</span> <span class="pre">+</span> <span class="pre">x1</span> <span class="pre">&lt;=</span> <span class="pre">1.5</span></code>, return <code class="docutils literal notranslate"><span class="pre">x0</span> <span class="pre">+</span> <span class="pre">x1</span> <span class="pre">-</span> <span class="pre">1.5</span></code>. Linear inequalities use the matrix form <code class="docutils literal notranslate"><span class="pre">Aineq</span> <span class="pre">x</span> <span class="pre">&lt;=</span> <span class="pre">bineq</span></code>.</p></li>
+<li><p><strong>Answers satisfy tolerances, not equalities.</strong> The solver stops when constraints are met to within <code class="docutils literal notranslate"><span class="pre">1e-6</span></code> and the optimality measure is below <code class="docutils literal notranslate"><span class="pre">1e-6</span></code>. A coordinate that should be exactly <code class="docutils literal notranslate"><span class="pre">0</span></code> may come back as <code class="docutils literal notranslate"><span class="pre">1e-7</span></code>. Program 2 shows this.</p></li>
+</ul>
+</section>
+<section id="the-six-call-shapes">
+<h2>The six call shapes<a class="headerlink" href="#the-six-call-shapes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">optima</span></code> has six overloads. They differ only in how you hand over the objective and the starting point.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Objective</p></th>
+<th class="head"><p>Start</p></th>
+<th class="head"><p>Use when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Trace</span></code> function of one vector <code class="docutils literal notranslate"><span class="pre">Trace</span></code></p></td>
+<td><p>one <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
+<td><p>one vector of unknowns (programs 1 to 5)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Trace</span></code> function of a pack</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Series&gt;</span></code></p></td>
+<td><p>several named blocks (programs 6, 7, 11)</p></td>
+</tr>
+<tr class="row-even"><td><p>a <code class="docutils literal notranslate"><span class="pre">ConstrainedProblem</span></code></p></td>
+<td><p>one <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
+<td><p>the problem is built once and reused (program 8)</p></td>
+</tr>
+<tr class="row-odd"><td><p>a <code class="docutils literal notranslate"><span class="pre">ConstrainedProblem</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Series&gt;</span></code></p></td>
+<td><p>the problem is reused and has named blocks (program 8)</p></td>
+</tr>
+<tr class="row-even"><td><p>value-and-gradient function of one <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
+<td><p>one <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
+<td><p>you have an analytic gradient (program 9)</p></td>
+</tr>
+<tr class="row-odd"><td><p>value-and-gradient function of a pack</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Series&gt;</span></code></p></td>
+<td><p>analytic gradient, named blocks (program 9)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The four overloads that take a function (the first, second, fifth and sixth rows) accept the constraints as an optional fourth argument, after the options: a value built with <code class="docutils literal notranslate"><span class="pre">constraints()</span></code>. A <code class="docutils literal notranslate"><span class="pre">ConstrainedProblem</span></code> already contains its constraints, so the two overloads that take one have no such argument.</p>
+</section>
+<section id="a-guided-tour">
+<h2>A guided tour<a class="headerlink" href="#a-guided-tour" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="optima_01_first_problems/the_smallest_call.html"><span class="std std-doc">The smallest call</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/bounds.html"><span class="std std-doc">Bounds</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/a_nonlinear_inequality.html"><span class="std std-doc">A nonlinear inequality</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/a_nonlinear_equality.html"><span class="std std-doc">A nonlinear equality</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/linear_constraints.html"><span class="std std-doc">Linear constraints</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/every_constraint_family_at_once.html"><span class="std std-doc">Every constraint family at once</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/named_blocks_and_a_model.html"><span class="std std-doc">Named blocks and a model</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/a_problem_as_a_value.html"><span class="std std-doc">A problem as a value</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/analytic_gradients.html"><span class="std std-doc">Analytic gradients</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/reading_the_result.html"><span class="std std-doc">Reading the result</span></a></p></li>
+</ul>
+</section>
+<section id="decisions">
+<h2>Decisions<a class="headerlink" href="#decisions" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>One vector or named blocks?</strong> Use one vector when the unknowns are interchangeable coordinates, such as portfolio weights. Use named blocks when they mean different things or have different shapes, such as a matrix and an offset. Once you use blocks, build bounds as packs with the same names.</p></li>
+<li><p><strong>Automatic or analytic gradient?</strong> Start with <code class="docutils literal notranslate"><span class="pre">Trace</span></code>. Move to an analytic gradient only when you have a reason to, and audit it before trusting it.</p></li>
+<li><p><strong>Inline objective or a <code class="docutils literal notranslate"><span class="pre">ConstrainedProblem</span></code>?</strong> Inline for one-off solves. A <code class="docutils literal notranslate"><span class="pre">ConstrainedProblem</span></code> when the problem is reused, stored, or passed around.</p></li>
+<li><p><strong>Struct or builder?</strong> The builder is shorter and chooses the right objective slot for the callable you give it. Fill the struct when you need slots the builder does not cover.</p></li>
+</ul>
+</section>
+<section id="pitfalls">
+<h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="optima_01_first_problems/bounds_that_do_not_match_the_blocks.html"><span class="std std-doc">Bounds that do not match the blocks</span></a></p></li>
+<li><p><a class="reference internal" href="optima_01_first_problems/an_objective_that_returns_more_than_one_number.html"><span class="std std-doc">An objective that returns more than one number</span></a></p></li>
+</ul>
+</section>
+<section id="where-next">
+<h2>Where next<a class="headerlink" href="#where-next" title="Link to this heading">¶</a></h2>
+<p>The next chapter reads results in depth: every exit flag, what each field of the output means, how to watch a run with progress hooks, and how to tell a stalled run from a converged one.</p>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/optima/optima_01_first_problems.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

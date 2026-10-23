@@ -1232,9 +1232,19 @@ inline IntegraResult integra(const IntegrandFn& fn, double a, double b, const In
   }
 
   const AleatoriaResult mc = aleatoria(fn, a, b, options.monte_carlo);
+  result.evaluations = q.evaluations + mc.samples;
+  // Keep whichever answer is better by its own error estimate. Quadrature that missed a very tight tolerance may still be
+  // far more accurate than a Monte Carlo estimate (error of order 1/sqrt(samples)); then the quadrature value is returned,
+  // marked as not converged, instead of being replaced by a noisier one.
+  if (q.error_estimate < mc.standard_error) {
+    result.value = q.value;
+    result.error_estimate = q.error_estimate;
+    result.strategy_used = IntegraStrategy::Quadrature;
+    result.converged = false;
+    return result;
+  }
   result.value = mc.value;
   result.error_estimate = mc.standard_error;
-  result.evaluations = q.evaluations + mc.samples;
   result.strategy_used = IntegraStrategy::MonteCarlo;
   result.converged = true;
   return result;

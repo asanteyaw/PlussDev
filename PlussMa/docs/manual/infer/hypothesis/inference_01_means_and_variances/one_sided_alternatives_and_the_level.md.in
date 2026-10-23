@@ -1,0 +1,8 @@
+# One-sided alternatives and the level
+
+[Back to Means and Variances](../inference_01_means_and_variances.md)
+
+
+@@example Stats/inference/guide/1103_tails_and_levels.cpp@@
+
+With `Tail::Right` the alternative is "the mean is larger than 5.0": the p-value is half the two-sided one when the statistic points the right way, and the critical value is smaller in absolute terms (1.89 rather than 2.36 at 5%), so the test is more powerful against that alternative. With `Tail::Left` the statistic points the wrong way: the p-value is near 1 and the test cannot reject, however large the statistic. Choose the tail before looking at the data, from the question you are asking. Lowering `alpha` from 0.05 to 0.01 raises the critical value (2.36 to 3.50) and makes the test harder to pass; the p-value does not depend on `alpha`.

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The mesh &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Linear constraints" href="linear_constraints.html" />
+    <link rel="prev" title="The search step" href="the_search_step.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from the_mesh.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="the-mesh">
+<h1>The mesh<a class="headerlink" href="#the-mesh" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../dfo_07_pattern_search.html"><span class="std std-doc">Back to The Pattern Search Minimiser</span></a></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">dfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">optimization</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">vec</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">())}).</span><span class="n">to</span><span class="p">(</span><span class="n">f64</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">rosenbrock</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">).</span><span class="n">square</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">-1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">).</span><span class="n">square</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">PSConfig</span><span class="w"> </span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">c</span><span class="p">.</span><span class="n">lower_bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">-10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-5000.0</span><span class="p">});</span>
+<span class="w">  </span><span class="n">c</span><span class="p">.</span><span class="n">upper_bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5000.0</span><span class="p">});</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">3.0</span><span class="p">).</span><span class="n">square</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">((</span><span class="n">x</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">2000.0</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1000.0</span><span class="p">).</span><span class="n">square</span><span class="p">();</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">pattern_search_minimizer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}),</span><span class="w"> </span><span class="n">c</span><span class="p">);</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">o</span><span class="p">.</span><span class="n">status</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">scientific</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">o</span><span class="p">.</span><span class="n">minimum</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">defaultfloat</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;evals &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">o</span><span class="p">.</span><span class="n">diagnostics</span><span class="p">.</span><span class="n">evaluations</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">dfo</span><span class="o">::</span><span class="n">PSConfig</span><span class="w"> </span><span class="n">base</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;defaults (RangeLog scaling)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">base</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">off</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="n">off</span><span class="p">.</span><span class="n">mesh_scaling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">PSMeshScaling</span><span class="o">::</span><span class="n">Off</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;mesh_scaling Off&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">off</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">nups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="n">nups</span><span class="p">.</span><span class="n">mesh_scaling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dfo</span><span class="o">::</span><span class="n">PSMeshScaling</span><span class="o">::</span><span class="n">NupsDynamic</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;mesh_scaling NupsDynamic&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">nups</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">initial_mesh_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.01</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;initial_mesh_size 0.01&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">small</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">large</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="n">large</span><span class="p">.</span><span class="n">initial_mesh_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100.0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;initial_mesh_size 100&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">large</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">slow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="n">slow</span><span class="p">.</span><span class="n">mesh_contraction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.9</span><span class="p">;</span><span class="w"> </span><span class="n">slow</span><span class="p">.</span><span class="n">mesh_expansion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.1</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;expansion 1.1, contraction 0.9&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">slow</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>defaults (RangeLog scaling)       Converged                 1.41e-10   evals 221
+mesh_scaling Off                  ReachedIterationBudget    6.76e-03   evals 660
+mesh_scaling NupsDynamic          Converged                 2.57e-03   evals 505
+initial_mesh_size 0.01            Converged                 9.34e-11   evals 201
+initial_mesh_size 100             Converged                 3.19e-11   evals 277
+expansion 1.1, contraction 0.9    ReachedIterationBudget    9.98e-11   evals 786
+</pre></div>
+</div>
+<p>The problem has one variable of order 1 and one of order 1000. With bounds supplied, <code class="docutils literal notranslate"><span class="pre">RangeLog</span></code> scales each variable’s step by its range, so the poll behaves as if both were of order one, and the run converges accurately. Without scaling, a step suited to one variable is far too small or too large for the other. The initial mesh size matters much less than the scaling: the mesh grows and shrinks by factors of 2 and 0.5, so a poor start is corrected in a few iterations. Gentler factors (1.1 and 0.9) work, but need many more iterations.</p>
+<p>Scaling is derived from the bounds. Without bounds there is no range to read, so give the variables comparable scales yourself (divide by a typical size inside the objective) or supply bounds.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/optim/dfo/dfo_07_pattern_search/the_mesh.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -57,10 +57,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region", false);
+auto labeled = orders.labels().set("region", false);
 std::cout << labeled;
 
-auto out = labeled.label().drop({"region"});
+auto out = labeled.labels().drop({"region"});
 std::cout << out;
 ```
 
@@ -100,7 +100,7 @@ structure) and its values are untouched.
 Example 2. Row-filter with `duplicated = true` — removes extra occurrences.
 
 ```cpp
-auto out2 = labeled.label().drop(DataFrame::LabelDropOptions{.duplicated = true});
+auto out2 = labeled.labels().drop(DataFrame::LabelDropOptions{.duplicated = true});
 std::cout << out2;
 ```
 
@@ -124,7 +124,7 @@ Example 3. Row-filter with `repeated = true` — removes every occurrence of a
 repeated value.
 
 ```cpp
-auto out3 = labeled.label().drop(DataFrame::LabelDropOptions{.repeated = true});
+auto out3 = labeled.labels().drop(DataFrame::LabelDropOptions{.repeated = true});
 std::cout << out3;
 ```
 

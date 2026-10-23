@@ -1,0 +1,3 @@
+add_executable(eng_circuit_test circuit_test.cpp)
+target_link_libraries(eng_circuit_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_circuit_test COMMAND eng_circuit_test)

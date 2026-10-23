@@ -1,4 +1,5 @@
 #include "pluss/subsp/stats/ts.h"
+#include "pluss/subsp/stats/tails.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
@@ -95,12 +96,8 @@ std::vector<std::int64_t> normalize_lags_(const std::vector<std::int64_t>& lags,
   return out;
 }
 
-double chisq_survival_(double stat, std::int64_t dof, Config cfg) {
-  const auto out_cfg = f64_cfg_(cfg);
-  const Series q = pluss::make_series(std::vector<double>{stat}, {1}, out_cfg);
-  const double cdf = pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>();
-  const double p = 1.0 - cdf;
-  return std::clamp(p, 0.0, 1.0);
+double chisq_survival_(double stat, std::int64_t dof, Config /*cfg*/) {
+  return std::clamp(pluss::subsp::stats::tails::chi2_sf(stat, static_cast<double>(dof)), 0.0, 1.0);
 }
 
 } // namespace

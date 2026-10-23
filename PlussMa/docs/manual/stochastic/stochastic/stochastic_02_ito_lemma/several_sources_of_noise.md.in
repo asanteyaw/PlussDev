@@ -1,0 +1,10 @@
+# Several sources of noise
+
+[Back to Differentials and Ito's Lemma](../stochastic_02_ito_lemma.md)
+
+
+With `m` independent Wiener processes, `dX = μ dt + Σ σ_k dW_k`. Pass `sigma` with a trailing axis of length `m`. The second-order term becomes `½ g'' Σ σ_k²` and the diffusion has one column per source.
+
+@@example Probability/random_processes/guide/sde/12_several_factors.cpp@@
+
+The diffusion has shape `[3, 2]`: three states, two sources. For `g = x²` each row matches `2xμ + σ₁² + σ₂²` for the drift and `2xσ_k` for the diffusion, to the printed digits.

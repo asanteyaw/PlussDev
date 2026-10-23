@@ -108,6 +108,39 @@ TEST_CASE("sequential qp can use Krylov routing for sparse-structured KKT solves
   REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(5e-2));
   REQUIRE(x[0] == Approx(0.25).margin(5e-2));
   REQUIRE(x[1] == Approx(1.25).margin(5e-2));
-  // The quadratic subproblem is solved directly, so the Krylov policy is accepted but not exercised.
+  // The quadratic subproblem's reduced Newton system is solved by conjugate gradients, and says so.
   REQUIRE(result.converged);
+  REQUIRE(result.krylov_iterations > 0);
+}
+
+TEST_CASE("sequential qp honours every linear-system solver choice for its subproblem",
+          "[optim][sqp][linear-policy]") {
+  const Series target = make_vec({1.0, 2.0});
+  ConstrainedProblem problem;
+  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
+    return sum(square(p.at("x") - trace(target, false)));
+  };
+  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace { return sum(p.at("x")) - 1.5; };
+  problem.bounds.lower = ParameterPack<Series>({{"x", make_vec({0.0, 0.0})}});
+  const ParameterPack<Series> initial({{"x", make_vec({1.0, 1.0})}});
+
+  for (auto solver : {OptimaLinearSystemSolver::Auto, OptimaLinearSystemSolver::Cholesky,
+                      OptimaLinearSystemSolver::PivotedDirect, OptimaLinearSystemSolver::Inverse,
+                      OptimaLinearSystemSolver::PseudoInverse, OptimaLinearSystemSolver::ConjugateGradient}) {
+    SequentialQPOptions options;
+    options.max_iterations = 40;
+    options.linear_system_solver = solver;
+    options.constraint_tolerance = 1e-6;
+    options.optimality_tolerance = 1e-5;
+    const auto result = solve_sequential_qp(problem, initial, options);
+    const auto x = result.params.at("x").to_vec<double>();
+    REQUIRE(result.converged);
+    REQUIRE(x[0] == Approx(0.25).margin(1e-4));
+    REQUIRE(x[1] == Approx(1.25).margin(1e-4));
+    if (solver == OptimaLinearSystemSolver::ConjugateGradient) {
+      REQUIRE(result.krylov_iterations > 0);
+    } else {
+      REQUIRE(result.krylov_iterations == 0);
+    }
+  }
 }

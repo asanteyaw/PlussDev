@@ -1,0 +1,8 @@
+# Filtering a local linear trend
+
+[Back to State-Space Models](../ts_05_state_space_models.md)
+
+
+@@example Stats/time_series/guide/1219_state_space_filter.cpp@@
+
+The local linear trend model has a level and a slope; the level moves by the slope each step, and both are disturbed by small shocks. Started from an uninformative prior, the filter learns the slope quickly: it is 0.05 after the first observation, 0.15 after three and about 0.3 from then on (the data rise 0.3 per step). The forecast errors shrink from 1.24 (the prior is far from the first value) to values near the observation noise. The scan over the observation noise standard deviation has its peak at 0.3, next to the value 0.289 that generated the data; too small a value makes the filter chase noise (the likelihood falls to −79), too large a value makes it sluggish.

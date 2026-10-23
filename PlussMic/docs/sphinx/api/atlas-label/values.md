@@ -18,7 +18,7 @@ Returns the atlas's depth-axis labels as a `Slate` — the same values
 `Slate` rather than a `std::optional<Slate>`. If the atlas was constructed without
 explicit depth labels, `values()` materializes the default `0, 1, 2, ...` integer
 positions on the fly instead of requiring a `has_value()` check first — the same
-"always defined" convenience [`DataFrame::label().values()`](../dataframe-label/values.md)
+"always defined" convenience [`DataFrame::labels().values()`](../dataframe-label/values.md)
 offers for the case axis, applied here to the depth axis instead.
 
 ## Returns

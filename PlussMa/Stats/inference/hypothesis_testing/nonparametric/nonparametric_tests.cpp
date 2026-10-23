@@ -249,6 +249,95 @@ SignTestResult signtest_from_diffs_(const std::vector<double>& diffs,
   return out;
 }
 
+// Exact null distributions for the rank tests. Ranks are doubled so that tied (half-integer) ranks stay integers.
+std::vector<std::int64_t> doubled_ranks_(const std::vector<double>& ranks) {
+  std::vector<std::int64_t> out;
+  out.reserve(ranks.size());
+  for (double r : ranks) {
+    out.push_back(static_cast<std::int64_t>(std::llround(2.0 * r)));
+  }
+  return out;
+}
+
+// Tail probabilities P(S <= s) and P(S >= s) of a discrete distribution on the doubled-integer support.
+std::pair<double, double> pmf_tails_(const std::vector<double>& pmf, std::int64_t s) {
+  double left = 0.0;
+  double right = 0.0;
+  for (std::int64_t v = 0; v < static_cast<std::int64_t>(pmf.size()); ++v) {
+    if (v <= s) {
+      left += pmf[static_cast<std::size_t>(v)];
+    }
+    if (v >= s) {
+      right += pmf[static_cast<std::size_t>(v)];
+    }
+  }
+  return {std::min(1.0, left), std::min(1.0, right)};
+}
+
+double exact_p_from_tails_(double left, double right, Tail tail) {
+  switch (tail) {
+    case Tail::Left:
+      return clamp01_(left);
+    case Tail::Right:
+      return clamp01_(right);
+    case Tail::Both:
+      return clamp01_(2.0 * std::min(left, right));
+  }
+  return 1.0;
+}
+
+// Signed-rank statistic under H0: each rank enters the sum with probability 1/2.
+double signrank_exact_p_(const std::vector<double>& ranks, double wplus, Tail tail) {
+  const auto d = doubled_ranks_(ranks);
+  std::int64_t total = 0;
+  for (auto v : d) {
+    total += v;
+  }
+  std::vector<double> pmf(static_cast<std::size_t>(total + 1), 0.0);
+  pmf[0] = 1.0;
+  std::int64_t reach = 0;
+  for (auto v : d) {
+    reach += v;
+    for (std::int64_t s = reach; s >= 0; --s) {
+      const double shifted = (s >= v) ? pmf[static_cast<std::size_t>(s - v)] : 0.0;
+      pmf[static_cast<std::size_t>(s)] = 0.5 * (pmf[static_cast<std::size_t>(s)] + shifted);
+    }
+  }
+  const auto [left, right] = pmf_tails_(pmf, static_cast<std::int64_t>(std::llround(2.0 * wplus)));
+  return exact_p_from_tails_(left, right, tail);
+}
+
+// Rank-sum statistic under H0: the sample X is a uniformly random subset of size nx of the pooled ranks.
+double ranksum_exact_p_(const std::vector<double>& ranks, std::int64_t nx, double rank_sum_x, Tail tail) {
+  const auto d = doubled_ranks_(ranks);
+  std::int64_t total = 0;
+  for (auto v : d) {
+    total += v;
+  }
+  std::vector<std::vector<double>> ways(static_cast<std::size_t>(nx + 1), std::vector<double>(static_cast<std::size_t>(total + 1), 0.0));
+  ways[0][0] = 1.0;
+  std::int64_t seen = 0;
+  for (std::size_t i = 0; i < d.size(); ++i) {
+    seen += d[i];
+    const std::int64_t kmax = std::min<std::int64_t>(static_cast<std::int64_t>(i) + 1, nx);
+    for (std::int64_t k = kmax; k >= 1; --k) {
+      for (std::int64_t s = seen; s >= d[i]; --s) {
+        ways[static_cast<std::size_t>(k)][static_cast<std::size_t>(s)] += ways[static_cast<std::size_t>(k - 1)][static_cast<std::size_t>(s - d[i])];
+      }
+    }
+  }
+  double count = 0.0;
+  for (double w : ways[static_cast<std::size_t>(nx)]) {
+    count += w;
+  }
+  std::vector<double> pmf(ways[static_cast<std::size_t>(nx)].size());
+  for (std::size_t s = 0; s < pmf.size(); ++s) {
+    pmf[s] = ways[static_cast<std::size_t>(nx)][s] / count;
+  }
+  const auto [left, right] = pmf_tails_(pmf, static_cast<std::int64_t>(std::llround(2.0 * rank_sum_x)));
+  return exact_p_from_tails_(left, right, tail);
+}
+
 SignRankResult signrank_from_diffs_(const std::vector<double>& diffs,
                                     const TestOptions& options,
                                     Config cfg,
@@ -290,20 +379,20 @@ SignRankResult signrank_from_diffs_(const std::vector<double>& diffs,
   const double var = 0.25 * sumsq_rank;
   const double sd = std::sqrt(std::max(kEps, var));
   const double z = continuity_corrected_z_(wplus, mean, sd, options.tail);
-  const double pvalue = p_from_cdf_(normal_cdf_(z, out_cfg), options.tail);
+  // Exact distribution for small samples (n <= 15 nonzero differences), the normal approximation otherwise.
+  const bool exact = options.method == PValueMethod::Exact || (options.method == PValueMethod::Auto && n <= 15);
+  const double pvalue = exact ? signrank_exact_p_(ranks, wplus, options.tail)
+                              : p_from_cdf_(normal_cdf_(z, out_cfg), options.tail);
 
   double critical = 0.0;
-  bool reject = false;
   if (options.tail == Tail::Both) {
     critical = normal_quantile_(1.0 - options.alpha * 0.5, out_cfg);
-    reject = std::abs(z) > critical;
   } else if (options.tail == Tail::Right) {
     critical = normal_quantile_(1.0 - options.alpha, out_cfg);
-    reject = z > critical;
   } else {
     critical = normal_quantile_(options.alpha, out_cfg);
-    reject = z < critical;
   }
+  const bool reject = pvalue < options.alpha;
 
   SignRankResult out;
   out.stat = z;
@@ -369,20 +458,22 @@ RankSumResult ranksum(const Series& x, const Series& y, const TestOptions& optio
   if (var_u > kEps) {
     z = continuity_corrected_z_(u, mean_u, std::sqrt(var_u), options.tail);
   }
-  const double pvalue = p_from_cdf_(normal_cdf_(z, out_cfg), options.tail);
+  // Exact distribution for small samples (the smaller sample under 10 and fewer than 20 observations in all), the normal
+  // approximation otherwise.
+  const bool exact = options.method == PValueMethod::Exact ||
+                     (options.method == PValueMethod::Auto && std::min(nx, ny) < 10 && (nx + ny) < 20);
+  const double pvalue = exact ? ranksum_exact_p_(ranks, nx, rx, options.tail)
+                              : p_from_cdf_(normal_cdf_(z, out_cfg), options.tail);
 
   double critical = 0.0;
-  bool reject = false;
   if (options.tail == Tail::Both) {
     critical = normal_quantile_(1.0 - options.alpha * 0.5, out_cfg);
-    reject = std::abs(z) > critical;
   } else if (options.tail == Tail::Right) {
     critical = normal_quantile_(1.0 - options.alpha, out_cfg);
-    reject = z > critical;
   } else {
     critical = normal_quantile_(options.alpha, out_cfg);
-    reject = z < critical;
   }
+  const bool reject = pvalue < options.alpha;
 
   RankSumResult out;
   out.stat = z;

@@ -1,0 +1,10 @@
+# Bounds
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+Bounds restrict each coordinate to an interval. This program puts the unconstrained minimum at `(3, -2)` and the box at `[0, 2] x [0, 2]`, so the solver has to settle on the corner of the box nearest the target. Bounds go into a `constraints()` value, passed as the fourth argument.
+
+@@example Numerical/optimization/guide/optima/02_bounds.cpp@@
+
+The answer is the corner `(2, 0)`. The second coordinate prints as `7.18148e-12` instead of exactly `0`: a coordinate that should sit on a bound can come back a hair away from it, within the stopping tolerance. The reported violation of `0` confirms the point is feasible.

@@ -1,0 +1,263 @@
+# `pluss::subsp::stats::ts::GarchFit`
+
+The result of a `Garch` fit: the estimated parameters and the methods that evaluate the fitted model.
+
+## Signature
+
+```cpp
+ts::GarchFit fit = ts::Garch::fit_mle(y, options);
+```
+
+## Construction
+
+Obtained from [`Garch::fit_mle`](Garch.md).
+
+## State
+
+| Field | Meaning |
+|---|---|
+| `mean` | the sample mean removed before fitting |
+| `omega` | the constant `ω` |
+| `arch`, `garch` | the coefficient vectors `α_i`, `β_j` |
+| `variance_floor`, `stationarity_margin`, `finite_diff_eps` | settings the methods use |
+
+## Methods
+
+### `unconditional_var`
+
+```cpp
+double unconditional_var() const;
+```
+
+The long-run variance `ω / (1 − Σα − Σβ)` that the forecasts revert to.
+
+**Returns.** The long-run variance as a `double`.
+
+**Errors.** The persistence must be below 1.
+
+### `persistence`
+
+```cpp
+double persistence() const;
+```
+
+The persistence `Σα + Σβ`: how slowly a variance shock dies out.
+
+**Returns.** The persistence as a `double`.
+
+### `infer`
+
+```cpp
+pluss::Series infer(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The fitted conditional variances `h_t` of `y`, one per observation: the model's estimate of the variance of each return given the past. Dividing `(y − mean)` by their square roots gives the standardised residuals, which should show no remaining clustering (test them with [`arch_lm`](../diagnostics/arch_lm.md)).
+
+`const pluss::Series& y`
+: The return series in time order (at least 8 observations; a vector or an `n × 1` matrix).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** A `Series` of variances, the length of `y`.
+
+### `loglik`
+
+```cpp
+double loglik(const pluss::Series& y) const;
+```
+
+The Gaussian log-likelihood of `y` under the fitted parameters. Compare models by it and by Akaike's criterion.
+
+`const pluss::Series& y`
+: The return series in time order (at least 8 observations; a vector or an `n × 1` matrix).
+
+**Returns.** The total log-likelihood as a `double`.
+
+### `loglik_per_obs`
+
+```cpp
+pluss::Series loglik_per_obs(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The contribution of each observation to the log-likelihood; they sum to `loglik`.
+
+`const pluss::Series& y`
+: The return series in time order (at least 8 observations; a vector or an `n × 1` matrix).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** A `Series`, one value per observation.
+
+### `score`
+
+```cpp
+pluss::Series score(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The gradient of the log-likelihood with respect to the parameters (`ω`, the `α` coefficients, then the `β` coefficients), by central differences. It is close to zero at a maximum.
+
+`const pluss::Series& y`
+: The return series in time order (at least 8 observations; a vector or an `n × 1` matrix).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** A `Series` with one entry per parameter.
+
+### `observed_inf`
+
+```cpp
+pluss::Series observed_inf(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The observed information matrix (minus the numerical Hessian of the log-likelihood) in the parameter order of `score`. Its inverse estimates the covariance of the estimates.
+
+`const pluss::Series& y`
+: The return series in time order (at least 8 observations; a vector or an `n × 1` matrix).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** A square `Series`, one row and column per parameter.
+
+### `forecast`
+
+```cpp
+pluss::Series forecast(std::int64_t horizon, const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+Forecasts the conditional variance `horizon` steps beyond `y`. Each forecast mean-reverts geometrically to the unconditional variance at the rate of the persistence; the one-step forecast uses the last observed shock and variance. (For `EgarchFit` the forecast is the exact expectation of the variance given the data: the one-step value is known and each later step multiplies in the expectation of the exponential of the unknown shocks, which is available in closed form for Gaussian shocks.)
+
+`std::int64_t horizon`
+: Number of steps ahead (greater than 0).
+
+`const pluss::Series& y`
+: The return series in time order (at least 8 observations; a vector or an `n × 1` matrix).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** A `Series` of `horizon` variance forecasts.
+
+**Errors.** `horizon` must be positive.
+
+### `simulate`
+
+```cpp
+pluss::Series simulate(std::int64_t num_observations, pluss::codem::Config cfg = {}, std::uint64_t seed = 0) const;
+```
+
+Draws a return series from the fitted model with Gaussian shocks. The same `seed` gives the same series.
+
+`std::int64_t num_observations`
+: Length of the simulated series.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+`std::uint64_t seed`
+: Seed of the random stream (default 0, a fixed stream).
+
+**Returns.** A `Series` of simulated returns.
+
+## Practical Examples
+
+### Example 1
+
+Fit the model, check the first-order condition (the score is zero at the maximum) and compare the fitted variances with their long-run level.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+// Returns whose variance responds more to negative shocks: h = 0.05 + (0.05 + 0.20 * 1[r < 0]) r_prev^2 + 0.75 h_prev.
+Series returns(int n) {
+  std::vector<double> r(n);
+  double h = 0.5, prev = 0.0;
+  for (int t = 0; t < n; ++t) {
+    double u = std::sin(12.9898 * (t + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    const double z = (u - 0.5) * std::sqrt(12.0);
+    h = 0.05 + (0.05 + (prev < 0 ? 0.20 : 0.0)) * prev * prev + 0.75 * h;
+    r[t] = std::sqrt(h) * z;
+    prev = r[t];
+  }
+  return pluss::make_series(r, {n}, f64);
+}
+
+int main() {
+  const Series y = returns(1000);
+  const auto fit = ts::Garch::fit_mle(y);
+  show("score", fit.score(y));
+  const Series h = fit.infer(y);
+  std::cout << std::fixed << std::setprecision(4) << "mean of fitted variances " << h.mean().item<double>() << ", log-likelihood " << fit.loglik(y) << "\n";
+}
+```
+
+### Example 2
+
+Forecast the variance and simulate a series; the same seed reproduces it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+// Returns whose variance responds more to negative shocks: h = 0.05 + (0.05 + 0.20 * 1[r < 0]) r_prev^2 + 0.75 h_prev.
+Series returns(int n) {
+  std::vector<double> r(n);
+  double h = 0.5, prev = 0.0;
+  for (int t = 0; t < n; ++t) {
+    double u = std::sin(12.9898 * (t + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    const double z = (u - 0.5) * std::sqrt(12.0);
+    h = 0.05 + (0.05 + (prev < 0 ? 0.20 : 0.0)) * prev * prev + 0.75 * h;
+    r[t] = std::sqrt(h) * z;
+    prev = r[t];
+  }
+  return pluss::make_series(r, {n}, f64);
+}
+
+int main() {
+  const Series y = returns(1000);
+  const auto fit = ts::Garch::fit_mle(y);
+  show("forecast", fit.forecast(5, y));
+  const Series a = fit.simulate(6, f64, 3ULL), b = fit.simulate(6, f64, 3ULL);
+  show("simulated", a);
+  std::cout << "same seed, same draws: " << std::boolalpha << ((a - b).abs().max().item<double>() == 0.0) << "\n";
+}
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::CalcAccessor::diff.malliavin &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::CalcAccessor::grad" href="grad.html" />
+    <link rel="prev" title="Series::CalcAccessor::diff.marcus" href="diff_marcus.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-calcaccessor-diff-malliavin">
+<h1>Series::CalcAccessor::diff.malliavin<a class="headerlink" href="#series-calcaccessor-diff-malliavin" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_calc_accessor_api_reference.html"><span class="std std-doc">Back to Series::CalcAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">CalcAccessor</span><span class="o">::</span><span class="n">DiffAccessor</span><span class="o">::</span><span class="n">malliavin</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Series</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+
+<span class="n">Series</span><span class="w"> </span><span class="n">malliavin_path</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Series</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+
+<span class="n">Series</span><span class="w"> </span><span class="n">skorokhod</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Series</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">dt</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-computes">
+<h2>What It Computes<a class="headerlink" href="#what-it-computes" title="Link to this heading">¶</a></h2>
+<p>Discretize a Wiener path into increments <code class="docutils literal notranslate"><span class="pre">ΔW_1,</span> <span class="pre">…,</span> <span class="pre">ΔW_n</span></code>. A functional <code class="docutils literal notranslate"><span class="pre">F</span></code> of the
+path is a function of those increments, and its <strong>Malliavin derivative</strong> is the
+gradient with respect to them:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>D_i F = ∂F / ∂(ΔW_i)
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">malliavin</span></code> takes the increments as the receiver and returns that gradient. It is
+computed by one reverse pass, however many increments there are. <code class="docutils literal notranslate"><span class="pre">malliavin_path</span></code>
+takes the <em>path</em> <code class="docutils literal notranslate"><span class="pre">W</span></code> (n + 1 samples starting at 0) as the receiver and
+differentiates with respect to its n increments, so <code class="docutils literal notranslate"><span class="pre">F</span></code> sees the path rebuilt from
+them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">skorokhod</span></code> computes the <strong>Skorokhod integral</strong> (the divergence, adjoint of the
+Malliavin derivative) of a process <code class="docutils literal notranslate"><span class="pre">u</span> <span class="pre">=</span> <span class="pre">u(ΔW)</span></code> that may look into the future:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>δ(u) = Σ u_i ΔW_i − Σ (∂u_i / ∂ΔW_i) Δt
+</pre></div>
+</div>
+<p>For an adapted <code class="docutils literal notranslate"><span class="pre">u</span></code> the second sum vanishes and <code class="docutils literal notranslate"><span class="pre">δ(u)</span></code> is the Itô sum. For an
+anticipating <code class="docutils literal notranslate"><span class="pre">u</span></code> it is still defined. The two are linked by the duality <code class="docutils literal notranslate"><span class="pre">E[F</span> <span class="pre">δ(u)]</span> <span class="pre">=</span> <span class="pre">E[Σ</span> <span class="pre">u_i</span> <span class="pre">D_i</span> <span class="pre">F</span> <span class="pre">Δt]</span></code>, the integration by parts that moves a derivative from a
+payoff onto a weight.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The receiver holds the Brownian increments (for <code class="docutils literal notranslate"><span class="pre">malliavin</span></code>, <code class="docutils literal notranslate"><span class="pre">skorokhod</span></code>) or the
+path (for <code class="docutils literal notranslate"><span class="pre">malliavin_path</span></code>) along <code class="docutils literal notranslate"><span class="pre">dim</span></code>. Other axes are independent paths.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">F</span></code> returns one value per remaining index: it reduces the time axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">u</span></code> returns a process with the shape of its argument.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dt</span></code> is the time step (for <code class="docutils literal notranslate"><span class="pre">skorokhod</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim</span></code> is the time axis.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">F</span> <span class="pre">=</span> <span class="pre">W_T²</span></code> depends on every increment equally; its derivative is <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">W_T</span></code>
+on each one.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dw</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">diff</span><span class="p">.</span><span class="n">malliavin</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">inc</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">inc</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;derivative &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;2 W_T = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">0.3</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>derivative pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.8, 0.8, 0.8, 0.8]
+2 W_T = 0.8
+</pre></div>
+</div>
+<p>Example 2. The maximum of the path. Only the increments up to the position of the
+maximum move it: here the maximum is the first sample after the start, so only the
+first increment has a nonzero derivative.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.4</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">unite</span><span class="p">({</span><span class="n">dw</span><span class="p">.</span><span class="n">cumsum</span><span class="p">(</span><span class="mi">0</span><span class="p">)},</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">diff</span><span class="p">.</span><span class="n">malliavin_path</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">w</span><span class="p">.</span><span class="n">amax</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;path       &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;derivative &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>path       pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[0, 0.3, -0.2, 0, -0.4]
+derivative pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1, 0, 0, 0]
+</pre></div>
+</div>
+<p>Example 3. For an adapted integrand the Skorokhod integral is the Itô sum. Take <code class="docutils literal notranslate"><span class="pre">u_i</span> <span class="pre">=</span> <span class="pre">W</span></code> at the left end of step <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">adapted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">inc</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">inc</span><span class="p">.</span><span class="n">cumsum</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">sub</span><span class="p">(</span><span class="n">inc</span><span class="p">);</span><span class="w"> </span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dw</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">diff</span><span class="p">.</span><span class="n">skorokhod</span><span class="p">(</span><span class="n">adapted</span><span class="p">,</span><span class="w"> </span><span class="mf">0.25</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ito_sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adapted</span><span class="p">(</span><span class="n">dw</span><span class="p">).</span><span class="n">mul</span><span class="p">(</span><span class="n">dw</span><span class="p">).</span><span class="n">sum</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;skorokhod &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;ito sum   &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ito_sum</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>skorokhod pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-0.19
+ito sum   pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-0.19
+</pre></div>
+</div>
+<p>Example 4. An anticipating integrand. With <code class="docutils literal notranslate"><span class="pre">u_i</span> <span class="pre">=</span> <span class="pre">W_T</span></code> for every <code class="docutils literal notranslate"><span class="pre">i</span></code>, the Itô sum is
+not defined, but <code class="docutils literal notranslate"><span class="pre">δ(u)</span> <span class="pre">=</span> <span class="pre">W_T²</span> <span class="pre">−</span> <span class="pre">T</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">anticipating</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">inc</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">inc</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">expand</span><span class="p">({</span><span class="n">inc</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)});</span><span class="w"> </span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dw</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">diff</span><span class="p">.</span><span class="n">skorokhod</span><span class="p">(</span><span class="n">anticipating</span><span class="p">,</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">4.0</span><span class="p">);</span>
+
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">wT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.4</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;skorokhod   &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;W_T^2 - T = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">wT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">wT</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>skorokhod   pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-0.84
+W_T^2 - T = -0.84
+</pre></div>
+</div>
+<p>Example 5. Many paths at once: time on axis 0, paths on axis 1. The derivative has
+the shape of the increments.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">randn</span><span class="p">({</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">),</span><span class="w"> </span><span class="mi">7</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dw</span><span class="p">.</span><span class="n">calc</span><span class="p">.</span><span class="n">diff</span><span class="p">.</span><span class="n">malliavin</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">inc</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">inc</span><span class="p">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;shape of derivative [&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;equals 2 W_T on each increment: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">dw</span><span class="p">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">expand</span><span class="p">({</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">})).</span><span class="n">abs</span><span class="p">().</span><span class="n">amax</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>shape of derivative [6, 3]
+equals 2 W_T on each increment: 0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">skorokhod</span></code> costs one reverse pass per increment. Use it for the grid sizes of a
+test or a sensitivity, not for millions of steps.</p></li>
+<li><p>The Malliavin derivative here is the <em>discrete</em> derivative of the discretized
+functional. It converges to the continuous one as the grid is refined; on a coarse
+grid, compare against a known case before relying on it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">F</span></code> must be differentiable in the increments. A functional with an indicator
+(a digital payoff) has derivative zero almost everywhere; that is the case for
+which the Malliavin weight is used instead of the pathwise derivative.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">diff.malliavin</span></code> differentiates a functional of a Brownian path with respect to its
+increments, and <code class="docutils literal notranslate"><span class="pre">diff.skorokhod</span></code> integrates processes that look ahead.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="diff_ito.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff.ito</span></code></span></a> and <a class="reference internal" href="antidiff_ito.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">antidiff.ito</span></code></span></a>: the adapted case.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+  <li><a href="../../series_calc_accessor_api_reference.html">Series::CalcAccessor API Reference</a><ul>
+      <li>Previous: <a href="diff_marcus.html" title="previous chapter">Series::CalcAccessor::diff.marcus</a></li>
+      <li>Next: <a href="grad.html" title="next chapter">Series::CalcAccessor::grad</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series-calc/diff_malliavin.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

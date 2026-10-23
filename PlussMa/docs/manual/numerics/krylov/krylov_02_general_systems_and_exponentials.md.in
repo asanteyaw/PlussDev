@@ -1,0 +1,51 @@
+# Large Linear Systems 2: General Systems and Exponentials
+
+Not every system is symmetric, and not every linear problem asks for a solve: sometimes you want the matrix exponential applied to a vector. This chapter covers restarted GMRES for general systems and the Arnoldi evaluation of `exp(t A) v`. After it you can solve non-symmetric systems matrix-free, tune the restart, and advance a linear evolution without forming a dense exponential.
+
+Every program is complete and its output is the output of that program.
+
+## GMRES for general systems
+
+```cpp
+krylov::GmresResult krylov::gmres(apply, rhs, solve_dims, GmresOptions options = {}, initial = undefined);
+```
+
+GMRES builds an orthonormal basis of the Krylov space, finds the combination that minimises the residual, and restarts from the result. It works for any invertible real or complex operator.
+
+| `GmresOptions` | Meaning | Default |
+|---|---|---|
+| `max_iterations` | total iteration cap | 128 |
+| `restart` | basis size before restarting | 24 |
+| `relative_tolerance`, `absolute_tolerance` | stopping tolerances | 1e-8, 1e-10 |
+| `rank_tolerance` | numerical-rank threshold used when the basis degenerates | 1e-12 |
+
+`GmresResult` has `solution`, `residual_norm`, `relative_residual`, per-lane `converged`, `iterations`, `operator_evaluations` and `restarts`.
+
+- [The restart length](krylov_02_general_systems_and_exponentials/the_restart_length.md)
+
+## The action of a matrix exponential
+
+```cpp
+krylov::ExpResult krylov::exp_action(apply, v, solve_dims, double time, ExpOptions options = {});
+```
+
+This computes `exp(time · A) v` by an Arnoldi projection. It is the solution at time `time` of `y' = A y` starting from `v`, and it is how large linear evolutions (diffusion, wave and Schrödinger equations on a grid) are advanced exactly in time, with no time-stepping error.
+
+| `ExpOptions` | Meaning | Default |
+|---|---|---|
+| `max_iterations` | size of the Krylov space | 32 |
+| `relative_tolerance`, `absolute_tolerance` | accuracy for the residual estimate | 1e-9, 1e-12 |
+
+`ExpResult` has `value`, `residual_estimate` (the standard a-posteriori Krylov estimate), per-lane `converged`, `iterations` and `operator_evaluations`.
+
+- [Heat flow](krylov_02_general_systems_and_exponentials/heat_flow.md)
+
+## Checklist
+
+1. Not symmetric: `gmres`. Count `operator_evaluations`, and try several `restart` lengths.
+2. Linear evolution `y' = A y`: `exp_action`, growing `max_iterations` until `converged`.
+3. `gmres` and `exp_action` accept complex operators and vectors; `cg` and `pcg` are for real systems.
+4. Use the residual estimate and the `converged` flags; they are the stopping evidence.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

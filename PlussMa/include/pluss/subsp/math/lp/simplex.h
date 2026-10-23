@@ -19,6 +19,7 @@
 #include "pluss/subsp/math/lp/sparse.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cmath>
@@ -37,6 +38,7 @@ struct SimplexOptions final {
   double pivot_tol = 1e-7;
   std::int64_t max_iterations = 5'000'000;
   double time_limit_seconds = 1e30;
+  const std::atomic<bool> *stop = nullptr; // cooperative cancellation (another solver finished first): reported as TimeLimit
   int refactor_interval = 300;
   bool perturb = true;
   bool scale = true;
@@ -532,7 +534,7 @@ private:
 
   // Stall response: add a fresh, larger random perturbation to the NONBASIC costs (direction chosen to keep d_j feasible).
   void escalate_perturbation(int level) {
-    static std::mt19937_64 rng(777);
+    thread_local std::mt19937_64 rng(777);
     std::uniform_real_distribution<double> u(0.0, 1.0);
     const double base = 5e-6 * std::pow(4.0, level);
     for (std::int32_t j = 0; j < n_ + m_; ++j) {
@@ -663,6 +665,9 @@ private:
         inf = xv - hi_[j];
       return inf * inf;
     };
+    // adaptive refactorisation: iterations get slower as eta columns pile up; refactor once an iteration costs more than the average
+    // cost per iteration since the last refactorisation (including the refactorisation itself)
+    double refactor_block_s = 0.0, acc_iter_s = 0.0, ema_iter_s = 0.0, iter_t0 = now_s();
     int degenerate = 0;
     double best_obj = -kInf;
     std::int64_t best_it = iterations_;
@@ -687,14 +692,19 @@ private:
           obj += cost_[static_cast<std::size_t>(j)] * x_[static_cast<std::size_t>(j)];
         best_obj = std::max(best_obj, obj);
       }
-      if ((iterations_ & 63) == 0 && elapsed() > opt_.time_limit_seconds)
+      if ((iterations_ & 63) == 0 && (elapsed() > opt_.time_limit_seconds || (opt_.stop && opt_.stop->load(std::memory_order_relaxed))))
         return SolveStatus::TimeLimit;
-      if (need_refactor_ || since_refactor_ >= opt_.refactor_interval || lu_.eta_nnz() > 2 * lu_.factor_nnz() + 10 * m_) {
+      const bool adaptive_due = since_refactor_ >= 25 && ema_iter_s > 1.05 * (refactor_block_s + acc_iter_s) / static_cast<double>(since_refactor_);
+      if (need_refactor_ || adaptive_due || since_refactor_ >= opt_.refactor_interval || lu_.eta_nnz() > 2 * lu_.factor_nnz() + 10 * m_) {
+        const double rb0 = now_s();
         refactor();
         compute_primal();
         compute_dual();
         fix_dual_infeasibilities();
         pinf_ok = false;
+        refactor_block_s = now_s() - rb0;
+        acc_iter_s = 0.0;
+        ema_iter_s = 0.0;
       }
       if (primal_dirty_) {
         compute_primal();
@@ -811,11 +821,21 @@ private:
         out.ray.clear();
         return SolveStatus::Infeasible;
       }
-      std::sort(cands.begin(), cands.end(), [](const Cand &a, const Cand &b) { return a.ratio < b.ratio; });
+      // candidates are only sorted as far as the ratio test walks: the bound-flipping walk and the Harris pass usually stop after a few
+      std::size_t sorted_count = 0;
+      const auto need = [&](std::size_t upto) {
+        upto = std::min(upto, cands.size());
+        if (upto <= sorted_count)
+          return;
+        const std::size_t target = std::min(cands.size(), std::max<std::size_t>(upto, std::max<std::size_t>(32, 2 * sorted_count)));
+        std::partial_sort(cands.begin(), cands.begin() + static_cast<std::ptrdiff_t>(target), cands.end(), [](const Cand &a, const Cand &b) { return a.ratio < b.ratio; });
+        sorted_count = target;
+      };
       // bound-flipping: walk breakpoints while the slope stays non-negative
       double slope = std::abs(delta);
       std::size_t kstar = cands.size();
       for (std::size_t t = 0; t < cands.size(); ++t) {
+        need(t + 1);
         const auto sj = static_cast<std::size_t>(cands[t].j);
         const double range = hi_[sj] - lo_[sj];
         if (std::isinf(range) || st_[sj] == VarStatus::Free) {
@@ -842,11 +862,15 @@ private:
         window = std::min(window, (std::abs(d_[static_cast<std::size_t>(cands[t].j)]) + opt_.dual_tol) / std::abs(cands[t].atilde));
       std::size_t pick = kstar;
       double pick_abs = 0.0;
-      for (std::size_t t = kstar; t < cands.size() && cands[t].ratio <= window; ++t)
+      for (std::size_t t = kstar; t < cands.size(); ++t) {
+        need(t + 1);
+        if (!(cands[t].ratio <= window))
+          break;
         if (std::abs(cands[t].atilde) > pick_abs) {
           pick_abs = std::abs(cands[t].atilde);
           pick = t;
         }
+      }
       const std::int32_t q = cands[pick].j;
       const double theta = cands[pick].ratio;
       if (opt_.verbose)
@@ -968,6 +992,13 @@ private:
       ++iterations_;
       degenerate = theta < 1e-12 ? degenerate + 1 : 0;
       (void)degenerate;
+      {
+        const double now = now_s();
+        const double dt = now - iter_t0;
+        iter_t0 = now;
+        acc_iter_s += dt;
+        ema_iter_s = ema_iter_s == 0.0 ? dt : 0.9 * ema_iter_s + 0.1 * dt;
+      }
     }
   }
 
@@ -1058,7 +1089,7 @@ private:
     while (true) {
       if (iterations_ >= opt_.max_iterations)
         return SolveStatus::IterationLimit;
-      if ((iterations_ & 63) == 0 && elapsed() > opt_.time_limit_seconds)
+      if ((iterations_ & 63) == 0 && (elapsed() > opt_.time_limit_seconds || (opt_.stop && opt_.stop->load(std::memory_order_relaxed))))
         return SolveStatus::TimeLimit;
       if (since_refactor_ >= opt_.refactor_interval) {
         refactor();

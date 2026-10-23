@@ -1,0 +1,10 @@
+# Every constraint family at once
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+Real problems mix constraint types. This program has three scalar unknowns named `a`, `b` and `c` and uses all five families in one chain. Because the unknowns are named blocks, bounds are given as packs with the same names. Linear rows address the blocks in order, one column per scalar.
+
+@@example Numerical/optimization/guide/optima/06_everything_together.cpp@@
+
+All the requirements hold at the answer. The constraint `c^2 <= 0.6` is active, since `c^2` prints as exactly its limit. The solver chose the largest allowed `c` because the objective rewards it.

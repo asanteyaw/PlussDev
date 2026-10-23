@@ -1,0 +1,8 @@
+# Collinear predictors
+
+[Back to Least Squares](../regression_01_least_squares.md)
+
+
+@@example Stats/regression/guide/1004_collinearity.cpp@@
+
+When one predictor is a multiple of another, the data cannot say how to split the effect between them. Exactly collinear: the rank falls to 2 and the coefficients are chosen by a pseudoinverse (the minimum-norm solution), with two warnings; the standard errors are not meaningful. Almost collinear: the rank is full but the condition number is 3×10⁵, the standard error of the first slope is over 1600 where the unrelated pair gives 0.03, and the fit warns. The rules are the usual ones: a warning when the smallest eigenvalue of XᵀX is below 1e-10, otherwise when the condition number exceeds 1000. The remedy is to drop or combine predictors, or to gather data in which they vary independently.

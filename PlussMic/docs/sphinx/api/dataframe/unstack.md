@@ -18,7 +18,7 @@ Pivots one named level out of a **multi-level case-label axis** so its distinct
 values become new output columns — the (partial) inverse of
 [`stack()`](stack.md)/[`pivot_table()`](pivot_table.md). `unstack()` requires the
 frame to already have named case-label levels (built via
-[`label().set({...}, true)`](label.md)); the level named by `options.label` (or the
+[`label().set({...}, true)`](labels.md)); the level named by `options.label` (or the
 convenience overload's `label` argument) is the one that gets spread into columns,
 while every *other* level stays as the row grouping key.
 
@@ -146,7 +146,7 @@ Now that **two** features (`score` and `attendance`) remain after promoting
 ## Notes
 
 - `unstack()` requires the frame to already have named case-label level(s) — build
-  them first with [`label().set({...}, true)`](label.md); it throws
+  them first with [`label().set({...}, true)`](labels.md); it throws
   `"DataFrame::unstack: current DataFrame has no case labels"` otherwise.
 - If a `(remaining-level combination, pivoted value)` pair occurs more than once in
   the source, `unstack()` throws `"duplicate cells found; aggregate before
@@ -160,7 +160,7 @@ Now that **two** features (`score` and `attendance`) remain after promoting
 - [`DataFrame::stack`](stack.md): the general melt this method partially reverses.
 - [`DataFrame::pivot_table`](pivot_table.md): the aggregating wide-reshape for
   ordinary (non-case-label) features, a related but distinct reshape.
-- [`DataFrame::label`](label.md): building and inspecting the case-label levels
+- [`DataFrame::labels`](labels.md): building and inspecting the case-label levels
   `unstack()` operates on.
 
 <div class="pluss-inline-prev-next">

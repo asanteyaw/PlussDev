@@ -1,0 +1,18 @@
+# How a solve ends
+
+[Back to First Programs](../linprog_01_first_programs.md)
+
+
+Each of the four outcomes, produced on purpose.
+
+@@example Numerical/optimization/guide/lp/204_status_codes.cpp@@
+
+| Status | Code | Meaning | What the result carries |
+|---|---|---|---|
+| `Optimal` | 0 | the optimum was found | `x`, `objective`, the duals |
+| `PrimalInfeasible` | 1 | no point satisfies the constraints | `farkas`: multipliers that prove it |
+| `Unbounded` | 2 | the objective falls without limit | `ray`: a direction of unbounded descent |
+| `IterationLimit` | 3 | the budget ran out first | the last iterate |
+| `NearOptimal` | 4 | the iteration stalled with small residuals | the best iterate; `lp::success` accepts it |
+
+Read the status before reading `x`: a result for an infeasible program still has an `x`, and it means nothing. `lp::success(status)` is true for `Optimal` and `NearOptimal`. The Farkas multipliers and the ray are certificates, and chapter 2 shows how to check them.

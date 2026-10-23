@@ -1,0 +1,17 @@
+# Seven methods, four problems
+
+[Back to Choosing a Solver](../dfo_02_the_solvers.md)
+
+
+The same start, bounds and budget (30000 evaluations) for every method. `sum |x-c|` is non-smooth: it has a kink at its minimum.
+
+@@example Numerical/optimization/guide/dfo/311_compare_solvers.cpp@@
+
+What to take from the table, and what not to:
+
+- **Smooth, one minimum (sphere, Rosenbrock).** Nelder–Mead and pattern search converge with the fewest evaluations (hundreds). The population methods reach similar accuracy at ten to a hundred times the evaluations, or stop on the budget instead of converging.
+- **Many local minima (Rastrigin).** The local methods (Nelder–Mead, pattern search, OrthoMADS) converge, to a local minimum, and say `Converged`: the status describes the method's stopping test, not the global quality. The population methods keep searching; DE‑PRMM and particle swarm reach the global minimum (to about 5e‑6 and 0 respectively) at the cost of the whole budget.
+- **Non-smooth (`sum |x-c|`).** Nelder–Mead stalls at a value of about 2.4 although it reports `Converged`: its simplex collapses against the kink. The direct-search methods (pattern search, OrthoMADS) get through the kink, because they only compare values.
+- **Budget statuses are not failures.** A population method that ends on `ReachedEvaluationBudget` with a value of 1e‑12 has done well; it simply has no cheap stopping test.
+
+One table on four problems is evidence, not a ranking. Different starts, dimensions and budgets change the numbers; the shapes of the results (local methods cheap and local, population methods expensive and global) are what carry over.

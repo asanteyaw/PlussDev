@@ -1570,13 +1570,13 @@ Slate DataFrame::freq(FreqOptions options) const {
     grouped = grouped.slice(0, std::min<std::int64_t>(grouped.ncases(), options.top));
   }
 
-  grouped = grouped.label().set(
+  grouped = grouped.labels().set(
       pluss::msharp::RangeView::Of<std::string_view>(
           std::span<const std::string_view>(key_views.data(), key_views.size())),
       true,
       "\x1F");
 
-  auto labels = grouped.label().values().name(freq_label_name_token_(names));
+  auto labels = grouped.labels().values().name(freq_label_name_token_(names));
   auto out = grouped.features("count").label().set(labels);
   if (options.kind == FreqKind::Prop) {
     if (out.size() == 0) {
@@ -1605,7 +1605,7 @@ Slate DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> featu
     const auto name = scoped.features().front();
     return scoped.features(name)
         .duplicated(keep_first, keep_last)
-        .label().set(scoped.label().values())
+        .label().set(scoped.labels().values())
         .name("duplicated");
   }
 
@@ -1630,7 +1630,7 @@ Slate DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> featu
     }
   }
   return Slate(bool_series_from_keep(mask))
-      .label().set(scoped.label().values())
+      .label().set(scoped.labels().values())
       .name("duplicated");
 }
 
@@ -2758,8 +2758,8 @@ bool dataframe_equals_impl_(const DataFrame& lhs,
                             bool tolerant,
                             double atol,
                             double rtol) {
-  const auto lhs_labels = lhs.label().values();
-  const auto rhs_labels = rhs.label().values();
+  const auto lhs_labels = lhs.labels().values();
+  const auto rhs_labels = rhs.labels().values();
 
   if (lhs.ncases() != rhs.ncases() || lhs.nfeatures() != rhs.nfeatures()) {
     return false;

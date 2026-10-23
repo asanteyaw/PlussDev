@@ -1,0 +1,12 @@
+# Nonlinear constraints and their policies
+
+[Back to The Pattern Search Minimiser](../dfo_07_pattern_search.md)
+
+
+`nonlinear_constraints` returns a `PSConstraintValues` with an `inequality` vector (feasible when every entry is `<= 0`) and an `equality` vector (`= 0`).
+
+@@example Numerical/optimization/guide/dfo/366_pattern_search_constraint_policies.cpp@@
+
+- **ExtremeBarrier** rejects any violating point. Cheapest, and always feasible, but it can only approach a boundary from inside, so it stops a little short.
+- **MeritPenalty** adds a penalty on the violation to the objective and increases it as needed. It reaches closer to the boundary.
+- **AugmentedLagrangian** (the default) adds multiplier estimates to the penalty and refines them over several outer rounds. It costs the most evaluations and gives the most accurate answer, and it is the policy built for equality constraints, which a barrier cannot satisfy (a random point never lies exactly on one). Its violation is small but not zero.

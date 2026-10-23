@@ -1,0 +1,10 @@
+# Values that were not simulated
+
+[Back to Stochastic Integrals](../stochastic_01_integrals.md)
+
+
+An integrand and integrator may come from data rather than from a simulated Wiener path. The sampled forms take the values directly. The program integrates `x²` against a sampled `x`, and computes the covariation of two sampled series.
+
+@@example Probability/random_processes/guide/sde/05_sampled_values.cpp@@
+
+The Stratonovich value 3.754421 is close to `x_T³/3 = 3.752384`, as the ordinary chain rule predicts; the Ito value 2.733069 is not, because `x` has quadratic variation. The covariation obeys the polarization identity `[x + y] = [x] + [y] + 2[x, y]` exactly, 1.938163 on both sides.

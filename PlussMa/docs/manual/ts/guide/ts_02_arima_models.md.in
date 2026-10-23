@@ -1,0 +1,47 @@
+# Time Series 2: ARIMA Models
+
+An ARMA model explains a stationary series by its own past values and past shocks. An ARIMA model differences the series first, to handle a unit root; a seasonal ARIMA (SARIMA) adds terms at the seasonal lag. After this chapter you can fit these models by maximum likelihood, choose their orders, forecast, and check the residuals.
+
+Every program is complete and its output is the output of that program.
+
+## The model
+
+For a series `x_t` (after any differencing and removal of the mean) the ARMA(p, q) model is
+
+> x_t = a₁ x_{t−1} + … + a_p x_{t−p} + e_t + b₁ e_{t−1} + … + b_q e_{t−q},
+
+with independent shocks `e_t` of variance σ². Seasonal terms multiply: the full autoregressive polynomial is `(1 − φ₁B − …)(1 − Φ₁Bˢ − …)` and the moving-average polynomial `(1 + θ₁B + …)(1 + Θ₁Bˢ + …)`, with `B` the lag operator, so a model with one regular and one seasonal AR term (period 12) has coefficients at lags 1, 12 and 13 (−φΦ).
+
+The orders are given by `ArimaOptions` (`ar_order`, `diff_order`, `ma_order`, `seasonal_ar_order`, `seasonal_diff_order`, `seasonal_ma_order`, `seasonal_period`) or by `SarimaOptions` in the usual letters (`p, d, q, P, D, Q, s`).
+
+| Option | Meaning | Default |
+|---|---|---|
+| `demean` | subtract the sample mean first (a free mean is estimated as well) | true |
+| `ar0`, `ma0`, `sar0`, `sma0`, `intercept0` | starting values (the default start is the zero polynomial, which is valid) | zeros |
+| `exact_likelihood` | exact Gaussian likelihood (Kalman filter, stationary start), or the conditional likelihood that skips the first `max(p, q)` observations | true |
+| `stationarity_margin` | the partial autocorrelations are kept inside `±(1 − margin)` | 1e-6 |
+| `max_iterations`, `max_evaluations`, `simplex_delta` | settings of the Nelder–Mead search | 800, 6000, 0.05 |
+
+The search runs over the partial autocorrelations of each polynomial (through `tanh`), so every candidate is stationary (autoregressive) or invertible (moving average), and the whole such region is reachable. Models with exogenous regressors (`fit_mle(y, x, options)`) use the conditional likelihood.
+
+`ArimaFit` holds `ar`, `ma`, `sar`, `sma`, `beta`, `mean`, `intercept`, `sigma`, and the methods `loglik(y)`, `loglik_per_obs(y)`, `infer(y)` (one-step prediction errors), `forecast(h, y)`, `simulate(n)`, `score(y)` and `observed_inf(y)` (the numerical gradient and information matrix at the fit). `SarimaFit` wraps an `ArimaFit` in `core` with the same methods.
+
+## Programs
+
+- [Fitting](ts_02_arima_models/fitting.md)
+- [Forecasting](ts_02_arima_models/forecasting.md)
+- [Choosing the orders](ts_02_arima_models/choosing_the_orders.md)
+- [Checking the residuals](ts_02_arima_models/checking_the_residuals.md)
+- [Seasonal models](ts_02_arima_models/seasonal_models.md)
+- [Differencing](ts_02_arima_models/differencing.md)
+
+## Checklist
+
+1. Look at the ACF and PACF and run ADF and KPSS first (Chapter 1); difference what has a unit root.
+2. Fit a few orders and compare Akaike's and Schwarz's criteria; prefer the smaller model when they disagree.
+3. Check the residuals with a Ljung–Box test whose `model_df` equals the number of coefficients.
+4. Forecast with `forecast(h, y)`; remember that forecasts of a stationary model revert to the mean.
+5. For seasonal data use `Sarima` with the seasonal period; the seasonal and regular terms multiply.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

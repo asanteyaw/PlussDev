@@ -42,7 +42,11 @@ option(PLUSSMA_STATS_ENABLE_TIME_SERIES "Build PlussMa Stats::time_series" ON)
 
 # Engineering modules
 option(PLUSSMA_ENG_ENABLE_CONTROL "Build PlussMa Eng::control" ON)
-option(PLUSSMA_ENG_ENABLE_SIGNAL_PROC "Build PlussMa Eng::signal_proc" ON)
+option(PLUSSMA_ENG_ENABLE_CIRCUIT "Build PlussMa Eng::circuit" ON)
+option(PLUSSMA_ENG_ENABLE_LTI "Build PlussMa Eng::lti" ON)
+option(PLUSSMA_ENG_ENABLE_POWER "Build PlussMa Eng::power" ON)
+option(PLUSSMA_ENG_ENABLE_SIGNAL "Build PlussMa Eng::signal" ON)
+option(PLUSSMA_ENG_ENABLE_STRUCTURE "Build PlussMa Eng::structure" ON)
 
 # Natural Sciences modules
 option(PLUSSMA_NATSCI_ENABLE_PHYSICS "Build PlussMa NatSci::physics" ON)
@@ -58,6 +62,9 @@ target_include_directories(pluss PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+# Shared numerical engines used across otherwise independent subspaces.
+add_subdirectory(State)
 
 if(PLUSSMA_ENABLE_STATS AND PLUSSMA_STATS_ENABLE_TIME_SERIES AND NOT PLUSSMA_STATS_ENABLE_DISTRIBUTIONS)
     message(FATAL_ERROR "PlussMa config invalid: Stats::time_series requires Stats::distributions")

@@ -1,4 +1,5 @@
 #include "pluss/subsp/stats/ts.h"
+#include "pluss/subsp/stats/tails.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
@@ -77,8 +78,8 @@ double chisq_cdf_(double value, std::int64_t dof, Config cfg) {
   return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>());
 }
 
-double chisq_survival_(double value, std::int64_t dof, Config cfg) {
-  return clamp01_(1.0 - chisq_cdf_(value, dof, cfg));
+double chisq_survival_(double value, std::int64_t dof, Config /*cfg*/) {
+  return clamp01_(pluss::subsp::stats::tails::chi2_sf(value, static_cast<double>(dof)));
 }
 
 double chisq_quantile_(double prob, std::int64_t dof, Config cfg) {
@@ -145,34 +146,69 @@ Series lagged_column_(const Series& x, std::int64_t start, std::int64_t length) 
   return x.take(idx).reshape({length, 1});
 }
 
-std::array<double, 3> adf_critical_(AdfModel model) {
+// MacKinnon (1994, 2010) response surfaces for the Dickey-Fuller distribution with one series (N = 1). Regressions: no constant (AR),
+// constant (ARD), constant and trend (TS).
+struct MacKinnonSurface {
+  double tau_max;                    // statistics above this have p-value 1
+  double tau_min;                    // statistics below this have p-value 0
+  double tau_star;                   // switch between the small-p and the large-p polynomial
+  std::array<double, 3> small_p;     // p = Phi(c0 + c1 tau + c2 tau^2)         for tau <= tau_star
+  std::array<double, 4> large_p;     // p = Phi(c0 + c1 tau + c2 tau^2 + c3 tau^3) for tau >  tau_star
+  std::array<std::array<double, 4>, 3> crit;  // critical values at 1%, 5%, 10%: c0 + c1/T + c2/T^2 + c3/T^3 with T = observations
+};
+
+const MacKinnonSurface& mackinnon_surface_(AdfModel model) {
+  static const MacKinnonSurface none{std::numeric_limits<double>::infinity(), -19.04, -1.04,
+                                     {0.6344, 1.2378, 0.032496},
+                                     {0.4797, 0.93557, -0.06999, 0.033066},
+                                     {{{-2.56574, -2.2358, -3.627, 0.0}, {-1.941, -0.2686, -3.365, 31.223}, {-1.61682, 0.2656, -2.714, 25.364}}}};
+  static const MacKinnonSurface constant{2.74, -18.83, -1.61,
+                                         {2.1659, 1.4412, 0.038269},
+                                         {1.7339, 0.93202, -0.12745, -0.010368},
+                                         {{{-3.43035, -6.5393, -16.786, -79.433}, {-2.86154, -2.8903, -4.234, -40.04}, {-2.56677, -1.5384, -2.809, 0.0}}}};
+  static const MacKinnonSurface trend{0.7, -16.18, -2.89,
+                                      {3.2512, 1.6047, 0.049588},
+                                      {2.5261, 0.61654, -0.37956, -0.060285},
+                                      {{{-3.95877, -9.0531, -28.428, -134.155}, {-3.41049, -4.3904, -9.036, -45.374}, {-3.12705, -2.5856, -3.925, -22.38}}}};
   switch (model) {
     case AdfModel::AR:
-      return {-2.58, -1.95, -1.62};
+      return none;
     case AdfModel::ARD:
-      return {-3.43, -2.86, -2.57};
+      return constant;
     case AdfModel::TS:
-      return {-3.96, -3.41, -3.12};
+      return trend;
   }
-  return {-3.43, -2.86, -2.57};
+  return constant;
 }
 
-double adf_pvalue_approx_(double stat, const std::array<double, 3>& criticals) {
-  const double c01 = criticals[0];
-  const double c05 = criticals[1];
-  const double c10 = criticals[2];
-  if (stat <= c01) {
-    return 0.01;
+// Finite-sample critical values at 1%, 5% and 10% for `nobs` observations in the Dickey-Fuller regression.
+std::array<double, 3> adf_critical_(AdfModel model, std::int64_t nobs) {
+  const auto& surface = mackinnon_surface_(model);
+  const double inv = 1.0 / static_cast<double>(std::max<std::int64_t>(1, nobs));
+  std::array<double, 3> out{};
+  for (std::size_t i = 0; i < 3; ++i) {
+    const auto& c = surface.crit[i];
+    out[i] = c[0] + inv * (c[1] + inv * (c[2] + inv * c[3]));
   }
-  if (stat <= c05) {
-    return lerp_(c01, 0.01, c05, 0.05, stat);
+  return out;
+}
+
+// MacKinnon's approximate p-value for the Dickey-Fuller t statistic.
+double adf_pvalue_(double stat, AdfModel model) {
+  const auto& surface = mackinnon_surface_(model);
+  if (stat > surface.tau_max) {
+    return 1.0;
   }
-  if (stat <= c10) {
-    return lerp_(c05, 0.05, c10, 0.10, stat);
+  if (stat < surface.tau_min) {
+    return 0.0;
   }
-  const double z = stat - c10;
-  const double tail = 0.5 * std::erfc(-z / std::sqrt(2.0));
-  return std::clamp(0.10 + 0.90 * tail, 0.10, 0.999);
+  double z = 0.0;
+  if (stat <= surface.tau_star) {
+    z = surface.small_p[0] + stat * (surface.small_p[1] + stat * surface.small_p[2]);
+  } else {
+    z = surface.large_p[0] + stat * (surface.large_p[1] + stat * (surface.large_p[2] + stat * surface.large_p[3]));
+  }
+  return clamp01_(pluss::subsp::stats::tails::normal_sf(-z));
 }
 
 double kpss_pvalue_approx_(double stat, const std::array<double, 4>& criticals) {
@@ -367,10 +403,10 @@ AdfResult adf_test(const Series& y, const AdfOptions& options, Config cfg) {
   const double stat = delta / std::max(se, std::sqrt(kEps));
 
   constexpr std::array<double, 3> sig = {0.01, 0.05, 0.10};
-  const auto criticals = adf_critical_(options.model);
+  const auto criticals = adf_critical_(options.model, t);
   const double alpha = std::clamp(options.alpha, sig.front(), sig.back());
   const double critical = interp_piecewise_(sig, criticals, alpha);
-  const double pvalue = adf_pvalue_approx_(stat, criticals);
+  const double pvalue = adf_pvalue_(stat, options.model);
 
   return AdfResult{
       .stat = stat,

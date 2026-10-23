@@ -263,6 +263,38 @@ int main() {
            "complex SR1 objective must be deterministic across repeated runs", &failures);
   }
 
+  // 6) A memory larger than the number of variables must be capped at n: with n + 1 stored pairs the history matrices have more
+  // columns than rows, and the old code read past the end of the reduced QR factor, so the iteration varied from run to run.
+  // Ten-variable chained Rosenbrock with memory 30 must reproduce itself exactly and behave as memory 10.
+  {
+    const std::int64_t n = 10;
+    std::vector<double> first, second, start;
+    for (std::int64_t i = 0; i + 1 < n; ++i) { first.push_back(static_cast<double>(i)); second.push_back(static_cast<double>(i + 1)); }
+    for (std::int64_t i = 0; i < n; ++i) start.push_back(i % 2 == 0 ? -1.2 : 1.0);
+    const Series head = pluss::make_series(first, {n - 1}).to(ScalarType::Int64);
+    const Series tail = pluss::make_series(second, {n - 1}).to(ScalarType::Int64);
+    auto chain = [&](const Trace& x) -> Trace {
+      const Trace a = pluss::subsp::math::diff::index_select(x, 0, head), b = pluss::subsp::math::diff::index_select(x, 0, tail);
+      return pluss::optim::sum(100.0 * pluss::optim::square(b - pluss::optim::square(a)) + pluss::optim::square(1.0 - a));
+    };
+    auto run = [&](std::int64_t memory) {
+      Lsr1SolveOptions o;
+      o.max_iterations = 1000;
+      o.step.memory_size = memory;
+      return l_sr1_trust_region(chain, pluss::make_series(start, {n}).to(ScalarType::Float64), o);
+    };
+    const auto reference = run(10);
+    bool identical = true;
+    for (int repeat = 0; repeat < 12; ++repeat) {
+      const auto r = run(30);
+      identical = identical && r.exit_flag == reference.exit_flag && r.iteration == reference.iteration && r.objective_value == reference.objective_value;
+    }
+    if (!identical || reference.exit_flag != Lsr1ExitFlag::Converged) {
+      std::cerr << "[FAIL] memory above n is capped and the iteration is reproducible\n";
+      ++failures;
+    }
+  }
+
   if (failures != 0) {
     std::cerr << "lsr1_complex_test failed with " << failures << " failure(s)\n";
     return 1;

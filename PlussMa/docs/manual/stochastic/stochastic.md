@@ -1,0 +1,24 @@
+<!-- generated from stochastic.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Stochastic calculus
+
+Chapters, in reading order:
+
+- [Stochastic 1: Stochastic Integrals](stochastic/stochastic_01_integrals.md)
+- [Stochastic 2: Differentials and Ito's Lemma](stochastic/stochastic_02_ito_lemma.md)
+- [Stochastic 3: Jumps and the Marcus Integral](stochastic/stochastic_03_jumps_and_marcus.md)
+- [Stochastic 4: Simulating and Differentiating SDEs](stochastic/stochastic_04_simulating_sdes.md)
+- [Stochastic 5: Malliavin Calculus](stochastic/stochastic_05_malliavin.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic/stochastic_01_integrals
+stochastic/stochastic_02_ito_lemma
+stochastic/stochastic_03_jumps_and_marcus
+stochastic/stochastic_04_simulating_sdes
+stochastic/stochastic_05_malliavin
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,60 @@
+<!-- generated from linprog_01_first_programs.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Linear Programming 1: First Programs
+
+A linear program asks for the cheapest (or most profitable) way to meet a set of linear requirements: minimize a sum of costs, subject to limits on resources, balances that must hold exactly, and bounds on each quantity. Many problems in production, blending, transport and scheduling take this form, and for those the answer is exact and comes with a proof of its own correctness. After this chapter you can state a linear program in the library's form, solve it with either method, write a requirement in whichever shape is convenient, read every field of the result, and tell the four ways a solve can end.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+A linear program in this library has the form
+
+```text
+minimize    c . x
+subject to  a_eq x  = b_eq
+            a_ub x <= b_ub
+            lower <= x <= upper
+```
+
+with the data held in a `linprog::Problem` of `Series`:
+
+| Field | Shape | Meaning |
+|---|---|---|
+| `c` | `[n]` | the cost of each variable; the solver **minimizes**, so enter a profit negated |
+| `a_eq`, `b_eq` | `[me, n]`, `[me]` | rows that must hold with equality |
+| `a_ub`, `b_ub` | `[mu, n]`, `[mu]` | rows that must hold with `<=`; write `>=` by negating the row and the right-hand side |
+| `lower`, `upper` | `[n]` | bounds on each variable; `-inf` and `+inf` (from `std::numeric_limits`) mean none |
+
+Everything is optional except `c`. The call `linprog::solve(problem, options)` returns a `linprog::Result` made of `Series`, which is why one call can solve many problems at once (chapter 3).
+
+There are two methods, chosen with `options.method`. **Interior point** (the default) moves through the inside of the feasible region and converges to the optimum; it handles large problems and batches of problems well, and its answer is accurate to about nine digits. **Simplex** walks from corner to corner of the feasible region and stops at a corner; its answer is an exact vertex, and it can be restarted from a previous solution (chapter 3). Both return the same optimal objective.
+
+## Programs
+
+- [A first linear program](linprog_01_first_programs/a_first_linear_program.md)
+- [The shapes a requirement can take](linprog_01_first_programs/the_shapes_a_requirement_can_take.md)
+- [Reading the result](linprog_01_first_programs/reading_the_result.md)
+- [How a solve ends](linprog_01_first_programs/how_a_solve_ends.md)
+- [The default bounds](linprog_01_first_programs/the_default_bounds.md)
+
+## What to remember
+
+- A linear program is `min c . x` with equality rows, `<=` rows and bounds. A profit is entered negated, a `>=` row is negated.
+- Both methods give the same optimal objective. Interior point is the default and works on batches; simplex returns an exact vertex.
+- Missing bounds mean **free**, not non-negative: set `lower`.
+- Read the status first. `Optimal` and `NearOptimal` are successes; `PrimalInfeasible` and `Unbounded` come with certificates.
+- `dual_objective` equal to `objective` proves optimality.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog_01_first_programs/a_first_linear_program
+linprog_01_first_programs/the_shapes_a_requirement_can_take
+linprog_01_first_programs/reading_the_result
+linprog_01_first_programs/how_a_solve_ends
+linprog_01_first_programs/the_default_bounds
+```
+<!-- apiref:toctree:end -->

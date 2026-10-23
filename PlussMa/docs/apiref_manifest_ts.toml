@@ -1,0 +1,902 @@
+# apiref_manifest_ts.toml -- the `ts` framework of PlussMa.
+
+[framework.ts]
+title = "ts"
+summary = "Time series: transforms, diagnostics, ARIMA, volatility, vector, state-space and direct forecasting models."
+include = "<pluss/ma.h>"
+header = "PlussMa/include/pluss/subsp/stats/ts.h"
+
+[[family]]
+path = "ts/transforms"
+page = "api/ts/transforms.md"
+title = "transforms"
+maxdepth = 2
+children = ["transforms/diff", "transforms/ema", "transforms/ewm_mean", "transforms/ewm_std", "transforms/expanding_mean", "transforms/expanding_std", "transforms/fill_gaps", "transforms/lag", "transforms/lead", "transforms/log_returns", "transforms/resample", "transforms/returns", "transforms/rolling_max", "transforms/rolling_mean", "transforms/rolling_min", "transforms/rolling_std", "transforms/rolling_sum", "transforms/rolling_var", "transforms/zscore_rolling"]
+
+[[family]]
+path = "ts/diagnostics"
+page = "api/ts/diagnostics.md"
+title = "diagnostics"
+maxdepth = 2
+children = ["diagnostics/acf", "diagnostics/AcfOptions", "diagnostics/adf_test", "diagnostics/AdfOptions", "diagnostics/AdfResult", "diagnostics/arch_lm", "diagnostics/ArchLmOptions", "diagnostics/ArchLmResult", "diagnostics/kpss_test", "diagnostics/KpssOptions", "diagnostics/KpssResult", "diagnostics/ljung_box", "diagnostics/LjungBoxOptions", "diagnostics/LjungBoxResult", "diagnostics/pacf", "diagnostics/PacfOptions"]
+
+[[family]]
+path = "ts/arima"
+page = "api/ts/arima.md"
+title = "arima"
+maxdepth = 2
+children = ["arima/Arima", "arima/ArimaFit", "arima/ArimaOptions", "arima/Sarima", "arima/SarimaFit", "arima/SarimaOptions"]
+
+[[family]]
+path = "ts/volatility"
+page = "api/ts/volatility.md"
+title = "volatility"
+maxdepth = 2
+children = ["volatility/Egarch", "volatility/EgarchFit", "volatility/EgarchOptions", "volatility/Garch", "volatility/Garch11", "volatility/Garch11Fit", "volatility/Garch11Options", "volatility/GarchFit", "volatility/GarchOptions", "volatility/Gjr", "volatility/GjrFit", "volatility/GjrOptions", "volatility/MvEgarch", "volatility/MvEgarchFit", "volatility/MvEgarchOptions", "volatility/MvGarch", "volatility/MvGarchFit", "volatility/MvGarchOptions", "volatility/MvGjr", "volatility/MvGjrFit", "volatility/MvGjrOptions"]
+
+[[family]]
+path = "ts/vector"
+page = "api/ts/vector.md"
+title = "vector"
+maxdepth = 2
+children = ["vector/FevdOptions", "vector/GrangerOptions", "vector/GrangerResult", "vector/IrfOptions", "vector/johansen_test", "vector/JohansenOptions", "vector/JohansenResult", "vector/Var", "vector/var_to_vecm", "vector/VarFit", "vector/VarOptions", "vector/Vecm", "vector/vecm_to_var", "vector/VecmFit", "vector/VecmOptions"]
+
+[[family]]
+path = "ts/statespace"
+page = "api/ts/statespace.md"
+title = "statespace"
+maxdepth = 2
+children = ["statespace/Ssm", "statespace/SsmFilterResult", "statespace/SsmForecastResult", "statespace/SsmModel", "statespace/SsmOptions", "statespace/SsmSimResult", "statespace/SsmSmoothResult"]
+
+[[family]]
+path = "ts/forecasting"
+page = "api/ts/forecasting.md"
+title = "forecasting"
+maxdepth = 2
+children = ["forecasting/build_lag_plan", "forecasting/build_lagged_predictors", "forecasting/DirectCVForecaster", "forecasting/DirectForecaster", "forecasting/DirectForecasterOptions", "forecasting/DirectStepModel", "forecasting/dm_test", "forecasting/DmOptions", "forecasting/DmResult", "forecasting/LagPlan", "forecasting/LagPlanOptions", "forecasting/PartitionOptions", "forecasting/PartitionWindow", "forecasting/TsPartition"]
+
+[[family]]
+path = "ts/plot"
+page = "api/ts/plot.md"
+title = "plot"
+maxdepth = 2
+children = ["plot/CorrPlotOptions", "plot/CorrPlotPayload", "plot/plot_acf", "plot/plot_acf_payload", "plot/plot_pacf", "plot/plot_pacf_payload", "plot/plot_residuals", "plot/plot_residuals_payload", "plot/ResidualPlotOptions", "plot/ResidualPlotPayload"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::diff"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/diff.md"
+summary = "The first difference of a series: each observation minus the one `periods` positions earlier."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::returns"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/returns.md"
+summary = "The simple return of a series: the relative change over `periods` observations."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::log_returns"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/log_returns.md"
+summary = "The logarithmic return of a series: the natural log of the ratio of an observation to the one `periods` earlier."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::lag"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/lag.md"
+summary = "The series shifted later in time: position `t` holds the observation from `periods` steps earlier."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::lead"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/lead.md"
+summary = "The series shifted earlier in time: position `t` holds the observation from `periods` steps later."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::rolling_mean"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/rolling_mean.md"
+summary = "The mean of each window of `window` consecutive observations."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::rolling_sum"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/rolling_sum.md"
+summary = "The sum of each window of `window` consecutive observations."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::rolling_std"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/rolling_std.md"
+summary = "The standard deviation of each window of `window` consecutive observations."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::rolling_var"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/rolling_var.md"
+summary = "The variance of each window of `window` consecutive observations."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::rolling_min"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/rolling_min.md"
+summary = "The smallest value in each window of `window` consecutive observations."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::rolling_max"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/rolling_max.md"
+summary = "The largest value in each window of `window` consecutive observations."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ewm_mean"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/ewm_mean.md"
+summary = "The exponentially weighted moving average of a series."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ema"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/ema.md"
+summary = "The exponential moving average of a series; the same computation as `ewm_mean`."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ewm_std"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/ewm_std.md"
+summary = "The exponentially weighted standard deviation of a series."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::expanding_mean"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/expanding_mean.md"
+summary = "The mean of all observations up to each position."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::expanding_std"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/expanding_std.md"
+summary = "The standard deviation of all observations up to each position."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::zscore_rolling"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/zscore_rolling.md"
+summary = "The rolling z-score: each observation minus the window mean, divided by the window standard deviation."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::fill_gaps"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/fill_gaps.md"
+summary = "Replaces missing values (`NaN`) in a series by carrying values forward or backward, or by a constant."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::resample"
+kind = "function"
+family = "ts/transforms"
+page = "api/ts/transforms/resample.md"
+summary = "Aggregates a time-indexed series into coarser time bins, such as days, weeks or months."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::acf"
+kind = "function"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/acf.md"
+summary = "The sample autocorrelation function of a series: its correlation with itself at lags 0 through `max_lag`."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::pacf"
+kind = "function"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/pacf.md"
+summary = "The sample partial autocorrelation function: the correlation at each lag that remains after removing the effect of the shorter lags."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ljung_box"
+kind = "function"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/ljung_box.md"
+summary = "The Ljung–Box test that a series, or a model's residuals, is white noise up to a set of lags."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::arch_lm"
+kind = "function"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/arch_lm.md"
+summary = "Engle's ARCH-LM test for volatility clustering: are the squared values of a series autocorrelated?"
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::adf_test"
+kind = "function"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/adf_test.md"
+summary = "The augmented Dickey–Fuller test for a unit root."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::kpss_test"
+kind = "function"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/kpss_test.md"
+summary = "The KPSS test of the null that a series is stationary around a level or a trend."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::AcfOptions"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/AcfOptions.md"
+summary = "Options of `ts::acf`."
+fields = ["max_lag", "norm", "demean"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::PacfOptions"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/PacfOptions.md"
+summary = "Options of `ts::pacf`."
+fields = ["max_lag", "norm", "demean"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::LjungBoxOptions"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/LjungBoxOptions.md"
+summary = "Options of `ts::ljung_box`."
+fields = ["lags", "model_df", "norm", "demean"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::LjungBoxResult"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/LjungBoxResult.md"
+summary = "Result of `ts::ljung_box`."
+fields = ["lags", "stat", "pvalue", "dof"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ArchLmOptions"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/ArchLmOptions.md"
+summary = "Options of `ts::arch_lm`."
+fields = ["lags", "demean", "alpha"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ArchLmResult"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/ArchLmResult.md"
+summary = "Result of `ts::arch_lm`."
+fields = ["stat", "pvalue", "critical", "reject", "dof", "effective_n"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::AdfOptions"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/AdfOptions.md"
+summary = "Options of `ts::adf_test`."
+fields = ["lags", "model", "alpha"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::AdfResult"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/AdfResult.md"
+summary = "Result of `ts::adf_test`."
+fields = ["stat", "pvalue", "critical", "reject", "lags", "effective_n"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::KpssOptions"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/KpssOptions.md"
+summary = "Options of `ts::kpss_test`."
+fields = ["lags", "trend", "alpha"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::KpssResult"
+kind = "options"
+family = "ts/diagnostics"
+page = "api/ts/diagnostics/KpssResult.md"
+summary = "Result of `ts::kpss_test`."
+fields = ["stat", "pvalue", "critical", "reject", "long_run_var", "lags", "effective_n"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ArimaOptions"
+kind = "options"
+family = "ts/arima"
+page = "api/ts/arima/ArimaOptions.md"
+summary = "Options of `ts::Arima::fit_mle`: the orders of the model, starting values and search settings."
+fields = ["ar_order", "diff_order", "ma_order", "seasonal_ar_order", "seasonal_diff_order", "seasonal_ma_order", "seasonal_period", "demean", "intercept0", "ar0, ma0, sar0, sma0", "beta0", "variance_floor", "stationarity_margin", "finite_diff_eps", "max_iterations, max_evaluations", "simplex_delta", "exact_likelihood"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Arima"
+kind = "class"
+family = "ts/arima"
+page = "api/ts/arima/Arima.md"
+summary = "Fits an ARIMA model by maximum likelihood."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ArimaFit"
+kind = "class"
+family = "ts/arima"
+page = "api/ts/arima/ArimaFit.md"
+summary = "The result of an ARIMA fit: the estimated coefficients and the methods that evaluate the fitted model."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SarimaOptions"
+kind = "options"
+family = "ts/arima"
+page = "api/ts/arima/SarimaOptions.md"
+summary = "Options of `ts::Sarima::fit_mle`: the orders in the usual seasonal letters."
+fields = ["p, d, q", "P, D, Q", "s", "demean", "intercept0, ar0, ma0, sar0, sma0, beta0", "variance_floor, stationarity_margin, finite_diff_eps", "max_iterations, max_evaluations, simplex_delta", "exact_likelihood"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Sarima"
+kind = "class"
+family = "ts/arima"
+page = "api/ts/arima/Sarima.md"
+summary = "Fits a seasonal ARIMA model by maximum likelihood, in the notation `(p, d, q)(P, D, Q)s`."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SarimaFit"
+kind = "class"
+family = "ts/arima"
+page = "api/ts/arima/SarimaFit.md"
+summary = "The result of a seasonal ARIMA fit: an `ArimaFit` plus the orders it was fitted with."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::GarchOptions"
+kind = "options"
+family = "ts/volatility"
+page = "api/ts/volatility/GarchOptions.md"
+summary = "Options of `ts::Garch::fit_mle`."
+fields = ["arch_order", "garch_order", "omega0", "arch0", "garch0", "demean", "variance_floor", "stationarity_margin", "finite_diff_eps", "max_iterations, max_evaluations", "simplex_delta", "nm_restarts"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Garch11Options"
+kind = "options"
+family = "ts/volatility"
+page = "api/ts/volatility/Garch11Options.md"
+summary = "Options of `ts::Garch11::fit_mle`."
+fields = ["omega0", "alpha0", "beta0", "demean", "variance_floor", "stationarity_margin", "finite_diff_eps", "max_iterations, max_evaluations", "simplex_delta", "nm_restarts"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::EgarchOptions"
+kind = "options"
+family = "ts/volatility"
+page = "api/ts/volatility/EgarchOptions.md"
+summary = "Options of `ts::Egarch::fit_mle`."
+fields = ["arch_order", "garch_order", "omega0", "arch0", "asym0", "garch0", "demean", "variance_floor", "stationarity_margin", "finite_diff_eps", "max_iterations, max_evaluations", "simplex_delta", "nm_restarts"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::GjrOptions"
+kind = "options"
+family = "ts/volatility"
+page = "api/ts/volatility/GjrOptions.md"
+summary = "Options of `ts::Gjr::fit_mle`."
+fields = ["arch_order", "garch_order", "omega0", "arch0", "asym0", "garch0", "demean", "variance_floor", "stationarity_margin", "finite_diff_eps", "max_iterations, max_evaluations", "simplex_delta", "nm_restarts"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Garch"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/Garch.md"
+summary = "Fits a GARCH(p, q) model by maximum likelihood."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Garch11"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/Garch11.md"
+summary = "Fits a GARCH(1, 1) model by maximum likelihood."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Egarch"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/Egarch.md"
+summary = "Fits a EGARCH(p, q) model by maximum likelihood."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Gjr"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/Gjr.md"
+summary = "Fits a GJR-GARCH(p, q) model by maximum likelihood."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::GarchFit"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/GarchFit.md"
+summary = "The result of a `Garch` fit: the estimated parameters and the methods that evaluate the fitted model."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Garch11Fit"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/Garch11Fit.md"
+summary = "The result of a `Garch11` fit: the estimated parameters and the methods that evaluate the fitted model."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::EgarchFit"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/EgarchFit.md"
+summary = "The result of a `Egarch` fit: the estimated parameters and the methods that evaluate the fitted model."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::GjrFit"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/GjrFit.md"
+summary = "The result of a `Gjr` fit: the estimated parameters and the methods that evaluate the fitted model."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvGarchOptions"
+kind = "options"
+family = "ts/volatility"
+page = "api/ts/volatility/MvGarchOptions.md"
+summary = "Options of `ts::MvGarch::fit_mle`."
+fields = ["marginal", "corr_shrinkage", "corr_jitter"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvGarch"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/MvGarch.md"
+summary = "Fits a constant-conditional-correlation model with a GARCH variance for every series."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvGarchFit"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/MvGarchFit.md"
+summary = "The result of a `MvGarch` fit: one univariate fit per series, the means and the correlation matrix."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvGjrOptions"
+kind = "options"
+family = "ts/volatility"
+page = "api/ts/volatility/MvGjrOptions.md"
+summary = "Options of `ts::MvGjr::fit_mle`."
+fields = ["marginal", "corr_shrinkage", "corr_jitter"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvGjr"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/MvGjr.md"
+summary = "Fits a constant-conditional-correlation model with a GJR-GARCH variance for every series."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvGjrFit"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/MvGjrFit.md"
+summary = "The result of a `MvGjr` fit: one univariate fit per series, the means and the correlation matrix."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvEgarchOptions"
+kind = "options"
+family = "ts/volatility"
+page = "api/ts/volatility/MvEgarchOptions.md"
+summary = "Options of `ts::MvEgarch::fit_mle`."
+fields = ["marginal", "corr_shrinkage", "corr_jitter"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvEgarch"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/MvEgarch.md"
+summary = "Fits a constant-conditional-correlation model with a EGARCH variance for every series."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::MvEgarchFit"
+kind = "class"
+family = "ts/volatility"
+page = "api/ts/volatility/MvEgarchFit.md"
+summary = "The result of a `MvEgarch` fit: one univariate fit per series, the means and the correlation matrix."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::VarOptions"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/VarOptions.md"
+summary = "Options of `ts::Var::fit_mle`."
+fields = ["lag_order", "include_intercept", "include_trend", "ridge", "pinv_rcond"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::IrfOptions"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/IrfOptions.md"
+summary = "Options of `VarFit::irf`."
+fields = ["horizon", "method"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::FevdOptions"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/FevdOptions.md"
+summary = "Options of `VarFit::fevd`."
+fields = ["horizon", "method"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::GrangerOptions"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/GrangerOptions.md"
+summary = "Options of `VarFit::granger_test`."
+fields = ["type", "stat", "alpha", "cause", "effect"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::GrangerResult"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/GrangerResult.md"
+summary = "Result of `VarFit::granger_test`."
+fields = ["cause", "effect", "stat", "pvalue", "critical", "dof1", "dof2", "reject"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Var"
+kind = "class"
+family = "ts/vector"
+page = "api/ts/vector/Var.md"
+summary = "Fits a vector autoregression by least squares (Gaussian maximum likelihood)."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::VarFit"
+kind = "class"
+family = "ts/vector"
+page = "api/ts/vector/VarFit.md"
+summary = "The result of a vector autoregression: the coefficients and the methods that evaluate, forecast and analyse the system."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::JohansenOptions"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/JohansenOptions.md"
+summary = "Options of `ts::johansen_test`."
+fields = ["lag_order", "include_intercept", "include_trend", "statistic", "alpha"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::JohansenResult"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/JohansenResult.md"
+summary = "Result of `ts::johansen_test`."
+fields = ["eigenvalues", "stat", "pvalue", "critical", "reject", "dof", "alpha", "beta", "selected_rank"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::johansen_test"
+kind = "function"
+family = "ts/vector"
+page = "api/ts/vector/johansen_test.md"
+summary = "Johansen's cointegration rank test."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::VecmOptions"
+kind = "options"
+family = "ts/vector"
+page = "api/ts/vector/VecmOptions.md"
+summary = "Options of `ts::Vecm::fit_mle`."
+fields = ["lag_order", "rank", "include_intercept", "include_trend", "alpha", "ridge", "pinv_rcond"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Vecm"
+kind = "class"
+family = "ts/vector"
+page = "api/ts/vector/Vecm.md"
+summary = "Fits a vector error-correction model for a given cointegration rank."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::VecmFit"
+kind = "class"
+family = "ts/vector"
+page = "api/ts/vector/VecmFit.md"
+summary = "The result of a vector error-correction fit."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::var_to_vecm"
+kind = "function"
+family = "ts/vector"
+page = "api/ts/vector/var_to_vecm.md"
+summary = "Converts the lag matrices of a VAR into the short-run matrices and the impact matrix of its error-correction form."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::vecm_to_var"
+kind = "function"
+family = "ts/vector"
+page = "api/ts/vector/vecm_to_var.md"
+summary = "Converts the short-run and impact matrices of an error-correction model into VAR lag matrices."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SsmModel"
+kind = "options"
+family = "ts/statespace"
+page = "api/ts/statespace/SsmModel.md"
+summary = "The matrices and initial moments of a linear Gaussian state-space model."
+fields = ["transition", "state_loading", "observation", "innovation_loading", "mean0", "cov0"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SsmOptions"
+kind = "options"
+family = "ts/statespace"
+page = "api/ts/statespace/SsmOptions.md"
+summary = "Options of the state-space filter and smoother."
+fields = ["tolerance"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SsmFilterResult"
+kind = "options"
+family = "ts/statespace"
+page = "api/ts/statespace/SsmFilterResult.md"
+summary = "Result of `Ssm::filter`."
+fields = ["filtered_states", "filtered_states_cov", "forecasted_states", "forecasted_states_cov", "forecasted_obs", "forecasted_obs_cov", "forecast_obs_error", "kalman_gain", "data_used", "loglik_per_obs", "loglik"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SsmSmoothResult"
+kind = "options"
+family = "ts/statespace"
+page = "api/ts/statespace/SsmSmoothResult.md"
+summary = "Result of `Ssm::smooth`."
+fields = ["filter", "smoothed_states", "smoothed_states_cov"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SsmForecastResult"
+kind = "options"
+family = "ts/statespace"
+page = "api/ts/statespace/SsmForecastResult.md"
+summary = "Result of `Ssm::forecast`."
+fields = ["observations", "observations_cov", "states", "states_cov"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::SsmSimResult"
+kind = "options"
+family = "ts/statespace"
+page = "api/ts/statespace/SsmSimResult.md"
+summary = "Result of `Ssm::simulate`."
+fields = ["observations", "states", "state_disturbance", "obs_innovation"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::Ssm"
+kind = "class"
+family = "ts/statespace"
+page = "api/ts/statespace/Ssm.md"
+summary = "Filtering, smoothing, forecasting and simulation for a linear Gaussian state-space model."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::PartitionOptions"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/PartitionOptions.md"
+summary = "Options of the `TsPartition` constructors."
+fields = ["direction", "gap_size", "max_lag", "max_train_size", "min_train_size", "train_size", "test_size", "step_size"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::PartitionWindow"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/PartitionWindow.md"
+summary = "One training/test window of a `TsPartition`."
+fields = ["train_start, train_end", "test_start, test_end", "test_buffer_start, test_buffer_end"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::TsPartition"
+kind = "class"
+family = "ts/forecasting"
+page = "api/ts/forecasting/TsPartition.md"
+summary = "Splits a series into consecutive training and test windows for honest forecast evaluation."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::LagPlanOptions"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/LagPlanOptions.md"
+summary = "Options describing which lagged features a direct forecaster uses."
+fields = ["horizon", "response_lags", "leading_predictors", "predictor_lags", "leading_predictor_lags"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::LagPlan"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/LagPlan.md"
+summary = "A normalised lag plan: the result of `build_lag_plan`."
+fields = ["horizon", "response_lags", "nonleading_predictor_indices, leading_predictor_indices", "predictor_lags, leading_unique_lags", "prepared_predictors_per_horizon", "max_lag, max_lead", "feature_count"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::build_lag_plan"
+kind = "function"
+family = "ts/forecasting"
+page = "api/ts/forecasting/build_lag_plan.md"
+summary = "Normalises a lag specification into a plan for a number of predictor columns."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::build_lagged_predictors"
+kind = "function"
+family = "ts/forecasting"
+page = "api/ts/forecasting/build_lagged_predictors.md"
+summary = "Builds the feature matrix of a lag plan from the predictors and the response."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::DirectForecasterOptions"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/DirectForecasterOptions.md"
+summary = "Options of `DirectForecaster::fit` and `DirectCVForecaster::fit`."
+fields = ["lag", "learner", "fit_intercept", "ridge_lambda", "pinv_rcond"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::DirectStepModel"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/DirectStepModel.md"
+summary = "The model fitted for one horizon of a direct forecaster."
+fields = ["horizon", "active_columns_index", "beta"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::DirectForecaster"
+kind = "class"
+family = "ts/forecasting"
+page = "api/ts/forecasting/DirectForecaster.md"
+summary = "A set of regressions, one per forecast horizon, that predict `y_{t+h}` from lagged information at time `t`."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::DirectCVForecaster"
+kind = "class"
+family = "ts/forecasting"
+page = "api/ts/forecasting/DirectCVForecaster.md"
+summary = "One direct forecaster per training window of a partition, for out-of-sample evaluation."
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::DmOptions"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/DmOptions.md"
+summary = "Options of `ts::dm_test`."
+fields = ["horizon", "max_lag", "loss", "loss_power", "hln_adjust", "tail", "alpha"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::DmResult"
+kind = "options"
+family = "ts/forecasting"
+page = "api/ts/forecasting/DmResult.md"
+summary = "Result of `ts::dm_test`."
+fields = ["stat", "pvalue", "critical", "reject", "horizon", "lags", "effective_n", "mean_diff", "lrv"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::dm_test"
+kind = "function"
+family = "ts/forecasting"
+page = "api/ts/forecasting/dm_test.md"
+summary = "The Diebold–Mariano test that two forecasting models have equal expected loss."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::CorrPlotOptions"
+kind = "options"
+family = "ts/plot"
+page = "api/ts/plot/CorrPlotOptions.md"
+summary = "Options of the autocorrelation plots and payloads."
+fields = ["max_lag", "norm", "demean", "include_zero_lag", "show_confidence_band", "confidence_level", "trace_width"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::CorrPlotPayload"
+kind = "options"
+family = "ts/plot"
+page = "api/ts/plot/CorrPlotPayload.md"
+summary = "The numbers behind an autocorrelation plot."
+fields = ["lags", "values", "conf_low, conf_high"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ResidualPlotOptions"
+kind = "options"
+family = "ts/plot"
+page = "api/ts/plot/ResidualPlotOptions.md"
+summary = "Options of the residual plot."
+fields = ["show_zero_line", "trace_width"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::ResidualPlotPayload"
+kind = "options"
+family = "ts/plot"
+page = "api/ts/plot/ResidualPlotPayload.md"
+summary = "The numbers behind a residual plot."
+fields = ["index", "residuals"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::plot_acf_payload"
+kind = "function"
+family = "ts/plot"
+page = "api/ts/plot/plot_acf_payload.md"
+summary = "The numbers behind the autocorrelation plot: lags, values and the white-noise band."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::plot_pacf_payload"
+kind = "function"
+family = "ts/plot"
+page = "api/ts/plot/plot_pacf_payload.md"
+summary = "The numbers behind the partial autocorrelation plot: lags, values and the white-noise band."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::plot_acf"
+kind = "function"
+family = "ts/plot"
+page = "api/ts/plot/plot_acf.md"
+summary = "Draws the autocorrelation plot of a series into a `pluss::pl::Studio` figure."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::plot_pacf"
+kind = "function"
+family = "ts/plot"
+page = "api/ts/plot/plot_pacf.md"
+summary = "Draws the partial autocorrelation plot of a series into a `pluss::pl::Studio` figure."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::plot_residuals_payload"
+kind = "function"
+family = "ts/plot"
+page = "api/ts/plot/plot_residuals_payload.md"
+summary = "The numbers behind a residual plot: the time index and the residuals."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::ts::plot_residuals"
+kind = "function"
+family = "ts/plot"
+page = "api/ts/plot/plot_residuals.md"
+summary = "Draws the residuals of a model against time into a `pluss::pl::Studio` figure."
+overloads = 1
+

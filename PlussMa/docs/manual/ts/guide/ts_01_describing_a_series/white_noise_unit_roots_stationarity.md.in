@@ -1,0 +1,10 @@
+# White noise, unit roots, stationarity
+
+[Back to Describing a Series](../ts_01_describing_a_series.md)
+
+
+@@example Stats/time_series/guide/1203_randomness_and_stationarity.cpp@@
+
+The Ljung–Box statistics for the AR(1) series are enormous (p-values of 10⁻⁴¹ and 10⁻⁴⁷): the series is far from white noise, as it must be. When the series is the residual of a model with `k` fitted ARMA coefficients, set `model_df = k` so the degrees of freedom are reduced (9 instead of 10 here); Chapter 2 uses this.
+
+The ADF test on the AR(1) series is strongly rejected in all three specifications (p = 4×10⁻⁵, 6×10⁻⁴, 5×10⁻³), while for the random walk it is not (p = 0.62, 0.45, 0.79). The p-values and critical values come from MacKinnon's response surfaces, which depend on the sample size (the 5% critical value for the constant model is −2.8763 for 197 observations, against −2.86 asymptotically). The KPSS test agrees: stationarity is kept for the AR(1) series around a level (p = 0.10, the largest value the tables give) and rejected for the walk (p = 0.01, the smallest). With a trend term the AR(1) series is rejected narrowly (statistic 0.1489 against a critical value of 0.146, p = 0.048); a small sample and a borderline statistic can do that, which is why one test is not a verdict.

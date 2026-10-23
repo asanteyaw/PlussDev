@@ -26,6 +26,15 @@ namespace pluss::subsp::math::roots {
 
 using Fn = std::function<Series(const Series &)>;
 
+struct Derivatives final {
+  Series value;
+  Series first;
+  Series second;
+  Series third;
+};
+
+using DerivativeFn = std::function<Derivatives(const Series &)>;
+
 struct Options final {
   std::int64_t max_iterations{100};
   double x_tolerance{0.0};   // stop when every lane's bracket / step is below this (0 = run all iterations)
@@ -133,6 +142,57 @@ inline Result newton(const Fn &f, Series x, const Fn &df = {}, const Options &op
   }
   out.root = x;
   out.residual = f(x);
+  return out;
+}
+
+// Fourth-order Householder iteration. The callback evaluates f and its first
+// three derivatives together so domain-specific callers can share intermediates.
+inline Result householder(const DerivativeFn &evaluate, Series x,
+                          const Options &opt = {}) {
+  if (!evaluate)
+    throw std::invalid_argument("roots::householder: evaluator is required");
+  if (opt.max_iterations <= 0)
+    throw std::invalid_argument(
+        "roots::householder: max_iterations must be positive");
+  if (opt.check_every <= 0)
+    throw std::invalid_argument(
+        "roots::householder: check_every must be positive");
+  if (opt.x_tolerance < 0.0 || opt.f_tolerance < 0.0)
+    throw std::invalid_argument(
+        "roots::householder: tolerances must be non-negative");
+
+  Result out;
+  for (std::int64_t i = 0; i < opt.max_iterations; ++i) {
+    const Derivatives d = evaluate(x);
+    const Series first2 = d.first.square();
+    const Series numerator =
+        d.value.mul(first2.sub(d.value.mul(d.second).mul(0.5)));
+    const Series denominator =
+        d.first.mul(first2.sub(d.value.mul(d.second)))
+            .add(d.third.mul(d.value.square()).mul(1.0 / 6.0));
+    const Series safe = denominator.abs().lt(1e-30).where(
+        pluss::series::ones_like(denominator), denominator);
+    const Series step = numerator.div(safe);
+    x = x.sub(step);
+    out.iterations = i + 1;
+    if ((opt.x_tolerance > 0.0 || opt.f_tolerance > 0.0) &&
+        (i + 1) % opt.check_every == 0) {
+      if ((opt.x_tolerance > 0.0 &&
+           detail::all_below(step, opt.x_tolerance)) ||
+          (opt.f_tolerance > 0.0 &&
+           detail::all_below(d.value, opt.f_tolerance)))
+        break;
+    }
+  }
+  // Rebuild the converged root as an implicit function of every Series
+  // captured by the evaluator. This avoids retaining the full iteration tape
+  // and gives dx/dp = -(dF/dp)/(dF/dx), independent of the initial guess.
+  const Series root_value = x.detach();
+  const Derivatives final = evaluate(root_value);
+  const Series safe_first = final.first.abs().lt(1e-30).where(
+      pluss::series::ones_like(final.first), final.first);
+  out.root = root_value.sub(final.value.div(safe_first.detach()));
+  out.residual = evaluate(out.root).value;
   return out;
 }
 

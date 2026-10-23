@@ -1,0 +1,10 @@
+# Batches and derivatives
+
+[Back to Beyond One Interval](../integration_02_beyond_one_interval.md)
+
+
+If the integrand returns shape `[B, n]` for a node vector of length `n`, the integral runs along the last axis and returns `B` values; any number of leading batch axes is allowed. A parameter captured by the integrand and marked `tracks_slope_(true)` receives its derivative when you call `reverse()` on a scalar built from the result.
+
+@@example Numerical/integration/guide/612_batches_and_gradients.cpp@@
+
+This is how an integral enters a model that is being fitted: a distribution's parameters inside a likelihood integral, for example, are differentiated through the quadrature with no extra code.

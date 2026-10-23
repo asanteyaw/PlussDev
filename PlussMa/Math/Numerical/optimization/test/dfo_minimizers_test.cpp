@@ -205,6 +205,73 @@ int main() {
   std::cerr << "DE guarded f=" << de_guard_out.minimum << '\n';
   expect(std::isfinite(de_guard_out.minimum), "DE non-finite objective handling failed", &failures);
 
+  // The default (vectorized) population solvers must actually improve on their initial population: a selection step that
+  // keeps the worse point of each pair leaves the best value at its starting value forever. A bounded sphere from a point
+  // away from the optimum must come down by many orders of magnitude within a fixed budget, in both execution modes.
+  {
+    const Series lower = pluss::series::full({3}, -5.0, cfg);
+    const Series upper = pluss::series::full({3}, 5.0, cfg);
+    const Series start = pluss::make_series(std::vector<double>{2.5, -1.5, 3.0}).to(ScalarType::Float64);
+    for (const auto mode : {PopulationSolverExecutionMode::Vectorized, PopulationSolverExecutionMode::OptimMasterCompat}) {
+      DifferentialEvolutionConfig de;
+      de.max_generations = 200; de.check_every = 0; de.lower_bounds = lower; de.upper_bounds = upper; de.execution_mode = mode;
+      expect(differential_evolution_minimizer(sphere, start, de).minimum < 1e-8, "DE improves on its initial population", &failures);
+      DifferentialEvolutionPrmmConfig prmm;
+      prmm.max_generations = 200; prmm.max_evaluations = 60000; prmm.check_every = 0; prmm.lower_bounds = lower; prmm.upper_bounds = upper; prmm.execution_mode = mode;
+      expect(differential_evolution_prmm_minimizer(sphere, start, prmm).minimum < 1e-6, "DE-PRMM improves on its initial population", &failures);
+      ParticleSwarmConfig pso;
+      pso.max_generations = 300; pso.check_every = 0; pso.lower_bounds = lower; pso.upper_bounds = upper; pso.execution_mode = mode;
+      expect(particle_swarm_minimizer(sphere, start, pso).minimum < 1e-8, "PSO improves on its initial population", &failures);
+      ParticleSwarmDvConfig dv;
+      dv.max_generations = 300; dv.check_every = 0; dv.lower_bounds = lower; dv.upper_bounds = upper; dv.execution_mode = mode;
+      expect(particle_swarm_dv_minimizer(sphere, start, dv).minimum < 1e-8, "PSO-DV improves on its initial population", &failures);
+    }
+    // A plateau of the best value is not convergence: with the early-stop test on, a run that declares itself converged
+    // must have reached the minimum, not merely stopped improving for one check window.
+    ParticleSwarmDvConfig dv;
+    dv.max_generations = 1000; dv.check_every = 10; dv.lower_bounds = lower; dv.upper_bounds = upper;
+    const auto outcome = particle_swarm_dv_minimizer(sphere, start, dv);
+    expect(outcome.minimum < 1e-6, "PSO-DV with the early-stop test on must not stop on a plateau", &failures);
+  }
+
+  {
+    // With no evaluation budget given, the generation limit is what ends the run and the status must say so.
+    DifferentialEvolutionConfig limited;
+    limited.population_size = 20;
+    limited.max_generations = 5;
+    const Series start = pluss::make_series(std::vector<double>{3.0, 3.0}, {2}, cfg);
+    const auto out = differential_evolution_minimizer(
+        [](const Series& x) { return x.square().sum(); }, start, limited);
+    expect(out.status == PopulationSolverStatus::ReachedIterationBudget,
+           "a generation limit reports ReachedIterationBudget, not ReachedEvaluationBudget", &failures);
+    DifferentialEvolutionConfig capped = limited;
+    capped.max_generations = 100;
+    capped.max_evaluations = 60;
+    const auto out2 = differential_evolution_minimizer(
+        [](const Series& x) { return x.square().sum(); }, start, capped);
+    expect(out2.status == PopulationSolverStatus::ReachedEvaluationBudget,
+           "an evaluation limit reports ReachedEvaluationBudget", &failures);
+  }
+
+  {
+    // With bounds and the default initial radius the population covers the whole box, not a small cluster around the start,
+    // so the swarm reaches the global minimum of the 3-D Rastrigin function (value 0 at the origin) from a start in a
+    // distant local-minimum basin, for several seeds.
+    const double pi = 3.14159265358979323846;
+    auto rastrigin = [pi](const Series& x) { return x.square().sub(x.mul(2.0 * pi).cos().mul(10.0)).add(10.0).sum(); };
+    const Series start = pluss::series::full({3}, 3.0, cfg);
+    int reached = 0;
+    for (const std::uint64_t seed : {1ULL, 2ULL, 3ULL, 4ULL}) {
+      ParticleSwarmConfig box;
+      box.lower_bounds = pluss::series::full({3}, -5.12, cfg);
+      box.upper_bounds = pluss::series::full({3}, 5.12, cfg);
+      box.max_evaluations = 20000;
+      box.rng_seed = seed;
+      if (particle_swarm_minimizer(rastrigin, start, box).minimum < 1e-6) ++reached;
+    }
+    expect(reached >= 3, "bounded swarm covers the box and finds the global minimum for most seeds", &failures);
+  }
+
   if (failures != 0) {
     std::cerr << "dfo_minimizers_test: " << failures << " failure(s)\n";
     return 1;

@@ -91,7 +91,11 @@ void test_multi_horizon_shape_and_finiteness() {
 
   expect(model.num_steps() == 3, "expected three fitted horizon steps");
   expect(pred.sizes().size() == 2 && pred.sizes()[0] == n && pred.sizes()[1] == 3, "expected prediction shape [n,3]");
-  expect(pred.isfinite().all().item<double>() == 1.0, "expected finite predictions");
+  // rows that lack part of the lag history have no prediction (NaN); every later row has one
+  const std::int64_t first_complete = 16;
+  expect(pred.index_select(0, pluss::series::arange(first_complete, n, pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU)))
+                 .isfinite().all().item<double>() == 1.0,
+         "expected finite predictions once the lag history exists");
   expect(mae.sizes().size() == 1 && mae.sizes()[0] == 3, "expected mae shape [3]");
   expect(mae.isfinite().all().item<double>() == 1.0, "expected finite mae values");
 }

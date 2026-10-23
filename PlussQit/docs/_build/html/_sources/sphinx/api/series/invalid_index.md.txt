@@ -207,8 +207,8 @@ positions, especially if the next step is "fetch those exact lanes" or
     <span class="label">Previous</span>
     <span class="title">invalid</span>
   </a>
-  <a class="next-link" href="is_complex.html">
+  <a class="next-link" href="irfft.html">
     <span class="label">Next</span>
-    <span class="title">is_complex</span>
+    <span class="title">irfft</span>
   </a>
 </div>

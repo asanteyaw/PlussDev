@@ -1,0 +1,10 @@
+# Gradients through a solve
+
+[Back to Events, Stiffness and Gradients](../ode_02_events_stiffness_and_gradients.md)
+
+
+`ode::fluxa_adjoint(f, y0, t0, t1, theta, grad_y_final, options)` returns the final state together with the gradient of a scalar loss with respect to the initial state (`grad_y0`) and to the parameters (`grad_theta`), given the seed `dL/dy(t1)`. It runs fixed-step RK4 forward, stores the trajectory at each step boundary, then walks it backward computing one step's vector–Jacobian product at a time. It never builds a single graph over the whole trajectory, so the memory is the stored trajectory, not a stack of intermediate operations.
+
+@@example Numerical/ode/guide/704_adjoint_gradients.cpp@@
+
+The adjoint is the exact gradient of the *discrete* RK4 map. It differs from the gradient of the true solution only by the method's own error, which falls by about 16 per halving of the step, as in Chapter 1. The method is defined for fixed-step RK4; asking for it with the adaptive method is an error, because differentiating through accepted and rejected step decisions is a separate problem. Choose `steps` so the discretisation error is below the accuracy you need in the gradient.

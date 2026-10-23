@@ -1,26 +1,22 @@
-<!-- pluss-hand-authored -->
+# API Reference
 
-# PlussMa API Reference
+PlussMa is organized by public framework first, so you can enter through the exact namespace you are using in code.
 
-[Back to PlussMa](index.md)
+| Framework | What it covers | Reference |
+|---|---|---|
+| `ts` | Time series: transforms, diagnostics, ARIMA, volatility, vector, state-space and direct forecasting models | [API reference](api/plussma_ts.md) |
+| Distributions | Probability families, sampling and maximum-likelihood fitting | [Guides](manual/distr.md) |
+| Inference | Tests of means, variances, ranks, distributions and tables | [Guides](manual/infer.md) |
+| Regression | Least squares, generalised linear, quantile and polynomial regression | [Guides](manual/regress.md) |
+| Optimization | Constrained and unconstrained optimization, linear and mixed-integer programming, derivative-free search, root finding | [Guides](manual/optim.md) |
+| Numerical methods | Integration, differential equations, interpolation and large linear systems | [Guides](manual/numerics.md) |
+| Stochastic processes | Stochastic integrals, Itô calculus, jump processes, SDE simulation | [Guides](manual/stochastic.md) |
 
-PlussMa's reference material is organized by math/statistics domain. Pick the domain
-that matches what you're working with:
+Only `ts` has a per-function API reference so far. The other frameworks are documented through their guides, which cover every public entry point with complete programs and real output.
 
 ```{toctree}
-:glob:
-:maxdepth: 3
+:maxdepth: 4
+:hidden:
 
-_local/*/*
-_local/*/*/*
+api/plussma_ts
 ```
-
-If a domain you expect to see here is missing (for example a future `Finance` or
-`Regression` reference), it hasn't been written yet.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
-    <span class="label">Previous</span>
-    <span class="title">PlussMa Home</span>
-  </a>
-</div>

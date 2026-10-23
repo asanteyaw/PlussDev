@@ -1,0 +1,10 @@
+# Infinite limits
+
+[Back to Beyond One Interval](../integration_02_beyond_one_interval.md)
+
+
+Pass `±infinity` as a limit. `quadra` rewrites the integral on a finite interval by a change of variables and integrates that. The far tails are cut at `infinite_domain_epsilon` (default 1e-10), which sets the accuracy limit.
+
+@@example Numerical/integration/guide/611_infinite_domains.cpp@@
+
+Complex integrands work the same way: the real and imaginary parts are integrated together.

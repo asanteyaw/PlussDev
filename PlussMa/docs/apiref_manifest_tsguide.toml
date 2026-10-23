@@ -1,0 +1,255 @@
+# apiref_manifest_tsguide.toml -- the `Time series` guide of PlussMa.
+
+[framework.ts_guide]
+title = "Time series"
+nav_title = "Time series guide"
+nav_prefix = "manual/ts/"
+root_page = "manual/ts/guide.html"
+summary = "Transforms, diagnostics, ARIMA, volatility, vector, state-space and direct forecasting models."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "ts/ts_01_describing_a_series"
+page = "manual/ts/guide/ts_01_describing_a_series.md"
+title = "Describing a Series"
+maxdepth = 2
+children = ["ts_01_describing_a_series/the_transforms", "ts_01_describing_a_series/acf_and_pacf", "ts_01_describing_a_series/white_noise_unit_roots_stationarity", "ts_01_describing_a_series/volatility_clustering"]
+
+[[family]]
+path = "ts/ts_02_arima_models"
+page = "manual/ts/guide/ts_02_arima_models.md"
+title = "ARIMA Models"
+maxdepth = 2
+children = ["ts_02_arima_models/fitting", "ts_02_arima_models/forecasting", "ts_02_arima_models/choosing_the_orders", "ts_02_arima_models/checking_the_residuals", "ts_02_arima_models/seasonal_models", "ts_02_arima_models/differencing"]
+
+[[family]]
+path = "ts/ts_03_volatility_models"
+page = "manual/ts/guide/ts_03_volatility_models.md"
+title = "Volatility Models"
+maxdepth = 2
+children = ["ts_03_volatility_models/fitting_a_garch_1_1", "ts_03_volatility_models/asymmetric_responses", "ts_03_volatility_models/checking_the_fit", "ts_03_volatility_models/several_series_with_a_constant_correlation"]
+
+[[family]]
+path = "ts/ts_04_vector_models"
+page = "manual/ts/guide/ts_04_vector_models.md"
+title = "Vector Autoregressions and Cointegration"
+maxdepth = 2
+children = ["ts_04_vector_models/fitting_a_var_and_choosing_the_lag_order", "ts_04_vector_models/impulse_responses_and_variance_decompositions", "ts_04_vector_models/granger_tests", "ts_04_vector_models/the_rank_of_a_cointegrated_system", "ts_04_vector_models/the_error_correction_model"]
+
+[[family]]
+path = "ts/ts_05_state_space_models"
+page = "manual/ts/guide/ts_05_state_space_models.md"
+title = "State-Space Models"
+maxdepth = 2
+children = ["ts_05_state_space_models/filtering_a_local_linear_trend", "ts_05_state_space_models/smoothing_across_a_gap_and_forecasting", "ts_05_state_space_models/simulation_as_a_check"]
+
+[[family]]
+path = "ts/ts_06_direct_forecasting"
+page = "manual/ts/guide/ts_06_direct_forecasting.md"
+title = "Direct Forecasting and Model Comparison"
+maxdepth = 2
+children = ["ts_06_direct_forecasting/partitions", "ts_06_direct_forecasting/direct_forecasts", "ts_06_direct_forecasting/comparing_models_out_of_sample"]
+
+[[family]]
+path = "ts/ts_07_plots"
+page = "manual/ts/guide/ts_07_plots.md"
+title = "Plots"
+maxdepth = 2
+children = ["ts_07_plots/autocorrelation_and_partial_autocorrelation", "ts_07_plots/plots_of_the_residuals"]
+
+[[family]]
+path = "ts/guide"
+page = "manual/ts/guide.md"
+title = "guide"
+maxdepth = 2
+children = ["guide/ts_01_describing_a_series", "guide/ts_02_arima_models", "guide/ts_03_volatility_models", "guide/ts_04_vector_models", "guide/ts_05_state_space_models", "guide/ts_06_direct_forecasting", "guide/ts_07_plots"]
+
+[[symbol]]
+qualname = "ts::ts_01_describing_a_series::The transforms"
+kind = "page"
+family = "ts/ts_01_describing_a_series"
+page = "manual/ts/guide/ts_01_describing_a_series/the_transforms.md"
+summary = "The transforms"
+
+[[symbol]]
+qualname = "ts::ts_01_describing_a_series::ACF and PACF"
+kind = "page"
+family = "ts/ts_01_describing_a_series"
+page = "manual/ts/guide/ts_01_describing_a_series/acf_and_pacf.md"
+summary = "ACF and PACF"
+
+[[symbol]]
+qualname = "ts::ts_01_describing_a_series::White noise, unit roots, stationarity"
+kind = "page"
+family = "ts/ts_01_describing_a_series"
+page = "manual/ts/guide/ts_01_describing_a_series/white_noise_unit_roots_stationarity.md"
+summary = "White noise, unit roots, stationarity"
+
+[[symbol]]
+qualname = "ts::ts_01_describing_a_series::Volatility clustering"
+kind = "page"
+family = "ts/ts_01_describing_a_series"
+page = "manual/ts/guide/ts_01_describing_a_series/volatility_clustering.md"
+summary = "Volatility clustering"
+
+[[symbol]]
+qualname = "ts::ts_02_arima_models::Fitting"
+kind = "page"
+family = "ts/ts_02_arima_models"
+page = "manual/ts/guide/ts_02_arima_models/fitting.md"
+summary = "Fitting"
+
+[[symbol]]
+qualname = "ts::ts_02_arima_models::Forecasting"
+kind = "page"
+family = "ts/ts_02_arima_models"
+page = "manual/ts/guide/ts_02_arima_models/forecasting.md"
+summary = "Forecasting"
+
+[[symbol]]
+qualname = "ts::ts_02_arima_models::Choosing the orders"
+kind = "page"
+family = "ts/ts_02_arima_models"
+page = "manual/ts/guide/ts_02_arima_models/choosing_the_orders.md"
+summary = "Choosing the orders"
+
+[[symbol]]
+qualname = "ts::ts_02_arima_models::Checking the residuals"
+kind = "page"
+family = "ts/ts_02_arima_models"
+page = "manual/ts/guide/ts_02_arima_models/checking_the_residuals.md"
+summary = "Checking the residuals"
+
+[[symbol]]
+qualname = "ts::ts_02_arima_models::Seasonal models"
+kind = "page"
+family = "ts/ts_02_arima_models"
+page = "manual/ts/guide/ts_02_arima_models/seasonal_models.md"
+summary = "Seasonal models"
+
+[[symbol]]
+qualname = "ts::ts_02_arima_models::Differencing"
+kind = "page"
+family = "ts/ts_02_arima_models"
+page = "manual/ts/guide/ts_02_arima_models/differencing.md"
+summary = "Differencing"
+
+[[symbol]]
+qualname = "ts::ts_03_volatility_models::Fitting a GARCH(1, 1)"
+kind = "page"
+family = "ts/ts_03_volatility_models"
+page = "manual/ts/guide/ts_03_volatility_models/fitting_a_garch_1_1.md"
+summary = "Fitting a GARCH(1, 1)"
+
+[[symbol]]
+qualname = "ts::ts_03_volatility_models::Asymmetric responses"
+kind = "page"
+family = "ts/ts_03_volatility_models"
+page = "manual/ts/guide/ts_03_volatility_models/asymmetric_responses.md"
+summary = "Asymmetric responses"
+
+[[symbol]]
+qualname = "ts::ts_03_volatility_models::Checking the fit"
+kind = "page"
+family = "ts/ts_03_volatility_models"
+page = "manual/ts/guide/ts_03_volatility_models/checking_the_fit.md"
+summary = "Checking the fit"
+
+[[symbol]]
+qualname = "ts::ts_03_volatility_models::Several series with a constant correlation"
+kind = "page"
+family = "ts/ts_03_volatility_models"
+page = "manual/ts/guide/ts_03_volatility_models/several_series_with_a_constant_correlation.md"
+summary = "Several series with a constant correlation"
+
+[[symbol]]
+qualname = "ts::ts_04_vector_models::Fitting a VAR and choosing the lag order"
+kind = "page"
+family = "ts/ts_04_vector_models"
+page = "manual/ts/guide/ts_04_vector_models/fitting_a_var_and_choosing_the_lag_order.md"
+summary = "Fitting a VAR and choosing the lag order"
+
+[[symbol]]
+qualname = "ts::ts_04_vector_models::Impulse responses and variance decompositions"
+kind = "page"
+family = "ts/ts_04_vector_models"
+page = "manual/ts/guide/ts_04_vector_models/impulse_responses_and_variance_decompositions.md"
+summary = "Impulse responses and variance decompositions"
+
+[[symbol]]
+qualname = "ts::ts_04_vector_models::Granger tests"
+kind = "page"
+family = "ts/ts_04_vector_models"
+page = "manual/ts/guide/ts_04_vector_models/granger_tests.md"
+summary = "Granger tests"
+
+[[symbol]]
+qualname = "ts::ts_04_vector_models::The rank of a cointegrated system"
+kind = "page"
+family = "ts/ts_04_vector_models"
+page = "manual/ts/guide/ts_04_vector_models/the_rank_of_a_cointegrated_system.md"
+summary = "The rank of a cointegrated system"
+
+[[symbol]]
+qualname = "ts::ts_04_vector_models::The error-correction model"
+kind = "page"
+family = "ts/ts_04_vector_models"
+page = "manual/ts/guide/ts_04_vector_models/the_error_correction_model.md"
+summary = "The error-correction model"
+
+[[symbol]]
+qualname = "ts::ts_05_state_space_models::Filtering a local linear trend"
+kind = "page"
+family = "ts/ts_05_state_space_models"
+page = "manual/ts/guide/ts_05_state_space_models/filtering_a_local_linear_trend.md"
+summary = "Filtering a local linear trend"
+
+[[symbol]]
+qualname = "ts::ts_05_state_space_models::Smoothing across a gap, and forecasting"
+kind = "page"
+family = "ts/ts_05_state_space_models"
+page = "manual/ts/guide/ts_05_state_space_models/smoothing_across_a_gap_and_forecasting.md"
+summary = "Smoothing across a gap, and forecasting"
+
+[[symbol]]
+qualname = "ts::ts_05_state_space_models::Simulation as a check"
+kind = "page"
+family = "ts/ts_05_state_space_models"
+page = "manual/ts/guide/ts_05_state_space_models/simulation_as_a_check.md"
+summary = "Simulation as a check"
+
+[[symbol]]
+qualname = "ts::ts_06_direct_forecasting::Partitions"
+kind = "page"
+family = "ts/ts_06_direct_forecasting"
+page = "manual/ts/guide/ts_06_direct_forecasting/partitions.md"
+summary = "Partitions"
+
+[[symbol]]
+qualname = "ts::ts_06_direct_forecasting::Direct forecasts"
+kind = "page"
+family = "ts/ts_06_direct_forecasting"
+page = "manual/ts/guide/ts_06_direct_forecasting/direct_forecasts.md"
+summary = "Direct forecasts"
+
+[[symbol]]
+qualname = "ts::ts_06_direct_forecasting::Comparing models out of sample"
+kind = "page"
+family = "ts/ts_06_direct_forecasting"
+page = "manual/ts/guide/ts_06_direct_forecasting/comparing_models_out_of_sample.md"
+summary = "Comparing models out of sample"
+
+[[symbol]]
+qualname = "ts::ts_07_plots::Autocorrelation and partial autocorrelation"
+kind = "page"
+family = "ts/ts_07_plots"
+page = "manual/ts/guide/ts_07_plots/autocorrelation_and_partial_autocorrelation.md"
+summary = "Autocorrelation and partial autocorrelation"
+
+[[symbol]]
+qualname = "ts::ts_07_plots::Plots of the residuals"
+kind = "page"
+family = "ts/ts_07_plots"
+page = "manual/ts/guide/ts_07_plots/plots_of_the_residuals.md"
+summary = "Plots of the residuals"

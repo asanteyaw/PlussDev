@@ -221,8 +221,8 @@ required.
     <span class="label">Previous</span>
     <span class="title">det</span>
   </a>
-  <a class="next-link" href="inverse.html">
+  <a class="next-link" href="eigh.html">
     <span class="label">Next</span>
-    <span class="title">inverse</span>
+    <span class="title">eigh</span>
   </a>
 </div>

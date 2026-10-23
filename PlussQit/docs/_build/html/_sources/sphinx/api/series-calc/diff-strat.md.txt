@@ -1,0 +1,204 @@
+<!-- pluss-hand-authored -->
+
+# Series::CalcAccessor::diff.strat
+
+[Back to Series::CalcAccessor API Reference](../../series_calc_accessor_api_reference.md)
+
+## Signatures
+
+```cpp
+// One state
+Series::ItoDifferential Series::CalcAccessor::DiffAccessor::strat(
+    const std::function<Series(const Series&)>& g,
+    const Series& mu, const Series& sigma) const
+
+// Two states
+Series::ItoDifferential strat(
+    const std::function<Series(const Series&, const Series&)>& g,
+    const Series& mu, const Series& sigma, const Series::ItoState& other) const
+
+// Any number of states, optional time argument
+Series::ItoDifferential strat(const ItoFn& g, const Series& mu, const Series& sigma,
+    const std::vector<Series::ItoState>& others, const Series::ItoOptions& options) const
+
+// Converting a drift between the two conventions, one scalar process per element
+Series strat_drift(const Series& ito_drift,
+    const std::function<Series(const Series&)>& sigma) const
+Series ito_drift(const Series& strat_drift,
+    const std::function<Series(const Series&)>& sigma) const
+```
+
+## What It Computes
+
+A Stratonovich differential obeys the ordinary chain rule. If `dX = μ dt + σ ∘
+dW` is written in Stratonovich form, then
+
+```text
+drift      = g'(x) μ
+diffusion  = g'(x) σ
+```
+
+with no second-order term. The same process in Itô form has a drift shifted by
+half of `σσ'`:
+
+```text
+μ_Stratonovich = μ_Itô − ½ σ(x) σ'(x)
+```
+
+so the same geometric Brownian motion `dX = μX dt + σX dW` (Itô) is `dX = (μ −
+σ²/2) X dt + σX ∘ dW` (Stratonovich). `strat_drift` and `ito_drift` convert a
+drift between the two, and they are exact inverses of each other.
+
+The Stratonovich rule is also the right one for pathwise integration against a
+fractional Brownian motion with Hurst index above one half, which has zero
+quadratic variation.
+
+The parameters, the result type and the shapes are those of
+[`diff.ito`](diff-ito.md). Jumps are not accepted here: under the ordinary chain
+rule, a jump needs a rule for how it moves the state, which is what
+[`diff.marcus`](diff-marcus.md) provides.
+
+## Parameters
+
+- `g`, `mu`, `sigma`, `other`, `others`, `options`: as for [`diff.ito`](diff-ito.md).
+- `ito_drift` (for `strat_drift`) is the drift in Itô form, with the receiver's
+  shape.
+- `strat_drift` (for `ito_drift`) is the drift in Stratonovich form.
+- `sigma` (the callable) maps the state to the volatility at that state, with the
+  receiver's shape. It is differentiated by automatic differentiation to get `σ'`.
+  Every element is its own one-dimensional process; the conversion does not mix
+  elements.
+
+## Examples
+
+Example 1. The ordinary chain rule. For `g(x) = x²` the Stratonovich drift is
+`2xμ` with no `σ²` term, in contrast to [`diff.ito`](diff-ito.md).
+
+```cpp
+auto x = pluss::make_series({0.5, 1.0, -0.3});
+auto mu = pluss::make_series({0.1, 0.2, -0.1});
+auto sigma = pluss::make_series({0.3, 0.5, 0.2});
+auto square = [](const pluss::Series& s) { return s.mul(s); };
+
+auto strat = x.calc.diff.strat(square, mu, sigma);
+auto ito = x.calc.diff.ito(square, mu, sigma);
+
+std::cout << "strat drift " << strat.drift << "\n";
+std::cout << "ito drift   " << ito.drift << "\n";
+std::cout << "same diffusion " << strat.diffusion << "\n";
+```
+
+### Output
+
+```text
+strat drift pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.1, 0.4, 0.06]
+ito drift   pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.19, 0.65, 0.1]
+same diffusion pluss::Series(shape=[3,1], strides=[1,1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[[0.3],
+  [1],
+  [-0.12]]
+```
+
+Example 2. Converting a drift. Geometric Brownian motion has Itô drift `μx`; the
+Stratonovich drift is `(μ − σ²/2) x`, and converting back recovers the original.
+
+```cpp
+const double mu_c = 0.12, sg = 0.4;
+auto x = pluss::make_series({0.5, 1.0, 2.0});
+auto mu = x.mul(mu_c);
+auto sigma_of = [sg](const pluss::Series& s) { return s.mul(sg); };
+
+auto mu_strat = x.calc.diff.strat_drift(mu, sigma_of);
+auto back = x.calc.diff.ito_drift(mu_strat, sigma_of);
+
+std::cout << "Ito drift          " << mu << "\n";
+std::cout << "Stratonovich drift " << mu_strat << "\n";
+std::cout << "(mu - sigma^2/2) x " << (mu_c - 0.5 * sg * sg) * 0.5 << ", " << (mu_c - 0.5 * sg * sg) * 1.0 << ", "
+          << (mu_c - 0.5 * sg * sg) * 2.0 << "\n";
+std::cout << "round trip         " << back << "\n";
+```
+
+### Output
+
+```text
+Ito drift          pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.06, 0.12, 0.24]
+Stratonovich drift pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.02, 0.04, 0.08]
+(mu - sigma^2/2) x 0.02, 0.04, 0.08
+round trip         pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.06, 0.12, 0.24]
+```
+
+Example 3. Both routes to `d log X` agree. The Itô route subtracts `σ²/2`
+explicitly through the lemma; the Stratonovich route applies the ordinary chain
+rule to the converted drift.
+
+```cpp
+const double mu_c = 0.12, sg = 0.4;
+auto x = pluss::make_series({1.0});
+auto mu = x.mul(mu_c);
+auto sigma = x.mul(sg);
+auto sigma_of = [sg](const pluss::Series& s) { return s.mul(sg); };
+auto log_fn = [](const pluss::Series& s) { return s.log(); };
+
+auto ito = x.calc.diff.ito(log_fn, mu, sigma);
+auto strat = x.calc.diff.strat(log_fn, x.calc.diff.strat_drift(mu, sigma_of), sigma);
+
+std::cout << "ito   drift " << ito.drift << " diffusion " << ito.diffusion << "\n";
+std::cout << "strat drift " << strat.drift << " diffusion " << strat.diffusion << "\n";
+```
+
+### Output
+
+```text
+ito   drift pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.04] diffusion pluss::Series(shape=[1,1], strides=[1,1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[[0.4]]
+strat drift pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.04] diffusion pluss::Series(shape=[1,1], strides=[1,1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[[0.4]]
+```
+
+Example 4. Two states under the ordinary chain rule: no covariation term.
+
+```cpp
+auto x = pluss::make_series({2.0});
+auto mu_x = pluss::make_series({0.05});
+auto sigma_x = pluss::make_series({{0.3, 0.0}});
+pluss::Series::ItoState y{pluss::make_series({1.5}), pluss::make_series({0.08}),
+                          pluss::make_series({{0.24, 0.32}})};
+
+auto d = x.calc.diff.strat(
+    [](const pluss::Series& a, const pluss::Series& b) { return a.mul(b); }, mu_x, sigma_x, y);
+
+std::cout << "drift " << d.drift << "  (= Y mu_x + X mu_y = " << 1.5 * 0.05 + 2.0 * 0.08 << ")\n";
+```
+
+### Output
+
+```text
+drift pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[0.235]  (= Y mu_x + X mu_y = 0.235)
+```
+
+## Gotchas And Failure Modes
+
+- The drift you pass must be in Stratonovich form. A drift taken from an Itô
+  model is off by `½ σσ'`; convert it first with `strat_drift`.
+- `strat_drift` and `ito_drift` treat every element as its own scalar process. For
+  a state with several coupled components the correction is not `½ σσ'` per
+  component.
+
+## Summary
+
+`diff.strat` is the ordinary chain rule for Stratonovich processes, and
+`strat_drift`/`ito_drift` move a drift between the two conventions.
+
+## See Also
+
+- [`diff.ito`](diff-ito.md): Itô's lemma.
+- [`diff.marcus`](diff-marcus.md): the Stratonovich-type rule for processes that jump.
+- [`antidiff.ito`](antidiff-ito.md): the integral counterparts.

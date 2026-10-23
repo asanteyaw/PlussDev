@@ -1,0 +1,8 @@
+# The transforms
+
+[Back to Describing a Series](../ts_01_describing_a_series.md)
+
+
+@@example Stats/time_series/guide/1201_transforms.cpp@@
+
+Read the `NaN` pattern: `diff(2)` loses two values, a rolling statistic with `min_periods` equal to the window loses the start of the series, and a sample standard deviation is undefined for a single observation (the population one is 0). `returns` and `log_returns` agree closely for small changes and differ for large ones (0.6667 against 0.5108 for the move from 3 to 5).

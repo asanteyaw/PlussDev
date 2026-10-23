@@ -149,7 +149,7 @@ Duration::operator+: nanosecond overflow
 ## Neighboring Named Methods
 
 The dedicated [`add`](add.md), [`sub`](sub.md), [`neg`](neg.md),
-[`mul`](mul.md), and [`div`](div.md) pages teach each arithmetic contract in
+[`mul`](mul.md), and [`div`](div.md) pages cover each arithmetic contract in
 isolation. [`eq`](eq.md) through [`ge`](ge.md) do the same for comparisons.
 `floordiv()` and `mod()` are named methods because C++ has no distinct operator
 for floor division and the public remainder takes a nanosecond integer.

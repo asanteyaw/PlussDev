@@ -1,0 +1,10 @@
+# A digital option's delta
+
+[Back to Malliavin Calculus](../stochastic_05_malliavin.md)
+
+
+A digital option pays `1{X_T > K}`. Its pathwise derivative is zero almost everywhere, so the estimator of chapter 4 reports zero: the payoff has no slope except at a single point that no path hits. Integrating by parts with the Malliavin derivative puts the derivative on the weight instead. For geometric Brownian motion `delta = E[1{X_T > K} W_T] / (x₀ σ T)` (undiscounted), and the closed form is `n(d2) / (x₀ σ √T)`.
+
+@@example Probability/random_processes/guide/sde/43_digital_delta.cpp@@
+
+The weighted estimate is 0.01328 against the closed form 0.01325, from 400000 paths, while the pathwise estimate is exactly zero. The weight is the whole trick: the payoff is untouched and so can be as discontinuous as you like.

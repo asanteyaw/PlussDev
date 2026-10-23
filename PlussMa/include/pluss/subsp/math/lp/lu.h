@@ -31,10 +31,261 @@ public:
     std::int32_t row;
   };
 
-  // Factorise the m x m matrix with CSC arrays (start, index, value); column k is basis position k.
-  // Returns the singular (position, row) repair list (empty when the basis is numerically nonsingular).
+  // Factorise the basis. Right-looking Markowitz elimination with threshold pivoting (Markowitz 1957; Suhl & Suhl 1990): singletons
+  // first, then pivots minimising (row count - 1)(column count - 1) among entries within `threshold` of their column maximum. Far less
+  // fill than the left-looking Gilbert-Peierls variant with a static column order (kept for comparison as `use_markowitz = false`).
+  bool use_markowitz = true;
   std::vector<Singular> factorize(std::int32_t m, const std::vector<std::int64_t> &start, const std::vector<std::int32_t> &index,
                                   const std::vector<double> &value, double threshold = 0.1, double pivot_tol = 1e-9) {
+    if (!use_markowitz)
+      return factorize_gp_(m, start, index, value, threshold, pivot_tol);
+    return factorize_markowitz_(m, start, index, value, threshold, pivot_tol);
+  }
+
+  std::vector<Singular> factorize_markowitz_(std::int32_t m, const std::vector<std::int64_t> &start, const std::vector<std::int32_t> &index,
+                                             const std::vector<double> &value, double threshold, double pivot_tol) {
+    m_ = m;
+    const auto M = static_cast<std::size_t>(m);
+    prow_.assign(M, -1);
+    qpos_.assign(M, -1);
+    pinv_.assign(M, -1);
+    udiag_.assign(M, 0.0);
+    lstart_.assign(1, 0);
+    lindex_.clear();
+    lvalue_.clear();
+    uindex_.clear();
+    uvalue_.clear();
+    etas_.clear();
+    eta_nnz_ = 0;
+    std::vector<Singular> singular;
+    using Ent = std::pair<std::int32_t, double>;
+    std::vector<std::vector<Ent>> cols(M);
+    std::vector<std::vector<std::int32_t>> rowpat(M);
+    for (std::size_t j = 0; j < M; ++j)
+      for (std::int64_t p = start[j]; p < start[j + 1]; ++p) {
+        cols[j].push_back({index[static_cast<std::size_t>(p)], value[static_cast<std::size_t>(p)]});
+        rowpat[static_cast<std::size_t>(index[static_cast<std::size_t>(p)])].push_back(static_cast<std::int32_t>(j));
+      }
+    std::vector<char> col_active(M, 1), row_active(M, 1);
+    std::vector<std::vector<std::int32_t>> bucket_c(M + 2), bucket_r(M + 2);
+    std::size_t lowc = M + 1;
+    const auto push_col = [&](std::size_t j) {
+      const std::size_t c = cols[j].size();
+      bucket_c[c].push_back(static_cast<std::int32_t>(j));
+      lowc = std::min(lowc, c);
+    };
+    const auto push_row = [&](std::size_t i) {
+      const std::size_t c = rowpat[i].size();
+      bucket_r[c].push_back(static_cast<std::int32_t>(i));
+      lowc = std::min(lowc, c);
+    };
+    for (std::size_t j = 0; j < M; ++j)
+      push_col(j);
+    for (std::size_t i = 0; i < M; ++i)
+      push_row(i);
+    std::vector<std::int32_t> where(M, -1), colstep(M, -1);
+    struct PendingU {
+      std::int32_t col, step;
+      double val;
+    };
+    std::vector<PendingU> pending;
+    std::vector<Ent> lent;
+    std::vector<std::int32_t> skipped_positions;
+    std::int32_t step = 0;
+    const auto col_max = [&](std::size_t j) {
+      double mx = 0.0;
+      for (const auto &e : cols[j])
+        mx = std::max(mx, std::abs(e.second));
+      return mx;
+    };
+    for (;;) {
+      // ---- pivot search by increasing count (columns, then rows, of the same count)
+      double best_merit = std::numeric_limits<double>::infinity(), best_abs = 0.0;
+      std::int32_t pi = -1, pj = -1;
+      std::size_t examined = 0;
+      for (std::size_t c = std::max<std::size_t>(lowc, 1); c <= M; ++c) {
+        auto &bc = bucket_c[c];
+        for (std::size_t q = 0; q < bc.size();) {
+          const auto j = static_cast<std::size_t>(bc[q]);
+          if (!col_active[j] || cols[j].size() != c) { // stale entry
+            bc[q] = bc.back();
+            bc.pop_back();
+            continue;
+          }
+          const double mx = col_max(j);
+          if (mx > pivot_tol) {
+            for (const auto &e : cols[j]) {
+              const double a = std::abs(e.second);
+              if (a < threshold * mx || a <= pivot_tol)
+                continue;
+              const double merit = static_cast<double>(rowpat[static_cast<std::size_t>(e.first)].size() - 1) * static_cast<double>(c - 1);
+              if (merit < best_merit || (merit == best_merit && a > best_abs)) {
+                best_merit = merit;
+                best_abs = a;
+                pi = e.first;
+                pj = static_cast<std::int32_t>(j);
+              }
+            }
+            ++examined;
+          } else {
+            // numerically empty column: cannot pivot now (and never will: entries only change by elimination of active rows)
+          }
+          ++q;
+          if (examined >= 4 && pi >= 0)
+            break;
+        }
+        if (pi >= 0 && best_merit <= static_cast<double>((c - 1) * (c - 1)))
+          break;
+        auto &br = bucket_r[c];
+        for (std::size_t q = 0; q < br.size();) {
+          const auto i = static_cast<std::size_t>(br[q]);
+          if (!row_active[i] || rowpat[i].size() != c) {
+            br[q] = br.back();
+            br.pop_back();
+            continue;
+          }
+          for (const auto jj : rowpat[i]) {
+            const auto sj = static_cast<std::size_t>(jj);
+            double a = 0.0;
+            for (const auto &e : cols[sj])
+              if (e.first == static_cast<std::int32_t>(i)) {
+                a = std::abs(e.second);
+                break;
+              }
+            if (a <= pivot_tol || a < threshold * col_max(sj))
+              continue;
+            const double merit = static_cast<double>(c - 1) * static_cast<double>(cols[sj].size() - 1);
+            if (merit < best_merit || (merit == best_merit && a > best_abs)) {
+              best_merit = merit;
+              best_abs = a;
+              pi = static_cast<std::int32_t>(i);
+              pj = jj;
+            }
+          }
+          ++examined;
+          ++q;
+          if (examined >= 4 && pi >= 0)
+            break;
+        }
+        if (pi >= 0 && (examined >= 4 || best_merit <= static_cast<double>((c - 1) * (c - 1)) || c >= 2))
+          break;
+        if (c + 1 > M)
+          break;
+        // advance lowc past empty low buckets
+        if (c == lowc && bucket_c[c].empty() && bucket_r[c].empty())
+          lowc = c + 1;
+      }
+      if (pi < 0)
+        break; // no acceptable pivot left: the remaining columns are numerically singular
+      const auto spi = static_cast<std::size_t>(pi), spj = static_cast<std::size_t>(pj);
+      // ---- eliminate
+      double pivot = 0.0;
+      lent.clear();
+      for (const auto &e : cols[spj]) {
+        if (e.first == pi)
+          pivot = e.second;
+      }
+      for (const auto &e : cols[spj])
+        if (e.first != pi)
+          lent.push_back({e.first, e.second / pivot});
+      // remove the pivot column from the row patterns
+      for (const auto &e : cols[spj]) {
+        auto &rp = rowpat[static_cast<std::size_t>(e.first)];
+        rp.erase(std::find(rp.begin(), rp.end(), pj));
+      }
+      col_active[spj] = 0;
+      row_active[spi] = 0;
+      colstep[spj] = step;
+      // U row: every other active column of the pivot row
+      const std::vector<std::int32_t> rowcols = rowpat[spi];
+      for (const auto jj : rowcols) {
+        const auto sj = static_cast<std::size_t>(jj);
+        auto &cj = cols[sj];
+        double u = 0.0;
+        for (std::size_t q = 0; q < cj.size(); ++q)
+          if (cj[q].first == pi) {
+            u = cj[q].second;
+            cj[q] = cj.back();
+            cj.pop_back();
+            break;
+          }
+        pending.push_back({jj, step, u});
+        if (!lent.empty()) {
+          for (std::size_t q = 0; q < cj.size(); ++q)
+            where[static_cast<std::size_t>(cj[q].first)] = static_cast<std::int32_t>(q);
+          for (const auto &le : lent) {
+            const auto r = static_cast<std::size_t>(le.first);
+            if (where[r] >= 0) {
+              cj[static_cast<std::size_t>(where[r])].second -= le.second * u;
+            } else {
+              cj.push_back({le.first, -le.second * u});
+              rowpat[r].push_back(jj);
+            }
+          }
+          for (const auto &e : cj)
+            where[static_cast<std::size_t>(e.first)] = -1;
+          for (const auto &le : lent)
+            where[static_cast<std::size_t>(le.first)] = -1;
+        }
+        push_col(sj);
+      }
+      rowpat[spi].clear();
+      cols[spj].clear();
+      for (const auto &le : lent)
+        push_row(static_cast<std::size_t>(le.first));
+      // ---- record the step
+      for (const auto &le : lent) {
+        lindex_.push_back(le.first);
+        lvalue_.push_back(le.second);
+      }
+      lstart_.push_back(static_cast<std::int64_t>(lindex_.size()));
+      udiag_[static_cast<std::size_t>(step)] = pivot;
+      prow_[static_cast<std::size_t>(step)] = pi;
+      pinv_[spi] = step;
+      qpos_[static_cast<std::size_t>(step)] = pj;
+      ++step;
+    }
+    steps_ = step;
+    for (std::size_t j = 0; j < M; ++j)
+      if (colstep[j] < 0)
+        skipped_positions.push_back(static_cast<std::int32_t>(j));
+    // ---- U by column (of the step at which the column was pivoted)
+    ustart_.assign(static_cast<std::size_t>(step) + 1, 0);
+    for (const auto &pu : pending)
+      if (pu.val != 0.0 && colstep[static_cast<std::size_t>(pu.col)] >= 0)
+        ++ustart_[static_cast<std::size_t>(colstep[static_cast<std::size_t>(pu.col)]) + 1];
+    for (std::size_t k = 0; k < static_cast<std::size_t>(step); ++k)
+      ustart_[k + 1] += ustart_[k];
+    uindex_.assign(static_cast<std::size_t>(ustart_.back()), 0);
+    uvalue_.assign(uindex_.size(), 0.0);
+    {
+      std::vector<std::int64_t> pos(ustart_.begin(), ustart_.end() - 1);
+      for (const auto &pu : pending) {
+        const std::int32_t cs = colstep[static_cast<std::size_t>(pu.col)];
+        if (pu.val == 0.0 || cs < 0)
+          continue;
+        const auto at = static_cast<std::size_t>(pos[static_cast<std::size_t>(cs)]++);
+        uindex_[at] = pu.step;
+        uvalue_[at] = pu.val;
+      }
+    }
+    qinv_.clear();
+    build_transposes_();
+    if (!skipped_positions.empty()) {
+      std::vector<std::int32_t> free_rows;
+      for (std::int32_t i = 0; i < m; ++i)
+        if (pinv_[static_cast<std::size_t>(i)] < 0)
+          free_rows.push_back(i);
+      for (std::size_t k = 0; k < skipped_positions.size() && k < free_rows.size(); ++k)
+        singular.push_back({skipped_positions[k], free_rows[k]});
+    }
+    return singular;
+  }
+
+  // Factorise the m x m matrix with CSC arrays (start, index, value); column k is basis position k.
+  // Returns the singular (position, row) repair list (empty when the basis is numerically nonsingular).
+  std::vector<Singular> factorize_gp_(std::int32_t m, const std::vector<std::int64_t> &start, const std::vector<std::int32_t> &index,
+                                      const std::vector<double> &value, double threshold, double pivot_tol) {
     m_ = m;
     const auto M = static_cast<std::size_t>(m);
     prow_.assign(M, -1);

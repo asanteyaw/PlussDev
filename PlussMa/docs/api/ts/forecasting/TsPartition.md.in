@@ -1,0 +1,405 @@
+# `pluss::subsp::stats::ts::TsPartition`
+
+Splits a series into consecutive training and test windows for honest forecast evaluation.
+
+## Signature
+
+```cpp
+ts::TsPartition ts::TsPartition::expanding_window(std::int64_t num_observations, std::int64_t num_test_sets, const ts::PartitionOptions& options = {});
+ts::TsPartition ts::TsPartition::sliding_window(std::int64_t num_observations, std::int64_t num_test_sets, const ts::PartitionOptions& options = {});
+ts::TsPartition ts::TsPartition::holdout(std::int64_t num_observations, double holdout = 0.1, const ts::PartitionOptions& options = {});
+```
+
+## Construction
+
+Built by one of three factories; a partition holds only index ranges, not data.
+
+## State
+
+A partition reports `type()`, `direction()`, `num_observations()`, `num_test_sets()`, `gap_size()`, `max_lag()` and `step_size()`, and its windows.
+
+## Methods
+
+### `expanding_window`
+
+```cpp
+ts::TsPartition ts::TsPartition::expanding_window(std::int64_t num_observations, std::int64_t num_test_sets, const ts::PartitionOptions& options = {});
+```
+
+Windows whose training set starts at observation 0 and grows from one fold to the next: each test set is tested on a model trained on everything before it (up to `max_train_size`). Use it when old data stay relevant.
+
+`std::int64_t num_observations`
+: Length of the series (greater than 1).
+
+`std::int64_t num_test_sets`
+: Number of folds `k` (greater than 0).
+
+`const ts::PartitionOptions& options`
+: Sizes, gap, buffer and direction; see [`PartitionOptions`](PartitionOptions.md).
+
+**Returns.** A [`TsPartition`](TsPartition.md).
+
+**Errors.** The requested sizes must fit `k` folds in `n` observations. `max_lag` must be smaller than the smallest training set.
+
+### `sliding_window`
+
+```cpp
+ts::TsPartition ts::TsPartition::sliding_window(std::int64_t num_observations, std::int64_t num_test_sets, const ts::PartitionOptions& options = {});
+```
+
+Windows whose training set has fixed length `train_size` and slides forward with the test set. Use it when only recent data are relevant.
+
+`std::int64_t num_observations`
+: Length of the series.
+
+`std::int64_t num_test_sets`
+: Number of folds.
+
+`const ts::PartitionOptions& options`
+: Sizes, gap, buffer and direction.
+
+**Returns.** A [`TsPartition`](TsPartition.md).
+
+**Errors.** The requested sizes must fit in `n` observations.
+
+### `holdout`
+
+```cpp
+ts::TsPartition ts::TsPartition::holdout(std::int64_t num_observations, double holdout = 0.1, const ts::PartitionOptions& options = {});
+```
+
+A single split: the last `holdout` fraction (if below 1) or count (if an integer ≥ 1) of the observations is the test set, preceded by `gap_size` unused observations and the training set.
+
+`std::int64_t num_observations`
+: Length of the series.
+
+`double holdout`
+: The test fraction in (0, 1), or a count of observations (an integer ≥ 1); default 0.1.
+
+`const ts::PartitionOptions& options`
+: Gap, buffer and direction.
+
+**Returns.** A [`TsPartition`](TsPartition.md) with one window.
+
+**Errors.** `holdout` must be positive; a value of 1 or more must be an integer.
+
+### `window / windows`
+
+```cpp
+const ts::PartitionWindow& ts::TsPartition::window(std::int64_t i) const;
+std::span<const ts::PartitionWindow> ts::TsPartition::windows() const;
+```
+
+The index ranges of fold `i` or of all folds, as [`PartitionWindow`](PartitionWindow.md) values.
+
+`std::int64_t i`
+: The fold index, `0 … num_test_sets − 1`.
+
+**Returns.** A window, or a span of all of them.
+
+**Errors.** An out-of-range `i` is rejected.
+
+### `training / test / test_buffer`
+
+```cpp
+pluss::Series ts::TsPartition::training(std::int64_t i, pluss::codem::Config cfg = {}) const;
+pluss::Series ts::TsPartition::test(std::int64_t i, pluss::codem::Config cfg = {}) const;
+pluss::Series ts::TsPartition::test_buffer(std::int64_t i, pluss::codem::Config cfg = {}) const;
+```
+
+The 0-based integer indices of the training, test or buffer observations of fold `i`, as an integer `Series` ready for indexing.
+
+`std::int64_t i`
+: The fold index.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** An integer `Series` of indices (empty for an empty buffer).
+
+**Errors.** An out-of-range `i` is rejected.
+
+### `training_mask / test_mask / test_buffer_mask`
+
+```cpp
+pluss::Series ts::TsPartition::training_mask(std::int64_t i, pluss::codem::Config cfg = {}) const;
+pluss::Series ts::TsPartition::test_mask(std::int64_t i, pluss::codem::Config cfg = {}) const;
+pluss::Series ts::TsPartition::test_buffer_mask(std::int64_t i, pluss::codem::Config cfg = {}) const;
+```
+
+The same sets as Boolean masks of length `num_observations`.
+
+`std::int64_t i`
+: The fold index.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** A Boolean `Series`.
+
+**Errors.** An out-of-range `i` is rejected.
+
+## Practical Examples
+
+### Example 1
+
+The default windows: the last test set ends at the end of the series, and the three sizes are a quarter of the series each.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  std::cout << "expanding window\n";
+  const auto expanding = ts::TsPartition::expanding_window(100, 3);
+  for (const auto& w : expanding.windows())
+    std::cout << "  train " << std::setw(3) << w.train_start + 1 << " - " << std::setw(3) << w.train_end + 1 << "   test " << std::setw(3) << w.test_start + 1 << " - " << std::setw(3) << w.test_end + 1 << "\n";
+  std::cout << "sliding window\n";
+  const auto sliding = ts::TsPartition::sliding_window(100, 3);
+  for (const auto& w : sliding.windows())
+    std::cout << "  train " << std::setw(3) << w.train_start + 1 << " - " << std::setw(3) << w.train_end + 1 << "   test " << std::setw(3) << w.test_start + 1 << " - " << std::setw(3) << w.test_end + 1 << "\n";
+}
+```
+
+### Example 2
+
+A gap leaves observations unused between training and test, and the sizes adapt so the windows still fit; giving only `test_size` makes the step equal to it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  ts::PartitionOptions gap;
+  gap.gap_size = 2;
+  const auto gapped = ts::TsPartition::expanding_window(100, 3, gap);
+  for (const auto& w : gapped.windows())
+    std::cout << "gap 2:  train " << std::setw(3) << w.train_start + 1 << " - " << std::setw(3) << w.train_end + 1 << "   test " << std::setw(3) << w.test_start + 1 << " - " << std::setw(3) << w.test_end + 1 << "\n";
+  ts::PartitionOptions test10;
+  test10.test_size = 10;
+  const auto tens = ts::TsPartition::sliding_window(100, 4, test10);
+  for (const auto& w : tens.windows())
+    std::cout << "test 10: train " << std::setw(3) << w.train_start + 1 << " - " << std::setw(3) << w.train_end + 1 << "   test " << std::setw(3) << w.test_start + 1 << " - " << std::setw(3) << w.test_end + 1 << "\n";
+}
+```
+
+### Example 3
+
+A forward expanding window starts from a given training length; a holdout is a single split; `max_lag` adds a buffer before the test set.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  ts::PartitionOptions forward;
+  forward.direction = ts::Direction::Forward;
+  forward.min_train_size = 40;
+  forward.step_size = 20;
+  const auto forwarded = ts::TsPartition::expanding_window(100, 3, forward);
+  for (const auto& w : forwarded.windows())
+    std::cout << "forward: train " << std::setw(3) << w.train_start + 1 << " - " << std::setw(3) << w.train_end + 1 << "   test " << std::setw(3) << w.test_start + 1 << " - " << std::setw(3) << w.test_end + 1 << "\n";
+  const auto h = ts::TsPartition::holdout(100, 0.2).window(0);
+  std::cout << "holdout: train " << h.train_start + 1 << " - " << h.train_end + 1 << "   test " << h.test_start + 1 << " - " << h.test_end + 1 << "\n";
+  ts::PartitionOptions lag;
+  lag.max_lag = 5;
+  const auto w = ts::TsPartition::expanding_window(100, 3, lag).window(0);
+  std::cout << "buffer of the first test set: " << w.test_buffer_start + 1 << " - " << w.test_buffer_end + 1 << "\n";
+}
+```
+
+### Example 4
+
+The index and mask views of a fold.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  const auto partition = ts::TsPartition::expanding_window(20, 3);
+  const Series test_idx = partition.test(0);
+  std::cout << "test indices of fold 0: ";
+  for (auto i : test_idx.to_vec<std::int64_t>()) std::cout << i << " ";
+  std::cout << "\ntraining mask sum of fold 0: " << partition.training_mask(0).to(pluss::ScalarType::Float64).sum().item<double>() << "\n";
+}
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`PartitionOptions`](PartitionOptions.md)
+- [`PartitionWindow`](PartitionWindow.md)
+- [`DirectCVForecaster`](DirectCVForecaster.md)

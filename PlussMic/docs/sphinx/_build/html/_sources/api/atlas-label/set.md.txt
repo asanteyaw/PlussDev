@@ -15,7 +15,7 @@ AtlasLabelAccessor::set(const Slate& labels) const -> Atlas
 
 Returns a copy of the bound atlas with its depth-axis labels replaced by `labels` —
 the depth-axis counterpart to
-[`DataFrame::label().set()`](../dataframe-label/set.md), which replaces the case-axis
+[`DataFrame::labels().set()`](../dataframe-label/set.md), which replaces the case-axis
 labels of a single frame instead.
 
 ## Parameters

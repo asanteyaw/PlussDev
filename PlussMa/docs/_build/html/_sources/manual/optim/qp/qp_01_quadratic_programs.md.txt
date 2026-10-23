@@ -1,0 +1,72 @@
+<!-- generated from qp_01_quadratic_programs.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Quadratic Programming
+
+A quadratic program minimises a convex quadratic subject to linear constraints:
+
+> minimise  0.5 xᵀ P x + qᵀ x   subject to   lower ≤ A x ≤ upper
+
+with P symmetric positive semidefinite. It appears as the inner problem of model predictive control, portfolio selection, least squares with bounds, and sequential quadratic programming. Pluss solves it with an operator-splitting method (ADMM) that works on whole batches of problems at once. After this chapter you can state any linear constraint in the single form above, solve batches, reuse the setup, warm-start, tune the accuracy and read the result.
+
+Every program is complete and its output is the output of that program. Iteration counts are shown because they are the same on every machine; no running times are claimed.
+
+## The call
+
+```cpp
+qp::Result qp::solve(P, q, A, lower, upper, Options options = {}, WarmStart warm = {});
+```
+
+Everything in the constraint is a row of `A`:
+
+| You want | Write |
+|---|---|
+| an equality `a·x = b` | a row with `lower = upper = b` |
+| a bound `a·x ≤ b` | `upper = b`, `lower = -inf` |
+| a bound `a·x ≥ b` | `lower = b`, `upper = +inf` |
+| a simple bound on `x_i` | a row of the identity with that bound |
+| no constraint on a variable | a row of the identity with `±inf` |
+
+Leading dimensions of `q`, the bounds, and optionally `P` and `A` are batch dimensions and broadcast.
+
+| `Result` | Meaning |
+|---|---|
+| `x`, `objective` | the solution and its objective value |
+| `z`, `y` | the constraint values `A x` (projected) and the multipliers, one per constraint row |
+| `primal_residual`, `dual_residual` | final residuals (infinity norm) |
+| `iterations`, `converged` | work done and whether both residuals met the tolerance |
+| `warm()` | the `{x, z, y}` state to start the next solve from |
+
+| `Options` | Meaning | Default |
+|---|---|---|
+| `max_iters` | iteration cap | 4000 |
+| `abs_tol`, `rel_tol` | stop when each residual is below `√n · abs_tol + rel_tol · scale` | 1e-5, 1e-5 |
+| `check_every` | residual check cadence | 10 |
+| `rho`, `sigma`, `alpha` | starting penalty, regularisation, over-relaxation | 0.1, 1e-6, 1.6 |
+| `adaptive_rho`, `adaptive_rho_tolerance` | rebalance the penalty during the run, refactorising when it changes by more than this factor | on, 5 |
+
+## Programs
+
+- [A first QP](qp_01_quadratic_programs/a_first_qp.md)
+- [The constraint forms](qp_01_quadratic_programs/the_constraint_forms.md)
+- [Batches and reuse](qp_01_quadratic_programs/batches_and_reuse.md)
+- [Warm starts and options](qp_01_quadratic_programs/warm_starts_and_options.md)
+
+## Checklist
+
+1. Write every restriction as a row of `A` with `lower`/`upper`; use `±inf` for a missing side.
+2. Check `converged`, and the two residuals, before using `x`.
+3. Solve batches in one call; reuse `prepare` when only `q` or the bounds change.
+4. Warm-start repeated solves of nearby problems.
+5. Set the tolerances to the accuracy you need; the defaults give about four digits.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+qp_01_quadratic_programs/a_first_qp
+qp_01_quadratic_programs/the_constraint_forms
+qp_01_quadratic_programs/batches_and_reuse
+qp_01_quadratic_programs/warm_starts_and_options
+```
+<!-- apiref:toctree:end -->

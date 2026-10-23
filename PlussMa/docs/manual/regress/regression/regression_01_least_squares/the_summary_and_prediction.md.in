@@ -1,0 +1,8 @@
+# The summary, and prediction
+
+[Back to Least Squares](../regression_01_least_squares.md)
+
+
+@@example Stats/regression/guide/1002_summary_and_prediction.cpp@@
+
+The summary collects the headline numbers: R² and its adjusted form, the F test of the whole model, the information criteria, one row per coefficient, and the residual diagnostics (omnibus and Jarque–Bera tests of normality, skewness, kurtosis, the Durbin–Watson statistic for serial correlation, and the condition number). `ols_predict` adds the intercept itself, so pass only the predictor values. A prediction outside the range of the data (9 and 10 here, past 8) extrapolates the line and is less reliable the further it goes.

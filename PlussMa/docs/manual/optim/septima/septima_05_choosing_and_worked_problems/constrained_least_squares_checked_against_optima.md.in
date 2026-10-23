@@ -1,0 +1,12 @@
+# Constrained least squares, checked against Optima
+
+[Back to Choosing a Solver, and Worked Problems](../septima_05_choosing_and_worked_problems.md)
+
+
+Choose non-negative weights that sum to 1 so that a weighted mix of five series matches a target. The data are built from the weights `(0.5, 0, 0.3, 0, 0.2)` plus a little noise, so the right answer has two weights at zero, which are active bounds. Optima solves it as a quadratic program. Septima uses its bound projection for the non-negativity and an equality residual for the sum.
+
+@@example Numerical/optimization/guide/septima/142_simplex_weights.cpp@@
+
+The two solvers agree: the weights are `0.5017, 0.0011, 0.2985, 0.0000, 0.1987` in both, they sum to 1.00000, and the objective is 0.00031. Septima reports `Converged` after 319 iterations with an equality violation of 6.8e-08, using the default constraint schedule. Optima needs 15 evaluations to Septima's 319.
+
+This is a problem where Septima's constraint handling is at its best: the objective is convex, the equality is linear, and the rest is bounds. Chapter 2, Program 4, is the harder case, with nonlinear equalities and inequalities and a non-convex problem; Septima reaches the same solution as Optima there too, in 242 evaluations with L-BFGS where Optima needs 6.

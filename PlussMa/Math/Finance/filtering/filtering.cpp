@@ -3,6 +3,7 @@
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
+#include "pluss/subsp/math/state.h"
 
 #include <algorithm>
 #include <cmath>
@@ -307,125 +308,43 @@ bool has_any_finite_(const Series& x) {
 KalmanResult kalman_filter(const Series& observations, const KalmanModel& model, Config cfg) {
   const char* op = "kalman_filter";
   validate_observations_(observations, op);
-
   const Series y = force_obs_matrix_(observations);
   const auto out_cfg = f64_cfg_(cfg, y.platform());
   const Series yv = y.to(out_cfg.platform, out_cfg.dtype);
-  const auto ys = yv.sizes();
-  const std::int64_t t_obs = ys[0];
-  const std::int64_t m = ys[1];
-
-  const Series F = as_matrix_(model.transition, op, "transition").to(out_cfg.platform, out_cfg.dtype);
-  const Series H = as_matrix_(model.observation, op, "observation").to(out_cfg.platform, out_cfg.dtype);
-  const Series Q = as_matrix_(model.process_cov, op, "process_cov").to(out_cfg.platform, out_cfg.dtype);
-  const Series R = as_matrix_(model.observation_cov, op, "observation_cov").to(out_cfg.platform, out_cfg.dtype);
-  Series x = as_vector_col_(model.initial_mean, op, "initial_mean").to(out_cfg.platform, out_cfg.dtype);
-  Series P = as_matrix_(model.initial_cov, op, "initial_cov").to(out_cfg.platform, out_cfg.dtype);
-
-  const auto fs = F.sizes();
-  const auto hs = H.sizes();
-  PLUSS_CHECK(fs[0] == fs[1], "subsp::math::finance::filtering::kalman_filter: transition must be square");
-  PLUSS_CHECK(hs[0] == m && hs[1] == fs[0],
-              "subsp::math::finance::filtering::kalman_filter: observation shape mismatch");
-  PLUSS_CHECK(Q.sizes()[0] == fs[0] && Q.sizes()[1] == fs[0],
-              "subsp::math::finance::filtering::kalman_filter: process_cov shape mismatch");
-  PLUSS_CHECK(R.sizes()[0] == m && R.sizes()[1] == m,
-              "subsp::math::finance::filtering::kalman_filter: observation_cov shape mismatch");
-  PLUSS_CHECK(x.numel() == fs[0], "subsp::math::finance::filtering::kalman_filter: initial_mean dimension mismatch");
-  PLUSS_CHECK(P.sizes()[0] == fs[0] && P.sizes()[1] == fs[0],
-              "subsp::math::finance::filtering::kalman_filter: initial_cov shape mismatch");
-
-  const std::int64_t n = fs[0];
-  const Series I = pluss::series::eye(n, out_cfg);
-
-  const bool use_control = model.control.defined() || model.control_matrix.defined();
-  const double info_tol = std::max(model.info_tol, 0.0);
-  Series U = pluss::series::undefined();
-  Series B = pluss::series::undefined();
-  if (use_control) {
-    U = as_matrix_(model.control, op, "control").to(out_cfg.platform, out_cfg.dtype);
-    B = as_matrix_(model.control_matrix, op, "control_matrix").to(out_cfg.platform, out_cfg.dtype);
-    PLUSS_CHECK(U.sizes()[0] == t_obs,
-                "subsp::math::finance::filtering::kalman_filter: control must have T rows");
-    PLUSS_CHECK(B.sizes()[0] == n && B.sizes()[1] == U.sizes()[1],
-                "subsp::math::finance::filtering::kalman_filter: control_matrix shape mismatch");
+  pluss::subsp::math::state::LinearModel shared_model{
+      .transition = as_matrix_(model.transition, op, "transition")
+                        .to(out_cfg.platform, out_cfg.dtype),
+      .observation = as_matrix_(model.observation, op, "observation")
+                         .to(out_cfg.platform, out_cfg.dtype),
+      .process_cov = as_matrix_(model.process_cov, op, "process_cov")
+                         .to(out_cfg.platform, out_cfg.dtype),
+      .observation_cov =
+          as_matrix_(model.observation_cov, op, "observation_cov")
+              .to(out_cfg.platform, out_cfg.dtype),
+      .initial_mean = as_vector_col_(model.initial_mean, op, "initial_mean")
+                          .to(out_cfg.platform, out_cfg.dtype),
+      .initial_cov = as_matrix_(model.initial_cov, op, "initial_cov")
+                         .to(out_cfg.platform, out_cfg.dtype),
+  };
+  if (model.control.defined() || model.control_matrix.defined()) {
+    shared_model.input = as_matrix_(model.control, op, "control")
+                             .to(out_cfg.platform, out_cfg.dtype);
+    shared_model.state_input =
+        as_matrix_(model.control_matrix, op, "control_matrix")
+            .to(out_cfg.platform, out_cfg.dtype);
   }
-
-  std::vector<Series> pred_means;
-  std::vector<Series> pred_covs;
-  std::vector<Series> filt_means;
-  std::vector<Series> filt_covs;
-  std::vector<Series> innovs;
-  std::vector<Series> innov_covs;
-  std::vector<Series> data_used_rows;
-  pred_means.reserve(static_cast<std::size_t>(t_obs));
-  pred_covs.reserve(static_cast<std::size_t>(t_obs));
-  filt_means.reserve(static_cast<std::size_t>(t_obs));
-  filt_covs.reserve(static_cast<std::size_t>(t_obs));
-  innovs.reserve(static_cast<std::size_t>(t_obs));
-  innov_covs.reserve(static_cast<std::size_t>(t_obs));
-  data_used_rows.reserve(static_cast<std::size_t>(t_obs));
-
-  double ll = 0.0;
-  for (std::int64_t t = 0; t < t_obs; ++t) {
-    const Series idx_t = row_index_(t, out_cfg.platform);
-    Series x_pred = F.matmul(x);
-    if (use_control) {
-      const Series ut = U.index_select(0, idx_t).reshape({U.sizes()[1], 1});
-      x_pred = x_pred.add(B.matmul(ut));
-    }
-    const Series P_pred = stabilize_cov_(F.matmul(P).matmul(F.transpose(0, 1)).add(Q), kTiny, out_cfg);
-
-    const Series yt = yv.index_select(0, idx_t).reshape({m, 1});
-    const Series y_hat = H.matmul(x_pred);
-    const Series innovation = yt.sub(y_hat);
-    const Series S_full = stabilize_cov_(H.matmul(P_pred).matmul(H.transpose(0, 1)).add(R), kTiny, out_cfg);
-
-    const std::vector<std::int64_t> obs_idx = informative_obs_idx_(yt, S_full, info_tol);
-    if (!obs_idx.empty()) {
-      const Series idx_obs = index_from_vector_(obs_idx, out_cfg.platform);
-      const std::int64_t m_used = static_cast<std::int64_t>(obs_idx.size());
-
-      const Series H_used = H.index_select(0, idx_obs).reshape({m_used, n});
-      const Series R_used = R.index_select(0, idx_obs).index_select(1, idx_obs).reshape({m_used, m_used});
-      const Series y_used = yt.index_select(0, idx_obs).reshape({m_used, 1});
-      const Series y_hat_used = y_hat.index_select(0, idx_obs).reshape({m_used, 1});
-      const Series innovation_used = y_used.sub(y_hat_used);
-      const Series S_used = stabilize_cov_(H_used.matmul(P_pred).matmul(H_used.transpose(0, 1)).add(R_used), kTiny, out_cfg);
-      const Series S_inv = pluss::subsp::math::linalg::pinverse(S_used, 1e-12);
-      const Series K = P_pred.matmul(H_used.transpose(0, 1)).matmul(S_inv);
-
-      x = x_pred.add(K.matmul(innovation_used));
-      const Series KH = K.matmul(H_used);
-      P = stabilize_cov_((I.sub(KH)).matmul(P_pred).matmul(I.sub(KH).transpose(0, 1))
-                             .add(K.matmul(R_used).matmul(K.transpose(0, 1))),
-                         kTiny,
-                         out_cfg);
-
-      ll += innovation_loglik_(innovation_used, S_used, info_tol);
-    } else {
-      x = x_pred;
-      P = P_pred;
-    }
-
-    pred_means.push_back(x_pred.reshape({1, n}));
-    pred_covs.push_back(P_pred.reshape({1, n, n}));
-    filt_means.push_back(x.reshape({1, n}));
-    filt_covs.push_back(P.reshape({1, n, n}));
-    innovs.push_back(innovation.reshape({1, m}));
-    innov_covs.push_back(S_full.reshape({1, m, m}));
-    data_used_rows.push_back(data_used_row_(m, obs_idx, out_cfg));
-  }
-
+  const auto shared = pluss::subsp::math::state::filter(
+      yv, shared_model,
+      {.info_tol = std::max(model.info_tol, 0.0), .jitter = kTiny});
   return KalmanResult{
-      .filtered_mean = stack_rows_(filt_means),
-      .filtered_cov = stack_rows_(filt_covs),
-      .predicted_mean = stack_rows_(pred_means),
-      .predicted_cov = stack_rows_(pred_covs),
-      .innovation = stack_rows_(innovs),
-      .innovation_cov = stack_rows_(innov_covs),
-      .data_used = stack_rows_(data_used_rows),
-      .loglik = ll,
+      .filtered_mean = shared.filtered_mean,
+      .filtered_cov = shared.filtered_cov,
+      .predicted_mean = shared.predicted_mean,
+      .predicted_cov = shared.predicted_cov,
+      .innovation = shared.innovation,
+      .innovation_cov = shared.innovation_cov,
+      .data_used = shared.data_used.to(out_cfg.dtype),
+      .loglik = shared.loglik.item<double>(),
   };
 }
 

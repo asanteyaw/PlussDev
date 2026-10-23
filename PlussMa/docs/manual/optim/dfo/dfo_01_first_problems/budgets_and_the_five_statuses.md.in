@@ -1,0 +1,17 @@
+# Budgets and the five statuses
+
+[Back to First Problems](../dfo_01_first_problems.md)
+
+
+Every solve ends in one state. The budgets are checked between steps, so a method can overshoot a budget by the evaluations of its last step (60 allowed, 61 used below).
+
+@@example Numerical/optimization/guide/dfo/304_budgets_and_status.cpp@@
+
+How to read the endings:
+
+- `Converged`: the method's stopping test was met.
+- `ReachedEvaluationBudget` / `ReachedIterationBudget`: it was still improving when the budget ran out. The point is the best seen, usable, but not settled. Raise the budget and run again, starting from the returned `minimizer`.
+- `ReachedTimeBudget`: a time limit set in the method's own configuration ended the run.
+- `InfeasibleStationary`: with constraints, no feasible point was found (Chapter 3).
+
+A looser `relative_improvement_tolerance` stops earlier with a coarser answer; the last row shows the trade.

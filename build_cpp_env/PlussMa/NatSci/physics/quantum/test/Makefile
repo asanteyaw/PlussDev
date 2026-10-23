@@ -193,6 +193,20 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/rule
+.PHONY : PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/rule
+
+# Convenience name for target.
+phys_quantum_dynamics_test: PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/rule
+.PHONY : phys_quantum_dynamics_test
+
+# fast build rule for target.
+phys_quantum_dynamics_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/build.make PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/build
+.PHONY : phys_quantum_dynamics_test/fast
+
+# Convenience name for target.
 PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_quantum_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_quantum_test.dir/rule
 .PHONY : PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_quantum_test.dir/rule
@@ -205,6 +219,30 @@ phys_quantum_quantum_test: PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_q
 phys_quantum_quantum_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_quantum_test.dir/build.make PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_quantum_test.dir/build
 .PHONY : phys_quantum_quantum_test/fast
+
+dynamics_test.o: dynamics_test.cpp.o
+.PHONY : dynamics_test.o
+
+# target to build an object file
+dynamics_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/build.make PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/dynamics_test.cpp.o
+.PHONY : dynamics_test.cpp.o
+
+dynamics_test.i: dynamics_test.cpp.i
+.PHONY : dynamics_test.i
+
+# target to preprocess a source file
+dynamics_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/build.make PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/dynamics_test.cpp.i
+.PHONY : dynamics_test.cpp.i
+
+dynamics_test.s: dynamics_test.cpp.s
+.PHONY : dynamics_test.s
+
+# target to generate assembly for a file
+dynamics_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/build.make PlussMa/NatSci/physics/quantum/test/CMakeFiles/phys_quantum_dynamics_test.dir/dynamics_test.cpp.s
+.PHONY : dynamics_test.cpp.s
 
 quantum_test.o: quantum_test.cpp.o
 .PHONY : quantum_test.o
@@ -245,7 +283,11 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... phys_quantum_dynamics_test"
 	@echo "... phys_quantum_quantum_test"
+	@echo "... dynamics_test.o"
+	@echo "... dynamics_test.i"
+	@echo "... dynamics_test.s"
 	@echo "... quantum_test.o"
 	@echo "... quantum_test.i"
 	@echo "... quantum_test.s"

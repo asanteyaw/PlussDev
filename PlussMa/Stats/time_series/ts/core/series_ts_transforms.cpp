@@ -165,12 +165,31 @@ Series rolling_mean(const Series& x, std::int64_t window, std::int64_t min_perio
   return apply_min_periods_(xr.stat.movmean(window), xr, window, min_periods);
 }
 
-Series rolling_std(const Series& x, std::int64_t window, std::int64_t min_periods) {
+// Population -> sample statistic: multiply a population variance by count / (count - ddof), where count is the number of observations in
+// each trailing window (fewer than `window` at the start). count <= ddof gives NaN.
+Series ddof_variance_(const Series& population_variance, std::int64_t window, std::int64_t ddof) {
+  PLUSS_CHECK(ddof >= 0, "subsp::stats::ts: ddof must be >= 0");
+  if (ddof == 0) {
+    return population_variance;
+  }
+  const std::int64_t n = population_variance.numel();
+  if (n == 0) {
+    return population_variance;
+  }
+  const Series idx = pluss::series::arange(0, n, cfg_like_(population_variance, ScalarType::Int64)).to(population_variance.scalar_type());
+  const Series count = idx.add(1.0).clamp(0.0, static_cast<double>(window));
+  const Series denom = count.sub(static_cast<double>(ddof));
+  const Series valid = denom.gt(0.0);
+  const Series factor = count.div(denom.masked_fill(valid.logical_not(), 1.0));
+  return population_variance.mul(factor).masked_fill(valid.logical_not(), std::numeric_limits<double>::quiet_NaN());
+}
+
+Series rolling_std(const Series& x, std::int64_t window, std::int64_t min_periods, std::int64_t ddof) {
   PLUSS_CHECK(window > 0, "subsp::stats::ts::rolling_std: window must be > 0");
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_std: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_std: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_std");
-  return apply_min_periods_(xr.stat.movstd(window), xr, window, min_periods);
+  return apply_min_periods_(ddof_variance_(xr.stat.movvar(window), window, ddof).sqrt(), xr, window, min_periods);
 }
 
 Series rolling_sum(const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -181,12 +200,12 @@ Series rolling_sum(const Series& x, std::int64_t window, std::int64_t min_period
   return apply_min_periods_(xr.stat.movsum(window), xr, window, min_periods);
 }
 
-Series rolling_var(const Series& x, std::int64_t window, std::int64_t min_periods) {
+Series rolling_var(const Series& x, std::int64_t window, std::int64_t min_periods, std::int64_t ddof) {
   PLUSS_CHECK(window > 0, "subsp::stats::ts::rolling_var: window must be > 0");
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::rolling_var: min_periods must be > 0");
   PLUSS_CHECK(min_periods <= window, "subsp::stats::ts::rolling_var: min_periods cannot exceed window");
   const Series xr = as_real_vector_(x, "rolling_var");
-  return apply_min_periods_(xr.stat.movvar(window), xr, window, min_periods);
+  return apply_min_periods_(ddof_variance_(xr.stat.movvar(window), window, ddof), xr, window, min_periods);
 }
 
 Series rolling_min(const Series& x, std::int64_t window, std::int64_t min_periods) {
@@ -233,11 +252,30 @@ Series ewm_mean(const Series& x, double alpha) {
 
 Series ewm_std(const Series& x, double alpha, double epsilon) {
   PLUSS_CHECK(epsilon > 0.0, "subsp::stats::ts::ewm_std: epsilon must be > 0");
+  PLUSS_CHECK(alpha > 0.0 && alpha <= 1.0, "subsp::stats::ts::ewm_std: alpha must be in (0, 1]");
   const Series xr = as_real_vector_(x, "ewm_std");
-  const Series mean = ema(xr, alpha);
-  const Series mean_sq = ema(xr.square(), alpha);
-  const Series var = mean_sq.sub(mean.square()).clamp(0.0, 1e308);
-  return var.add(epsilon).sqrt();
+  // Exponentially weighted variance by the stable recursion (the "RiskMetrics" estimator, biased form):
+  //   m_t = m_{t-1} + alpha (x_t - m_{t-1}),   v_t = (1 - alpha) (v_{t-1} + alpha (x_t - m_{t-1})^2),
+  // starting from m_0 = x_0, v_0 = 0. It equals EMA(x^2) - EMA(x)^2 without the cancellation error of that difference.
+  const std::int64_t n = xr.numel();
+  const Series host = xr.to(pluss::pCPU, ScalarType::Float64).contiguous();
+  const auto values = host.to_vec<double>();
+  std::vector<double> out(static_cast<std::size_t>(n), std::numeric_limits<double>::quiet_NaN());
+  double m = 0.0, v = 0.0;
+  for (std::int64_t i = 0; i < n; ++i) {
+    const double xi = values[static_cast<std::size_t>(i)];
+    if (i == 0) {
+      m = xi;
+      v = 0.0;
+    } else {
+      const double d = xi - m;
+      v = (1.0 - alpha) * (v + alpha * d * d);
+      m += alpha * d;
+    }
+    out[static_cast<std::size_t>(i)] = std::sqrt(std::max(v, 0.0));
+  }
+  (void)epsilon;  // kept for compatibility; a constant series has standard deviation 0 exactly
+  return pluss::make_series(out, {n}).to(xr.platform(), xr.scalar_type());
 }
 
 Series expanding_mean(const Series& x, std::int64_t min_periods) {
@@ -257,7 +295,7 @@ Series expanding_mean(const Series& x, std::int64_t min_periods) {
   return mean.masked_fill(valid.logical_not(), std::numeric_limits<double>::quiet_NaN());
 }
 
-Series expanding_std(const Series& x, std::int64_t min_periods, double epsilon) {
+Series expanding_std(const Series& x, std::int64_t min_periods, double epsilon, std::int64_t ddof) {
   PLUSS_CHECK(min_periods > 0, "subsp::stats::ts::expanding_std: min_periods must be > 0");
   PLUSS_CHECK(epsilon > 0.0, "subsp::stats::ts::expanding_std: epsilon must be > 0");
   const Series xr = as_real_vector_(x, "expanding_std");
@@ -269,8 +307,13 @@ Series expanding_std(const Series& x, std::int64_t min_periods, double epsilon) 
   const Series count = idx.add(1.0);
   const Series mean = xr.cumsum(0).div(count);
   const Series mean_sq = xr.square().cumsum(0).div(count);
-  const Series var = mean_sq.sub(mean.square()).clamp(0.0, 1e308);
-  const Series stdv = var.add(epsilon).sqrt();
+  const Series pop_var = mean_sq.sub(mean.square()).clamp(0.0, 1e308);
+  const Series denom = count.sub(static_cast<double>(ddof));
+  const Series ok = denom.gt(0.0);
+  const Series var = (ddof == 0) ? pop_var
+                                 : pop_var.mul(count.div(denom.masked_fill(ok.logical_not(), 1.0)))
+                                       .masked_fill(ok.logical_not(), std::numeric_limits<double>::quiet_NaN());
+  const Series stdv = var.sqrt();
   if (min_periods == 1) {
     return stdv;
   }
@@ -278,11 +321,11 @@ Series expanding_std(const Series& x, std::int64_t min_periods, double epsilon) 
   return stdv.masked_fill(valid.logical_not(), std::numeric_limits<double>::quiet_NaN());
 }
 
-Series zscore_rolling(const Series& x, std::int64_t window, std::int64_t min_periods, double epsilon) {
+Series zscore_rolling(const Series& x, std::int64_t window, std::int64_t min_periods, double epsilon, std::int64_t ddof) {
   PLUSS_CHECK(epsilon > 0.0, "subsp::stats::ts::zscore_rolling: epsilon must be > 0");
   const Series xr = as_real_vector_(x, "zscore_rolling");
   const Series mean = rolling_mean(xr, window, min_periods);
-  const Series stdv = rolling_std(xr, window, min_periods);
+  const Series stdv = rolling_std(xr, window, min_periods, ddof);
   const Series denom_valid = stdv.abs().gt(epsilon).logical_and(stdv.isfinite());
   const Series safe_denom = stdv.masked_fill(denom_valid.logical_not(), epsilon);
   const Series raw = xr.sub(mean).div(safe_denom);

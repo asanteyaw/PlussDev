@@ -214,12 +214,12 @@ void append_key_part_(std::string& out, const std::string& part) {
 }
 
 std::vector<std::string> structured_case_keys(const DataFrame& frame) {
-  const auto names = frame.label().names();
+  const auto names = frame.labels().names();
   PLUSS_CHECK(!names.empty(), "DataFrame::match: structured case axis has no levels");
   std::vector<std::vector<std::string>> level_keys;
   level_keys.reserve(names.size());
   for (const auto& name : names) {
-    level_keys.push_back(case_keys(frame.label().part(name)));
+    level_keys.push_back(case_keys(frame.labels().part(name)));
   }
 
   std::vector<std::string> out(static_cast<std::size_t>(frame.ncases()));
@@ -234,21 +234,21 @@ std::vector<std::string> structured_case_keys(const DataFrame& frame) {
 }
 
 void ensure_structured_case_axes_match(const DataFrame& left, const DataFrame& right) {
-  if (!left.label().has() || !right.label().has()) {
+  if (!left.labels().has() || !right.labels().has()) {
     return;
   }
   PLUSS_CHECK(
-      left.label().names() == right.label().names(),
+      left.labels().names() == right.labels().names(),
       "DataFrame::match: structured case levels differ; reorder/rename levels before aligning");
-  const auto names = left.label().names();
+  const auto names = left.labels().names();
   for (const auto& name : names) {
-    ensure_case_types_match(left.label().part(name), right.label().part(name));
+    ensure_case_types_match(left.labels().part(name), right.labels().part(name));
   }
 }
 
 std::vector<std::string> frame_case_keys(const DataFrame& frame) {
-  return frame.label().has() ? structured_case_keys(frame)
-                             : case_keys(frame.label().values());
+  return frame.labels().has() ? structured_case_keys(frame)
+                             : case_keys(frame.labels().values());
 }
 
 void ensure_case_types_match(const Slate& left, const Slate& right) {
@@ -377,8 +377,8 @@ CasePlan plan_cases(
     const DataFrame& right,
     const FrameMatchOptions& options) {
   ensure_structured_case_axes_match(left, right);
-  if (!left.label().has() || !right.label().has()) {
-    ensure_case_types_match(left.label().values(), right.label().values());
+  if (!left.labels().has() || !right.labels().has()) {
+    ensure_case_types_match(left.labels().values(), right.labels().values());
   }
   const auto left_keys = frame_case_keys(left);
   const auto right_keys = frame_case_keys(right);
@@ -386,7 +386,7 @@ CasePlan plan_cases(
   if (left_keys == right_keys) {
     RowMap identity(left.ncases());
     std::iota(identity.begin(), identity.end(), std::int64_t{0});
-    return {identity, identity, left.label().values()};
+    return {identity, identity, left.labels().values()};
   }
 
   const auto left_positions = positions_by_key(left_keys);
@@ -426,13 +426,13 @@ CasePlan plan_cases(
       for (std::int64_t row = 0; row < left.ncases(); ++row) {
         append_from_left(row);
       }
-      plan.output_cases = left.label().values();
+      plan.output_cases = left.labels().values();
       break;
     case FrameMatchRule::KeepRight:
       for (std::int64_t row = 0; row < right.ncases(); ++row) {
         append_from_right(row);
       }
-      plan.output_cases = right.label().values();
+      plan.output_cases = right.labels().values();
       break;
     case FrameMatchRule::Common: {
       RowMap output_rows;
@@ -447,7 +447,7 @@ CasePlan plan_cases(
         plan.right.push_back(found->second[occurrence]);
         output_rows.push_back(row);
       }
-      plan.output_cases = take_cases(left.label().values(), output_rows);
+      plan.output_cases = take_cases(left.labels().values(), output_rows);
       break;
     }
     case FrameMatchRule::Unite: {
@@ -469,8 +469,8 @@ CasePlan plan_cases(
         right_only.push_back(row);
       }
       plan.output_cases = append_cases(
-          left.label().values(),
-          take_cases(right.label().values(), right_only));
+          left.labels().values(),
+          take_cases(right.labels().values(), right_only));
       break;
     }
   }
@@ -650,7 +650,7 @@ FrameMatch DataFrame::match(
   PLUSS_CHECK(other.defined(), "DataFrame::match: right frame is undefined");
 
   if (options.repeated_cases == RepeatedCaseRule::PairInOrder &&
-      detail::same_payload(case_labels_(), other.label().values()) &&
+      detail::same_payload(case_labels_(), other.labels().values()) &&
       features() == other.features()) {
     return FrameMatch{*this, other};
   }
@@ -721,7 +721,7 @@ DataFrame DataFrame::extend(
         pluss::codem::ScalarType::Int64,
         pluss::codem::Platform::CPU));
   } else {
-    output_cases = append_cases(case_labels_(), other.label().values());
+    output_cases = append_cases(case_labels_(), other.labels().values());
     if (reject_repeats) {
       const auto positions = positions_by_key(case_keys(output_cases));
       reject_repeated_caselbl(positions, "combined");

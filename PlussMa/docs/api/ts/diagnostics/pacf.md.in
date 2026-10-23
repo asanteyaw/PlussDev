@@ -1,0 +1,165 @@
+# `pluss::subsp::stats::ts::pacf`
+
+The sample partial autocorrelation function: the correlation at each lag that remains after removing the effect of the shorter lags.
+
+## Signature
+
+```cpp
+pluss::Series ts::pacf(const pluss::Series& x, const ts::PacfOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## What It Does
+
+`pacf` returns `φ[k, k]` for `k = 0 … max_lag`, the last coefficient of the best autoregression of order `k`, computed by the Levinson–Durbin recursion from the autocorrelations. Its value at lag 0 is 1. For an autoregression of order `p` the partial autocorrelations are large up to lag `p` and close to zero beyond, which makes the function the standard tool for reading the order off a series. Compare with [`acf`](acf.md), which cuts off for a moving average instead.
+
+The options are those of the autocorrelation function: the normalisation of the autocovariances (`Biased` default) and `demean`.
+
+## Parameters
+
+`const pluss::Series& x`
+: A one-dimensional series in time order, at least two observations long.
+
+`const ts::PacfOptions& options`
+: `max_lag` (default 20), `norm` and `demean`, as in [`AcfOptions`](AcfOptions.md); see [`PacfOptions`](PacfOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the computation itself runs in double precision.
+
+## Returns
+
+A `Series` of `max_lag + 1` values, lag 0 first.
+
+## Errors
+
+- A series shorter than two observations is rejected.
+
+## Practical Examples
+
+### Example 1
+
+The partial autocorrelations of an autoregressive series of order one: large at lag 1, small after it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  ts::PacfOptions options;
+  options.max_lag = 5;
+  show("lag", pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0, 5.0}, f64));
+  show("pacf", ts::pacf(y, options));
+}
+```
+
+### Example 2
+
+Placed beside the autocorrelations, the cut-off after lag 1 is clear.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  ts::AcfOptions a;
+  ts::PacfOptions p;
+  a.max_lag = p.max_lag = 5;
+  show("acf", ts::acf(y, a));
+  show("pacf", ts::pacf(y, p));
+}
+```
+
+
+## See Also
+
+- [`acf`](acf.md)
+- [`PacfOptions`](PacfOptions.md)

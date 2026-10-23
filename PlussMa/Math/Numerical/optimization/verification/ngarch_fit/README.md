@@ -8,5 +8,5 @@ from `with_returns.m`: scaled parameters (`10^ceil(log10|p|)`), the same bounds,
     verify_example.sh optima_fit.cpp optima_fit.exe
     optima_fit.exe MODEL returns.csv starts_MODEL.csv internal-protocol|sqp|working-set|merit [autodiff|dual]
 
-`dual` uses a plain-double forward-mode likelihood with exact gradients; `autodiff` records the recurrence on the
+`dual` uses `optim::Fwd<N>` (plain-double forward-mode scalars) with exact gradients; `autodiff` records the recurrence on the
 Trace tape (about 900x slower for 6,000 time steps). MATLAB uses its default finite-difference gradients.

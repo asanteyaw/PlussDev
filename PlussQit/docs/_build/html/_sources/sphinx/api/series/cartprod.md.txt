@@ -206,12 +206,12 @@ Use `cartprod()` when you want explicit combinations, not a set summary.
 - [`Series::unite`](unite.md): concatenate along an existing dimension.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="broadcast_to.html">
+  <a class="prev-link" href="calc.html">
     <span class="label">Previous</span>
-    <span class="title">broadcast_to</span>
+    <span class="title">calc</span>
   </a>
-  <a class="next-link" href="cbrt.html">
+  <a class="next-link" href="cauchy_.html">
     <span class="label">Next</span>
-    <span class="title">cbrt</span>
+    <span class="title">cauchy_</span>
   </a>
 </div>

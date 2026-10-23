@@ -4,7 +4,7 @@
 // neutral numerical owner used by both physics and chemistry; domain wrappers
 // add units and model semantics without rebuilding the polynomial evaluator.
 
-#include "pluss/codem/codem.h"
+#include "pluss/codem/series_factory.h"
 
 #include <algorithm>
 #include <array>
@@ -22,6 +22,7 @@ namespace pluss::subsp::natsci::common::thermo {
 struct SpeciesData final {
   std::string name;
   std::vector<std::pair<std::string, double>> composition;
+  double molar_mass{0.0}; // kg/mol; optional for polynomial-only consumers
   double t_min{0.0};
   double t_mid{0.0};
   double t_max{0.0};

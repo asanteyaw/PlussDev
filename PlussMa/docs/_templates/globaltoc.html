@@ -1,0 +1,26 @@
+{% set is_api = pagename.startswith('api/') or pagename.startswith('manual/') %}
+
+{% if pagename == 'api_reference' %}
+<div class="pluss-api-sidebar-fallback">
+  <p class="caption"><span class="caption-text">API reference</span></p>
+  <ul>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('api/plussma_ts') }}">Time series</a></li>
+  </ul>
+  <p class="caption"><span class="caption-text">Guides</span></p>
+  <ul>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('manual/ts/guide') }}">Time series</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('manual/distr') }}">Distributions</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('manual/infer') }}">Inference</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('manual/regress') }}">Regression</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('manual/optim') }}">Optimization</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('manual/numerics') }}">Numerical methods</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('manual/stochastic') }}">Stochastic processes</a></li>
+  </ul>
+</div>
+{% elif is_api %}
+<div class="pluss-api-sidebar-fallback">
+  {{ toctree(maxdepth=2, collapse=False, includehidden=True, titles_only=False) }}
+</div>
+{% else %}
+{{ toctree(maxdepth=2, collapse=False, includehidden=True, titles_only=False) }}
+{% endif %}

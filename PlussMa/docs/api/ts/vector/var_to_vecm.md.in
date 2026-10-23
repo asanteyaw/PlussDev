@@ -1,0 +1,92 @@
+# `pluss::subsp::stats::ts::var_to_vecm`
+
+Converts the lag matrices of a VAR into the short-run matrices and the impact matrix of its error-correction form.
+
+## Signature
+
+```cpp
+std::pair<pluss::Series, pluss::Series> ts::var_to_vecm(const pluss::Series& ar, pluss::codem::Config cfg = {});
+```
+
+## What It Does
+
+A VAR(p) `y_t = A_1 y_{t−1} + … + A_p y_{t−p} + e_t` can be rewritten as `Δy_t = y_{t−1} Π + Σ Γ_i Δy_{t−i} + e_t` with `Π = A_1 + … + A_p − I` (the *impact*) and `Γ_i = −(A_{i+1} + … + A_p)`. `var_to_vecm` returns `(short_run, impact)` for the lag array of a [`VarFit`](VarFit.md) in the same row-vector layout. A rank-deficient impact matrix means the series are cointegrated.
+
+## Parameters
+
+`const pluss::Series& ar`
+: The lag matrices, a `p × k × k` array.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series).
+
+## Returns
+
+A pair: the short-run matrices (`(p − 1) × k × k`) and the impact matrix (`k × k`).
+
+## Practical Examples
+
+### Example 1
+
+Convert the VAR(2) of two linked series and convert back; the round trip reproduces the coefficients.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// Two linked series: a_t = 0.5 a_{t-1} + 0.2 b_{t-1} + e1_t,  b_t = 0.1 a_{t-1} + 0.6 b_{t-1} + 0.5 e1_t + e2_t   (n x 2, row t = (a_t, b_t)).
+Series linked(int n) {
+  const auto e1 = noise(n, 0), e2 = noise(n, 5000);
+  std::vector<double> y(2 * n);
+  double a = 0.0, b = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double na = 0.5 * a + 0.2 * b + e1[t];
+    const double nb = 0.1 * a + 0.6 * b + 0.5 * e1[t] + e2[t];
+    a = na;
+    b = nb;
+    y[2 * t] = a;
+    y[2 * t + 1] = b;
+  }
+  return pluss::make_series(y, {n, 2}, f64);
+}
+
+int main() {
+  const Series y = linked(300);
+  ts::VarOptions options;
+  options.lag_order = 2;
+  const auto fit = ts::Var::fit_mle(y, options);
+  const auto [short_run, impact] = ts::var_to_vecm(fit.ar);
+  const Series back = ts::vecm_to_var(short_run, impact);
+  std::cout << std::fixed << std::setprecision(4) << "impact row 0: " << impact.select(0, 0).to_vec<double>()[0] << " " << impact.select(0, 0).to_vec<double>()[1] << "\n";
+  std::cout << "largest difference after the round trip: " << std::scientific << std::setprecision(1) << (back - fit.ar).abs().max().item<double>() << "\n";
+}
+```
+
+
+## See Also
+
+- [`vecm_to_var`](vecm_to_var.md)
+- [`VarFit`](VarFit.md)

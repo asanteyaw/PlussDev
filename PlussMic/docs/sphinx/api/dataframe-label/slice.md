@@ -53,9 +53,9 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-auto out = labeled.label().slice(1, 3);
+auto out = labeled.labels().slice(1, 3);
 std::cout << out;
 ```
 
@@ -74,7 +74,7 @@ Example 2. Label-value slice — inclusive of `stop`'s *last* occurrence, which
 can include repeats you might not expect.
 
 ```cpp
-auto out2 = labeled.label().slice("east", "east");
+auto out2 = labeled.labels().slice("east", "east");
 std::cout << out2;
 ```
 
@@ -97,21 +97,21 @@ Example 3. A `start` or `stop` value that doesn't occur throws, and so does a
 
 ```cpp
 try {
-  auto out = labeled.label().slice("missing", "east");
+  auto out = labeled.labels().slice("missing", "east");
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
-  auto out = labeled.label().slice("east", "missing");
+  auto out = labeled.labels().slice("east", "missing");
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
 }
 
 try {
-  auto out = labeled.label().slice("north", "east");
+  auto out = labeled.labels().slice("north", "east");
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

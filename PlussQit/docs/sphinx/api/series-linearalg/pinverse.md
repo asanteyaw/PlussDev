@@ -84,7 +84,9 @@ positions in the result.
 ## Returns
 
 `Series`
-    The SVD-defined pseudoinverse, with the final two dimensions reversed.
+    The SVD-defined pseudoinverse, with the final two dimensions reversed and
+    the input floating or complex dtype preserved. Integer and boolean inputs
+    are rejected rather than silently converted.
 
 ## Gradient
 

@@ -1,0 +1,12 @@
+# Prices, checked by re-solving
+
+[Back to Prices and Certificates](../linprog_02_prices_and_certificates.md)
+
+
+The workshop of chapter 1. For each machine the program prints the hours left over at the optimum, the dual value the solver reports, the price in profit (the negated dual value, since the program minimizes the negated profit), and the price found independently by re-solving with the hours changed by plus and minus 0.01 and dividing the change in profit by 0.02.
+
+@@example Numerical/optimization/guide/lp/205_duals_as_prices.cpp@@
+
+Machine A has 2 idle hours and a price of 0: another hour of A would not earn anything. Machine B is fully used and an extra hour is worth 1.5 in profit; machine C is fully used and an hour is worth 1.0. The re-solved prices agree with the reported dual values to the printed digits, so the duals are not to be taken on trust; they can be checked, and this check costs only two extra solves per row. The last line is strong duality: the primal and dual objectives are both -36.
+
+The prices say where to spend effort. An hour of machine B is worth half as much again as an hour of machine C, and an hour of machine A is worth nothing, so if hours can be bought or moved, the order of interest is B, then C, never A. They also say how far the statement holds: a price is a rate at the current plan, and once enough hours are added that a different set of machines binds, the rate changes.

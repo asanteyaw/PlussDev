@@ -1,0 +1,8 @@
+# Partitions
+
+[Back to Direct Forecasting and Model Comparison](../ts_06_direct_forecasting.md)
+
+
+@@example Stats/time_series/guide/1224_partitions.cpp@@
+
+The default expanding window ends its last test set at the end of the series and gives the three tests and the first training set a length of a quarter each. A gap of 2 leaves the two observations before each test set unused, and the sizes are recomputed (24 instead of 25) so that the windows still fit. Giving only `test_size = 10` makes the step 10 and lets the sliding training window take the rest (60). The `Forward` window starts from a training set of 40 and moves by the step.

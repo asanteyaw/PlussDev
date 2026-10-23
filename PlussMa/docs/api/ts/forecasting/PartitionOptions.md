@@ -1,0 +1,28 @@
+<!-- generated from PartitionOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::PartitionOptions`
+
+Options of the `TsPartition` constructors.
+
+`PartitionOptions` controls the sizes and spacing of the windows. The three sizes are linked by `n − train − test − gap = step · (k − 1)` for `k` test sets; whichever are not given are derived from that relation.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `direction` | `ts::Direction` | `Reverse` | `Reverse` ends the last test set at the end of the series; `Forward` starts the first training set at the beginning. |
+| `gap_size` | `std::int64_t` | 0 | Observations left out between a training set and its test set. |
+| `max_lag` | `std::int64_t` | 0 | Length of the test buffer: the observations just before a test set, which hold the lags its first rows need. |
+| `max_train_size` | `std::optional<std::int64_t>` | `n − 1` | Longest training set of an expanding window. |
+| `min_train_size` | `std::optional<std::int64_t>` | derived | Shortest training set of an expanding window. |
+| `train_size` | `std::optional<std::int64_t>` | derived | Training length of a sliding window. |
+| `test_size` | `std::optional<std::int64_t>` | derived | Observations in each test set. |
+| `step_size` | `std::optional<std::int64_t>` | derived | Distance between the starts of consecutive test sets. |
+
+## Guidance
+
+With none of the three sizes given they all equal `⌊(n − gap)/(k + 1)⌋`. With only `test_size` or only `step_size` the other equals it and the training size takes what is left. With `train_size` (or `min_train_size`) alone, test and step are `⌊(n − gap − train)/k⌋`. With two of the three the third follows. A combination that does not fit in `n` observations is rejected.
+
+## See Also
+
+- [`TsPartition`](TsPartition.md)

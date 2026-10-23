@@ -1,0 +1,8 @@
+# Granger tests
+
+[Back to Vector Autoregressions and Cointegration](../ts_04_vector_models.md)
+
+
+@@example Stats/time_series/guide/1216_granger_causality.cpp@@
+
+Both directions are significant at the 5% level: each series carries information about the future of the other, as the model's cross coefficients say. The F form has slightly larger p-values than the Wald form, as it should in a finite sample.

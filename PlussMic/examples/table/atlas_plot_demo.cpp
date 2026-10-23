@@ -27,7 +27,7 @@ int main() {
         {"Volume", pluss::make_series(volume)},
         {"Range", pluss::make_series(range)},
     });
-    return frame.label().set(pluss::table::Slate(cases));
+    return frame.labels().set(pluss::table::Slate(cases));
   };
 
   auto f0 = make_frame({102.0, 105.0, 108.0, 111.0, 109.0, 113.0},

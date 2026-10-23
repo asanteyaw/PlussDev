@@ -1,0 +1,86 @@
+# ts arima
+
+`arima` fits autoregressive integrated moving-average models by maximum likelihood: `Arima` for models given by their orders `(p, d, q)` and, optionally, seasonal orders and a seasonal period; `Sarima` for the same model in the usual seasonal letters `(p, d, q)(P, D, Q)s`.
+
+An ARMA model explains a stationary series by its own past values and past shocks: `x_t = a_1 x_{t−1} + … + a_p x_{t−p} + e_t + b_1 e_{t−1} + … + b_q e_{t−q}`. The integrated part differences the series `d` times (and seasonally `D` times) first. Seasonal terms multiply the regular ones: a model with one regular and one seasonal autoregressive term of period 12 has coefficients at lags 1, 12 and 13. The likelihood is the exact Gaussian one, computed by the Kalman filter from the stationary distribution; the search is over the partial autocorrelations of each polynomial, so every candidate is stationary and invertible.
+
+## The Surface
+
+| Entity | What it gives you |
+|---|---|
+| [`Arima`](arima/Arima.md) | Fits an ARIMA model by maximum likelihood |
+| [`ArimaFit`](arima/ArimaFit.md) | The result of an ARIMA fit: the estimated coefficients and the methods that evaluate the fitted model |
+| [`ArimaOptions`](arima/ArimaOptions.md) | Options of `ts::Arima::fit_mle`: the orders of the model, starting values and search settings |
+| [`Sarima`](arima/Sarima.md) | Fits a seasonal ARIMA model by maximum likelihood, in the notation `(p, d, q)(P, D, Q)s` |
+| [`SarimaFit`](arima/SarimaFit.md) | The result of a seasonal ARIMA fit: an `ArimaFit` plus the orders it was fitted with |
+| [`SarimaOptions`](arima/SarimaOptions.md) | Options of `ts::Sarima::fit_mle`: the orders in the usual seasonal letters |
+
+## How To Call It
+
+Fit an AR(1) model to an autoregressive series, compare it with a moving-average model by log-likelihood, and forecast three steps.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  ts::ArimaOptions options;
+  options.ar_order = 1;
+  const auto fit = ts::Arima::fit_mle(y, options);
+  std::cout << std::fixed << std::setprecision(4) << "AR(1) coefficient " << fit.ar[0] << ", innovation sd " << fit.sigma << ", log-likelihood " << fit.loglik(y) << "\n";
+
+  ts::ArimaOptions ma;
+  ma.ar_order = 0;
+  ma.ma_order = 1;
+  std::cout << "MA(1) log-likelihood " << ts::Arima::fit_mle(y, ma).loglik(y) << "\n";
+  show("forecast", fit.forecast(3, y));
+}
+```
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

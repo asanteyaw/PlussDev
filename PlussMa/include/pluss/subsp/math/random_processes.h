@@ -11,7 +11,7 @@
 // use (Septima/Optima/Minimax under pluss::optim; Integra/Quadra/
 // Aleatoria/Analytica under pluss::integ; Fluxa under pluss::ode). The
 // standalone stochastic-integral primitives below (ito_integral/
-// stratonovich_integral) keep their standard field names rather than a
+// strat_integral) keep their standard field names rather than a
 // Latin pseudonym -- "Ito"/"Stratonovich" are already the universally
 // standard terms (named after their originators, like "Gauss-Legendre"),
 // not generic descriptive words the way quadrature/analytic/random are.
@@ -35,7 +35,7 @@
 //     the future increment it is about to be multiplied by); using the
 //     midpoint or trapezoidal average instead gives a DIFFERENT, also
 //     well-defined object (the Stratonovich integral), not an
-//     approximation error -- see stratonovich_integral() below, and the
+//     approximation error -- see strat_integral() below, and the
 //     module's test file for the exact discrete identities that pin both
 //     conventions down independently.
 //   - Differentiating an SDE's solution with respect to its own
@@ -60,10 +60,9 @@
 //     built here, a real, separate, documented gap).
 //
 // Scope/tradeoffs, stated plainly (mirroring pluss::ode's own discipline):
-//  - fluctua() uses fixed-step Euler-Maruyama only (strong order 0.5).
-//    Milstein (strong order 1.0, needs d(sigma)/dy) is real, useful,
-//    future work -- not built here, to keep this first pass to one
-//    well-verified scheme rather than several unverified ones.
+//  - fluctua() uses a fixed step. Schemes: Euler-Maruyama (Ito, strong order
+//    0.5), Milstein (Ito, strong order 1.0 for diagonal noise) and a
+//    Stratonovich Heun scheme (see SdeMethod).
 //  - Diffusion is elementwise/uncorrelated: `sigma(t, y, theta)` must be
 //    the SAME shape as `y`, and drives one independent scalar Wiener
 //    increment per entry of `y`. This is deliberately NOT a general
@@ -81,7 +80,7 @@
 //    freshly-tracked leaf. The realized noise draws are treated as fixed
 //    constants in the backward pass too (this is exactly what "pathwise"
 //    means) -- they are never re-tracked or differentiated.
-//  - ito_integral()/stratonovich_integral() operate against an explicit,
+//  - ito_integral()/strat_integral() operate against an explicit,
 //    already-simulated WienerPath (see simulate_wiener_path()) rather
 //    than an implicit one, so callers can reuse the SAME realized path
 //    across multiple integrands or cross-checks -- mirroring why quadra's
@@ -94,6 +93,7 @@
 
 #include "pluss/subsp/math/diff.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -116,8 +116,19 @@ using DiffusionFn = std::function<Series(double, const Series&, const Series&)>;
 // first -- see that overload's own comment for why this was worth adding.
 using LossFn = std::function<Series(const Series&)>;
 
+// EulerMaruyama: Ito SDE, strong order 0.5.
+// Milstein:      Ito SDE, strong order 1.0 for diagonal noise; adds 1/2 sigma sigma' (dW^2 - h), with
+//                sigma' = d sigma_i / d y_i taken elementwise by autodiff. sigma_i must therefore depend on y_i
+//                only (not on the other components), as the module's elementwise-diffusion convention already
+//                assumes.
+// StratonovichHeun: the SDE is read in the STRATONOVICH sense (mu and sigma define dY = mu dt + sigma o dW),
+//                predictor-corrector with the trapezoidal average of the coefficients; strong order 1.0 for
+//                scalar or commutative noise. Convert a drift between the two readings with
+//                `y.calc.diff.strat_drift(...)` / `ito_drift(...)`.
 enum class SdeMethod : std::uint8_t {
   EulerMaruyama = 0,
+  Milstein = 1,
+  StratonovichHeun = 2,
 };
 
 struct SdeOptions {
@@ -179,6 +190,59 @@ inline Series em_step_(const DriftFn& mu, const DiffusionFn& sigma, double t, co
   return y.add(mu(t, y, theta).mul(h)).add(sigma(t, y, theta).mul(dw));
 }
 
+// d sigma_i / d y_i, elementwise. When `y` is itself being differentiated (the adjoint replay) the derivative is
+// returned with its graph attached to `y` and `theta`, so the step stays differentiable through it; otherwise it
+// is computed on a throwaway leaf.
+inline Series sigma_prime_(const DiffusionFn& sigma, double t, const Series& y, const Series& theta) {
+  const bool attached = y.tracks_slope();
+  Series leaf = y;
+  if (!attached) {
+    leaf = y.detach();
+    pluss::codem::series_tape::clear_source_link(leaf);
+    pluss::subsp::math::diff::detail::set_tracks_slope_(leaf, true);
+  }
+  const Series s = sigma(t, leaf, theta);
+  Series zero = Series::zeros(y.sizes(), y.scalar_type(), y.platform());
+  if (!pluss::subsp::math::diff::detail::has_reverse_path_(s)) return zero;
+  pluss::codem::series_tape::clear_sensitivity(leaf);
+  if (theta.defined() && theta.tracks_slope()) pluss::codem::series_tape::clear_sensitivity(theta);
+  s.sum().reverse(/*keep_graph=*/true, /*accumulate_sensitivity=*/false, /*track_higher_order=*/attached);
+  Series d = leaf.has_sensitivity() ? leaf.sensitivity() : zero;
+  if (!attached) d = d.detach();
+  pluss::codem::series_tape::clear_sensitivity(leaf);
+  if (theta.defined() && theta.tracks_slope()) pluss::codem::series_tape::clear_sensitivity(theta);
+  return d;
+}
+
+inline Series milstein_step_(const DriftFn& mu, const DiffusionFn& sigma, double t, const Series& y,
+                             const Series& theta, double h, const Series& dw) {
+  const Series s = sigma(t, y, theta);
+  const Series ds = sigma_prime_(sigma, t, y, theta);
+  return y.add(mu(t, y, theta).mul(h))
+      .add(s.mul(dw))
+      .add(s.mul(ds).mul(dw.mul(dw).sub(h)).mul(0.5));
+}
+
+inline Series heun_step_(const DriftFn& mu, const DiffusionFn& sigma, double t, const Series& y, const Series& theta,
+                         double h, const Series& dw) {
+  const Series m0 = mu(t, y, theta);
+  const Series s0 = sigma(t, y, theta);
+  const Series predictor = y.add(m0.mul(h)).add(s0.mul(dw));
+  const Series m1 = mu(t + h, predictor, theta);
+  const Series s1 = sigma(t + h, predictor, theta);
+  return y.add(m0.add(m1).mul(0.5 * h)).add(s0.add(s1).mul(0.5).mul(dw));
+}
+
+inline Series step_(SdeMethod method, const DriftFn& mu, const DiffusionFn& sigma, double t, const Series& y,
+                    const Series& theta, double h, const Series& dw) {
+  switch (method) {
+    case SdeMethod::EulerMaruyama: return em_step_(mu, sigma, t, y, theta, h, dw);
+    case SdeMethod::Milstein: return milstein_step_(mu, sigma, t, y, theta, h, dw);
+    case SdeMethod::StratonovichHeun: return heun_step_(mu, sigma, t, y, theta, h, dw);
+  }
+  ::pluss::throw_error("subsp::math::sde: unknown SDE method");
+}
+
 }  // namespace detail
 
 inline SdeResult fluctua(const DriftFn& mu, const DiffusionFn& sigma, const Series& y0, double t0, double t1,
@@ -203,7 +267,7 @@ inline SdeResult fluctua(const DriftFn& mu, const DiffusionFn& sigma, const Seri
   double t = t0;
   for (std::int64_t i = 0; i < options.steps; ++i) {
     const Series dw_i = dw.select(0, i);
-    y = detail::em_step_(mu, sigma, t, y, theta, h, dw_i);
+    y = detail::step_(options.method, mu, sigma, t, y, theta, h, dw_i);
     w_accum = w_accum.add(dw_i);
     t += h;
   }
@@ -261,7 +325,7 @@ inline SdeAdjointResult fluctua_adjoint(const DriftFn& mu, const DiffusionFn& si
     Series y = y0;
     double t = t0;
     for (std::int64_t i = 0; i < options.steps; ++i) {
-      y = detail::em_step_(mu, sigma, t, y, theta, h, dw.select(0, i));
+      y = detail::step_(options.method, mu, sigma, t, y, theta, h, dw.select(0, i));
       t += h;
       trajectory.push_back(y);
     }
@@ -297,7 +361,7 @@ inline SdeAdjointResult fluctua_adjoint(const DriftFn& mu, const DiffusionFn& si
       theta_tracked = ttheta.value();
     }
 
-    const Series y_next = detail::em_step_(mu, sigma, t, y_tracked, theta_tracked, h, dw_i);
+    const Series y_next = detail::step_(options.method, mu, sigma, t, y_tracked, theta_tracked, h, dw_i);
     y_next.reverse(a);
     a = y_tracked.sensitivity();
     if (has_theta) {
@@ -375,6 +439,11 @@ struct WienerPath {
 };
 
 struct StochasticIntegralResult {
+  // Notes about the input that did not stop the calculation but change what the number means (for example a path
+  // whose realized quadratic variation does not match a standard Wiener path). Empty when nothing was found.
+  std::vector<std::string> warnings{};
+  // Mean over the batch of (realized quadratic variation) / (t1 - t0); about 1 for a standard Wiener path.
+  double quadratic_variation_ratio{1.0};
   Series value = pluss::series::undefined();
   // sum_i (W(t_{i+1}) - W(t_i))^2 for the SAME path -- the realized
   // quadratic variation, exposed because it is exactly the quantity that
@@ -413,26 +482,87 @@ inline Series quadratic_variation_(const WienerPath& path) {
 
 }  // namespace detail
 
+namespace detail {
+
+// Validates an explicit Wiener path before it reaches the canonical Series integral, which only sees samples:
+// the grid and the samples must agree in length, the grid must be finite and strictly increasing, and the path
+// must be finite. (An integrand that is a callback of (t, W_t) cannot anticipate by construction; it never
+// sees a later sample. A callback that captured the path and looked ahead would defeat any check.)
+inline void validate_path_(const WienerPath& path, const char* op) {
+  if (!path.w.defined() || path.w.dim() < 1) {
+    ::pluss::throw_error(std::string("subsp::math::sde::") + op + ": the path is undefined");
+  }
+  if (path.steps <= 0 || path.w.size(0) != path.steps + 1 ||
+      static_cast<std::int64_t>(path.times.size()) != path.steps + 1) {
+    ::pluss::throw_error(std::string("subsp::math::sde::") + op +
+                         ": the path needs steps + 1 samples and steps + 1 grid times");
+  }
+  for (std::size_t i = 0; i < path.times.size(); ++i) {
+    if (!std::isfinite(path.times[i]) || (i > 0 && !(path.times[i] > path.times[i - 1]))) {
+      ::pluss::throw_error(std::string("subsp::math::sde::") + op +
+                           ": the time grid must be finite and strictly increasing");
+    }
+  }
+  if (!path.w.isfinite().all().to(pluss::pCPU, ScalarType::Bool).item<bool>()) {
+    ::pluss::throw_error(std::string("subsp::math::sde::") + op + ": the path contains non-finite samples");
+  }
+}
+
+// Compares the realized quadratic variation with the elapsed time. For a standard Wiener path the ratio is 1 up to
+// a relative sampling error of about sqrt(2 / (steps * batch)); a path with another volatility, a smooth path (ratio
+// near 0, where Ito and Stratonovich coincide) or a path with jumps is flagged.
+inline void annotate_(StochasticIntegralResult& result, const WienerPath& path) {
+  const double elapsed = path.t1 - path.t0;
+  const double batch = static_cast<double>(std::max<std::int64_t>(result.realized_quadratic_variation.numel(), 1));
+  result.quadratic_variation_ratio = result.realized_quadratic_variation.mean().item<double>() / elapsed;
+  const double spread = 6.0 * std::sqrt(2.0 / (static_cast<double>(path.steps) * batch)) + 1e-3;
+  if (std::abs(result.quadratic_variation_ratio - 1.0) > spread) {
+    result.warnings.push_back(
+        "the path's realized quadratic variation is " + std::to_string(result.quadratic_variation_ratio) +
+        " times the elapsed time; a standard Wiener path gives about 1, so this is not a standard Brownian path "
+        "(another volatility, a smooth path, or jumps) and Ito and Stratonovich values are not the standard ones");
+  }
+}
+
+// theta = 0: Ito (left endpoint). theta = 1/2: Stratonovich (average of the endpoint values).
+inline StochasticIntegralResult stochastic_integral_(const WienerIntegrandFn& f, const WienerPath& path,
+                                                     double theta, const char* op) {
+  if (!f) {
+    ::pluss::throw_error(std::string("subsp::math::sde::") + op + ": integrand callback is required");
+  }
+  validate_path_(path, op);
+  // The Series integral is vectorized over the time axis; adapt the per-step callback to it.
+  const Series::CalcAccessor::IntegrandFn vectorized = [&](const Series& t, const Series& w) {
+    const std::int64_t n = w.size(0);
+    const std::vector<double> times = t.reshape({n}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    Series stacked = pluss::series::undefined();
+    for (std::int64_t i = 0; i < n; ++i) {
+      const Series row = f(times[static_cast<std::size_t>(i)], w.select(0, i)).unsqueeze(0);
+      stacked = stacked.defined() ? stacked.unite({row}, 0) : row;
+    }
+    return stacked;
+  };
+  const Series times = pluss::make_series(path.times, {static_cast<std::int64_t>(path.times.size())})
+                           .to(path.w.scalar_type())
+                           .to(path.w.platform());
+  StochasticIntegralResult result;
+  result.value = path.w.calc.antidiff.theta(vectorized, theta, times, 0);
+  result.realized_quadratic_variation = quadratic_variation_(path);
+  annotate_(result, path);
+  return result;
+}
+
+}  // namespace detail
+
 // Discrete Ito sum: sum_i f(t_i, W_{t_i}) * (W_{t_{i+1}} - W_{t_i}) --
 // LEFT-endpoint evaluation, the defining, non-negotiable feature of the
 // Ito convention (the integrand must not anticipate the increment it is
 // about to be multiplied by). See the module comment for why this is not
-// interchangeable with the Stratonovich convention below.
+// interchangeable with the Stratonovich convention below. The sum itself is
+// `path.w.calc.antidiff.ito(...)` on Series; this function validates the path
+// first and also reports the realized quadratic variation.
 inline StochasticIntegralResult ito_integral(const WienerIntegrandFn& f, const WienerPath& path) {
-  if (!f) {
-    ::pluss::throw_error("subsp::math::sde::ito_integral: integrand callback is required");
-  }
-  Series total = pluss::series::undefined();
-  for (std::int64_t i = 0; i < path.steps; ++i) {
-    const Series w_i = path.w.select(0, i);
-    const Series dw_i = path.w.select(0, i + 1).sub(w_i);
-    const Series term = f(path.times[static_cast<std::size_t>(i)], w_i).mul(dw_i);
-    total = total.defined() ? total.add(term) : term;
-  }
-  StochasticIntegralResult result;
-  result.value = total;
-  result.realized_quadratic_variation = detail::quadratic_variation_(path);
-  return result;
+  return detail::stochastic_integral_(f, path, 0.0, "ito_integral");
 }
 
 // Discrete Stratonovich sum: sum_i 0.5*(f(t_i, W_{t_i}) + f(t_{i+1},
@@ -440,24 +570,207 @@ inline StochasticIntegralResult ito_integral(const WienerIntegrandFn& f, const W
 // evaluation. Unlike Ito's, this convention obeys ordinary calculus's
 // chain rule, which is exactly why it disagrees with ito_integral() by a
 // term that is NOT an approximation error (see the test file).
-inline StochasticIntegralResult stratonovich_integral(const WienerIntegrandFn& f, const WienerPath& path) {
-  if (!f) {
-    ::pluss::throw_error("subsp::math::sde::stratonovich_integral: integrand callback is required");
+inline StochasticIntegralResult strat_integral(const WienerIntegrandFn& f, const WienerPath& path) {
+  return detail::stochastic_integral_(f, path, 0.5, "strat_integral");
+}
+
+// ---------------------------------------------------------------------
+// Integrands that are computed from the whole sampled path.
+//
+// A pointwise callback f(t, W_t) cannot look ahead: it never sees a later sample. An integrand built from the path
+// (a running maximum, a moving average, a filter) can, by accident -- a centered moving average or a "smoothed"
+// value at sample i that uses sample i + 1 is the classic way to turn an Ito sum into something else without any
+// error. The two overloads below take such an integrand as a function of the path and PROBE it before integrating:
+// they keep the first j + 1 samples of the path, redraw the rest, and require the integrand at samples 0..j to be
+// unchanged. An adapted integrand passes by construction; one that depends on the future fails with the first
+// offending sample. The probe is randomized and finite (a dependence that happens to cancel for every redraw is not
+// seen), so raise `probes` for an integrand you are unsure of.
+// ---------------------------------------------------------------------
+using SampledIntegrandFn = std::function<Series(const Series&)>;
+
+struct AdaptednessOptions {
+  std::int64_t probes{4};
+  std::uint64_t seed{12345};
+  double tolerance{1e-9};
+};
+
+namespace detail {
+
+inline void check_adapted_(const SampledIntegrandFn& make, const WienerPath& path, const AdaptednessOptions& check,
+                           const char* op) {
+  const std::string name = std::string("subsp::math::sde::") + op;
+  const std::int64_t n = path.w.size(0);
+  const Series base = make(path.w);
+  if (!base.defined() || base.dim() != path.w.dim() || (base.size(0) != n && base.size(0) != n - 1)) {
+    ::pluss::throw_error(name + ": the integrand function must return one sample per path sample (or one fewer for "
+                                "the Ito form), with the path's trailing shape");
   }
-  Series total = pluss::series::undefined();
-  for (std::int64_t i = 0; i < path.steps; ++i) {
-    const Series w_i = path.w.select(0, i);
-    const Series w_ip1 = path.w.select(0, i + 1);
-    const Series dw_i = w_ip1.sub(w_i);
-    const Series f_i = f(path.times[static_cast<std::size_t>(i)], w_i);
-    const Series f_ip1 = f(path.times[static_cast<std::size_t>(i + 1)], w_ip1);
-    const Series term = f_i.add(f_ip1).mul(0.5).mul(dw_i);
-    total = total.defined() ? total.add(term) : term;
+  for (std::int64_t d = 1; d < path.w.dim(); ++d) {
+    if (base.size(d) != path.w.size(d)) {
+      ::pluss::throw_error(name + ": the integrand's trailing shape must match the path's");
+    }
   }
+  if (!base.isfinite().all().to(pluss::pCPU, ScalarType::Bool).item<bool>()) {
+    ::pluss::throw_error(name + ": the integrand contains a non-finite value");
+  }
+  if (n < 3 || check.probes <= 0) return;
+  const double scale = 1.0 + base.abs().max().item<double>();
+  const std::int64_t usable = base.size(0);
+  for (std::int64_t k = 0; k < check.probes; ++k) {
+    // split so that samples 0..j are kept and j + 1..n - 1 are redrawn
+    const std::int64_t j = std::clamp<std::int64_t>(((k + 1) * (n - 1)) / (check.probes + 1), 1, n - 2);
+    const std::int64_t tail = n - 1 - j;
+    std::vector<double> root_dt(static_cast<std::size_t>(tail));
+    for (std::int64_t i = 0; i < tail; ++i) {
+      root_dt[static_cast<std::size_t>(i)] =
+          std::sqrt(path.times[static_cast<std::size_t>(j + 1 + i)] - path.times[static_cast<std::size_t>(j + i)]);
+    }
+    std::vector<std::int64_t> bshape(static_cast<std::size_t>(path.w.dim()), 1);
+    bshape[0] = tail;
+    const Series scale_dt = pluss::make_series(root_dt, {tail}).to(path.w.scalar_type()).to(path.w.platform()).reshape(bshape);
+    std::vector<std::int64_t> shape = {tail};
+    for (std::int64_t d = 1; d < path.w.dim(); ++d) shape.push_back(path.w.size(d));
+    const Series fresh = pluss::series::randn(pluss::msharp::RangeView::Int(shape),
+                                              Config{}.with_dtype(path.w.scalar_type()).with_platform(path.w.platform()),
+                                              check.seed + static_cast<std::uint64_t>(k)).mul(scale_dt);
+    const Series kept = path.w.slice(0, 0, j + 1, 1);
+    const Series redrawn = kept.select(0, j).unsqueeze(0).add(fresh.cumsum(0));
+    const Series perturbed = kept.unite({redrawn}, 0);
+    const Series changed = make(perturbed);
+    if (!changed.defined() || changed.size(0) != usable) {
+      ::pluss::throw_error(name + ": the integrand function changed its length when the path changed");
+    }
+    const std::int64_t compared = std::min<std::int64_t>(j + 1, usable);
+    const Series diff = base.slice(0, 0, compared, 1).sub(changed.slice(0, 0, compared, 1)).abs();
+    Series per_sample = diff;
+    while (per_sample.dim() > 1) per_sample = per_sample.amax(per_sample.dim() - 1, false);
+    const std::vector<double> worst = per_sample.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (std::int64_t i = 0; i < compared; ++i) {
+      if (worst[static_cast<std::size_t>(i)] > check.tolerance * scale) {
+        ::pluss::throw_error(name + ": the integrand at sample " + std::to_string(i) +
+                             " changed when only samples after sample " + std::to_string(j) +
+                             " of the path were redrawn, so it looks into the future of the path (it is not "
+                             "adapted) and the sum is not an Ito integral");
+      }
+    }
+  }
+}
+
+inline StochasticIntegralResult sampled_integral_(const SampledIntegrandFn& make, const WienerPath& path,
+                                                  const AdaptednessOptions& check, double theta, const char* op) {
+  if (!make) {
+    ::pluss::throw_error(std::string("subsp::math::sde::") + op + ": integrand function is required");
+  }
+  validate_path_(path, op);
+  check_adapted_(make, path, check, op);
   StochasticIntegralResult result;
-  result.value = total;
-  result.realized_quadratic_variation = detail::quadratic_variation_(path);
+  result.value = make(path.w).antidiff(path.w).theta(theta, 0);
+  result.realized_quadratic_variation = quadratic_variation_(path);
+  annotate_(result, path);
   return result;
+}
+
+}  // namespace detail
+
+// Ito sum of an integrand computed from the sampled path, after checking that it is adapted.
+inline StochasticIntegralResult ito_integral(const SampledIntegrandFn& make, const WienerPath& path,
+                                             const AdaptednessOptions& check = {}) {
+  return detail::sampled_integral_(make, path, check, 0.0, "ito_integral");
+}
+
+inline StochasticIntegralResult strat_integral(const SampledIntegrandFn& make, const WienerPath& path,
+                                               const AdaptednessOptions& check = {}) {
+  return detail::sampled_integral_(make, path, check, 0.5, "strat_integral");
+}
+
+// ---------------------------------------------------------------------
+// Jump paths and the Marcus (canonical) integral
+// ---------------------------------------------------------------------
+
+// A path with Brownian increments and compound-Poisson jumps (Merton's jump-diffusion driver),
+// X = drift * t + volatility * W + sum of jumps, together with the steps that contain a jump.
+struct JumpPath {
+  WienerPath path;
+  Series jump_mask = pluss::series::undefined();  // [steps] + like: 1 on a step with a jump
+};
+
+// At most one jump per step is simulated, so jump_rate * h must be small (checked: below 0.2).
+inline JumpPath simulate_jump_diffusion_path(const Series& like, double t0, double t1, std::int64_t steps,
+                                             std::uint64_t seed, double drift, double volatility, double jump_rate,
+                                             double jump_mean, double jump_stddev) {
+  if (steps <= 0) ::pluss::throw_error("subsp::math::sde::simulate_jump_diffusion_path: steps must be > 0");
+  if (!(jump_rate >= 0.0) || !(jump_stddev >= 0.0) || !(volatility >= 0.0)) {
+    ::pluss::throw_error("subsp::math::sde::simulate_jump_diffusion_path: rate, volatilities must be non-negative");
+  }
+  const double h = (t1 - t0) / static_cast<double>(steps);
+  if (jump_rate * h >= 0.2) {
+    ::pluss::throw_error("subsp::math::sde::simulate_jump_diffusion_path: jump_rate * step is " +
+                         std::to_string(jump_rate * h) + "; use more steps (at most one jump per step is simulated)");
+  }
+  std::vector<std::int64_t> sizes = {steps};
+  for (std::int64_t d = 0; d < like.dim(); ++d) sizes.push_back(like.size(d));
+  const auto cfg = Config{}.with_dtype(like.scalar_type()).with_platform(like.platform());
+  const Series brownian = pluss::series::randn(pluss::msharp::RangeView::Int(sizes), cfg, seed).mul(volatility * std::sqrt(h));
+  const Series u = Series::rand(pluss::msharp::RangeView::Int(sizes), like.scalar_type(), seed + 1, like.platform());
+  const Series size = pluss::series::randn(pluss::msharp::RangeView::Int(sizes), cfg, seed + 2).mul(jump_stddev).add(jump_mean);
+  const Series mask = u.lt(jump_rate * h).to(like.scalar_type());
+  const Series increments = brownian.add(drift * h).add(mask.mul(size));
+  const Series zero = Series::zeros(like.sizes(), like.scalar_type(), like.platform()).unsqueeze(0);
+  JumpPath out;
+  out.path.w = zero.unite({increments.cumsum(0)}, 0);
+  out.path.t0 = t0;
+  out.path.t1 = t1;
+  out.path.steps = steps;
+  for (std::int64_t i = 0; i <= steps; ++i) out.path.times.push_back(t0 + h * static_cast<double>(i));
+  out.jump_mask = mask;
+  return out;
+}
+
+// Marcus integral of f(t, X_t) dX along a path with jumps. Steps flagged in `jump_mask` are integrated along the
+// straight segment between the samples (the flow of the jump); the rest use the Stratonovich average. With the
+// second overload, a step is flagged when |dX| > jump_sigma * sqrt(step), i.e. far outside the Brownian scale --
+// pass an explicit mask when you know where the jumps are.
+inline StochasticIntegralResult marcus_integral(const WienerIntegrandFn& f, const WienerPath& path,
+                                                const Series& jump_mask) {
+  if (!f) ::pluss::throw_error("subsp::math::sde::marcus_integral: integrand callback is required");
+  detail::validate_path_(path, "marcus_integral");
+  if (!jump_mask.defined() || jump_mask.size(0) != path.steps) {
+    ::pluss::throw_error("subsp::math::sde::marcus_integral: the jump mask needs one entry per step");
+  }
+  const Series::CalcAccessor::IntegrandFn vectorized = [&](const Series& t, const Series& w) {
+    const std::int64_t n = w.size(0);
+    const std::vector<double> times = t.reshape({n}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    Series stacked = pluss::series::undefined();
+    for (std::int64_t i = 0; i < n; ++i) {
+      const Series row = f(times[static_cast<std::size_t>(i)], w.select(0, i)).unsqueeze(0);
+      stacked = stacked.defined() ? stacked.unite({row}, 0) : row;
+    }
+    return stacked;
+  };
+  const Series times = pluss::make_series(path.times, {static_cast<std::int64_t>(path.times.size())})
+                           .to(path.w.scalar_type())
+                           .to(path.w.platform());
+  StochasticIntegralResult result;
+  result.value = path.w.calc.antidiff.marcus(vectorized, jump_mask, times, 0);
+  result.realized_quadratic_variation = detail::quadratic_variation_(path);
+  detail::annotate_(result, path);
+  return result;
+}
+
+inline StochasticIntegralResult marcus_integral(const WienerIntegrandFn& f, const WienerPath& path,
+                                                double jump_sigma = 8.0) {
+  detail::validate_path_(path, "marcus_integral");
+  if (!(jump_sigma > 0.0)) ::pluss::throw_error("subsp::math::sde::marcus_integral: jump_sigma must be positive");
+  std::vector<double> bound(static_cast<std::size_t>(path.steps));
+  for (std::int64_t i = 0; i < path.steps; ++i) {
+    bound[static_cast<std::size_t>(i)] =
+        jump_sigma * std::sqrt(path.times[static_cast<std::size_t>(i + 1)] - path.times[static_cast<std::size_t>(i)]);
+  }
+  std::vector<std::int64_t> bshape(static_cast<std::size_t>(path.w.dim()), 1);
+  bshape[0] = path.steps;
+  const Series limit = pluss::make_series(bound, {path.steps}).to(path.w.scalar_type()).to(path.w.platform()).reshape(bshape);
+  const Series mask = path.w.diff(1, 0).abs().gt(limit);
+  return marcus_integral(f, path, mask.to(path.w.scalar_type()));
 }
 
 }  // namespace pluss::subsp::math::sde

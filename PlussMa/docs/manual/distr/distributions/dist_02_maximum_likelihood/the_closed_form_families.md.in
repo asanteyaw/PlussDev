@@ -1,0 +1,8 @@
+# The closed-form families
+
+[Back to Maximum Likelihood](../dist_02_maximum_likelihood.md)
+
+
+@@example Stats/distributions/guide/1304_fitting_by_maximum_likelihood.cpp@@
+
+The estimates are close to the true values (a mean of 1.4956 for a true 1.5, a standard deviation of 1.9274 for a true 2.0), and the standard errors computed from the Hessian agree with the exact formulas to all printed digits (`σ/√n = 0.0862` for the mean, `σ/√(2n) = 0.0610` for the standard deviation). The score is zero at the estimate; the covariance of the normal is diagonal (mean and variance are uncorrelated). Each 95% interval is the estimate ± 1.96 standard errors and contains the true value here.

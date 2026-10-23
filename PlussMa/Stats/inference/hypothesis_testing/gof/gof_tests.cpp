@@ -1,6 +1,7 @@
 #include "pluss/subsp/stats/inference/hypothesis_testing.h"
 
 #include "CodeM/core/Errors.h"
+#include "pluss/subsp/stats/tails.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/stats/distr.h"
 
@@ -115,6 +116,144 @@ double ks_one_sided_pvalue_(double n_eff, double d) {
   return clamp01_(std::exp(-2.0 * n_eff * d * d));
 }
 
+// ---- exact Kolmogorov-Smirnov distributions ------------------------------------------------------------------------------------
+
+// One sample, two-sided: P(D_n < d) by the matrix-power method of Marsaglia, Tsang and Wang (2003), carrying a decimal exponent so
+// that the repeated squaring cannot overflow.
+void ks_matrix_multiply_(const std::vector<double>& a, const std::vector<double>& b, std::vector<double>& c, int m) {
+  for (int i = 0; i < m; ++i) {
+    for (int j = 0; j < m; ++j) {
+      double s = 0.0;
+      for (int k = 0; k < m; ++k) {
+        s += a[static_cast<std::size_t>(i * m + k)] * b[static_cast<std::size_t>(k * m + j)];
+      }
+      c[static_cast<std::size_t>(i * m + j)] = s;
+    }
+  }
+}
+
+void ks_matrix_power_(const std::vector<double>& a, int ea, std::vector<double>& v, int& ev, int m, int n) {
+  if (n == 1) {
+    v = a;
+    ev = ea;
+    return;
+  }
+  ks_matrix_power_(a, ea, v, ev, m, n / 2);
+  std::vector<double> b(static_cast<std::size_t>(m * m));
+  ks_matrix_multiply_(v, v, b, m);
+  int eb = 2 * ev;
+  if (n % 2 == 0) {
+    v = b;
+    ev = eb;
+  } else {
+    ks_matrix_multiply_(a, b, v, m);
+    ev = ea + eb;
+  }
+  if (v[static_cast<std::size_t>((m / 2) * m + (m / 2))] > 1e140) {
+    for (auto& x : v) {
+      x *= 1e-140;
+    }
+    ev += 140;
+  }
+}
+
+double ks_cdf_exact_one_sample_(int n, double d) {
+  const int k = static_cast<int>(n * d) + 1;
+  const int m = 2 * k - 1;
+  const double h = k - n * d;
+  std::vector<double> hm(static_cast<std::size_t>(m * m));
+  for (int i = 0; i < m; ++i) {
+    for (int j = 0; j < m; ++j) {
+      hm[static_cast<std::size_t>(i * m + j)] = (i - j + 1 < 0) ? 0.0 : 1.0;
+    }
+  }
+  for (int i = 0; i < m; ++i) {
+    hm[static_cast<std::size_t>(i * m)] -= std::pow(h, i + 1);
+    hm[static_cast<std::size_t>((m - 1) * m + i)] -= std::pow(h, m - i);
+  }
+  hm[static_cast<std::size_t>((m - 1) * m)] += (2 * h - 1 > 0) ? std::pow(2 * h - 1, m) : 0.0;
+  for (int i = 0; i < m; ++i) {
+    for (int j = 0; j < m; ++j) {
+      if (i - j + 1 > 0) {
+        for (int g = 1; g <= i - j + 1; ++g) {
+          hm[static_cast<std::size_t>(i * m + j)] /= g;
+        }
+      }
+    }
+  }
+  std::vector<double> q;
+  int eq = 0;
+  ks_matrix_power_(hm, 0, q, eq, m, n);
+  double s = q[static_cast<std::size_t>((k - 1) * m + k - 1)];
+  for (int i = 1; i <= n; ++i) {
+    s = s * i / n;
+    if (s < 1e-140) {
+      s *= 1e140;
+      eq -= 140;
+    }
+  }
+  return s * std::pow(10.0, eq);
+}
+
+// One sample, one-sided: P(D+_n >= d) (Birnbaum and Tingey 1951), summed in logarithms.
+double ks_one_sided_exact_one_sample_(int n, double d) {
+  if (d <= 0.0) {
+    return 1.0;
+  }
+  if (d >= 1.0) {
+    return 0.0;
+  }
+  double sum = 0.0;
+  const int jmax = static_cast<int>(std::floor(n * (1.0 - d)));
+  for (int j = 0; j <= jmax; ++j) {
+    const double a = 1.0 - d - static_cast<double>(j) / n;
+    const double b = d + static_cast<double>(j) / n;
+    if (a <= 0.0) {
+      continue;
+    }
+    const double logterm = std::lgamma(n + 1.0) - std::lgamma(j + 1.0) - std::lgamma(n - j + 1.0) + (n - j) * std::log(a) + (j - 1) * std::log(b);
+    sum += std::exp(logterm);
+  }
+  return clamp01_(d * sum);
+}
+
+// Two samples: P(D >= d) by counting the lattice paths from (0,0) to (nx,ny) that stay strictly inside the band |i/nx - j/ny| < d
+// (two-sided) or that never reach i/nx - j/ny >= d (side = +1) or j/ny - i/nx >= d (side = -1). Differences are compared as integers
+// i*ny - j*nx against round(d*nx*ny), which is exact because the statistic is a multiple of 1/(nx*ny).
+double ks_two_sample_exact_p_(std::int64_t nx, std::int64_t ny, double d, int side) {
+  if (d <= 0.0) {
+    return 1.0;
+  }
+  const std::int64_t limit = static_cast<std::int64_t>(std::llround(d * static_cast<double>(nx) * static_cast<double>(ny)));
+  std::vector<double> prev(static_cast<std::size_t>(ny + 1), 0.0), cur(static_cast<std::size_t>(ny + 1), 0.0);
+  auto inside = [&](std::int64_t i, std::int64_t j) {
+    const std::int64_t diff = i * ny - j * nx;
+    if (side == 0) {
+      return std::llabs(diff) < limit;
+    }
+    return side > 0 ? diff < limit : -diff < limit;
+  };
+  for (std::int64_t i = 0; i <= nx; ++i) {
+    for (std::int64_t j = 0; j <= ny; ++j) {
+      double ways = 0.0;
+      if (i == 0 && j == 0) {
+        ways = 1.0;
+      } else {
+        if (i > 0) {
+          ways += prev[static_cast<std::size_t>(j)];
+        }
+        if (j > 0) {
+          ways += cur[static_cast<std::size_t>(j - 1)];
+        }
+      }
+      cur[static_cast<std::size_t>(j)] = inside(i, j) ? ways : 0.0;
+    }
+    std::swap(prev, cur);
+  }
+  const double total = std::exp(std::lgamma(nx + ny + 1.0) - std::lgamma(nx + 1.0) - std::lgamma(ny + 1.0));
+  return clamp01_(1.0 - prev[static_cast<std::size_t>(ny)] / total);
+}
+
 double ks_critical_two_sided_(double n_eff, double alpha) {
   double lo = 0.0;
   double hi = 1.0;
@@ -163,10 +302,14 @@ KSTestResult kstest(const Series& x,
   }
 
   const double n_eff = static_cast<double>(n);
-  const double pvalue = (options.tail == Tail::Both)
-                            ? ks_two_sided_pvalue_(n_eff, stat)
-                            : ks_one_sided_pvalue_(n_eff, stat);
-
+  // Exact distributions for samples of up to 140 observations (as for the usual statistical packages), the Kolmogorov series otherwise.
+  const bool exact = options.method == PValueMethod::Exact || (options.method == PValueMethod::Auto && n <= 140);
+  double pvalue = 0.0;
+  if (options.tail == Tail::Both) {
+    pvalue = exact ? clamp01_(1.0 - ks_cdf_exact_one_sample_(static_cast<int>(n), stat)) : ks_two_sided_pvalue_(n_eff, stat);
+  } else {
+    pvalue = exact ? ks_one_sided_exact_one_sample_(static_cast<int>(n), stat) : ks_one_sided_pvalue_(n_eff, stat);
+  }
   const double critical = (options.tail == Tail::Both)
                               ? ks_critical_two_sided_(n_eff, options.alpha)
                               : ks_critical_one_sided_(n_eff, options.alpha);
@@ -175,7 +318,7 @@ KSTestResult kstest(const Series& x,
   out.stat = stat;
   out.pvalue = pvalue;
   out.critical = critical;
-  out.reject = stat > critical;
+  out.reject = pvalue < options.alpha;
   out.d_plus = dplus;
   out.d_minus = dminus;
   out.mean0 = mean0;
@@ -219,9 +362,16 @@ KSTest2Result kstest2(const Series& x,
 
   const double n_eff = (static_cast<double>(nx) * static_cast<double>(ny)) /
                        static_cast<double>(nx + ny);
-  const double pvalue = (options.tail == Tail::Both)
-                            ? ks_two_sided_pvalue_(n_eff, stat)
-                            : ks_one_sided_pvalue_(n_eff, stat);
+  // Exact distribution while nx * ny < 10000, the Kolmogorov series otherwise.
+  const bool exact = options.method == PValueMethod::Exact ||
+                     (options.method == PValueMethod::Auto && nx * ny < 10000);
+  double pvalue = 0.0;
+  if (exact) {
+    const int side = options.tail == Tail::Both ? 0 : (options.tail == Tail::Right ? 1 : -1);
+    pvalue = ks_two_sample_exact_p_(nx, ny, stat, side);
+  } else {
+    pvalue = (options.tail == Tail::Both) ? ks_two_sided_pvalue_(n_eff, stat) : ks_one_sided_pvalue_(n_eff, stat);
+  }
   const double critical = (options.tail == Tail::Both)
                               ? ks_critical_two_sided_(n_eff, options.alpha)
                               : ks_critical_one_sided_(n_eff, options.alpha);
@@ -230,7 +380,7 @@ KSTest2Result kstest2(const Series& x,
   out.stat = stat;
   out.pvalue = pvalue;
   out.critical = critical;
-  out.reject = stat > critical;
+  out.reject = pvalue < options.alpha;
   out.d_plus = dplus;
   out.d_minus = dminus;
   out.effective_nx = nx;
@@ -259,8 +409,7 @@ JBTestResult jbtest(const Series& x, double alpha, Config cfg) {
   const double kurt = m4 / (m2 * m2);
   const double jb = nd * (skew * skew + 0.25 * (kurt - 3.0) * (kurt - 3.0)) / 6.0;
 
-  const double cdf = chisq_cdf_(jb, 2, out_cfg);
-  const double pvalue = 1.0 - cdf;
+  const double pvalue = pluss::subsp::stats::tails::chi2_sf(jb, 2.0);
   const double critical = chisq_quantile_(1.0 - alpha, 2, out_cfg);
 
   JBTestResult out;
@@ -311,7 +460,7 @@ ChiGofResult chisq_gof(const Series& observed,
   PLUSS_CHECK(dof > 0.0, std::string(op) + ": non-positive degrees of freedom");
 
   const double stat = scalar_(obs.sub(expv).mul(obs.sub(expv)).div(expv).sum());
-  const double pvalue = clamp01_(1.0 - chisq_cdf_(stat, static_cast<std::int64_t>(std::llround(dof)), out_cfg));
+  const double pvalue = clamp01_(pluss::subsp::stats::tails::chi2_sf(stat, std::round(dof)));
   const double critical = chisq_quantile_(1.0 - options.alpha, static_cast<std::int64_t>(std::llround(dof)), out_cfg);
 
   ChiGofResult out;
@@ -350,7 +499,7 @@ ChiIndepResult chisq_indep(const Series& contingency, double alpha, Config cfg) 
   const Series expv = row_sum.matmul(col_sum).div(total).maximum(kEps);
   const double stat = scalar_(obs.sub(expv).mul(obs.sub(expv)).div(expv).sum());
   const double dof = static_cast<double>((r - 1) * (c - 1));
-  const double pvalue = clamp01_(1.0 - chisq_cdf_(stat, static_cast<std::int64_t>(std::llround(dof)), out_cfg));
+  const double pvalue = clamp01_(pluss::subsp::stats::tails::chi2_sf(stat, std::round(dof)));
   const double critical = chisq_quantile_(1.0 - alpha, static_cast<std::int64_t>(std::llround(dof)), out_cfg);
 
   ChiIndepResult out;

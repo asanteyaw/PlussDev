@@ -1,0 +1,168 @@
+<!-- generated from MvGjrFit.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::MvGjrFit`
+
+The result of a `MvGjr` fit: one univariate fit per series, the means and the correlation matrix.
+
+## Signature
+
+```cpp
+ts::MvGjrFit fit = ts::MvGjr::fit_mle(y, options);
+```
+
+## Construction
+
+Obtained from [`MvGjr::fit_mle`](MvGjr.md).
+
+## State
+
+| Field | Meaning |
+|---|---|
+| `marginals` | a vector of univariate fits ([`GjrFit`](GjrFit.md)), one per column |
+| `mean` | the `k` means removed from the columns |
+| `corr` | the `k × k` constant correlation matrix |
+
+## Methods
+
+### `infer`
+
+```cpp
+pluss::Series infer(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The fitted conditional variances of every series, an `n × k` matrix. The covariance of the pair `(i, j)` at time `t` is `corr[i][j] · sqrt(h[t][i] · h[t][j])`.
+
+`const pluss::Series& y`
+: The returns as an `n × k` matrix, one column per series.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** An `n × k` `Series`.
+
+### `loglik`
+
+```cpp
+double loglik(const pluss::Series& y) const;
+```
+
+The joint Gaussian log-likelihood: `−½ Σ_t [k log 2π + Σ_i log h_it + z_t' R⁻¹ z_t + log |R|]` with `z` the standardised residuals and `R` the correlation matrix.
+
+`const pluss::Series& y`
+: The returns as an `n × k` matrix, one column per series.
+
+**Returns.** The total as a `double`.
+
+### `loglik_per_obs`
+
+```cpp
+pluss::Series loglik_per_obs(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The joint log-likelihood contribution of each time point; they sum to `loglik`.
+
+`const pluss::Series& y`
+: The returns as an `n × k` matrix, one column per series.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** A `Series` of length `n`.
+
+### `forecast`
+
+```cpp
+pluss::Series forecast(std::int64_t horizon, const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The variance forecasts of every series, a `horizon × k` matrix, from the univariate models. Forecast covariances follow from the constant correlation: `corr[i][j] · sqrt(h_i · h_j)`.
+
+`std::int64_t horizon`
+: Number of steps ahead (greater than 0).
+
+`const pluss::Series& y`
+: The returns as an `n × k` matrix, one column per series.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** A `horizon × k` `Series`.
+
+**Errors.** `horizon` must be positive.
+
+## Practical Examples
+
+### Example 1
+
+Compare the joint log-likelihood with the same marginals and the correlation set to zero, and read variance and covariance forecasts.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+Series pair(int n) {
+  std::vector<double> y(2 * n);
+  double h1 = 0.4, h2 = 0.4, p1 = 0.0, p2 = 0.0;
+  for (int t = 0; t < n; ++t) {
+    double u = std::sin(12.9898 * (t + 1.0) + 78.233) * 43758.5453, w = std::sin(12.9898 * (t + 40001.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    w -= std::floor(w);
+    const double z1 = (u - 0.5) * std::sqrt(12.0), z2 = (w - 0.5) * std::sqrt(12.0);
+    h1 = 0.05 + 0.15 * p1 * p1 + 0.75 * h1;
+    h2 = 0.10 + 0.10 * p2 * p2 + 0.80 * h2;
+    p1 = std::sqrt(h1) * z1;
+    p2 = std::sqrt(h2) * (0.6 * z1 + 0.8 * z2);
+    y[2 * t] = p1;
+    y[2 * t + 1] = p2;
+  }
+  return pluss::make_series(y, {n, 2}, f64);
+}
+
+int main() {
+  const Series y = pair(1500);
+  const auto fit = ts::MvGjr::fit_mle(y);
+  auto independent = fit;
+  independent.corr = pluss::series::eye(2, 2).to(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(2) << "log-likelihood " << fit.loglik(y) << ", with the correlation set to zero " << independent.loglik(y) << "\n";
+  const auto f = fit.forecast(3, y).to_vec<double>();
+  const double rho = fit.corr.to_vec<double>()[1];
+  for (int h = 0; h < 3; ++h) {
+    std::cout << std::setprecision(3) << "step " << h + 1 << "  var0 " << f[2 * h] << "  var1 " << f[2 * h + 1] << "  cov " << rho * std::sqrt(f[2 * h] * f[2 * h + 1]) << "\n";
+  }
+}
+```
+
+Output
+
+```text
+log-likelihood -3338.33, with the correlation set to zero -3690.42
+step 1  var0 0.530  var1 0.676  cov 0.366
+step 2  var0 0.522  var1 0.714  cov 0.374
+step 3  var0 0.516  var1 0.747  cov 0.380
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`MvGjr`](MvGjr.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

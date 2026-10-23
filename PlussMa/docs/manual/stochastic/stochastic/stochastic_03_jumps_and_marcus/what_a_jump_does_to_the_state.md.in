@@ -1,0 +1,10 @@
+# What a jump does to the state
+
+[Back to Jumps and the Marcus Integral](../stochastic_03_jumps_and_marcus.md)
+
+
+A jump of size `z` under coefficient `h` moves the state along the flow of `dy/du = h(y) z`. Three coefficients have closed-form flows: `h = 1` (additive), `h = y` (multiplicative, so `log y` moves by exactly `z`) and `h = y(1 − y)` (logistic, which keeps the state inside (0, 1)).
+
+@@example Probability/random_processes/guide/sde/23_marcus_flow.cpp@@
+
+Every row matches the closed form. The additive flow adds `z`, and the logistic flow never leaves (0, 1): from 0.9 with `z = 3` it ends at 0.994499. The flow is followed by a Runge-Kutta scheme with 32 steps by default; the multiplicative jump from 0.9 with `z = 3` is 18.076951 against the exact 18.076983, and the `flow_steps` option raises the accuracy when the jumps are large.

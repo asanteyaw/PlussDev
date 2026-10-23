@@ -93,7 +93,7 @@ auto labeled = pluss::scribble::Axel({
 }, pluss::scribble::Slot({pluss::make_note("l0"), pluss::make_note("l1"), pluss::make_note("l2")}));
 
 auto out = labeled.slice(1, 3);
-std::cout << std::get<pluss::Note>(out.labels()->at(0)).at(0);
+std::cout << std::get<pluss::Note>(out.label()->at(0)).at(0);
 ```
 
 ### Output

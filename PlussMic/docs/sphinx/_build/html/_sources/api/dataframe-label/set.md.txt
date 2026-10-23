@@ -111,7 +111,7 @@ auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
-auto out = orders.label().set("region");
+auto out = orders.labels().set("region");
 std::cout << out;
 ```
 
@@ -137,7 +137,7 @@ Example 2. Promote and explicitly keep the feature, so it exists both as the cas
 and as an ordinary column.
 
 ```cpp
-auto out2 = orders.label().set("region", false);
+auto out2 = orders.labels().set("region", false);
 std::cout << out2;
 ```
 
@@ -167,7 +167,7 @@ auto readings = DataFrame(
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 ```
 
@@ -196,7 +196,7 @@ Example 4. The same two-feature promotion, but keeping both `region` and `city` 
 ordinary columns too.
 
 ```cpp
-auto grouped_kept = readings.label().set({"region", "city"}, false, "/");
+auto grouped_kept = readings.labels().set({"region", "city"}, false, "/");
 std::cout << grouped_kept;
 ```
 
@@ -219,7 +219,7 @@ Example 5. `set(const Slate&)` — a raw axis replacement with no structure at a
 column).
 
 ```cpp
-auto tagged = orders.label().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
+auto tagged = orders.labels().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
 std::cout << tagged;
 ```
 
@@ -237,7 +237,7 @@ r4   | north   90
 [4 cs x 2 feat]
 ```
 
-`tagged.label().has()` is `false` here — this overload never creates a
+`tagged.labels().has()` is `false` here — this overload never creates a
 `case_axis_`, regardless of the `Slate`'s own kind or origin. Both `region` and `sales`
 remain as ordinary columns since this overload doesn't source the labels from a column at
 all.
@@ -254,7 +254,7 @@ auto sales = DataFrame({
     {"price",  pluss::make_series({3.0, 4.0, 2.5, 5.0})},
 });
 
-auto labeled = sales.label().set(
+auto labeled = sales.labels().set(
     pluss::make_note({"row-a", "row-b", "row-c", "row-d"}));
 std::cout << labeled;
 ```
@@ -273,7 +273,7 @@ row-d | Tamale  north   5      5
 [4 cs x 4 feat]
 ```
 
-`labeled.label().has()` remains `false`: these are flat case labels, even though their
+`labeled.labels().has()` remains `false`: these are flat case labels, even though their
 storage is a `Note`.
 
 Example 7. Direct labels must match the frame's case count. Validation occurs before a
@@ -281,7 +281,7 @@ result is returned.
 
 ```cpp
 try {
-  auto invalid = sales.label().set(pluss::make_note({"row-a", "row-b"}));
+  auto invalid = sales.labels().set(pluss::make_note({"row-a", "row-b"}));
 } catch (const std::exception& e) {
   std::string message(e.what());
   std::cout << message.substr(0, message.find('\n'));
@@ -298,7 +298,7 @@ Example 8. `SetLabelOptions{.sort = true}` — promote (dropping by default, sam
 `SetLabelOptions`'s own `drop` default) and immediately sort by the new label.
 
 ```cpp
-auto sorted = orders.label().set(DataFrame::SetLabelOptions{.features = {"region"}, .sort = true});
+auto sorted = orders.labels().set(DataFrame::SetLabelOptions{.features = {"region"}, .sort = true});
 std::cout << sorted;
 ```
 
@@ -318,14 +318,14 @@ west  | 200
 
 Rows are rearranged into ascending order by the new case label (`"east"`, `"east"`,
 `"north"`, `"west"`) as part of the same call — equivalent to
-`set("region").label().sort()`. `region` is dropped from the columns since
+`set("region").labels().sort()`. `region` is dropped from the columns since
 `SetLabelOptions.drop` defaults to `true`, same as every feature-name overload.
 
 Example 9. `SetLabelOptions{.drop = false, .sort = true}` — keep the column and sort, both
 explicit.
 
 ```cpp
-auto sorted_kept = orders.label().set(
+auto sorted_kept = orders.labels().set(
     DataFrame::SetLabelOptions{.features = {"region"}, .drop = false, .sort = true});
 std::cout << sorted_kept;
 ```
@@ -349,7 +349,7 @@ unique.
 
 ```cpp
 try {
-  auto verified = orders.label().set(DataFrame::SetLabelOptions{.features = {"region"}, .verify = true});
+  auto verified = orders.labels().set(DataFrame::SetLabelOptions{.features = {"region"}, .verify = true});
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

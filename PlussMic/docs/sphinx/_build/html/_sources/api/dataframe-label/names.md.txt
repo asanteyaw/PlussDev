@@ -49,10 +49,10 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
-for (const auto& name : grouped.label().names()) {
+for (const auto& name : grouped.labels().names()) {
   std::cout << name << " ";
 }
 ```
@@ -78,10 +78,10 @@ region city
 ```
 
 ```cpp
-auto renamed = grouped.label().names({"area", "town"});
+auto renamed = grouped.labels().names({"area", "town"});
 std::cout << renamed;
 
-for (const auto& name : renamed.label().names()) {
+for (const auto& name : renamed.labels().names()) {
   std::cout << name << " ";
 }
 ```
@@ -117,7 +117,7 @@ overload throw.
 
 ```cpp
 try {
-  auto out = grouped.label().names({"area"});
+  auto out = grouped.labels().names({"area"});
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
@@ -127,7 +127,7 @@ try {
 ### Output
 
 ```text
-DataFrame::label().names: expected one name per current label level
+DataFrame::labels().names: expected one name per current label level
 ```
 
 `grouped` has 2 levels; the renaming overload requires exactly one new name

@@ -1,0 +1,10 @@
+# Reading the result
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+The returned object answers six questions: where, how good, how feasible, how much work, why it stopped, and what each constraint costs. This program prints one of each for a problem with a linear inequality and bounds.
+
+@@example Numerical/optimization/guide/optima/10_reading_the_result.cpp@@
+
+`params` holds the answer, `evaluation` the objective value and feasibility at the answer, `iteration` and `function_evaluations` the work, `exit_flag` and `message` the reason, and `multipliers` how strongly each constraint pushes on the answer. The multiplier of the linear inequality is `1`, the price of tightening it: the objective would improve by about that much per unit the limit is relaxed. The zero counts for equalities show that multipliers exist only for the constraint families the problem uses. `converged` is true exactly when the exit flag is `Converged`.

@@ -1,0 +1,10 @@
+# No feasible point
+
+[Back to Bounds and Constraints](../dfo_03_bounds_and_constraints.md)
+
+
+If the constraints contradict each other, no method can succeed; the question is whether it says so.
+
+@@example Numerical/optimization/guide/dfo/323_infeasible.cpp@@
+
+With a roomy budget the run ends in `InfeasibleStationary`: it reached a point where no poll reduces the violation. The returned point is the least-violating one found (here `x0 = 1.5`, halfway between the two contradictory requirements, violating each by 0.5). With the default budget the run is cut off earlier, with a budget status, but the violation reported is the same. Whatever the status, **always check `diagnostics.max_constraint_violation` when you pass constraints**; a status of `Converged` together with a violation of 0 is what a good answer looks like.

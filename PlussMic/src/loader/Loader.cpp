@@ -1953,7 +1953,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   }
   if (add_cases) {
     names.insert(names.begin(), case_label);
-    columns.insert(columns.begin(), frame.label().values());
+    columns.insert(columns.begin(), frame.labels().values());
   }
   PLUSS_CHECK(names.size() == columns.size(), "loader::save_parquet: column metadata size mismatch");
 
@@ -2834,7 +2834,7 @@ std::vector<pluss::table::Slate> json_columns_with_cases(const pluss::table::Dat
     columns.push_back(frame.features(name));
   }
   if (add_cases) {
-    columns.insert(columns.begin(), frame.label().values());
+    columns.insert(columns.begin(), frame.labels().values());
   }
   return columns;
 }

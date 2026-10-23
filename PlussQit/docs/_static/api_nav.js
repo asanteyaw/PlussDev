@@ -22,6 +22,7 @@ window.PLUSS_API_NAV = {
       "amin",
       "aminmax",
       "angle",
+      "antidiff",
       "any",
       "argmax",
       "argmin",
@@ -49,6 +50,7 @@ window.PLUSS_API_NAV = {
       "block",
       "bmm",
       "broadcast_to",
+      "calc",
       "cartprod",
       "cauchy_",
       "cbrt",
@@ -112,6 +114,7 @@ window.PLUSS_API_NAV = {
       "extract_put_",
       "factor",
       "factorial",
+      "fft",
       "fftshift",
       "flatten",
       "flip",
@@ -154,6 +157,7 @@ window.PLUSS_API_NAV = {
       "i0",
       "idct",
       "idst",
+      "ifft",
       "ifftshift",
       "igamma",
       "igammac",
@@ -172,6 +176,7 @@ window.PLUSS_API_NAV = {
       "intersection_along",
       "invalid",
       "invalid_index",
+      "irfft",
       "is_complex",
       "is_contiguous",
       "is_cpu",
@@ -284,6 +289,7 @@ window.PLUSS_API_NAV = {
       "retain_grad",
       "retains_grad",
       "reverse",
+      "rfft",
       "roll",
       "rot90",
       "round",
@@ -449,6 +455,26 @@ window.PLUSS_API_NAV = {
       "var"
     ]
   },
+  "Series::CalcAccessor": {
+    "title": "Series::CalcAccessor",
+    "slug": "series-calc",
+    "landing": "series_calc_accessor_api_reference.html",
+    "methods": [
+      "antidiff",
+      "antidiff_ito",
+      "antidiff_marcus",
+      "antidiff_strat",
+      "diff",
+      "diff_ito",
+      "diff_malliavin",
+      "diff_marcus",
+      "diff_strat",
+      "grad",
+      "hess",
+      "jac",
+      "options"
+    ]
+  },
   "Series::LinearAlgAccessor": {
     "title": "Series::LinearAlgAccessor",
     "slug": "series-linearalg",
@@ -459,6 +485,9 @@ window.PLUSS_API_NAV = {
       "cholesky_solve",
       "det",
       "dot",
+      "eigh",
+      "eigvalsh",
+      "gen_eigh",
       "inverse",
       "logdet",
       "lu_solve",
@@ -486,6 +515,8 @@ window.PLUSS_API_NAV = {
     "landing": "series_antidiff_accessor_api_reference.html",
     "methods": [
       "cumulative_trapezoid",
+      "quadratic_variation",
+      "stochastic_integrals",
       "trapezoid"
     ]
   },

@@ -14,6 +14,7 @@
 namespace common = pluss::subsp::natsci::common;
 namespace spatial = common::spatial;
 namespace fluids = pluss::subsp::natsci::physics::fluids;
+namespace gas = fluids::gas;
 
 using pluss::Platform;
 using pluss::ScalarType;
@@ -207,6 +208,220 @@ BoundedCase bounded_case(std::int64_t n, Platform platform) {
   return {std::move(grid), std::move(bounds), std::move(state), std::move(raw)};
 }
 
+gas::State gas_state(const Series &rho, const Series &velocity,
+                     const Series &temperature,
+                     const spatial::PeriodicGrid &grid,
+                     const gas::Model &model = {}) {
+  const Series momentum = velocity.mul(rho.unsqueeze(0));
+  const Series pressure =
+      temperature.mul(rho).mul(model.gas_constant.si_value());
+  const Series kinetic = velocity.square().sum(0, false).mul(rho).mul(0.5);
+  return gas::make(common::SeriesQuantity<gas::Density>::from_si(rho),
+                   common::SeriesQuantity<gas::MomDensity>::from_si(momentum),
+                   common::SeriesQuantity<gas::EnergyDensity>::from_si(
+                       pressure.div(model.gamma - 1.0).add(kinetic)),
+                   grid, model);
+}
+
+gas::State gas_state(const Series &rho, const Series &velocity,
+                     const Series &temperature, const spatial::BoxGrid &grid,
+                     const gas::Model &model = {}) {
+  const Series momentum = velocity.mul(rho.unsqueeze(0));
+  const Series pressure =
+      temperature.mul(rho).mul(model.gas_constant.si_value());
+  const Series kinetic = velocity.square().sum(0, false).mul(rho).mul(0.5);
+  return gas::make(common::SeriesQuantity<gas::Density>::from_si(rho),
+                   common::SeriesQuantity<gas::MomDensity>::from_si(momentum),
+                   common::SeriesQuantity<gas::EnergyDensity>::from_si(
+                       pressure.div(model.gamma - 1.0).add(kinetic)),
+                   grid, model);
+}
+
+struct PeriodicGasCase final {
+  spatial::PeriodicGrid grid;
+  gas::State state;
+};
+
+PeriodicGasCase periodic_gas_case(std::int64_t n, Platform platform) {
+  const double h = 1.0 / static_cast<double>(n);
+  auto grid = spatial::make_periodic_grid({n, n}, {metres(h), metres(h)});
+  const Series rho = cpu_noise({n, n}, 131).to(platform).mul(0.01F).add(1.1F);
+  const Series velocity = cpu_noise({2, n, n}, 137).to(platform).mul(0.01F);
+  const Series temperature =
+      cpu_noise({n, n}, 139).to(platform).mul(2.0F).add(300.0F);
+  return {grid, gas_state(rho, velocity, temperature, grid)};
+}
+
+struct BoundedGasCase final {
+  spatial::BoxGrid grid;
+  gas::Bounds bounds;
+  gas::State state;
+};
+
+BoundedGasCase bounded_gas_case(std::int64_t n, Platform platform) {
+  const double h = 1.0 / static_cast<double>(n);
+  auto grid = spatial::make_box_grid({n, n}, {metres(h), metres(h)});
+  const Series rho = cpu_noise({n, n}, 149).to(platform).mul(0.01F).add(1.1F);
+  const Series velocity = cpu_noise({2, n, n}, 151).to(platform).mul(0.01F);
+  const Series temperature =
+      cpu_noise({n, n}, 157).to(platform).mul(2.0F).add(300.0F);
+  auto bounds = gas::bounds(grid, {gas::wall({0, spatial::Side::Low}),
+                                   gas::wall({0, spatial::Side::High}),
+                                   gas::wall({1, spatial::Side::Low}),
+                                   gas::wall({1, spatial::Side::High})});
+  return {grid, std::move(bounds), gas_state(rho, velocity, temperature, grid)};
+}
+
+gas::Options gas_options(bool sutherland, gas::Rule rule = gas::Rule::Rk2) {
+  gas::Options options;
+  options.rule = rule;
+  options.recon = gas::Recon::Weno5;
+  options.flux = gas::FluxScheme::Hllc;
+  options.enforce = false;
+  if (sutherland)
+    options.sutherland = gas::SutherlandLaw{};
+  return options;
+}
+
+void require_finite(const gas::Rate &rate, std::string_view operation) {
+  if (!rate.density.si_value().isfinite().all().item<bool>() ||
+      !rate.momentum.si_value().isfinite().all().item<bool>() ||
+      !rate.energy.si_value().isfinite().all().item<bool>())
+    throw std::runtime_error(std::string(operation) +
+                             " produced a non-finite reference residual");
+}
+
+void append_periodic_gas(std::vector<Result> &results, const Config &config,
+                         Platform platform, std::string_view platform_name) {
+  const auto setup = periodic_gas_case(config.size, platform);
+  const auto inviscid = gas_options(false);
+  auto roe = gas_options(false);
+  roe.flux = gas::FluxScheme::Roe;
+  auto lm_roe = roe;
+  lm_roe.roe.mach = gas::RoeMach::Rieper;
+  auto h_roe = roe;
+  h_roe.roe.shock = gas::RoeShock::HFix;
+  const auto sutherland = gas_options(true);
+  const auto rk3 = gas_options(true, gas::Rule::Rk3);
+  require_finite(gas::rate(setup.state, setup.grid, {}, inviscid),
+                 "periodic HLLC-WENO");
+  require_finite(gas::rate(setup.state, setup.grid, {}, sutherland),
+                 "periodic Sutherland");
+  require_finite(gas::rate(setup.state, setup.grid, {}, roe), "periodic Roe");
+  require_finite(gas::rate(setup.state, setup.grid, {}, lm_roe),
+                 "periodic low-Mach Roe");
+  require_finite(gas::rate(setup.state, setup.grid, {}, h_roe),
+                 "periodic H-corrected Roe");
+  const double stable =
+      gas::limits(setup.state, setup.grid, {}, *sutherland.sutherland)
+          .allowed.si_value()
+          .min()
+          .item<float>();
+  const auto width = seconds(stable * 0.05);
+  results.push_back(measure("periodic", "gas-weno", std::string(platform_name),
+                            config.size, 1, config.warmup, config.rounds, [&] {
+                              return gas::rate(setup.state, setup.grid, {},
+                                               inviscid)
+                                  .energy.si_value();
+                            }));
+  results.push_back(measure("periodic", "gas-suth", std::string(platform_name),
+                            config.size, 1, config.warmup, config.rounds, [&] {
+                              return gas::rate(setup.state, setup.grid, {},
+                                               sutherland)
+                                  .energy.si_value();
+                            }));
+  results.push_back(measure(
+      "periodic", "gas-roe", std::string(platform_name), config.size, 1,
+      config.warmup, config.rounds, [&] {
+        return gas::rate(setup.state, setup.grid, {}, roe).energy.si_value();
+      }));
+  results.push_back(measure(
+      "periodic", "gas-lmroe", std::string(platform_name), config.size, 1,
+      config.warmup, config.rounds, [&] {
+        return gas::rate(setup.state, setup.grid, {}, lm_roe).energy.si_value();
+      }));
+  results.push_back(measure(
+      "periodic", "gas-hroe", std::string(platform_name), config.size, 1,
+      config.warmup, config.rounds, [&] {
+        return gas::rate(setup.state, setup.grid, {}, h_roe).energy.si_value();
+      }));
+  results.push_back(measure("periodic", "gas-rk3", std::string(platform_name),
+                            config.size, 3, config.warmup, config.rounds, [&] {
+                              return gas::step(setup.state, setup.grid, width,
+                                               {}, rk3)
+                                  .state.energy()
+                                  .si_value();
+                            }));
+}
+
+void append_bounded_gas(std::vector<Result> &results, const Config &config,
+                        Platform platform, std::string_view platform_name) {
+  const auto setup = bounded_gas_case(config.size, platform);
+  const auto inviscid = gas_options(false);
+  auto roe = gas_options(false);
+  roe.flux = gas::FluxScheme::Roe;
+  auto lm_roe = roe;
+  lm_roe.roe.mach = gas::RoeMach::Rieper;
+  auto h_roe = roe;
+  h_roe.roe.shock = gas::RoeShock::HFix;
+  const auto sutherland = gas_options(true);
+  const auto rk3 = gas_options(true, gas::Rule::Rk3);
+  require_finite(gas::rate(setup.state, setup.grid, setup.bounds, {}, inviscid),
+                 "bounded HLLC-WENO");
+  require_finite(
+      gas::rate(setup.state, setup.grid, setup.bounds, {}, sutherland),
+      "bounded Sutherland");
+  require_finite(gas::rate(setup.state, setup.grid, setup.bounds, {}, roe),
+                 "bounded Roe");
+  require_finite(gas::rate(setup.state, setup.grid, setup.bounds, {}, lm_roe),
+                 "bounded low-Mach Roe");
+  require_finite(gas::rate(setup.state, setup.grid, setup.bounds, {}, h_roe),
+                 "bounded H-corrected Roe");
+  const double stable =
+      gas::step_limit(setup.state, setup.grid, {}, *sutherland.sutherland)
+          .si_value()
+          .min()
+          .item<float>();
+  const auto width = seconds(stable * 0.05);
+  results.push_back(measure("bounded", "gas-weno", std::string(platform_name),
+                            config.size, 1, config.warmup, config.rounds, [&] {
+                              return gas::rate(setup.state, setup.grid,
+                                               setup.bounds, {}, inviscid)
+                                  .energy.si_value();
+                            }));
+  results.push_back(measure("bounded", "gas-suth", std::string(platform_name),
+                            config.size, 1, config.warmup, config.rounds, [&] {
+                              return gas::rate(setup.state, setup.grid,
+                                               setup.bounds, {}, sutherland)
+                                  .energy.si_value();
+                            }));
+  results.push_back(measure("bounded", "gas-roe", std::string(platform_name),
+                            config.size, 1, config.warmup, config.rounds, [&] {
+                              return gas::rate(setup.state, setup.grid,
+                                               setup.bounds, {}, roe)
+                                  .energy.si_value();
+                            }));
+  results.push_back(measure("bounded", "gas-lmroe", std::string(platform_name),
+                            config.size, 1, config.warmup, config.rounds, [&] {
+                              return gas::rate(setup.state, setup.grid,
+                                               setup.bounds, {}, lm_roe)
+                                  .energy.si_value();
+                            }));
+  results.push_back(measure("bounded", "gas-hroe", std::string(platform_name),
+                            config.size, 1, config.warmup, config.rounds, [&] {
+                              return gas::rate(setup.state, setup.grid,
+                                               setup.bounds, {}, h_roe)
+                                  .energy.si_value();
+                            }));
+  results.push_back(measure("bounded", "gas-rk3", std::string(platform_name),
+                            config.size, 3, config.warmup, config.rounds, [&] {
+                              return gas::step(setup.state, setup.grid,
+                                               setup.bounds, width, {}, rk3)
+                                  .state.energy()
+                                  .si_value();
+                            }));
+}
+
 void append_periodic(std::vector<Result> &results, const Config &config,
                      Platform platform, std::string_view platform_name) {
   const auto options = projection_options(config.size);
@@ -298,9 +513,9 @@ Config parse(int argc, char **argv) {
     else
       throw std::invalid_argument("unknown option: " + argument);
   }
-  if (config.size < 4 || config.rounds <= 0 || config.warmup < 0)
+  if (config.size < 5 || config.rounds <= 0 || config.warmup < 0)
     throw std::invalid_argument(
-        "size must be at least 4, rounds positive, and warmup non-negative");
+        "size must be at least 5, rounds positive, and warmup non-negative");
   if (config.platform != "cpu" && config.platform != "mps" &&
       config.platform != "all")
     throw std::invalid_argument("platform must be cpu, mps, or all");
@@ -352,6 +567,10 @@ int main(int argc, char **argv) {
         append_periodic(results, config, platform, name);
       if (config.domain == "bounded" || config.domain == "all")
         append_bounded(results, config, platform, name);
+      if (config.domain == "periodic" || config.domain == "all")
+        append_periodic_gas(results, config, platform, name);
+      if (config.domain == "bounded" || config.domain == "all")
+        append_bounded_gas(results, config, platform, name);
     };
     if (config.platform == "cpu" || config.platform == "all")
       run(pluss::pCPU, "cpu");

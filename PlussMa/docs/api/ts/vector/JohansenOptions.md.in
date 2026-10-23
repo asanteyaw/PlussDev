@@ -1,0 +1,23 @@
+# `pluss::subsp::stats::ts::JohansenOptions`
+
+Options of `ts::johansen_test`.
+
+`JohansenOptions` chooses the statistic and the deterministic terms of the cointegration test.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `lag_order` | `std::int64_t` | 1 | Order `p` of the VAR in levels; `p − 1` lagged differences are held fixed. |
+| `include_intercept` | `bool` | true | An unrestricted constant (drift in the levels). |
+| `include_trend` | `bool` | false | An unrestricted constant and linear trend. |
+| `statistic` | `ts::JohansenStat` | `Trace` | `Trace`: tests rank ≤ r against any larger rank. `MaxEigen`: tests rank ≤ r against rank r + 1. |
+| `alpha` | `double` | 0.05 | Significance level of the critical values and of `reject`. |
+
+## Guidance
+
+The p-values and critical values come from simulated limiting distributions for three specifications: no deterministic terms (both flags off), an unrestricted constant, and an unrestricted constant with a trend, for up to 12 series.
+
+## See Also
+
+- [`johansen_test`](johansen_test.md)

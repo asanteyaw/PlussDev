@@ -166,4 +166,4 @@ mixed directions like "city ascending, price descending", you must use the
 - `arrange()` does not deduplicate ties; equal-key rows keep their stable relative order.
 - When you pass several feature names plus one `ascending` flag, that direction is
   shared by every key. Per-key direction requires `ArrangeSpec`.
-- If you need to sort case labels rather than feature values, use [`label().sort()`](label.md).
+- If you need to sort case labels rather than feature values, use [`label().sort()`](labels.md).

@@ -1,0 +1,10 @@
+# A problem as a value
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+When the same problem is solved from several starting points, or handed to another function, bundle it into a `ConstrainedProblem`. You can fill the struct directly or use the `problem()` builder, which accepts the same callables as the struct and picks the right slot. Either value is passed to `optima` with a start given as a plain vector or as a pack.
+
+@@example Numerical/optimization/guide/optima/08_problem_object.cpp@@
+
+Both routes produce the same answer, the point of `x0 + x1 <= 1.5` nearest `(1, 2)`. Starting from a plain vector produces a block named `x`, which is the same result as passing the vector wrapped as a pack.

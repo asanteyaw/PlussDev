@@ -21,7 +21,9 @@
 //   Unbounded        recession ray d:  Aub d <= 0, Aeq d = 0, d respects the bounds, c^T d < 0 (confirmed feasible)
 // Accuracy: every iterate is refined against the exact Newton system (full-system iterative refinement with a primal
 // proximal preconditioner), which keeps degenerate vertices from stalling. Rows of Aeq may be linearly dependent.
-// Precision is that of an interior-point method (relative 1e-9 on residuals and gap), not a vertex-exact simplex answer.
+// Precision is that of an interior-point method (relative 1e-9 on residuals and gap), not a vertex-exact simplex answer -- except that lanes the
+// interior point cannot certify (IterationLimit / NearOptimal, typical when the feasible set has almost no interior, e.g. an objective pinned to
+// its optimum) are re-solved by the exact simplex when Options::polish is true (default).
 // Bound PATTERN (which entries are finite) must be the same in all lanes.
 
 #include "pluss/codem/codem.h"
@@ -54,6 +56,10 @@ struct Options final {
   double regularization = 1e-12;       // relative diagonal (dual) shift of the normal equations
   double primal_regularization = 1e-9; // proximal term: D -> D/(1 + rho D) caps the dynamic range of A D A^T
   int refinement_sweeps = 4;           // full-system iterative refinement sweeps
+  // Interior-point lanes that end IterationLimit or NearOptimal are re-solved one by one with the exact simplex and replaced by its verdict
+  // (Optimal / PrimalInfeasible / Unbounded with the vertex, duals and certificates). This is what makes problems with almost no interior --
+  // an objective pinned to its optimum (FVA at fraction 1), equality-like inequality pairs -- reliable under the default method.
+  bool polish = true;
   bool confirm_unbounded = true;       // a recession ray alone is dual infeasibility; confirm primal feasibility
   std::int64_t max_lanes = 0;          // >0: solve at most this many lanes per batched call (bounds the [B, m, m] workspace)
   double sparse_density = 0.05;        // assemble A D A^T from the non-zeros when the matrix is sparser than this (and m >= 128)
@@ -128,9 +134,20 @@ inline Standard standardize(const Problem &p) {
   };
 
   const double inf = std::numeric_limits<double>::infinity();
+  // a right-hand side of +-1e20 or beyond (or non-finite) is a vacuous row written with a sentinel: the rows are shared by all lanes, so it cannot be
+  // dropped per lane and as a huge finite number it would wreck the scaling -> fail loudly instead of returning a wrong answer
+  for (const auto *rhs : {p.b_ub ? &*p.b_ub : nullptr, p.b_eq ? &*p.b_eq : nullptr})
+    if (rhs && !rhs->abs().lt(1e20).all().template item<bool>())
+      throw std::invalid_argument("linprog: a constraint right-hand side is non-finite or beyond 1e20 (a vacuous row): remove the row instead");
   const Series zero_n = c.mul(0.0);
-  const Series lower = p.lower ? lanes(p.lower->to(dt), n) : zero_n.add(-inf);
-  const Series upper = p.upper ? lanes(p.upper->to(dt), n) : zero_n.add(inf);
+  // |bound| >= 1e20 is an infinity (the HiGHS convention): 1e30 / 1e300 "big-M" sentinels used to be treated as huge finite numbers, which turned
+  // feasible problems infeasible or NaN. Only the outward-pointing side is canonicalised (an inward 1e20+ bound is genuinely infeasible).
+  const auto canonical = [&](const Series &v, bool lower_side) {
+    const Series huge = lower_side ? v.le(-1e20) : v.ge(1e20);
+    return huge.where(zero_n.add(lower_side ? -inf : inf), v);
+  };
+  const Series lower = p.lower ? canonical(lanes(p.lower->to(dt), n), true) : zero_n.add(-inf);
+  const Series upper = p.upper ? canonical(lanes(p.upper->to(dt), n), false) : zero_n.add(inf);
   auto pattern = [&](const Series &v) { // lane-uniform finite pattern as a host vector
     const Series f = v.isfinite().to(dt);
     const auto mx = f.amax(0, false).to_vec<double>(), mn = f.amin(0, false).to_vec<double>();
@@ -937,6 +954,85 @@ inline Result solve_simplex(const Problem &p, const Options &opt) {
   return r;
 }
 
+// Re-solve the lanes the interior point could not certify (IterationLimit / NearOptimal) with the exact simplex and merge them back.
+inline Result polish_with_simplex(const Problem &p, Result r, const Options &opt) {
+  const auto st = r.status.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  std::vector<std::int64_t> bad;
+  for (std::size_t i = 0; i < st.size(); ++i)
+    if (st[i] == static_cast<double>(Status::IterationLimit) || st[i] == static_cast<double>(Status::NearOptimal))
+      bad.push_back(static_cast<std::int64_t>(i));
+  if (bad.empty())
+    return r;
+  const std::int64_t n = p.c.size(-1), B = static_cast<std::int64_t>(st.size());
+  const Series c_flat = p.c.reshape({B, n});
+  auto lane_of = [&](const std::optional<Series> &v, std::int64_t k, std::int64_t lane) -> std::optional<Series> {
+    if (!v)
+      return v;
+    if (v->dim() == 1)
+      return v; // shared
+    return v->reshape({B, k}).select(0, lane);
+  };
+  Options so = opt;
+  so.method = Method::Simplex;
+  so.polish = false;
+  auto rows_of = [&](const Series &v, std::int64_t width) { return v.defined() ? v.reshape({B, width}).to(pluss::ScalarType::Float64).contiguous().to_vec<double>() : std::vector<double>{}; };
+  const std::int64_t me = p.a_eq ? p.a_eq->size(0) : 0, mu = p.a_ub ? p.a_ub->size(0) : 0;
+  std::vector<double> x = rows_of(r.x, n), obj = rows_of(r.objective, 1), dobj = rows_of(r.dual_objective, 1), stat = rows_of(r.status, 1);
+  std::vector<double> deq = rows_of(r.dual_eq, std::max<std::int64_t>(me, 1)), dub = rows_of(r.dual_ub, std::max<std::int64_t>(mu, 1)), ray = rows_of(r.ray, n);
+  std::vector<double> far = r.farkas.defined() ? rows_of(r.farkas, r.farkas.size(-1)) : std::vector<double>{};
+  const std::int64_t far_w = r.farkas.defined() ? r.farkas.size(-1) : 0;
+  for (const std::int64_t lane : bad) {
+    Problem q;
+    q.c = c_flat.select(0, lane);
+    q.a_eq = p.a_eq;
+    q.a_ub = p.a_ub;
+    q.b_eq = lane_of(p.b_eq, me, lane);
+    q.b_ub = lane_of(p.b_ub, mu, lane);
+    q.lower = lane_of(p.lower, n, lane);
+    q.upper = lane_of(p.upper, n, lane);
+    const Result s = solve_simplex(q, so);
+    const double code = s.status.to(pluss::ScalarType::Float64).contiguous().to_vec<double>()[0];
+    if (code == static_cast<double>(Status::IterationLimit))
+      continue; // the simplex could not decide either: keep the interior-point answer and its status
+    auto put = [&](std::vector<double> &dst, const Series &src, std::int64_t width) {
+      if (!src.defined() || dst.empty())
+        return;
+      const auto v = src.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+      for (std::int64_t k = 0; k < width && static_cast<std::size_t>(k) < v.size(); ++k)
+        dst[static_cast<std::size_t>(lane * width + k)] = v[static_cast<std::size_t>(k)];
+    };
+    put(x, s.x, n);
+    put(obj, s.objective, 1);
+    put(dobj, s.dual_objective, 1);
+    stat[static_cast<std::size_t>(lane)] = code;
+    put(deq, s.dual_eq, std::max<std::int64_t>(me, 1));
+    put(dub, s.dual_ub, std::max<std::int64_t>(mu, 1));
+    put(ray, s.ray, n);
+    if (far_w > 0)
+      put(far, s.farkas, far_w);
+  }
+  auto rebuild = [&](const Series &like, const std::vector<double> &v, std::int64_t width) {
+    if (!like.defined() || v.empty())
+      return like;
+    std::vector<std::int64_t> shape;
+    for (std::int64_t d = 0; d < like.dim(); ++d)
+      shape.push_back(like.size(d));
+    return pluss::make_series(v, {B, width}).to(like.scalar_type()).to(like.platform()).reshape(shape);
+  };
+  r.x = rebuild(r.x, x, n);
+  r.objective = rebuild(r.objective, obj, 1);
+  r.dual_objective = rebuild(r.dual_objective, dobj, 1);
+  r.status = rebuild(r.status, stat, 1);
+  if (me > 0)
+    r.dual_eq = rebuild(r.dual_eq, deq, me);
+  if (mu > 0)
+    r.dual_ub = rebuild(r.dual_ub, dub, mu);
+  r.ray = rebuild(r.ray, ray, n);
+  if (far_w > 0)
+    r.farkas = rebuild(r.farkas, far, far_w);
+  return r;
+}
+
 inline Result solve_unchunked(const Problem &p_in, const Options &opt) {
   Problem p = p_in;
   // A bound-only problem has no rows; add one inert inequality (0 x <= 1) so the normal equations are non-empty.
@@ -952,6 +1048,8 @@ inline Result solve_unchunked(const Problem &p_in, const Options &opt) {
   if (opt.method == Method::Simplex)
     return solve_simplex(p, opt); // phase I decides feasibility, so unboundedness needs no confirmation solve
   Result r = solve_impl(p, opt);
+  if (opt.polish)
+    r = polish_with_simplex(p, std::move(r), opt);
   if (!opt.confirm_unbounded)
     return r;
   const Series flagged = r.status.eq(static_cast<double>(Status::Unbounded));

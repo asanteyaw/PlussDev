@@ -191,9 +191,9 @@ singular matrices whose lost directions cannot be recovered.
 - [`Series::LinearAlgAccessor::slogdet`](slogdet.md): stable determinant sign and magnitude.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dot.html">
+  <a class="prev-link" href="gen_eigh.html">
     <span class="label">Previous</span>
-    <span class="title">dot</span>
+    <span class="title">gen_eigh</span>
   </a>
   <a class="next-link" href="logdet.html">
     <span class="label">Next</span>

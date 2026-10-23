@@ -23,7 +23,7 @@ Use `Atlas::ts()` when you want the same transform delegated to every frame in a
 Preferred selection-first style:
 
 ```cpp
-auto values = df.label().set("date", false).features({"close", "volume"});
+auto values = df.labels().set("date", false).features({"close", "volume"});
 auto daily = values.ts().resample("D").mean();
 auto roll = values.ts().rolling(20, pluss::table::WindowStatistic::Mean);
 auto seven_day = values.ts().rolling("7D", pluss::table::WindowStatistic::Mean);
@@ -109,7 +109,7 @@ DataFrame df = DataFrame::load_csv("prices.csv")
                          "date", pluss::table::SlateCastTarget::Timeline, {}},
                  });
 
-auto values = df.label().set("date", false).features({"Adj Close", "Volume"});
+auto values = df.labels().set("date", false).features({"Adj Close", "Volume"});
 auto lr = values.ts().log_returns();
 auto lag = values.ts().lag_block({1, 2, 5});
 auto roll = values.ts().rolling(20, pluss::table::WindowStatistic::Mean, {.min_count = 5});
@@ -163,7 +163,7 @@ DataFrame df = DataFrame::load_csv("prices.csv").cast({
 auto s = df.features("Adj Close");
 auto lr = s.ts().log_returns();
 auto z = s.ts().rolling(30, pluss::table::WindowStatistic::Mean, {.min_count = 10});
-auto r7 = s.ts().rolling(df.label().values(), "7D", pluss::table::WindowStatistic::Mean);
+auto r7 = s.ts().rolling(df.labels().values(), "7D", pluss::table::WindowStatistic::Mean);
 auto rs = s.ts().resample(df.features("date"), "W", pluss::subsp::stats::ts::ResampleOp::Last, 1);
 ```
 

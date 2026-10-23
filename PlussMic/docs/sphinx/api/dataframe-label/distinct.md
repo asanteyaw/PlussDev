@@ -40,9 +40,9 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-auto out = labeled.label().distinct();
+auto out = labeled.labels().distinct();
 std::cout << out;
 ```
 
@@ -70,10 +70,10 @@ auto readings = DataFrame(
                                20.0, std::numeric_limits<double>::quiet_NaN(), 10.0})));
 std::cout << readings;
 
-auto without_null = readings.label().distinct();
+auto without_null = readings.labels().distinct();
 std::cout << without_null;
 
-auto with_null = readings.label().distinct(false);
+auto with_null = readings.labels().distinct(false);
 std::cout << with_null;
 ```
 

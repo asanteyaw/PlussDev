@@ -64,6 +64,13 @@ if(BUILD_TESTING)
     target_link_libraries(plusstils_core_seed_tests PRIVATE PlussTilsCore)
     target_compile_features(plusstils_core_seed_tests PRIVATE cxx_std_20)
     add_test(NAME plusstils_core_seed COMMAND plusstils_core_seed_tests)
+
+    add_executable(plusstils_scalar_cast_compat_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/scalar_cast_compat_tests.cpp
+    )
+    target_link_libraries(plusstils_scalar_cast_compat_tests PRIVATE PlussTils)
+    target_compile_features(plusstils_scalar_cast_compat_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_scalar_cast_compat COMMAND plusstils_scalar_cast_compat_tests)
 endif()
 
 install(TARGETS PlussTilsCore PlussTils

@@ -1,0 +1,23 @@
+<!-- generated from ArchLmOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::ArchLmOptions`
+
+Options of `ts::arch_lm`.
+
+`ArchLmOptions` selects the number of lagged squares in the test regression and the significance level.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `lags` | `std::int64_t` | 1 | How many lagged squared values enter the regression; also the degrees of freedom. |
+| `demean` | `bool` | true | Subtract the sample mean first; use false for the residuals of a mean model. |
+| `alpha` | `double` | 0.05 | Significance level of the critical value and of `reject`. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`arch_lm`](arch_lm.md)

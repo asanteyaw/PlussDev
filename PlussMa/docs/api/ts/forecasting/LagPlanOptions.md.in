@@ -1,0 +1,24 @@
+# `pluss::subsp::stats::ts::LagPlanOptions`
+
+Options describing which lagged features a direct forecaster uses.
+
+`LagPlanOptions` names the horizons and the lags of the response and of the exogenous predictors.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `horizon` | `std::vector<std::int64_t>` | {1} | The forecast horizons `h`; one regression is fitted for each. |
+| `response_lags` | `std::vector<std::int64_t>` | {1} | Lags of the response used as features. |
+| `leading_predictors` | `std::vector<std::int64_t>` | {} | 0-based column indices of predictors whose future values are known. |
+| `predictor_lags` | `std::vector<std::vector<std::int64_t>>` | lag 1 | Lags of each non-leading predictor (one list per predictor, or a single list applied to all). |
+| `leading_predictor_lags` | `std::vector<std::vector<std::int64_t>>` | lag 0 | Lags of the leading predictors: lag 0 is the value at the forecast time `t + h`, lag `ℓ` the value at `t + h − ℓ`. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`build_lag_plan`](build_lag_plan.md)
+- [`DirectForecaster`](DirectForecaster.md)

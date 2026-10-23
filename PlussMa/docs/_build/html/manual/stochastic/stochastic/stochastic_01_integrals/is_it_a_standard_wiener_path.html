@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Is it a standard Wiener path? &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Stochastic 2: Differentials and Ito’s Lemma" href="../stochastic_02_ito_lemma.html" />
+    <link rel="prev" title="Integrands that look into the future" href="integrands_that_look_into_the_future.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from is_it_a_standard_wiener_path.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="is-it-a-standard-wiener-path">
+<h1>Is it a standard Wiener path?<a class="headerlink" href="#is-it-a-standard-wiener-path" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../stochastic_01_integrals.html"><span class="std std-doc">Back to Stochastic Integrals</span></a></p>
+<p>Ito and Stratonovich values are the standard ones only when the integrator has quadratic variation equal to elapsed time. Every result from the wrapper carries <code class="docutils literal notranslate"><span class="pre">quadratic_variation_ratio</span></code> and a list of warnings. The program feeds it a standard path, the same path scaled by 3, and a straight line.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">sde</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">sde</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">).</span><span class="n">to</span><span class="p">(</span><span class="n">f64</span><span class="p">).</span><span class="n">reshape</span><span class="p">({</span><span class="mi">1</span><span class="p">});</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">identity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">w</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">w</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">standard</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sde</span><span class="o">::</span><span class="n">simulate_wiener_path</span><span class="p">(</span><span class="n">like</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="cm">/*seed=*/</span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">sde</span><span class="o">::</span><span class="n">WienerPath</span><span class="w"> </span><span class="n">tripled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">standard</span><span class="p">;</span>
+<span class="w">  </span><span class="n">tripled</span><span class="p">.</span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">standard</span><span class="p">.</span><span class="n">w</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">3.0</span><span class="p">);</span><span class="w">                                  </span><span class="c1">// volatility 3</span>
+<span class="w">  </span><span class="n">sde</span><span class="o">::</span><span class="n">WienerPath</span><span class="w"> </span><span class="n">smooth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">standard</span><span class="p">;</span>
+<span class="w">  </span><span class="n">smooth</span><span class="p">.</span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">::</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mi">2001</span><span class="p">,</span><span class="w"> </span><span class="n">f64</span><span class="p">).</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w">  </span><span class="c1">// a straight line</span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">sde</span><span class="o">::</span><span class="n">WienerPath</span><span class="o">&gt;</span><span class="p">{</span><span class="s">&quot;standard path&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">standard</span><span class="p">},</span>
+<span class="w">                           </span><span class="p">{</span><span class="s">&quot;path times 3&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">tripled</span><span class="p">},</span>
+<span class="w">                           </span><span class="p">{</span><span class="s">&quot;straight line&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">smooth</span><span class="p">}})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sde</span><span class="o">::</span><span class="n">ito_integral</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="p">.</span><span class="n">second</span><span class="p">);</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">item</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;: quadratic_variation_ratio = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">quadratic_variation_ratio</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, warnings = &quot;</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">warnings</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">warnings</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;    &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>standard path: quadratic_variation_ratio = 0.978837, warnings = 0
+path times 3: quadratic_variation_ratio = 8.80953, warnings = 1
+    the path&#39;s realized quadratic variation is 8.809532 times the elapsed time; a standard Wiener path gives about 1, so this is not a standard Brownian path (another volatility, a smooth path, or jumps) and Ito and Stratonovich values are not the standard ones
+straight line: quadratic_variation_ratio = 0.0005, warnings = 1
+    the path&#39;s realized quadratic variation is 0.000500 times the elapsed time; a standard Wiener path gives about 1, so this is not a standard Brownian path (another volatility, a smooth path, or jumps) and Ito and Stratonovich values are not the standard ones
+</pre></div>
+</div>
+<p>The standard path gives a ratio of 0.978837 and no warning. The tripled path gives 8.80953, close to <code class="docutils literal notranslate"><span class="pre">3²</span> <span class="pre">=</span> <span class="pre">9</span></code>, and the straight line 0.0005; both draw a warning. Nothing is thrown, because a scaled or smooth path is a legitimate integrator; the warning is there so a wrong path is not mistaken for a standard one.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/stochastic/stochastic/stochastic_01_integrals/is_it_a_standard_wiener_path.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -86,7 +86,7 @@ the column header text differs.
 
 - [`DataFrame::rename`](rename.md): the non-mutating counterpart, with additional
   overloads for multi-pair and full-axis renames.
-- [`DataFrame::label`](label.md): the case-label accessor, for renaming or otherwise
+- [`DataFrame::labels`](labels.md): the case-label accessor, for renaming or otherwise
   editing row labels instead of feature names.
 
 <div class="pluss-inline-prev-next">

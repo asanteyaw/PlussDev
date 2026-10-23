@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,7 +54,7 @@
 values become new output columns — the (partial) inverse of
 <a class="reference internal" href="stack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stack()</span></code></span></a>/<a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pivot_table()</span></code></span></a>. <code class="docutils literal notranslate"><span class="pre">unstack()</span></code> requires the
 frame to already have named case-label levels (built via
-<a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set({...},</span> <span class="pre">true)</span></code></span></a>); the level named by <code class="docutils literal notranslate"><span class="pre">options.label</span></code> (or the
+<a class="reference internal" href="labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set({...},</span> <span class="pre">true)</span></code></span></a>); the level named by <code class="docutils literal notranslate"><span class="pre">options.label</span></code> (or the
 convenience overload’s <code class="docutils literal notranslate"><span class="pre">label</span></code> argument) is the one that gets spread into columns,
 while every <em>other</em> level stays as the row grouping key.</p>
 <p>Whether the new column names get prefixed by the source feature name depends on how
@@ -174,7 +174,7 @@ Kojo | 89           84         92                98
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">unstack()</span></code> requires the frame to already have named case-label level(s) — build
-them first with <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set({...},</span> <span class="pre">true)</span></code></span></a>; it throws
+them first with <a class="reference internal" href="labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set({...},</span> <span class="pre">true)</span></code></span></a>; it throws
 <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::unstack:</span> <span class="pre">current</span> <span class="pre">DataFrame</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">case</span> <span class="pre">labels&quot;</span></code> otherwise.</p></li>
 <li><p>If a <code class="docutils literal notranslate"><span class="pre">(remaining-level</span> <span class="pre">combination,</span> <span class="pre">pivoted</span> <span class="pre">value)</span></code> pair occurs more than once in
 the source, <code class="docutils literal notranslate"><span class="pre">unstack()</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;duplicate</span> <span class="pre">cells</span> <span class="pre">found;</span> <span class="pre">aggregate</span> <span class="pre">before</span> <span class="pre">unstacking&quot;</span></code> rather than silently picking one — aggregate with
@@ -189,7 +189,7 @@ a <code class="docutils literal notranslate"><span class="pre">NULL</span></code
 <li><p><a class="reference internal" href="stack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::stack</span></code></span></a>: the general melt this method partially reverses.</p></li>
 <li><p><a class="reference internal" href="pivot_table.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::pivot_table</span></code></span></a>: the aggregating wide-reshape for
 ordinary (non-case-label) features, a related but distinct reshape.</p></li>
-<li><p><a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label</span></code></span></a>: building and inspecting the case-label levels
+<li><p><a class="reference internal" href="labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::labels</span></code></span></a>: building and inspecting the case-label levels
 <code class="docutils literal notranslate"><span class="pre">unstack()</span></code> operates on.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

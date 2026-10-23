@@ -1,0 +1,8 @@
+# A known standard deviation, and tests of variances
+
+[Back to Means and Variances](../inference_01_means_and_variances.md)
+
+
+@@example Stats/inference/guide/1102_known_variance_and_variance_tests.cpp@@
+
+When the standard deviation is known (from long experience with the machine), the z test replaces the t test and its critical value is the normal 1.96. The variance of machine A (0.2355) is consistent with 0.25: the p-value of 0.94 is nowhere near rejection, and the 95% interval for the variance, [0.103, 0.976], is wide, which is what 8 observations buy. The F test compares the two machines' variances: the ratio is 2.37, p = 0.25, and the interval for the ratio, [0.52, 11.6], is wider still. A p-value of 0.25 does not prove the variances are equal; it says these data cannot tell. The variance tests assume normal data and are sensitive to departures from it.

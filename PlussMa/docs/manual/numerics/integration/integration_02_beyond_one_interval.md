@@ -1,0 +1,36 @@
+<!-- generated from integration_02_beyond_one_interval.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Integration 2: Beyond One Interval
+
+Integrals rarely stop at one finite interval. This chapter covers infinite limits, many integrals in one call and their derivatives, integrals over a box, Monte Carlo, the dispatcher that picks a method, and the exact formulas kept for common integrands. After it you can integrate over any of these and check a result against a closed form.
+
+Every program is complete and its output is the output of that program.
+
+## Programs
+
+- [Infinite limits](integration_02_beyond_one_interval/infinite_limits.md)
+- [Batches and derivatives](integration_02_beyond_one_interval/batches_and_derivatives.md)
+- [Integrals over a box](integration_02_beyond_one_interval/integrals_over_a_box.md)
+- [Monte Carlo](integration_02_beyond_one_interval/monte_carlo.md)
+- [The dispatcher and the closed forms](integration_02_beyond_one_interval/the_dispatcher_and_the_closed_forms.md)
+
+## Checklist
+
+1. Infinite limits: pass `±infinity`; accuracy is bounded by `infinite_domain_epsilon`.
+2. Many integrals sharing nodes: return `[B, n]` and integrate in one call.
+3. Fitting a model with an integral inside: mark the parameter and `reverse()`; no extra code.
+4. Two or three dimensions: tensor quadrature. More: Monte Carlo.
+5. Unsure: `integra`. Known form: `analytica`, also as a cross-check.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integration_02_beyond_one_interval/infinite_limits
+integration_02_beyond_one_interval/batches_and_derivatives
+integration_02_beyond_one_interval/integrals_over_a_box
+integration_02_beyond_one_interval/monte_carlo
+integration_02_beyond_one_interval/the_dispatcher_and_the_closed_forms
+```
+<!-- apiref:toctree:end -->

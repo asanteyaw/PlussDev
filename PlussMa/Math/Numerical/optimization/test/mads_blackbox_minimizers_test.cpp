@@ -91,6 +91,19 @@ int main() {
          "bounded MADS returned value outside bounds", &failures);
   expect(as_f64(xb.mean()) > 0.85, "bounded MADS did not approach constrained optimum on upper face", &failures);
 
+  {
+    // check_every = 0 switches the improvement-window test off; the run must still converge on the frame size alone.
+    MadsBlackboxConfig frame_only;
+    frame_only.check_every = 0;
+    frame_only.max_iterations = 4000;
+    frame_only.max_evaluations = 40000;
+    const Series start = pluss::make_series(std::vector<double>{3.0, -2.0}, {2}, cfg);
+    const auto out = orthomads_minimizer(
+        [](const Series& x) { return x.sub(1.0).square().sum().add(1.0); }, start, frame_only);
+    expect(out.status == BlackboxSolverStatus::Converged && std::abs(out.minimum - 1.0) < 1e-6,
+           "MADS with the window test off converges on the frame size", &failures);
+  }
+
   if (failures != 0) {
     std::cerr << "mads_blackbox_minimizers_test: " << failures << " failure(s)\n";
     return 1;

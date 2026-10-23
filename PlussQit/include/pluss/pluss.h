@@ -56,6 +56,8 @@
 //   - pluss::loader::DataLoader + pluss::loader::* helpers
 //   - pluss::tils::to_scalar<T>(series) + pluss::tils::as_f64/as_f32/as_i64/... helpers
 //   - pluss::view::* utilities
+// Scalar casts retain their historical pluss::as_f64/as_i64/... and
+// unqualified compatibility spellings through this full-SDK umbrella.
 
 #if __has_include("pluss/mic.h")
 #include "pluss/mic.h"

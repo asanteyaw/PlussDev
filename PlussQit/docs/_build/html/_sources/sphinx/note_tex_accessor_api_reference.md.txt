@@ -52,7 +52,7 @@ the fix carries no behavioral change beyond removing the extra character.
 
 ## Coverage
 
-Every method on the accessor now has a full, compiled-and-verified teaching
+Every method on the accessor now has a full, compiled-and-verified
 page — all ninety-seven:
 
 ```{toctree}

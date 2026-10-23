@@ -887,7 +887,7 @@ DataFrame DataFrameNoteAccessor::findall(std::string_view pattern) const {
   PLUSS_CHECK(features_.size() == 1, "DataFrame::nt().findall requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == SlateKind::Note, "DataFrame::nt().findall: feature must be Note");
-  return expanded_text_result_(source.nt().findall(pattern), frame_.label().values(), frame_.title());
+  return expanded_text_result_(source.nt().findall(pattern), frame_.labels().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::findall(
@@ -896,7 +896,7 @@ DataFrame DataFrameNoteAccessor::findall(
   PLUSS_CHECK(features_.size() == 1, "DataFrame::nt().findall requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == SlateKind::Note, "DataFrame::nt().findall: feature must be Note");
-  return expanded_text_result_(source.nt().findall(pattern, options), frame_.label().values(), frame_.title());
+  return expanded_text_result_(source.nt().findall(pattern, options), frame_.labels().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::extract(
@@ -905,7 +905,7 @@ DataFrame DataFrameNoteAccessor::extract(
   PLUSS_CHECK(features_.size() == 1, "DataFrame::nt().extract requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == SlateKind::Note, "DataFrame::nt().extract: feature must be Note");
-  return expanded_text_result_(source.nt().extract(pattern, names), frame_.label().values(), frame_.title());
+  return expanded_text_result_(source.nt().extract(pattern, names), frame_.labels().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::split(
@@ -915,7 +915,7 @@ DataFrame DataFrameNoteAccessor::split(
   PLUSS_CHECK(features_.size() == 1, "DataFrame::nt().split requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == SlateKind::Note, "DataFrame::nt().split: feature must be Note");
-  return expanded_text_result_(source.nt().split(delimiter, limit, std::move(prefix)), frame_.label().values(), frame_.title());
+  return expanded_text_result_(source.nt().split(delimiter, limit, std::move(prefix)), frame_.labels().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::split(
@@ -924,7 +924,7 @@ DataFrame DataFrameNoteAccessor::split(
   PLUSS_CHECK(features_.size() == 1, "DataFrame::nt().split requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == SlateKind::Note, "DataFrame::nt().split: feature must be Note");
-  return expanded_text_result_(source.nt().split(pattern, options), frame_.label().values(), frame_.title());
+  return expanded_text_result_(source.nt().split(pattern, options), frame_.labels().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::partition(std::string_view separator,
@@ -932,7 +932,7 @@ DataFrame DataFrameNoteAccessor::partition(std::string_view separator,
   PLUSS_CHECK(features_.size() == 1, "DataFrame::nt().partition requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == SlateKind::Note, "DataFrame::nt().partition: feature must be Note");
-  return expanded_text_result_(source.nt().partition(separator, std::move(prefix)), frame_.label().values(), frame_.title());
+  return expanded_text_result_(source.nt().partition(separator, std::move(prefix)), frame_.labels().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::pad(std::int64_t width, TextAlign align, char fill) const {
@@ -967,7 +967,7 @@ DataFrame DataFrameNoteAccessor::indicate(std::string_view delimiter,
   PLUSS_CHECK(features_.size() == 1, "DataFrame::nt().indicate requires one feature");
   const auto source = frame_.features(features_.front());
   PLUSS_CHECK(source.kind() == SlateKind::Note, "DataFrame::nt().indicate: feature must be Note");
-  return expanded_text_result_(source.nt().indicate(delimiter, std::move(prefix)), frame_.label().values(), frame_.title());
+  return expanded_text_result_(source.nt().indicate(delimiter, std::move(prefix)), frame_.labels().values(), frame_.title());
 }
 
 DataFrame DataFrameNoteAccessor::replace(std::string_view from,
@@ -1020,7 +1020,7 @@ DataFrame DataFrameTimelineAccessor::map_(
       columns.emplace_back(name, source);
     }
   }
-  return DataFrame(std::move(columns), frame_.label().values()).title(frame_.title());
+  return DataFrame(std::move(columns), frame_.labels().values()).title(frame_.title());
 }
 
 DataFrame DataFrameTimelineAccessor::isnat() const {
@@ -1149,7 +1149,7 @@ DataFrame DataFrameTimelineAccessor::span(
                 "DataFrame::tl().span: other DataFrame is missing feature '" + name + "'");
     columns.emplace_back(name, source.tl().span(other.features(name), options));
   }
-  return DataFrame(std::move(columns), frame_.label().values()).title(frame_.title());
+  return DataFrame(std::move(columns), frame_.labels().values()).title(frame_.title());
 }
 
 DataFrame DataFrameTimelineAccessor::span(const DataFrame& other, TimeUnit unit) const {

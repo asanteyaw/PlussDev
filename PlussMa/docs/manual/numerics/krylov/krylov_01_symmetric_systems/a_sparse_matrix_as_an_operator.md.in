@@ -1,0 +1,10 @@
+# A sparse matrix as an operator
+
+[Back to Symmetric Systems](../krylov_01_symmetric_systems.md)
+
+
+`linear_operator::coo(rows, columns, row_index, column_index, values)` describes a sparse matrix by its nonzeros. `apply` multiplies a vector or batch (shape `[..., columns]`), `apply_columns` a matrix of column vectors, and `adjoint()` returns the conjugate transpose. The nonzero values are a Series, so products are differentiable with respect to them and can sit on any backend.
+
+@@example Numerical/linear_algebra/guide/905_sparse_operator.cpp@@
+
+The map plugs straight into the solvers: `[&](const Series& x) { return A.apply(x); }` is an operator. Index arrays must be `Int64`, all inside the map's dimensions, with at least one nonzero.

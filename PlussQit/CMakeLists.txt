@@ -595,6 +595,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_autodiff_reference_demo examples/CodeM/series_autodiff_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_autodiff_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_calc_accessor_reference_demo examples/CodeM/series_calc_accessor_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_calc_accessor_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_series_linearalg_product_reference_demo examples/CodeM/series_linearalg_product_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_linearalg_product_reference_demo PRIVATE PlussQit::CodeM)
 
@@ -606,6 +609,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
 
   add_executable(plussqit_codem_series_linearalg_decomposition_solve_reference_demo examples/CodeM/series_linearalg_decomposition_solve_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_linearalg_decomposition_solve_reference_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_linearalg_gen_eigh_reference_demo examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_linearalg_gen_eigh_reference_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_series_matrix_reference_demo examples/CodeM/series_matrix_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_matrix_reference_demo PRIVATE PlussQit::CodeM)
@@ -1350,6 +1356,9 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch91_optima_pathology_suite.cpp
       tests/CodeM/test_patch92_optima_working_set.cpp
       tests/CodeM/test_patch93_optima_interior_exactness.cpp
+      tests/CodeM/test_patch94_optim_fwd_scalar.cpp
+      tests/CodeM/test_patch95_stochastic_calc.cpp
+      tests/CodeM/test_patch96_optima_curvature_models.cpp
       tests/CodeM/test_patch171_unique_dim_contract.cpp
       tests/CodeM/test_patch172_series_set_ops.cpp
       tests/CodeM/test_patch173_series_set_number_ops.cpp

@@ -191,12 +191,12 @@ heavy-tailed Cauchy samples:
   internally.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cbrt.html">
+  <a class="prev-link" href="cartprod.html">
     <span class="label">Previous</span>
-    <span class="title">cbrt</span>
+    <span class="title">cartprod</span>
   </a>
-  <a class="next-link" href="ceil.html">
+  <a class="next-link" href="cbrt.html">
     <span class="label">Next</span>
-    <span class="title">ceil</span>
+    <span class="title">cbrt</span>
   </a>
 </div>

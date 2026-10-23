@@ -1,15 +1,3 @@
-#include "pluss/subsp/linearalg/linearalg.h"
-
-#include "CodeM/core/SeriesTape.h"
-#include "CodeM/core/Errors.h"
-#include "CodeM/core/OpsInternal.h"
-#include "CodeM/native/cpu/BlasGemm.h"
-#include "CodeM/native/mps/Linalg.h"
-#include "CodeM/native/cuda/CUDARuntime.h"
-#include "CodeM/native/cuda/LinalgOps.h"
-#include "pluss/codem/series_factory.h"
-#include "pluss/subsp/math/linalg.h"
-
 #include <atomic>
 #include <cmath>
 #include <cstddef>
@@ -21,6 +9,17 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "CodeM/core/Errors.h"
+#include "CodeM/core/OpsInternal.h"
+#include "CodeM/core/SeriesTape.h"
+#include "CodeM/native/cpu/BlasGemm.h"
+#include "CodeM/native/cuda/CUDARuntime.h"
+#include "CodeM/native/cuda/LinalgOps.h"
+#include "CodeM/native/mps/Linalg.h"
+#include "pluss/codem/series_factory.h"
+#include "pluss/subsp/linearalg/linearalg.h"
+#include "pluss/subsp/math/linalg.h"
 
 namespace pluss::subsp::linearalg {
 namespace {
@@ -1190,7 +1189,72 @@ void bind_svd_backward_lazy_(
   pluss::codem::series_tape::bind_source_link(out, std::move(link));
 }
 
-LinearAlgDenseProvider dense_provider_from_cpu_blas_(pluss::codem::native::cpu::blas::Provider provider) noexcept {
+void bind_eigh_values_backward_(const Series &values, const Series &vectors,
+                                const Series &a) {
+  if (!linalg_tracks_slope_(a))
+    return;
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::eigvalsh";
+  link->parents = {a};
+  link->propagate = [a, vectors](const Series &out_sens) {
+    const Series grad_values =
+        linalg_sensitivity_like_(out_sens, vectors).unsqueeze(-2);
+    Series grad = vectors.mul(grad_values).matmul(matrix_adjoint_(vectors));
+    grad = grad.add(matrix_adjoint_(grad)).mul(0.5);
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(values, std::move(link));
+}
+
+void bind_eigh_vectors_backward_(const Series &vectors, const Series &values,
+                                 const Series &a) {
+  if (!linalg_tracks_slope_(a))
+    return;
+  auto link = std::make_shared<pluss::codem::series_tape::SourceLink>();
+  link->op_name = "subsp::linearalg::eigh_vectors";
+  link->parents = {a};
+  link->propagate = [a, values, vectors](const Series &out_sens) {
+    const Series grad_vectors = linalg_sensitivity_like_(out_sens, vectors);
+    const Series projected = matrix_adjoint_(vectors).matmul(grad_vectors);
+    const Series eye = eye_matrix_like_(projected);
+
+    if (is_complex_scalar_(vectors.scalar_type())) {
+      const Series phase = pluss::codem::ops_internal::imag(projected.mul(eye));
+      PLUSS_CHECK(
+          phase.abs().le(1e-2).all().item<bool>(),
+          "subsp::linearalg::eigh: an eigenvector-dependent complex loss "
+          "must be invariant to each eigenvector's arbitrary phase");
+    }
+
+    const Series off_diagonal = eye.mul(-1.0).add(1.0);
+    const Series off_mask = eye.eq(0.0);
+    const Series gaps = values.unsqueeze(-2).sub(values.unsqueeze(-1));
+    const Series active =
+        projected.sub(matrix_adjoint_(projected)).mul(0.5).mul(off_diagonal);
+    const double scale = values.abs().max().item<double>();
+    const double tolerance =
+        std::max(1.0, scale) *
+        (values.scalar_type() == ScalarType::Float32 ? 1e-6 : 1e-12);
+    const Series singular = gaps.abs().le(tolerance).logical_and(off_mask);
+    const Series demanded = active.abs().gt(tolerance);
+    PLUSS_CHECK(
+        !singular.logical_and(demanded).any().item<bool>(),
+        "subsp::linearalg::eigh: eigenvector gradients require distinct "
+        "eigenvalues; the loss depends on a degenerate eigenspace basis");
+
+    const Series safe_gaps = gaps.add(eye).add(singular.to(gaps.scalar_type()));
+    const Series middle = active.div(safe_gaps).mul(off_diagonal);
+    Series grad = vectors.matmul(middle).matmul(matrix_adjoint_(vectors));
+    grad = grad.add(matrix_adjoint_(grad)).mul(0.5);
+    grad = linalg_sensitivity_like_(grad, a);
+    pluss::codem::series_tape::accumulate_sensitivity(a, grad);
+  };
+  pluss::codem::series_tape::bind_source_link(vectors, std::move(link));
+}
+
+LinearAlgDenseProvider dense_provider_from_cpu_blas_(
+    pluss::codem::native::cpu::blas::Provider provider) noexcept {
   using BlasProvider = pluss::codem::native::cpu::blas::Provider;
   switch (provider) {
     case BlasProvider::Accelerate: return LinearAlgDenseProvider::Accelerate;
@@ -1600,10 +1664,16 @@ inline Series inverse_mps_native_(const Series& a) {
   return inv.to(Platform::MPS);
 }
 
-inline bool mps_native_lu_solve_supported_(const Series& lu, const Series& b) {
-  if (!mps_experimental_native_enabled_()) return false;
-  if (lu.platform() != Platform::MPS || b.platform() != Platform::MPS) return false;
-  if (lu.dim() != 2) return false;
+inline bool mps_native_lu_solve_supported_(const Series &lu, const Series &b) {
+  if (!mps_experimental_native_enabled_())
+    return false;
+  if (lu.platform() != Platform::MPS || b.platform() != Platform::MPS)
+    return false;
+  if (is_complex_scalar_(lu.scalar_type()) ||
+      is_complex_scalar_(b.scalar_type()))
+    return false;
+  if (lu.dim() != 2)
+    return false;
   const auto n = lu.sizes()[0];
   if (n != lu.sizes()[1]) return false;
   if (b.dim() == 1) {
@@ -2327,85 +2397,111 @@ LinearAlgBackendInfo linearalg_backend_info(LinearAlgTarget target) noexcept {
   info.target = target;
 
   switch (target) {
-    case LinearAlgTarget::CPU: {
-      info.dense_provider =
-          dense_provider_from_cpu_blas_(pluss::codem::native::cpu::blas::provider());
-      info.solver_provider =
-          cpu_solver_has_lapack_() ? LinearAlgSolverProvider::Accelerate : LinearAlgSolverProvider::Reference;
-      info.dense_available = (info.dense_provider != LinearAlgDenseProvider::None);
-      info.solver_available = true;
-      info.supports_matmul = true;
-      info.supports_det = true;
-      info.supports_inverse = true;
-      info.supports_cholesky = true;
-      info.supports_qr = cpu_solver_has_lapack_();
-      info.supports_svd = cpu_solver_has_lapack_();
-      info.supports_triangular_solve = true;
-      info.supports_cholesky_solve = true;
-      info.supports_lu_solve = true;
-      info.supports_matrix_power = true;
-      info.supports_matrix_exp = true;
-      return info;
+  case LinearAlgTarget::CPU: {
+    info.dense_provider = dense_provider_from_cpu_blas_(
+        pluss::codem::native::cpu::blas::provider());
+    info.solver_provider = cpu_solver_has_lapack_()
+                               ? LinearAlgSolverProvider::Accelerate
+                               : LinearAlgSolverProvider::Reference;
+    info.dense_available =
+        (info.dense_provider != LinearAlgDenseProvider::None);
+    info.solver_available = true;
+    info.supports_matmul = true;
+    info.supports_det = true;
+    info.supports_inverse = true;
+    info.supports_cholesky = true;
+    info.supports_qr = cpu_solver_has_lapack_();
+    info.supports_svd = cpu_solver_has_lapack_();
+    info.supports_eigh = cpu_solver_has_lapack_();
+    info.supports_triangular_solve = true;
+    info.supports_cholesky_solve = true;
+    info.supports_lu_solve = true;
+    info.supports_matrix_power = true;
+    info.supports_matrix_exp = true;
+    return info;
+  }
+  case LinearAlgTarget::MPS: {
+    const bool mps_ready =
+        pluss::codem::platform_available(pluss::codem::Platform::MPS);
+    const bool bridge_ready = mps_ready && linearalg_mps_cpu_bridge_enabled();
+    const bool native_enabled =
+        mps_ready && linearalg_mps_experimental_native_enabled();
+    const bool prefer_bridge = mps_solver_route_prefers_bridge_();
+    const bool native_ready =
+        native_enabled && (!prefer_bridge || !bridge_ready);
+    const bool solver_ready = native_ready || bridge_ready;
+    info.dense_provider = mps_ready ? LinearAlgDenseProvider::Metal
+                                    : LinearAlgDenseProvider::None;
+    if (native_ready) {
+      info.solver_provider = LinearAlgSolverProvider::Metal;
+    } else if (bridge_ready) {
+      info.solver_provider = LinearAlgSolverProvider::Reference;
+    } else {
+      info.solver_provider = LinearAlgSolverProvider::None;
     }
-    case LinearAlgTarget::MPS: {
-      const bool mps_ready = pluss::codem::platform_available(pluss::codem::Platform::MPS);
-      const bool bridge_ready = mps_ready && linearalg_mps_cpu_bridge_enabled();
-      const bool native_enabled = mps_ready && linearalg_mps_experimental_native_enabled();
-      const bool prefer_bridge = mps_solver_route_prefers_bridge_();
-      const bool native_ready = native_enabled && (!prefer_bridge || !bridge_ready);
-      const bool solver_ready = native_ready || bridge_ready;
-      info.dense_provider = mps_ready ? LinearAlgDenseProvider::Metal : LinearAlgDenseProvider::None;
-      if (native_ready) {
-        info.solver_provider = LinearAlgSolverProvider::Metal;
-      } else if (bridge_ready) {
-        info.solver_provider = LinearAlgSolverProvider::Reference;
-      } else {
-        info.solver_provider = LinearAlgSolverProvider::None;
-      }
-      info.dense_available = mps_ready;
-      info.solver_available = solver_ready;
-      info.supports_matmul = mps_ready;
-      info.supports_det = solver_ready;
-      info.supports_inverse = solver_ready;
-      info.supports_cholesky = solver_ready;
-      info.supports_qr = solver_ready;
-      info.supports_svd = solver_ready;
-      info.supports_triangular_solve = solver_ready;
-      info.supports_cholesky_solve = solver_ready;
-      info.supports_lu_solve = solver_ready;
-      info.supports_matrix_power = mps_ready;
-      info.supports_matrix_exp = mps_ready;
-      return info;
-    }
-    case LinearAlgTarget::CUDA:
-    default: {
-      const bool cublas_ready = pluss::codem::cuda_cublas_provider_available();
-      const bool cusolver_ready = pluss::codem::cuda_cusolver_provider_available();
-      info.dense_provider = cublas_ready ? LinearAlgDenseProvider::CuBLAS : LinearAlgDenseProvider::None;
-      info.solver_provider = cusolver_ready ? LinearAlgSolverProvider::CuSolver : LinearAlgSolverProvider::None;
-      info.dense_available = cublas_ready;
-      info.solver_available = cusolver_ready;
-      info.supports_matmul =
-          pluss::codem::cuda_supports_matmul_baseline(ScalarType::Float32, ScalarType::Float32);
-      info.supports_det = pluss::codem::cuda_supports_det_linalg_baseline(ScalarType::Float32);
-      info.supports_inverse = pluss::codem::cuda_supports_inverse_linalg_baseline(ScalarType::Float32);
-      info.supports_cholesky = pluss::codem::cuda_supports_cholesky_linalg_baseline(ScalarType::Float32);
-      info.supports_qr = pluss::codem::cuda_supports_qr_linalg_baseline(ScalarType::Float32, /*reduced=*/true);
-      info.supports_svd = pluss::codem::cuda_supports_svd_linalg_baseline(ScalarType::Float32, /*full_matrices=*/false);
-      info.supports_triangular_solve = pluss::codem::cuda_supports_triangular_solve_linalg_baseline(
-          ScalarType::Float32, ScalarType::Float32);
-      info.supports_cholesky_solve = pluss::codem::cuda_supports_cholesky_solve_linalg_baseline(
-          ScalarType::Float32, ScalarType::Float32);
-      info.supports_lu_solve = pluss::codem::cuda_supports_lu_solve_linalg_baseline(
-          ScalarType::Float32, ScalarType::Float32);
-      info.supports_matrix_power = pluss::codem::cuda_supports_matrix_power_linalg_baseline(ScalarType::Float32);
-      info.supports_matrix_exp = pluss::codem::cuda_supports_matrix_exp_linalg_baseline(ScalarType::Float32);
-      return info;
-    }
+    info.dense_available = mps_ready;
+    info.solver_available = solver_ready;
+    info.supports_matmul = mps_ready;
+    info.supports_det = solver_ready;
+    info.supports_inverse = solver_ready;
+    info.supports_cholesky = solver_ready;
+    info.supports_qr = solver_ready;
+    info.supports_svd = solver_ready;
+    info.supports_eigh = bridge_ready;
+    info.supports_triangular_solve = solver_ready;
+    info.supports_cholesky_solve = solver_ready;
+    info.supports_lu_solve = solver_ready;
+    info.supports_matrix_power = mps_ready;
+    info.supports_matrix_exp = mps_ready;
+    return info;
+  }
+  case LinearAlgTarget::CUDA:
+  default: {
+    const bool cublas_ready = pluss::codem::cuda_cublas_provider_available();
+    const bool cusolver_ready =
+        pluss::codem::cuda_cusolver_provider_available();
+    info.dense_provider = cublas_ready ? LinearAlgDenseProvider::CuBLAS
+                                       : LinearAlgDenseProvider::None;
+    info.solver_provider = cusolver_ready ? LinearAlgSolverProvider::CuSolver
+                                          : LinearAlgSolverProvider::None;
+    info.dense_available = cublas_ready;
+    info.solver_available = cusolver_ready;
+    info.supports_matmul = pluss::codem::cuda_supports_matmul_baseline(
+        ScalarType::Float32, ScalarType::Float32);
+    info.supports_det =
+        pluss::codem::cuda_supports_det_linalg_baseline(ScalarType::Float32);
+    info.supports_inverse = pluss::codem::cuda_supports_inverse_linalg_baseline(
+        ScalarType::Float32);
+    info.supports_cholesky =
+        pluss::codem::cuda_supports_cholesky_linalg_baseline(
+            ScalarType::Float32);
+    info.supports_qr = pluss::codem::cuda_supports_qr_linalg_baseline(
+        ScalarType::Float32, /*reduced=*/true);
+    info.supports_svd = pluss::codem::cuda_supports_svd_linalg_baseline(
+        ScalarType::Float32, /*full_matrices=*/false);
+    info.supports_eigh = pluss::codem::platform_available(Platform::CUDA) &&
+                         pluss::codem::cuda_cpu_bridge_enabled();
+    info.supports_triangular_solve =
+        pluss::codem::cuda_supports_triangular_solve_linalg_baseline(
+            ScalarType::Float32, ScalarType::Float32);
+    info.supports_cholesky_solve =
+        pluss::codem::cuda_supports_cholesky_solve_linalg_baseline(
+            ScalarType::Float32, ScalarType::Float32);
+    info.supports_lu_solve =
+        pluss::codem::cuda_supports_lu_solve_linalg_baseline(
+            ScalarType::Float32, ScalarType::Float32);
+    info.supports_matrix_power =
+        pluss::codem::cuda_supports_matrix_power_linalg_baseline(
+            ScalarType::Float32);
+    info.supports_matrix_exp =
+        pluss::codem::cuda_supports_matrix_exp_linalg_baseline(
+            ScalarType::Float32);
+    return info;
+  }
   }
 }
 
-Series matmul(const Series& a, const Series& b) {
+Series matmul(const Series &a, const Series &b) {
   return invoke_pair_("matmul", "matmul", a, b);
 }
 
@@ -2874,13 +2970,18 @@ Series matrix_power(const Series& a, std::int64_t n) {
   throw_platform_not_ready_("matrix_power", a.platform());
 }
 
-Series matrix_exp(const Series& a) {
+Series matrix_exp(const Series &a) {
+  require_defined_(a, "matrix_exp");
+  PLUSS_CHECK(
+      a.dtype().is_floating() || is_complex_scalar_(a.scalar_type()),
+      "subsp::linearalg::matrix_exp: expected floating or complex input");
   const auto finish = [&](Series out) {
+    if (out.scalar_type() != a.scalar_type())
+      out = out.to(a.scalar_type());
     bind_matrix_exp_backward_(out, a);
     return out;
   };
   if (a.dim() > 2) {
-    require_defined_(a, "matrix_exp");
     const auto tail = tail_shape_(a, 2, "matrix_exp");
     const std::int64_t m = tail[0];
     const std::int64_t k = tail[1];
@@ -2933,15 +3034,20 @@ Series matrix_exp(const Series& a) {
   throw_platform_not_ready_("matrix_exp", a.platform());
 }
 
-Series pinverse(const Series& a, double rcond) {
-  PLUSS_CHECK(std::isfinite(rcond) && rcond >= 0.0,
-              "subsp::linearalg::pinverse: rcond must be finite and non-negative");
+Series pinverse(const Series &a, double rcond) {
+  require_defined_(a, "pinverse");
+  PLUSS_CHECK(a.dtype().is_floating() || is_complex_scalar_(a.scalar_type()),
+              "subsp::linearalg::pinverse: expected floating or complex input");
+  PLUSS_CHECK(
+      std::isfinite(rcond) && rcond >= 0.0,
+      "subsp::linearalg::pinverse: rcond must be finite and non-negative");
   const auto finish = [&](Series out) {
+    if (out.scalar_type() != a.scalar_type())
+      out = out.to(a.scalar_type());
     bind_pinverse_backward_(out, a);
     return out;
   };
   if (a.dim() > 2) {
-    require_defined_(a, "pinverse");
     const auto tail = tail_shape_(a, 2, "pinverse");
     const auto batch = batch_shape_(a, 2, "pinverse");
     const std::vector<std::int64_t> out_tail{tail[1], tail[0]};
@@ -3148,7 +3254,44 @@ Series qr_r(const Series& a, bool reduced) {
   throw_platform_not_ready_("qr_r", a.platform());
 }
 
-SvdDecomposition svd(const Series& a, bool full_matrices) {
+EigenDecomposition eigh(const Series &a, bool upper) {
+  require_defined_(a, "eigh");
+  const auto solve_cpu = [&]() {
+    const auto raw = pluss::subsp::math::linalg::eigh(
+        a.platform() == Platform::CPU ? a : a.to(Platform::CPU), upper);
+    return EigenDecomposition{raw.eigenvalues, raw.eigenvectors};
+  };
+
+  const auto finish = [&](EigenDecomposition out) {
+    bind_eigh_values_backward_(out.values, out.vectors, a);
+    bind_eigh_vectors_backward_(out.vectors, out.values, a);
+    return out;
+  };
+
+  if (a.platform() == Platform::CPU)
+    return finish(solve_cpu());
+  if (a.platform() == Platform::MPS) {
+    PLUSS_CHECK(linearalg_mps_cpu_bridge_enabled(),
+                "subsp::linearalg::eigh: MPS requires the CPU solver bridge");
+    auto out = solve_cpu();
+    out.values = out.values.to(Platform::MPS).contiguous();
+    out.vectors = out.vectors.to(Platform::MPS).contiguous();
+    return finish(std::move(out));
+  }
+  if (a.platform() == Platform::CUDA) {
+    PLUSS_CHECK(pluss::codem::cuda_cpu_bridge_enabled(),
+                "subsp::linearalg::eigh: CUDA requires the CPU solver bridge");
+    auto out = solve_cpu();
+    out.values = out.values.to(Platform::CUDA).contiguous();
+    out.vectors = out.vectors.to(Platform::CUDA).contiguous();
+    return finish(std::move(out));
+  }
+  throw_platform_not_ready_("eigh", a.platform());
+}
+
+Series eigvalsh(const Series &a, bool upper) { return eigh(a, upper).values; }
+
+SvdDecomposition svd(const Series &a, bool full_matrices) {
   if (a.dim() > 2) {
     require_defined_(a, "svd");
     const auto tail = tail_shape_(a, 2, "svd");

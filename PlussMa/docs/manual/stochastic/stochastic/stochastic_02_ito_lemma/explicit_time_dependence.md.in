@@ -1,0 +1,10 @@
+# Explicit time dependence
+
+[Back to Differentials and Ito's Lemma](../stochastic_02_ito_lemma.md)
+
+
+When `g` depends on time as well, use `ito_at(time, g, mu, sigma)`: `g` receives the time as its first argument. The program discounts a process, `g(t, x) = e^(−rt) x`. Its drift is `e^(−rt)(μ − r x)`, which is zero exactly when `μ = r x`: the risk-neutral asset has no drift once discounted.
+
+@@example Probability/random_processes/guide/sde/14_time_dependent.cpp@@
+
+The first state is risk-neutral and has discounted drift 0.00000; the second has 3.12411, equal to `e^(−rt)(μ − r x)`. The discounted diffusion equals `e^(−rt) σ`.

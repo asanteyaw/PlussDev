@@ -1,0 +1,85 @@
+# ts vector
+
+`vector` models several series together. A vector autoregression (`Var`) makes each series a linear function of the past of all of them; its fit offers impulse responses, forecast-error variance decompositions, Granger tests and forecasts. When the series have unit roots but share long-run relations (cointegration), `johansen_test` finds how many relations there are and `Vecm` fits the error-correction form; `var_to_vecm` and `vecm_to_var` convert between the two representations.
+
+Series are given as an `n × k` matrix with one column per series. Coefficient arrays use the row-vector convention: `ar[l][j][i]` is the effect of series `j` at lag `l + 1` on series `i`, and the impulse responses and variance shares are indexed `[step][shock][response]`.
+
+## The Surface
+
+| Entity | What it gives you |
+|---|---|
+| [`FevdOptions`](vector/FevdOptions.md) | Options of `VarFit::fevd` |
+| [`GrangerOptions`](vector/GrangerOptions.md) | Options of `VarFit::granger_test` |
+| [`GrangerResult`](vector/GrangerResult.md) | Result of `VarFit::granger_test` |
+| [`IrfOptions`](vector/IrfOptions.md) | Options of `VarFit::irf` |
+| [`johansen_test`](vector/johansen_test.md) | Johansen's cointegration rank test |
+| [`JohansenOptions`](vector/JohansenOptions.md) | Options of `ts::johansen_test` |
+| [`JohansenResult`](vector/JohansenResult.md) | Result of `ts::johansen_test` |
+| [`Var`](vector/Var.md) | Fits a vector autoregression by least squares (Gaussian maximum likelihood) |
+| [`var_to_vecm`](vector/var_to_vecm.md) | Converts the lag matrices of a VAR into the short-run matrices and the impact matrix of its error-correction form |
+| [`VarFit`](vector/VarFit.md) | The result of a vector autoregression: the coefficients and the methods that evaluate, forecast and analyse the system |
+| [`VarOptions`](vector/VarOptions.md) | Options of `ts::Var::fit_mle` |
+| [`Vecm`](vector/Vecm.md) | Fits a vector error-correction model for a given cointegration rank |
+| [`vecm_to_var`](vector/vecm_to_var.md) | Converts the short-run and impact matrices of an error-correction model into VAR lag matrices |
+| [`VecmFit`](vector/VecmFit.md) | The result of a vector error-correction fit |
+| [`VecmOptions`](vector/VecmOptions.md) | Options of `ts::Vecm::fit_mle` |
+
+## How To Call It
+
+Fit a VAR(1) to two linked series, read the first-lag coefficients and forecast.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// Two linked series: a_t = 0.5 a_{t-1} + 0.2 b_{t-1} + e1_t,  b_t = 0.1 a_{t-1} + 0.6 b_{t-1} + 0.5 e1_t + e2_t   (n x 2, row t = (a_t, b_t)).
+Series linked(int n) {
+  const auto e1 = noise(n, 0), e2 = noise(n, 5000);
+  std::vector<double> y(2 * n);
+  double a = 0.0, b = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double na = 0.5 * a + 0.2 * b + e1[t];
+    const double nb = 0.1 * a + 0.6 * b + 0.5 * e1[t] + e2[t];
+    a = na;
+    b = nb;
+    y[2 * t] = a;
+    y[2 * t + 1] = b;
+  }
+  return pluss::make_series(y, {n, 2}, f64);
+}
+
+int main() {
+  const Series y = linked(300);
+  const auto fit = ts::Var::fit_mle(y);
+  const Series a1 = fit.ar.select(0, 0);
+  std::cout << std::fixed << std::setprecision(4) << "effect of series 0 on (0, 1): " << a1.select(0, 0).to_vec<double>()[0] << ", " << a1.select(0, 0).to_vec<double>()[1] << "\n";
+  std::cout << "effect of series 1 on (0, 1): " << a1.select(0, 1).to_vec<double>()[0] << ", " << a1.select(0, 1).to_vec<double>()[1] << "\n";
+  show("forecast row 1", fit.forecast(2, y).select(0, 0));
+}
+```
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

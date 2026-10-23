@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optima 8: Worked Problems &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="A minimum-variance portfolio" href="optima_08_worked_problems/a_minimum_variance_portfolio.html" />
+    <link rel="prev" title="Long loops without a tape" href="optima_07_derivatives/long_loops_without_a_tape.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from optima_08_worked_problems.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="optima-8-worked-problems">
+<h1>Optima 8: Worked Problems<a class="headerlink" href="#optima-8-worked-problems" title="Link to this heading">¶</a></h1>
+<p>Chapters 1 to 7 each taught one part of the solver. This chapter uses all of them on five complete problems, each the kind you would meet outside a guide: a portfolio, a physical design with a known answer, a design that cannot be built, a maximum-likelihood fit, and a plant with every kind of constraint at once. After it you have a routine for any new problem: formulate, solve, then decide whether to believe the answer before you use it.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="the-routine">
+<h2>The routine<a class="headerlink" href="#the-routine" title="Link to this heading">¶</a></h2>
+<p>Solving is the short part. The routine that the programs follow, and that you should follow, is:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Step</p></th>
+<th class="head"><p>What you do</p></th>
+<th class="head"><p>Where it was taught</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1. Formulate</p></td>
+<td><p>Name the unknowns, write the objective, put every requirement in the constraint family that fits it.</p></td>
+<td><p>chapter 1</p></td>
+</tr>
+<tr class="row-odd"><td><p>2. Start</p></td>
+<td><p>Choose a starting point where the objective and its gradient are of ordinary size.</p></td>
+<td><p>chapter 3, and Program 4 below</p></td>
+</tr>
+<tr class="row-even"><td><p>3. Solve</p></td>
+<td><p>Call <code class="docutils literal notranslate"><span class="pre">optima</span></code>, with default options unless a chapter gave you a reason.</p></td>
+<td><p>chapters 3 to 6</p></td>
+</tr>
+<tr class="row-odd"><td><p>4. Check the flag</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">exit_flag</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code> only when the solver believes it converged. Anything else is a message to read.</p></td>
+<td><p>chapter 2</p></td>
+</tr>
+<tr class="row-even"><td><p>5. Check the violation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max_constraint_violation</span></code> must be at or below your tolerance.</p></td>
+<td><p>chapter 2</p></td>
+</tr>
+<tr class="row-odd"><td><p>6. Read the multipliers</p></td>
+<td><p>A multiplier of zero means a limit does not bind; a positive one is the price of that limit.</p></td>
+<td><p>chapter 2</p></td>
+</tr>
+<tr class="row-even"><td><p>7. Verify independently</p></td>
+<td><p>Check the answer by something the solver did not use: a closed form, a re-solve, a second start, an identity the optimum must satisfy.</p></td>
+<td><p>below</p></td>
+</tr>
+</tbody>
+</table>
+<p>Step 7 is the one that is skipped, and Program 4 shows why it matters.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="optima_08_worked_problems/a_minimum_variance_portfolio.html"><span class="std std-doc">A minimum-variance portfolio</span></a></p></li>
+<li><p><a class="reference internal" href="optima_08_worked_problems/a_design_with_a_closed_form_answer.html"><span class="std std-doc">A design with a closed-form answer</span></a></p></li>
+<li><p><a class="reference internal" href="optima_08_worked_problems/a_design_that_cannot_be_built.html"><span class="std std-doc">A design that cannot be built</span></a></p></li>
+<li><p><a class="reference internal" href="optima_08_worked_problems/a_maximum_likelihood_fit_and_what_a_flag_cannot.html"><span class="std std-doc">A maximum-likelihood fit, and what a flag cannot tell you</span></a></p></li>
+<li><p><a class="reference internal" href="optima_08_worked_problems/a_plant_with_every_kind_of_constraint.html"><span class="std std-doc">A plant with every kind of constraint</span></a></p></li>
+</ul>
+</section>
+<section id="what-goes-wrong-in-practice">
+<h2>What goes wrong in practice<a class="headerlink" href="#what-goes-wrong-in-practice" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Likely cause</p></th>
+<th class="head"><p>What to do</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Flag <code class="docutils literal notranslate"><span class="pre">-6</span></code> with a nonzero violation</p></td>
+<td><p>the requirements conflict (Program 3)</p></td>
+<td><p>read the message, find the limit that cannot be met, relax it</p></td>
+</tr>
+<tr class="row-odd"><td><p>Flag <code class="docutils literal notranslate"><span class="pre">1</span></code> but the answer fails your own check</p></td>
+<td><p>a start with a huge gradient (Program 4) or a wrong model</p></td>
+<td><p>restart from an ordinary point; verify by an identity</p></td>
+</tr>
+<tr class="row-even"><td><p>Different starts give different answers</p></td>
+<td><p>more than one local optimum</p></td>
+<td><p>compare objective values; keep the best (chapter 3)</p></td>
+</tr>
+<tr class="row-odd"><td><p>A multiplier you expected to be positive is zero</p></td>
+<td><p>that limit does not bind at the optimum (Program 5)</p></td>
+<td><p>the limit is not what is shaping the answer</p></td>
+</tr>
+<tr class="row-even"><td><p>The solver rejects the problem before iterating</p></td>
+<td><p>a malformed callback (chapter 1, chapter 7)</p></td>
+<td><p>read the message; audit hand-written derivatives (chapter 7)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="what-to-remember">
+<h2>What to remember<a class="headerlink" href="#what-to-remember" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Follow the routine: formulate, start sensibly, solve, check the flag, the violation and the multipliers, then verify independently.</p></li>
+<li><p>A multiplier is a price. Re-solve with a limit nudged to confirm it (Program 1), or compare it with a closed form (Program 2).</p></li>
+<li><p>A problem with a known answer is the best test of a formulation.</p></li>
+<li><p>An infeasible problem returns its best attempt and a flag, not an error. Read the flag and the violation, never only the parameters (Program 3).</p></li>
+<li><p>The optimality measure is relative to the size of the gradient at the start. Start at an ordinary point, try more than one start when it matters, and check the answer by something the solver did not use (Program 4).</p></li>
+<li><p>Positive multipliers name the limits that shape the answer; zero multipliers name the ones that do not (Program 5).</p></li>
+</ul>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/optima/optima_08_worked_problems.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

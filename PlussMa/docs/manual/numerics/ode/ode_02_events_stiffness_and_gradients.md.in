@@ -1,0 +1,21 @@
+# ODE 2: Events, Stiffness and Gradients
+
+Three things come up as soon as an ODE solve is part of a larger problem: you want to stop when something happens, the system is stiff and ordinary steps are hopelessly small, or you need the derivative of the result with respect to the initial state or a parameter. After this chapter you can do all three.
+
+Every program is complete and its output is the output of that program.
+
+## Programs
+
+- [Stopping at an event](ode_02_events_stiffness_and_gradients/stopping_at_an_event.md)
+- [A stiff linear system](ode_02_events_stiffness_and_gradients/a_stiff_linear_system.md)
+- [Gradients through a solve](ode_02_events_stiffness_and_gradients/gradients_through_a_solve.md)
+
+## Checklist
+
+1. Events: set `direction`, then check `triggered` before using `y_final`.
+2. Stiff linear systems: `fluxa_linear` with an `action` callable; the default explicit methods will need very many steps.
+3. Gradients: `fluxa_adjoint`, fixed-step RK4, enough steps for the gradient accuracy you need.
+4. Pass `theta` as a Series whenever you want its gradient.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

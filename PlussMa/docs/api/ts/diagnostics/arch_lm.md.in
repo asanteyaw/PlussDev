@@ -1,0 +1,174 @@
+# `pluss::subsp::stats::ts::arch_lm`
+
+Engle's ARCH-LM test for volatility clustering: are the squared values of a series autocorrelated?
+
+## Signature
+
+```cpp
+ts::ArchLmResult ts::arch_lm(const pluss::Series& x, const ts::ArchLmOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## What It Does
+
+`arch_lm` regresses the squared series on its own `lags` lagged values and reports `n R²` of that regression, which is chi-squared with `lags` degrees of freedom under the null of no ARCH effects. A series whose scale alternates between calm and turbulent stretches has autocorrelated squares and is rejected; steady noise is not. Rejection says that a constant-variance model is wrong and that a GARCH-type model of the variance is appropriate.
+
+For a raw series leave `demean` on. If the input is already the residual vector of a mean model (whose mean is zero by construction), pass `demean = false`.
+
+## Parameters
+
+`const pluss::Series& x`
+: A one-dimensional series in time order, at least two observations long.
+
+`const ts::ArchLmOptions& options`
+: `lags` (default 1), `demean` (default true) and `alpha` (the significance level of the critical value, default 0.05); see [`ArchLmOptions`](ArchLmOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the computation itself runs in double precision.
+
+## Returns
+
+An [`ArchLmResult`](ArchLmResult.md): the statistic, the p-value, the critical value at `alpha`, `reject`, the degrees of freedom and the number of observations used.
+
+## Errors
+
+- `lags` must be at least 1 and smaller than the series length.
+
+## Practical Examples
+
+### Example 1
+
+A series whose scale alternates between 0.3 and 2.0 every 50 observations is rejected; steady noise of the same overall size is not.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const auto e = noise(300);
+  std::vector<double> clustered(300), steady(300);
+  for (int i = 0; i < 300; ++i) {
+    const double scale = ((i / 50) % 2 == 0) ? 0.3 : 2.0;
+    clustered[i] = scale * e[i];
+    steady[i] = 1.2 * e[i];
+  }
+  ts::ArchLmOptions options;
+  options.lags = 4;
+  for (const auto* data : {&clustered, &steady}) {
+    const auto r = ts::arch_lm(pluss::make_series(*data, {300}, f64), options);
+    std::cout << std::fixed << std::setprecision(3) << (data == &clustered ? "clustered" : "steady   ") << "  LM = " << r.stat << "  p = " << r.pvalue << "  critical = " << r.critical
+              << "  reject = " << std::boolalpha << r.reject << "\n";
+  }
+}
+```
+
+### Example 2
+
+The result also reports the degrees of freedom and how many observations took part (the lags are used up by the regression).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const auto e = noise(300);
+  ts::ArchLmOptions options;
+  options.lags = 4;
+  const auto r = ts::arch_lm(pluss::make_series(e, {300}, f64), options);
+  std::cout << "dof = " << r.dof << ", effective observations = " << r.effective_n << "\n";
+}
+```
+
+
+## See Also
+
+- [`ArchLmOptions`](ArchLmOptions.md)
+- [`ArchLmResult`](ArchLmResult.md)
+- [`ljung_box`](ljung_box.md)

@@ -1,0 +1,8 @@
+# Reading a table
+
+[Back to Linear Interpolation](../interp_01_linear.md)
+
+
+@@example Numerical/interpolation/guide/801_first_interpolation.cpp@@
+
+A query exactly on a table point returns the table value, and the spacing is free to vary: the intervals here are 2, 3, 5 and 10 minutes wide.

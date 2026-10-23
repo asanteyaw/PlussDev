@@ -159,8 +159,8 @@ Each element was replicated into two rows, so each accumulates a gradient of
     <span class="label">Previous</span>
     <span class="title">bmm</span>
   </a>
-  <a class="next-link" href="cartprod.html">
+  <a class="next-link" href="calc.html">
     <span class="label">Next</span>
-    <span class="title">cartprod</span>
+    <span class="title">calc</span>
   </a>
 </div>

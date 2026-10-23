@@ -1,0 +1,50 @@
+# Integer Programming 2: Larger Models and Worked Problems
+
+The first chapter solved small integer programs with the dense branch-and-bound. Real integer models are bigger, have a mix of whole and continuous variables, and benefit from a stronger search. This chapter introduces the sparse branch-and-cut solver and uses it on two complete problems: choosing where to open warehouses, and building a weekly staff schedule. After it you can pick between the two integer solvers, read the extra result fields, and verify an integer answer without trusting the solver that found it.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+The sparse solver, `lp::solve_mip(model, options)`, is a **branch-and-cut** method. It is branch and bound with three additions that make the search much shorter.
+
+- **Presolve** shrinks the model first, as for a linear program (chapter 4).
+- **Cutting planes** are extra constraints, valid for every integer solution but violated by the relaxation's fractional answer, added at the root to tighten the bound before any branching.
+- **Heuristics** (diving, and small sub-integer-programs around the relaxation) look for good integer solutions early, so that more of the tree can be pruned.
+
+Its `MipResult` has the same essentials as the dense one, `status`, `objective`, `x`, `best_bound` and `nodes`, and adds the relative `gap` and `lp_iterations`. A search that ends with `nodes = 0` was finished at the root: presolve, the cuts and the heuristics together closed the gap before any branching.
+
+| `MipOptions` | Meaning | Default |
+|---|---|---|
+| `node_limit` | stop after this many nodes | very large |
+| `rel_gap`, `abs_gap` | stop when the bound and the incumbent agree to this | 1e-6, 1e-9 |
+| `int_tol` | how close to whole counts as whole | 1e-6 |
+| `presolve` | simplify the model first | `true` |
+| `cut_rounds` | rounds of cutting planes at the root (0 turns them off) | 25 |
+| `heuristics` | diving and sub-integer-program heuristics | `true` |
+
+A dense `milp::Problem` is solved with the sparse engine by `lp::solve_sparse(problem)`. The two engines must agree on the optimal value, and when they do on a model you built, that is good evidence the model is as you meant.
+
+## Programs
+
+- [Where to open warehouses](milp_02_larger_integer_models/where_to_open_warehouses.md)
+- [A weekly staff schedule](milp_02_larger_integer_models/a_weekly_staff_schedule.md)
+
+## A routine for an integer program
+
+1. Write the model with the relaxation in mind: tight bounds on every integer variable, and capacities linked to decisions as tightly as the problem allows (the capacity times `y` in Program 1 is the tightest valid link; a very large constant in its place would give a weak relaxation and a long search).
+2. Solve the relaxation first. If it is whole, you are done; if not, its value is a bound on the answer.
+3. Solve the integer program. Read the status, then `objective` and `best_bound`. If the search ended on a node limit, the gap between them is your measure of quality.
+4. Check the plan against the constraints directly, row by row, from the data.
+5. Verify optimality by something independent: brute force on a small instance, enumeration of the integer part, a counting bound, or the other engine.
+
+## What to remember
+
+- Branch-and-cut adds presolve, cutting planes and heuristics to branch and bound. It reports the same essentials plus the relative gap.
+- `nodes = 0` means the search was closed at the root.
+- Link a capacity to its decision variable as tightly as you can; a loose link weakens the relaxation.
+- Verify an integer answer independently: enumerate the integer part and solve the rest as a linear program, or count.
+- Dense and sparse engines must agree on the optimum of a well-formed model.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

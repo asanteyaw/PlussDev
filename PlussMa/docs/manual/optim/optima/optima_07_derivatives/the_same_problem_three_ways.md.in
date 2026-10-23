@@ -1,0 +1,10 @@
+# The same problem, three ways
+
+[Back to Derivatives](../optima_07_derivatives.md)
+
+
+The Rosenbrock function on a box, solved with a traced objective, a hand-written gradient and a forward-mode objective.
+
+@@example Numerical/optimization/guide/optima/81_three_ways.cpp@@
+
+The three runs are identical to the printed digits: 35 iterations, 45 evaluations, an objective of 5.38e-10, at (0.999977, 0.999954). That is the point. The form changes what you write, not what the algorithm does. `analytic` returns a pair, the value and a pack with the same blocks as the parameters holding the gradient. `fwd_objective<N>` takes a function of an `std::array<Fwd<N>, N>`, with the parameters flattened in block order, and `N` must equal the total number of parameters (a mismatch is an error that names both numbers).

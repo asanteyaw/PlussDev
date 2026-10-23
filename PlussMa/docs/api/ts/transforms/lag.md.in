@@ -1,0 +1,99 @@
+# `pluss::subsp::stats::ts::lag`
+
+The series shifted later in time: position `t` holds the observation from `periods` steps earlier.
+
+## Signature
+
+```cpp
+pluss::Series ts::lag(const pluss::Series& x, std::int64_t periods = 1);
+```
+
+## What It Does
+
+`lag` places `x[t − periods]` at position `t`, so the series appears delayed by `periods` steps. It is how a regressor is built from the past: the pair `(y, lag(y))` is a first-order autoregression's data. The first `periods` positions have no earlier observation and are `NaN`. A negative `periods` shifts the other way and equals [`lead`](lead.md) of the opposite sign.
+
+## Parameters
+
+`const pluss::Series& x`
+: A one-dimensional series in time order. A series with more than one dimension is rejected.
+
+`std::int64_t periods`
+: The number of steps to delay (default 1). A negative value moves the series earlier instead.
+
+## Returns
+
+A `Series` of the same length as `x`; observations shifted out of range are dropped.
+
+## Errors
+
+- A series with more than one dimension is rejected.
+
+## Practical Examples
+
+### Example 1
+
+The series delayed by one and two steps.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+
+int main() {
+  const Series x = pluss::make_series({10.0, 12.0, 11.0, 15.0, 14.0, 18.0, 17.0}, f64);
+  show("x", x);
+  show("lag(x)", ts::lag(x));
+  show("lag(x, 2)", ts::lag(x, 2));
+}
+```
+
+### Example 2
+
+A negative shift moves the series earlier, like `lead`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+
+int main() {
+  const Series x = pluss::make_series({10.0, 12.0, 11.0, 15.0, 14.0, 18.0, 17.0}, f64);
+  show("x", x);
+  show("lag(x, -1)", ts::lag(x, -1));
+  show("lead(x)", ts::lead(x));
+}
+```
+
+
+## See Also
+
+- [`lead`](lead.md)
+- [`diff`](diff.md)

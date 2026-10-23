@@ -4,6 +4,8 @@
 #include "pluss/ma/math/integration.h"
 #include "pluss/ma/math/interpolation.h"
 #include "pluss/subsp/math/krylov.h"
+#include "pluss/subsp/math/linear_operator.h"
+#include "pluss/subsp/math/state.h"
 #include "pluss/ma/math/ode.h"
 #include "pluss/ma/math/random_processes.h"
 #include "pluss/ma/math/linearalg.h"
@@ -14,7 +16,6 @@ namespace optim = ::pluss::subsp::math::optim;
 namespace integ = ::pluss::subsp::math::integ;
 namespace interp = ::pluss::subsp::math::interp;
 namespace ode = ::pluss::subsp::math::ode;
-namespace sde = ::pluss::subsp::math::sde;
 namespace finance = ::pluss::subsp::math::finance;
 }
 

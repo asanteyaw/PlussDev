@@ -1,0 +1,230 @@
+# `pluss::subsp::stats::ts::ljung_box`
+
+The Ljung–Box test that a series, or a model's residuals, is white noise up to a set of lags.
+
+## Signature
+
+```cpp
+ts::LjungBoxResult ts::ljung_box(const pluss::Series& x, const ts::LjungBoxOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## What It Does
+
+`ljung_box` tests the null hypothesis that the autocorrelations of `x` at lags `1 … m` are all zero, for each `m` in `options.lags`. The statistic is `Q = n (n + 2) Σ r[k]² / (n − k)`, compared with a chi-squared distribution whose degrees of freedom are `m − model_df`. A small p-value says the series is not white noise.
+
+When `x` is the residual series of a fitted ARMA model, set `model_df` to the number of ARMA coefficients that were estimated: the residuals of a fitted model are slightly more regular than white noise and the degrees of freedom must be reduced accordingly. Without it the test is too lenient.
+
+## Parameters
+
+`const pluss::Series& x`
+: A one-dimensional series in time order, at least two observations long.
+
+`const ts::LjungBoxOptions& options`
+: `lags` (the lag sets to test, default {10}), `model_df` (degrees of freedom to subtract, default 0), `norm` and `demean`; see [`LjungBoxOptions`](LjungBoxOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the computation itself runs in double precision.
+
+## Returns
+
+A [`LjungBoxResult`](LjungBoxResult.md) with one entry per element of `options.lags`: the lags, the statistics, the p-values and the degrees of freedom, each a `Series`.
+
+## Errors
+
+- `lags` must not be empty.
+- `model_df` must leave positive degrees of freedom at every lag.
+
+## Practical Examples
+
+### Example 1
+
+An autoregressive series is far from white noise at lags 5, 10 and 20.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  ts::LjungBoxOptions options;
+  options.lags = {5, 10, 20};
+  const auto test = ts::ljung_box(y, options);
+  show("lags", test.lags);
+  show("statistic", test.stat);
+  show("dof", test.dof);
+  std::cout << std::scientific << std::setprecision(2);
+  for (double p : test.pvalue.to_vec<double>()) std::cout << "p-value " << p << "\n";
+}
+```
+
+### Example 2
+
+Noise that has no dependence is not rejected.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = pluss::make_series(noise(200), {200}, f64);
+  const auto test = ts::ljung_box(y);
+  std::cout << std::fixed << std::setprecision(4) << "statistic " << test.stat.to_vec<double>()[0] << ", p-value " << test.pvalue.to_vec<double>()[0] << "\n";
+}
+```
+
+### Example 3
+
+`model_df` removes degrees of freedom for the coefficients of a fitted model: 10 lags and 2 fitted coefficients leave 8.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  ts::LjungBoxOptions options;
+  options.lags = {10};
+  options.model_df = 2;
+  show("dof", ts::ljung_box(y, options).dof);
+}
+```
+
+
+## See Also
+
+- [`LjungBoxOptions`](LjungBoxOptions.md)
+- [`LjungBoxResult`](LjungBoxResult.md)
+- [`acf`](acf.md)
+- [`arch_lm`](arch_lm.md)

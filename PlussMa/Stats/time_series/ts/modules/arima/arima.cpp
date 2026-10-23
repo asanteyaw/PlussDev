@@ -143,20 +143,6 @@ double exog_dot_(const ExogMatrix* x, const std::vector<double>& beta, std::int6
   return out;
 }
 
-double stable_sigmoid_(double x) {
-  if (x >= 0.0) {
-    const double z = std::exp(-x);
-    return 1.0 / (1.0 + z);
-  }
-  const double z = std::exp(x);
-  return z / (1.0 + z);
-}
-
-double stable_logit_(double p) {
-  const double q = std::clamp(p, 1e-12, 1.0 - 1e-12);
-  return std::log(q / (1.0 - q));
-}
-
 std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
   auto values = flat_f64_values_(y);
   PLUSS_CHECK(!values.empty(), "subsp::stats::ts::Arima: expected non-empty response series");
@@ -283,33 +269,85 @@ std::vector<double> invert_zero_base_(std::vector<double> transformed,
   return transformed;
 }
 
-double group_l1_(const std::vector<double>& a, const std::vector<double>& b) {
-  const auto abs_sum = [](const std::vector<double>& x) {
-    return std::accumulate(x.begin(), x.end(), 0.0, [](const double acc, const double v) { return acc + std::abs(v); });
-  };
-  return abs_sum(a) + abs_sum(b);
+// Autoregressive (and, with the sign flipped, moving-average) coefficients are tied to the partial autocorrelations: a polynomial
+// 1 - phi_1 z - ... - phi_k z^k has all its roots outside the unit circle exactly when its k partial autocorrelations lie in (-1, 1)
+// (Barndorff-Nielsen and Schou 1973; Monahan 1984). Parametrising by the partial autocorrelations therefore covers the whole stationary
+// (invertible) region, not a subset, and the zero polynomial is an ordinary interior point.
+std::vector<double> coefficients_from_pacf_(const std::vector<double>& r) {
+  std::vector<double> phi;
+  phi.reserve(r.size());
+  for (std::size_t k = 0; k < r.size(); ++k) {
+    std::vector<double> next(k + 1);
+    for (std::size_t j = 0; j < k; ++j) {
+      next[j] = phi[j] - r[k] * phi[k - 1 - j];
+    }
+    next[k] = r[k];
+    phi = std::move(next);
+  }
+  return phi;
+}
+
+std::vector<double> pacf_from_coefficients_(std::vector<double> phi) {
+  const std::size_t n = phi.size();
+  std::vector<double> r(n, 0.0);
+  for (std::size_t k = n; k >= 1; --k) {
+    const double rk = phi[k - 1];
+    r[k - 1] = rk;
+    const double denom = 1.0 - rk * rk;
+    if (!(std::abs(denom) > 1e-12)) {
+      // on or outside the boundary: the lower-order coefficients are not recoverable, treat them as zero
+      std::fill(phi.begin(), phi.end(), 0.0);
+      continue;
+    }
+    std::vector<double> lower(k - 1);
+    for (std::size_t j = 0; j + 1 < k; ++j) {
+      lower[j] = (phi[j] + rk * phi[k - 2 - j]) / denom;
+    }
+    phi.assign(lower.begin(), lower.end());
+    phi.resize(k - 1);
+  }
+  return r;
+}
+
+// Pull a coefficient vector inside the stationary region by clamping its partial autocorrelations to (-cap, cap); a vector that is
+// already inside is returned unchanged.
+std::vector<double> stabilize_coefficients_(const std::vector<double>& phi, double cap) {
+  if (phi.empty()) {
+    return phi;
+  }
+  auto r = pacf_from_coefficients_(phi);
+  bool changed = false;
+  for (double& v : r) {
+    if (!std::isfinite(v)) {
+      v = 0.0;
+      changed = true;
+    } else if (std::abs(v) > cap) {
+      v = (v > 0.0 ? cap : -cap);
+      changed = true;
+    }
+  }
+  return changed ? coefficients_from_pacf_(r) : phi;
 }
 
 ArimaParams stabilize_params_(ArimaParams p, double stationarity_margin) {
   const double cap = std::max(1e-9, 1.0 - stationarity_margin);
-  const double ar_l1 = group_l1_(p.ar, p.sar);
-  if (ar_l1 >= cap) {
-    const double scale = cap / std::max(ar_l1, 1e-15);
-    std::for_each(p.ar.begin(), p.ar.end(), [scale](double& v) { v *= scale; });
-    std::for_each(p.sar.begin(), p.sar.end(), [scale](double& v) { v *= scale; });
-  }
-  const double ma_l1 = group_l1_(p.ma, p.sma);
-  if (ma_l1 >= cap) {
-    const double scale = cap / std::max(ma_l1, 1e-15);
-    std::for_each(p.ma.begin(), p.ma.end(), [scale](double& v) { v *= scale; });
-    std::for_each(p.sma.begin(), p.sma.end(), [scale](double& v) { v *= scale; });
-  }
+  p.ar = stabilize_coefficients_(p.ar, cap);
+  p.sar = stabilize_coefficients_(p.sar, cap);
+  // moving-average polynomials 1 + theta z + ... are invertible exactly when the autoregressive polynomial with phi = -theta is stationary
+  auto negate = [](std::vector<double> v) {
+    for (double& x : v) x = -x;
+    return v;
+  };
+  p.ma = negate(stabilize_coefficients_(negate(p.ma), cap));
+  p.sma = negate(stabilize_coefficients_(negate(p.sma), cap));
   if (!std::isfinite(p.intercept)) {
     p.intercept = 0.0;
   }
   return p;
 }
 
+// Layout of the unconstrained vector: intercept, then one partial-autocorrelation block (atanh scale) for each of ar, sar, ma, sma,
+// then the regression coefficients.
 ArimaParams decode_theta_(const std::vector<double>& theta,
                           std::int64_t p,
                           std::int64_t q,
@@ -317,102 +355,104 @@ ArimaParams decode_theta_(const std::vector<double>& theta,
                           std::int64_t Q,
                           std::int64_t k_beta,
                           double stationarity_margin) {
-  const std::int64_t k_ar = p + P;
-  const std::int64_t k_ma = q + Q;
-  std::int64_t expected = 1;
-  if (k_ar > 0) expected += 1 + k_ar;
-  if (k_ma > 0) expected += 1 + k_ma;
-  expected += k_beta;
+  const std::int64_t expected = 1 + p + P + q + Q + k_beta;
   PLUSS_CHECK(static_cast<std::int64_t>(theta.size()) == expected,
               "subsp::stats::ts::Arima: internal theta size mismatch");
 
   const double cap = std::max(1e-9, 1.0 - stationarity_margin);
+  std::size_t idx = 0;
   ArimaParams out;
-  out.ar.resize(static_cast<std::size_t>(p));
-  out.ma.resize(static_cast<std::size_t>(q));
-  out.sar.resize(static_cast<std::size_t>(P));
-  out.sma.resize(static_cast<std::size_t>(Q));
+  out.intercept = theta[idx++];
+  auto block = [&](std::int64_t count, bool negate) {
+    std::vector<double> r(static_cast<std::size_t>(count));
+    for (auto& v : r) {
+      v = cap * std::tanh(theta[idx++]);
+    }
+    auto coeffs = coefficients_from_pacf_(r);
+    if (negate) {
+      for (double& c : coeffs) c = -c;
+    }
+    return coeffs;
+  };
+  out.ar = block(p, false);
+  out.sar = block(P, false);
+  out.ma = block(q, true);
+  out.sma = block(Q, true);
   out.beta.resize(static_cast<std::size_t>(k_beta));
-
-  std::int64_t idx = 0;
-  out.intercept = theta[static_cast<std::size_t>(idx++)];
-
-  if (k_ar > 0) {
-    const double amp = stable_sigmoid_(theta[static_cast<std::size_t>(idx++)]) * cap;
-    std::vector<double> raw(static_cast<std::size_t>(k_ar), 0.0);
-    for (std::int64_t i = 0; i < k_ar; ++i) {
-      raw[static_cast<std::size_t>(i)] = std::tanh(theta[static_cast<std::size_t>(idx++)]);
-    }
-    const double l1 = std::accumulate(raw.begin(), raw.end(), 0.0, [](double a, double v) { return a + std::abs(v); });
-    const double scale = (l1 > 1e-15) ? (amp / l1) : 0.0;
-    for (std::int64_t i = 0; i < p; ++i) out.ar[static_cast<std::size_t>(i)] = raw[static_cast<std::size_t>(i)] * scale;
-    for (std::int64_t i = 0; i < P; ++i) out.sar[static_cast<std::size_t>(i)] = raw[static_cast<std::size_t>(p + i)] * scale;
+  for (auto& b : out.beta) {
+    b = theta[idx++];
   }
-
-  if (k_ma > 0) {
-    const double amp = stable_sigmoid_(theta[static_cast<std::size_t>(idx++)]) * cap;
-    std::vector<double> raw(static_cast<std::size_t>(k_ma), 0.0);
-    for (std::int64_t i = 0; i < k_ma; ++i) {
-      raw[static_cast<std::size_t>(i)] = std::tanh(theta[static_cast<std::size_t>(idx++)]);
-    }
-    const double l1 = std::accumulate(raw.begin(), raw.end(), 0.0, [](double a, double v) { return a + std::abs(v); });
-    const double scale = (l1 > 1e-15) ? (amp / l1) : 0.0;
-    for (std::int64_t i = 0; i < q; ++i) out.ma[static_cast<std::size_t>(i)] = raw[static_cast<std::size_t>(i)] * scale;
-    for (std::int64_t i = 0; i < Q; ++i) out.sma[static_cast<std::size_t>(i)] = raw[static_cast<std::size_t>(q + i)] * scale;
-  }
-
-  for (std::int64_t j = 0; j < k_beta; ++j) {
-    out.beta[static_cast<std::size_t>(j)] = theta[static_cast<std::size_t>(idx++)];
-  }
-
-  return stabilize_params_(std::move(out), stationarity_margin);
+  return out;
 }
 
 std::vector<double> encode_theta_(ArimaParams p, double stationarity_margin) {
   p = stabilize_params_(std::move(p), stationarity_margin);
-  const std::int64_t p_n = static_cast<std::int64_t>(p.ar.size());
-  const std::int64_t q_n = static_cast<std::int64_t>(p.ma.size());
-  const std::int64_t P_n = static_cast<std::int64_t>(p.sar.size());
-  const std::int64_t Q_n = static_cast<std::int64_t>(p.sma.size());
-  const std::int64_t k_ar = p_n + P_n;
-  const std::int64_t k_ma = q_n + Q_n;
   const double cap = std::max(1e-9, 1.0 - stationarity_margin);
-
   std::vector<double> out;
-  out.reserve(static_cast<std::size_t>(1 + ((k_ar > 0) ? (1 + k_ar) : 0) + ((k_ma > 0) ? (1 + k_ma) : 0) +
-                                      static_cast<std::int64_t>(p.beta.size())));
   out.push_back(p.intercept);
-
-  if (k_ar > 0) {
-    std::vector<double> v;
-    v.reserve(static_cast<std::size_t>(k_ar));
-    v.insert(v.end(), p.ar.begin(), p.ar.end());
-    v.insert(v.end(), p.sar.begin(), p.sar.end());
-    const double l1 = std::accumulate(v.begin(), v.end(), 0.0, [](double a, double x) { return a + std::abs(x); });
-    const double amp = std::clamp(l1, 1e-12, cap - 1e-12);
-    out.push_back(stable_logit_(amp / cap));
-    for (double coeff : v) {
-      const double u = (amp > 1e-12) ? std::clamp(coeff / amp, -0.999999, 0.999999) : 0.0;
-      out.push_back(0.5 * std::log((1.0 + u) / (1.0 - u)));
+  auto block = [&](std::vector<double> coeffs, bool negate) {
+    if (negate) {
+      for (double& c : coeffs) c = -c;
     }
-  }
-
-  if (k_ma > 0) {
-    std::vector<double> v;
-    v.reserve(static_cast<std::size_t>(k_ma));
-    v.insert(v.end(), p.ma.begin(), p.ma.end());
-    v.insert(v.end(), p.sma.begin(), p.sma.end());
-    const double l1 = std::accumulate(v.begin(), v.end(), 0.0, [](double a, double x) { return a + std::abs(x); });
-    const double amp = std::clamp(l1, 1e-12, cap - 1e-12);
-    out.push_back(stable_logit_(amp / cap));
-    for (double coeff : v) {
-      const double u = (amp > 1e-12) ? std::clamp(coeff / amp, -0.999999, 0.999999) : 0.0;
-      out.push_back(0.5 * std::log((1.0 + u) / (1.0 - u)));
+    for (double r : pacf_from_coefficients_(coeffs)) {
+      out.push_back(std::atanh(std::clamp(r / cap, -0.999999, 0.999999)));
     }
-  }
-
+  };
+  block(p.ar, false);
+  block(p.sar, false);
+  block(p.ma, true);
+  block(p.sma, true);
   out.insert(out.end(), p.beta.begin(), p.beta.end());
+  return out;
+}
 
+// Full autoregressive and moving-average coefficients of the multiplicative model
+//   (1 - phi_1 B - ...)(1 - Phi_1 B^s - ...) (x_t - mu) = (1 + theta_1 B + ...)(1 + Theta_1 B^s + ...) e_t,
+// as the coefficient lists a (x_t = a_1 x_{t-1} + ... ) and b (... + b_1 e_{t-1} + ...). The seasonal and non-seasonal factors multiply, so
+// the cross terms (lag s + 1 and so on) are present, as in the standard seasonal ARIMA model.
+struct FullPolynomials {
+  std::vector<double> a{};
+  std::vector<double> b{};
+};
+
+std::vector<double> multiply_polynomials_(const std::vector<double>& u, const std::vector<double>& v) {
+  std::vector<double> out(u.size() + v.size() - 1, 0.0);
+  for (std::size_t i = 0; i < u.size(); ++i) {
+    for (std::size_t j = 0; j < v.size(); ++j) {
+      out[i + j] += u[i] * v[j];
+    }
+  }
+  return out;
+}
+
+FullPolynomials expand_polynomials_(const std::vector<double>& ar,
+                                    const std::vector<double>& ma,
+                                    const std::vector<double>& sar,
+                                    const std::vector<double>& sma,
+                                    std::int64_t seasonal_period) {
+  auto seasonal_poly = [&](const std::vector<double>& c, double sign) {
+    std::vector<double> poly(1 + c.size() * static_cast<std::size_t>(std::max<std::int64_t>(seasonal_period, 1)), 0.0);
+    poly[0] = 1.0;
+    for (std::size_t j = 0; j < c.size(); ++j) {
+      poly[(j + 1) * static_cast<std::size_t>(std::max<std::int64_t>(seasonal_period, 1))] = sign * c[j];
+    }
+    return poly;
+  };
+  auto plain_poly = [&](const std::vector<double>& c, double sign) {
+    std::vector<double> poly(1 + c.size(), 0.0);
+    poly[0] = 1.0;
+    for (std::size_t j = 0; j < c.size(); ++j) {
+      poly[j + 1] = sign * c[j];
+    }
+    return poly;
+  };
+  const auto ar_poly = multiply_polynomials_(plain_poly(ar, -1.0), seasonal_poly(sar, -1.0));
+  const auto ma_poly = multiply_polynomials_(plain_poly(ma, 1.0), seasonal_poly(sma, 1.0));
+  FullPolynomials out;
+  for (std::size_t i = 1; i < ar_poly.size(); ++i) out.a.push_back(-ar_poly[i]);
+  for (std::size_t i = 1; i < ma_poly.size(); ++i) out.b.push_back(ma_poly[i]);
+  while (!out.a.empty() && out.a.back() == 0.0) out.a.pop_back();
+  while (!out.b.empty() && out.b.back() == 0.0) out.b.pop_back();
   return out;
 }
 
@@ -433,32 +473,20 @@ ArmaEval arma_eval_(const std::vector<double>& x,
   out.eps.assign(static_cast<std::size_t>(n), 0.0);
   out.ll_per_obs.assign(static_cast<std::size_t>(n), std::numeric_limits<double>::quiet_NaN());
 
-  const std::int64_t lag_ar = static_cast<std::int64_t>(p.ar.size());
-  const std::int64_t lag_ma = static_cast<std::int64_t>(p.ma.size());
-  const std::int64_t lag_sar = static_cast<std::int64_t>(p.sar.size()) * std::max<std::int64_t>(seasonal_period, 0);
-  const std::int64_t lag_sma = static_cast<std::int64_t>(p.sma.size()) * std::max<std::int64_t>(seasonal_period, 0);
-  out.burn = std::max<std::int64_t>({0, lag_ar, lag_ma, lag_sar, lag_sma});
+  const auto poly = expand_polynomials_(p.ar, p.ma, p.sar, p.sma, seasonal_period);
+  const std::int64_t na = static_cast<std::int64_t>(poly.a.size());
+  const std::int64_t nb = static_cast<std::int64_t>(poly.b.size());
+  out.burn = std::max<std::int64_t>({0, na, nb});
   PLUSS_CHECK(n > out.burn + 2,
               "subsp::stats::ts::Arima: effective sample is too short for requested ARIMA/SARIMA lags");
 
   for (std::int64_t t = 0; t < n; ++t) {
     double pred = p.intercept + exog_dot_(exog, p.beta, t);
-
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(p.ar.size()); ++i) {
-      const std::int64_t idx = t - i;
-      if (idx >= 0) pred += p.ar[static_cast<std::size_t>(i - 1)] * x[static_cast<std::size_t>(idx)];
+    for (std::int64_t i = 1; i <= na; ++i) {
+      if (t - i >= 0) pred += poly.a[static_cast<std::size_t>(i - 1)] * x[static_cast<std::size_t>(t - i)];
     }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(p.sar.size()); ++i) {
-      const std::int64_t idx = t - i * seasonal_period;
-      if (idx >= 0) pred += p.sar[static_cast<std::size_t>(i - 1)] * x[static_cast<std::size_t>(idx)];
-    }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(p.ma.size()); ++i) {
-      const std::int64_t idx = t - i;
-      if (idx >= 0) pred += p.ma[static_cast<std::size_t>(i - 1)] * out.eps[static_cast<std::size_t>(idx)];
-    }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(p.sma.size()); ++i) {
-      const std::int64_t idx = t - i * seasonal_period;
-      if (idx >= 0) pred += p.sma[static_cast<std::size_t>(i - 1)] * out.eps[static_cast<std::size_t>(idx)];
+    for (std::int64_t i = 1; i <= nb; ++i) {
+      if (t - i >= 0) pred += poly.b[static_cast<std::size_t>(i - 1)] * out.eps[static_cast<std::size_t>(t - i)];
     }
 
     out.eps[static_cast<std::size_t>(t)] = x[static_cast<std::size_t>(t)] - pred;
@@ -479,6 +507,126 @@ ArmaEval arma_eval_(const std::vector<double>& x,
   return out;
 }
 
+// Exact Gaussian likelihood of the stationary ARMA process (x_t - mu) = sum a_i (x_{t-i} - mu) + e_t + sum b_i e_{t-i}, mu = c / (1 - sum a),
+// by the Kalman filter on Harvey's state-space form, started from the stationary state covariance (obtained by the doubling iteration
+// P <- P + M P M', M <- M M for the discrete Lyapunov equation P = T P T' + R R'). The innovations variance is concentrated out:
+// sigma^2 = mean(v_t^2 / F_t). Returns innovations v_t as `eps`, the per-observation log-likelihood and sigma^2.
+ArmaEval arma_exact_eval_(const std::vector<double>& x,
+                          const ArimaParams& p,
+                          std::int64_t seasonal_period,
+                          double variance_floor) {
+  const std::int64_t n = static_cast<std::int64_t>(x.size());
+  ArmaEval out;
+  out.eps.assign(static_cast<std::size_t>(n), 0.0);
+  out.ll_per_obs.assign(static_cast<std::size_t>(n), std::numeric_limits<double>::quiet_NaN());
+  out.burn = 0;
+  const auto poly = expand_polynomials_(p.ar, p.ma, p.sar, p.sma, seasonal_period);
+  const std::size_t na = poly.a.size();
+  const std::size_t nb = poly.b.size();
+  const std::size_t r = std::max<std::size_t>(1, std::max(na, nb + 1));
+  PLUSS_CHECK(n > 2, "subsp::stats::ts::Arima: effective sample is too short");
+
+  double sum_a = 0.0;
+  for (double v : poly.a) sum_a += v;
+  const double denom = 1.0 - sum_a;
+  const double mu = (std::abs(denom) > 1e-10) ? p.intercept / denom : 0.0;
+
+  std::vector<double> A(r, 0.0), R(r, 0.0);
+  for (std::size_t i = 0; i < na; ++i) A[i] = poly.a[i];
+  R[0] = 1.0;
+  for (std::size_t i = 0; i < nb; ++i) R[i + 1] = poly.b[i];
+
+  // stationary covariance by doubling
+  auto matmul = [r](const std::vector<double>& X, const std::vector<double>& Y) {
+    std::vector<double> Z(r * r, 0.0);
+    for (std::size_t i = 0; i < r; ++i)
+      for (std::size_t k = 0; k < r; ++k) {
+        const double xik = X[i * r + k];
+        if (xik == 0.0) continue;
+        for (std::size_t j = 0; j < r; ++j) Z[i * r + j] += xik * Y[k * r + j];
+      }
+    return Z;
+  };
+  auto transpose = [r](const std::vector<double>& X) {
+    std::vector<double> Z(r * r);
+    for (std::size_t i = 0; i < r; ++i)
+      for (std::size_t j = 0; j < r; ++j) Z[j * r + i] = X[i * r + j];
+    return Z;
+  };
+  std::vector<double> P(r * r), M(r * r, 0.0);
+  for (std::size_t i = 0; i < r; ++i)
+    for (std::size_t j = 0; j < r; ++j) P[i * r + j] = R[i] * R[j];
+  for (std::size_t i = 0; i < r; ++i) {
+    M[i * r] = A[i];
+    if (i + 1 < r) M[i * r + i + 1] = 1.0;
+  }
+  for (int iter = 0; iter < 80; ++iter) {
+    const auto MPMt = matmul(matmul(M, P), transpose(M));
+    double change = 0.0, scale = 0.0;
+    for (std::size_t k = 0; k < r * r; ++k) {
+      P[k] += MPMt[k];
+      change = std::max(change, std::abs(MPMt[k]));
+      scale = std::max(scale, std::abs(P[k]));
+    }
+    M = matmul(M, M);
+    if (!(change <= 1e-15 * std::max(1.0, scale))) continue;
+    break;
+  }
+
+  std::vector<double> a(r, 0.0);  // predicted state mean
+  std::vector<double> Pa = P;     // predicted state covariance
+  std::vector<double> TP(r * r), Pn(r * r), col(r);
+  double sum_scaled = 0.0;
+  std::vector<double> innovations_variance(static_cast<std::size_t>(n), 0.0);
+  for (std::int64_t t = 0; t < n; ++t) {
+    const double v = x[static_cast<std::size_t>(t)] - mu - a[0];
+    const double F = Pa[0];
+    if (!(F > 1e-300) || !std::isfinite(F) || !std::isfinite(v)) {
+      out.sigma2 = variance_floor;
+      return out;  // ll_per_obs left NaN -> treated as an invalid evaluation
+    }
+    out.eps[static_cast<std::size_t>(t)] = v;
+    innovations_variance[static_cast<std::size_t>(t)] = F;
+    sum_scaled += v * v / F;
+    // filter update: state a + P[:,0] v / F, covariance P - P[:,0] P[0,:] / F
+    for (std::size_t i = 0; i < r; ++i) col[i] = Pa[i * r];
+    std::vector<double> a_f(r);
+    for (std::size_t i = 0; i < r; ++i) a_f[i] = a[i] + col[i] * v / F;
+    std::vector<double> P_f(r * r);
+    for (std::size_t i = 0; i < r; ++i)
+      for (std::size_t j = 0; j < r; ++j) P_f[i * r + j] = Pa[i * r + j] - col[i] * col[j] / F;
+    // prediction: a <- T a_f, P <- T P_f T' + R R' with T = A e_0' + shift
+    for (std::size_t i = 0; i < r; ++i) a[i] = A[i] * a_f[0] + ((i + 1 < r) ? a_f[i + 1] : 0.0);
+    for (std::size_t i = 0; i < r; ++i)
+      for (std::size_t j = 0; j < r; ++j) TP[i * r + j] = A[i] * P_f[j] + ((i + 1 < r) ? P_f[(i + 1) * r + j] : 0.0);
+    for (std::size_t i = 0; i < r; ++i)
+      for (std::size_t j = 0; j < r; ++j) Pn[i * r + j] = TP[i * r] * A[j] + ((j + 1 < r) ? TP[i * r + j + 1] : 0.0) + R[i] * R[j];
+    Pa = Pn;
+  }
+  const double nd = static_cast<double>(n);
+  out.sigma2 = std::max(variance_floor, sum_scaled / nd);
+  // per-observation terms use the same concentrated sigma^2, so they add up to the profile log-likelihood
+  const double ls2 = std::log(out.sigma2);
+  for (std::int64_t t = 0; t < n; ++t) {
+    const double F = innovations_variance[static_cast<std::size_t>(t)];
+    const double v = out.eps[static_cast<std::size_t>(t)];
+    out.ll_per_obs[static_cast<std::size_t>(t)] = -0.5 * (kLog2Pi + ls2 + std::log(F) + (v * v) / (out.sigma2 * F));
+  }
+  return out;
+}
+
+ArmaEval eval_dispatch_(const std::vector<double>& x,
+                        const ArimaParams& p,
+                        const ExogMatrix* exog,
+                        std::int64_t seasonal_period,
+                        double variance_floor,
+                        bool exact) {
+  if (exact && (exog == nullptr || exog->empty())) {
+    return arma_exact_eval_(x, p, seasonal_period, variance_floor);
+  }
+  return arma_eval_(x, p, exog, seasonal_period, variance_floor);
+}
+
 double loglik_from_eval_(const ArmaEval& eval) {
   double ll = 0.0;
   for (double v : eval.ll_per_obs) {
@@ -491,8 +639,9 @@ double loglik_transformed_(const std::vector<double>& x,
                            const ExogMatrix* exog,
                            const ArimaParams& p,
                            std::int64_t seasonal_period,
-                           double variance_floor) {
-  const auto eval = arma_eval_(x, p, exog, seasonal_period, variance_floor);
+                           double variance_floor,
+                           bool exact) {
+  const auto eval = eval_dispatch_(x, p, exog, seasonal_period, variance_floor, exact);
   return loglik_from_eval_(eval);
 }
 
@@ -500,8 +649,9 @@ double nll_transformed_(const std::vector<double>& x,
                         const ExogMatrix* exog,
                         const ArimaParams& p,
                         std::int64_t seasonal_period,
-                        double variance_floor) {
-  const double ll = loglik_transformed_(x, exog, p, seasonal_period, variance_floor);
+                        double variance_floor,
+                        bool exact) {
+  const double ll = loglik_transformed_(x, exog, p, seasonal_period, variance_floor, exact);
   if (!std::isfinite(ll)) {
     return kHuge;
   }
@@ -584,7 +734,7 @@ ArimaFit fit_arima_(const Series& y, const Series* x_opt, const ArimaOptions& op
                                  options.seasonal_ma_order,
                                  x_trans.k,
                                  options.stationarity_margin);
-    return nll_transformed_(pipe.transformed, &x_trans, p, options.seasonal_period, options.variance_floor);
+    return nll_transformed_(pipe.transformed, &x_trans, p, options.seasonal_period, options.variance_floor, options.exact_likelihood);
   };
 
   const auto out = pluss::subsp::math::optimization::nelder_mead_minimizer(objective, initial, nm);
@@ -598,7 +748,7 @@ ArimaFit fit_arima_(const Series& y, const Series* x_opt, const ArimaOptions& op
                               options.stationarity_margin);
   best_p = stabilize_params_(std::move(best_p), options.stationarity_margin);
 
-  const auto eval = arma_eval_(pipe.transformed, best_p, &x_trans, options.seasonal_period, options.variance_floor);
+  const auto eval = eval_dispatch_(pipe.transformed, best_p, &x_trans, options.seasonal_period, options.variance_floor, options.exact_likelihood);
 
   return ArimaFit{
       .mean = mean,
@@ -615,6 +765,7 @@ ArimaFit fit_arima_(const Series& y, const Series* x_opt, const ArimaOptions& op
       .variance_floor = options.variance_floor,
       .stationarity_margin = options.stationarity_margin,
       .finite_diff_eps = options.finite_diff_eps,
+      .exact_likelihood = options.exact_likelihood,
   };
 }
 
@@ -680,8 +831,8 @@ std::vector<double> score_numeric_(const std::vector<double>& x,
     const double h = std::max(finite_diff_eps, finite_diff_eps * std::abs(base[static_cast<std::size_t>(i)]));
     const auto p_plus = perturb_natural_(p0, i, h, fit.stationarity_margin);
     const auto p_minus = perturb_natural_(p0, i, -h, fit.stationarity_margin);
-    const double f_plus = loglik_transformed_(x, exog, p_plus, fit.seasonal_period, fit.variance_floor);
-    const double f_minus = loglik_transformed_(x, exog, p_minus, fit.seasonal_period, fit.variance_floor);
+    const double f_plus = loglik_transformed_(x, exog, p_plus, fit.seasonal_period, fit.variance_floor, fit.exact_likelihood);
+    const double f_minus = loglik_transformed_(x, exog, p_minus, fit.seasonal_period, fit.variance_floor, fit.exact_likelihood);
     const double grad = (f_plus - f_minus) / (2.0 * h);
     g[static_cast<std::size_t>(i)] = std::isfinite(grad) ? grad : 0.0;
   }
@@ -723,10 +874,10 @@ std::vector<double> observed_inf_numeric_(const std::vector<double>& x,
                                        -hj,
                                        fit.stationarity_margin);
 
-      const double fpp = loglik_transformed_(x, exog, pp, fit.seasonal_period, fit.variance_floor);
-      const double fpm = loglik_transformed_(x, exog, pm, fit.seasonal_period, fit.variance_floor);
-      const double fmp = loglik_transformed_(x, exog, mp, fit.seasonal_period, fit.variance_floor);
-      const double fmm = loglik_transformed_(x, exog, mm, fit.seasonal_period, fit.variance_floor);
+      const double fpp = loglik_transformed_(x, exog, pp, fit.seasonal_period, fit.variance_floor, fit.exact_likelihood);
+      const double fpm = loglik_transformed_(x, exog, pm, fit.seasonal_period, fit.variance_floor, fit.exact_likelihood);
+      const double fmp = loglik_transformed_(x, exog, mp, fit.seasonal_period, fit.variance_floor, fit.exact_likelihood);
+      const double fmm = loglik_transformed_(x, exog, mm, fit.seasonal_period, fit.variance_floor, fit.exact_likelihood);
       const double h = (fpp - fpm - fmp + fmm) / (4.0 * hi * hj);
       out[static_cast<std::size_t>(i * d + j)] = std::isfinite(h) ? -h : 0.0;
     }
@@ -749,6 +900,7 @@ std::vector<double> arma_forecast_transformed_(std::int64_t horizon,
   }
   std::vector<double> x_ext = x;
   std::vector<double> e_ext = eps;
+  const auto poly = expand_polynomials_(fit.ar, fit.ma, fit.sar, fit.sma, fit.seasonal_period);
 
   const std::int64_t n = static_cast<std::int64_t>(x.size());
   std::vector<double> out(static_cast<std::size_t>(horizon), 0.0);
@@ -756,22 +908,11 @@ std::vector<double> arma_forecast_transformed_(std::int64_t horizon,
   for (std::int64_t h = 0; h < horizon; ++h) {
     const std::int64_t t = n + h;
     double pred = fit.intercept + exog_dot_(x_future, fit.beta, h);
-
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.ar.size()); ++i) {
-      const std::int64_t idx = t - i;
-      if (idx >= 0) pred += fit.ar[static_cast<std::size_t>(i - 1)] * x_ext[static_cast<std::size_t>(idx)];
+    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(poly.a.size()); ++i) {
+      if (t - i >= 0) pred += poly.a[static_cast<std::size_t>(i - 1)] * x_ext[static_cast<std::size_t>(t - i)];
     }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.sar.size()); ++i) {
-      const std::int64_t idx = t - i * fit.seasonal_period;
-      if (idx >= 0) pred += fit.sar[static_cast<std::size_t>(i - 1)] * x_ext[static_cast<std::size_t>(idx)];
-    }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.ma.size()); ++i) {
-      const std::int64_t idx = t - i;
-      if (idx >= 0) pred += fit.ma[static_cast<std::size_t>(i - 1)] * e_ext[static_cast<std::size_t>(idx)];
-    }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.sma.size()); ++i) {
-      const std::int64_t idx = t - i * fit.seasonal_period;
-      if (idx >= 0) pred += fit.sma[static_cast<std::size_t>(i - 1)] * e_ext[static_cast<std::size_t>(idx)];
+    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(poly.b.size()); ++i) {
+      if (t - i >= 0) pred += poly.b[static_cast<std::size_t>(i - 1)] * e_ext[static_cast<std::size_t>(t - i)];
     }
 
     out[static_cast<std::size_t>(h)] = pred;
@@ -801,26 +942,16 @@ std::vector<double> arma_simulate_transformed_(std::int64_t n,
 
   std::vector<double> y_state(static_cast<std::size_t>(n), 0.0);
   std::vector<double> eps(static_cast<std::size_t>(n), 0.0);
+  const auto poly = expand_polynomials_(fit.ar, fit.ma, fit.sar, fit.sma, fit.seasonal_period);
 
   for (std::int64_t t = 0; t < n; ++t) {
     eps[static_cast<std::size_t>(t)] = sigma * z[static_cast<std::size_t>(t)];
     double pred = fit.intercept + exog_dot_(exog, fit.beta, t);
-
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.ar.size()); ++i) {
-      const std::int64_t idx = t - i;
-      if (idx >= 0) pred += fit.ar[static_cast<std::size_t>(i - 1)] * y_state[static_cast<std::size_t>(idx)];
+    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(poly.a.size()); ++i) {
+      if (t - i >= 0) pred += poly.a[static_cast<std::size_t>(i - 1)] * y_state[static_cast<std::size_t>(t - i)];
     }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.sar.size()); ++i) {
-      const std::int64_t idx = t - i * fit.seasonal_period;
-      if (idx >= 0) pred += fit.sar[static_cast<std::size_t>(i - 1)] * y_state[static_cast<std::size_t>(idx)];
-    }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.ma.size()); ++i) {
-      const std::int64_t idx = t - i;
-      if (idx >= 0) pred += fit.ma[static_cast<std::size_t>(i - 1)] * eps[static_cast<std::size_t>(idx)];
-    }
-    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(fit.sma.size()); ++i) {
-      const std::int64_t idx = t - i * fit.seasonal_period;
-      if (idx >= 0) pred += fit.sma[static_cast<std::size_t>(i - 1)] * eps[static_cast<std::size_t>(idx)];
+    for (std::int64_t i = 1; i <= static_cast<std::int64_t>(poly.b.size()); ++i) {
+      if (t - i >= 0) pred += poly.b[static_cast<std::size_t>(i - 1)] * eps[static_cast<std::size_t>(t - i)];
     }
 
     y_state[static_cast<std::size_t>(t)] = pred + eps[static_cast<std::size_t>(t)];
@@ -837,7 +968,7 @@ Series ArimaFit::infer(const Series& y, Config cfg) const {
   const Series yv = as_vector_(y, "ArimaFit::infer").to(out_cfg.platform, out_cfg.dtype);
   const auto centered = centered_with_mean_(yv, mean);
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
-  const auto eval = arma_eval_(pipe.transformed, to_params_(*this), nullptr, seasonal_period, variance_floor);
+  const auto eval = eval_dispatch_(pipe.transformed, to_params_(*this), nullptr, seasonal_period, variance_floor, exact_likelihood);
 
   std::vector<double> out(static_cast<std::size_t>(pipe.lost), std::numeric_limits<double>::quiet_NaN());
   out.insert(out.end(), eval.eps.begin(), eval.eps.end());
@@ -851,7 +982,7 @@ Series ArimaFit::infer(const Series& y, const Series& x, Config cfg) const {
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
   const ExogMatrix x_all = as_exog_(x, yv.numel(), "ArimaFit::infer", out_cfg);
   const ExogMatrix x_trans = exog_tail_(x_all, static_cast<std::int64_t>(pipe.transformed.size()));
-  const auto eval = arma_eval_(pipe.transformed, to_params_(*this), &x_trans, seasonal_period, variance_floor);
+  const auto eval = eval_dispatch_(pipe.transformed, to_params_(*this), &x_trans, seasonal_period, variance_floor, exact_likelihood);
 
   std::vector<double> out(static_cast<std::size_t>(pipe.lost), std::numeric_limits<double>::quiet_NaN());
   out.insert(out.end(), eval.eps.begin(), eval.eps.end());
@@ -863,7 +994,7 @@ double ArimaFit::loglik(const Series& y) const {
   const Series yv = as_vector_(y, "ArimaFit::loglik").to(ScalarType::Float64);
   const auto centered = centered_with_mean_(yv, mean);
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
-  return loglik_transformed_(pipe.transformed, nullptr, to_params_(*this), seasonal_period, variance_floor);
+  return loglik_transformed_(pipe.transformed, nullptr, to_params_(*this), seasonal_period, variance_floor, exact_likelihood);
 }
 
 double ArimaFit::loglik(const Series& y, const Series& x) const {
@@ -873,7 +1004,7 @@ double ArimaFit::loglik(const Series& y, const Series& x) const {
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
   const ExogMatrix x_all = as_exog_(x, yv.numel(), "ArimaFit::loglik", out_cfg);
   const ExogMatrix x_trans = exog_tail_(x_all, static_cast<std::int64_t>(pipe.transformed.size()));
-  return loglik_transformed_(pipe.transformed, &x_trans, to_params_(*this), seasonal_period, variance_floor);
+  return loglik_transformed_(pipe.transformed, &x_trans, to_params_(*this), seasonal_period, variance_floor, exact_likelihood);
 }
 
 Series ArimaFit::loglik_per_obs(const Series& y, Config cfg) const {
@@ -882,7 +1013,7 @@ Series ArimaFit::loglik_per_obs(const Series& y, Config cfg) const {
   const Series yv = as_vector_(y, "ArimaFit::loglik_per_obs").to(out_cfg.platform, out_cfg.dtype);
   const auto centered = centered_with_mean_(yv, mean);
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
-  const auto eval = arma_eval_(pipe.transformed, to_params_(*this), nullptr, seasonal_period, variance_floor);
+  const auto eval = eval_dispatch_(pipe.transformed, to_params_(*this), nullptr, seasonal_period, variance_floor, exact_likelihood);
 
   std::vector<double> out(static_cast<std::size_t>(pipe.lost), std::numeric_limits<double>::quiet_NaN());
   out.insert(out.end(), eval.ll_per_obs.begin(), eval.ll_per_obs.end());
@@ -896,7 +1027,7 @@ Series ArimaFit::loglik_per_obs(const Series& y, const Series& x, Config cfg) co
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
   const ExogMatrix x_all = as_exog_(x, yv.numel(), "ArimaFit::loglik_per_obs", out_cfg);
   const ExogMatrix x_trans = exog_tail_(x_all, static_cast<std::int64_t>(pipe.transformed.size()));
-  const auto eval = arma_eval_(pipe.transformed, to_params_(*this), &x_trans, seasonal_period, variance_floor);
+  const auto eval = eval_dispatch_(pipe.transformed, to_params_(*this), &x_trans, seasonal_period, variance_floor, exact_likelihood);
 
   std::vector<double> out(static_cast<std::size_t>(pipe.lost), std::numeric_limits<double>::quiet_NaN());
   out.insert(out.end(), eval.ll_per_obs.begin(), eval.ll_per_obs.end());
@@ -954,7 +1085,7 @@ Series ArimaFit::forecast(std::int64_t horizon, const Series& y, Config cfg) con
   const Series yv = as_vector_(y, "ArimaFit::forecast").to(out_cfg.platform, out_cfg.dtype);
   const auto centered = centered_with_mean_(yv, mean);
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
-  const auto eval = arma_eval_(pipe.transformed, to_params_(*this), nullptr, seasonal_period, variance_floor);
+  const auto eval = eval_dispatch_(pipe.transformed, to_params_(*this), nullptr, seasonal_period, variance_floor, exact_likelihood);
 
   const auto transformed_forecast = arma_forecast_transformed_(horizon, pipe.transformed, eval.eps, nullptr, *this);
   auto level_forecast = invert_forecast_(pipe,
@@ -979,7 +1110,7 @@ Series ArimaFit::forecast(std::int64_t horizon,
   const ExogMatrix x_all = as_exog_(x_hist, yv.numel(), "ArimaFit::forecast", out_cfg);
   const ExogMatrix x_trans = exog_tail_(x_all, static_cast<std::int64_t>(pipe.transformed.size()));
   const ExogMatrix xh = as_exog_(x_future, horizon, "ArimaFit::forecast", out_cfg);
-  const auto eval = arma_eval_(pipe.transformed, to_params_(*this), &x_trans, seasonal_period, variance_floor);
+  const auto eval = eval_dispatch_(pipe.transformed, to_params_(*this), &x_trans, seasonal_period, variance_floor, exact_likelihood);
 
   const auto transformed_forecast = arma_forecast_transformed_(horizon, pipe.transformed, eval.eps, &xh, *this);
   auto level_forecast = invert_forecast_(pipe,
@@ -1071,6 +1202,7 @@ SarimaFit Sarima::fit_mle(const Series& y, const SarimaOptions& options, Config 
   opt.max_iterations = options.max_iterations;
   opt.max_evaluations = options.max_evaluations;
   opt.simplex_delta = options.simplex_delta;
+  opt.exact_likelihood = options.exact_likelihood;
 
   SarimaFit out;
   out.core = Arima::fit_mle(y, opt, cfg);
@@ -1106,6 +1238,7 @@ SarimaFit Sarima::fit_mle(const Series& y, const Series& x, const SarimaOptions&
   opt.max_iterations = options.max_iterations;
   opt.max_evaluations = options.max_evaluations;
   opt.simplex_delta = options.simplex_delta;
+  opt.exact_likelihood = options.exact_likelihood;
 
   SarimaFit out;
   out.core = Arima::fit_mle(y, x, opt, cfg);

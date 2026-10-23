@@ -1,0 +1,10 @@
+# Integers that are not 0 or 1, and when the relaxation is enough
+
+[Back to Choosing Whole Things](../milp_01_integer_programs.md)
+
+
+Integer variables can be any whole number in their bounds. The first program maximizes `5x + 4y + 3z` subject to three resource rows, with `x`, `y`, `z` integers up to 10. The second maximizes `x + y` subject to `x + y <= 3.5` with both integer.
+
+@@example Numerical/optimization/guide/lp/212_general_integers.cpp@@
+
+For the production plan the relaxation's answer is already whole, `(2, 0, 1)` with value 13, so the search finishes at the root: 1 node. This happens often enough to be worth knowing: solve the relaxation first, and if it is integral you are done. For `x + y <= 3.5` the relaxation reaches 3.5 and no integer point does; the search needs 17 nodes and finds 3, at `(2, 1)`.

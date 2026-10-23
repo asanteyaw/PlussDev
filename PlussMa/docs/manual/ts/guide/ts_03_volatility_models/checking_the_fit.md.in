@@ -1,0 +1,8 @@
+# Checking the fit
+
+[Back to Volatility Models](../ts_03_volatility_models.md)
+
+
+@@example Stats/time_series/guide/1213_checking_a_fit.cpp@@
+
+The raw returns show strong ARCH effects (p ≈ 10⁻¹⁴ for the ARCH-LM test and 10⁻²² for the Ljung–Box test on squares). After dividing by the fitted conditional standard deviation both tests are silent (p = 0.82 and 0.92): the model has absorbed the clustering. If the standardised residuals still show effects, add lags (`arch_order`, `garch_order`), or try an asymmetric model.

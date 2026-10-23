@@ -1,0 +1,8 @@
+# Impulse responses and variance decompositions
+
+[Back to Vector Autoregressions and Cointegration](../ts_04_vector_models.md)
+
+
+@@example Stats/time_series/guide/1215_impulse_responses.cpp@@
+
+At step 0 the orthogonalised response of series 0 to its own shock is 0.2815, the square root of its error variance, and a shock to series 1 does not move series 0 on impact (the Cholesky ordering). The generalised response to the same shock is 0.1168, the covariance divided by the standard deviation: it lets series 0 move with the correlated shock. All responses die out geometrically, as the VAR is stable. Series 0's variance is almost entirely its own shock (over 95% at five steps), while series 1's variance is shared (roughly a quarter of it caused by the shock to series 0 at five steps). The generalised shares, normalised to add up to one, are less lopsided because they do not attribute the common part of the shocks to the first series.

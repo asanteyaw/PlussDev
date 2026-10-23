@@ -1,0 +1,10 @@
+# Distributions and maximum likelihood
+
+Chapters, in reading order:
+
+- [Distributions 1: Evaluating and Sampling](distributions/dist_01_evaluating_and_sampling.md)
+- [Distributions 2: Maximum Likelihood](distributions/dist_02_maximum_likelihood.md)
+- [Distributions 3: Heavy Tails and Mixtures](distributions/dist_03_heavy_tails_and_mixtures.md)
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

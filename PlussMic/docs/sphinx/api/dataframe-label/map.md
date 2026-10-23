@@ -42,10 +42,10 @@ using namespace pluss::table;
 
 auto orders = DataFrame(
     {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto tagged = orders.label().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
+auto tagged = orders.labels().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
 std::cout << tagged;
 
-auto out = tagged.label().map([](const SlateValue& v) {
+auto out = tagged.labels().map([](const SlateValue& v) {
   return SlateValue(Slate(pluss::make_note({v.to_str() + "!"})));
 });
 std::cout << out;
@@ -90,11 +90,11 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
-std::cout << labeled.label().has();
+auto labeled = orders.labels().set("region");
+std::cout << labeled.labels().has();
 
 try {
-  auto out = labeled.label().map([](const SlateValue& v) {
+  auto out = labeled.labels().map([](const SlateValue& v) {
     return SlateValue(Slate(pluss::make_note({v.to_str() + "!"})));
   });
 } catch (const std::exception& e) {
@@ -107,7 +107,7 @@ try {
 
 ```text
 true
-DataFrame::label().map: structured labels are not supported; map a label part instead
+DataFrame::labels().map: structured labels are not supported; map a label part instead
 ```
 
 `labeled`'s case labels came from `set("region")`, which always creates a

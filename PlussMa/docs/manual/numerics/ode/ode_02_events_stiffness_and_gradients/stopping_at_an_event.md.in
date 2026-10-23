@@ -1,0 +1,18 @@
+# Stopping at an event
+
+[Back to Events, Stiffness and Gradients](../ode_02_events_stiffness_and_gradients.md)
+
+
+`ode::fluxa_until(f, event, y0, t0, t1, theta, options, event_options)` integrates until the scalar `event(t, y, theta)` changes sign, then refines the crossing and returns the state there. It uses the fixed-step RK4 and refines the crossing time within the step where it occurred.
+
+| `OdeEventOptions` | Meaning | Default |
+|---|---|---|
+| `direction` | `Any`, `Rising` (negative to positive) or `Falling` | `Any` |
+| `time_tolerance`, `value_tolerance` | refinement targets | 1e-10, 1e-10 |
+| `max_refinements` | cap on bisection steps | 48 |
+
+The result extends `OdeResult` with `triggered`, `t_final`, `event_value`, and `event_evaluations`.
+
+@@example Numerical/ode/guide/703_events.cpp@@
+
+The impact time and speed agree with the closed form to the printed digits, and the event value (the height) is zero to the refinement tolerance. Asking for a rising crossing, which never happens, returns `triggered = 0` and the state at `t1`: always check `triggered`.

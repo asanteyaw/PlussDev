@@ -1,0 +1,11 @@
+# Linear programming
+
+Chapters, in reading order:
+
+- [Linear Programming 1: First Programs](linprog/linprog_01_first_programs.md)
+- [Linear Programming 2: Prices and Certificates](linprog/linprog_02_prices_and_certificates.md)
+- [Linear Programming 3: Methods, Warm Starts and Sweeps](linprog/linprog_03_methods_warm_starts_and_sweeps.md)
+- [Linear Programming 4: Large Sparse Models](linprog/linprog_04_large_sparse_models.md)
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

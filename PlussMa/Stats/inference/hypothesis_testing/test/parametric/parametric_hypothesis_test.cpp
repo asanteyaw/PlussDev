@@ -49,6 +49,18 @@ int main() {
     }
 
     {
+      // An extreme statistic keeps a small nonzero p-value (1 - cdf would round to exactly zero).
+      std::vector<double> big;
+      for (int i = 0; i < 100; ++i) big.push_back(10.0 + 0.1 * ((i % 7) - 3));
+      hyp::TestOptions opt;
+      opt.tail = hyp::Tail::Both;
+      const auto r = hyp::ttest(make_vec(big), 0.0, opt, cfg);
+      expect(r.pvalue > 0.0 && r.pvalue < 1e-60, "ttest extreme statistic keeps a tiny nonzero pvalue");
+      const auto z = hyp::ztest(make_vec(big), 0.0, 0.3, opt, cfg);
+      expect(z.pvalue >= 0.0 && z.pvalue < 1e-100, "ztest extreme statistic pvalue");
+    }
+
+    {
       const Series x = make_vec({4.0, 5.0, 6.0, 7.0, 8.0});
       hyp::TestOptions opt;
       opt.alpha = 0.05;

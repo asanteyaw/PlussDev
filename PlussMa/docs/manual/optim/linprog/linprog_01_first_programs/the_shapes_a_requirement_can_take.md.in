@@ -1,0 +1,10 @@
+# The shapes a requirement can take
+
+[Back to First Programs](../linprog_01_first_programs.md)
+
+
+A requirement can be written in several equivalent ways, and which is most convenient depends on where it comes from. A "greater than or equal" is a `<=` row with both sides negated. A balance with surplus is an equality with an extra variable. A simple limit on one variable can be a bound or a row. The program minimizes `2 x0 + 3 x1 + 4 x2` subject to `x0 + x1 >= 2` and `x2 >= 1` in three formulations, and then shows a free variable and an upper-bounded one.
+
+@@example Numerical/optimization/guide/lp/202_problem_forms.cpp@@
+
+All three formulations give the objective 8 at `x = (2, 0, 1)`: a row and a bound, an equality with a surplus variable, and both requirements as rows. Prefer the bound to the row wherever a requirement is about one variable: it is cheaper for the solver, and it stays out of the constraint matrix. The last case has a free variable (`lower = -inf`) and a variable with an upper limit: the optimum is `x0 = -3`, `x1 = 0`, objective -3.

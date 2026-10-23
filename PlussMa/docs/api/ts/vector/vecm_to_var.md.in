@@ -1,0 +1,94 @@
+# `pluss::subsp::stats::ts::vecm_to_var`
+
+Converts the short-run and impact matrices of an error-correction model into VAR lag matrices.
+
+## Signature
+
+```cpp
+pluss::Series ts::vecm_to_var(const pluss::Series& short_run, const pluss::Series& impact, pluss::codem::Config cfg = {});
+```
+
+## What It Does
+
+The inverse of [`var_to_vecm`](var_to_vecm.md): with `Π` the impact and `Γ_i` the short-run matrices, the lag matrices are `A_1 = I + Π + Γ_1`, `A_i = Γ_i − Γ_{i−1}` for `1 < i < p`, and `A_p = −Γ_{p−1}`.
+
+## Parameters
+
+`const pluss::Series& short_run`
+: The short-run matrices, `(p − 1) × k × k` (empty first dimension for `p = 1`).
+
+`const pluss::Series& impact`
+: The impact matrix, `k × k`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series).
+
+## Returns
+
+The lag matrices, `p × k × k`.
+
+## Practical Examples
+
+### Example 1
+
+A VECM's matrices expressed as a VAR: with no short-run terms the lag array is a single matrix `I + impact`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// Three series: x is a random walk, y = x + a stationary AR(1) (so y is tied to x), w is an unrelated random walk.
+Series three(int n) {
+  const auto e1 = noise(n, 0), e2 = noise(n, 5000), e3 = noise(n, 9000);
+  std::vector<double> y(3 * n);
+  double x = 0.0, u = 0.0, w = 0.0;
+  for (int t = 0; t < n; ++t) {
+    x += e1[t];
+    u = 0.6 * u + e2[t];
+    w += e3[t];
+    y[3 * t] = x;
+    y[3 * t + 1] = x + u;
+    y[3 * t + 2] = w;
+  }
+  return pluss::make_series(y, {n, 3}, f64);
+}
+
+int main() {
+  const Series y = three(400);
+  ts::VecmOptions options;
+  options.rank = 1;
+  const auto fit = ts::Vecm::fit_mle(y, options);
+  const Series ar = ts::vecm_to_var(fit.gamma, fit.impact);
+  std::cout << "lag array shape: " << ar.sizes()[0] << " x " << ar.sizes()[1] << " x " << ar.sizes()[2] << "\n";
+  std::cout << std::fixed << std::setprecision(4) << "(A_1 - I) minus impact, largest absolute entry: " << (ar.select(0, 0) - pluss::series::eye(3, 3).to(pluss::ScalarType::Float64) - fit.impact).abs().max().item<double>() << "\n";
+}
+```
+
+
+## See Also
+
+- [`var_to_vecm`](var_to_vecm.md)
+- [`VecmFit`](VecmFit.md)

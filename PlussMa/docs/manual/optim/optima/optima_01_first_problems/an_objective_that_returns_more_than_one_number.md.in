@@ -1,0 +1,10 @@
+# An objective that returns more than one number
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+The objective must reduce to a single number. Returning a vector of residuals, instead of their sum of squares, is the usual slip. The solver returns immediately with the `InvalidProblem` flag and a message that names the fix.
+
+@@example Numerical/optimization/guide/optima/12_pitfall_nonscalar_objective.cpp@@
+
+`optima` does not throw here: it returns a result with exit flag `-5` and an explanation, so a calling program can inspect it. `converged` is false because the exit flag is not `Converged`.

@@ -114,3 +114,25 @@ TEST_CASE("ts diagnostics: stress and crash checks", "[ts][diagnostics][stress][
   bad_lb.lags = {0, 5};
   REQUIRE_THROWS(pluss::subsp::stats::ts::ljung_box(y, bad_lb, cfg));
 }
+
+TEST_CASE("ljung-box p-values stay accurate far in the tail", "[ts][ljung_box]") {
+  namespace ts = pluss::subsp::stats::ts;
+  std::vector<double> x(200);
+  double carry = 0.0;
+  for (int i = 0; i < 200; ++i) {
+    const double t = i + 1.0;
+    double u = std::sin(12.9898 * t + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    carry = 0.7 * carry + (u - 0.5);
+    x[static_cast<std::size_t>(i)] = carry;
+  }
+  ts::LjungBoxOptions options;
+  options.lags = {5, 10};
+  const auto lb = ts::ljung_box(pluss::make_series(x, {200}).to(pluss::ScalarType::Float64), options);
+  const auto stat = lb.stat.to_vec<double>();
+  const auto p = lb.pvalue.to_vec<double>();
+  // a p-value computed as 1 - cdf would be exactly 0 here
+  REQUIRE(stat[0] == Catch::Approx(200.155711).epsilon(1e-6));
+  REQUIRE(p[0] == Catch::Approx(2.6308937e-41).epsilon(1e-5));
+  REQUIRE(p[1] == Catch::Approx(7.966146e-47).epsilon(1e-5));
+}

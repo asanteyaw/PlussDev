@@ -1,0 +1,102 @@
+# Distributions 1: Evaluating and Sampling
+
+A distribution answers four questions about a variable: how dense is the probability at a point (`pdf`), how much probability lies below it (`cdf`), what are their logarithms (`logpdf`, `logcdf`), and what do random draws from it look like (`sample`). Here every such function works on a whole `Series` at once, so a grid of a million points is one call. After this chapter you can evaluate and draw from any of the sixty families, keep accuracy far in the tails, give each point its own parameters, and look up a family's parameters in the table below.
+
+Every program is complete and its output is the output of that program.
+
+## Two ways in
+
+**Distribution objects.** The common families are structs holding their parameters, with the same methods: `Normal{mean, stddev}`, `Lognormal{mean_log, stddev_log}`, `Uniform{low, high}`, `Exponential{rate}`, `Laplace{location, scale}`, `Logistic{location, scale}`, `Rayleigh{sigma}`, `Gamma{shape, scale, location}`, `ChiSquare{degrees_of_freedom}`, `InverseGaussian{theta, chi}` (mean and shape), `StudentT{degrees_of_freedom, location, scale}`, `FDistribution{numerator, denominator}`, `Weibull{shape, scale}`, `Beta{low, high, alpha, beta}`, `NormalTrunc{lower, upper, mean, stddev}`, `Nig` and `Gh` (Chapter 3), and the discrete `Bernoulli{p}`, `Binomial{count, p}`, `Poisson{lambda}`, `Geometric{p}`, `NegativeBinomial{r, p}`, `Skellam{lambda1, lambda2}`. For a discrete family `pdf` is the probability mass function (a count `k` outside the support has probability 0).
+
+| Method | Result |
+|---|---|
+| `pdf(x)`, `logpdf(x)` | density (mass) and its logarithm |
+| `cdf(x)`, `logcdf(x)` | distribution function and its logarithm |
+| `sample(sizes, cfg, seed)`, `sample_like(like, seed)` | random draws (Chapter below) |
+| `cgf(t)`, `cumulant(order)` | cumulant generating function, and the cumulant of a given order (the first is the mean, the second the variance) |
+| `MLE(x)` | maximum likelihood fit (Chapter 2) |
+
+**By kind.** All families, including the less common ones, are reached through `dst::Kind` values (`dst::Weibull`, `dst::StudentT`, `dst::Yule` ...) and the free functions `pdf(kind, x, params)`, `logpdf`, `cdf`, `sample(kind, params, sizes, cfg, seed)` and `sample_like(kind, params, like, seed)`, with `params` a list of the parameters in the order of the table. `supports(kind)` tells whether a kind is implemented. The namespace aliases used in the programs are `namespace distr = pluss::subsp::stats::distr;` and `namespace dst = distr::dst;`.
+
+## Accuracy
+
+The densities and distribution functions are accurate to rounding over the usual range and far into the tails, where the logarithmic forms matter: `cdf` of a normal rounds to exactly 0 below about −38, `logcdf` carries on (−1805 at −60). The densities of the normal inverse Gaussian and generalised hyperbolic families use the modified Bessel function of the second kind of any real order, evaluated to about 12 digits (it is also exact in its logarithm for large arguments).
+
+## Parameters as Series
+
+Any parameter of an object may be a `Series` instead of a number. The points and the parameters are then paired element by element, so one call evaluates a different distribution at every point: this is how a model with a mean and a variance per observation is evaluated.
+
+## Random draws
+
+`sample({n})` draws `n` independent values; `sample({rows, cols}, cfg, seed)` fills an array of any shape; `sample_like(like)` matches the shape, dtype and platform of an existing array. A given `seed` always produces the same numbers (a seed of 0 is a fixed default, not a random one); different seeds give different, independent streams. `cfg` selects the dtype and platform of the result (default: Float32 on the CPU).
+
+## The families and their parameters
+
+The `params` lists of the kind-based functions (a list with fewer entries selects the default parameters where the family has a short form):
+
+| Kind | Parameters | Notes |
+|---|---|---|
+| `Normal` | `{}` or `{mean, sd}` | |
+| `Lognormal` | `{mean_log, sd_log}` | log of the variable is normal |
+| `Uniform` | `{a, b}` | |
+| `Exponential` | `{rate}` | |
+| `Gamma` | `{shape}` or `{location, scale, shape}` | note the order of the long form |
+| `ChiSquare` | `{nu}` | |
+| `ChiSquareNoncentral` | `{lambda, nu}` | non-centrality first |
+| `Chi` | `{nu}` or `{location, scale, nu}` | |
+| `Beta` | `{a, b}` or `{low, high, a, b}` | |
+| `StudentT` | `{nu}` or `{nu, location, scale}` | |
+| `F`, `FNoncentral` | `{df1, df2}`, `{lambda, df1, df2}` | |
+| `Cauchy`, `Laplace`, `Logistic` | `{location, scale}` (Cauchy also `{}`) | |
+| `ExtremeValue` | `{location, scale}` | the Gumbel law of maxima |
+| `Weibull` | `{shape, scale}` or `{theta, alpha, beta}` | long form: location, shape, scale |
+| `Rayleigh`, `Maxwell` | `{scale}` | |
+| `Rice` | `{nu, sigma}` | |
+| `Nakagami` | `{m, omega}` | |
+| `InverseGaussian` | `{mean, shape}` | |
+| `Wald` | `{chi}` | inverse Gaussian with mean 1 and shape `chi` |
+| `Gig` | `{lambda, chi, psi}` | generalised inverse Gaussian |
+| `Pareto` | `{xm, alpha}` | |
+| `Lomax` | `{scale, alpha}` | |
+| `Burr` | `{c, k}` | Burr type III |
+| `Gompertz` | `{b, c}` | `c > 1`; density `b c^x exp(−b (c^x − 1)/ln c)` |
+| `Bradford` | `{c}` | |
+| `Erlang` | `{scale, k}` | |
+| `Alpha` | `{a, b}` | |
+| `NormalTrunc` | `{lower, upper, mean, sd}` | |
+| `Triangular` | `{a, c, b}` | minimum, mode, maximum |
+| `VonMises` | `{mu, kappa}` | on the circle around `mu` |
+| `Semicircle` | `{center, radius}` | |
+| `TukeyLambda` | `{lambda}` | |
+| `Planck` | `{a, b}` | density proportional to `x^a / (exp(b x) − 1)` |
+| `Cosine`, `HalfCosine`, `HyperbolicSecant`, `Quadratic`, `UShape`, `Anglit` | `{}` or `{t, s}` | centre `t` and half-width (or scale) `s`; the defaults are `t = 0` and `s = π` for `Cosine` and `HalfCosine`, π/4 for `Anglit`, 1 for the others; `Arcsin` takes `{}` only (a beta(½, ½) on (0, 1)) |
+| `Nig` | `{alpha, beta, mu, delta}` | `|beta| < alpha` |
+| `Gh` | `{lambda, alpha, beta, mu, delta}` | `|beta| < alpha`; `lambda = −1/2` is the NIG |
+| `Bernoulli` | `{p}` | |
+| `Binomial` | `{n, p}` | |
+| `Poisson` | `{lambda}` | |
+| `Geometric` | `{p}` | support 1, 2, … |
+| `NegativeBinomial` | `{r, p}` | successes `r`, success probability `p`, support 0, 1, … |
+| `Hypergeometric` | `{N, M, n}` | population, successes in it, draws |
+| `Skellam` | `{mu1, mu2}` | |
+| `Bessel` | `{nu, a}` | |
+| `Yule` | `{p}` | mass `(p − 1) B(k, p)` on 1, 2, …, `p > 1` (the Yule–Simon law) |
+| `Zeta` | `{s}` | mass `k^(−s) / zeta(s)`, `s > 1` |
+| `Rademacher` | `{}` | ±1 with probability ½ |
+
+## Programs
+
+- [Densities, distribution functions and tails](dist_01_evaluating_and_sampling/densities_distribution_functions_and_tails.md)
+- [Random draws](dist_01_evaluating_and_sampling/random_draws.md)
+- [Families by kind](dist_01_evaluating_and_sampling/families_by_kind.md)
+
+## Checklist
+
+1. Use `logpdf` and `logcdf` for anything that is multiplied or compared far in the tails; the plain forms underflow.
+2. Pass the parameters in the order of the table (the long form of the gamma is `{location, scale, shape}`).
+3. Give a `seed` whenever a result must be reproducible; use a different seed for each independent stream.
+4. Use `sample_like` to match the shape, dtype and device of an array you already have.
+5. Use Series parameters to evaluate one distribution per point in a single call.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

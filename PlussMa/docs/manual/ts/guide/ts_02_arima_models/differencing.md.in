@@ -1,0 +1,8 @@
+# Differencing
+
+[Back to ARIMA Models](../ts_02_arima_models.md)
+
+
+@@example Stats/time_series/guide/1210_differencing.cpp@@
+
+A random walk fails the unit-root test in levels (p = 0.46) and passes it after one difference (p ≈ 4×10⁻¹³), so `diff_order = 1` is right. The fitted MA coefficient is small (−0.09), so the changes are close to white noise and the walk is close to ARIMA(0, 1, 0). The forecasts of the level continue from the last value at the estimated drift, the mean of the changes.

@@ -125,7 +125,7 @@ data=[[1, 4],
   [3, 6]]
 ```
 
-This is the example that teaches the method correctly. The result follows the
+This is the example that shows the method correctly. The result follows the
 transposed logical order, not the original row-major order of `mat`.
 
 Example 3. Borrowed shape metadata can be passed directly here too.

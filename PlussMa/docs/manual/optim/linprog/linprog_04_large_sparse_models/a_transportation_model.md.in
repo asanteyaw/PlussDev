@@ -1,0 +1,12 @@
+# A transportation model
+
+[Back to Large Sparse Models](../linprog_04_large_sparse_models.md)
+
+
+Three warehouses ship to four shops. Every warehouse ships out exactly its stock, and every shop receives exactly its demand, so the model has 12 variables, 7 equality rows and 24 non-zeros: each shipment appears in one warehouse row and one shop row.
+
+@@example Numerical/optimization/guide/lp/214_sparse_model.cpp@@
+
+The cheapest plan costs 830. It ships 5 from warehouse 0 to shop 1 and 25 to shop 2, 20 from warehouse 1 to shop 0 and 5 to shop 2, and 20 and 25 from warehouse 2 to shops 1 and 3. Every shipment is a whole number, which is a property of transportation models: the constraint matrix is such that the optimal corners are integral, so there is no need for an integer program. The dense solver given the same data finds the same cost, 830.
+
+The prices of the rows are `6, 9, 9` for the warehouses and `0, 0, 4, -4` for the shops. Read them with one caution: because the total stock equals the total demand, one row is redundant, and the prices are determined only up to adding a constant to every warehouse price and subtracting it from every shop price. The *differences* are the meaningful part. Shops 2 and 3 (numbering from 0) are priced 4 and -4; raising the demand of shop 2 by one unit while lowering the demand of shop 3 by one raises the cost by 4 - (-4) = 8, which re-solving with the demands shifted confirms.

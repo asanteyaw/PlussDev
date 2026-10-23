@@ -1,0 +1,10 @@
+# The family in between
+
+[Back to Stochastic Integrals](../stochastic_01_integrals.md)
+
+
+The `θ` family reads `f` at `(1 − θ)·left + θ·right` of each step. The program fits each integral as `W_T²/2 + c · QV/2` and prints `c`.
+
+@@example Probability/random_processes/guide/sde/03_theta_family.cpp@@
+
+The coefficient is `−1`, `0` and `+1` for `θ = 0`, `½` and `1` on both paths, to the printed precision. That is the whole classification: Ito subtracts half the quadratic variation, Stratonovich subtracts none, and the backward integral (used in the Hänggi–Klimontovich convention) adds it.

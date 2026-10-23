@@ -162,7 +162,7 @@ pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, cont
 data=[42]
 ```
 
-That example matters because it teaches the shape distinction clearly:
+That example matters because it shows the shape distinction clearly:
 
 - scalar shape: `[]`
 - length-1 vector shape after unsqueeze: `[1]`

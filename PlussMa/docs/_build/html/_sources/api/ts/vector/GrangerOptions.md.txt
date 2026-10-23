@@ -1,0 +1,26 @@
+<!-- generated from GrangerOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::GrangerOptions`
+
+Options of `VarFit::granger_test`.
+
+`GrangerOptions` selects which causal hypotheses are tested and the form of the statistic.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `type` | `ts::GrangerType` | `LeaveOneOut` | `LeaveOneOut`: every ordered pair (cause, effect), each cause alone. `ExcludeAll`: for each effect, all the other series jointly. `BlockWise`: the series in `cause` jointly against each series in `effect`. |
+| `stat` | `ts::GrangerStat` | `ChiSquare` | `ChiSquare`: the Wald statistic with a chi-squared reference. `F`: the F form, better in small samples. |
+| `alpha` | `double` | 0.05 | Significance level of the critical values and `reject`. |
+| `cause` | `std::vector<std::int64_t>` | empty | 0-based indices of the candidate causes (empty: all). |
+| `effect` | `std::vector<std::int64_t>` | empty | 0-based indices of the effects (empty: all). |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`VarFit`](VarFit.md)
+- [`GrangerResult`](GrangerResult.md)

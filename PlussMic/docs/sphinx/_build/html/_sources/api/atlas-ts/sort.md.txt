@@ -103,7 +103,7 @@ try {
 ### Output
 
 ```text
-threw: DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.label().set("date") first
+threw: DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.labels().set("date") first
 ```
 
 `atlas.ts()` binds per-frame accessors that delegate straight to

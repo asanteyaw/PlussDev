@@ -1,0 +1,22 @@
+# `pluss::subsp::stats::ts::SsmForecastResult`
+
+Result of `Ssm::forecast`.
+
+`SsmForecastResult` is plain data; each field is a `Series`.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `observations` | `pluss::Series` | — | `H × n`: forecast observations. |
+| `observations_cov` | `pluss::Series` | — | `H × n × n`: their covariance. |
+| `states` | `pluss::Series` | — | `H × m`: forecast states. |
+| `states_cov` | `pluss::Series` | — | `H × m × m`: their covariance. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`Ssm`](Ssm.md)

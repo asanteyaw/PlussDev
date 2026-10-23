@@ -1,0 +1,190 @@
+<!-- generated from Vecm.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::Vecm`
+
+Fits a vector error-correction model for a given cointegration rank.
+
+## Signature
+
+```cpp
+ts::VecmFit ts::Vecm::fit_mle(const pluss::Series& y, const ts::VecmOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## Construction
+
+`Vecm` has no instances: it is a namespace for the static `fit_mle`, which returns a [`VecmFit`](VecmFit.md).
+
+## Methods
+
+### `fit_mle`
+
+```cpp
+ts::VecmFit ts::Vecm::fit_mle(const pluss::Series& y, const ts::VecmOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+Fits `Δy_t = c + y_{t−1} β α' + Γ_1 Δy_{t−1} + … + e_t` for rank `r`. For `0 < r < k` the estimate is Johansen's maximum-likelihood one: `β` (the cointegrating vectors) from the canonical correlations, normalised so that its leading `r × r` block is the identity, `α` (the adjustment loadings) by regression, and the other coefficients by least squares given the impact matrix. For `r = k` the impact matrix is unrestricted least squares; for `r = 0` the model is the VAR in differences. A negative `rank` selects it by the trace test.
+
+`const pluss::Series& y`
+: The series as an `n × k` matrix, one column per series (a vector is a single series).
+
+`const ts::VecmOptions& options`
+: Rank, lag order and deterministic terms; see [`VecmOptions`](VecmOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series).
+
+**Returns.** A [`VecmFit`](VecmFit.md).
+
+**Errors.** `rank` must not exceed the number of series.
+
+## Practical Examples
+
+### Example 1
+
+Fit the error-correction model with the rank chosen by the trace test: the cointegrating vector shows the long-run relation and the loadings the speed of adjustment.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// Three series: x is a random walk, y = x + a stationary AR(1) (so y is tied to x), w is an unrelated random walk.
+Series three(int n) {
+  const auto e1 = noise(n, 0), e2 = noise(n, 5000), e3 = noise(n, 9000);
+  std::vector<double> y(3 * n);
+  double x = 0.0, u = 0.0, w = 0.0;
+  for (int t = 0; t < n; ++t) {
+    x += e1[t];
+    u = 0.6 * u + e2[t];
+    w += e3[t];
+    y[3 * t] = x;
+    y[3 * t + 1] = x + u;
+    y[3 * t + 2] = w;
+  }
+  return pluss::make_series(y, {n, 3}, f64);
+}
+
+int main() {
+  const Series y = three(400);
+  ts::VecmOptions options;
+  options.rank = -1;
+  const auto fit = ts::Vecm::fit_mle(y, options);
+  std::cout << std::fixed << std::setprecision(4) << "rank " << fit.rank << "\n";
+  show("beta", fit.beta.select(1, 0));
+  show("alpha", fit.alpha.select(1, 0));
+  std::cout << std::setprecision(2) << "log-likelihood " << fit.loglik(y) << "\n";
+}
+```
+
+Output
+
+```text
+rank 1
+beta             1.0000  -0.9788  -0.0036
+alpha            0.0284   0.4860  -0.0462
+log-likelihood -193.03
+```
+
+### Example 2
+
+A given rank of 0 is the VAR in differences; the rank cannot exceed the number of series.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// Three series: x is a random walk, y = x + a stationary AR(1) (so y is tied to x), w is an unrelated random walk.
+Series three(int n) {
+  const auto e1 = noise(n, 0), e2 = noise(n, 5000), e3 = noise(n, 9000);
+  std::vector<double> y(3 * n);
+  double x = 0.0, u = 0.0, w = 0.0;
+  for (int t = 0; t < n; ++t) {
+    x += e1[t];
+    u = 0.6 * u + e2[t];
+    w += e3[t];
+    y[3 * t] = x;
+    y[3 * t + 1] = x + u;
+    y[3 * t + 2] = w;
+  }
+  return pluss::make_series(y, {n, 3}, f64);
+}
+
+int main() {
+  const Series y = three(400);
+  ts::VecmOptions none;
+  none.rank = 0;
+  std::cout << "rank 0 impact is zero: " << std::boolalpha << (ts::Vecm::fit_mle(y, none).impact.abs().max().item<double>() == 0.0) << "\n";
+  ts::VecmOptions too_many;
+  too_many.rank = 4;
+  try {
+    ts::Vecm::fit_mle(y, too_many);
+  } catch (const std::exception&) {
+    std::cout << "rank 4 of 3 series is rejected\n";
+  }
+}
+```
+
+Output
+
+```text
+rank 0 impact is zero: true
+rank 4 of 3 series is rejected
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`VecmOptions`](VecmOptions.md)
+- [`VecmFit`](VecmFit.md)
+- [`johansen_test`](johansen_test.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

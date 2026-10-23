@@ -1,0 +1,10 @@
+# The mesh
+
+[Back to The Pattern Search Minimiser](../dfo_07_pattern_search.md)
+
+
+@@example Numerical/optimization/guide/dfo/364_pattern_search_mesh.cpp@@
+
+The problem has one variable of order 1 and one of order 1000. With bounds supplied, `RangeLog` scales each variable's step by its range, so the poll behaves as if both were of order one, and the run converges accurately. Without scaling, a step suited to one variable is far too small or too large for the other. The initial mesh size matters much less than the scaling: the mesh grows and shrinks by factors of 2 and 0.5, so a poor start is corrected in a few iterations. Gentler factors (1.1 and 0.9) work, but need many more iterations.
+
+Scaling is derived from the bounds. Without bounds there is no range to read, so give the variables comparable scales yourself (divide by a typical size inside the objective) or supply bounds.

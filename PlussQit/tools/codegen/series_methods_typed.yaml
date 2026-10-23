@@ -397,6 +397,22 @@ methods:
     signature: "Series hilbert(std::int64_t dim) const"
     forward: "dim"
 
+  - name: fft
+    signature: 'Series fft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const'
+    forward: "n, dim, norm"
+
+  - name: ifft
+    signature: 'Series ifft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const'
+    forward: "n, dim, norm"
+
+  - name: rfft
+    signature: 'Series rfft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const'
+    forward: "n, dim, norm"
+
+  - name: irfft
+    signature: 'Series irfft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const'
+    forward: "n, dim, norm"
+
   - name: cumsum
     signature: "Series cumsum(std::int64_t dim) const"
     forward: "dim, false"

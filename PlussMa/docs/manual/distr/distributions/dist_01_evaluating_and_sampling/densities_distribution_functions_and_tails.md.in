@@ -1,0 +1,8 @@
+# Densities, distribution functions and tails
+
+[Back to Evaluating and Sampling](../dist_01_evaluating_and_sampling.md)
+
+
+@@example Stats/distributions/guide/1301_densities_and_cdfs.cpp@@
+
+The standard normal density at 0 is 0.39894 and its distribution function at 1 is 0.84134, as in any table. The Poisson mass and cdf are the probabilities of exactly and at most `k` events. In the far tail the plain `cdf` shrinks to 10⁻³¹⁶ at −38 and then to exactly 0, while `logcdf` goes on smoothly (−726.6 at −38, −1805.0 at −60), the quantity a likelihood or a tail-risk calculation needs. The last line evaluates four different normals at four points in one call.

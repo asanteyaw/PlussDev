@@ -1,0 +1,29 @@
+<!-- generated from DmResult.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::DmResult`
+
+Result of `ts::dm_test`.
+
+`DmResult` carries the statistic and what is needed to read it.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `stat` | `double` | — | The Diebold–Mariano statistic; negative favours the first model. |
+| `pvalue` | `double` | — | For the chosen tail. |
+| `critical` | `double` | — | Critical value at `alpha`. |
+| `reject` | `bool` | — | True when the models differ at level `alpha`. |
+| `horizon` | `std::int64_t` | — | The horizon used. |
+| `lags` | `std::int64_t` | — | Lags of the long-run variance. |
+| `effective_n` | `std::int64_t` | — | Number of error pairs. |
+| `mean_diff` | `double` | — | The mean loss difference (first model minus second). |
+| `lrv` | `double` | — | The long-run variance of the loss difference. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`dm_test`](dm_test.md)

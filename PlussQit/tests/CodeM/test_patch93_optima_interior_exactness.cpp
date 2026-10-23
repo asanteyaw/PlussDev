@@ -267,3 +267,198 @@ TEST_CASE("every algorithm backs off an infinite objective wall and converges", 
     REQUIRE(r.params.at("x").item<double>() == Approx(3.0).margin(1e-5));
   }
 }
+
+TEST_CASE("independent nonlinear slacks keep the interior method from crawling off a curved boundary",
+          "[optim][optima][interior][exact]") {
+  // minimize x0*x3*(x0+x1+x2) + x2  s.t.  x0*x1*x2*x3 >= 25,  sum x^2 = 40,  1 <= x <= 5, started on the
+  // boundary of the product constraint and on two bounds; the optimum is 17.0140172891.
+  const auto f = [](const optim::ParameterPack<optim::Trace>& p) {
+    return p.at("a") * p.at("d") * (p.at("a") + p.at("b") + p.at("c")) + p.at("c");
+  };
+  const auto constraints =
+      optim::constraints()
+          .nl_ineq([](const optim::ParameterPack<optim::Trace>& p) { return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d"); })
+          .nl_eq([](const optim::ParameterPack<optim::Trace>& p) {
+            return optim::square(p.at("a")) + optim::square(p.at("b")) + optim::square(p.at("c")) + optim::square(p.at("d")) - 40.0;
+          })
+          .lbs(scalars({{"a", 1}, {"b", 1}, {"c", 1}, {"d", 1}}))
+          .ubs(scalars({{"a", 5}, {"b", 5}, {"c", 5}, {"d", 5}}));
+  const auto start = scalars({{"a", 1}, {"b", 5}, {"c", 5}, {"d", 1}});
+  for (bool independent : {true, false}) {
+    optim::OptimaOptions options = interior();
+    options.internal_protocol.independent_nonlinear_slacks = independent;
+    const auto r = optim::optima(f, start, options, constraints);
+    INFO("independent slacks " << independent);
+    REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
+    REQUIRE(r.evaluation.value.item<double>() == Approx(17.0140172891).margin(1e-5));
+    if (independent) REQUIRE(r.iteration <= 20);
+  }
+}
+
+TEST_CASE("without independent slacks every iterate satisfies the nonlinear inequality", "[optim][optima][interior][exact]") {
+  const auto f = [](const optim::ParameterPack<optim::Trace>& p) {
+    return optim::square(p.at("a") - 3.0) + optim::square(p.at("b") - 3.0);
+  };
+  const auto disc = optim::constraints().nl_ineq([](const optim::ParameterPack<optim::Trace>& p) {
+    return optim::square(p.at("a")) + optim::square(p.at("b")) - 2.0;
+  });
+  optim::OptimaOptions options = interior();
+  options.internal_protocol.independent_nonlinear_slacks = false;
+  double worst = 0.0;
+  options.progress_hook = [&](const optim::OptimaProgressSnapshot& s) {
+    if (s.stage == optim::OptimaProgressStage::Iteration) worst = std::max(worst, s.evaluation.max_constraint_violation);
+    return false;
+  };
+  const auto r = optim::optima(f, scalars({{"a", 0.0}, {"b", 0.0}}), options, disc);
+  REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
+  REQUIRE(worst <= 1e-9);
+}
+
+TEST_CASE("sequential qp converges on a smoothing fit whose quadratic subproblem is ill-conditioned late in its interior iteration",
+          "[optim][sqp][linear-policy]") {
+  const int n = 32;
+  std::vector<double> target(n), start(n), lo(n, 0.0), hi(n, 1.0);
+  double total = 0.0;
+  for (int i = 0; i < n; ++i) {
+    target[i] = 0.2 + 0.6 * i / (n - 1) + 0.15 * std::sin(1.7 * i);
+    start[i] = (i % 2 == 0) ? 0.9 : 0.1;
+    total += target[i];
+  }
+  std::vector<double> diff(static_cast<std::size_t>(2 * (n - 1) * n), 0.0);
+  std::vector<double> cap(static_cast<std::size_t>(2 * (n - 1)), 0.12);
+  for (int i = 0; i + 1 < n; ++i) {
+    diff[static_cast<std::size_t>((2 * i) * n + i)] = 1.0;
+    diff[static_cast<std::size_t>((2 * i) * n + i + 1)] = -1.0;
+    diff[static_cast<std::size_t>((2 * i + 1) * n + i)] = -1.0;
+    diff[static_cast<std::size_t>((2 * i + 1) * n + i + 1)] = 1.0;
+  }
+  const auto constraints =
+      optim::constraints()
+          .ln_ineq(make_series(diff, {2 * (n - 1), n}).to(ScalarType::Float64), vec(cap))
+          .ln_eq(make_series(std::vector<double>(n, 1.0), {1, n}).to(ScalarType::Float64), vec({total}))
+          .lbs(vec(lo))
+          .ubs(vec(hi));
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::SequentialQP;
+  options.sequential_qp.max_iterations = 500;
+  const auto r = optim::optima(distance_to(vec(target)), vec(start), options, constraints);
+  REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
+  REQUIRE(r.evaluation.max_constraint_violation <= 1e-6);
+}
+
+TEST_CASE("interior method with conjugate-gradient steps reaches the same optimum as with direct steps",
+          "[optim][interior][linear-policy]") {
+  const int n = 40;
+  std::vector<double> target(n), start(n);
+  double total = 0.0;
+  for (int i = 0; i < n; ++i) {
+    target[i] = 0.2 + 0.6 * i / (n - 1) + 0.15 * std::sin(1.7 * i);
+    start[i] = (i % 2 == 0) ? 0.9 : 0.1;
+    total += target[i];
+  }
+  std::vector<double> diff(static_cast<std::size_t>(2 * (n - 1) * n), 0.0);
+  std::vector<double> cap(static_cast<std::size_t>(2 * (n - 1)), 0.12);
+  for (int i = 0; i + 1 < n; ++i) {
+    diff[static_cast<std::size_t>((2 * i) * n + i)] = 1.0;
+    diff[static_cast<std::size_t>((2 * i) * n + i + 1)] = -1.0;
+    diff[static_cast<std::size_t>((2 * i + 1) * n + i)] = -1.0;
+    diff[static_cast<std::size_t>((2 * i + 1) * n + i + 1)] = 1.0;
+  }
+  const auto constraints =
+      optim::constraints()
+          .ln_ineq(make_series(diff, {2 * (n - 1), n}).to(ScalarType::Float64), vec(cap))
+          .ln_eq(make_series(std::vector<double>(n, 1.0), {1, n}).to(ScalarType::Float64), vec({total}))
+          .lbs(vec(std::vector<double>(n, 0.0)))
+          .ubs(vec(std::vector<double>(n, 1.0)));
+  auto solve = [&](optim::OptimaLinearSystemSolver solver) {
+    optim::OptimaOptions options;
+    options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+    options.internal_protocol.linear_system_solver = solver;
+    options.internal_protocol.system_structure = solver == optim::OptimaLinearSystemSolver::ConjugateGradient
+                                                     ? optim::OptimaLinearSystemStructure::Sparse
+                                                     : optim::OptimaLinearSystemStructure::Dense;
+    return optim::optima(distance_to(vec(target)), vec(start), options, constraints);
+  };
+  const auto direct = solve(optim::OptimaLinearSystemSolver::Cholesky);
+  const auto krylov = solve(optim::OptimaLinearSystemSolver::ConjugateGradient);
+  REQUIRE(direct.exit_flag == optim::OptimaExitFlag::Converged);
+  REQUIRE(krylov.exit_flag == optim::OptimaExitFlag::Converged);
+  REQUIRE(krylov.evaluation.value.item<double>() == Approx(direct.evaluation.value.item<double>()).margin(1e-5));
+}
+
+TEST_CASE("every algorithm solves a problem written in extreme units, and multipliers come back in the caller's units",
+          "[optim][optima][scaling]") {
+  for (double K : {1e-6, 1e6, 1e9}) {
+    auto objective = [K](const Pack& p) {
+      return K * optim::square(p.at("a") - 1.0) + (1.0 / K) * optim::square(p.at("b") - 1500.0) + K * 0.01 * p.at("a");
+    };
+    const auto constraints =
+        optim::constraints()
+            .nl_eq([K](const Pack& p) { return K * (optim::square(p.at("a")) + optim::square(p.at("b") * 0.001) - 3.0); })
+            .nl_ineq([K](const Pack& p) { return (p.at("b") - 1400.0) / K; });
+    for (auto algorithm : {optim::OptimaAlgorithm::SequentialQP, optim::OptimaAlgorithm::WorkingSet,
+                           optim::OptimaAlgorithm::InternalProtocol}) {
+      optim::OptimaOptions options;
+      options.algorithm = algorithm;
+      options.sequential_qp.max_iterations = 300;
+      options.working_set.max_iterations = 300;
+      options.internal_protocol.max_iterations = 300;
+      const auto r = optim::optima(objective, scalars({{"a", 0.3}, {"b", 900.0}}), options, constraints);
+      INFO("K = " << K << ", algorithm " << static_cast<int>(algorithm));
+      REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
+      // The solution a ~ 1.0198, b = 1400 (the inequality binds) in natural units.
+      REQUIRE(r.params.at("a").item<double>() == Approx(1.0198).margin(2e-3));
+      REQUIRE(r.params.at("b").item<double>() == Approx(1400.0).margin(1.0));
+    }
+  }
+
+  // d f / d x = 2 K (x - 3) = -2 K at x = 2, so the multiplier of x <= 2 is 2 K in the caller's units.
+  const double K = 1e6;
+  auto objective = [K](const optim::Trace& x) { return K * optim::sum(optim::square(x - 3.0)); };
+  const auto r = optim::optima(objective, vec({0.0}), {}, optim::constraints().ln_ineq(row({1.0}), vec({2.0})));
+  REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
+  REQUIRE(r.multipliers.linear_inequalities.to_vec<double>()[0] == Approx(2.0 * K).epsilon(1e-3));
+  REQUIRE(r.evaluation.value.item<double>() == Approx(K).epsilon(1e-6));
+}
+
+TEST_CASE("the quadratic-model algorithms solve a smoothing fit with a hundred and twenty variables and several hundred rows",
+          "[optim][optima][linear-policy]") {
+  // 238 smoothness rows, one equality and bounds: the subproblem has ~700 inequality rows, whose late interior
+  // iterations are ill-conditioned. Each algorithm must reach the same optimum (to the tolerance) quickly.
+  const int n = 120;
+  std::vector<double> target(n), start(n);
+  double total = 0.0;
+  for (int i = 0; i < n; ++i) {
+    target[i] = 0.2 + 0.6 * i / (n - 1) + 0.15 * std::sin(1.7 * i);
+    start[i] = (i % 2 == 0) ? 0.9 : 0.1;
+    total += target[i];
+  }
+  std::vector<double> diff(static_cast<std::size_t>(2 * (n - 1) * n), 0.0);
+  std::vector<double> cap(static_cast<std::size_t>(2 * (n - 1)), 0.12);
+  for (int i = 0; i + 1 < n; ++i) {
+    diff[static_cast<std::size_t>((2 * i) * n + i)] = 1.0;
+    diff[static_cast<std::size_t>((2 * i) * n + i + 1)] = -1.0;
+    diff[static_cast<std::size_t>((2 * i + 1) * n + i)] = -1.0;
+    diff[static_cast<std::size_t>((2 * i + 1) * n + i + 1)] = 1.0;
+  }
+  const auto constraints =
+      optim::constraints()
+          .ln_ineq(make_series(diff, {2 * (n - 1), n}).to(ScalarType::Float64), vec(cap))
+          .ln_eq(make_series(std::vector<double>(n, 1.0), {1, n}).to(ScalarType::Float64), vec({total}))
+          .lbs(vec(std::vector<double>(n, 0.0)))
+          .ubs(vec(std::vector<double>(n, 1.0)));
+  std::vector<double> values;
+  for (auto algorithm : {optim::OptimaAlgorithm::SequentialQP, optim::OptimaAlgorithm::WorkingSet,
+                         optim::OptimaAlgorithm::InternalProtocol}) {
+    optim::OptimaOptions options;
+    options.algorithm = algorithm;
+    const auto r = optim::optima(distance_to(vec(target)), vec(start), options, constraints);
+    INFO("algorithm " << static_cast<int>(algorithm));
+    REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
+    REQUIRE(r.evaluation.max_constraint_violation <= 1e-5);
+    if (algorithm == optim::OptimaAlgorithm::SequentialQP) REQUIRE(r.function_evaluations <= 20);
+    values.push_back(r.evaluation.value.item<double>());
+  }
+  REQUIRE(values[0] == Approx(values[2]).margin(1e-4));
+  REQUIRE(values[1] == Approx(values[2]).margin(1e-4));
+}

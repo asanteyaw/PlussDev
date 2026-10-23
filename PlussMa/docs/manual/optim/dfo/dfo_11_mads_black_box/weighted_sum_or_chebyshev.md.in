@@ -1,0 +1,8 @@
+# Weighted sum or Chebyshev
+
+[Back to The Black-Box MADS Minimisers](../dfo_11_mads_black_box.md)
+
+
+@@example Numerical/optimization/guide/dfo/402_mads_scalarization.cpp@@
+
+On a non-convex front the weighted sum can only reach an end of the trade-off, here the end at `x = 1`, and Chebyshev finds the balanced compromise at `x = 0.618`. When the front is convex both rules reach interior points and the weighted sum is cheaper. Choose Chebyshev when you want a particular balance or suspect the trade-off is not convex.

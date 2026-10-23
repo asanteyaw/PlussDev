@@ -81,7 +81,9 @@ inline Result solve(const Problem &p, const Options &opt = {}) {
     lo = p.lp.lower->to(dt).to_vec<double>();
   if (p.lp.upper)
     hi = p.lp.upper->to(dt).to_vec<double>();
-  for (std::int64_t j = 0; j < n; ++j) {
+  for (std::int64_t j = 0; j < n; ++j) { // sentinel infinities (<= -1e20, >= 1e20) are real infinities, as in linprog.h
+    if (lo[static_cast<std::size_t>(j)] <= -1e20) lo[static_cast<std::size_t>(j)] = -inf;
+    if (hi[static_cast<std::size_t>(j)] >= 1e20) hi[static_cast<std::size_t>(j)] = inf;
     if (is_int[static_cast<std::size_t>(j)] != 0.0) {
       if (!std::isfinite(lo[static_cast<std::size_t>(j)]) || !std::isfinite(hi[static_cast<std::size_t>(j)]))
         throw std::invalid_argument("milp: integer variables must have finite lower and upper bounds");

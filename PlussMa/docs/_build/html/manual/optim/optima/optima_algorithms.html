@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optima Algorithms &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Optima Sequential QP" href="optima_sequential_qp.html" />
+    <link rel="prev" title="A plant with every kind of constraint" href="optima_08_worked_problems/a_plant_with_every_kind_of_constraint.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from optima_algorithms.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="optima-algorithms">
+<h1>Optima Algorithms<a class="headerlink" href="#optima-algorithms" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">Optima</span></code> is the constrained optimization layer built in <code class="docutils literal notranslate"><span class="pre">PlussMa</span></code> on top of the <code class="docutils literal notranslate"><span class="pre">Series</span></code> and autodiff runtime from <code class="docutils literal notranslate"><span class="pre">PlussQit</span></code>.</p>
+<p>This split is intentional:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussQit</span></code> owns <code class="docutils literal notranslate"><span class="pre">Series</span></code>, autodiff transforms, and backend compute</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa</span></code> owns numerical optimization logic and solver policy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optima(...)</span></code> is the public constrained-solver entry point</p></li>
+</ul>
+<section id="public-entry-point">
+<h2>Public Entry Point<a class="headerlink" href="#public-entry-point" title="Link to this heading">¶</a></h2>
+<p>The top-level call takes a constrained problem, a <code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Series&gt;</span></code> initial point, and an <code class="docutils literal notranslate"><span class="pre">OptimaOptions</span></code> value:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">optim</span><span class="p">;</span>
+
+<span class="n">ConstrainedProblem</span><span class="w"> </span><span class="n">problem</span><span class="p">;</span>
+<span class="n">ParameterPack</span><span class="o">&lt;</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x0</span><span class="p">;</span>
+<span class="n">OptimaOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+
+<span class="n">options</span><span class="p">.</span><span class="n">algorithm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OptimaAlgorithm</span><span class="o">::</span><span class="n">SequentialQP</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">optima</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span><span class="w"> </span><span class="n">x0</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="problem-model">
+<h2>Problem Model<a class="headerlink" href="#problem-model" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Optima</span></code> works with:</p>
+<ul class="simple">
+<li><p>a scalar objective</p></li>
+<li><p>nonlinear equality constraints</p></li>
+<li><p>nonlinear inequality constraints</p></li>
+<li><p>linear equality constraints</p></li>
+<li><p>linear inequality constraints</p></li>
+<li><p>lower and upper bounds</p></li>
+</ul>
+<p>The public parameter surface is always <code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Series&gt;</span></code>. Derivatives come from either:</p>
+<ul class="simple">
+<li><p>autodiff callbacks over <code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Trace&gt;</span></code></p></li>
+<li><p>user-supplied analytic callbacks</p></li>
+</ul>
+<p>Autodiff/analytic are the derivative paths in <code class="docutils literal notranslate"><span class="pre">Optima</span></code>.</p>
+</section>
+<section id="shared-runtime-contract">
+<h2>Shared Runtime Contract<a class="headerlink" href="#shared-runtime-contract" title="Link to this heading">¶</a></h2>
+<p>All current backends reuse the same evaluation layer and diagnostics:</p>
+<ul class="simple">
+<li><p>callback validation and shape checks</p></li>
+<li><p>non-finite evaluation detection</p></li>
+<li><p>best-feasible tracking</p></li>
+<li><p>multiplier reporting</p></li>
+<li><p>progress hooks</p></li>
+<li><p>stall classification</p></li>
+<li><p>scaling and normalization</p></li>
+<li><p>dense and iterative linear-system policies</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">OptimaAlgorithm</span></code> currently exposes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MeritMethod</span></code> (baseline penalty-method backend)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WorkingSet</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InternalProtocol</span></code></p></li>
+</ul>
+<p>The primary constrained nonlinear programming backends are <code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code> and <code class="docutils literal notranslate"><span class="pre">InternalProtocol</span></code>.
+This document focuses on those two:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="optima_sequential_qp.html"><span class="std std-doc">Sequential QP</span></a></p></li>
+<li><p><a class="reference internal" href="optima_internal_protocol.html"><span class="std std-doc">Internal Protocol</span></a></p></li>
+</ul>
+</section>
+<section id="common-outputs">
+<h2>Common Outputs<a class="headerlink" href="#common-outputs" title="Link to this heading">¶</a></h2>
+<p>Every <code class="docutils literal notranslate"><span class="pre">optima(...)</span></code> result exposes:</p>
+<ul class="simple">
+<li><p>final parameters</p></li>
+<li><p>final evaluation bundle</p></li>
+<li><p>iteration count</p></li>
+<li><p>function evaluation count</p></li>
+<li><p>backend parameter</p></li>
+<li><p>stationarity metric</p></li>
+<li><p>exit flag</p></li>
+<li><p>message</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OptimaOutput</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ConstraintMultipliers</span></code></p></li>
+<li><p>optional best-feasible snapshot</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">OptimaOutput</span></code> payload is the main reporting surface:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">algorithm</span></code></p></td>
+<td><p>Backend label</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">iterations</span></code></p></td>
+<td><p>Major iterations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">function_evaluations</span></code></p></td>
+<td><p>Total evaluation count</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">constraint_violation</span></code></p></td>
+<td><p>Max violation at the returned point</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">first_order_optimality</span></code></p></td>
+<td><p>First-order stationarity metric</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">step_size</span></code></p></td>
+<td><p>Final accepted step fraction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">line_search_fraction</span></code></p></td>
+<td><p>Accepted line-search scaling</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">backend_parameter</span></code></p></td>
+<td><p>Merit weight or barrier parameter</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></td>
+<td><p>Complementarity residual where applicable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">krylov_iterations</span></code></p></td>
+<td><p>Iterative linear-solver work</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">best_feasible_available</span></code></p></td>
+<td><p>Whether a feasible checkpoint was found</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">returned_best_feasible</span></code></p></td>
+<td><p>Whether the solver returned that checkpoint</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">best_feasible_value</span></code></p></td>
+<td><p>Objective at the best feasible checkpoint</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">best_feasible_constraint_violation</span></code></p></td>
+<td><p>Violation at the best feasible checkpoint</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">best_feasible_first_order_optimality</span></code></p></td>
+<td><p>Stationarity at the best feasible checkpoint</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiplier_max_norm</span></code></p></td>
+<td><p>Largest multiplier magnitude</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_multiplier_count</span></code></p></td>
+<td><p>Count of active multipliers</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">detail_message</span></code></p></td>
+<td><p>Expanded termination message</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stall_category</span></code></p></td>
+<td><p>Structured stall classification</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stall_measure</span></code></p></td>
+<td><p>Diagnostic measure associated with the stall</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stall_reference</span></code></p></td>
+<td><p>Reference threshold associated with the stall</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="progress-hooks">
+<h2>Progress Hooks<a class="headerlink" href="#progress-hooks" title="Link to this heading">¶</a></h2>
+<p>Each backend option block accepts a <code class="docutils literal notranslate"><span class="pre">progress_hook</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">options</span><span class="p">.</span><span class="n">sequential_qp</span><span class="p">.</span><span class="n">progress_hook</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">OptimaProgressSnapshot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The snapshot includes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stage</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">algorithm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">evaluation</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iteration</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">function_evaluations</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step_size</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backend_parameter</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stationarity</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">krylov_iterations</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stall_category</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stall_measure</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stall_reference</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">best_feasible</span></code></p></li>
+</ul>
+<p>Returning <code class="docutils literal notranslate"><span class="pre">true</span></code> requests an orderly stop.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reports::iter(std::ostream&amp;,</span> <span class="pre">precision)</span></code> and <code class="docutils literal notranslate"><span class="pre">reports::iteration_only_trace(...)</span></code>
+are convenience factories for per-iteration output.</p>
+<p>To intercept the run after each iteration, use a custom hook and return <code class="docutils literal notranslate"><span class="pre">true</span></code>
+when you want to stop before the next iteration.</p>
+</section>
+<section id="internal-protocol-presets">
+<h2>Internal Protocol Presets<a class="headerlink" href="#internal-protocol-presets" title="Link to this heading">¶</a></h2>
+<p>Both presets below use <code class="docutils literal notranslate"><span class="pre">OptimaAlgorithm::InternalProtocol</span></code>; the robust preset
+just allocates more recovery budget and explicit solver defaults:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">presets::internal_protocol()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">presets::robust_internal_protocol()</span></code></p></li>
+</ul>
+<p>Key robust deltas:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>: <code class="docutils literal notranslate"><span class="pre">160</span></code> (vs <code class="docutils literal notranslate"><span class="pre">100</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_restoration_iterations</span></code>: <code class="docutils literal notranslate"><span class="pre">10</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_restoration_line_search_iterations</span></code>: <code class="docutils literal notranslate"><span class="pre">20</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enable_restoration</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enable_feasibility_phase</span></code>: <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hessian_approximation</span></code>: <code class="docutils literal notranslate"><span class="pre">Bfgs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">linear_system_solver</span></code>: <code class="docutils literal notranslate"><span class="pre">Auto</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_structure</span></code>: <code class="docutils literal notranslate"><span class="pre">Auto</span></code></p></li>
+</ul>
+</section>
+<section id="stall-taxonomy">
+<h2>Stall Taxonomy<a class="headerlink" href="#stall-taxonomy" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Optima</span></code> surfaces structured failure modes instead of only generic stop messages:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">user-stop</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">invalid-callback-contract</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nonfinite-callback-region</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">search-direction-collapse</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">boundary-limited</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">infeasible-stationary</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">complementarity-stagnation</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">feasibility-failure</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recovery-failure</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iteration-limit</span></code></p></li>
+</ul>
+</section>
+<section id="example-demos">
+<h2>Example Demos<a class="headerlink" href="#example-demos" title="Link to this heading">¶</a></h2>
+<p>Current demos relevant to these backends:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa/examples/Numerical/optimization/optima_sequential_qp_demo.cpp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa/examples/Numerical/optimization/optima_internal_protocol_demo.cpp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa/examples/Numerical/optimization/garch11_optima_demo.cpp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa/examples/Numerical/optimization/garch11_internal_protocol_demo.cpp</span></code></p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/optima/optima_algorithms.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

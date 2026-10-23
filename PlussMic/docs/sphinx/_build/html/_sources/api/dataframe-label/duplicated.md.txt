@@ -56,9 +56,9 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-auto out = labeled.label().duplicated();
+auto out = labeled.labels().duplicated();
 std::cout << out;
 ```
 
@@ -83,9 +83,9 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 
-auto out2 = grouped.label().duplicated({"region"});
+auto out2 = grouped.labels().duplicated({"region"});
 std::cout << out2;
 ```
 
@@ -113,9 +113,9 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-auto out = labeled.label().duplicated(false, true);
+auto out = labeled.labels().duplicated(false, true);
 std::cout << out;
 ```
 
@@ -144,10 +144,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
 try {
-  auto out = labeled.label().duplicated(true, true);
+  auto out = labeled.labels().duplicated(true, true);
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

@@ -1,0 +1,8 @@
+# Options and missing data
+
+[Back to Least Squares](../regression_01_least_squares.md)
+
+
+@@example Stats/regression/guide/1003_options_and_missing_data.cpp@@
+
+A looser `alpha` gives a narrower interval. Without an intercept the line is forced through the origin, and the fit reports a warning that R² and F no longer have their usual meaning: here R² is still measured against the mean of `y`, so it can be negative for a poor fit. With `drop_missing` (the default) any row that has a non-finite value in `y` or in any predictor is removed before fitting, and `nobs` and `dropped_observations` say how many remain and how many went; if you would rather be told, set it to false and the fit throws.

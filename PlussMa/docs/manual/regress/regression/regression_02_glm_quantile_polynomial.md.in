@@ -1,0 +1,57 @@
+# Regression 2: Generalised Linear, Quantile and Polynomial Regression
+
+Least squares assumes a continuous response with constant noise about a straight-line mean. Three extensions relax this. A generalised linear model handles yes/no outcomes and counts. Quantile regression models a quantile of the response rather than its mean, and resists outliers. Polynomial regression fits curves. After this chapter you can fit each, read what its coefficients mean, and check a fit against an independent condition.
+
+Every program is complete and its output is the output of that program.
+
+## Generalised linear models
+
+```cpp
+reg::GLMFitResult reg::glm_fit(y, x, reg::GLMOptions options = {}, Config cfg = {});
+Series            reg::glm_predict(fit, x_new, reg::GLMPredictionType type = Mean, Config cfg = {});
+```
+
+A GLM says that the mean of `y` is a function of a linear predictor `η = b₀ + b₁x₁ + ...`, with a variance that depends on the mean. It is fitted by iteratively reweighted least squares (IRLS).
+
+| `GLMOptions` | Meaning | Default |
+|---|---|---|
+| `family` | `Normal`, `Binomial` (`y` in [0, 1]), `Poisson` (counts) | `Normal` |
+| `link` | `Canonical` (identity, logit, log for the three families), or `Identity`, `Log`, `Logit` | `Canonical` |
+| `max_iter`, `tol` | IRLS iteration cap and convergence tolerance | 200, 1e-8 |
+| `alpha`, `add_intercept`, `drop_missing`, `rcond`, names | as for least squares | |
+
+`GLMFitResult` carries the coefficients with standard errors, `z_values`, `p_values` and intervals (normal approximations), `fitted_values` (the means), `linear_predictor`, `deviance`, `null_deviance`, `pseudo_rsquared`, `dispersion`, `iterations`, `converged`, `log_likelihood`, `aic`, `bic`. `glm_predict` returns the mean (`Mean`, a probability for the binomial family) or the linear predictor (`Linear`).
+
+- [Logistic and Poisson regression](regression_02_glm_quantile_polynomial/logistic_and_poisson_regression.md)
+
+## Quantile regression
+
+```cpp
+reg::QuantileFitResult reg::quantile_fit(y, x, reg::QuantileOptions options = {}, Config cfg = {});
+```
+
+It minimises the asymmetric absolute loss, so that a fraction `tau` of the residuals are below the line. `tau = 0.5` is median regression. `QuantileOptions` has `tau`, `covariance` (`Robust`, the default sandwich estimate, or `Iid`), `alpha`, `add_intercept`, `drop_missing`, `rcond`, `max_iter` (500), `tol` (1e-7) and `eps` (a smoothing constant, 1e-6). Standard errors rest on an estimate of the density of the residuals at zero, with the Hall–Sheather bandwidth scaled by the smaller of the standard deviation of `y` and the interquartile range of the residuals divided by 1.34, so a few outliers do not inflate it; p-values and intervals use Student's t distribution on the residual degrees of freedom. The result carries coefficients, standard errors, intervals, `objective`, `pseudo_rsquared`, `iterations` and `converged`.
+
+- [Robust and conditional-quantile fits](regression_02_glm_quantile_polynomial/robust_and_conditional_quantile_fits.md)
+
+## Polynomial regression
+
+```cpp
+reg::PolyFitResult reg::poly_fit(y, x, reg::PolyOptions options = {}, Config cfg = {});
+Series             reg::poly_expand(x, degree, include_cross = false, Config cfg = {});
+Series             reg::poly_predict(fit, x_new, Config cfg = {});
+```
+
+`PolyOptions::degree` is the highest power and `include_cross` adds products of different predictors. The fit is ordinary least squares on the expanded columns (`fit.ols`), so everything in Chapter 1 applies; coefficient names show the terms.
+
+- [Curves and cross terms](regression_02_glm_quantile_polynomial/curves_and_cross_terms.md)
+
+## Checklist
+
+1. Binary outcome: `Binomial`. Counts: `Poisson`. Check `converged`.
+2. Coefficients of a logistic model are log-odds; exponentiate for odds ratios.
+3. Outliers or interest in the spread: quantile regression.
+4. Curves: low-degree polynomials; compare with the information criteria.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

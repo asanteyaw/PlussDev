@@ -37,10 +37,10 @@ auto r0 = pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_
 auto r1 = pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(2)})}});
 
 auto unlabeled = pluss::scribble::Axel({r0, r1});
-std::cout << "unlabeled: " << std::boolalpha << unlabeled.labels().has_value() << "\n";
+std::cout << "unlabeled: " << std::boolalpha << unlabeled.label().has_value() << "\n";
 
 auto labeled = pluss::scribble::Axel({r0, r1}, pluss::scribble::Slot({pluss::make_note("q1"), pluss::make_note("q2")}));
-std::cout << "labeled: " << labeled.labels().has_value() << " first=" << std::get<pluss::Note>(labeled.labels()->at(0)).at(0);
+std::cout << "labeled: " << labeled.label().has_value() << " first=" << std::get<pluss::Note>(labeled.label()->at(0)).at(0);
 ```
 
 ### Output

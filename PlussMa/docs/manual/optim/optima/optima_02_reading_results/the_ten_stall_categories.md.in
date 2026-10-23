@@ -1,0 +1,24 @@
+# The ten stall categories
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+The exit flag is coarse. The stall category says what went wrong underneath. There are ten, and this program triggers each. The scenario text describes the cause, and the line below it shows the category name and the flag it came with.
+
+@@example Numerical/optimization/guide/optima/24_stall_categories.cpp@@
+
+| Category | What it means |
+|---|---|
+| `none` | The run ended healthily. |
+| `user-stop` | The progress hook asked to stop. |
+| `invalid-callback-contract` | A callback returned the wrong shape or threw. |
+| `nonfinite-callback-region` | A callback returned `NaN` or infinity. |
+| `search-direction-collapse` | The line search could not find an acceptable step. |
+| `boundary-limited` | No step was possible toward a bound or the linearized constraints. |
+| `infeasible-stationary` | The constraint violation is at a stationary point that is still infeasible. |
+| `complementarity-stagnation` | The interior method hit its budget with the barrier complementarity still large against stationarity. |
+| `feasibility-failure` | The feasibility phase could not reduce the violation. |
+| `recovery-failure` | The restoration or recovery step failed. |
+| `iteration-limit` | The iteration budget was spent. |
+
+`boundary-limited` needs an unusual setting to appear: here the interior method's `fraction_to_boundary = 0` forbids any step toward a constraint boundary. It is the category to look for when a run on a boxed problem refuses to move.

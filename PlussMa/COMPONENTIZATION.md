@@ -25,7 +25,8 @@ This file defines the include and build layering for PlussMa so users can opt in
   - `#include <pluss/ma/stats/time_series.h>`
 - Engineering:
   - `#include <pluss/ma/eng/control.h>`
-  - `#include <pluss/ma/eng/signal_proc.h>`
+  - `#include <pluss/ma/eng/lti.h>`
+  - `#include <pluss/ma/eng/signal.h>`
 - Natural Sciences:
   - `#include <pluss/ma/natsci/physics.h>`
   - `#include <pluss/ma/natsci/chemistry.h>`
@@ -76,7 +77,8 @@ Stats module switches:
 
 Engineering module switches:
 - `PLUSSMA_ENG_ENABLE_CONTROL`
-- `PLUSSMA_ENG_ENABLE_SIGNAL_PROC`
+- `PLUSSMA_ENG_ENABLE_LTI`
+- `PLUSSMA_ENG_ENABLE_SIGNAL`
 
 Natural Sciences module switches:
 - `PLUSSMA_NATSCI_ENABLE_PHYSICS`

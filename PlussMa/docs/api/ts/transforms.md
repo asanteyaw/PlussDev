@@ -1,0 +1,98 @@
+<!-- generated from transforms.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# ts transforms
+
+`transforms` holds the element-wise and windowed operations that turn a series into another series of the same length: changes (`diff`, `returns`, `log_returns`), shifts (`lag`, `lead`), rolling and expanding statistics, exponentially weighted statistics, a rolling z-score, and gap filling. They are the building blocks the models of the other families expect their input to have gone through.
+
+All of them take a one-dimensional `Series` and return a `Series` of the same length. Positions where a statistic is not yet defined (before a window has filled, or because a value needed does not exist) hold `NaN`, so the output always lines up with the input observation by observation. A `NaN` inside a window makes the statistic of that window `NaN`.
+
+## The Surface
+
+| Entity | What it gives you |
+|---|---|
+| [`diff`](transforms/diff.md) | The first difference of a series: each observation minus the one `periods` positions earlier |
+| [`ema`](transforms/ema.md) | The exponential moving average of a series; the same computation as `ewm_mean` |
+| [`ewm_mean`](transforms/ewm_mean.md) | The exponentially weighted moving average of a series |
+| [`ewm_std`](transforms/ewm_std.md) | The exponentially weighted standard deviation of a series |
+| [`expanding_mean`](transforms/expanding_mean.md) | The mean of all observations up to each position |
+| [`expanding_std`](transforms/expanding_std.md) | The standard deviation of all observations up to each position |
+| [`fill_gaps`](transforms/fill_gaps.md) | Replaces missing values (`NaN`) in a series by carrying values forward or backward, or by a constant |
+| [`lag`](transforms/lag.md) | The series shifted later in time: position `t` holds the observation from `periods` steps earlier |
+| [`lead`](transforms/lead.md) | The series shifted earlier in time: position `t` holds the observation from `periods` steps later |
+| [`log_returns`](transforms/log_returns.md) | The logarithmic return of a series: the natural log of the ratio of an observation to the one `periods` earlier |
+| [`resample`](transforms/resample.md) | Aggregates a time-indexed series into coarser time bins, such as days, weeks or months |
+| [`returns`](transforms/returns.md) | The simple return of a series: the relative change over `periods` observations |
+| [`rolling_max`](transforms/rolling_max.md) | The largest value in each window of `window` consecutive observations |
+| [`rolling_mean`](transforms/rolling_mean.md) | The mean of each window of `window` consecutive observations |
+| [`rolling_min`](transforms/rolling_min.md) | The smallest value in each window of `window` consecutive observations |
+| [`rolling_std`](transforms/rolling_std.md) | The standard deviation of each window of `window` consecutive observations |
+| [`rolling_sum`](transforms/rolling_sum.md) | The sum of each window of `window` consecutive observations |
+| [`rolling_var`](transforms/rolling_var.md) | The variance of each window of `window` consecutive observations |
+| [`zscore_rolling`](transforms/zscore_rolling.md) | The rolling z-score: each observation minus the window mean, divided by the window standard deviation |
+
+## How To Call It
+
+Compute the changes, the lagged values and a three-period rolling mean of one series and print them side by side.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+
+int main() {
+  const Series x = pluss::make_series({10.0, 12.0, 11.0, 15.0, 14.0, 18.0, 17.0}, f64);
+  show("x", x);
+  show("diff", ts::diff(x));
+  show("lag", ts::lag(x));
+  show("rolling mean", ts::rolling_mean(x, 3, 3));
+}
+```
+
+Output
+
+```text
+x               10.0000  12.0000  11.0000  15.0000  14.0000  18.0000  17.0000
+diff                nan   2.0000  -1.0000   4.0000  -1.0000   4.0000  -1.0000
+lag                 nan  10.0000  12.0000  11.0000  15.0000  14.0000  18.0000
+rolling mean        nan      nan  11.0000  12.6667  13.3333  15.6667  16.3333
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+transforms/diff
+transforms/ema
+transforms/ewm_mean
+transforms/ewm_std
+transforms/expanding_mean
+transforms/expanding_std
+transforms/fill_gaps
+transforms/lag
+transforms/lead
+transforms/log_returns
+transforms/resample
+transforms/returns
+transforms/rolling_max
+transforms/rolling_mean
+transforms/rolling_min
+transforms/rolling_std
+transforms/rolling_sum
+transforms/rolling_var
+transforms/zscore_rolling
+```
+<!-- apiref:toctree:end -->

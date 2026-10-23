@@ -263,6 +263,34 @@ external_reference_parity_test/fast:
 .PHONY : external_reference_parity_test/fast
 
 # Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/rule
+
+# Convenience name for target.
+linprog_infinity_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/rule
+.PHONY : linprog_infinity_test
+
+# fast build rule for target.
+linprog_infinity_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/build
+.PHONY : linprog_infinity_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/rule
+
+# Convenience name for target.
+linprog_polish_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/rule
+.PHONY : linprog_polish_test
+
+# fast build rule for target.
+linprog_polish_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/build
+.PHONY : linprog_polish_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/rule
 .PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/rule
@@ -275,6 +303,20 @@ linprog_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.d
 linprog_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/build
 .PHONY : linprog_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/rule
+
+# Convenience name for target.
+lp_sparse_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/rule
+.PHONY : lp_sparse_test
+
+# fast build rule for target.
+lp_sparse_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/build
+.PHONY : lp_sparse_test/fast
 
 # Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/rule:
@@ -359,6 +401,20 @@ pattern_search_minimizer_test: PlussMa/Math/Numerical/optimization/test/CMakeFil
 pattern_search_minimizer_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build
 .PHONY : pattern_search_minimizer_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/rule
+
+# Convenience name for target.
+qp_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/rule
+.PHONY : qp_test
+
+# fast build rule for target.
+qp_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/build
+.PHONY : qp_test/fast
 
 # Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/roots_test.dir/rule:
@@ -578,6 +634,54 @@ external_reference_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/external_reference_parity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/external_reference_parity_test.dir/external_reference_parity_test.cpp.s
 .PHONY : external_reference_parity_test.cpp.s
 
+linprog_infinity_test.o: linprog_infinity_test.cpp.o
+.PHONY : linprog_infinity_test.o
+
+# target to build an object file
+linprog_infinity_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/linprog_infinity_test.cpp.o
+.PHONY : linprog_infinity_test.cpp.o
+
+linprog_infinity_test.i: linprog_infinity_test.cpp.i
+.PHONY : linprog_infinity_test.i
+
+# target to preprocess a source file
+linprog_infinity_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/linprog_infinity_test.cpp.i
+.PHONY : linprog_infinity_test.cpp.i
+
+linprog_infinity_test.s: linprog_infinity_test.cpp.s
+.PHONY : linprog_infinity_test.s
+
+# target to generate assembly for a file
+linprog_infinity_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_infinity_test.dir/linprog_infinity_test.cpp.s
+.PHONY : linprog_infinity_test.cpp.s
+
+linprog_polish_test.o: linprog_polish_test.cpp.o
+.PHONY : linprog_polish_test.o
+
+# target to build an object file
+linprog_polish_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/linprog_polish_test.cpp.o
+.PHONY : linprog_polish_test.cpp.o
+
+linprog_polish_test.i: linprog_polish_test.cpp.i
+.PHONY : linprog_polish_test.i
+
+# target to preprocess a source file
+linprog_polish_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/linprog_polish_test.cpp.i
+.PHONY : linprog_polish_test.cpp.i
+
+linprog_polish_test.s: linprog_polish_test.cpp.s
+.PHONY : linprog_polish_test.s
+
+# target to generate assembly for a file
+linprog_polish_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_polish_test.dir/linprog_polish_test.cpp.s
+.PHONY : linprog_polish_test.cpp.s
+
 linprog_test.o: linprog_test.cpp.o
 .PHONY : linprog_test.o
 
@@ -601,6 +705,30 @@ linprog_test.s: linprog_test.cpp.s
 linprog_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/linprog_test.dir/linprog_test.cpp.s
 .PHONY : linprog_test.cpp.s
+
+lp_sparse_test.o: lp_sparse_test.cpp.o
+.PHONY : lp_sparse_test.o
+
+# target to build an object file
+lp_sparse_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/lp_sparse_test.cpp.o
+.PHONY : lp_sparse_test.cpp.o
+
+lp_sparse_test.i: lp_sparse_test.cpp.i
+.PHONY : lp_sparse_test.i
+
+# target to preprocess a source file
+lp_sparse_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/lp_sparse_test.cpp.i
+.PHONY : lp_sparse_test.cpp.i
+
+lp_sparse_test.s: lp_sparse_test.cpp.s
+.PHONY : lp_sparse_test.s
+
+# target to generate assembly for a file
+lp_sparse_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lp_sparse_test.dir/lp_sparse_test.cpp.s
+.PHONY : lp_sparse_test.cpp.s
 
 lsr1_complex_test.o: lsr1_complex_test.cpp.o
 .PHONY : lsr1_complex_test.o
@@ -794,6 +922,30 @@ pattern_search_minimizer_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/pattern_search_minimizer_test.cpp.s
 .PHONY : pattern_search_minimizer_test.cpp.s
 
+qp_test.o: qp_test.cpp.o
+.PHONY : qp_test.o
+
+# target to build an object file
+qp_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/qp_test.cpp.o
+.PHONY : qp_test.cpp.o
+
+qp_test.i: qp_test.cpp.i
+.PHONY : qp_test.i
+
+# target to preprocess a source file
+qp_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/qp_test.cpp.i
+.PHONY : qp_test.cpp.i
+
+qp_test.s: qp_test.cpp.s
+.PHONY : qp_test.s
+
+# target to generate assembly for a file
+qp_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/qp_test.dir/qp_test.cpp.s
+.PHONY : qp_test.cpp.s
+
 roots_test.o: roots_test.cpp.o
 .PHONY : roots_test.o
 
@@ -934,7 +1086,10 @@ help:
 	@echo "... dfo_minimizers_test"
 	@echo "... dfo_solver_test"
 	@echo "... external_reference_parity_test"
+	@echo "... linprog_infinity_test"
+	@echo "... linprog_polish_test"
 	@echo "... linprog_test"
+	@echo "... lp_sparse_test"
 	@echo "... lsr1_complex_test"
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"
@@ -943,6 +1098,7 @@ help:
 	@echo "... optima_robustness_catch2"
 	@echo "... pattern_search_closure_catch2"
 	@echo "... pattern_search_minimizer_test"
+	@echo "... qp_test"
 	@echo "... roots_test"
 	@echo "... septima_adam_complex_test"
 	@echo "... septima_lbfgs_complex_test"
@@ -963,9 +1119,18 @@ help:
 	@echo "... external_reference_parity_test.o"
 	@echo "... external_reference_parity_test.i"
 	@echo "... external_reference_parity_test.s"
+	@echo "... linprog_infinity_test.o"
+	@echo "... linprog_infinity_test.i"
+	@echo "... linprog_infinity_test.s"
+	@echo "... linprog_polish_test.o"
+	@echo "... linprog_polish_test.i"
+	@echo "... linprog_polish_test.s"
 	@echo "... linprog_test.o"
 	@echo "... linprog_test.i"
 	@echo "... linprog_test.s"
+	@echo "... lp_sparse_test.o"
+	@echo "... lp_sparse_test.i"
+	@echo "... lp_sparse_test.s"
 	@echo "... lsr1_complex_test.o"
 	@echo "... lsr1_complex_test.i"
 	@echo "... lsr1_complex_test.s"
@@ -990,6 +1155,9 @@ help:
 	@echo "... pattern_search_minimizer_test.o"
 	@echo "... pattern_search_minimizer_test.i"
 	@echo "... pattern_search_minimizer_test.s"
+	@echo "... qp_test.o"
+	@echo "... qp_test.i"
+	@echo "... qp_test.s"
 	@echo "... roots_test.o"
 	@echo "... roots_test.i"
 	@echo "... roots_test.s"

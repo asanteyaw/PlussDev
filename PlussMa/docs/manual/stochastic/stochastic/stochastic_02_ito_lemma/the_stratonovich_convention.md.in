@@ -1,0 +1,10 @@
+# The Stratonovich convention
+
+[Back to Differentials and Ito's Lemma](../stochastic_02_ito_lemma.md)
+
+
+The same geometric Brownian motion is `dX = μX dt + σX dW` in Ito form and `dX = (μ − σ²/2) X dt + σX ∘ dW` in Stratonovich form. `strat_drift` converts the drift one way and `ito_drift` the other; the pair is an exact round trip. The program then computes `d log X` by both routes.
+
+@@example Probability/random_processes/guide/sde/15_stratonovich_and_conversion.cpp@@
+
+The converted drifts are 0.02, 0.04, 0.08 for the three states, equal to `(μ − σ²/2) x`, and converting back recovers 0.06, 0.12, 0.24. Both routes for `log X` give drift 0.04 and diffusion 0.4: Ito's lemma subtracts `σ²/2` explicitly, while the ordinary chain rule applied to the Stratonovich drift needs no extra term.

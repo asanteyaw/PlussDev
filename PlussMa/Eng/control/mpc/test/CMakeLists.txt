@@ -1,0 +1,3 @@
+add_executable(eng_control_mpc_test mpc_test.cpp)
+target_link_libraries(eng_control_mpc_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_control_mpc_test COMMAND eng_control_mpc_test)

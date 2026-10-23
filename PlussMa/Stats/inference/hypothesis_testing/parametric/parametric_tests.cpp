@@ -3,6 +3,7 @@
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/stats/distr.h"
+#include "pluss/subsp/stats/tails.h"
 
 #include <algorithm>
 #include <cmath>
@@ -194,17 +195,23 @@ double f_quantile_(double p, double dof1, double dof2, Config cfg) {
   return 0.5 * (lo + hi);
 }
 
-double p_from_cdf_(double cdf, Tail tail) {
-  const double c = clamp01_(cdf);
+// p-value from the two tail probabilities of the statistic, each evaluated directly so that extreme statistics keep a nonzero p-value.
+double p_from_tails_(double lower, double upper, Tail tail) {
   switch (tail) {
     case Tail::Both:
-      return clamp01_(2.0 * std::min(c, 1.0 - c));
+      return clamp01_(2.0 * std::min(lower, upper));
     case Tail::Left:
-      return c;
+      return clamp01_(lower);
     case Tail::Right:
-      return 1.0 - c;
+      return clamp01_(upper);
   }
   return 1.0;
+}
+
+// Tail probabilities of a Student t statistic: {P(T <= t), P(T >= t)}.
+std::pair<double, double> t_tails_(double t, double dof) {
+  const double half = 0.5 * pluss::subsp::stats::tails::student_t_two_sided(std::abs(t), dof);
+  return t >= 0.0 ? std::make_pair(1.0 - half, half) : std::make_pair(half, 1.0 - half);
 }
 
 void check_alpha_(double alpha, const char* op) {
@@ -225,8 +232,8 @@ TTestResult ttest(const Series& x, double mean0, const TestOptions& options, Con
   const double se = std::sqrt(st.var / static_cast<double>(st.n));
   const double dof = static_cast<double>(st.n - 1);
   const double stat = (st.mean - mean0) / std::max(se, std::sqrt(kEps));
-  const double cdf = t_cdf_(stat, dof, out_cfg);
-  const double pvalue = p_from_cdf_(cdf, options.tail);
+  const auto tt = t_tails_(stat, dof);
+  const double pvalue = p_from_tails_(tt.first, tt.second, options.tail);
 
   double critical = 0.0;
   bool reject = false;
@@ -297,8 +304,8 @@ TTest2Result ttest2(const Series& x, const Series& y, const TTest2Options& optio
   }
 
   const double stat = diff / std::max(se, std::sqrt(kEps));
-  const double cdf = t_cdf_(stat, dof, out_cfg);
-  const double pvalue = p_from_cdf_(cdf, options.tail);
+  const auto tt = t_tails_(stat, dof);
+  const double pvalue = p_from_tails_(tt.first, tt.second, options.tail);
 
   double critical = 0.0;
   bool reject = false;
@@ -349,8 +356,7 @@ ZTestResult ztest(const Series& x,
 
   const double se = sigma / std::sqrt(static_cast<double>(st.n));
   const double stat = (st.mean - mean0) / std::max(se, std::sqrt(kEps));
-  const double cdf = normal_cdf_(stat, out_cfg);
-  const double pvalue = p_from_cdf_(cdf, options.tail);
+  const double pvalue = p_from_tails_(pluss::subsp::stats::tails::normal_sf(-stat), pluss::subsp::stats::tails::normal_sf(stat), options.tail);
 
   double critical = 0.0;
   bool reject = false;
@@ -398,8 +404,8 @@ VarTestResult vartest(const Series& x,
 
   const double dof = static_cast<double>(st.n - 1);
   const double chi = dof * st.var / variance0;
-  const double cdf = chisq_cdf_(chi, dof, out_cfg);
-  const double pvalue = p_from_cdf_(cdf, options.tail);
+  const double upper_tail = pluss::subsp::stats::tails::chi2_sf(chi, dof);
+  const double pvalue = p_from_tails_(chisq_cdf_(chi, dof, out_cfg), upper_tail, options.tail);
 
   double critical = 0.0;
   bool reject = false;
@@ -451,8 +457,8 @@ VarTest2Result vartest2(const Series& x,
   const double dof1 = static_cast<double>(sx.n - 1);
   const double dof2 = static_cast<double>(sy.n - 1);
   const double fstat = sx.var / sy.var;
-  const double cdf = f_cdf_(fstat, dof1, dof2, out_cfg);
-  const double pvalue = p_from_cdf_(cdf, options.tail);
+  const double upper_tail = pluss::subsp::stats::tails::f_sf(fstat, dof1, dof2);
+  const double pvalue = p_from_tails_(f_cdf_(fstat, dof1, dof2, out_cfg), upper_tail, options.tail);
 
   double critical = 0.0;
   bool reject = false;
@@ -550,8 +556,7 @@ Anova1WResult anova_1w(const Series& y,
   const double ms_between = ss_between / std::max(kEps, dof_between);
   const double ms_within = ss_within / std::max(kEps, dof_within);
   const double fstat = ms_between / std::max(kEps, ms_within);
-  const double cdf = f_cdf_(fstat, dof_between, dof_within, out_cfg);
-  const double pvalue = clamp01_(1.0 - cdf);
+  const double pvalue = clamp01_(pluss::subsp::stats::tails::f_sf(fstat, dof_between, dof_within));
   const double critical = f_quantile_(1.0 - options.alpha, dof_between, dof_within, out_cfg);
 
   Anova1WResult out;

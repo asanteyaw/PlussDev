@@ -946,7 +946,7 @@ void load_source(sqlite3* db,
               "DataFrame::sql().execute: failed to prepare sqlite insert");
   SqliteStmt stmt(raw_stmt);
 
-  const auto labels = frame.label().values();
+  const auto labels = frame.labels().values();
   for (std::int64_t row = 0; row < frame.ncases(); ++row) {
     PLUSS_CHECK(sqlite3_reset(stmt.get()) == SQLITE_OK, "DataFrame::sql().execute: sqlite reset failed");
     PLUSS_CHECK(sqlite3_clear_bindings(stmt.get()) == SQLITE_OK,

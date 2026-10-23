@@ -1,0 +1,11 @@
+add_executable(eng_structure_test structure_test.cpp)
+target_link_libraries(eng_structure_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_structure_test COMMAND eng_structure_test)
+
+add_executable(eng_structure_frame_test frame_test.cpp)
+target_link_libraries(eng_structure_frame_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_structure_frame_test COMMAND eng_structure_frame_test)
+
+add_executable(eng_structure_spectral_test spectral_test.cpp)
+target_link_libraries(eng_structure_spectral_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_structure_spectral_test COMMAND eng_structure_spectral_test)

@@ -1,0 +1,16 @@
+# A maximum-likelihood fit, and what a flag cannot tell you
+
+[Back to Worked Problems](../optima_08_worked_problems.md)
+
+
+Forty lifetimes are placed at the evenly spaced quantiles of a Weibull distribution with shape 2.5 and scale 100. The unknowns are the shape `k` and the scale `s`, both positive. The objective is the negative log-likelihood. At the maximum of the likelihood the scale satisfies `s^k = mean(x^k)` exactly, which gives a check the solver never sees: the last column of the output is `s^k / mean(x^k)`, and it should be 1.
+
+@@example Numerical/optimization/guide/optima/94_weibull_fit.cpp@@
+
+The first three starts are ordinary and all return `k` close to 2.54 and `s` close to 99.94, near the 2.5 and 100 that generated the data (the data sit exactly on the quantiles, so the fit is close to the generating values but not equal to them), and the check column is 1.0000 each time. Several starting points that agree is evidence that you have the global answer, which chapter 3 showed you cannot assume for every problem.
+
+The fourth start, `(10, 20)`, is the instructive one. The solver reports flag `1` and an optimality measure of 6.2e-07, which looks excellent, and the answer, `k = 3.0579`, `s = 21.4785`, is wrong: the check column reads 0.0082. At that start the objective is 6.4e9 and its gradient 1.4e10. The default algorithm, sequential QP, judges optimality relative to the size of the gradient at the start (never less than 1), so after the gradient has fallen by six orders of magnitude it counts as small, although the gradient is still 8.4e3 in absolute terms. The flag and the optimality measure are both honest answers to a question about the starting scale, not to the question you cared about. Three habits protect you:
+
+- start where the objective and its gradient are of ordinary size, as the first three starts do;
+- run from more than one start when a wrong answer would be costly;
+- check the answer by an identity or a closed form that the solver did not use, as the last column does.

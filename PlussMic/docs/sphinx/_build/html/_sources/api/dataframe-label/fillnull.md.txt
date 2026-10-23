@@ -50,7 +50,7 @@ auto readings = DataFrame(
     Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
 std::cout << readings;
 
-auto filled = readings.label().fillnull(0.0);
+auto filled = readings.labels().fillnull(0.0);
 std::cout << filled;
 ```
 
@@ -78,7 +78,7 @@ ptype: Series
 
 `filled` is a bare `Slate` — the middle case label's `NULL` became `0`, but
 `readings` itself is unchanged unless you call
-`readings.label().set(filled)` to apply it.
+`readings.labels().set(filled)` to apply it.
 
 Example 2. Fill a `NaT` in a `Timeline` case-label axis, using the
 `pluss::Timeline` overload.
@@ -91,7 +91,7 @@ auto readings = DataFrame(
     Slate(pluss::make_timeline({"2024-01-01T00:00:00Z", "", "2024-01-03T00:00:00Z"})));
 std::cout << readings;
 
-auto filled = readings.label().fillnull(pluss::make_timeline("2024-01-02T00:00:00Z"));
+auto filled = readings.labels().fillnull(pluss::make_timeline("2024-01-02T00:00:00Z"));
 std::cout << filled;
 ```
 
@@ -120,7 +120,7 @@ ptype: Timeline
 The empty string in the constructor produced a `NaT` middle label, displayed
 as `NULL`; `fillnull` replaces it with the single supplied `pluss::Timeline`
 value, `2024-01-02`. As in Example 1, this is still just the filled values —
-`readings` itself needs `readings.label().set(filled)` to actually change.
+`readings` itself needs `readings.labels().set(filled)` to actually change.
 
 ## Notes
 
@@ -132,7 +132,7 @@ value, `2024-01-02`. As in Example 1, this is still just the filled values —
 - The `std::string_view`/`const char*` overloads work the same way as
   Example 1's `double` overload, just for a `Note`-kind axis instead of a
   numeric one — pass the replacement text directly, e.g.
-  `readings.label().fillnull("unknown")`.
+  `readings.labels().fillnull("unknown")`.
 ## See Also
 
 - [`DataFrameLabelAccessor::isnull`](isnull.md),

@@ -34,11 +34,12 @@
 // of once over the whole computation.
 //
 // Scope/tradeoffs, stated plainly:
-//  - `fluxa()` (forward-only) uses fixed-step RK4. Deliberately NOT an
-//    adaptive method (no embedded-pair step-size control, unlike
-//    pluss::integ::Quadra's own step-doubling) -- a real, honest scope
-//    limit for this first pass, not a claim of production-grade
-//    adaptivity.
+//  - `fluxa()` provides fixed-step RK4 and adaptive Dormand-Prince 5(4).
+//    RK45 controls a weighted RMS local error and lands exactly on the
+//    requested endpoint. The checkpointed discrete adjoint below remains an
+//    RK4 contract because differentiating accepted/rejected adaptive step
+//    decisions requires a separate policy rather than pretending the two
+//    discretizations are interchangeable.
 //  - `fluxa_adjoint()`'s backward pass is a CHECKPOINTED discrete adjoint:
 //    it stores the forward trajectory's y values at every step boundary
 //    (O(steps) memory for the trajectory itself) and computes per-step
@@ -63,10 +64,13 @@
 //    themselves, exactly like Septima's own multi-block ergonomics do.
 
 #include "pluss/subsp/math/diff.h"
+#include "pluss/subsp/math/krylov.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -80,20 +84,29 @@ namespace pluss::subsp::math::ode {
 using OdeFn = std::function<Series(double, const Series &, const Series &)>;
 using OdeEventFn =
     std::function<Series(double, const Series &, const Series &)>;
+using LinearOdeFn = std::function<Series(double, const Series &)>;
 
 enum class OdeMethod : std::uint8_t {
   RK4 = 0,
+  RK45 = 1,
 };
 
 struct OdeOptions {
   OdeMethod method{OdeMethod::RK4};
   std::int64_t steps{100};
+  double relative_tolerance{1e-6};
+  double absolute_tolerance{1e-9};
+  double initial_step{0.0};
+  double minimum_step{0.0};
+  double maximum_step{std::numeric_limits<double>::infinity()};
+  std::int64_t max_steps{100000};
 };
 
 struct OdeResult {
   Series y_final = pluss::series::undefined();
   std::int64_t steps{0};
   std::int64_t function_evaluations{0};
+  std::int64_t rejected_steps{0};
   bool converged{false};
 };
 
@@ -126,6 +139,18 @@ struct OdeAdjointResult {
   std::int64_t backward_steps{0};
 };
 
+struct LinearOdeOptions {
+  std::int64_t steps{100};
+  double relative_tolerance{1e-6};
+  double absolute_tolerance{1e-9};
+  double initial_step{0.0};
+  double minimum_step{0.0};
+  double maximum_step{std::numeric_limits<double>::infinity()};
+  std::int64_t max_steps{100000};
+  std::vector<std::int64_t> solve_dims{-1};
+  krylov::GmresOptions linear{};
+};
+
 namespace detail {
 
 inline void require_defined_(const Series &x, const char *op) {
@@ -146,6 +171,106 @@ inline Series rk4_step_(const OdeFn &f, double t, double h, const Series &y,
   const Series k3 = f(t + h * 0.5, y.add(k2.mul(h * 0.5)), theta);
   const Series k4 = f(t + h, y.add(k3.mul(h)), theta);
   return y.add(k1.add(k2.mul(2.0)).add(k3.mul(2.0)).add(k4).mul(h / 6.0));
+}
+
+struct Rk45Step final {
+  Series value;
+  Series error;
+};
+
+inline Rk45Step rk45_step_(const OdeFn &f, double t, double h, const Series &y,
+                           const Series &theta) {
+  const Series k1 = f(t, y, theta);
+  const Series k2 =
+      f(t + h * (1.0 / 5.0), y.add(k1.mul(h * (1.0 / 5.0))), theta);
+  const Series k3 =
+      f(t + h * (3.0 / 10.0),
+        y.add(k1.mul(h * (3.0 / 40.0))).add(k2.mul(h * (9.0 / 40.0))), theta);
+  const Series k4 = f(t + h * (4.0 / 5.0),
+                      y.add(k1.mul(h * (44.0 / 45.0)))
+                          .add(k2.mul(h * (-56.0 / 15.0)))
+                          .add(k3.mul(h * (32.0 / 9.0))),
+                      theta);
+  const Series k5 = f(t + h * (8.0 / 9.0),
+                      y.add(k1.mul(h * (19372.0 / 6561.0)))
+                          .add(k2.mul(h * (-25360.0 / 2187.0)))
+                          .add(k3.mul(h * (64448.0 / 6561.0)))
+                          .add(k4.mul(h * (-212.0 / 729.0))),
+                      theta);
+  const Series k6 = f(t + h,
+                      y.add(k1.mul(h * (9017.0 / 3168.0)))
+                          .add(k2.mul(h * (-355.0 / 33.0)))
+                          .add(k3.mul(h * (46732.0 / 5247.0)))
+                          .add(k4.mul(h * (49.0 / 176.0)))
+                          .add(k5.mul(h * (-5103.0 / 18656.0))),
+                      theta);
+  const Series high = y.add(k1.mul(h * (35.0 / 384.0)))
+                          .add(k3.mul(h * (500.0 / 1113.0)))
+                          .add(k4.mul(h * (125.0 / 192.0)))
+                          .add(k5.mul(h * (-2187.0 / 6784.0)))
+                          .add(k6.mul(h * (11.0 / 84.0)));
+  const Series k7 = f(t + h, high, theta);
+  const Series low = y.add(k1.mul(h * (5179.0 / 57600.0)))
+                         .add(k3.mul(h * (7571.0 / 16695.0)))
+                         .add(k4.mul(h * (393.0 / 640.0)))
+                         .add(k5.mul(h * (-92097.0 / 339200.0)))
+                         .add(k6.mul(h * (187.0 / 2100.0)))
+                         .add(k7.mul(h * (1.0 / 40.0)));
+  return {high, high.sub(low)};
+}
+
+inline double weighted_error_(const Series &error, const Series &left,
+                              const Series &right, double rtol, double atol) {
+  const Series scale = left.abs().maximum(right.abs()).mul(rtol).add(atol);
+  return error.abs().div(scale).square().mean().sqrt().item<double>();
+}
+
+inline void validate_adaptive_options_(const OdeOptions &options) {
+  if (!(options.relative_tolerance > 0.0) ||
+      !std::isfinite(options.relative_tolerance) ||
+      !(options.absolute_tolerance > 0.0) ||
+      !std::isfinite(options.absolute_tolerance) ||
+      !(options.initial_step >= 0.0) || !std::isfinite(options.initial_step) ||
+      !(options.minimum_step >= 0.0) || !std::isfinite(options.minimum_step) ||
+      !(options.maximum_step > 0.0) || std::isnan(options.maximum_step) ||
+      options.max_steps <= 0 || options.minimum_step > options.maximum_step) {
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa: invalid adaptive-step options");
+  }
+}
+
+inline void validate_adaptive_options_(const LinearOdeOptions &options) {
+  if (options.steps <= 0 || !(options.relative_tolerance > 0.0) ||
+      !std::isfinite(options.relative_tolerance) ||
+      !(options.absolute_tolerance > 0.0) ||
+      !std::isfinite(options.absolute_tolerance) ||
+      !(options.initial_step >= 0.0) || !std::isfinite(options.initial_step) ||
+      !(options.minimum_step >= 0.0) || !std::isfinite(options.minimum_step) ||
+      !(options.maximum_step > 0.0) || std::isnan(options.maximum_step) ||
+      options.max_steps <= 0 || options.minimum_step > options.maximum_step ||
+      options.solve_dims.empty())
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa_linear: invalid adaptive-step options");
+}
+
+struct MidpointStep final {
+  Series value;
+  std::int64_t evaluations{};
+  bool converged{};
+};
+
+inline MidpointStep midpoint_step_(const LinearOdeFn &action, double t,
+                                   double h, const Series &y,
+                                   const LinearOdeOptions &options) {
+  const double midpoint = t + h * 0.5;
+  const Series rhs = y.add(action(midpoint, y).mul(h * 0.5));
+  auto system = [&](const Series &trial) {
+    return trial.sub(action(midpoint, trial).mul(h * 0.5));
+  };
+  const auto solved =
+      krylov::gmres(system, rhs, options.solve_dims, options.linear, y);
+  return {solved.solution, solved.operator_evaluations + 1,
+          solved.converged.all().item<bool>()};
 }
 
 inline double event_scalar_(const OdeEventFn &event, double t,
@@ -194,6 +319,69 @@ inline OdeResult fluxa(const OdeFn &f, const Series &y0, double t0, double t1,
     ::pluss::throw_error("subsp::math::ode::fluxa: steps must be > 0");
   }
 
+  if (options.method == OdeMethod::RK45) {
+    detail::validate_adaptive_options_(options);
+    OdeResult result;
+    result.y_final = y0;
+    if (t0 == t1) {
+      result.converged = true;
+      return result;
+    }
+    const double direction = t1 > t0 ? 1.0 : -1.0;
+    const double span = std::abs(t1 - t0);
+    double magnitude = options.initial_step > 0.0
+                           ? options.initial_step
+                           : span / static_cast<double>(options.steps);
+    magnitude = std::min(magnitude, options.maximum_step);
+    if (options.minimum_step > 0.0)
+      magnitude = std::max(magnitude, options.minimum_step);
+    Series y = y0;
+    double t = t0;
+    for (std::int64_t attempt = 0; attempt < options.max_steps; ++attempt) {
+      const double remaining = std::abs(t1 - t);
+      if (remaining <= std::numeric_limits<double>::epsilon() *
+                           std::max({1.0, std::abs(t), std::abs(t1)})) {
+        result.y_final = y;
+        result.converged = true;
+        return result;
+      }
+      magnitude = std::min(magnitude, remaining);
+      if (!(magnitude > 0.0) || t + direction * magnitude == t)
+        ::pluss::throw_error(
+            "subsp::math::ode::fluxa: adaptive step underflow");
+      const double h = direction * magnitude;
+      const auto candidate = detail::rk45_step_(f, t, h, y, theta);
+      result.function_evaluations += 7;
+      const double error = detail::weighted_error_(
+          candidate.error, y, candidate.value, options.relative_tolerance,
+          options.absolute_tolerance);
+      if (!std::isfinite(error))
+        ::pluss::throw_error(
+            "subsp::math::ode::fluxa: non-finite adaptive error estimate");
+      const bool accept = error <= 1.0;
+      if (accept) {
+        y = candidate.value;
+        t += h;
+        ++result.steps;
+      } else {
+        ++result.rejected_steps;
+      }
+      const double factor = error == 0.0
+                                ? 10.0
+                                : std::clamp(0.9 * std::pow(error, -0.2), 0.2,
+                                             accept ? 10.0 : 1.0);
+      magnitude = std::min(options.maximum_step, magnitude * factor);
+      if (options.minimum_step > 0.0 && magnitude < options.minimum_step) {
+        if (!accept)
+          ::pluss::throw_error(
+              "subsp::math::ode::fluxa: required step is below minimum_step");
+        magnitude = options.minimum_step;
+      }
+    }
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa: adaptive step budget exhausted");
+  }
+
   const double h = (t1 - t0) / static_cast<double>(options.steps);
   OdeResult result;
   Series y = y0;
@@ -209,6 +397,110 @@ inline OdeResult fluxa(const OdeFn &f, const Series &y0, double t0, double t1,
   return result;
 }
 
+// Adaptive implicit midpoint with step doubling for a linear, possibly stiff
+// system y' = A(t)y. The callback applies A(t) without requiring a dense
+// matrix; each implicit solve delegates to the shared batched GMRES engine.
+inline OdeResult fluxa_linear(const LinearOdeFn &action, const Series &y0,
+                              double t0, double t1,
+                              const LinearOdeOptions &options = {}) {
+  if (!action)
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa_linear: linear action is required");
+  detail::require_defined_(y0, "fluxa_linear");
+  detail::validate_adaptive_options_(options);
+
+  OdeResult result;
+  result.y_final = y0;
+  if (t0 == t1) {
+    result.converged = true;
+    return result;
+  }
+  const double direction = t1 > t0 ? 1.0 : -1.0;
+  const double span = std::abs(t1 - t0);
+  double magnitude = options.initial_step > 0.0
+                         ? options.initial_step
+                         : span / static_cast<double>(options.steps);
+  magnitude = std::min(magnitude, options.maximum_step);
+  if (options.minimum_step > 0.0)
+    magnitude = std::max(magnitude, options.minimum_step);
+
+  Series y = y0;
+  double t = t0;
+  for (std::int64_t attempt = 0; attempt < options.max_steps; ++attempt) {
+    const double remaining = std::abs(t1 - t);
+    if (remaining <= std::numeric_limits<double>::epsilon() *
+                         std::max({1.0, std::abs(t), std::abs(t1)})) {
+      result.y_final = y;
+      result.converged = true;
+      return result;
+    }
+    magnitude = std::min(magnitude, remaining);
+    if (!(magnitude > 0.0) || t + direction * magnitude == t)
+      ::pluss::throw_error(
+          "subsp::math::ode::fluxa_linear: adaptive step underflow");
+    const double h = direction * magnitude;
+
+    const auto full = detail::midpoint_step_(action, t, h, y, options);
+    result.function_evaluations += full.evaluations;
+    if (!full.converged) {
+      ++result.rejected_steps;
+      magnitude *= 0.5;
+      if (options.minimum_step > 0.0 && magnitude < options.minimum_step)
+        ::pluss::throw_error(
+            "subsp::math::ode::fluxa_linear: linear solve failed at "
+            "minimum_step");
+      continue;
+    }
+    const auto half_left =
+        detail::midpoint_step_(action, t, h * 0.5, y, options);
+    result.function_evaluations += half_left.evaluations;
+    if (!half_left.converged) {
+      ++result.rejected_steps;
+      magnitude *= 0.5;
+      continue;
+    }
+    const auto half_right = detail::midpoint_step_(action, t + h * 0.5, h * 0.5,
+                                                   half_left.value, options);
+    result.function_evaluations += half_right.evaluations;
+    if (!half_right.converged) {
+      ++result.rejected_steps;
+      magnitude *= 0.5;
+      continue;
+    }
+
+    const Series error = half_right.value.sub(full.value).div(3.0);
+    const double scaled_error = detail::weighted_error_(
+        error, y, half_right.value, options.relative_tolerance,
+        options.absolute_tolerance);
+    if (!std::isfinite(scaled_error))
+      ::pluss::throw_error(
+          "subsp::math::ode::fluxa_linear: non-finite error estimate");
+    const bool accept = scaled_error <= 1.0;
+    if (accept) {
+      y = half_right.value;
+      t += h;
+      ++result.steps;
+    } else {
+      ++result.rejected_steps;
+    }
+    const double factor =
+        scaled_error == 0.0
+            ? 4.0
+            : std::clamp(0.9 * std::pow(scaled_error, -1.0 / 3.0), 0.2,
+                         accept ? 4.0 : 1.0);
+    magnitude = std::min(options.maximum_step, magnitude * factor);
+    if (options.minimum_step > 0.0 && magnitude < options.minimum_step) {
+      if (!accept)
+        ::pluss::throw_error(
+            "subsp::math::ode::fluxa_linear: required step is below "
+            "minimum_step");
+      magnitude = options.minimum_step;
+    }
+  }
+  ::pluss::throw_error(
+      "subsp::math::ode::fluxa_linear: adaptive step budget exhausted");
+}
+
 inline OdeEventResult fluxa_until(
     const OdeFn &f, const OdeEventFn &event, const Series &y0, double t0,
     double t1, const Series &theta = pluss::series::undefined(),
@@ -217,6 +509,10 @@ inline OdeEventResult fluxa_until(
     ::pluss::throw_error("subsp::math::ode::fluxa_until: derivative and event "
                          "callbacks are required");
   detail::require_defined_(y0, "fluxa_until");
+  if (options.method != OdeMethod::RK4)
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa_until: only fixed RK4 event refinement is "
+        "currently supported");
   if (options.steps <= 0)
     ::pluss::throw_error("subsp::math::ode::fluxa_until: steps must be > 0");
   if (!(event_options.time_tolerance > 0.0) ||
@@ -327,6 +623,10 @@ inline OdeAdjointResult fluxa_adjoint(const OdeFn &f, const Series &y0,
   }
   detail::require_defined_(y0, "fluxa_adjoint");
   detail::require_defined_(grad_y_final, "fluxa_adjoint");
+  if (options.method != OdeMethod::RK4)
+    ::pluss::throw_error(
+        "subsp::math::ode::fluxa_adjoint: the checkpointed discrete adjoint "
+        "is defined for fixed RK4 only");
   if (options.steps <= 0) {
     ::pluss::throw_error("subsp::math::ode::fluxa_adjoint: steps must be > 0");
   }

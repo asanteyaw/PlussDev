@@ -1,0 +1,10 @@
+# The curvature model
+
+[Back to Choosing and Tuning an Algorithm](../optima_03_choosing_an_algorithm.md)
+
+
+The quasi-Newton algorithms build a model of the curvature from the steps they take, and `hessian_approximation` chooses the model. Here a six-variable chain with strongly coupled curvature is minimized under bounds, with each model the two algorithms accept.
+
+@@example Numerical/optimization/guide/optima/45_curvature_models.cpp@@
+
+The identity model uses no curvature information at all, and it shows what the other models are worth: neither algorithm finishes in 300 iterations with it, and both stop with objective values around `5` against below `1e-7` for the real models. Between the real models the choice is smaller. `Bfgs` stores a dense matrix, which is fine here and large for thousands of variables; `Lbfgs` stores a few recent steps and rebuilds the matrix from them, and it needed fewer iterations than `Bfgs` in the interior method (51 against 57) and the same number in sequential QP (56). All three algorithms accept all of these models. Two more, `Exact` and `HessianVector`, use exact second derivatives and need dual-number callbacks; chapter 6 compares all four, and chapter 7 shows how to supply the callbacks.

@@ -1,0 +1,233 @@
+# `pluss::subsp::stats::ts::kpss_test`
+
+The KPSS test of the null that a series is stationary around a level or a trend.
+
+## Signature
+
+```cpp
+ts::KpssResult ts::kpss_test(const pluss::Series& y, const ts::KpssOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## What It Does
+
+`kpss_test` removes a constant (`trend = false`) or a constant and a linear trend (`trend = true`, the default) from the series, accumulates the residuals, and compares the size of the accumulated sum with the long-run variance of the residuals. **Rejecting the null means the series is not stationary** around that deterministic part: it has a unit root, or a trend that was not modelled. The p-value is interpolated from the test's critical-value table and is bounded by its extremes (0.01 and 0.10).
+
+The long-run variance estimate needs a bandwidth. `lags = 0` uses the plain residual variance, which is right only if the series has no autocorrelation; a series with positive autocorrelation then looks non-stationary. Set `lags` to a bandwidth that reflects the series's memory (a few lags for a persistent series; a common rule is about `4 (n / 100)^{1/4}`). Read together with [`adf_test`](adf_test.md): they have opposite nulls.
+
+## Parameters
+
+`const pluss::Series& y`
+: The series to test, in time order.
+
+`const ts::KpssOptions& options`
+: `lags` (bandwidth of the long-run variance, default 0), `trend` (test stationarity around a trend, default true) and `alpha` (default 0.05); see [`KpssOptions`](KpssOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the computation itself runs in double precision.
+
+## Returns
+
+A [`KpssResult`](KpssResult.md): the statistic, the p-value, the critical value at `alpha`, `reject`, the long-run variance used, the lags used and the observations used.
+
+## Errors
+
+- `lags` must be smaller than the series length.
+
+## Practical Examples
+
+### Example 1
+
+A random walk is rejected as stationary; an autoregression is judged with a bandwidth that reflects its memory.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series stationary = ar1(200, 0.7);
+  const Series unit_root = walk(200);
+  ts::KpssOptions options;
+  options.lags = 8;
+  for (const auto* s : {&stationary, &unit_root}) {
+    const auto r = ts::kpss_test(*s, options);
+    std::cout << std::fixed << std::setprecision(4) << (s == &stationary ? "AR(1)       " : "random walk  ") << "statistic " << r.stat << "  p = " << r.pvalue << "  critical " << r.critical
+              << "  stationarity rejected: " << std::boolalpha << r.reject << "\n";
+  }
+}
+```
+
+### Example 2
+
+The bandwidth matters for a persistent series: with no lags the long-run variance is too small and the statistic too large.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  for (int lags : {0, 4, 8}) {
+    ts::KpssOptions options;
+    options.lags = lags;
+    const auto r = ts::kpss_test(y, options);
+    std::cout << "lags " << lags << "  long-run variance " << std::fixed << std::setprecision(4) << r.long_run_var << "  statistic " << r.stat << "\n";
+  }
+}
+```
+
+### Example 3
+
+`trend = false` tests stationarity around a constant level instead of a trend.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  ts::KpssOptions level, trend;
+  level.lags = trend.lags = 8;
+  level.trend = false;
+  std::cout << std::fixed << std::setprecision(4) << "level: statistic " << ts::kpss_test(y, level).stat << ", critical " << ts::kpss_test(y, level).critical << "\n";
+  std::cout << "trend: statistic " << ts::kpss_test(y, trend).stat << ", critical " << ts::kpss_test(y, trend).critical << "\n";
+}
+```
+
+
+## See Also
+
+- [`KpssOptions`](KpssOptions.md)
+- [`KpssResult`](KpssResult.md)
+- [`adf_test`](adf_test.md)

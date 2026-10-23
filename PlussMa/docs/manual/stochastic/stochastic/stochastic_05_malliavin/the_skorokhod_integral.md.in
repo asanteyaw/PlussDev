@@ -1,0 +1,10 @@
+# The Skorokhod integral
+
+[Back to Malliavin Calculus](../stochastic_05_malliavin.md)
+
+
+For an adapted integrand the Skorokhod integral reduces to the Ito sum. For an anticipating one it does not: with `u_i = W_T` for every `i`, the Ito sum is not defined, but `δ(u) = W_T² − T`. The second check runs 20000 paths at once.
+
+@@example Probability/random_processes/guide/sde/42_skorokhod_integral.cpp@@
+
+The first line shows the two sums agree on an adapted integrand, −0.60934 on both sides. The second shows the anticipating identity: the mean absolute difference between `δ(u)` and `W_T² − 1` is 0.00000 to the printed digits. The cost is one reverse pass per increment, so use it on the grid sizes of a test or a sensitivity, not on millions of steps.

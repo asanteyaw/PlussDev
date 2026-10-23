@@ -17,6 +17,9 @@
 namespace pluss::subsp::math::lp {
 
 inline constexpr double kInf = std::numeric_limits<double>::infinity();
+// Finite values at or beyond this magnitude (1e30 / 1e300 "big-M infinity" sentinels, as in MPS files and many callers) are treated as infinite,
+// the HiGHS convention (kHighsInf = 1e20). Without it such a bound is a genuine huge finite number: it wrecks scaling and can silently change the answer.
+inline constexpr double kInfThreshold = 1e20;
 
 struct SparseMatrix final {
   std::int32_t rows{0}, cols{0};
@@ -133,6 +136,21 @@ struct Model final {
       if (v)
         return true;
     return false;
+  }
+  [[nodiscard]] bool has_huge_values() const {
+    const auto huge = [](double x) { return std::isfinite(x) && std::abs(x) >= kInfThreshold; };
+    for (const double x : col_lo) if (huge(x)) return true;
+    for (const double x : col_hi) if (huge(x)) return true;
+    for (const double x : row_lo) if (huge(x)) return true;
+    for (const double x : row_hi) if (huge(x)) return true;
+    return false;
+  }
+  // lower sides <= -1e20 become -inf, upper sides >= 1e20 become +inf (a lower side >= 1e20 or an upper side <= -1e20 is left alone: it is infeasible)
+  void canonicalize_infinities() {
+    for (double &x : col_lo) if (x <= -kInfThreshold) x = -kInf;
+    for (double &x : row_lo) if (x <= -kInfThreshold) x = -kInf;
+    for (double &x : col_hi) if (x >= kInfThreshold) x = kInf;
+    for (double &x : row_hi) if (x >= kInfThreshold) x = kInf;
   }
   void validate() const {
     if (static_cast<std::int32_t>(cost.size()) != cols || static_cast<std::int32_t>(col_lo.size()) != cols ||

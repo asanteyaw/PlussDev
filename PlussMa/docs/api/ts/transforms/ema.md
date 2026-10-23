@@ -1,0 +1,116 @@
+<!-- generated from ema.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::ema`
+
+The exponential moving average of a series; the same computation as `ewm_mean`.
+
+## Signature
+
+```cpp
+pluss::Series ts::ema(const pluss::Series& x, double alpha);
+```
+
+## What It Does
+
+`ema` is the common name for [`ewm_mean`](ewm_mean.md) and returns exactly the same values: `y[0] = x[0]`, `y[t] = alpha · x[t] + (1 − alpha) · y[t − 1]`. Use whichever name reads better beside the surrounding code.
+
+## Parameters
+
+`const pluss::Series& x`
+: A one-dimensional series in time order. A series with more than one dimension is rejected.
+
+`double alpha`
+: The weight of the newest observation, in (0, 1]. A larger value forgets the past faster; `alpha = 1` returns the series unchanged. Values outside (0, 1] are rejected.
+
+## Returns
+
+A `Series` of the same length as `x`.
+
+## Errors
+
+- `alpha` outside (0, 1] is rejected.
+
+## Practical Examples
+
+### Example 1
+
+`ema` and `ewm_mean` agree to the last digit.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+
+int main() {
+  const Series x = pluss::make_series({10.0, 12.0, 11.0, 15.0, 14.0, 18.0, 17.0}, f64);
+  show("x", x);
+  show("ema", ts::ema(x, 0.3));
+  show("ewm_mean", ts::ewm_mean(x, 0.3));
+}
+```
+
+Output
+
+```text
+x               10.0000  12.0000  11.0000  15.0000  14.0000  18.0000  17.0000
+ema             10.0000  10.6000  10.7200  12.0040  12.6028  14.2220  15.0554
+ewm_mean        10.0000  10.6000  10.7200  12.0040  12.6028  14.2220  15.0554
+```
+
+### Example 2
+
+An out-of-range `alpha` is an error, caught before any value is computed.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+
+int main() {
+  const Series x = pluss::make_series({10.0, 12.0, 11.0, 15.0, 14.0, 18.0, 17.0}, f64);
+  show("x", x);
+  try {
+    ts::ema(x, 0.0);
+  } catch (const std::exception&) {
+    std::cout << "alpha = 0 is rejected\n";
+  }
+}
+```
+
+Output
+
+```text
+x               10.0000  12.0000  11.0000  15.0000  14.0000  18.0000  17.0000
+alpha = 0 is rejected
+```
+
+
+## See Also
+
+- [`ewm_mean`](ewm_mean.md)

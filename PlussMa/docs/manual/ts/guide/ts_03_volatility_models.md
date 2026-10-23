@@ -1,0 +1,62 @@
+<!-- generated from ts_03_volatility_models.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Time Series 3: Volatility Models
+
+Returns of financial assets are close to unpredictable in level, but their size is not: calm stretches and turbulent stretches come in clusters. Volatility models describe this by letting the variance of the next observation depend on the recent past. After this chapter you can fit GARCH, GJR and EGARCH models, compare them, forecast the variance, and check that the clustering has been absorbed.
+
+Every program is complete and its output is the output of that program.
+
+## The models
+
+With `e_t = y_t − mean` and conditional variance `h_t`, the models are:
+
+| Model | Variance equation | Constraints on the fit |
+|---|---|---|
+| GARCH(p, q) | `h_t = ω + Σ αᵢ e²_{t−i} + Σ βⱼ h_{t−j}` | `ω > 0`, `αᵢ, βⱼ ≥ 0`, `Σα + Σβ < 1` |
+| GJR(p, q) | `h_t = ω + Σ (αᵢ + γᵢ 1[e_{t−i} < 0]) e²_{t−i} + Σ βⱼ h_{t−j}` | as above, with `γᵢ ≥ 0` and `Σα + Σγ/2 + Σβ < 1` |
+| EGARCH(p, q) | `log h_t = ω + Σ αᵢ (\|z_{t−i}\| − √(2/π)) + Σ γᵢ z_{t−i} + Σ βⱼ log h_{t−j}`, `z = e/√h` | `βⱼ ≥ 0`, `Σβ < 1`; `ω`, `α`, `γ` unrestricted |
+
+The innovations are Gaussian and the fit maximises the Gaussian likelihood. The pre-sample variance (needed to start the recursion) is the mean squared residual, so it does not move with the parameters being searched. The mean is the sample mean when `demean` is true (the default) and zero otherwise; it is removed first and held fixed during the search. The unconditional variance of a GARCH model is `ω / (1 − Σα − Σβ)`.
+
+Because the GJR leverage `γ` is constrained to be non-negative, a series whose volatility responds *less* to bad news than to good news is fitted with `γ = 0`; use EGARCH, whose asymmetry coefficient has either sign, for that case.
+
+| Interface | Use |
+|---|---|
+| `Garch11::fit_mle(y, Garch11Options)` | the common GARCH(1, 1), fields `alpha`, `beta` |
+| `Garch::fit_mle(y, GarchOptions)` | any orders: `arch_order`, `garch_order`, starting vectors `arch0`, `garch0` |
+| `Gjr::fit_mle(y, GjrOptions)` | GJR, fields `arch`, `asym`, `garch` (vectors, one entry per lag) |
+| `Egarch::fit_mle(y, EgarchOptions)` | EGARCH, fields `arch`, `asym`, `garch` |
+| `MvGarch`, `MvGjr`, `MvEgarch` `::fit_mle(Y, options)` | several series with a constant conditional correlation (Program 4) |
+
+Every options struct also has `demean`, `omega0`, `variance_floor`, `stationarity_margin`, `max_iterations`, `max_evaluations`, `simplex_delta` and `nm_restarts` (the search restarts from perturbed starting points and keeps the best). Every fit offers `loglik(y)`, `loglik_per_obs(y)`, `infer(y)` (the fitted conditional variances `h_t`), `forecast(h, y)` (the expected variance `h` steps ahead), `simulate(n, cfg, seed)`, `score(y)` and `observed_inf(y)` (the numerical gradient and information matrix), `persistence()` and, where it exists, `unconditional_var()`.
+
+## Forecasts
+
+For GARCH and GJR the forecast of the variance mean-reverts to the unconditional variance geometrically at rate `Σα + Σβ` (plus `Σγ/2` for GJR). For EGARCH the forecast is the exact expectation of `h` given the data: the one-step value is known, and each later step multiplies in the expectation of the exponential of the unknown shocks, which is available in closed form for Gaussian shocks (this is larger than the exponential of the expected log-variance).
+
+## Programs
+
+- [Fitting a GARCH(1, 1)](ts_03_volatility_models/fitting_a_garch_1_1.md)
+- [Asymmetric responses](ts_03_volatility_models/asymmetric_responses.md)
+- [Checking the fit](ts_03_volatility_models/checking_the_fit.md)
+- [Several series with a constant correlation](ts_03_volatility_models/several_series_with_a_constant_correlation.md)
+
+## Checklist
+
+1. Test the raw series for ARCH effects first (`arch_lm`, Chapter 1); a series with none does not need a volatility model.
+2. Start with `Garch11`; if the response to bad and good news differs, try `Gjr` and `Egarch` and compare log-likelihoods and criteria.
+3. Check that the standardised residuals `(y − mean)/√h` show no ARCH-LM or Ljung–Box effect on their squares.
+4. Remember the constraints: GJR leverage is non-negative, the variance coefficients must sum to less than one.
+5. Forecast with `forecast(h, y)`; forecasts of a stationary model revert to the unconditional variance.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_03_volatility_models/fitting_a_garch_1_1
+ts_03_volatility_models/asymmetric_responses
+ts_03_volatility_models/checking_the_fit
+ts_03_volatility_models/several_series_with_a_constant_correlation
+```
+<!-- apiref:toctree:end -->

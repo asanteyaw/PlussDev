@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::LinearAlgAccessor::eigh &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::LinearAlgAccessor::eigvalsh" href="eigvalsh.html" />
+    <link rel="prev" title="Series::LinearAlgAccessor::dot" href="dot.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-linearalgaccessor-eigh">
+<h1>Series::LinearAlgAccessor::eigh<a class="headerlink" href="#series-linearalgaccessor-eigh" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">Back to Series::LinearAlgAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">EigenDecomposition</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">LinearAlgAccessor</span><span class="o">::</span><span class="n">eigh</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">EigenDecomposition</span><span class="w"> </span><span class="n">SeriesLinearAlgProxy</span><span class="o">::</span><span class="n">eigh</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">eigh()</span></code> decomposes a symmetric (real) or Hermitian (complex) matrix into the
+directions it only stretches, and the stretch factors:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>A = V diag(L) V^H
+</pre></div>
+</div>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">EigenDecomposition</span></code> has two public <code class="docutils literal notranslate"><span class="pre">Series</span></code> fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.values</span></code>: the eigenvalues <code class="docutils literal notranslate"><span class="pre">L</span></code>, <strong>real</strong> and in ascending order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.vectors</span></code>: the eigenvectors, one per <strong>column</strong>, orthonormal</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">V^H</span></code> is the conjugate transpose of <code class="docutils literal notranslate"><span class="pre">V</span></code>; for a real matrix it is the transpose.
+Multiplying <code class="docutils literal notranslate"><span class="pre">A</span></code> by column <code class="docutils literal notranslate"><span class="pre">j</span></code> of <code class="docutils literal notranslate"><span class="pre">V</span></code> gives that column scaled by <code class="docutils literal notranslate"><span class="pre">L[j]</span></code>:
+<code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">v_j</span> <span class="pre">=</span> <span class="pre">L[j]</span> <span class="pre">v_j</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">h</span></code> in the name is the promise that the matrix is symmetric or Hermitian.
+That promise is what makes the result well behaved: the eigenvalues are always
+real, the eigenvectors are always orthogonal, and the computation is stable.
+The method does not check the promise. It reads <strong>one triangle</strong> of each matrix
+(see <code class="docutils literal notranslate"><span class="pre">upper</span></code>) and treats the other triangle as its mirror, so a matrix that is
+not symmetric is silently replaced by the symmetric matrix defined by the
+triangle that was read (Example 3).</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">eigh()</span></code> when both factors are needed: principal axes of a covariance
+matrix, a basis in which a quadratic form is diagonal, a matrix function such as
+a square root or exponential built as <code class="docutils literal notranslate"><span class="pre">V</span> <span class="pre">f(L)</span> <span class="pre">V^H</span></code>. Use
+<a class="reference internal" href="eigvalsh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eigvalsh</span></code></span></a> when only the eigenvalues are consumed.</p>
+</section>
+<section id="calling-styles-and-the-two-signature-types">
+<h2>Calling Styles And The Two Signature Types<a class="headerlink" href="#calling-styles-and-the-two-signature-types" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span><span class="w">     </span><span class="c1">// Series::LinearAlgAccessor</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">proxied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">().</span><span class="n">eigh</span><span class="p">();</span><span class="w">  </span><span class="c1">// SeriesLinearAlgProxy</span>
+</pre></div>
+</div>
+<p>Both expressions decompose <code class="docutils literal notranslate"><span class="pre">matrix</span></code> identically. Eigendecomposition is unary,
+so the peer-bound form <code class="docutils literal notranslate"><span class="pre">matrix.linearalg(other)</span></code> has nothing to bind; use the
+direct form.</p>
+</section>
+<section id="parameter">
+<h2>Parameter<a class="headerlink" href="#parameter" title="Link to this heading">¶</a></h2>
+<p><strong>upper</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)
+Selects the triangle that is read. <code class="docutils literal notranslate"><span class="pre">false</span></code> reads the lower triangle
+(including the diagonal), <code class="docutils literal notranslate"><span class="pre">true</span></code> the upper triangle. The other triangle is
+never read. For an exactly symmetric or Hermitian matrix both choices give
+the same answer.</p>
+<p>For a complex matrix, the imaginary part of each diagonal entry is ignored: a
+Hermitian matrix has a real diagonal, and the method behaves as if it did.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">EigenDecomposition</span></code>
+A value object containing <code class="docutils literal notranslate"><span class="pre">.values</span></code> and <code class="docutils literal notranslate"><span class="pre">.vectors</span></code>. It is not itself a
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>; select a field before applying <code class="docutils literal notranslate"><span class="pre">Series</span></code> methods.</p>
+<p>For input <code class="docutils literal notranslate"><span class="pre">[...,</span> <span class="pre">n,</span> <span class="pre">n]</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>field</p></th>
+<th class="head"><p>shape</p></th>
+<th class="head"><p>dtype</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.values</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,</span> <span class="pre">n]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Float64</span></code> for <code class="docutils literal notranslate"><span class="pre">Float64</span></code> or <code class="docutils literal notranslate"><span class="pre">Complex128</span></code> input, <code class="docutils literal notranslate"><span class="pre">Float32</span></code> for <code class="docutils literal notranslate"><span class="pre">Float32</span></code> or <code class="docutils literal notranslate"><span class="pre">Complex64</span></code> input</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.vectors</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[...,</span> <span class="pre">n,</span> <span class="pre">n]</span></code></p></td>
+<td><p>the dtype of the input</p></td>
+</tr>
+</tbody>
+</table>
+<p>Leading dimensions are batch dimensions; every matrix is decomposed
+independently. The input must be floating point or complex, at least
+two-dimensional, square, and not empty. Integer input is rejected: convert it
+first.</p>
+<p>Each eigenvector is determined only up to a sign (real case) or a unit complex
+factor (complex case): <code class="docutils literal notranslate"><span class="pre">v</span></code> and <code class="docutils literal notranslate"><span class="pre">-v</span></code> are equally valid. The signs and phases
+that come back are whatever the solver produced, so compare eigenvectors
+through quantities that do not depend on them, such as <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">v</span> <span class="pre">=</span> <span class="pre">L</span> <span class="pre">v</span></code>, the
+projector <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">v^H</span></code>, or the squared magnitude of an entry. When two eigenvalues
+coincide, the whole eigenspace is determined but no particular basis of it is.</p>
+</section>
+<section id="platforms">
+<h2>Platforms<a class="headerlink" href="#platforms" title="Link to this heading">¶</a></h2>
+<p>The solver runs on the CPU. A matrix on another platform is moved to the CPU,
+decomposed there, and the results are moved back, which requires that
+platform’s CPU solver bridge to be enabled; otherwise the call throws.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p>Reverse mode is supported for real and complex input, batched or not. The
+sensitivity that reaches the matrix is itself symmetric (Hermitian), whichever
+triangle was read.</p>
+<ul class="simple">
+<li><p>A loss that depends only on <code class="docutils literal notranslate"><span class="pre">.values</span></code> always has a well-defined gradient.
+For one eigenvalue it is the projector onto its eigenvector, <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">v^H</span></code>.</p></li>
+<li><p>A loss that depends on <code class="docutils literal notranslate"><span class="pre">.vectors</span></code> needs distinct eigenvalues, because the
+derivative of an eigenvector divides by the gap to the other eigenvalues.
+The call throws if the loss depends on the basis of a repeated eigenvalue.</p></li>
+<li><p>For a complex matrix the loss must also be unchanged when any eigenvector is
+multiplied by a unit complex factor. A loss such as the squared magnitude of
+an entry is; the real part of an entry is not, and the call throws.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The two factors for a small symmetric matrix. The eigenvalues are
+ascending, and the columns of the eigenvector matrix satisfy <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">v</span> <span class="pre">=</span> <span class="pre">L</span> <span class="pre">v</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">residual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;A v = L v for every column: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">residual</span><span class="p">.</span><span class="n">abs</span><span class="p">().</span><span class="n">max</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">1e-14</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1.0000, 3.0000]
+A v = L v for every column: true
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">unsqueeze(0)</span></code> turns the eigenvalue vector into a row so that it scales
+column <code class="docutils literal notranslate"><span class="pre">j</span></code> by <code class="docutils literal notranslate"><span class="pre">L[j]</span></code>.</p>
+<p>Example 2. Rebuild the matrix, and check that the eigenvectors are orthonormal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">vt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">rebuilt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">diag_embed</span><span class="p">()).</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">vt</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">gram</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vt</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;V diag(L) V^T equals A: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">rebuilt</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">matrix</span><span class="p">).</span><span class="n">abs</span><span class="p">().</span><span class="n">max</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">1e-14</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;V^T V is the identity: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">gram</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)).</span><span class="n">abs</span><span class="p">().</span><span class="n">max</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">1e-14</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>V diag(L) V^T equals A: true
+V^T V is the identity: true
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.2679, 3.0000, 4.7321]
+</pre></div>
+</div>
+<p>Example 3. Only one triangle is read. The matrix below is not symmetric: its
+lower-left entry is 1 and its upper-right entry is 100. The default reads the
+lower triangle, so the matrix is treated as <code class="docutils literal notranslate"><span class="pre">[[2,</span> <span class="pre">1],</span> <span class="pre">[1,</span> <span class="pre">3]]</span></code>; <code class="docutils literal notranslate"><span class="pre">upper</span> <span class="pre">=</span> <span class="pre">true</span></code>
+reads the upper triangle and sees <code class="docutils literal notranslate"><span class="pre">[[2,</span> <span class="pre">100],</span> <span class="pre">[100,</span> <span class="pre">3]]</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">().</span><span class="n">values</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">(</span><span class="nb">true</span><span class="p">).</span><span class="n">values</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1.3820, 3.6180]
+Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[-97.5012, 102.5012]
+</pre></div>
+</div>
+<p>Neither result is an eigenvalue of the matrix as written; both are eigenvalues
+of the symmetric matrix that the chosen triangle defines. Pass a matrix that
+really is symmetric, or symmetrize it first (<code class="docutils literal notranslate"><span class="pre">0.5</span> <span class="pre">*</span> <span class="pre">(A</span> <span class="pre">+</span> <span class="pre">A^T)</span></code>).</p>
+<p>Example 4. A complex Hermitian matrix. The eigenvalues are real, the
+eigenvectors are complex, and <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">v</span> <span class="pre">=</span> <span class="pre">L</span> <span class="pre">v</span></code> holds in complex arithmetic.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">C</span><span class="o">&gt;</span><span class="p">{{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values are real: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="o">!</span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">is_complex</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;vectors are complex: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">is_complex</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">residual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">mm</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;A v = L v for every column: &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">residual</span><span class="p">.</span><span class="n">abs</span><span class="p">().</span><span class="n">max</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">1e-14</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1.0000, 4.0000]
+values are real: true
+vectors are complex: true
+A v = L v for every column: true
+</pre></div>
+</div>
+<p>Example 5. Batches. Leading dimensions are batch dimensions; each matrix is
+decomposed on its own.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}},</span>
+<span class="w">                                 </span><span class="p">{{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}},</span>
+<span class="w">                                 </span><span class="p">{{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stack</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values shape: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; x &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;vectors shape: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; x &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; x &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>values shape: 3 x 2
+vectors shape: 3 x 2 x 2
+Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  2.0000 5.0000 ⎤
+⎢ -1.0000 3.0000 ⎥
+⎣  4.0000 4.0000 ⎦
+</pre></div>
+</div>
+<p>The last matrix has a repeated eigenvalue: any orthonormal pair is a valid
+eigenvector matrix there.</p>
+<p>Example 6. Single precision stays in single precision.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values are Float32: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">scalar_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;vectors are Float32: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">scalar_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>values are Float32: true
+vectors are Float32: true
+</pre></div>
+</div>
+<p>Example 7. Reverse mode through the eigenvalues. The gradient of the largest
+eigenvalue of <code class="docutils literal notranslate"><span class="pre">[[2,</span> <span class="pre">1],</span> <span class="pre">[1,</span> <span class="pre">2]]</span></code> is the projector <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">v^T</span></code> onto its eigenvector
+<code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">sqrt(2)</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}});</span>
+<span class="n">matrix</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+<span class="n">parts</span><span class="p">.</span><span class="n">values</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 0.5000 0.5000 ⎤
+⎣ 0.5000 0.5000 ⎦
+</pre></div>
+</div>
+<p>Example 8. Reverse mode through an eigenvector. The squared first component of
+the top eigenvector does not depend on the sign of the eigenvector, so its
+gradient is well defined.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}});</span>
+<span class="n">matrix</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">top</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">vectors</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">top</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">).</span><span class="n">mul</span><span class="p">(</span><span class="n">top</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)).</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 0.1789  0.0894 ⎤
+⎣ 0.0894 -0.1789 ⎦
+</pre></div>
+</div>
+<p>The gradient is symmetric, as it must be for a symmetric input.</p>
+<p>Example 9. Invalid input and ill-defined gradients are rejected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">first_line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}}).</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">first_line</span><span class="p">(</span><span class="n">e</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}}).</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">first_line</span><span class="p">(</span><span class="n">e</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+
+<span class="k">using</span><span class="w"> </span><span class="n">C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">hermitian</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">C</span><span class="o">&gt;</span><span class="p">{{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="n">hermitian</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">hermitian</span><span class="p">.</span><span class="n">linearalg</span><span class="p">.</span><span class="n">eigh</span><span class="p">().</span><span class="n">vectors</span><span class="p">.</span><span class="n">real</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;arbitrary phase&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">::</span><span class="n">npos</span>
+<span class="w">                    </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;a loss that depends on the eigenvector phase is rejected&quot;</span>
+<span class="w">                    </span><span class="o">:</span><span class="w"> </span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>subsp::math::linalg::eigh: expected shape [..., n, n]
+subsp::math::linalg::eigh: expected floating or complex values
+a loss that depends on the eigenvector phase is rejected
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Symmetry is assumed, not checked.</strong> Only the chosen triangle is read; an
+asymmetric matrix is silently replaced by its symmetric counterpart.</p></li>
+<li><p><strong>Do not compare eigenvectors entry by entry.</strong> Signs and phases are arbitrary.
+Compare <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">v</span> <span class="pre">=</span> <span class="pre">L</span> <span class="pre">v</span></code>, projectors, or squared magnitudes.</p></li>
+<li><p><strong>Repeated eigenvalues give arbitrary bases.</strong> The eigenspace is unique, its
+basis is not; gradients that depend on the basis throw.</p></li>
+<li><p><strong>Eigenvectors are columns</strong>, not rows (unlike the rows of <code class="docutils literal notranslate"><span class="pre">svd().vh</span></code>).</p></li>
+<li><p><strong>Eigenvalues are ascending</strong>, the opposite of the singular values of
+<a class="reference internal" href="svd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd</span></code></span></a>.</p></li>
+<li><p><strong>Input must be floating point or complex.</strong> Integer input is rejected.</p></li>
+<li><p><strong>The diagonal of a complex input is taken as real.</strong></p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">eigh()</span></code> returns the real, ascending eigenvalues and the orthonormal eigenvector
+columns of a symmetric or Hermitian matrix, batched over leading dimensions,
+in the precision of the input. It reads one triangle, selected by <code class="docutils literal notranslate"><span class="pre">upper</span></code>, and is
+differentiable for losses that do not depend on eigenvector sign or phase.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="eigvalsh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eigvalsh</span></code></span></a>: the eigenvalues alone.</p></li>
+<li><p><a class="reference internal" href="svd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svd</span></code></span></a>: the analogous decomposition for any rectangular matrix.</p></li>
+<li><p><a class="reference internal" href="cholesky.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cholesky</span></code></span></a>: a triangular factorization of a positive-definite matrix.</p></li>
+<li><p><a class="reference internal" href="matrix_exp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matrix_exp</span></code></span></a>: a matrix function that <code class="docutils literal notranslate"><span class="pre">eigh</span></code> can also build as <code class="docutils literal notranslate"><span class="pre">V</span> <span class="pre">exp(L)</span> <span class="pre">V^H</span></code> for symmetric input.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dot.html"><span class="label">Previous</span><span class="title">dot</span></a>
+  <a class="next-link" href="eigvalsh.html"><span class="label">Next</span><span class="title">eigvalsh</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+  <li><a href="../../series_linearalg_accessor_api_reference.html">Series::LinearAlgAccessor API Reference</a><ul>
+      <li>Previous: <a href="dot.html" title="previous chapter">Series::LinearAlgAccessor::dot</a></li>
+      <li>Next: <a href="eigvalsh.html" title="next chapter">Series::LinearAlgAccessor::eigvalsh</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series-linearalg/eigh.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

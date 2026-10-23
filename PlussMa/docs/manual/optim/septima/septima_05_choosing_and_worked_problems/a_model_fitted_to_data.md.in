@@ -1,0 +1,12 @@
+# A model fitted to data
+
+[Back to Choosing a Solver, and Worked Problems](../septima_05_choosing_and_worked_problems.md)
+
+
+Two hundred points in the plane are labelled by which side of a line they fall on, with one label in ten flipped. The model is logistic regression with a small L2 penalty. The data are a `Series` held fixed inside the objective; the parameters are a weight column and a bias; the loss is a few lines of `Trace` arithmetic.
+
+@@example Numerical/optimization/guide/septima/141_logistic_regression.cpp@@
+
+The problem is convex, so every optimizer must find the same answer, and they do: the three fits agree to 2.3e-05, with a loss of 0.557757, weights `(0.7150, -0.4648)` and a bias of -0.0354. The weights are in the ratio 1.54 to -1, close to the 1.5 to -1 of the line that generated the labels, and the model classifies 82.5% of the points correctly, which is about as good as it can do when one label in ten is wrong.
+
+The cost is where they differ. L-SR1 converges in 7 iterations and 8 evaluations, L-BFGS in 33 (and ends with `NoProgress`, having reached the limit of its tolerances), Adam in 190. For a smooth model fitted to a modest amount of data, with all the data in the objective at once, a curvature method is the right choice. Adam's strength is elsewhere: it needs only a gradient and tolerates a gradient that is noisy, which a curvature method does not.

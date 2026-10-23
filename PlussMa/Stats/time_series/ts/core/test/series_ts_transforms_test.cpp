@@ -65,6 +65,23 @@ void test_lag_diff_returns() {
   expect_close(lret[3], lr, 1e-12, "log_returns[3]");
 }
 
+void test_sample_statistics() {
+  // the default is the sample statistic (divide by count - 1): windows of {3,5,4}: mean 4, variance 1; {5,4,8}: variance 4.3333...
+  const auto x = pluss::make_series(std::vector<double>{3.0, 5.0, 4.0, 8.0, 7.0, 9.0, 12.0, 10.0}).to(pluss::ScalarType::Float64);
+  const auto sd = to_f64(pluss::subsp::stats::ts::rolling_std(x, 3));
+  expect_close(sd[0], std::numeric_limits<double>::quiet_NaN(), 0.0, "rolling_std sample, one observation");
+  expect_close(sd[1], std::sqrt(2.0), 1e-12, "rolling_std sample, two observations");
+  expect_close(sd[2], 1.0, 1e-12, "rolling_std sample, full window");
+  expect_close(sd[3], std::sqrt(13.0 / 3.0), 1e-12, "rolling_std sample, later window");
+  const auto var = to_f64(pluss::subsp::stats::ts::rolling_var(x, 3));
+  expect_close(var[2], 1.0, 1e-12, "rolling_var sample");
+  const auto es = to_f64(pluss::subsp::stats::ts::expanding_std(x));
+  expect_close(es[1], std::sqrt(2.0), 1e-12, "expanding_std sample");
+  expect_close(es[2], 1.0, 1e-12, "expanding_std sample, three observations");
+  const auto z = to_f64(pluss::subsp::stats::ts::zscore_rolling(x, 3));
+  expect_close(z[3], (8.0 - 17.0 / 3.0) / std::sqrt(13.0 / 3.0), 1e-12, "zscore_rolling uses the sample standard deviation");
+}
+
 void test_rolling_and_ema() {
   const auto x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0});
 
@@ -74,7 +91,7 @@ void test_rolling_and_ema() {
   expect_close(mean[2], 2.5, 1e-12, "rolling_mean[2]");
   expect_close(mean[3], 3.5, 1e-12, "rolling_mean[3]");
 
-  const auto stdv = to_f64(pluss::subsp::stats::ts::rolling_std(x, 2, 2));
+  const auto stdv = to_f64(pluss::subsp::stats::ts::rolling_std(x, 2, 2, 0));
   expect_close(stdv[0], std::numeric_limits<double>::quiet_NaN(), 0.0, "rolling_std[0]");
   expect_close(stdv[1], 0.5, 1e-12, "rolling_std[1]");
   expect_close(stdv[2], 0.5, 1e-12, "rolling_std[2]");
@@ -86,7 +103,7 @@ void test_rolling_and_ema() {
   expect_close(sumv[2], 5.0, 1e-12, "rolling_sum[2]");
   expect_close(sumv[3], 7.0, 1e-12, "rolling_sum[3]");
 
-  const auto varv = to_f64(pluss::subsp::stats::ts::rolling_var(x, 2, 2));
+  const auto varv = to_f64(pluss::subsp::stats::ts::rolling_var(x, 2, 2, 0));
   expect_close(varv[0], std::numeric_limits<double>::quiet_NaN(), 0.0, "rolling_var[0]");
   expect_close(varv[1], 0.25, 1e-12, "rolling_var[1]");
   expect_close(varv[2], 0.25, 1e-12, "rolling_var[2]");
@@ -120,7 +137,7 @@ void test_rolling_and_ema() {
   expect_close(exp_mean[2], 2.0, 1e-12, "expanding_mean[2]");
   expect_close(exp_mean[3], 2.5, 1e-12, "expanding_mean[3]");
 
-  const auto exp_std = to_f64(pluss::subsp::stats::ts::expanding_std(x, 2));
+  const auto exp_std = to_f64(pluss::subsp::stats::ts::expanding_std(x, 2, 1e-12, 0));
   expect_close(exp_std[0], std::numeric_limits<double>::quiet_NaN(), 0.0, "expanding_std[0]");
   expect(exp_std[1] > 0.0, "expanding_std[1]");
   expect(exp_std[2] > exp_std[1], "expanding_std monotonic check");
@@ -187,7 +204,8 @@ void test_fill_gaps_and_resample() {
 int main() {
   try {
     test_lag_diff_returns();
-    test_rolling_and_ema();
+    test_sample_statistics();
+  test_rolling_and_ema();
     test_fill_gaps_and_resample();
     std::cout << "series_ts_transforms_test passed\n";
     return 0;

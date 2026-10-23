@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -128,7 +128,9 @@ positions in the result.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-The SVD-defined pseudoinverse, with the final two dimensions reversed.</p>
+The SVD-defined pseudoinverse, with the final two dimensions reversed and
+the input floating or complex dtype preserved. Integer and boolean inputs
+are rejected rather than silently converted.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>

@@ -214,7 +214,7 @@ DataFrame::case_study: full key length must match case-label count
 
 - [`DataFrameCaseStudyAccessor::labels`](labels.md): select by the rendered case-axis
   key as a single string, rather than by named level.
-- [`DataFrame::label`](../dataframe/label.md): create the structured, multi-level case
+- [`DataFrame::labels`](../dataframe/labels.md): create the structured, multi-level case
   axis that `pick()` operates on, via `label().set({...names...})`.
 
 <div class="pluss-inline-prev-next">

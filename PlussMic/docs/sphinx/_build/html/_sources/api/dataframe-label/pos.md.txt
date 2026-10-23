@@ -42,9 +42,9 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-auto out = labeled.label().pos("east");
+auto out = labeled.labels().pos("east");
 std::cout << out;
 ```
 
@@ -72,7 +72,7 @@ auto readings = DataFrame(
     Slate(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
 std::cout << readings;
 
-auto out = readings.label().pos(10.0);
+auto out = readings.labels().pos(10.0);
 std::cout << out;
 ```
 
@@ -109,10 +109,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
 try {
-  auto out = labeled.label().pos("south");
+  auto out = labeled.labels().pos("south");
 } catch (const std::exception& e) {
   std::cout << "threw\n";
 }

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Derivative-Free Optimization 5: Worked Problems and Checking Answers &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Fitting a curve" href="dfo_05_worked_problems/fitting_a_curve.html" />
+    <link rel="prev" title="Constraint handling" href="dfo_04_black_boxes/constraint_handling.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from dfo_05_worked_problems.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="derivative-free-optimization-5-worked-problems-and-checking-answers">
+<h1>Derivative-Free Optimization 5: Worked Problems and Checking Answers<a class="headerlink" href="#derivative-free-optimization-5-worked-problems-and-checking-answers" title="Link to this heading">¶</a></h1>
+<p>The earlier chapters introduced the pieces. This one puts them together on two problems and ends with a routine for deciding whether an answer can be trusted, which matters more here than with gradient methods because a derivative-free solver gives no optimality certificate.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dfo_05_worked_problems/fitting_a_curve.html"><span class="std std-doc">Fitting a curve</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_05_worked_problems/verifying_an_answer.html"><span class="std std-doc">Verifying an answer</span></a></p></li>
+</ul>
+</section>
+<section id="a-short-guide-to-the-whole-section">
+<h2>A short guide to the whole section<a class="headerlink" href="#a-short-guide-to-the-whole-section" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Gradient available and the function smooth: use the gradient-based solvers; they will need far fewer evaluations.</p></li>
+<li><p>Smooth, few variables, no constraints: <code class="docutils literal notranslate"><span class="pre">Auto</span></code> (Nelder–Mead), then polish with <code class="docutils literal notranslate"><span class="pre">OrthoMads</span></code> or <code class="docutils literal notranslate"><span class="pre">PatternSearch</span></code>.</p></li>
+<li><p>Many local minima: a population method (<code class="docutils literal notranslate"><span class="pre">DifferentialEvolutionPrmm</span></code>, <code class="docutils literal notranslate"><span class="pre">ParticleSwarm</span></code>), then polish locally.</p></li>
+<li><p>Constraints: <code class="docutils literal notranslate"><span class="pre">PatternSearch</span></code>; equalities only there.</p></li>
+<li><p>Failures, several objectives, or an expensive deterministic function: <code class="docutils literal notranslate"><span class="pre">blackbox</span></code> and <code class="docutils literal notranslate"><span class="pre">MadsAdvanced</span></code> with the cache on.</p></li>
+<li><p>Always: count evaluations, fix the seed when reporting, and verify the answer from outside.</p></li>
+</ul>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/dfo/dfo_05_worked_problems.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!-- generated from optima.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Optima: constrained optimization
+
+Chapters, in reading order:
+
+- [Optima 1: Your First Constrained Problems](optima/optima_01_first_problems.md)
+- [Optima 2: Reading Results and Watching a Run](optima/optima_02_reading_results.md)
+- [Optima 3: Choosing and Tuning an Algorithm](optima/optima_03_choosing_an_algorithm.md)
+- [Optima 4: Sequential QP in Depth](optima/optima_04_sequential_qp.md)
+- [Optima 5: The Working-Set and Interior Methods](optima/optima_05_working_set_and_interior.md)
+- [Optima 6: Curvature, Linear Algebra and Scaling](optima/optima_06_curvature_linear_algebra_scaling.md)
+- [Optima 7: Derivatives](optima/optima_07_derivatives.md)
+- [Optima 8: Worked Problems](optima/optima_08_worked_problems.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima/optima_01_first_problems
+optima/optima_02_reading_results
+optima/optima_03_choosing_an_algorithm
+optima/optima_04_sequential_qp
+optima/optima_05_working_set_and_interior
+optima/optima_06_curvature_linear_algebra_scaling
+optima/optima_07_derivatives
+optima/optima_08_worked_problems
+optima/optima_algorithms
+optima/optima_sequential_qp
+optima/optimizer_surfaces
+optima/optima_internal_protocol
+```
+<!-- apiref:toctree:end -->

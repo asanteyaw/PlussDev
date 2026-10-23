@@ -1,0 +1,20 @@
+# `pluss::subsp::stats::ts::IrfOptions`
+
+Options of `VarFit::irf`.
+
+`IrfOptions` selects the horizon and the way shocks are identified.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `horizon` | `std::int64_t` | 20 | Number of steps of the response, the impact (step 0) included; it must be greater than 0. |
+| `method` | `ts::IrfMethod` | `Orthogonalized` | `Orthogonalized`: shocks made uncorrelated by the Cholesky factor of the covariance, so the order of the series matters (the first does not respond to the others within the period). `Generalized`: each series shocked alone, letting the others respond through the correlation of the shocks; independent of the ordering. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`VarFit`](VarFit.md)

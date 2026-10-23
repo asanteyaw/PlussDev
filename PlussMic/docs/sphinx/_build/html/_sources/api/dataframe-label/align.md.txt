@@ -59,11 +59,11 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region", false);
+auto labeled = orders.labels().set("region", false);
 std::cout << labeled;
 
 auto target = Slate(pluss::make_note({"west", "east", "south"}));
-auto out = labeled.label().align(target);
+auto out = labeled.labels().align(target);
 std::cout << out;
 ```
 
@@ -103,7 +103,7 @@ Example 2. The same reindex, with a fill value — which only reaches the numeri
 feature.
 
 ```cpp
-auto out2 = labeled.label().align(target, 0.0);
+auto out2 = labeled.labels().align(target, 0.0);
 std::cout << out2;
 ```
 
@@ -128,7 +128,7 @@ matched positionally, then exhausted.
 
 ```cpp
 auto target2 = Slate(pluss::make_note({"east", "east", "east"}));
-auto out3 = labeled.label().align(target2);
+auto out3 = labeled.labels().align(target2);
 std::cout << out3;
 ```
 

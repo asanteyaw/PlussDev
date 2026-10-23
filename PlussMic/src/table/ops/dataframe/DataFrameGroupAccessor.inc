@@ -254,7 +254,7 @@ DataFrame DataFrameGrouped::transform(pluss::msharp::RangeView::Of<DataFrame::Gr
             state));
   }
 
-  return DataFrame(std::move(out_cols), keyed.label().values()).title(frame_.title());
+  return DataFrame(std::move(out_cols), keyed.labels().values()).title(frame_.title());
 }
 
 DataFrame DataFrameGrouped::transform(std::initializer_list<DataFrame::GroupSpec> specs) const {

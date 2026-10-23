@@ -1,0 +1,12 @@
+# Autocorrelation and partial autocorrelation
+
+[Back to Plots](../ts_07_plots.md)
+
+
+@@example Stats/time_series/guide/1222_correlation_plots.cpp@@
+
+![Autocorrelation of an AR(1) series](assets/ts_acf.svg)
+
+![Partial autocorrelation of an AR(1) series](assets/ts_pacf.svg)
+
+For an AR(1) series with coefficient 0.7 the autocorrelation decays geometrically (0.70, 0.47, 0.38, 0.29, … at lags 1, 2, 3, 4) and stays outside the band for the first six or seven lags, while the partial autocorrelation is large only at lag 1 (0.70); the other bars are small, with lag 3 (0.125) just outside the band, as one bar in twenty is by chance. A large first partial autocorrelation followed by small ones is the signature of an autoregression of order one. The band for 400 observations is ±0.098.

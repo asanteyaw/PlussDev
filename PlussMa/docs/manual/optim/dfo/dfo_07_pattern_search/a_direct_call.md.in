@@ -1,0 +1,8 @@
+# A direct call
+
+[Back to The Pattern Search Minimiser](../dfo_07_pattern_search.md)
+
+
+@@example Numerical/optimization/guide/dfo/361_pattern_search_standalone.cpp@@
+
+The default budget is 100 iterations per variable, so this two-variable run stops at 200 iterations with `ReachedIterationBudget` while still improving. A status other than `Converged` is a message, not an error: raise the budget and continue from the returned `minimizer`.

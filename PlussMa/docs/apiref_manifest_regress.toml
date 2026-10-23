@@ -1,0 +1,80 @@
+# apiref_manifest_regress.toml -- the `Regression` guides of PlussMa.
+
+[framework.regress]
+nav_title = "Regression guide"
+nav_prefix = "manual/regress/"
+root_page = "manual/regress.html"
+title = "Regression"
+summary = "Least squares, generalised linear, quantile and polynomial regression."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares.md"
+title = "Least Squares"
+maxdepth = 2
+children = ["regression_01_least_squares/a_first_fit_checked_by_hand", "regression_01_least_squares/the_summary_and_prediction", "regression_01_least_squares/options_and_missing_data", "regression_01_least_squares/collinear_predictors"]
+
+[[family]]
+path = "regress/regression/regression_02_glm_quantile_polynomial"
+page = "manual/regress/regression/regression_02_glm_quantile_polynomial.md"
+title = "Generalised Linear, Quantile and Polynomial Regression"
+maxdepth = 2
+children = ["regression_02_glm_quantile_polynomial/logistic_and_poisson_regression", "regression_02_glm_quantile_polynomial/robust_and_conditional_quantile_fits", "regression_02_glm_quantile_polynomial/curves_and_cross_terms"]
+
+[[family]]
+path = "regress/regression"
+page = "manual/regress/regression.md"
+title = "regression"
+maxdepth = 2
+children = ["regression/regression_01_least_squares", "regression/regression_02_glm_quantile_polynomial"]
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::A first fit, checked by hand"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/a_first_fit_checked_by_hand.md"
+summary = "A first fit, checked by hand"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::The summary, and prediction"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/the_summary_and_prediction.md"
+summary = "The summary, and prediction"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Options and missing data"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/options_and_missing_data.md"
+summary = "Options and missing data"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Collinear predictors"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/collinear_predictors.md"
+summary = "Collinear predictors"
+
+[[symbol]]
+qualname = "regress::regression_02_glm_quantile_polynomial::Logistic and Poisson regression"
+kind = "page"
+family = "regress/regression/regression_02_glm_quantile_polynomial"
+page = "manual/regress/regression/regression_02_glm_quantile_polynomial/logistic_and_poisson_regression.md"
+summary = "Logistic and Poisson regression"
+
+[[symbol]]
+qualname = "regress::regression_02_glm_quantile_polynomial::Robust and conditional-quantile fits"
+kind = "page"
+family = "regress/regression/regression_02_glm_quantile_polynomial"
+page = "manual/regress/regression/regression_02_glm_quantile_polynomial/robust_and_conditional_quantile_fits.md"
+summary = "Robust and conditional-quantile fits"
+
+[[symbol]]
+qualname = "regress::regression_02_glm_quantile_polynomial::Curves and cross terms"
+kind = "page"
+family = "regress/regression/regression_02_glm_quantile_polynomial"
+page = "manual/regress/regression/regression_02_glm_quantile_polynomial/curves_and_cross_terms.md"
+summary = "Curves and cross terms"

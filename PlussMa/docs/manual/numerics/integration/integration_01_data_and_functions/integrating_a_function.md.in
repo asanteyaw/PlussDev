@@ -1,0 +1,17 @@
+# Integrating a function
+
+[Back to Data and Functions](../integration_01_data_and_functions.md)
+
+
+@@example Numerical/integration/guide/602_first_quadrature.cpp@@
+
+`quadra` returns a `QuadraResult`:
+
+| Field | Meaning |
+|---|---|
+| `value` | the integral, as a Series |
+| `error_estimate` | estimated error, from comparing two resolutions |
+| `evaluations` | integrand evaluations used, over all refinements |
+| `refinements` | how many times the node count was doubled |
+| `converged` | whether the error estimate reached `tolerance` |
+| `rule_used` | the rule that produced `value` (Simpson by default) |

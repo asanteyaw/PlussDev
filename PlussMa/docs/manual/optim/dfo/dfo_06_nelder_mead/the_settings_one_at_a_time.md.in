@@ -1,0 +1,13 @@
+# The settings, one at a time
+
+[Back to The Nelder–Mead Minimiser](../dfo_06_nelder_mead.md)
+
+
+@@example Numerical/optimization/guide/dfo/352_nelder_mead_knobs.cpp@@
+
+What the rows show:
+
+- **Tolerances** trade work for accuracy: 1e-8 costs about 60% more evaluations than the default and gains eight orders of magnitude in the objective; 1e-2 saves about a quarter.
+- **Starting simplex.** A large simplex (0.5) explores more and here converged sooner; a tiny one (0.001) must grow before it can move, and took more than the default. Match the simplex to the scale of the problem: if the variables are of order 100, 5% is a step of 5.
+- **Coefficients.** The defaults are the standard choice. Changing them rarely helps; the rows above are worse. Keep expansion above 1, contraction and shrink between 0 and 1.
+- **Budget.** Stopping at 100 evaluations returns the best point seen with `ReachedEvaluationBudget`.

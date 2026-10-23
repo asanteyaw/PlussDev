@@ -1,0 +1,79 @@
+# ts volatility
+
+`volatility` fits models in which the variance of a return series changes with time, in clusters of calm and turbulence. A model `y_t = mean + e_t`, `e_t = sqrt(h_t) z_t` lets the conditional variance `h_t` depend on past shocks and past variances: `Garch` and `Garch11` (symmetric), `Gjr` (larger response to negative shocks) and `Egarch` (the logarithm of the variance, so no positivity constraints). `MvGarch`, `MvGjr` and `MvEgarch` fit several series with a constant conditional correlation.
+
+All fits maximise the Gaussian likelihood. The pre-sample variance that starts the recursion is the mean squared residual, so the likelihood does not depend on the parameters being searched through its start-up value. The mean is the sample mean (when `demean` is on) and is held fixed during the search.
+
+## The Surface
+
+| Entity | What it gives you |
+|---|---|
+| [`Egarch`](volatility/Egarch.md) | Fits a EGARCH(p, q) model by maximum likelihood |
+| [`EgarchFit`](volatility/EgarchFit.md) | The result of a `Egarch` fit: the estimated parameters and the methods that evaluate the fitted model |
+| [`EgarchOptions`](volatility/EgarchOptions.md) | Options of `ts::Egarch::fit_mle` |
+| [`Garch`](volatility/Garch.md) | Fits a GARCH(p, q) model by maximum likelihood |
+| [`Garch11`](volatility/Garch11.md) | Fits a GARCH(1, 1) model by maximum likelihood |
+| [`Garch11Fit`](volatility/Garch11Fit.md) | The result of a `Garch11` fit: the estimated parameters and the methods that evaluate the fitted model |
+| [`Garch11Options`](volatility/Garch11Options.md) | Options of `ts::Garch11::fit_mle` |
+| [`GarchFit`](volatility/GarchFit.md) | The result of a `Garch` fit: the estimated parameters and the methods that evaluate the fitted model |
+| [`GarchOptions`](volatility/GarchOptions.md) | Options of `ts::Garch::fit_mle` |
+| [`Gjr`](volatility/Gjr.md) | Fits a GJR-GARCH(p, q) model by maximum likelihood |
+| [`GjrFit`](volatility/GjrFit.md) | The result of a `Gjr` fit: the estimated parameters and the methods that evaluate the fitted model |
+| [`GjrOptions`](volatility/GjrOptions.md) | Options of `ts::Gjr::fit_mle` |
+| [`MvEgarch`](volatility/MvEgarch.md) | Fits a constant-conditional-correlation model with a EGARCH variance for every series |
+| [`MvEgarchFit`](volatility/MvEgarchFit.md) | The result of a `MvEgarch` fit: one univariate fit per series, the means and the correlation matrix |
+| [`MvEgarchOptions`](volatility/MvEgarchOptions.md) | Options of `ts::MvEgarch::fit_mle` |
+| [`MvGarch`](volatility/MvGarch.md) | Fits a constant-conditional-correlation model with a GARCH variance for every series |
+| [`MvGarchFit`](volatility/MvGarchFit.md) | The result of a `MvGarch` fit: one univariate fit per series, the means and the correlation matrix |
+| [`MvGarchOptions`](volatility/MvGarchOptions.md) | Options of `ts::MvGarch::fit_mle` |
+| [`MvGjr`](volatility/MvGjr.md) | Fits a constant-conditional-correlation model with a GJR-GARCH variance for every series |
+| [`MvGjrFit`](volatility/MvGjrFit.md) | The result of a `MvGjr` fit: one univariate fit per series, the means and the correlation matrix |
+| [`MvGjrOptions`](volatility/MvGjrOptions.md) | Options of `ts::MvGjr::fit_mle` |
+
+## How To Call It
+
+Fit a GARCH(1,1) to a series with volatility clustering and read the persistence, the fitted variances and a forecast.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+// Returns whose variance responds more to negative shocks: h = 0.05 + (0.05 + 0.20 * 1[r < 0]) r_prev^2 + 0.75 h_prev.
+Series returns(int n) {
+  std::vector<double> r(n);
+  double h = 0.5, prev = 0.0;
+  for (int t = 0; t < n; ++t) {
+    double u = std::sin(12.9898 * (t + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    const double z = (u - 0.5) * std::sqrt(12.0);
+    h = 0.05 + (0.05 + (prev < 0 ? 0.20 : 0.0)) * prev * prev + 0.75 * h;
+    r[t] = std::sqrt(h) * z;
+    prev = r[t];
+  }
+  return pluss::make_series(r, {n}, f64);
+}
+
+int main() {
+  const Series y = returns(1000);
+  const auto fit = ts::Garch11::fit_mle(y);
+  std::cout << std::fixed << std::setprecision(4) << "omega " << fit.omega << ", alpha " << fit.alpha << ", beta " << fit.beta << ", persistence " << fit.alpha + fit.beta << "\n";
+  show("forecast", fit.forecast(5, y));
+}
+```
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

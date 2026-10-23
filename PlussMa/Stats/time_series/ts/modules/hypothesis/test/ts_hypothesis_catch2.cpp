@@ -148,3 +148,41 @@ TEST_CASE("ts hypothesis: parameter validation", "[ts][hypothesis][errors]") {
   bad_dm.horizon = 0;
   REQUIRE_THROWS(pluss::subsp::stats::ts::dm_test(y, y, bad_dm, cfg));
 }
+
+// Reference values from an independent implementation (finite-sample MacKinnon response surfaces, upper-tail chi-squared probabilities),
+// on a deterministic series: e_t = frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5, an AR(1) x_t = 0.7 x_{t-1} + e_t and its running sum w_t.
+namespace {
+std::pair<pluss::Series, pluss::Series> reference_series() {
+  std::vector<double> x(200), w(200);
+  double carry = 0.0, sum = 0.0;
+  for (int i = 0; i < 200; ++i) {
+    const double t = i + 1.0;
+    double u = std::sin(12.9898 * t + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    const double e = u - 0.5;
+    carry = 0.7 * carry + e;
+    sum += e;
+    x[static_cast<std::size_t>(i)] = carry;
+    w[static_cast<std::size_t>(i)] = sum;
+  }
+  const auto f64 = pluss::ScalarType::Float64;
+  return {pluss::make_series(x, {200}).to(f64), pluss::make_series(w, {200}).to(f64)};
+}
+} // namespace
+
+TEST_CASE("adf p-values and critical values follow the finite-sample response surfaces", "[ts][adf]") {
+  namespace ts = pluss::subsp::stats::ts;
+  const auto [x, w] = reference_series();
+  ts::AdfOptions options;
+  options.lags = 2;
+  options.model = ts::AdfModel::ARD;
+  const auto rw = ts::adf_test(w, options);
+  REQUIRE(rw.stat == Catch::Approx(-1.6539787).margin(1e-6));
+  REQUIRE(rw.pvalue == Catch::Approx(0.45496626).margin(1e-6));
+  REQUIRE(rw.critical == Catch::Approx(-2.8763259).margin(1e-6));
+  const auto ar = ts::adf_test(x, options);
+  REQUIRE(ar.pvalue == Catch::Approx(0.00064549555).margin(1e-8));
+  REQUIRE(ar.reject);
+  options.model = ts::AdfModel::AR;
+  REQUIRE(ts::adf_test(x, options).pvalue == Catch::Approx(3.7380773e-05).margin(1e-9));
+}

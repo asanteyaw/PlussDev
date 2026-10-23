@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Time Series 4: Vector Autoregressions and Cointegration &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Fitting a VAR and choosing the lag order" href="ts_04_vector_models/fitting_a_var_and_choosing_the_lag_order.html" />
+    <link rel="prev" title="Several series with a constant correlation" href="ts_03_volatility_models/several_series_with_a_constant_correlation.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from ts_04_vector_models.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="time-series-4-vector-autoregressions-and-cointegration">
+<h1>Time Series 4: Vector Autoregressions and Cointegration<a class="headerlink" href="#time-series-4-vector-autoregressions-and-cointegration" title="Link to this heading">¶</a></h1>
+<p>Several series observed together can influence each other. A vector autoregression (VAR) models each series by the past of all of them; impulse responses and variance decompositions then describe how a shock travels through the system, and Granger tests ask whether one series helps predict another. When the series have unit roots but share a long-run relation, the error-correction form (VECM) and Johansen’s test describe that relation. After this chapter you can fit and select a VAR, trace shocks through it, test for predictive content, and find and estimate cointegrating relations.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="the-var">
+<h2>The VAR<a class="headerlink" href="#the-var" title="Link to this heading">¶</a></h2>
+<p>For a <code class="docutils literal notranslate"><span class="pre">k</span></code>-dimensional series <code class="docutils literal notranslate"><span class="pre">y_t</span></code> the VAR(p) is</p>
+<blockquote>
+<div><p>y_t = c + A₁ y_{t−1} + … + A_p y_{t−p} + e_t,   Cov(e_t) = Σ.</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">Var::fit_mle(y,</span> <span class="pre">VarOptions)</span></code> takes <code class="docutils literal notranslate"><span class="pre">y</span></code> as an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">×</span> <span class="pre">k</span></code> matrix (one column per series) and fits it by least squares, which is the Gaussian maximum-likelihood estimate. <code class="docutils literal notranslate"><span class="pre">VarOptions</span></code>: <code class="docutils literal notranslate"><span class="pre">lag_order</span></code> (p, default 1), <code class="docutils literal notranslate"><span class="pre">include_intercept</span></code> (true), <code class="docutils literal notranslate"><span class="pre">include_trend</span></code> (false), <code class="docutils literal notranslate"><span class="pre">ridge</span></code> (0) and <code class="docutils literal notranslate"><span class="pre">pinv_rcond</span></code>. A second overload, <code class="docutils literal notranslate"><span class="pre">fit_mle(y,</span> <span class="pre">x,</span> <span class="pre">options)</span></code>, adds exogenous regressors <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">VarFit</span></code> holds <code class="docutils literal notranslate"><span class="pre">constant</span></code> (k), <code class="docutils literal notranslate"><span class="pre">ar</span></code> (p × k × k), <code class="docutils literal notranslate"><span class="pre">covariance</span></code> (k × k, the maximum-likelihood estimate: the residual cross-products divided by the number of fitted rows <code class="docutils literal notranslate"><span class="pre">sample_size</span> <span class="pre">=</span> <span class="pre">n</span> <span class="pre">−</span> <span class="pre">p</span></code>) and, with exogenous variables, <code class="docutils literal notranslate"><span class="pre">beta</span></code>. <strong>Layout:</strong> <code class="docutils literal notranslate"><span class="pre">ar[l][j][i]</span></code> is the coefficient of series <code class="docutils literal notranslate"><span class="pre">j</span></code> at lag <code class="docutils literal notranslate"><span class="pre">l</span> <span class="pre">+</span> <span class="pre">1</span></code> in the equation of series <code class="docutils literal notranslate"><span class="pre">i</span></code>, so row <code class="docutils literal notranslate"><span class="pre">j</span></code> of each matrix lists the effects of series <code class="docutils literal notranslate"><span class="pre">j</span></code> on all series. The same row-vector convention is used by <code class="docutils literal notranslate"><span class="pre">irf</span></code> and <code class="docutils literal notranslate"><span class="pre">fevd</span></code> below: the first index after the step is the <em>shock</em>, the last the <em>response</em>.</p>
+<p>Methods: <code class="docutils literal notranslate"><span class="pre">infer(y)</span></code> (residuals), <code class="docutils literal notranslate"><span class="pre">loglik(y)</span></code>, <code class="docutils literal notranslate"><span class="pre">loglik_per_obs(y)</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast(h,</span> <span class="pre">y)</span></code> (an <code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">×</span> <span class="pre">k</span></code> matrix of point forecasts), <code class="docutils literal notranslate"><span class="pre">simulate(n,</span> <span class="pre">cfg,</span> <span class="pre">seed)</span></code>, <code class="docutils literal notranslate"><span class="pre">irf</span></code>, <code class="docutils literal notranslate"><span class="pre">fevd</span></code> and <code class="docutils literal notranslate"><span class="pre">granger_test</span></code>.</p>
+</section>
+<section id="impulse-responses-and-variance-decompositions">
+<h2>Impulse responses and variance decompositions<a class="headerlink" href="#impulse-responses-and-variance-decompositions" title="Link to this heading">¶</a></h2>
+<p>Write the VAR as an infinite moving average <code class="docutils literal notranslate"><span class="pre">y_t</span> <span class="pre">=</span> <span class="pre">Σ</span> <span class="pre">Ψ_s</span> <span class="pre">e_{t−s}</span></code>. The <em>orthogonalised</em> responses use the Cholesky factor <code class="docutils literal notranslate"><span class="pre">P</span></code> of <code class="docutils literal notranslate"><span class="pre">Σ</span></code> (so <code class="docutils literal notranslate"><span class="pre">Σ</span> <span class="pre">=</span> <span class="pre">P</span> <span class="pre">P'</span></code>) to get uncorrelated shocks: the response of the system <code class="docutils literal notranslate"><span class="pre">s</span></code> steps after a one-standard-deviation shock to series <code class="docutils literal notranslate"><span class="pre">j</span></code> is the <code class="docutils literal notranslate"><span class="pre">j</span></code>-th column of <code class="docutils literal notranslate"><span class="pre">Ψ_s</span> <span class="pre">P</span></code>. The first series is thereby treated as not reacting to the others in the same period, so the order of the columns of <code class="docutils literal notranslate"><span class="pre">y</span></code> matters. The <em>generalised</em> responses (<code class="docutils literal notranslate"><span class="pre">IrfMethod::Generalized</span></code>) instead shock series <code class="docutils literal notranslate"><span class="pre">j</span></code> alone and let the other series respond through the correlation in <code class="docutils literal notranslate"><span class="pre">Σ</span></code> (<code class="docutils literal notranslate"><span class="pre">Ψ_s</span> <span class="pre">Σ</span> <span class="pre">e_j</span> <span class="pre">/</span> <span class="pre">√σ_jj</span></code>); they do not depend on the ordering.</p>
+<p>The forecast-error variance decomposition <code class="docutils literal notranslate"><span class="pre">fevd</span></code> gives, for each series and horizon, the fraction of its forecast-error variance due to each shock. For the generalised method the shares are normalised to add up to one for each series.</p>
+</section>
+<section id="granger-causality">
+<h2>Granger causality<a class="headerlink" href="#granger-causality" title="Link to this heading">¶</a></h2>
+<p>Series <code class="docutils literal notranslate"><span class="pre">j</span></code> does not Granger-cause series <code class="docutils literal notranslate"><span class="pre">i</span></code> when the lags of <code class="docutils literal notranslate"><span class="pre">j</span></code> have zero coefficients in the equation of <code class="docutils literal notranslate"><span class="pre">i</span></code>. <code class="docutils literal notranslate"><span class="pre">granger_test(y,</span> <span class="pre">GrangerOptions)</span></code> tests this by the Wald statistic (<code class="docutils literal notranslate"><span class="pre">GrangerStat::ChiSquare</span></code>, referred to a chi-squared distribution with one degree of freedom per restricted coefficient) or its <code class="docutils literal notranslate"><span class="pre">F</span></code> form (referred to <code class="docutils literal notranslate"><span class="pre">F(dof1,</span> <span class="pre">dof2)</span></code> with <code class="docutils literal notranslate"><span class="pre">dof2</span></code> the residual degrees of freedom of the equation). <code class="docutils literal notranslate"><span class="pre">type</span></code> selects the tests: every ordered pair (<code class="docutils literal notranslate"><span class="pre">LeaveOneOut</span></code>, the default; <code class="docutils literal notranslate"><span class="pre">cause</span></code> and <code class="docutils literal notranslate"><span class="pre">effect</span></code> index lists restrict it), each effect against all other series together (<code class="docutils literal notranslate"><span class="pre">ExcludeAll</span></code>), or the series in <code class="docutils literal notranslate"><span class="pre">cause</span></code> jointly against each series in <code class="docutils literal notranslate"><span class="pre">effect</span></code> (<code class="docutils literal notranslate"><span class="pre">BlockWise</span></code>). A joint test reports <code class="docutils literal notranslate"><span class="pre">-1</span></code> in the <code class="docutils literal notranslate"><span class="pre">cause</span></code> field.</p>
+</section>
+<section id="cointegration">
+<h2>Cointegration<a class="headerlink" href="#cointegration" title="Link to this heading">¶</a></h2>
+<p>Series that each have a unit root can still have a stationary linear combination: they are <em>cointegrated</em>. Their error-correction form is</p>
+<blockquote>
+<div><p>Δy_t = c + y_{t−1} β α’ + Γ₁ Δy_{t−1} + … + Γ_{p−1} Δy_{t−p+1} + e_t,</p>
+</div></blockquote>
+<p>where the columns of <code class="docutils literal notranslate"><span class="pre">β</span></code> (k × r) are the cointegrating vectors (<code class="docutils literal notranslate"><span class="pre">y_{t−1}</span> <span class="pre">β</span></code> is stationary), the columns of <code class="docutils literal notranslate"><span class="pre">α</span></code> (k × r) say how each series adjusts to a deviation, and <code class="docutils literal notranslate"><span class="pre">r</span></code>, the <em>rank</em>, is the number of independent relations. Johansen’s procedure finds <code class="docutils literal notranslate"><span class="pre">r</span></code> from the squared canonical correlations between the changes and the lagged levels, after the constant, the trend and the lagged differences have been removed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">johansen_test(y,</span> <span class="pre">JohansenOptions)</span></code> tests the sequence “rank ≤ r” for r = 0, 1, …, either by the <em>trace</em> statistic (against any larger rank) or the <em>maximum-eigenvalue</em> statistic (against rank r + 1). Neither follows a chi-squared law; the limiting distributions are non-standard functionals of Brownian motion and depend on the deterministic terms and on the number <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">=</span> <span class="pre">k</span> <span class="pre">−</span> <span class="pre">r</span></code> of series still tested. The library compares the statistics with simulated limiting distributions for three specifications (selected by the options): no deterministic terms, an unrestricted constant (<code class="docutils literal notranslate"><span class="pre">include_intercept</span></code>), and an unrestricted constant with a trend (<code class="docutils literal notranslate"><span class="pre">include_trend</span></code>), for up to 12 series. <code class="docutils literal notranslate"><span class="pre">selected_rank</span></code> is the first <code class="docutils literal notranslate"><span class="pre">r</span></code> that is not rejected.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Vecm::fit_mle(y,</span> <span class="pre">VecmOptions)</span></code> fits the error-correction model for a given <code class="docutils literal notranslate"><span class="pre">rank</span></code> (negative: chosen by the trace test at level <code class="docutils literal notranslate"><span class="pre">alpha</span></code>). Its <code class="docutils literal notranslate"><span class="pre">beta</span></code> is normalised so that its leading <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">×</span> <span class="pre">r</span></code> block is the identity, its <code class="docutils literal notranslate"><span class="pre">alpha</span></code> holds the adjustment loadings, and <code class="docutils literal notranslate"><span class="pre">impact</span> <span class="pre">=</span> <span class="pre">β</span> <span class="pre">α'</span></code>. For <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">rank</span> <span class="pre">&lt;</span> <span class="pre">k</span></code> the estimate is Johansen’s maximum-likelihood one, for <code class="docutils literal notranslate"><span class="pre">rank</span> <span class="pre">=</span> <span class="pre">k</span></code> it is least squares, and for <code class="docutils literal notranslate"><span class="pre">rank</span> <span class="pre">=</span> <span class="pre">0</span></code> it is the VAR in differences. In both functions <code class="docutils literal notranslate"><span class="pre">lag_order</span></code> is the order p of the VAR in levels.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ts_04_vector_models/fitting_a_var_and_choosing_the_lag_order.html"><span class="std std-doc">Fitting a VAR and choosing the lag order</span></a></p></li>
+<li><p><a class="reference internal" href="ts_04_vector_models/impulse_responses_and_variance_decompositions.html"><span class="std std-doc">Impulse responses and variance decompositions</span></a></p></li>
+<li><p><a class="reference internal" href="ts_04_vector_models/granger_tests.html"><span class="std std-doc">Granger tests</span></a></p></li>
+<li><p><a class="reference internal" href="ts_04_vector_models/the_rank_of_a_cointegrated_system.html"><span class="std std-doc">The rank of a cointegrated system</span></a></p></li>
+<li><p><a class="reference internal" href="ts_04_vector_models/the_error_correction_model.html"><span class="std std-doc">The error-correction model</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Use levels for the VAR only if the series are stationary; otherwise difference them or test for cointegration first (Chapter 1: ADF and KPSS).</p></li>
+<li><p>Choose the lag order by Akaike’s or Schwarz’s criterion from <code class="docutils literal notranslate"><span class="pre">loglik</span></code>, with <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">(k</span> <span class="pre">p</span> <span class="pre">+</span> <span class="pre">1)</span></code> parameters.</p></li>
+<li><p>Order the series before orthogonalising impulse responses; use the generalised version when there is no natural order.</p></li>
+<li><p>For a cointegration test pass the <em>levels</em>, state the deterministic terms honestly, and read <code class="docutils literal notranslate"><span class="pre">selected_rank</span></code> from the sequence of tests.</p></li>
+<li><p>Fit the VECM with the chosen rank; read <code class="docutils literal notranslate"><span class="pre">beta</span></code> as the long-run relation and <code class="docutils literal notranslate"><span class="pre">alpha</span></code> as the speed of adjustment.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/ts/guide/ts_04_vector_models.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

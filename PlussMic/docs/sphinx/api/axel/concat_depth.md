@@ -73,7 +73,7 @@ auto b = pluss::scribble::Axel({
     pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
 });
 auto out = a.concat_depth(b);
-std::cout << std::boolalpha << out.labels().has_value();
+std::cout << std::boolalpha << out.label().has_value();
 ```
 
 ### Output
@@ -94,7 +94,7 @@ auto b = pluss::scribble::Axel({
     pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
 }, pluss::scribble::Slot({pluss::make_note("l2"), pluss::make_note("l3")}));
 auto out = a.concat_depth(b);
-std::cout << "has_value=" << std::boolalpha << out.labels().has_value() << " size=" << out.labels()->size();
+std::cout << "has_value=" << std::boolalpha << out.label().has_value() << " size=" << out.label()->size();
 ```
 
 ### Output

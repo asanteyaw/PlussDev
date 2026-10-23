@@ -1,0 +1,8 @@
+# The two poll schemes
+
+[Back to Mesh Adaptive Direct Search](../dfo_10_mesh_adaptive_search.md)
+
+
+@@example Numerical/optimization/guide/dfo/392_mads_poll_schemes.cpp@@
+
+Both schemes follow the curved Rosenbrock valley to about 1e-15 within the iteration limit, and both solve the non-smooth sum of absolute values exactly, where a simplex stalls (Chapter 2). The two are interchangeable in practice; the differences you see are the random path. `mesh_adaptive_direct_search_minimizer` with `LtMadsRandom2N` is exactly `ltmads_minimizer`.

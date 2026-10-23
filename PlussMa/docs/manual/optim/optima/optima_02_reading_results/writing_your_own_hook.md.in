@@ -1,0 +1,10 @@
+# Writing your own hook
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+A hook is any function from a snapshot to a bool. The snapshot carries the stage, the current point, the full evaluation, and the work counters. This program records the objective at every iteration and stops the run as soon as the point is feasible and good enough.
+
+@@example Numerical/optimization/guide/optima/27_custom_hook.cpp@@
+
+The hook sees `start` once, `iter` for each iteration, and `done` once. It returned `true` at iteration 4, the first time the iterate was feasible and below `10.55`. The run ended with `Stopped`, the point it returned is the feasible one, and the `done` snapshot fires even when the hook ends the run. A hook can read `s.params` to log the point, or `s.evaluation.gradient` for the gradient, so it doubles as a monitor.

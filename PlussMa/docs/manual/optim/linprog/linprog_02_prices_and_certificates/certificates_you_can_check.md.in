@@ -1,0 +1,14 @@
+# Certificates you can check
+
+[Back to Prices and Certificates](../linprog_02_prices_and_certificates.md)
+
+
+A verdict of infeasible or unbounded is only as good as its proof, and the proof is in the result.
+
+@@example Numerical/optimization/guide/lp/206_certificates.cpp@@
+
+**Infeasible.** The program `x0 + x1 <= 1`, `x0 + x1 >= 3`, `x >= 0` cannot be satisfied. The Farkas multipliers `y` are weights on the rows, each zero or negative for a `<=` row. Multiply each row by its weight and add them. Because the weights are negative, each inequality flips, and the sum says that every point satisfying the rows has `g . x >= b . y`, where `g = A'y`. Here `g = (-0.7956, -0.7956)` and `b . y = 0.9088`. On `x >= 0` the largest `g . x` can be is 0, which is below 0.9088. So any feasible point would need `g . x >= 0.9088` while the bounds keep `g . x <= 0`: there is none. The program checks the inequality with arithmetic that does not call the solver, and it holds.
+
+**Unbounded.** The program "minimize `-x0` with `x1 <= 1`, `x >= 0`" can lower its objective forever by growing `x0`. The ray `d = (1.583, 0)` is a direction along which every row stays satisfied (`A d = 0 <= 0`), the bounds are respected (`d >= 0`) and the cost falls (`c . d = -1.583 < 0`). Any feasible point plus any multiple of `d` is feasible with a lower cost. The scale of a ray or of a set of multipliers is arbitrary; only the direction and the signs matter.
+
+These checks are worth running in your own code when a verdict surprises you, and they turn "the solver says infeasible" into a statement you can show someone.

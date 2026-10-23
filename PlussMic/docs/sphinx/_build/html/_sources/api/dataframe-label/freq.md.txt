@@ -47,9 +47,9 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-auto out = labeled.label().freq();
+auto out = labeled.labels().freq();
 std::cout << out;
 ```
 
@@ -77,10 +77,10 @@ auto orders = DataFrame(
     Slate(pluss::make_note({"east", "west", "east", "north", "east", "south"})));
 std::cout << orders;
 
-auto full = orders.label().freq();
+auto full = orders.labels().freq();
 std::cout << full;
 
-auto top2 = orders.label().freq(2);
+auto top2 = orders.labels().freq(2);
 std::cout << top2;
 ```
 
@@ -133,10 +133,10 @@ auto readings = DataFrame(
     Slate(pluss::make_series({10.0, 10.0, std::numeric_limits<double>::quiet_NaN()})));
 std::cout << readings;
 
-auto without_null = readings.label().freq();
+auto without_null = readings.labels().freq();
 std::cout << without_null;
 
-auto with_null = readings.label().freq(0, false);
+auto with_null = readings.labels().freq(0, false);
 std::cout << with_null;
 ```
 

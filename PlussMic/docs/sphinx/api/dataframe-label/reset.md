@@ -53,10 +53,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region", true); // drop_feature=true
+auto labeled = orders.labels().set("region", true); // drop_feature=true
 std::cout << labeled;
 
-auto out = labeled.label().reset();
+auto out = labeled.labels().reset();
 std::cout << out;
 ```
 
@@ -94,7 +94,7 @@ With no argument, the restored column keeps the level's own name —
 Example 2. Pass a name explicitly to override the level's own name.
 
 ```cpp
-auto out2 = labeled.label().reset("custom_name");
+auto out2 = labeled.labels().reset("custom_name");
 std::cout << out2;
 ```
 
@@ -118,7 +118,7 @@ given.
 Example 3. `drop = true` discards the old values entirely.
 
 ```cpp
-auto out3 = labeled.label().reset(DataFrame::ResetLabelOptions{.drop = true});
+auto out3 = labeled.labels().reset(DataFrame::ResetLabelOptions{.drop = true});
 std::cout << out3;
 ```
 

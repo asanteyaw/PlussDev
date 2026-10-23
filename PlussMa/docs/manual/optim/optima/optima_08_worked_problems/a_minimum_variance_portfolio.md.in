@@ -1,0 +1,12 @@
+# A minimum-variance portfolio
+
+[Back to Worked Problems](../optima_08_worked_problems.md)
+
+
+Four assets with a covariance matrix and expected returns. The weights must sum to 1 (a linear equality), the expected return must reach 9% (a linear inequality, written as `-expected . w <= -0.09`) and each weight lies between 0 and 0.6 (bounds). The objective is the variance `w' S w`, written on a column of weights because a matrix product needs matrices.
+
+@@example Numerical/optimization/guide/optima/91_portfolio.cpp@@
+
+The solver converges. The weights are 0.2875, 0.2594, 0.0691 and 0.3841; they sum to 1, the expected return is exactly the 9% target, and the minimum variance is 0.033957. No weight is at a bound, so only the equality and the return constraint shape the answer.
+
+The last two lines are step 7. The multiplier of the return constraint is 0.1826: the price, in variance, of asking for one more unit of return. The program checks that this is true without using the multiplier at all, by solving again with the target raised to 0.0905 and lowered to 0.0895 and dividing the change in the minimum variance by 0.001. The two numbers agree to four digits. A multiplier that matches the re-solved price is a strong sign that the whole solution is right.

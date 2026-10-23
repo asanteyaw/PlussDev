@@ -1,3 +1,4 @@
+#include <atomic>
 #include "CodeM/core/Storage.h"
 #include "CodeM/core/Errors.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
@@ -59,7 +60,9 @@ static bool pool_disabled_from_env_() {
   return false;
 }
 
-static bool storage_pool_enabled_() {
+static std::atomic<int> g_pool_state{-1};  // -1 unknown, 0 disabled, 1 enabled
+
+static bool storage_pool_compute_() {
 #if defined(__has_feature)
 #if __has_feature(address_sanitizer)
   return false;
@@ -69,6 +72,15 @@ static bool storage_pool_enabled_() {
   return false;
 #endif
   return !pool_disabled_from_env_();
+}
+
+static bool storage_pool_enabled_() {
+  int s = g_pool_state.load(std::memory_order_relaxed);
+  if (s < 0) {
+    s = storage_pool_compute_() ? 1 : 0;
+    g_pool_state.store(s, std::memory_order_relaxed);
+  }
+  return s == 1;
 }
 
 inline ThreadLocalPool& tls_pool_() {
@@ -119,6 +131,8 @@ static void pool_put_(void* p, std::size_t alloc_size, std::size_t alignment) no
 }
 
 } // namespace
+
+void Storage::reload_pool_env() noexcept { g_pool_state.store(-1, std::memory_order_relaxed); }
 
 void Storage::AlignedDeleter::operator()(std::byte* p) const noexcept {
   pool_put_(p, alloc_size, alignment);

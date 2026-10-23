@@ -1,0 +1,113 @@
+# `pluss::subsp::stats::ts::plot_pacf`
+
+Draws the partial autocorrelation plot of a series into a `pluss::pl::Studio` figure.
+
+## Signature
+
+```cpp
+pluss::pl::Studio& ts::plot::pacf(pluss::pl::Studio& studio, const pluss::Series& x, const ts::plot::CorrPlotOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## What It Does
+
+Adds stems for the partial autocorrelation at each lag, the two lines of the white-noise band (`+CI`, `−CI`) and a zero line, with the axes labelled `lag` and the function's name. Bars outside the band point to structure. The figure is returned for chaining and can then be saved with `save_svg`, `save_pdf` or `save_png`.
+
+## Parameters
+
+`pluss::pl::Studio& studio`
+: The figure to draw into.
+
+`const pluss::Series& x`
+: The series (a vector), at least two observations.
+
+`const ts::plot::CorrPlotOptions& options`
+: Lags, estimator and band; see [`CorrPlotOptions`](CorrPlotOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration of the payload arrays.
+
+## Returns
+
+The same `Studio`, for chaining.
+
+## Errors
+
+- A series shorter than two observations is rejected.
+
+## Practical Examples
+
+### Example 1
+
+Draw the partial autocorrelation plot of an autoregressive series and save it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <cstdlib>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include <pluss/pl/studio.h>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(400, 0.7);
+  ts::plot::CorrPlotOptions options;
+  options.max_lag = 24;
+  pluss::pl::Studio figure("pacf", pluss::pl::Theme::paper());
+  ts::plot::pacf(figure, y, options);
+  const char* dir = std::getenv("PLUSSMA_GUIDE_ASSETS");
+  if (dir != nullptr) figure.save_svg(std::string(dir) + "/ts_pacf.svg");
+  std::cout << "figure drawn with " << options.max_lag << " lags\n";
+}
+```
+
+![The partial autocorrelation of an autoregressive series](assets/ts_pacf.svg)
+
+
+## See Also
+
+- [`pacf_payload`](plot_pacf_payload.md)
+- [`CorrPlotOptions`](CorrPlotOptions.md)

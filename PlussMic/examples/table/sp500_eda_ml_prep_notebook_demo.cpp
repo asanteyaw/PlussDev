@@ -258,7 +258,7 @@ int main() {
       (ml_frame.features("Volume") / ml_frame.features("VolumePrev1")) - 1.0,
       (ml_frame.features("CloseNext1") / ml_frame.features("Close")) - 1.0,
   };
-  ml_frame = ml_frame.drop({"ClosePrev1", "ClosePrev5", "VolumePrev1", "CloseNext1"}).label().set("Date", true);
+  ml_frame = ml_frame.drop({"ClosePrev1", "ClosePrev5", "VolumePrev1", "CloseNext1"}).labels().set("Date", true);
 
   std::cout << "ML-ready rows: " << ml_frame.ncases() << "\n";
   ml_frame.head(6);

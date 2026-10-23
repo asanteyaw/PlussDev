@@ -1,0 +1,12 @@
+# Restarting from a previous answer
+
+[Back to Methods, Warm Starts and Sweeps](../linprog_03_methods_warm_starts_and_sweeps.md)
+
+
+A cost-minimizing mix of 30 foods must supply at least the required amounts of 12 nutrients. The program solves it from scratch, keeps the optimal basis, and then solves two changed versions both ways: with two requirements changed (one up by 50%, one halved), and with the food the plan uses most made three times as dear.
+
+@@example Numerical/optimization/guide/lp/209_warm_start.cpp@@
+
+The base problem takes 14 simplex iterations from scratch. With two requirements changed, a cold start takes 15 iterations and the warm start **zero**: the old basis is still optimal, because moving a right-hand side does not change which constraints bind until it moves far enough, and the answer is read off at once. With the main food three times as dear, a cold start takes 18 iterations and the warm start 4: a price change makes the old corner no longer the best, and the method pivots from it to the new one. `warm_started` is `yes` in both, which confirms the basis was used. If a basis cannot be used (its size does not match, or it is singular for the new data), the solver silently falls back to a cold start and `warm_started` says `no`, so check it when you count on the saving.
+
+A warm start is for the simplex method only. Reach for it when you re-solve the same model many times with small changes, as in a scenario study, a rolling plan or a branch-and-bound search.

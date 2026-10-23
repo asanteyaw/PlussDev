@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -153,7 +153,7 @@ one. Use `keep_extension=true` or narrower `load`/`ignore` filters when you need
 
 Every example below writes its own real files to a scratch directory first
 (via `DataFrame::save_csv`/`save_json`/`save_parquet`), so each one is a
-complete, self-contained, copy-pasteable teaching unit rather than assuming
+complete, self-contained, copy-pasteable unit rather than assuming
 files already exist somewhere. Each example uses its own directory, so
 running them in any order (or more than once) never leaves stale files from
 one example interfering with another.
@@ -342,7 +342,7 @@ valid, regardless of what files it actually contains.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">parallel=true</span></code> means outer file-level concurrency across the discovered tables, not
 “parallel parsing inside one csv file”.</p></li>
 <li><p>Actual per-file parsing still remains delegated to <code class="docutils literal notranslate"><span class="pre">DataFrame::load(...)</span></code>.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">config</span></code> field lets you stay format-flexible without teaching Nexus parser-specific knobs.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">config</span></code> field lets you stay format-flexible without exposing Nexus parser-specific knobs.</p></li>
 <li><p>Validation order: <code class="docutils literal notranslate"><span class="pre">directory</span></code> must exist and be an actual directory first;
 only then is the <code class="docutils literal notranslate"><span class="pre">load</span></code>/<code class="docutils literal notranslate"><span class="pre">ignore</span></code> mutual-exclusivity check applied; only
 after both pass does the directory actually get scanned.</p></li>

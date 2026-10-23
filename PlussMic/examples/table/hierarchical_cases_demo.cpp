@@ -15,14 +15,14 @@ int main() {
       {"cost", Slate(pluss::make_series(std::vector<double>{4.0, 8.0, 12.0, 16.0}))},
   });
 
-  auto indexed = sales.label().set(DataFrame::SetLabelOptions{
+  auto indexed = sales.labels().set(DataFrame::SetLabelOptions{
       .features = {"region", "account", "quarter"},
       .drop = false,
       .verify = true,
       .sort = false,
   });
   std::cout << "Structured case levels\n";
-  for (const auto& name : indexed.label().names()) {
+  for (const auto& name : indexed.labels().names()) {
     std::cout << "- " << name << "\n";
   }
   std::cout << indexed.features({"sales", "cost"}).head(4) << "\n";
@@ -40,7 +40,7 @@ int main() {
   std::cout << "Full structured key selection: East / 201 / Q2\n";
   std::cout << one_cell.features({"sales", "cost"}).head(2) << "\n";
 
-  auto sorted = indexed.label().sort(DataFrame::SortLabelOptions{
+  auto sorted = indexed.labels().sort(DataFrame::SortLabelOptions{
       .names = {"region", "account", "quarter"},
       .ascending = true,
       .nulls_last = true,
@@ -58,22 +58,22 @@ int main() {
   std::cout << "Grouped by case level: region\n";
   std::cout << by_region << "\n";
 
-  auto renamed = indexed.label().rename({{"account", "acct"}});
-  auto reordered = renamed.label().order({"region", "quarter", "acct"});
-  auto dropped = reordered.label().drop({"quarter"});
+  auto renamed = indexed.labels().rename({{"account", "acct"}});
+  auto reordered = renamed.labels().order({"region", "quarter", "acct"});
+  auto dropped = reordered.labels().drop({"quarter"});
   std::cout << "Renamed/reordered/dropped levels\n";
-  for (const auto& name : dropped.label().names()) {
+  for (const auto& name : dropped.labels().names()) {
     std::cout << "- " << name << "\n";
   }
 
-  auto reset = indexed.label().reset(DataFrame::ResetLabelOptions{
+  auto reset = indexed.labels().reset(DataFrame::ResetLabelOptions{
       .drop = false,
       .names = {"region_case", "account_case", "quarter_case"},
   });
   std::cout << "Reset cases back into ordinary features\n";
   std::cout << reset.features({"region_case", "account_case", "quarter_case", "sales"}).head(4) << "\n";
 
-  auto compact = sales.label().set({"region", "account", "quarter"}, true);
+  auto compact = sales.labels().set({"region", "account", "quarter"}, true);
   auto wide = compact.unstack("quarter");
   std::cout << "Unstack quarter into features\n";
   std::cout << wide << "\n";

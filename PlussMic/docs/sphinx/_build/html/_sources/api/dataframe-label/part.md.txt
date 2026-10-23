@@ -46,12 +46,12 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 
-auto region_by_name = grouped.label().part("region");
+auto region_by_name = grouped.labels().part("region");
 std::cout << region_by_name;
 
-auto city_by_position = grouped.label().part(1);
+auto city_by_position = grouped.labels().part(1);
 std::cout << city_by_position;
 ```
 
@@ -81,7 +81,7 @@ Each call returns just that one level's own values — not the joined
 Example 2. Use a negative position to count back from the last level.
 
 ```cpp
-auto city_by_negative_position = grouped.label().part(-1);
+auto city_by_negative_position = grouped.labels().part(-1);
 std::cout << city_by_negative_position;
 ```
 
@@ -105,10 +105,10 @@ using namespace pluss::table;
 
 auto orders = DataFrame(
     {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-std::cout << orders.label().has();
+std::cout << orders.labels().has();
 
 try {
-  auto out = orders.label().part("region");
+  auto out = orders.labels().part("region");
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
@@ -130,7 +130,7 @@ frame.
 
 ```cpp
 try {
-  auto out = grouped.label().part("country");
+  auto out = grouped.labels().part("country");
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

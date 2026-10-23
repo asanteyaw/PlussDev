@@ -67,7 +67,7 @@ pluss::Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contig
 data=[2, 1, 0]
 ```
 
-That is the cleanest way to teach the overload split: same probabilities,
+That is the cleanest way to show the overload split: same probabilities,
 different sampling contract.
 
 Example 3. Explicit seeds replay categorical draws exactly.

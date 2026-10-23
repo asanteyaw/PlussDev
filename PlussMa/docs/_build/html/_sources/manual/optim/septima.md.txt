@@ -1,0 +1,24 @@
+<!-- generated from septima.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Septima: gradient methods with constraints
+
+Chapters, in reading order:
+
+- [Septima 1: First Problems](septima/septima_01_first_problems.md)
+- [Septima 2: Constraints](septima/septima_02_constraints.md)
+- [Septima 3: Tuning and Robustness](septima/septima_03_tuning_and_robustness.md)
+- [Septima 4: The L-SR1 Trust-Region Optimizer](septima/septima_04_lsr1_trust_region.md)
+- [Septima 5: Choosing a Solver, and Worked Problems](septima/septima_05_choosing_and_worked_problems.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+septima/septima_01_first_problems
+septima/septima_02_constraints
+septima/septima_03_tuning_and_robustness
+septima/septima_04_lsr1_trust_region
+septima/septima_05_choosing_and_worked_problems
+```
+<!-- apiref:toctree:end -->

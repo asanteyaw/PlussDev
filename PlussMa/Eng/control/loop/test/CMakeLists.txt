@@ -1,0 +1,3 @@
+add_executable(eng_control_loop_test loop_test.cpp)
+target_link_libraries(eng_control_loop_test PRIVATE pluss)
+add_test(NAME eng_control_loop_test COMMAND eng_control_loop_test)

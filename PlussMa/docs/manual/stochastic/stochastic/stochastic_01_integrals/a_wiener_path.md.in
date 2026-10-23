@@ -1,0 +1,10 @@
+# A Wiener path
+
+[Back to Stochastic Integrals](../stochastic_01_integrals.md)
+
+
+`simulate_wiener_path` draws a path, or a batch of independent paths, on a uniform grid starting from zero. The shape of the `like` argument is the batch shape, so one call makes any number of independent paths. The program prints the realized quadratic variation (the sum of squared increments) at several step counts.
+
+@@example Probability/random_processes/guide/sde/01_wiener_path.cpp@@
+
+The path has `steps + 1` samples because the first is the start. The quadratic variation is random at 10 steps (between 0.55 and 1.12 across the three paths) and settles toward the elapsed time, 1, as the grid is refined; at 10000 steps the three paths give 1.0027, 1.0172 and 1.0117. This number is the reason the two integrals differ, and it is what the diagnostics of Program 7 compare against.

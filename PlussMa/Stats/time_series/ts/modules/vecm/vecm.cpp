@@ -3,7 +3,7 @@
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
-#include "pluss/subsp/stats/distr.h"
+#include "johansen_tables.h"
 
 #include <algorithm>
 #include <cmath>
@@ -208,33 +208,52 @@ Series inv_sqrt_spd_(const Series& a, Config cfg, const char* op_name) {
   return out;
 }
 
-double chisq_cdf_(double value, std::int64_t dof, Config cfg) {
-  const auto out_cfg = f64_cfg_(cfg);
-  const Series q = pluss::make_series(std::vector<double>{value}, {1}, out_cfg);
-  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>());
+// Index into the simulated tables: 0 = no deterministic terms, 1 = unrestricted constant, 2 = unrestricted constant and trend.
+int johansen_case_(bool include_intercept, bool include_trend) {
+  if (include_trend) {
+    return 2;
+  }
+  return include_intercept ? 1 : 0;
 }
 
-double chisq_quantile_(double prob, std::int64_t dof, Config cfg) {
-  if (prob <= 0.0) {
-    return 0.0;
+const double* johansen_row_(JohansenStat statistic, int case_index, std::int64_t m) {
+  return (statistic == JohansenStat::Trace ? johansen_tables::kTrace : johansen_tables::kMaxEigen)[case_index][m - 1];
+}
+
+// Upper-tail probability of a simulated asymptotic statistic: log-linear between the tabulated quantiles, exponential beyond the last one.
+double johansen_pvalue_(JohansenStat statistic, int case_index, std::int64_t m, double value) {
+  constexpr int n = johansen_tables::kNumProbs;
+  const double* q = johansen_row_(statistic, case_index, m);
+  const double* p = johansen_tables::kProbs;
+  if (!(value > q[0])) {
+    return 1.0;
   }
-  if (prob >= 1.0) {
-    return std::numeric_limits<double>::infinity();
-  }
-  double lo = 0.0;
-  double hi = std::max(1.0, static_cast<double>(dof) + 10.0 * std::sqrt(2.0 * static_cast<double>(dof)) + 10.0);
-  for (std::int64_t i = 0; i < 64 && chisq_cdf_(hi, dof, cfg) < prob; ++i) {
-    hi *= 2.0;
-  }
-  for (std::int64_t i = 0; i < 80; ++i) {
-    const double mid = 0.5 * (lo + hi);
-    if (chisq_cdf_(mid, dof, cfg) < prob) {
-      lo = mid;
-    } else {
-      hi = mid;
+  for (int i = 1; i < n; ++i) {
+    if (value <= q[i]) {
+      const double w = (value - q[i - 1]) / std::max(q[i] - q[i - 1], 1e-300);
+      return std::exp((1.0 - w) * std::log(p[i - 1]) + w * std::log(p[i]));
     }
   }
-  return 0.5 * (lo + hi);
+  const double rate = std::log(p[n - 2] / p[n - 1]) / std::max(q[n - 1] - q[n - 2], 1e-300);
+  return p[n - 1] * std::exp(-rate * (value - q[n - 1]));
+}
+
+// Critical value with upper-tail probability `alpha`.
+double johansen_critical_(JohansenStat statistic, int case_index, std::int64_t m, double alpha) {
+  constexpr int n = johansen_tables::kNumProbs;
+  const double* q = johansen_row_(statistic, case_index, m);
+  const double* p = johansen_tables::kProbs;
+  if (alpha >= p[0]) {
+    return q[0];
+  }
+  for (int i = 1; i < n; ++i) {
+    if (alpha >= p[i]) {
+      const double w = (std::log(p[i - 1]) - std::log(alpha)) / (std::log(p[i - 1]) - std::log(p[i]));
+      return q[i - 1] + w * (q[i] - q[i - 1]);
+    }
+  }
+  const double rate = std::log(p[n - 2] / p[n - 1]) / std::max(q[n - 1] - q[n - 2], 1e-300);
+  return q[n - 1] + std::log(p[n - 1] / alpha) / rate;
 }
 
 Series per_obs_loglik_(const Series& residuals, const Series& covariance, Config cfg, const char* op_name) {
@@ -252,22 +271,7 @@ Series per_obs_loglik_(const Series& residuals, const Series& covariance, Config
   return res.matmul(inv_cov).mul(res).sum(1, false).mul(-0.5).add(offset);
 }
 
-Series reduced_rank_impact_(const Series& pi, std::int64_t rank, Config cfg) {
-  const auto out_cfg = f64_cfg_(cfg);
-  const std::int64_t k = pi.sizes()[0];
-  if (rank <= 0) {
-    return pluss::series::zeros({k, k}, out_cfg);
-  }
-  if (rank >= k) {
-    return pi.to(out_cfg.platform, out_cfg.dtype);
-  }
-  const auto svd = pluss::subsp::math::linalg::svd(pi.to(out_cfg.platform, out_cfg.dtype), false);
-  const Series u = svd.U.index_select(1, i64_range_(0, rank, out_cfg));
-  const Series v = svd.Vh.transpose(0, 1).index_select(1, i64_range_(0, rank, out_cfg));
-  const Series s = svd_diag_(svd.S, rank, out_cfg);
-  return u.matmul(s).matmul(v.transpose(0, 1));
-}
-
+// Splits impact = beta alpha' by its singular value decomposition; returns {beta, alpha} (cointegrating vectors, adjustment loadings).
 std::pair<Series, Series> alpha_beta_from_impact_(const Series& impact, std::int64_t rank, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t k = impact.sizes()[0];
@@ -275,67 +279,89 @@ std::pair<Series, Series> alpha_beta_from_impact_(const Series& impact, std::int
     return {pluss::series::empty({k, 0}, out_cfg), pluss::series::empty({k, 0}, out_cfg)};
   }
   const auto svd = pluss::subsp::math::linalg::svd(impact.to(out_cfg.platform, out_cfg.dtype), false);
-  const Series beta = svd.Vh.transpose(0, 1).index_select(1, i64_range_(0, rank, out_cfg));
-  const Series alpha = impact.matmul(beta).matmul(
-      pluss::subsp::math::linalg::pinverse(beta.transpose(0, 1).matmul(beta), 1e-12));
-  return {alpha, beta};
+  const Series beta = svd.U.index_select(1, i64_range_(0, rank, out_cfg));
+  const Series alpha = impact.transpose(0, 1).matmul(beta);
+  return {beta, alpha};
 }
 
 } // namespace
+
+namespace {
+
+// Canonical-correlation step shared by the Johansen test and the reduced-rank VECM estimate: residuals of the differences and of the lagged
+// levels after removing the deterministic terms and the lagged differences, their moment matrices, and the eigen-decomposition.
+struct JohansenCore {
+  std::int64_t k = 0;
+  std::int64_t t = 0;
+  std::vector<double> lambda;
+  Series evec = pluss::series::undefined();  // columns satisfy evec' S11 evec = I, ordered by decreasing eigenvalue
+  Series s01 = pluss::series::undefined();
+  Series s11 = pluss::series::undefined();
+};
+
+JohansenCore johansen_core_(const Series& y, std::int64_t lag_order, bool include_intercept, bool include_trend, Config out_cfg, const char* op_name) {
+  const auto design = build_design_(y, lag_order, include_intercept, include_trend, out_cfg, op_name);
+  const std::int64_t k = design.k;
+  const std::int64_t t = design.t;
+  const CoeffLayout layout = coeff_layout_(
+      VecmOptions{.lag_order = lag_order, .include_intercept = include_intercept, .include_trend = include_trend}, k);
+
+  // Regressors held out of the cointegration problem: deterministic terms (before the level block) and lagged differences (after it).
+  std::vector<Series> parts;
+  if (layout.impact_row0 > 0) {
+    parts.push_back(design.design.index_select(1, i64_range_(0, layout.impact_row0, out_cfg)));
+  }
+  if (lag_order > 1) {
+    parts.push_back(design.design.index_select(1, i64_range_(layout.gamma_row0, design.d, out_cfg)));
+  }
+  Series r0 = design.target;
+  Series r1 = design.level_lag;
+  if (!parts.empty()) {
+    const Series w = parts.size() == 1 ? parts.front() : parts.front().unite(std::vector<Series>(parts.begin() + 1, parts.end()), 1);
+    const Series w_pinv = pluss::subsp::math::linalg::pinverse(w, 1e-12);
+    r0 = r0.sub(w.matmul(w_pinv.matmul(r0)));
+    r1 = r1.sub(w.matmul(w_pinv.matmul(r1)));
+  }
+
+  const double tt = static_cast<double>(t);
+  const Series s00 = r0.transpose(0, 1).matmul(r0).div(tt);
+  const Series s11 = r1.transpose(0, 1).matmul(r1).div(tt);
+  const Series s01 = r0.transpose(0, 1).matmul(r1).div(tt);
+  const Series s10 = s01.transpose(0, 1);
+
+  const Series s00_inv = pluss::subsp::math::linalg::pinverse(stabilize_cov_(s00, out_cfg), 1e-12);
+  const Series s11_inv_sqrt = inv_sqrt_spd_(stabilize_cov_(s11, out_cfg), out_cfg, op_name);
+  Series c = s11_inv_sqrt.matmul(s10).matmul(s00_inv).matmul(s01).matmul(s11_inv_sqrt);
+  c = c.add(c.transpose(0, 1)).mul(0.5);
+
+  const auto svd = pluss::subsp::math::linalg::svd(c, false);
+  const Series eval = svd.S.to(out_cfg.platform, out_cfg.dtype).reshape({k}).clamp_min(0.0).clamp_max(1.0 - 1e-10);
+  JohansenCore core;
+  core.k = k;
+  core.t = t;
+  core.lambda.resize(static_cast<std::size_t>(k));
+  for (std::int64_t i = 0; i < k; ++i) {
+    core.lambda[static_cast<std::size_t>(i)] = eval.select(0, i).item<double>();
+  }
+  core.evec = s11_inv_sqrt.matmul(svd.U.to(out_cfg.platform, out_cfg.dtype));
+  core.s01 = s01;
+  core.s11 = s11;
+  return core;
+}
+
+}  // namespace
 
 JohansenResult johansen_test(const Series& y, const JohansenOptions& options, Config cfg) {
   PLUSS_CHECK(options.lag_order > 0, "subsp::stats::ts::johansen_test: lag_order must be > 0");
   PLUSS_CHECK(options.alpha > 0.0 && options.alpha < 1.0, "subsp::stats::ts::johansen_test: alpha must be in (0,1)");
 
   const auto out_cfg = f64_cfg_(cfg);
-  const auto design = build_design_(y, options.lag_order, options.include_intercept, options.include_trend, out_cfg, "johansen_test");
-  const std::int64_t k = design.k;
-  const std::int64_t t = design.t;
-
-  const CoeffLayout layout = coeff_layout_(
-      VecmOptions{
-          .lag_order = options.lag_order,
-          .include_intercept = options.include_intercept,
-          .include_trend = options.include_trend,
-      },
-      k);
-
-  Series w = pluss::series::undefined();
-  if (layout.impact_row0 > 0) {
-    w = design.design.index_select(1, i64_range_(0, layout.impact_row0, out_cfg));
-  } else {
-    w = pluss::series::empty({t, 0}, out_cfg);
-  }
-
-  const Series y0 = design.target;
-  const Series y1 = design.level_lag;
-
-  Series r0 = y0;
-  Series r1 = y1;
-  if (w.sizes()[1] > 0) {
-    const Series w_pinv = pluss::subsp::math::linalg::pinverse(w, 1e-12);
-    r0 = y0.sub(w.matmul(w_pinv.matmul(y0)));
-    r1 = y1.sub(w.matmul(w_pinv.matmul(y1)));
-  }
-
-  const Series s00 = r0.transpose(0, 1).matmul(r0).div(static_cast<double>(t));
-  const Series s11 = r1.transpose(0, 1).matmul(r1).div(static_cast<double>(t));
-  const Series s01 = r0.transpose(0, 1).matmul(r1).div(static_cast<double>(t));
-  const Series s10 = s01.transpose(0, 1);
-
-  const Series s00_inv = pluss::subsp::math::linalg::pinverse(stabilize_cov_(s00, out_cfg), 1e-12);
-  const Series s11_inv_sqrt = inv_sqrt_spd_(stabilize_cov_(s11, out_cfg), out_cfg, "johansen_test");
-  Series c = s11_inv_sqrt.matmul(s10).matmul(s00_inv).matmul(s01).matmul(s11_inv_sqrt);
-  c = c.add(c.transpose(0, 1)).mul(0.5);
-
-  const auto svd = pluss::subsp::math::linalg::svd(c, false);
-  Series eval = svd.S.to(out_cfg.platform, out_cfg.dtype).reshape({k}).clamp_min(0.0).clamp_max(1.0 - 1e-10);
-  Series evec = s11_inv_sqrt.matmul(svd.U.to(out_cfg.platform, out_cfg.dtype));
-
-  std::vector<double> lambda(k, 0.0);
-  for (std::int64_t i = 0; i < k; ++i) {
-    lambda[static_cast<std::size_t>(i)] = eval.select(0, i).item<double>();
-  }
+  const JohansenCore core = johansen_core_(y, options.lag_order, options.include_intercept, options.include_trend, out_cfg, "johansen_test");
+  const std::int64_t k = core.k;
+  const std::int64_t t = core.t;
+  PLUSS_CHECK(k <= johansen_tables::kMaxM, "subsp::stats::ts::johansen_test: at most 12 series are supported");
+  const int case_index = johansen_case_(options.include_intercept, options.include_trend);
+  const auto& lambda = core.lambda;
 
   std::vector<double> stat(k, 0.0);
   std::vector<double> pval(k, 1.0);
@@ -343,34 +369,33 @@ JohansenResult johansen_test(const Series& y, const JohansenOptions& options, Co
   std::vector<std::int64_t> reject(k, 0);
   std::vector<std::int64_t> dof(k, 1);
 
-  std::int64_t selected_rank = 0;
+  // The hypothesis "rank <= r" is tested against "rank > r" for r = 0, 1, ...; the rank is the first r that is not rejected.
+  std::int64_t selected_rank = k;
+  bool still_rejecting = true;
   for (std::int64_t r = 0; r < k; ++r) {
+    const std::int64_t m = k - r;
     double stat_r = 0.0;
     if (options.statistic == JohansenStat::MaxEigen) {
       stat_r = -static_cast<double>(t) * std::log(std::max(1e-12, 1.0 - lambda[static_cast<std::size_t>(r)]));
-      dof[static_cast<std::size_t>(r)] = std::max<std::int64_t>(1, k - r);
+      dof[static_cast<std::size_t>(r)] = m;
     } else {
       double acc = 0.0;
       for (std::int64_t i = r; i < k; ++i) {
         acc += std::log(std::max(1e-12, 1.0 - lambda[static_cast<std::size_t>(i)]));
       }
       stat_r = -static_cast<double>(t) * acc;
-      const std::int64_t m = k - r;
-      dof[static_cast<std::size_t>(r)] = std::max<std::int64_t>(1, m * m);
+      dof[static_cast<std::size_t>(r)] = m * m;
     }
 
-    const std::int64_t d = dof[static_cast<std::size_t>(r)];
-    const double p = 1.0 - chisq_cdf_(stat_r, d, out_cfg);
-    const double cval = chisq_quantile_(1.0 - options.alpha, d, out_cfg);
+    const double cval = johansen_critical_(options.statistic, case_index, m, options.alpha);
     const bool rej = stat_r > cval;
-
     stat[static_cast<std::size_t>(r)] = stat_r;
-    pval[static_cast<std::size_t>(r)] = clamp01_(p);
+    pval[static_cast<std::size_t>(r)] = clamp01_(johansen_pvalue_(options.statistic, case_index, m, stat_r));
     critical[static_cast<std::size_t>(r)] = cval;
     reject[static_cast<std::size_t>(r)] = rej ? 1 : 0;
-
-    if (rej) {
-      selected_rank = r + 1;
+    if (still_rejecting && !rej) {
+      selected_rank = r;
+      still_rejecting = false;
     }
   }
   selected_rank = std::min<std::int64_t>(selected_rank, k - 1);
@@ -378,9 +403,9 @@ JohansenResult johansen_test(const Series& y, const JohansenOptions& options, Co
   Series alpha = pluss::series::empty({k, 0}, out_cfg);
   Series beta = pluss::series::empty({k, 0}, out_cfg);
   if (selected_rank > 0) {
-    beta = evec.index_select(1, i64_range_(0, selected_rank, out_cfg));
-    const Series denom = beta.transpose(0, 1).matmul(s11).matmul(beta);
-    alpha = s01.matmul(beta).matmul(pluss::subsp::math::linalg::pinverse(denom, 1e-12));
+    beta = core.evec.index_select(1, i64_range_(0, selected_rank, out_cfg));
+    const Series denom = beta.transpose(0, 1).matmul(core.s11).matmul(beta);
+    alpha = core.s01.matmul(beta).matmul(pluss::subsp::math::linalg::pinverse(denom, 1e-12));
   }
 
   return JohansenResult{
@@ -427,7 +452,7 @@ VecmFit Vecm::fit_mle(const Series& y, const VecmOptions& options, Config cfg) {
     y_fit = y_fit.unite({pluss::series::zeros({design.d, k}, out_cfg)}, 0);
   }
 
-  const Series coeff = pluss::subsp::math::linalg::pinverse(x_fit, options.pinv_rcond).matmul(y_fit);
+  const Series coeff_full = pluss::subsp::math::linalg::pinverse(x_fit, options.pinv_rcond).matmul(y_fit);
   const CoeffLayout layout = coeff_layout_(options, k);
 
   std::int64_t rank = options.rank;
@@ -442,12 +467,62 @@ VecmFit Vecm::fit_mle(const Series& y, const VecmOptions& options, Config cfg) {
   }
   rank = std::clamp<std::int64_t>(rank, 0, k);
 
+  // impact: Delta y_t = y_{t-1} impact + ..., with impact = beta alpha' (beta: cointegrating vectors, alpha: adjustment loadings).
+  Series coeff = coeff_full;
+  Series impact = coeff_full.index_select(0, i64_range_(layout.impact_row0, layout.impact_row0 + k, out_cfg));
+  Series alpha = pluss::series::empty({k, 0}, out_cfg);
+  Series beta = pluss::series::empty({k, 0}, out_cfg);
+  if (rank == 0) {
+    impact = pluss::series::zeros({k, k}, out_cfg);
+  } else if (rank < k) {
+    // Johansen's maximum likelihood estimate: beta from the canonical correlations (normalised so its leading r x r block is the identity),
+    // alpha by regression, and the remaining coefficients by least squares given the impact matrix.
+    const JohansenCore core = johansen_core_(y, options.lag_order, options.include_intercept, options.include_trend, out_cfg, "Vecm::fit_mle");
+    beta = core.evec.index_select(1, i64_range_(0, rank, out_cfg));
+    const Series top = beta.index_select(0, i64_range_(0, rank, out_cfg));
+    if (std::abs(pluss::subsp::math::linalg::slogdet(top).reshape({2}).select(0, 0).item<double>()) > 0.0) {
+      beta = beta.matmul(pluss::subsp::math::linalg::pinverse(top, 1e-12));
+    }
+    const Series denom = beta.transpose(0, 1).matmul(core.s11).matmul(beta);
+    alpha = core.s01.matmul(beta).matmul(pluss::subsp::math::linalg::pinverse(denom, 1e-12));
+    impact = beta.matmul(alpha.transpose(0, 1));
+  }
+  if (rank == 0 || rank < k) {
+    // Coefficients of the deterministic terms and lagged differences given the impact matrix.
+    const Series adjusted = design.target.sub(design.level_lag.matmul(impact));
+    std::vector<Series> cols;
+    if (layout.impact_row0 > 0) {
+      cols.push_back(design.design.index_select(1, i64_range_(0, layout.impact_row0, out_cfg)));
+    }
+    if (options.lag_order > 1) {
+      cols.push_back(design.design.index_select(1, i64_range_(layout.gamma_row0, design.d, out_cfg)));
+    }
+    std::vector<Series> rows;
+    if (!cols.empty()) {
+      const Series w = cols.size() == 1 ? cols.front() : cols.front().unite(std::vector<Series>(cols.begin() + 1, cols.end()), 1);
+      const Series b = pluss::subsp::math::linalg::pinverse(w, options.pinv_rcond).matmul(adjusted);
+      if (layout.impact_row0 > 0) {
+        rows.push_back(b.index_select(0, i64_range_(0, layout.impact_row0, out_cfg)));
+      }
+      rows.push_back(impact);
+      if (options.lag_order > 1) {
+        rows.push_back(b.index_select(0, i64_range_(layout.impact_row0, b.sizes()[0], out_cfg)));
+      }
+      coeff = rows.front().unite(std::vector<Series>(rows.begin() + 1, rows.end()), 0);
+    } else {
+      coeff = impact;
+    }
+  } else {
+    // Full rank: the unrestricted least-squares impact matrix; its singular value decomposition gives an orthonormal pair of bases.
+    auto ab = alpha_beta_from_impact_(impact, k, out_cfg);
+    beta = ab.first;
+    alpha = ab.second;
+  }
+
   Series constant = options.include_intercept ? coeff.select(0, layout.intercept).reshape({k})
                                               : pluss::series::zeros({k}, out_cfg);
   Series trend = options.include_trend ? coeff.select(0, layout.trend).reshape({k})
                                        : pluss::series::zeros({k}, out_cfg);
-  Series impact_full = coeff.index_select(0, i64_range_(layout.impact_row0, layout.impact_row0 + k, out_cfg));
-  Series impact = reduced_rank_impact_(impact_full, rank, out_cfg);
 
   Series gamma = pluss::series::empty({0, k, k}, out_cfg);
   if (options.lag_order > 1) {
@@ -456,7 +531,6 @@ VecmFit Vecm::fit_mle(const Series& y, const VecmOptions& options, Config cfg) {
     gamma = gflat.reshape({options.lag_order - 1, k, k});
   }
 
-  auto [alpha, beta] = alpha_beta_from_impact_(impact, rank, out_cfg);
   const Series resid = design.target.sub(design.design.matmul(coeff_from_fit_(
       VecmFit{
           .lag_order = options.lag_order,

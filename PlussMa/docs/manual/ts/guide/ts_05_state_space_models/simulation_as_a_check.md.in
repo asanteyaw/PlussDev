@@ -1,0 +1,8 @@
+# Simulation as a check
+
+[Back to State-Space Models](../ts_05_state_space_models.md)
+
+
+@@example Stats/time_series/guide/1221_simulating_a_model.cpp@@
+
+The variance across 20 000 simulated paths agrees with the variance the model predicts analytically (1.34, 1.59, 1.84, … rising by `B B'` = 0.25 each step) up to simulation error. Use this check whenever you set up a new model: a mistake in a matrix shows up as a mismatch.

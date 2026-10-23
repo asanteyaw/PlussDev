@@ -1262,7 +1262,7 @@ void save_csv(const pluss::table::DataFrame& frame,
     cols.push_back(slate_for_csv_io(frame.features(name)));
   }
   const bool include_cases = options.add_cases || options.cases;
-  const auto case_values = include_cases ? slate_for_csv_io(frame.label().values()) : pluss::table::Slate{};
+  const auto case_values = include_cases ? slate_for_csv_io(frame.labels().values()) : pluss::table::Slate{};
 
   if (options.header) {
     bool first = true;
@@ -1472,7 +1472,7 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
       converted_any = true;
     }
     if (converted_any) {
-      auto cases = output.label().values();
+      auto cases = output.labels().values();
       std::vector<std::pair<std::string, pluss::table::Slate>> typed_columns;
       typed_columns.reserve(columns.size());
       for (std::size_t i = 0; i < columns.size(); ++i) {

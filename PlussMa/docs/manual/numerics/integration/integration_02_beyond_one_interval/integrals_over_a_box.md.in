@@ -1,0 +1,10 @@
+# Integrals over a box
+
+[Back to Beyond One Interval](../integration_02_beyond_one_interval.md)
+
+
+`quadra(fn, bounds)` takes an integrand of a vector of coordinate Series, one per axis, and a vector of `[lo, hi]` pairs. It builds the tensor-product rule: the cost is the per-axis resolution to the power of the dimension (`QuadraNdOptions`: `rule`, `resolution`, `gauss_points`, and a cap `max_total_nodes`). It suits two or three dimensions. `aleatoria` with the same signature estimates it by Monte Carlo, whose error does not depend on the dimension.
+
+@@example Numerical/integration/guide/613_many_dimensions.cpp@@
+
+The 2-D rule is exact for this polynomial with 625 evaluations and the 3-D rule with 15625; the Monte Carlo estimate with 200000 samples is accurate to about 1e-5 with a standard error of 3e-4, which it reports. For a smooth integrand in few dimensions quadrature wins by orders of magnitude; the balance reverses as the dimension grows.

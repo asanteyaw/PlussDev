@@ -36,7 +36,7 @@ VecmFit truth_model() {
   fit.include_trend = false;
   fit.alpha = pluss::make_series(std::vector<double>{-0.55, 0.42}, {2, 1}, cfg);
   fit.beta = pluss::make_series(std::vector<double>{1.0, -1.0}, {2, 1}, cfg);
-  fit.impact = fit.alpha.matmul(fit.beta.transpose(0, 1));
+  fit.impact = fit.beta.matmul(fit.alpha.transpose(0, 1));
   fit.gamma = pluss::make_series(
       std::vector<double>{
           0.08, 0.01,

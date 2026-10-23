@@ -67,7 +67,7 @@ Every 2D chart method that takes an `x_feature` argument resolves it the same wa
    `x_feature` and still use `"month"`. An explicit `x_feature` argument on a given call
    still takes precedence over this default.
 3. **Omit it entirely, with no default set** — the x-axis becomes the frame's own **row
-   labels** (`DataFrame::label()`), not a bare `0..n-1` index, and the axis title becomes
+   labels** (`DataFrame::labels()`), not a bare `0..n-1` index, and the axis title becomes
    the literal string `"case"`. If the row labels are text, a timestamp, or a time index,
    the axis renders as evenly spaced categorical positions with those values as tick
    labels; if the row labels are themselves numeric, they're used as real numeric x

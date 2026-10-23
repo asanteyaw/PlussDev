@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=47991f43"></script>
+    <script src="../_static/api_nav.js?v=389a5f95"></script>
     <script src="../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -160,6 +160,9 @@ documented in the dedicated accessor reference</p></li>
 <li><p>antiderivative accessor entrypoint: <code class="docutils literal notranslate"><span class="pre">antidiff</span></code>, with its <code class="docutils literal notranslate"><span class="pre">trapezoid</span></code> and
 <code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid</span></code> methods documented in the dedicated accessor
 reference</p></li>
+<li><p>callable calculus accessor entrypoint: <code class="docutils literal notranslate"><span class="pre">calc</span></code>, with arbitrary-order
+differentiation, named gradient/Jacobian/Hessian forms, and anchored repeated
+integration documented in the dedicated accessor reference</p></li>
 </ul>
 <p>The complete handwritten <code class="docutils literal notranslate"><span class="pre">Series::StatAccessor</span></code> reference covers:</p>
 <ul class="simple">
@@ -181,15 +184,19 @@ reference</p></li>
 <a class="reference internal" href="series_traverse_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::TraverseAccessor</span></code></span></a></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">antidiff</span></code> -&gt;
 <a class="reference internal" href="series_antidiff_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::AntidiffAccessor</span></code></span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">calc</span></code> -&gt;
+<a class="reference internal" href="series_calc_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::CalcAccessor</span></code></span></a></p></li>
 </ul>
-<p>All four accessor references are complete across their public surfaces. Start
+<p>All five accessor references are complete across their public surfaces. Start
 with <a class="reference internal" href="api/series/stat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::stat</span></code></span></a>,
 <a class="reference internal" href="api/series/linearalg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::linearalg</span></code></span></a>,
 <a class="reference internal" href="api/series/traverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse</span></code></span></a>, or
-<a class="reference internal" href="api/series/antidiff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::antidiff</span></code></span></a> for the entrypoint itself, or jump
-straight to a dedicated accessor reference from the sidebar. <code class="docutils literal notranslate"><span class="pre">traverse</span></code> is the
+<a class="reference internal" href="api/series/antidiff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::antidiff</span></code></span></a>, or
+<a class="reference internal" href="api/series/calc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::calc</span></code></span></a> for an entrypoint itself. <code class="docutils literal notranslate"><span class="pre">traverse</span></code> is the
 value-driven search family — one call from a condition to the coordinates,
-matched values, and flat offsets of every position that satisfies it.</p>
+matched values, and flat offsets of every position that satisfies it. <code class="docutils literal notranslate"><span class="pre">calc</span></code>
+owns callable calculus; it is distinct from both adjacent-sample <code class="docutils literal notranslate"><span class="pre">diff()</span></code> and
+sampled-data <code class="docutils literal notranslate"><span class="pre">antidiff</span></code>.</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="pluss-inline-prev-next">

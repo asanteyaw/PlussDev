@@ -1,10 +1,12 @@
 #pragma once
 
 #include "pluss/subsp/math/optim.h"
+#include "pluss/subsp/math/optim_fwd.h"
 #include "pluss/subsp/math/optim_lsr1.h"
 #include "pluss/subsp/math/linprog.h"
 #include "pluss/subsp/math/milp.h"
 #include "pluss/subsp/math/roots.h"
+#include "pluss/subsp/math/qp.h"
 #include "pluss/subsp/math/lp/ipm.h"
 #include "pluss/subsp/math/lp/mip.h"
 #include "pluss/subsp/math/lp/mps.h"

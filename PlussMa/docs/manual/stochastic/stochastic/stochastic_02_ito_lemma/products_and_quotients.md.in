@@ -1,0 +1,10 @@
+# Products and quotients
+
+[Back to Differentials and Ito's Lemma](../stochastic_02_ito_lemma.md)
+
+
+For two processes driven by the same noise, `d(XY) = X dY + Y dX + d[X, Y]`, where `d[X, Y] = σ_x · σ_y dt` is the covariation. Quotients and any function of two processes follow from Ito's lemma in two variables. The convenience methods `ito_product` and `ito_quotient` name the two common cases; the general two-state form takes any `g(x, y)`.
+
+@@example Probability/random_processes/guide/sde/13_product_and_quotient.cpp@@
+
+Every drift equals its closed form: 0.30700 for the product, 0.02504 for the quotient, 0.07600 for `(X − Y)²`. The last one shows the general form: the second-order term is the variance of `X − Y`, which depends on how correlated the noises are.

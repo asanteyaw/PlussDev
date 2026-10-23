@@ -232,6 +232,20 @@ back_diff(const Series &value, const PeriodicGrid &grid, std::int64_t axis) {
   return detail::stack_components(components, value.dim() - grid.dim());
 }
 
+// Symmetric gradient of a vector field. The result is laid out as
+// [..., component, derivative_component, spatial...] so tensor_div can
+// consume stress tensors built from it without a data-layout conversion.
+[[nodiscard]] inline Series sym_grad(const Series &value,
+                                     const PeriodicGrid &grid) {
+  constexpr const char *operation = "natsci::spatial::sym_grad";
+  const std::int64_t component_axis =
+      detail::require_vector_layout(value, grid, operation);
+  const Series derivative = gradient(value, grid);
+  return derivative
+      .add(derivative.transpose(component_axis, component_axis + 1))
+      .mul(0.5);
+}
+
 [[nodiscard]] inline Series fwd_grad(const Series &value,
                                      const PeriodicGrid &grid) {
   constexpr const char *operation = "natsci::spatial::fwd_grad";
@@ -459,6 +473,11 @@ template <DimensionType D>
 gradient(const SeriesQuantity<D> &value, const PeriodicGrid &grid) {
   return SeriesQuantity<DimensionQuotient<D, Length>>::from_si(
       gradient(value.si_value(), grid));
+}
+
+[[nodiscard]] inline SeriesQuantity<Frequency>
+sym_grad(const SeriesQuantity<Speed> &value, const PeriodicGrid &grid) {
+  return SeriesQuantity<Frequency>::from_si(sym_grad(value.si_value(), grid));
 }
 
 template <DimensionType D>

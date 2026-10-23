@@ -94,7 +94,9 @@ struct PSConfig {
   PSPollingOrder polling_order{PSPollingOrder::Consecutive};
   bool complete_poll{false};
   PSDirectionFamily direction_family{PSDirectionFamily::GSSAugmented};
-  PSBasisFamily basis_family{PSBasisFamily::Canonical};
+  // A random orthonormal basis (changed at every refresh) rather than the coordinate axes: with constraints, a coordinate
+  // poll cannot move along a diagonal or curved boundary and stops at a feasible point that is not optimal.
+  PSBasisFamily basis_family{PSBasisFamily::RandomOrtho};
   std::int64_t basis_refresh_interval{1};
 
   PSMeshScaling mesh_scaling{PSMeshScaling::RangeLog};
@@ -109,10 +111,11 @@ struct PSConfig {
   std::int64_t search_trials{12};
   bool search_complete{false};
 
-  PSConstraintPolicy constraint_policy{PSConstraintPolicy::MeritPenalty};
+  // The augmented Lagrangian converges to the constrained optimum; a fixed merit penalty only approaches it.
+  PSConstraintPolicy constraint_policy{PSConstraintPolicy::AugmentedLagrangian};
   double initial_penalty{10.0};
   double penalty_growth{10.0};
-  std::int64_t al_max_outer_iterations{6};
+  std::int64_t al_max_outer_iterations{20};
   double al_penalty_growth{5.0};
   double al_violation_reduction_ratio{0.5};
   double al_multiplier_clip{1e8};

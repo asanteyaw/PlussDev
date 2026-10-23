@@ -1,0 +1,8 @@
+# A direct call
+
+[Back to The Black-Box MADS Minimisers](../dfo_11_mads_black_box.md)
+
+
+@@example Numerical/optimization/guide/dfo/401_mads_blackbox_standalone.cpp@@
+
+Both objectives are read back at the minimiser, along with the scalar the solver minimised. The constraint is inactive here (the compromise sits at `x0 = 0`, inside `x0 <= 0.5`). The archive holds the non-dominated points the search met, as rows.

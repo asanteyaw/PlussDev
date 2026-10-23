@@ -122,12 +122,12 @@ data=[inf, 0.33333333]
   input.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="cartprod.html">
+  <a class="prev-link" href="cauchy_.html">
     <span class="label">Previous</span>
-    <span class="title">cartprod</span>
-  </a>
-  <a class="next-link" href="cauchy_.html">
-    <span class="label">Next</span>
     <span class="title">cauchy_</span>
+  </a>
+  <a class="next-link" href="ceil.html">
+    <span class="label">Next</span>
+    <span class="title">ceil</span>
   </a>
 </div>

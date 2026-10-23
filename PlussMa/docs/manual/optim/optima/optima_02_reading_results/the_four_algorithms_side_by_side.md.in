@@ -1,0 +1,10 @@
+# The four algorithms side by side
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+Choosing an algorithm is the subject of the next chapter. For now, the first program shows that all four share one result type, so every report in this chapter works the same for each. It also shows how little they differ in what they return on an easy problem, and how much in the work they do to get there.
+
+@@example Numerical/optimization/guide/optima/21_four_algorithms.cpp@@
+
+All four agree on the answer, the corner `(1.5, 0.8)`, and all four exit with `Converged`. They differ in effort: the merit method needs two iterations and three evaluations because it handles bounds by projection, while sequential QP and the working-set method need a single iteration, because their first quadratic subproblem already identifies the corner, and the interior method takes five iterations and eight evaluations, since a barrier method approaches a bound from inside. `output.algorithm` carries each method's label.

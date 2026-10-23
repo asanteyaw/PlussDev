@@ -326,7 +326,7 @@ ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
                                    const DataFramePlotOptions& options) {
   const auto nrows = frame.ncases();
   const auto axis_name = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
-  const auto axis_slate = x_feature.has_value() ? frame.features(*x_feature) : frame.label().values();
+  const auto axis_slate = x_feature.has_value() ? frame.features(*x_feature) : frame.labels().values();
 
   ResolvedPlotAxis axis;
   axis.label = axis_name;
@@ -427,7 +427,7 @@ void apply_axis(Pane& pane, const ResolvedPlotAxis& axis, const DataFramePlotOpt
 std::vector<std::string> labels_for_cases(const DataFrame& frame,
                                           std::string_view where,
                                           const DataFramePlotOptions& options) {
-  auto labels = slate_to_plot_labels(frame.label().values(), options);
+  auto labels = slate_to_plot_labels(frame.labels().values(), options);
   require_plot_size(labels, frame.ncases(), "case", where);
   return labels;
 }
@@ -539,7 +539,7 @@ bool all_nonnegative_columns(const DataFrame& frame, const std::vector<std::stri
 }
 
 bool prefer_index_plot(const DataFrame& frame) {
-  return slate_prefers_labeled_axis(frame.label().values()) || frame.ncases() > 24;
+  return slate_prefers_labeled_axis(frame.labels().values()) || frame.ncases() > 24;
 }
 
 pluss::Series columns_to_matrix_series(const std::vector<pluss::Series>& columns,
@@ -1739,7 +1739,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature
   auto values = slate_to_plot_numeric_values(frame_.features(value_feature));
   require_plot_size(values, frame_.ncases(), value_feature);
   const auto labels = label_feature.has_value() ? slate_to_plot_labels(frame_.features(*label_feature), options_)
-                                                : slate_to_plot_labels(frame_.label().values(), options_);
+                                                : slate_to_plot_labels(frame_.labels().values(), options_);
   require_plot_size(labels,
                     frame_.ncases(),
                     label_feature.has_value() ? *label_feature : std::string_view("case"),
@@ -1947,7 +1947,7 @@ PivotGrid3D build_pivot_grid_3d(const DataFrame& pivoted, std::string_view where
   PLUSS_CHECK(out.rows > 0, std::string(where) + ": pivot produced zero rows");
   PLUSS_CHECK(out.cols > 0, std::string(where) + ": pivot produced zero columns");
 
-  out.y_axis = slate_to_plot_numeric_values(pivoted.label().values());
+  out.y_axis = slate_to_plot_numeric_values(pivoted.labels().values());
   std::size_t y_index = 0;
   std::for_each(out.y_axis.begin(), out.y_axis.end(), [&](double& value) {
     if (!std::isfinite(value)) {
@@ -2243,7 +2243,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(pluss::msharp::RangeView
       return scatter(names[0], names[1], hue_names.front());
     }
   }
-  if (names.size() <= 3 && slate_prefers_labeled_axis(frame_.label().values()) && all_nonnegative_columns(frame_, names)) {
+  if (names.size() <= 3 && slate_prefers_labeled_axis(frame_.labels().values()) && all_nonnegative_columns(frame_, names)) {
     if (frame_.ncases() <= 12) {
       if (names.size() == 2) {
         return bar_stacked({names[0], names[1]});

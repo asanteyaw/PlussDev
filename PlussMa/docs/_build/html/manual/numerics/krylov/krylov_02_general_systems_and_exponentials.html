@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Large Linear Systems 2: General Systems and Exponentials &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="The restart length" href="krylov_02_general_systems_and_exponentials/the_restart_length.html" />
+    <link rel="prev" title="A sparse matrix as an operator" href="krylov_01_symmetric_systems/a_sparse_matrix_as_an_operator.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from krylov_02_general_systems_and_exponentials.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="large-linear-systems-2-general-systems-and-exponentials">
+<h1>Large Linear Systems 2: General Systems and Exponentials<a class="headerlink" href="#large-linear-systems-2-general-systems-and-exponentials" title="Link to this heading">¶</a></h1>
+<p>Not every system is symmetric, and not every linear problem asks for a solve: sometimes you want the matrix exponential applied to a vector. This chapter covers restarted GMRES for general systems and the Arnoldi evaluation of <code class="docutils literal notranslate"><span class="pre">exp(t</span> <span class="pre">A)</span> <span class="pre">v</span></code>. After it you can solve non-symmetric systems matrix-free, tune the restart, and advance a linear evolution without forming a dense exponential.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="gmres-for-general-systems">
+<h2>GMRES for general systems<a class="headerlink" href="#gmres-for-general-systems" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">krylov</span><span class="o">::</span><span class="n">GmresResult</span><span class="w"> </span><span class="nf">krylov::gmres</span><span class="p">(</span><span class="n">apply</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">,</span><span class="w"> </span><span class="n">solve_dims</span><span class="p">,</span><span class="w"> </span><span class="n">GmresOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">initial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">undefined</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>GMRES builds an orthonormal basis of the Krylov space, finds the combination that minimises the residual, and restarts from the result. It works for any invertible real or complex operator.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">GmresOptions</span></code></p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code></p></td>
+<td><p>total iteration cap</p></td>
+<td><p>128</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">restart</span></code></p></td>
+<td><p>basis size before restarting</p></td>
+<td><p>24</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">relative_tolerance</span></code>, <code class="docutils literal notranslate"><span class="pre">absolute_tolerance</span></code></p></td>
+<td><p>stopping tolerances</p></td>
+<td><p>1e-8, 1e-10</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rank_tolerance</span></code></p></td>
+<td><p>numerical-rank threshold used when the basis degenerates</p></td>
+<td><p>1e-12</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">GmresResult</span></code> has <code class="docutils literal notranslate"><span class="pre">solution</span></code>, <code class="docutils literal notranslate"><span class="pre">residual_norm</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_residual</span></code>, per-lane <code class="docutils literal notranslate"><span class="pre">converged</span></code>, <code class="docutils literal notranslate"><span class="pre">iterations</span></code>, <code class="docutils literal notranslate"><span class="pre">operator_evaluations</span></code> and <code class="docutils literal notranslate"><span class="pre">restarts</span></code>.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="krylov_02_general_systems_and_exponentials/the_restart_length.html"><span class="std std-doc">The restart length</span></a></p></li>
+</ul>
+</section>
+<section id="the-action-of-a-matrix-exponential">
+<h2>The action of a matrix exponential<a class="headerlink" href="#the-action-of-a-matrix-exponential" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">krylov</span><span class="o">::</span><span class="n">ExpResult</span><span class="w"> </span><span class="nf">krylov::exp_action</span><span class="p">(</span><span class="n">apply</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">solve_dims</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">time</span><span class="p">,</span><span class="w"> </span><span class="n">ExpOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+</pre></div>
+</div>
+<p>This computes <code class="docutils literal notranslate"><span class="pre">exp(time</span> <span class="pre">·</span> <span class="pre">A)</span> <span class="pre">v</span></code> by an Arnoldi projection. It is the solution at time <code class="docutils literal notranslate"><span class="pre">time</span></code> of <code class="docutils literal notranslate"><span class="pre">y'</span> <span class="pre">=</span> <span class="pre">A</span> <span class="pre">y</span></code> starting from <code class="docutils literal notranslate"><span class="pre">v</span></code>, and it is how large linear evolutions (diffusion, wave and Schrödinger equations on a grid) are advanced exactly in time, with no time-stepping error.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">ExpOptions</span></code></p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code></p></td>
+<td><p>size of the Krylov space</p></td>
+<td><p>32</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">relative_tolerance</span></code>, <code class="docutils literal notranslate"><span class="pre">absolute_tolerance</span></code></p></td>
+<td><p>accuracy for the residual estimate</p></td>
+<td><p>1e-9, 1e-12</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">ExpResult</span></code> has <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">residual_estimate</span></code> (the standard a-posteriori Krylov estimate), per-lane <code class="docutils literal notranslate"><span class="pre">converged</span></code>, <code class="docutils literal notranslate"><span class="pre">iterations</span></code> and <code class="docutils literal notranslate"><span class="pre">operator_evaluations</span></code>.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="krylov_02_general_systems_and_exponentials/heat_flow.html"><span class="std std-doc">Heat flow</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Not symmetric: <code class="docutils literal notranslate"><span class="pre">gmres</span></code>. Count <code class="docutils literal notranslate"><span class="pre">operator_evaluations</span></code>, and try several <code class="docutils literal notranslate"><span class="pre">restart</span></code> lengths.</p></li>
+<li><p>Linear evolution <code class="docutils literal notranslate"><span class="pre">y'</span> <span class="pre">=</span> <span class="pre">A</span> <span class="pre">y</span></code>: <code class="docutils literal notranslate"><span class="pre">exp_action</span></code>, growing <code class="docutils literal notranslate"><span class="pre">max_iterations</span></code> until <code class="docutils literal notranslate"><span class="pre">converged</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gmres</span></code> and <code class="docutils literal notranslate"><span class="pre">exp_action</span></code> accept complex operators and vectors; <code class="docutils literal notranslate"><span class="pre">cg</span></code> and <code class="docutils literal notranslate"><span class="pre">pcg</span></code> are for real systems.</p></li>
+<li><p>Use the residual estimate and the <code class="docutils literal notranslate"><span class="pre">converged</span></code> flags; they are the stopping evidence.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/numerics/krylov/krylov_02_general_systems_and_exponentials.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

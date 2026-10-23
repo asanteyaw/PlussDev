@@ -1,0 +1,8 @@
+# Families by kind
+
+[Back to Evaluating and Sampling](../dist_01_evaluating_and_sampling.md)
+
+
+@@example Stats/distributions/guide/1303_families_by_kind.cpp@@
+
+The kind-based functions give the same numbers as the objects, and relations between families can be checked directly: a chi-squared with 5 degrees of freedom is a gamma with shape 2.5 and scale 2 (the two rows are identical), and the integral of the Weibull density over [0.5, 2], by the trapezoidal rule on 3000 steps, equals `cdf(2) − cdf(0.5)` (both 0.51814). The mean of draws from a gamma of shape 3 and scale 1 is 3.007, close to the exact 3.

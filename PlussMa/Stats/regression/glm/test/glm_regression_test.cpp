@@ -102,6 +102,20 @@ int main() {
       expect(approx(coef[1], 0.18, 0.20), "glm poisson slope");
     }
 
+    {
+      // intercept-only models have closed-form maximum likelihood estimates: logit of the mean, log of the mean
+      const std::vector<double> yb{0, 1, 1, 0, 1, 1, 0, 1};
+      reg::GLMOptions ob;
+      ob.family = reg::GLMFamily::Binomial;
+      const auto fb = reg::glm_fit(pluss::make_series(yb, {8}).to(pluss::ScalarType::Float64), pluss::Series::zeros({8, 0}, pluss::ScalarType::Float64), ob);
+      expect(std::abs(fb.coefficients.item<double>() - std::log(0.625 / 0.375)) < 1e-7, "intercept-only logistic gives logit of the mean");
+      const std::vector<double> yp{2, 0, 3, 1, 4, 2};
+      reg::GLMOptions op;
+      op.family = reg::GLMFamily::Poisson;
+      const auto fp = reg::glm_fit(pluss::make_series(yp, {6}).to(pluss::ScalarType::Float64), pluss::Series::zeros({6, 0}, pluss::ScalarType::Float64), op);
+      expect(std::abs(fp.coefficients.item<double>() - std::log(2.0)) < 1e-7, "intercept-only Poisson gives log of the mean");
+    }
+
     std::cout << "glm_regression_test passed\n";
     return 0;
   } catch (const std::exception& e) {

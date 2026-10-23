@@ -1,0 +1,10 @@
+# The Marcus differential
+
+[Back to Jumps and the Marcus Integral](../stochastic_03_jumps_and_marcus.md)
+
+
+`x.calc.diff.marcus(g, mu, sigma, h, jumps)` returns the differential of `g(X)` for a Stratonovich diffusion plus jumps that follow the flow of `h`. For `g = log` and `h = x` the jump moves `log X` by exactly the atom.
+
+@@example Probability/random_processes/guide/sde/24_marcus_differential.cpp@@
+
+The continuous part is the Stratonovich one: drift `μ/x = 0.1` and diffusion `σ/x = 0.3`, with no second-order term. The jump sizes of `log X` are 0.4 and −0.7, the atoms themselves.

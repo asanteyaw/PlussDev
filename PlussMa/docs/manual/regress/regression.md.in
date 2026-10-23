@@ -1,0 +1,9 @@
+# Regression
+
+Chapters, in reading order:
+
+- [Regression 1: Least Squares](regression/regression_01_least_squares.md)
+- [Regression 2: Generalised Linear, Quantile and Polynomial Regression](regression/regression_02_glm_quantile_polynomial.md)
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

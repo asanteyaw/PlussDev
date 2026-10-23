@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Distributions 3: Heavy Tails and Mixtures &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Heavy tails" href="dist_03_heavy_tails_and_mixtures/heavy_tails.html" />
+    <link rel="prev" title="Numerical estimates, correlation and fixed parameters" href="dist_02_maximum_likelihood/numerical_estimates_correlation_and_fixed_parame.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from dist_03_heavy_tails_and_mixtures.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="distributions-3-heavy-tails-and-mixtures">
+<h1>Distributions 3: Heavy Tails and Mixtures<a class="headerlink" href="#distributions-3-heavy-tails-and-mixtures" title="Link to this heading">¶</a></h1>
+<p>The normal distribution is a poor model for many real series: financial returns, insurance losses and measurement errors have heavier tails and skew. Two remedies are provided: a family with tail weight and skewness parameters of its own, the normal inverse Gaussian (and its generalisation, the generalised hyperbolic), and mixtures of normals, which build multimodal or skewed shapes from simple parts. After this chapter you can fit both by maximum likelihood, compare them with the normal, and read their standard errors.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="the-normal-inverse-gaussian-and-generalised-hyperbolic-families">
+<h2>The normal inverse Gaussian and generalised hyperbolic families<a class="headerlink" href="#the-normal-inverse-gaussian-and-generalised-hyperbolic-families" title="Link to this heading">¶</a></h2>
+<p>The NIG density with parameters <code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">&gt;</span> <span class="pre">|beta|</span></code>, location <code class="docutils literal notranslate"><span class="pre">μ</span></code> and scale <code class="docutils literal notranslate"><span class="pre">δ</span></code> is</p>
+<blockquote>
+<div><p>f(x) = α δ K₁(α q) / (π q) · exp(δ γ + β (x − μ)),    q = √(δ² + (x − μ)²),  γ = √(α² − β²),</p>
+</div></blockquote>
+<p>with <code class="docutils literal notranslate"><span class="pre">K₁</span></code> the modified Bessel function of the second kind. <code class="docutils literal notranslate"><span class="pre">alpha</span></code> governs the tails (the larger, the lighter; the tails decay like <code class="docutils literal notranslate"><span class="pre">exp(−(α</span> <span class="pre">−</span> <span class="pre">β)x)</span></code>), <code class="docutils literal notranslate"><span class="pre">beta</span></code> the skewness (negative: a longer left tail), <code class="docutils literal notranslate"><span class="pre">location</span></code> and <code class="docutils literal notranslate"><span class="pre">scale</span></code> the centre and spread. The generalised hyperbolic family <code class="docutils literal notranslate"><span class="pre">Gh{lambda,</span> <span class="pre">alpha,</span> <span class="pre">beta,</span> <span class="pre">location,</span> <span class="pre">scale}</span></code> adds the order <code class="docutils literal notranslate"><span class="pre">λ</span></code> of the Bessel function in the normalising constant: <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">=</span> <span class="pre">−1/2</span></code> is exactly the NIG, <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">=</span> <span class="pre">1</span></code> the hyperbolic distribution. Both are objects with the methods of Chapter 1 (and <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">cgf</span></code>, <code class="docutils literal notranslate"><span class="pre">cumulant</span></code>) and the fit methods of Chapter 2.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Nig::MLE(x)</span></code> maximises the exact log-likelihood over all four parameters from several starting shapes and keeps the best. The likelihood of <code class="docutils literal notranslate"><span class="pre">Gh::MLE(x)</span></code> is flat along a ridge in the parameters, and the maximum may lie on the boundary where the scale <code class="docutils literal notranslate"><span class="pre">δ</span></code> shrinks to zero (a variance-gamma limit that is not itself a member of the family). The fit keeps <code class="docutils literal notranslate"><span class="pre">δ</span></code> above one thousandth of the sample standard deviation; if the estimate is at that bound the sample does not distinguish the family from its limit, and the intervals should not be trusted. Fixing <code class="docutils literal notranslate"><span class="pre">λ</span></code> by using the NIG is the usual remedy.</p>
+</section>
+<section id="mixtures-of-normals">
+<h2>Mixtures of normals<a class="headerlink" href="#mixtures-of-normals" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GaussianMixture{weights,</span> <span class="pre">means,</span> <span class="pre">stddevs}</span></code> is the density <code class="docutils literal notranslate"><span class="pre">Σ_j</span> <span class="pre">w_j</span> <span class="pre">N(x;</span> <span class="pre">m_j,</span> <span class="pre">s_j²)</span></code>. <code class="docutils literal notranslate"><span class="pre">MLE(x)</span></code> fits the weights, means and standard deviations by the expectation-maximisation algorithm: it starts from the values stored in the object (their number is the number of components), alternates between computing each observation’s component probabilities and re-estimating the parameters, and stops when the log-likelihood no longer changes (a relative change below 10⁻¹³). Different starting values reach the same maximum unless the likelihood has several local ones, so for a real problem try a few starts and keep the highest log-likelihood.</p>
+<p><code class="docutils literal notranslate"><span class="pre">stderr</span></code>, <code class="docutils literal notranslate"><span class="pre">vcov</span></code> and <code class="docutils literal notranslate"><span class="pre">confint</span></code> of a fitted mixture are for the natural parameters, in the order weights (<code class="docutils literal notranslate"><span class="pre">k</span></code>), means (<code class="docutils literal notranslate"><span class="pre">k</span></code>), standard deviations (<code class="docutils literal notranslate"><span class="pre">k</span></code>). They are computed from the Hessian of the log-likelihood in unconstrained coordinates (the logits of the first <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">−</span> <span class="pre">1</span></code> weights relative to the last, the means, the logarithms of the standard deviations) by the delta method, which respects that the weights sum to one: the weights have equal standard errors for two components and their covariance matrix is singular. <code class="docutils literal notranslate"><span class="pre">score</span></code> and <code class="docutils literal notranslate"><span class="pre">observed_inf</span></code> are in the unconstrained coordinates.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dist_03_heavy_tails_and_mixtures/heavy_tails.html"><span class="std std-doc">Heavy tails</span></a></p></li>
+<li><p><a class="reference internal" href="dist_03_heavy_tails_and_mixtures/mixtures.html"><span class="std std-doc">Mixtures</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Compare heavy-tailed fits with the normal by log-likelihood and Akaike’s criterion, and look at the probability of the tail event that matters to you.</p></li>
+<li><p>Prefer the NIG to the generalised hyperbolic family unless the sample is large; treat a <code class="docutils literal notranslate"><span class="pre">Gh</span></code> scale at its lower bound as a sign that the extra parameter is not identified.</p></li>
+<li><p>For mixtures, choose the number of components by an information criterion and try several starting values.</p></li>
+<li><p>Read the weights’ standard errors with their constraint in mind: they sum to one.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/distr/distributions/dist_03_heavy_tails_and_mixtures.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

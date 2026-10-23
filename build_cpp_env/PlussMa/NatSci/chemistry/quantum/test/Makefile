@@ -206,6 +206,20 @@ chem_quantum_qc_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_qc_test.dir/build.make PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_qc_test.dir/build
 .PHONY : chem_quantum_qc_test/fast
 
+# Convenience name for target.
+PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/rule
+.PHONY : PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/rule
+
+# Convenience name for target.
+chem_quantum_uhf_test: PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/rule
+.PHONY : chem_quantum_uhf_test
+
+# fast build rule for target.
+chem_quantum_uhf_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/build.make PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/build
+.PHONY : chem_quantum_uhf_test/fast
+
 qc_test.o: qc_test.cpp.o
 .PHONY : qc_test.o
 
@@ -230,6 +244,30 @@ qc_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_qc_test.dir/build.make PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_qc_test.dir/qc_test.cpp.s
 .PHONY : qc_test.cpp.s
 
+uhf_test.o: uhf_test.cpp.o
+.PHONY : uhf_test.o
+
+# target to build an object file
+uhf_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/build.make PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/uhf_test.cpp.o
+.PHONY : uhf_test.cpp.o
+
+uhf_test.i: uhf_test.cpp.i
+.PHONY : uhf_test.i
+
+# target to preprocess a source file
+uhf_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/build.make PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/uhf_test.cpp.i
+.PHONY : uhf_test.cpp.i
+
+uhf_test.s: uhf_test.cpp.s
+.PHONY : uhf_test.s
+
+# target to generate assembly for a file
+uhf_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/build.make PlussMa/NatSci/chemistry/quantum/test/CMakeFiles/chem_quantum_uhf_test.dir/uhf_test.cpp.s
+.PHONY : uhf_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,9 +284,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... chem_quantum_qc_test"
+	@echo "... chem_quantum_uhf_test"
 	@echo "... qc_test.o"
 	@echo "... qc_test.i"
 	@echo "... qc_test.s"
+	@echo "... uhf_test.o"
+	@echo "... uhf_test.i"
+	@echo "... uhf_test.s"
 .PHONY : help
 
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -75,7 +75,7 @@ Negative values count back from the end (<code class="docutils literal notransla
 out-of-range <code class="docutils literal notranslate"><span class="pre">row</span></code> — including any <code class="docutils literal notranslate"><span class="pre">row</span></code> on a frame with no cases — throws
 <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame:</span> <span class="pre">row</span> <span class="pre">index</span> <span class="pre">out</span> <span class="pre">of</span> <span class="pre">bounds&quot;</span></code>. To pick the row by its case label first, go
 through <a class="reference internal" href="case_study.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">case_study().label(...)</span></code></span></a> and <code class="docutils literal notranslate"><span class="pre">observe</span></code> position <code class="docutils literal notranslate"><span class="pre">0</span></code> of the
-result, or <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().pos(...)</span></code></span></a> to turn a label into an offset.</p>
+result, or <a class="reference internal" href="labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().pos(...)</span></code></span></a> to turn a label into an offset.</p>
 <p>Use <a class="reference internal" href="view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">view()</span></code></span></a> / <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a> when you want a <em>range</em> of rows back
 as a frame to keep computing on; use <code class="docutils literal notranslate"><span class="pre">observe</span></code> when you want to <em>look at</em> a single
 observation. It does not mutate the source.</p>

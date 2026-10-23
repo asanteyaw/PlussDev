@@ -1,0 +1,8 @@
+# ACF and PACF
+
+[Back to Describing a Series](../ts_01_describing_a_series.md)
+
+
+@@example Stats/time_series/guide/1202_acf_and_pacf.cpp@@
+
+For this AR(1) series the autocorrelations decay roughly geometrically (0.65, 0.44, 0.40, 0.34, ...) but not exactly as 0.7ᵏ: with 200 observations the estimates carry a sampling error of about 0.07 at each lag, and the first estimate (0.65) sits below the true 0.7. The partial autocorrelations show the cut-off clearly: 0.65 at lag 1, then values around zero (0.04, 0.18, 0.02, ...). The 95% band for white noise of this length is ±0.139, so only the lags that exceed it are "real"; lag 3 (0.18) just does. The unbiased normalisation inflates the high lags slightly; the biased one is the usual choice because it guarantees a valid autocorrelation sequence.

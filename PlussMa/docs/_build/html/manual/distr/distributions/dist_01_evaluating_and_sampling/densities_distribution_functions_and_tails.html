@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Densities, distribution functions and tails &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Random draws" href="random_draws.html" />
+    <link rel="prev" title="Distributions 1: Evaluating and Sampling" href="../dist_01_evaluating_and_sampling.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from densities_distribution_functions_and_tails.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="densities-distribution-functions-and-tails">
+<h1>Densities, distribution functions and tails<a class="headerlink" href="#densities-distribution-functions-and-tails" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../dist_01_evaluating_and_sampling.html"><span class="std std-doc">Back to Evaluating and Sampling</span></a></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">distr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">stats</span><span class="o">::</span><span class="nn">distr</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
+<span class="n">Series</span><span class="w"> </span><span class="nf">vec</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">())}).</span><span class="n">to</span><span class="p">(</span><span class="n">f64</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">row</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">right</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">())</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">distr</span><span class="o">::</span><span class="n">Normal</span><span class="w"> </span><span class="n">normal</span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">};</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;normal pdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">normal</span><span class="p">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;normal cdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">normal</span><span class="p">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;normal logpdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">normal</span><span class="p">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+
+<span class="w">  </span><span class="c1">// A discrete family: the density is the probability mass at the integers.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">counts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">counts</span><span class="p">);</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;Poisson(2.5) pmf&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">distr</span><span class="o">::</span><span class="n">Poisson</span><span class="p">{</span><span class="mf">2.5</span><span class="p">}.</span><span class="n">pdf</span><span class="p">(</span><span class="n">counts</span><span class="p">));</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;Poisson(2.5) cdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">distr</span><span class="o">::</span><span class="n">Poisson</span><span class="p">{</span><span class="mf">2.5</span><span class="p">}.</span><span class="n">cdf</span><span class="p">(</span><span class="n">counts</span><span class="p">));</span>
+
+<span class="w">  </span><span class="c1">// Far in the tail the plain cdf underflows to exactly 0 (below about 1e-308), the logarithm does not.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="n">far</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">-10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-38.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-45.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-60.0</span><span class="p">});</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">scientific</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">far tail x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">far</span><span class="p">);</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;normal cdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">normal</span><span class="p">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">far</span><span class="p">));</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;normal logcdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">normal</span><span class="p">.</span><span class="n">logcdf</span><span class="p">(</span><span class="n">far</span><span class="p">));</span>
+
+<span class="w">  </span><span class="c1">// One distribution per point: the mean and standard deviation are Series too.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">distr</span><span class="o">::</span><span class="n">Normal</span><span class="w"> </span><span class="n">each</span><span class="p">{</span><span class="n">vec</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}),</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+<span class="w">  </span><span class="n">row</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">points (-1, 0, 1, 2) under N(0,1), N(1,1), N(2,4), N(3,4)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">each</span><span class="p">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">vec</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x                             -2.00000    -1.00000     0.00000     1.00000     2.00000
+normal pdf                     0.05399     0.24197     0.39894     0.24197     0.05399
+normal cdf                     0.02275     0.15866     0.50000     0.84134     0.97725
+normal logpdf                 -2.91894    -1.41894    -0.91894    -1.41894    -2.91894
+
+counts                        0.00000     1.00000     2.00000     3.00000     4.00000     5.00000
+Poisson(2.5) pmf               0.08208     0.20521     0.25652     0.21376     0.13360     0.06680
+Poisson(2.5) cdf               0.08208     0.28730     0.54381     0.75758     0.89118     0.95798
+
+far tail x                -1.0000e+01 -2.0000e+01 -3.8000e+01 -4.5000e+01 -6.0000e+01
+normal cdf                  7.6199e-24  2.7536e-89 2.8854e-316  0.0000e+00  0.0000e+00
+normal logcdf                  -53.231    -203.917    -726.557   -1017.226   -1805.014
+
+points (-1, 0, 1, 2) under N(0,1), N(1,1), N(2,4), N(3,4)     0.24197     0.24197     0.17603     0.17603
+</pre></div>
+</div>
+<p>The standard normal density at 0 is 0.39894 and its distribution function at 1 is 0.84134, as in any table. The Poisson mass and cdf are the probabilities of exactly and at most <code class="docutils literal notranslate"><span class="pre">k</span></code> events. In the far tail the plain <code class="docutils literal notranslate"><span class="pre">cdf</span></code> shrinks to 10⁻³¹⁶ at −38 and then to exactly 0, while <code class="docutils literal notranslate"><span class="pre">logcdf</span></code> goes on smoothly (−726.6 at −38, −1805.0 at −60), the quantity a likelihood or a tail-risk calculation needs. The last line evaluates four different normals at four points in one call.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/distr/distributions/dist_01_evaluating_and_sampling/densities_distribution_functions_and_tails.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Quadratic Programming &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="A first QP" href="qp_01_quadratic_programs/a_first_qp.html" />
+    <link rel="prev" title="Quadratic programs" href="../qp.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from qp_01_quadratic_programs.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="quadratic-programming">
+<h1>Quadratic Programming<a class="headerlink" href="#quadratic-programming" title="Link to this heading">¶</a></h1>
+<p>A quadratic program minimises a convex quadratic subject to linear constraints:</p>
+<blockquote>
+<div><p>minimise  0.5 xᵀ P x + qᵀ x   subject to   lower ≤ A x ≤ upper</p>
+</div></blockquote>
+<p>with P symmetric positive semidefinite. It appears as the inner problem of model predictive control, portfolio selection, least squares with bounds, and sequential quadratic programming. Pluss solves it with an operator-splitting method (ADMM) that works on whole batches of problems at once. After this chapter you can state any linear constraint in the single form above, solve batches, reuse the setup, warm-start, tune the accuracy and read the result.</p>
+<p>Every program is complete and its output is the output of that program. Iteration counts are shown because they are the same on every machine; no running times are claimed.</p>
+<section id="the-call">
+<h2>The call<a class="headerlink" href="#the-call" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">qp</span><span class="o">::</span><span class="n">Result</span><span class="w"> </span><span class="nf">qp::solve</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="p">,</span><span class="w"> </span><span class="n">Options</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">WarmStart</span><span class="w"> </span><span class="n">warm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+</pre></div>
+</div>
+<p>Everything in the constraint is a row of <code class="docutils literal notranslate"><span class="pre">A</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>You want</p></th>
+<th class="head"><p>Write</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>an equality <code class="docutils literal notranslate"><span class="pre">a·x</span> <span class="pre">=</span> <span class="pre">b</span></code></p></td>
+<td><p>a row with <code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">=</span> <span class="pre">upper</span> <span class="pre">=</span> <span class="pre">b</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>a bound <code class="docutils literal notranslate"><span class="pre">a·x</span> <span class="pre">≤</span> <span class="pre">b</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">upper</span> <span class="pre">=</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">=</span> <span class="pre">-inf</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>a bound <code class="docutils literal notranslate"><span class="pre">a·x</span> <span class="pre">≥</span> <span class="pre">b</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">=</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">upper</span> <span class="pre">=</span> <span class="pre">+inf</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>a simple bound on <code class="docutils literal notranslate"><span class="pre">x_i</span></code></p></td>
+<td><p>a row of the identity with that bound</p></td>
+</tr>
+<tr class="row-even"><td><p>no constraint on a variable</p></td>
+<td><p>a row of the identity with <code class="docutils literal notranslate"><span class="pre">±inf</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Leading dimensions of <code class="docutils literal notranslate"><span class="pre">q</span></code>, the bounds, and optionally <code class="docutils literal notranslate"><span class="pre">P</span></code> and <code class="docutils literal notranslate"><span class="pre">A</span></code> are batch dimensions and broadcast.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">Result</span></code></p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">objective</span></code></p></td>
+<td><p>the solution and its objective value</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code></p></td>
+<td><p>the constraint values <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">x</span></code> (projected) and the multipliers, one per constraint row</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">primal_residual</span></code>, <code class="docutils literal notranslate"><span class="pre">dual_residual</span></code></p></td>
+<td><p>final residuals (infinity norm)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">iterations</span></code>, <code class="docutils literal notranslate"><span class="pre">converged</span></code></p></td>
+<td><p>work done and whether both residuals met the tolerance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">warm()</span></code></p></td>
+<td><p>the <code class="docutils literal notranslate"><span class="pre">{x,</span> <span class="pre">z,</span> <span class="pre">y}</span></code> state to start the next solve from</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">Options</span></code></p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_iters</span></code></p></td>
+<td><p>iteration cap</p></td>
+<td><p>4000</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">abs_tol</span></code>, <code class="docutils literal notranslate"><span class="pre">rel_tol</span></code></p></td>
+<td><p>stop when each residual is below <code class="docutils literal notranslate"><span class="pre">√n</span> <span class="pre">·</span> <span class="pre">abs_tol</span> <span class="pre">+</span> <span class="pre">rel_tol</span> <span class="pre">·</span> <span class="pre">scale</span></code></p></td>
+<td><p>1e-5, 1e-5</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_every</span></code></p></td>
+<td><p>residual check cadence</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rho</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p>starting penalty, regularisation, over-relaxation</p></td>
+<td><p>0.1, 1e-6, 1.6</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">adaptive_rho</span></code>, <code class="docutils literal notranslate"><span class="pre">adaptive_rho_tolerance</span></code></p></td>
+<td><p>rebalance the penalty during the run, refactorising when it changes by more than this factor</p></td>
+<td><p>on, 5</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="qp_01_quadratic_programs/a_first_qp.html"><span class="std std-doc">A first QP</span></a></p></li>
+<li><p><a class="reference internal" href="qp_01_quadratic_programs/the_constraint_forms.html"><span class="std std-doc">The constraint forms</span></a></p></li>
+<li><p><a class="reference internal" href="qp_01_quadratic_programs/batches_and_reuse.html"><span class="std std-doc">Batches and reuse</span></a></p></li>
+<li><p><a class="reference internal" href="qp_01_quadratic_programs/warm_starts_and_options.html"><span class="std std-doc">Warm starts and options</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write every restriction as a row of <code class="docutils literal notranslate"><span class="pre">A</span></code> with <code class="docutils literal notranslate"><span class="pre">lower</span></code>/<code class="docutils literal notranslate"><span class="pre">upper</span></code>; use <code class="docutils literal notranslate"><span class="pre">±inf</span></code> for a missing side.</p></li>
+<li><p>Check <code class="docutils literal notranslate"><span class="pre">converged</span></code>, and the two residuals, before using <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+<li><p>Solve batches in one call; reuse <code class="docutils literal notranslate"><span class="pre">prepare</span></code> when only <code class="docutils literal notranslate"><span class="pre">q</span></code> or the bounds change.</p></li>
+<li><p>Warm-start repeated solves of nearby problems.</p></li>
+<li><p>Set the tolerances to the accuracy you need; the defaults give about four digits.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/qp/qp_01_quadratic_programs.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

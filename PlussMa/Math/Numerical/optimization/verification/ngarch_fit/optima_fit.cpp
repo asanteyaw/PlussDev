@@ -18,24 +18,16 @@ using Series = pluss::Series;
 static const auto f64 = pluss::ScalarType::Float64;
 
 
-// Forward-mode dual number with a fixed number of tangents: a plain-double likelihood with exact gradients.
-template <int N> struct Dual {
-  double v{0}; double d[N]{};
-  Dual() = default; Dual(double x) : v(x) {}
-};
-template <int N> Dual<N> operator+(Dual<N> a, const Dual<N>& b) { a.v += b.v; for (int i = 0; i < N; ++i) a.d[i] += b.d[i]; return a; }
-template <int N> Dual<N> operator-(Dual<N> a, const Dual<N>& b) { a.v -= b.v; for (int i = 0; i < N; ++i) a.d[i] -= b.d[i]; return a; }
-template <int N> Dual<N> operator*(const Dual<N>& a, const Dual<N>& b) { Dual<N> r; r.v = a.v * b.v; for (int i = 0; i < N; ++i) r.d[i] = a.d[i] * b.v + a.v * b.d[i]; return r; }
-template <int N> Dual<N> operator/(const Dual<N>& a, const Dual<N>& b) { Dual<N> r; r.v = a.v / b.v; for (int i = 0; i < N; ++i) r.d[i] = (a.d[i] - r.v * b.d[i]) / b.v; return r; }
-template <int N> Dual<N> dsqrt(const Dual<N>& a) { Dual<N> r; r.v = std::sqrt(a.v); for (int i = 0; i < N; ++i) r.d[i] = a.d[i] / (2 * r.v); return r; }
-template <int N> Dual<N> dlog(const Dual<N>& a) { Dual<N> r; r.v = std::log(a.v); for (int i = 0; i < N; ++i) r.d[i] = a.d[i] / a.v; return r; }
-template <int N> Dual<N> dtanh(const Dual<N>& a) { Dual<N> r; r.v = std::tanh(a.v); for (int i = 0; i < N; ++i) r.d[i] = a.d[i] * (1 - r.v * r.v); return r; }
-template <int N> Dual<N> dabs(const Dual<N>& a) { return a.v >= 0 ? a : Dual<N>(0.0) - a; }
+template <int N> using Dual = optim::Fwd<N>;
+template <int N> Dual<N> dsqrt(const Dual<N>& a) { return optim::sqrt(a); }
+template <int N> Dual<N> dlog(const Dual<N>& a) { return optim::log(a); }
+template <int N> Dual<N> dtanh(const Dual<N>& a) { return optim::tanh(a); }
+template <int N> Dual<N> dabs(const Dual<N>& a) { return optim::abs(a); }
 
 // Gaussian returns negative log-likelihood and its gradient with respect to the unscaled parameters.
 template <int N> double nll_dual(const std::string& model, const std::vector<double>& p, const std::vector<double>& y, double var, double* grad) {
   std::vector<Dual<N>> P(N);
-  for (int i = 0; i < N; ++i) { P[i].v = p[i]; P[i].d[i] = 1.0; }
+  for (int i = 0; i < N; ++i) P[i] = Dual<N>::variable(p[i], i);
   const double c0 = 0.5 * std::log(2 * M_PI);
   Dual<N> h(var), total(0.0), z;
   auto shock = [&](const Dual<N>& hh, double yy, const Dual<N>& la) { return (hh * Dual<N>(0.5) + Dual<N>(yy) - la * dsqrt(hh)) / dsqrt(hh); };

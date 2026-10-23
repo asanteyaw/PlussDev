@@ -23,7 +23,7 @@ auto returns = df.features({"close", "volume"}).ts().returns(1);
 Use DataFrame resampling and reindexing when the operation needs a time axis:
 
 ```cpp
-auto values = df.label().set("date", false).features({"close", "volume"});
+auto values = df.labels().set("date", false).features({"close", "volume"});
 auto daily = values.ts().resample("D").mean();
 ```
 
@@ -322,7 +322,7 @@ Use the resampler object when you want time-series semantics closer to a
 grouped pipeline:
 
 ```cpp
-auto values = df.label().set("date", false).features({"close", "volume"});
+auto values = df.labels().set("date", false).features({"close", "volume"});
 auto ordered = values.ts().sort();
 auto seven_day = values.ts().rolling("7D", pluss::table::WindowStatistic::Mean);
 auto daily = values.ts().resample("D").mean();
@@ -391,7 +391,7 @@ Use it when your downstream code expects a regular time grid.
 `insert_gaps` builds regular bins and aligns exact observations onto them:
 
 ```cpp
-auto with_gaps = df.label().set("date", false).features({"close"}).ts().insert_gaps("H", 1);
+auto with_gaps = df.labels().set("date", false).features({"close"}).ts().insert_gaps("H", 1);
 ```
 
 Rows with no exact source observation are emitted as undefined numeric
@@ -403,7 +403,7 @@ instead of connecting across missing intervals.
 Use `align_to` when you already have the target timeline:
 
 ```cpp
-auto aligned = df.label().set("date", false).features({"close", "volume"}).ts().align_to(
+auto aligned = df.labels().set("date", false).features({"close", "volume"}).ts().align_to(
     target_axis,
     pluss::table::TsAlignMode::Exact);
 ```
@@ -420,7 +420,7 @@ auto aligned = df.label().set("date", false).features({"close", "volume"}).ts().
 Use `reindex_time` when you also want to fill missing aligned values:
 
 ```cpp
-auto reindexed = df.label().set("date", false).features({"close"}).ts().reindex_time(
+auto reindexed = df.labels().set("date", false).features({"close"}).ts().reindex_time(
     target_axis,
     pluss::table::TsAlignMode::Exact,
     pluss::table::TsReindexFill::Forward);
@@ -439,7 +439,7 @@ auto reindexed = df.label().set("date", false).features({"close"}).ts().reindex_
 If you use `Constant`, pass the constant value:
 
 ```cpp
-auto filled = df.label().set("date", false).features({"close"}).ts().reindex_time(
+auto filled = df.labels().set("date", false).features({"close"}).ts().reindex_time(
     target_axis,
     pluss::table::TsAlignMode::Exact,
     pluss::table::TsReindexFill::Constant,
@@ -651,7 +651,7 @@ std::cout << "rolling mean window 2:\n"
           << df.features("close").ts().rolling(2, pluss::table::WindowStatistic::Mean, {.min_count = 2}).to_string()
           << '\n';
 
-auto values = df.label().set("date", false).features({"close", "volume"});
+auto values = df.labels().set("date", false).features({"close", "volume"});
 auto daily = values.ts().resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
 std::cout << "daily mean:\n" << daily.to_string() << '\n';
 
@@ -726,7 +726,7 @@ The output demonstrates several important details:
 | One transformed value stream | `df.features("x").ts()` |
 | Several transformed value streams | `df.features({"x", "y"}).ts()` |
 | Resample one value stream and handle labels manually | `Slate::ts().resample(axis, ...)` |
-| Resample several value streams into a new frame | `df.label().set("date").features({...}).ts().resample(...)` |
+| Resample several value streams into a new frame | `df.labels().set("date").features({...}).ts().resample(...)` |
 | Add calendar model features | `df.features({"date"}).tl().year()` |
 | Build lagged model features | `df.features({...}).ts().lag_block(...)` |
 | Build rolling model features | `df.features({...}).ts().rolling_block(...)` |
@@ -784,7 +784,7 @@ return. Resample first when the calendar interval matters.
 This fails when `"date"` is not a `Timeline` or `TimeIndex`:
 
 ```cpp
-auto daily = df.label().set("date", false).features({"close"}).ts().resample("D").mean();
+auto daily = df.labels().set("date", false).features({"close"}).ts().resample("D").mean();
 ```
 
 Fix the schema first:
@@ -794,7 +794,7 @@ auto fixed = df.cast({
     pluss::table::DataFrame::CastSpec{
         "date", pluss::table::SlateCastTarget::Timeline, {}},
 });
-auto daily = fixed.label().set("date", false).features({"close"}).ts().resample("D").mean();
+auto daily = fixed.labels().set("date", false).features({"close"}).ts().resample("D").mean();
 ```
 
 ### Rolling unsorted data

@@ -1,0 +1,12 @@
+# One function, every solver
+
+[Back to Choosing a Solver, and Worked Problems](../septima_05_choosing_and_worked_problems.md)
+
+
+The ten-variable chained Rosenbrock function, with no constraints, solved by Optima and by the three first-order methods.
+
+@@example Numerical/optimization/guide/septima/143_all_solvers.cpp@@
+
+Optima converges in 72 iterations and 80 evaluations to an objective of 3.6e-09. L-SR1 converges in 119 iterations and 286 evaluations to 9.2e-20 with a gradient of 1.1e-08, a far more accurate answer, at more work. L-BFGS stops with `NoProgress` after 124 iterations at 3.3e-10 and a gradient of 2.5e-04. Adam converges after 4388 iterations to 2.1e-17.
+
+Read the table by what you need. Fewest evaluations: Optima. Most accurate: L-SR1. Fewest evaluations per iteration and simplest: L-BFGS, if a gradient of 1e-4 is good enough. Adam: when nothing else works or when the gradient is noisy.

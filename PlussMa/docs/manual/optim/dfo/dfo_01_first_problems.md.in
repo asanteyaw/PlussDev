@@ -1,0 +1,61 @@
+# Derivative-Free Optimization 1: First Problems
+
+Sometimes the function you want to minimise has no usable gradient: it comes from a simulation, it has kinks, it is noisy, or it is simply code you would rather not differentiate. Derivative-free methods ask only for function values. After this chapter you can minimise a function with `solve_dfo`, read the result, understand which method `Auto` picks and why, control the budget, and repeat a run exactly.
+
+Every program is complete and its output is the output of that program. Evaluation and iteration counts are shown because they are the same on every machine; no running times are claimed.
+
+## The mental model
+
+A derivative-free method only ever asks "what is f at this point?". From the answers it builds a picture of where lower values lie, and moves there. That makes it:
+
+- **Cheap to set up.** No gradient, no Hessian, nothing to derive or record.
+- **Costly in evaluations.** Without slope information it needs many more calls of `f` than a gradient method on a smooth problem. If your function is smooth and you can differentiate it, the gradient-based solvers of the earlier chapters will use far fewer evaluations.
+- **Robust to rough functions.** Kinks, plateaus and noise do not break it.
+
+The methods fall into three families:
+
+| Family | Solvers | Idea |
+|---|---|---|
+| Simplex | `NelderMead` | a small shape of n+1 points that reflects, expands and shrinks along the valley |
+| Direct search | `PatternSearch`, `OrthoMads`, `LtMads`, `MadsAdvanced` | poll points around the best one on a mesh; refine the mesh when no poll improves |
+| Population | `DifferentialEvolution`, `DifferentialEvolutionPrmm`, `ParticleSwarm`, `ParticleSwarmDv` | many points explored at once, recombined or pulled toward the best found |
+
+Bounds and constraints are optional everywhere. Leave `lower_bounds`, `upper_bounds`, `constraints` and `constraints_values` unset and the problem is unconstrained; every program in this chapter does exactly that.
+
+## The pieces
+
+| Piece | Meaning |
+|---|---|
+| `DfoProblem::initial` | starting point (a one-dimensional Series); also fixes the number of variables |
+| `DfoProblem::objective` | `Series -> Series` returning one number |
+| `lower_bounds`, `upper_bounds` | optional box |
+| `DfoOptions::solver` | `Auto` (default) or a named method |
+| `max_evaluations`, `max_iterations` | budgets; 0 means the method's own default |
+| `relative_improvement_tolerance` | stop when progress falls below this; 0 means the method's own default |
+| `rng_seed` | seed for every random draw (default 5489) |
+
+| Result field | Meaning |
+|---|---|
+| `minimizer`, `minimum` | the best point found and its objective value |
+| `status` | `Converged`, `ReachedIterationBudget`, `ReachedEvaluationBudget`, `ReachedTimeBudget`, `InfeasibleStationary` |
+| `selected_solver`, `selection_reason` | the method that ran and, for `Auto`, why |
+| `diagnostics` | `evaluations`, `iterations`, and method-specific counters |
+
+## Programs
+
+- [A first solve](dfo_01_first_problems/a_first_solve.md)
+- [Three ways to call](dfo_01_first_problems/three_ways_to_call.md)
+- [What Auto chooses](dfo_01_first_problems/what_auto_chooses.md)
+- [Budgets and the five statuses](dfo_01_first_problems/budgets_and_the_five_statuses.md)
+- [Seeds and repeatability](dfo_01_first_problems/seeds_and_repeatability.md)
+
+## Checklist
+
+1. Start with `solve_dfo` and `Auto`; read `selected_solver` and `selection_reason`.
+2. Look at `status`. Anything but `Converged` means a budget ended the run.
+3. Count `diagnostics.evaluations`; this, not wall time, is the cost to plan around.
+4. Fix `rng_seed` when you need to reproduce a run.
+5. If the function is smooth and differentiable, ask whether a gradient-based solver would do the job in a fraction of the evaluations.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

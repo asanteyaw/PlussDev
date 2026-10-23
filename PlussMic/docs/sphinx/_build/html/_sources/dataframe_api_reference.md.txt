@@ -19,7 +19,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 - `case_study()` -> [`DataFrameCaseStudyAccessor`](dataframe_case_study_accessor_api_reference.md)
 - `nt()` -> [`DataFrameNoteAccessor`](dataframe_note_accessor_api_reference.md)
 - `tl()` -> [`DataFrameTimelineAccessor`](dataframe_timeline_accessor_api_reference.md)
-- `label()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
+- `labels()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
 - `feataxis()` -> [`DataFrameFeatureAxisAccessor`](dataframe_feataxis_accessor_api_reference.md)
 - `plot3d()` -> [`DataFramePlot3DAccessor`](dataframe_plot3d_accessor_api_reference.md)
 - `ts()` -> [`DataFrameTsAccessor`](dataframe_ts_accessor_api_reference.md)
@@ -109,7 +109,7 @@ api/dataframe/isnull
 api/dataframe/join
 api/dataframe/kindelize
 api/dataframe/kurtosis
-api/dataframe/label
+api/dataframe/labels
 api/dataframe/land
 api/dataframe/le
 api/dataframe/length

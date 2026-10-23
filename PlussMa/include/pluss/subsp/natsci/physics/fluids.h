@@ -504,10 +504,9 @@ flow_term(const common::SeriesQuantity<common::Speed> &velocity,
 strain(const common::SeriesQuantity<common::Speed> &velocity,
        const spatial::PeriodicGrid &grid) {
   const Series &field = velocity.si_value();
-  const std::int64_t component_axis = spatial::detail::require_vector_layout(
-      field, grid, "natsci::fluids::strain");
-  return common::SeriesQuantity<common::Frequency>::from_si(
-      detail::strain_from_grad(spatial::gradient(field, grid), component_axis));
+  spatial::detail::require_vector_layout(field, grid,
+                                         "natsci::fluids::strain");
+  return spatial::sym_grad(velocity, grid);
 }
 
 [[nodiscard]] inline common::SeriesQuantity<common::Frequency>

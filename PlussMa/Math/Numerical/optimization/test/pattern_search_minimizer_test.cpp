@@ -324,6 +324,48 @@ int main() {
            "AL budget test returned unexpected status", &failures);
   }
 
+  // Linear constraints that meet at a vertex of the feasible region. With bounds, an inequality and an equality all active
+  // the polls must still be able to leave along the edges of the feasible cone. Minimise |x - 2|^2 over x >= 0, x0+x1+x2 <= 3,
+  // x0 - x1 = 0.5; the optimum is (1.25, 0.75, 1) with value 3.125, reached from the start (0.5, 0, 0.5) which lies on a vertex.
+  // Without the bound and equality the optimum of the same problem is (1, 1, 1) with value 3.
+  for (const auto family : {PSBasisFamily::Canonical, PSBasisFamily::RandomOrtho}) {
+    for (const bool with_equality : {false, true}) {
+      PSConfig lin;
+      lin.basis_family = family;
+      lin.lower_bounds = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0}, {3}, cfg);
+      lin.upper_bounds = pluss::make_series(std::vector<double>{5.0, 5.0, 5.0}, {3}, cfg);
+      lin.linear_ineq_matrix = pluss::make_series(std::vector<double>{1.0, 1.0, 1.0}, {1, 3}, cfg);
+      lin.linear_ineq_rhs = pluss::make_series(std::vector<double>{3.0}, {1}, cfg);
+      if (with_equality) {
+        lin.linear_eq_matrix = pluss::make_series(std::vector<double>{1.0, -1.0, 0.0}, {1, 3}, cfg);
+        lin.linear_eq_rhs = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
+      }
+      const Series start = pluss::make_series(std::vector<double>{0.5, 0.0, 0.5}, {3}, cfg);
+      const auto out = pattern_search_minimizer(
+          [](const Series& x) { return x.sub(2.0).square().sum(); }, start, lin);
+      const double expected = with_equality ? 3.125 : 3.0;
+      expect(out.status == PSStatus::Converged && std::abs(out.minimum - expected) < 1e-3,
+             "linear constraints meeting at a vertex reach the constrained optimum", &failures);
+    }
+  }
+
+  // Variables on very different ranges, with bounds: the rotated default basis must be scaled by the ranges.
+  {
+    PSConfig sc;
+    sc.lower_bounds = pluss::make_series(std::vector<double>{-10.0, -5000.0}, {2}, cfg);
+    sc.upper_bounds = pluss::make_series(std::vector<double>{10.0, 5000.0}, {2}, cfg);
+    sc.max_iterations = 4000;
+    sc.max_evaluations = 40000;
+    const Series start = pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg);
+    const auto out = pattern_search_minimizer(
+        [](const Series& x) {
+          return x.select(0, 0).sub(3.0).square().add(x.select(0, 1).sub(2000.0).div(1000.0).square());
+        },
+        start,
+        sc);
+    expect(out.minimum < 1e-6, "bounded poll on badly scaled variables reaches the optimum", &failures);
+  }
+
   if (failures != 0) {
     std::cerr << "pattern_search_minimizer_test: " << failures << " failure(s)\n";
     return 1;

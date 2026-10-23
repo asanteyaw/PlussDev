@@ -1,0 +1,8 @@
+# Conjugate gradients with an operator
+
+[Back to Symmetric Systems](../krylov_01_symmetric_systems.md)
+
+
+@@example Numerical/linear_algebra/guide/901_conjugate_gradient.cpp@@
+
+The operator here is the second-difference stencil, written with shifted copies of the vector; no matrix exists anywhere. In exact arithmetic, conjugate gradients finishes in at most as many iterations as the right-hand side has distinct eigen-components: here only the odd eigenvectors are excited, which is why it stops after 56 for 100 unknowns, and why the answer is exact to the last digit. In general expect far fewer iterations than unknowns when the eigenvalues cluster, and many more when they do not.

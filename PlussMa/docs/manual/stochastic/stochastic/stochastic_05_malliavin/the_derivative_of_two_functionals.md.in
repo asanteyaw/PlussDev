@@ -1,0 +1,10 @@
+# The derivative of two functionals
+
+[Back to Malliavin Calculus](../stochastic_05_malliavin.md)
+
+
+`calc.diff.malliavin(F)` takes the increments and returns the derivative per increment. `malliavin_path(F)` takes the path itself, with `n + 1` samples starting at 0, and differentiates with respect to its increments so that `F` sees the path rebuilt from them.
+
+@@example Probability/random_processes/guide/sde/41_malliavin_derivative.cpp@@
+
+For `F = W_T²` the derivative is −1.73370 on every increment, equal to `2 W_T` with `W_T = −0.86685`. For `F = max(W)` the maximum of the sampled path is the second sample, 0.35760, so only the first increment moves it: the derivative is 1 there and 0 on the rest.

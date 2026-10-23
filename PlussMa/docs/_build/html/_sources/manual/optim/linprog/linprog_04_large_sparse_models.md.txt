@@ -1,0 +1,72 @@
+<!-- generated from linprog_04_large_sparse_models.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Linear Programming 4: Large Sparse Models
+
+The dense solver of the previous chapters keeps every entry of the constraint matrix, which is the right design for many small, related programs: a sweep, a scenario study, a batch. A large real model is different. A transportation network, a production plan across plants and weeks, a supply chain with thousands of products: most of its coefficients are zero, because each constraint mentions only a few variables. The sparse solver stores only the non-zeros, simplifies the model before solving it, and reads the standard exchange format for such models. After this chapter you can build a sparse model, solve it, read the prices, load a model from an MPS file, see what presolve removes, and choose between the dense and the sparse solver.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+A sparse model is an `lp::Model`: a cost vector, a sparse matrix, bounds on the rows and bounds on the columns.
+
+```text
+minimize    cost . x  (+ offset)
+subject to  row_lo <= A x <= row_hi
+            col_lo <=   x <= col_hi
+```
+
+Rows are *ranged*: `row_lo <= row <= row_hi`. A `<=` row has `row_lo = -kInf`; a `>=` row has `row_hi = kInf`; an equality has `row_lo = row_hi`. The matrix is built from triplets (row, column, value) with `SparseMatrix::from_triplets`, which sums duplicates and drops zeros. **This model has no default bounds**: every vector must be filled in, with `0` and `lp::kInf` for an ordinary non-negative variable.
+
+`lp::solve(model, options)` runs three stages. **Presolve** removes what cannot matter (below). The **simplex method** solves what is left. **Postsolve** rebuilds the answer for the original model, so the solution, the row prices and the reduced costs are all for the model you wrote, with your numbering. The result is an `LpSolution`:
+
+| Field | Meaning |
+|---|---|
+| `status` | `Optimal`, `Infeasible`, `Unbounded`, `IterationLimit`, `TimeLimit`, `InfeasibleOrUnbounded`, `NodeLimit` or `ObjectiveLimit` |
+| `objective`, `x` | the optimal value and point |
+| `row_activity` | `A x`, one per row |
+| `row_dual`, `reduced` | the price of each row, and the reduced cost of each column |
+| `basis` | the optimal basis, for restarting |
+| `ray`, `farkas` | the certificates, for an unbounded or infeasible model |
+
+`lp::LpOptions` selects the method (`Auto`, which is the simplex method with presolve; `Simplex`; `InteriorPoint`; `Race`, which runs both and takes the first to finish), turns presolve on or off, and can skip the postsolve warm start with `want_duals = false` when only the primal answer is needed.
+
+## Programs
+
+- [A transportation model](linprog_04_large_sparse_models/a_transportation_model.md)
+- [A model from an MPS file](linprog_04_large_sparse_models/a_model_from_an_mps_file.md)
+- [What presolve removes](linprog_04_large_sparse_models/what_presolve_removes.md)
+
+## Dense or sparse?
+
+| | Dense `linprog::solve` | Sparse `lp::solve` |
+|---|---|---|
+| Model | `Problem` of `Series`, every entry stored | `Model` of triplets, only non-zeros stored |
+| Many related programs | **yes**: batches, sweeps, one call | one program per call |
+| Presolve | none | yes, with exact postsolve |
+| Interior point and simplex | both | simplex (default), interior point, or race |
+| Warm start | yes, simplex | yes |
+| Files | none | MPS reader |
+| Missing bounds | free | none: all vectors must be filled in |
+
+A dense `Problem` can be solved by the sparse solver with `lp::solve_sparse(problem)`, and a dense integer program with `lp::solve_sparse(milp_problem)`. A missing `lower` means free in both, so one `Problem` has one meaning whichever solver takes it. Choose dense for sweeps and batches of small programs; choose sparse for one large model, for anything that arrives as an MPS file, and when you want presolve.
+
+## What to remember
+
+- A sparse model stores `row_lo <= A x <= row_hi` and `col_lo <= x <= col_hi`; fill every vector in. Use `lp::kInf` for no limit.
+- `lp::solve` presolves, solves and postsolves, so every output is for your original model.
+- Row prices of a balanced transportation model are determined up to a shift; read their differences.
+- `read_mps` loads a model from an MPS stream or file; a maximization comes back negated, with a flag.
+- Presolve removes singleton, empty, redundant and fixed structure and never changes the answer.
+- Dense for batches and sweeps, sparse for one large model.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog_04_large_sparse_models/a_transportation_model
+linprog_04_large_sparse_models/a_model_from_an_mps_file
+linprog_04_large_sparse_models/what_presolve_removes
+```
+<!-- apiref:toctree:end -->

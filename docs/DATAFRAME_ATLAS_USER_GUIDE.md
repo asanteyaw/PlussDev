@@ -247,7 +247,7 @@ auto subset = df.features({"price", "qty"});  // DataFrame subset
 Access case labels and cases:
 
 ```cpp
-auto case_axis = df.label().values();    // Slate, pandas-index equivalent
+auto case_axis = df.labels().values();    // Slate, pandas-index equivalent
 auto one_case_df = df.case_study(pluss::table::pos(10));
 auto case_slice = df.case_study(pluss::table::pos(5, 10)); // [5,10)
 auto cell1 = df.case_study(pluss::table::pos(3), pluss::table::feature(2));
@@ -447,7 +447,7 @@ auto pt = df.pivot_table("state", "severity", "distance", pluss::table::DataFram
 ```cpp
 auto a1 = df.sort_values({"price"});                  // ascending
 auto a2 = df.sort_values({{"price", false, true}});   // descending, nulls last
-auto a3 = df.label().sort(false);                     // descending by case-label axis
+auto a3 = df.labels().sort(false);                     // descending by case-label axis
 auto a4 = df.top("price", 10);                        // top-10 by feature
 auto a5 = df.bottom("price", 10);                     // bottom-10 by feature
 ```
@@ -507,18 +507,18 @@ auto v1 = df.iat(3, 2);
 auto v2 = df.at(3, "price");
 auto maybe_price = df.get("price");
 auto boot = df.sample(100, 42);
-auto dup = df.label().repeated({"city"});
+auto dup = df.labels().repeated({"city"});
 auto dedup = df.unique_cases({"city"});
-auto cased = df.label().set("city", true);
-auto reset = cased.label().reset("city_case");
-auto aligned = reset.label().align(reset.label().values());
+auto cased = df.labels().set("city", true);
+auto reset = cased.labels().reset("city_case");
+auto aligned = reset.labels().align(reset.labels().values());
 auto renamed = df.rename_features({{"price", "price_usd"}});
 auto relabeled = df.relabel_features({"feat_a", "feat_b", "feat_c"});
 auto relabeled2 = df.set_axis({"feat_a", "feat_b", "feat_c"});
 auto relabeled3 = df.set_axis({"feat_a", "feat_b", "feat_c"}); // alias
 auto conformed = df.conform_to(other_df);
 auto reindexed_like = df.reindex_like(other_df);
-auto reindexed_cases = df.label().align(other_df.label().values());
+auto reindexed_cases = df.labels().align(other_df.labels().values());
 auto stitched = left_df.stitch_on("id", right_df, "id", "_r");
 auto stitched2 = left_df.stitch_on({"id", "bucket"}, right_df, {"id", "bucket"}, "_r");
 ```

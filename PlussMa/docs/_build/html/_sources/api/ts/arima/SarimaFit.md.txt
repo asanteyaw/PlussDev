@@ -1,0 +1,187 @@
+<!-- generated from SarimaFit.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::SarimaFit`
+
+The result of a seasonal ARIMA fit: an `ArimaFit` plus the orders it was fitted with.
+
+## Signature
+
+```cpp
+ts::SarimaFit fit = ts::Sarima::fit_mle(y, options);
+```
+
+## Construction
+
+Obtained from [`Sarima::fit_mle`](Sarima.md).
+
+## State
+
+| Field | Meaning |
+|---|---|
+| `core` | the [`ArimaFit`](ArimaFit.md) with the estimated coefficients (`core.ar`, `core.sar`, `core.ma`, `core.sma`, `core.sigma`, …) |
+| `p`, `d`, `q`, `P`, `D`, `Q`, `s` | the orders the model was fitted with |
+
+## Methods
+
+### `infer`
+
+```cpp
+pluss::Series infer(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+Same as the method of [`ArimaFit`](ArimaFit.md) of the same name, applied to the wrapped model `core`.
+
+**Returns.** As for [`ArimaFit`](ArimaFit.md).
+
+### `loglik`
+
+```cpp
+double loglik(const pluss::Series& y) const;
+```
+
+Same as the method of [`ArimaFit`](ArimaFit.md) of the same name, applied to the wrapped model `core`.
+
+**Returns.** As for [`ArimaFit`](ArimaFit.md).
+
+### `loglik_per_obs`
+
+```cpp
+pluss::Series loglik_per_obs(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+Same as the method of [`ArimaFit`](ArimaFit.md) of the same name, applied to the wrapped model `core`.
+
+**Returns.** As for [`ArimaFit`](ArimaFit.md).
+
+### `score`
+
+```cpp
+pluss::Series score(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+Same as the method of [`ArimaFit`](ArimaFit.md) of the same name, applied to the wrapped model `core`.
+
+**Returns.** As for [`ArimaFit`](ArimaFit.md).
+
+### `observed_inf`
+
+```cpp
+pluss::Series observed_inf(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+Same as the method of [`ArimaFit`](ArimaFit.md) of the same name, applied to the wrapped model `core`.
+
+**Returns.** As for [`ArimaFit`](ArimaFit.md).
+
+### `forecast`
+
+```cpp
+pluss::Series forecast(std::int64_t horizon, const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+Same as the method of [`ArimaFit`](ArimaFit.md) of the same name, applied to the wrapped model `core`.
+
+**Returns.** As for [`ArimaFit`](ArimaFit.md).
+
+### `simulate`
+
+```cpp
+pluss::Series simulate(std::int64_t num_observations, pluss::codem::Config cfg = {}, std::uint64_t seed = 0) const;
+```
+
+Same as the method of [`ArimaFit`](ArimaFit.md) of the same name, applied to the wrapped model `core`.
+
+**Returns.** As for [`ArimaFit`](ArimaFit.md).
+
+## Practical Examples
+
+### Example 1
+
+Evaluate a seasonal fit: log-likelihood, innovations and a forecast that carries the seasonal pattern forward.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  std::vector<double> x(240, 0.0);
+  const auto e = noise(240);
+  for (int t = 0; t < 240; ++t) {
+    x[t] = e[t] + (t >= 1 ? 0.4 * x[t - 1] : 0.0) + (t >= 12 ? 0.5 * x[t - 12] : 0.0) - (t >= 13 ? 0.2 * x[t - 13] : 0.0);
+  }
+  const Series y = pluss::make_series(x, {240}, f64);
+  ts::SarimaOptions options;
+  options.p = 1;
+  options.P = 1;
+  options.s = 12;
+  const auto fit = ts::Sarima::fit_mle(y, options);
+  std::cout << std::fixed << std::setprecision(4) << "log-likelihood " << fit.loglik(y) << ", orders (" << fit.p << "," << fit.d << "," << fit.q << ")(" << fit.P << "," << fit.D << "," << fit.Q << ")" << fit.s << "\n";
+  show("innovations", fit.infer(y).slice(0, 0, 5));
+  show("forecast", fit.forecast(6, y));
+}
+```
+
+Output
+
+```text
+log-likelihood -39.5228, orders (1,0,0)(1,0,0)12
+innovations      0.1890   0.0441  -0.0699  -0.2600   0.2779
+forecast         0.2404   0.1413   0.0531   0.1265  -0.0459   0.2256
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`Sarima`](Sarima.md)
+- [`ArimaFit`](ArimaFit.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

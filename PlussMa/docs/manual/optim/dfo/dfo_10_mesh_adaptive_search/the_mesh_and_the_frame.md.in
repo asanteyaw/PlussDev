@@ -1,0 +1,11 @@
+# The mesh and the frame
+
+[Back to Mesh Adaptive Direct Search](../dfo_10_mesh_adaptive_search.md)
+
+
+@@example Numerical/optimization/guide/dfo/393_mads_mesh_and_frame.cpp@@
+
+- The **starting scale** hardly matters: the frame grows or shrinks by factors of 2 and 0.5 until it fits.
+- **Refinement speed** matters. Shrinking gently (0.8) polls many times at nearly the same scale and costs several times the evaluations; shrinking quickly (0.25) is cheaper.
+- **`mesh_tolerance`** is the accuracy you ask for. With the window test off, it alone ends the run, and tightening it from 1e-3 to 1e-12 costs about two and a half times the evaluations.
+- **Opportunistic off** evaluates the whole poll every time and takes the best point: more evaluations per iteration.

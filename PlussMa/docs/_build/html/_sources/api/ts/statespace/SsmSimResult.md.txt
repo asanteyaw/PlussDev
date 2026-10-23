@@ -1,0 +1,24 @@
+<!-- generated from SsmSimResult.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::SsmSimResult`
+
+Result of `Ssm::simulate`.
+
+`SsmSimResult` is plain data; each field is a `Series`.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `observations` | `pluss::Series` | — | `T × n`, or `P × T × n` for several paths. |
+| `states` | `pluss::Series` | — | `T × m` or `P × T × m`. |
+| `state_disturbance` | `pluss::Series` | — | The drawn state shocks `w`. |
+| `obs_innovation` | `pluss::Series` | — | The drawn observation shocks `v`. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`Ssm`](Ssm.md)

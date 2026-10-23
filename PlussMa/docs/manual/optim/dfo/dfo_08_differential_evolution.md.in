@@ -1,0 +1,58 @@
+# Derivative-Free Optimization 8: The Differential Evolution Minimisers
+
+Differential evolution keeps a population of candidate points and improves it by recombination, using only function values. It is the method of choice when a function has many local minima and you can afford thousands of evaluations. Two standalone minimisers exist: `differential_evolution_minimizer`, the classic scheme, and `differential_evolution_prmm_minimizer`, a self-adapting variant. After this chapter you can run either directly, set its parameters on purpose, reproduce a run, and read how it stopped.
+
+Every program is complete and its output is the output of that program. Counts are evaluations of the objective, and a "generation" is one pass over the population.
+
+## The method
+
+Start with `population_size` points drawn over the box (or around the starting point if there are no bounds); the starting point is always one of them. In each generation, for each member:
+
+1. Build a **mutant** from three other members: one plus `mutation_factor` times the difference of two others. (`best_mix` moves the base of the mutant from a random member toward the best member.)
+2. **Cross** the mutant with the member: each coordinate comes from the mutant with probability `crossover_rate`, otherwise from the member.
+3. Keep the better of the member and the trial.
+
+Because the step sizes come from the spread of the population itself, the method adapts its scale automatically: it takes large steps while the population is spread out and fine steps as it collapses on a minimum. That also means a population that collapses too early on the wrong minimum cannot recover. Population size and seed matter for this reason.
+
+## The calls
+
+```cpp
+PopulationSolverOutcome differential_evolution_minimizer(objective, initial, DifferentialEvolutionConfig config = {});
+PopulationSolverOutcome differential_evolution_prmm_minimizer(objective, initial, DifferentialEvolutionPrmmConfig config = {});
+```
+
+| `DifferentialEvolutionConfig` | Meaning | Default |
+|---|---|---|
+| `population_size` | members | 200 |
+| `mutation_factor` | scale of the difference vector | 0.8 |
+| `crossover_rate` | probability a coordinate is taken from the mutant | 0.9 |
+| `best_mix` | 0 = mutant built on a random member, 1 = on the best member | 0 |
+| `initial_radius` | the initial population is drawn from the start ± this, cut to the bounds; infinite means the whole box when bounded (and ±0.5 around the start otherwise). The start is always one member | infinite |
+| `lower_bounds`, `upper_bounds` | optional box; every member stays inside | none |
+| `max_generations`, `max_evaluations` | budgets (0 means 800 generations, and an evaluation budget derived from them) | 1000, 0 |
+| `check_every`, `relative_improvement_tolerance` | early-stop test (`check_every` 0 turns it off) | 0, 1e-8 |
+| `rng_seed` | seed for every random draw | 5489 |
+| `execution_mode` | `Vectorized` (whole population at once) or the sequential mode | `Vectorized` |
+| `promote_cpu_to_float64`, `display` | search in Float64 on the CPU; per-generation printing | true, `None` |
+
+`PopulationSolverOutcome` holds `minimizer`, `minimum`, `status` (`Converged`, `ReachedIterationBudget`, `ReachedEvaluationBudget`) and `diagnostics` (`iterations` = generations, `evaluations`, `last_step`). The facade's `DfoOptions::differential_evolution` and `differential_evolution_prmm` hold the same structures.
+
+## Programs
+
+- [A direct call](dfo_08_differential_evolution/a_direct_call.md)
+- [The parameters](dfo_08_differential_evolution/the_parameters.md)
+- [Seeds and execution modes](dfo_08_differential_evolution/seeds_and_execution_modes.md)
+- [Where the population starts](dfo_08_differential_evolution/where_the_population_starts.md)
+- [Stopping](dfo_08_differential_evolution/stopping.md)
+- [The self-adapting variant](dfo_08_differential_evolution/the_self_adapting_variant.md)
+
+## Checklist
+
+1. Give bounds; differential evolution is a global method and works best in a box.
+2. Set `population_size` to at least 5 to 10 times the number of variables, more for rugged functions.
+3. Set `max_evaluations` to what you can afford; leave `check_every` at 0 for multimodal problems, or turn it on when you know the function has one minimum.
+4. Fix `rng_seed` to reproduce a run; run several seeds to judge a multimodal result.
+5. When you cannot tune the parameters, use the self-adapting variant.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

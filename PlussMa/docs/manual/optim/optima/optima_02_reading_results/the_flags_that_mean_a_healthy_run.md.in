@@ -1,0 +1,10 @@
+# The flags that mean a healthy run
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+Four flags describe a run that behaved as designed: it finished, it ran out of its budget, you stopped it, or it reached a target you set. This program triggers each one and prints the flag, the `converged` convenience, and the iteration count.
+
+@@example Numerical/optimization/guide/optima/22_exit_success_and_limits.cpp@@
+
+Only the first run is `converged`. The second spent its single allowed iteration, so the flag is `MaxIterations` and the iterate is not a solution. The third stopped because the hook returned `true` on its second call; `Stopped` always means the caller asked. The fourth ended at iteration zero because the start already satisfied `objective_limit = 100`. A feasible point at or below the limit ends the run at once with `ObjectiveTargetReached`.

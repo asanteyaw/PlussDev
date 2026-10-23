@@ -1,0 +1,12 @@
+# An equality constraint
+
+[Back to Constraints](../septima_02_constraints.md)
+
+
+Be as close as possible to `(2, 1)` while the coordinates sum to 2: minimize `0.5 |x - (2, 1)|^2` subject to `x0 + x1 - 2 = 0`. The answer is `(1.5, 0.5)`, and the multiplier is 0.5, because the objective's gradient there is `(-0.5, -0.5)`, which is 0.5 times the gradient of the constraint. The table runs both optimizers with the defaults at three starting penalties, and then with the multiplier step overridden. `updates` counts the multiplier updates and `penalty x` is the factor by which the run raised the penalty.
+
+@@example Numerical/optimization/guide/septima/112_equality.cpp@@
+
+With the defaults every row converges to `(1.500, 0.500)` with a multiplier of exactly 0.500, whatever the starting penalty. L-BFGS needs 16, 15 and 10 iterations for penalties of 1, 10 and 100; Adam needs 696, 347 and 1392, because each step is bounded by its learning rate. The penalty column shows the schedule at work: from a penalty of 1 the run raised it by a factor of 10 for L-BFGS and 100 for Adam, because the violation did not shrink fast enough; from 10 and 100 it left the penalty alone. A penalty that is too small is repaired, and one that is generous costs nothing in accuracy, only some iterations for Adam.
+
+The last two rows override the multiplier step with 0.1, far below the penalty of 10. The schedule then compensates in the only way left: it inflates the penalty (by a factor of a thousand for Adam and a hundred thousand for L-BFGS) to force the violation down, and the multiplier, which now learns very slowly, ends at 0.020 and 0.011 instead of 0.5. The point is still right, but the multiplier is not. Leave `dual_learning_rate` at its default of 0, which means "use the penalty", unless you have a reason.

@@ -31,7 +31,7 @@ Negative values count back from the end (`observe(-1)` is the last row). An
 out-of-range `row` — including any `row` on a frame with no cases — throws
 `"DataFrame: row index out of bounds"`. To pick the row by its case label first, go
 through [`case_study().label(...)`](case_study.md) and `observe` position `0` of the
-result, or [`label().pos(...)`](label.md) to turn a label into an offset.
+result, or [`label().pos(...)`](labels.md) to turn a label into an offset.
 
 Use [`view()`](view.md) / [`slice()`](slice.md) when you want a *range* of rows back
 as a frame to keep computing on; use `observe` when you want to *look at* a single

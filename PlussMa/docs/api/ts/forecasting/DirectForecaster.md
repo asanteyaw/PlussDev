@@ -1,0 +1,365 @@
+<!-- generated from DirectForecaster.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::DirectForecaster`
+
+A set of regressions, one per forecast horizon, that predict `y_{t+h}` from lagged information at time `t`.
+
+## Signature
+
+```cpp
+ts::DirectForecaster ts::DirectForecaster::fit(const pluss::Series& x, const pluss::Series& y, const ts::DirectForecasterOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## Construction
+
+Built by the static `fit`.
+
+## State
+
+`num_steps()`, `step(i)`, `steps()`, `lag_plan()` and `options()` expose the fitted models and the plan.
+
+## Methods
+
+### `fit`
+
+```cpp
+static ts::DirectForecaster ts::DirectForecaster::fit(const pluss::Series& x, const pluss::Series& y, const ts::DirectForecasterOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+Builds the features of the lag plan and, for each horizon `h`, fits a regression of `y_t` on the features computed at the origin `t − h`. Only rows with a complete set of lagged values and an observed response enter the fit; the first rows, which lack some lag, are left out (not zero-filled).
+
+`const pluss::Series& x`
+: Predictors, `n × p` (undefined for none).
+
+`const pluss::Series& y`
+: The response, length `n`.
+
+`const ts::DirectForecasterOptions& options`
+: Lag plan and learner.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** A [`DirectForecaster`](DirectForecaster.md).
+
+**Errors.** No observation with a complete feature vector is an error.
+
+### `forecast`
+
+```cpp
+pluss::Series forecast(const pluss::Series& x, const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+pluss::Series forecast(const pluss::Series& x, const pluss::Series& y, const pluss::Series& x_future, pluss::codem::Config cfg = {}) const;
+```
+
+One forecast per fitted horizon, made from the last observation: the features at the origin `n` (the last observed values) are fed to each horizon's regression. When the model uses leading predictors with lags that reach into the future, the first form is refused and the second takes their future values `x_future` (at least as many rows as the largest horizon).
+
+`const pluss::Series& x`
+: Predictors over the history.
+
+`const pluss::Series& y`
+: The response history.
+
+`const pluss::Series& x_future`
+: Future values of the predictors (second form).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** A `Series` of length `num_steps()`.
+
+**Errors.** A history shorter than the longest lag is rejected. Future leading values are required when the plan reaches into the future.
+
+### `predict`
+
+```cpp
+pluss::Series predict(const pluss::Series& x, const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+The fitted values for every row, an `n × num_steps()` matrix: column `i` holds, at row `t`, the prediction of `y_t` made at origin `t − h_i`. Rows without a full set of lagged values are `NaN`.
+
+`const pluss::Series& x`
+: Predictors.
+
+`const pluss::Series& y`
+: Response.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** An `n × num_steps()` `Series`.
+
+### `prepared_predictors`
+
+```cpp
+pluss::Series prepared_predictors(const pluss::Series& x, const pluss::Series& y, std::int64_t horizon_step, pluss::codem::Config cfg = {}) const;
+```
+
+The feature matrix of one horizon (with the intercept column first when fitted): `NaN` where a lagged value is not yet available.
+
+`const pluss::Series& x`
+: Predictors.
+
+`const pluss::Series& y`
+: Response.
+
+`std::int64_t horizon_step`
+: One of the fitted horizons (the horizon value, not an index).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** An `n × (features + intercept)` `Series`.
+
+**Errors.** A horizon that was not fitted is rejected.
+
+### `loss`
+
+```cpp
+pluss::Series loss(const pluss::Series& x, const pluss::Series& y, ts::RegressionLoss kind = ts::RegressionLoss::MSE, pluss::codem::Config cfg = {}) const;
+```
+
+The mean squared (`MSE`) or absolute (`MAE`) error of each horizon over the rows that have a prediction.
+
+`const pluss::Series& x`
+: Predictors.
+
+`const pluss::Series& y`
+: Response.
+
+`ts::RegressionLoss kind`
+: `MSE` (default) or `MAE`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** A `Series` with one loss per horizon.
+
+## Practical Examples
+
+### Example 1
+
+Fit horizons 1 to 3 from two lags of the response and two lags of the predictor, read the coefficients and the in-sample error of each horizon, and forecast from the last observation.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  const Data data = make_data(300);
+  ts::DirectForecasterOptions options;
+  options.lag.horizon = {1, 2, 3};
+  options.lag.response_lags = {1, 2};
+  options.lag.predictor_lags = {{1, 2}};
+  const auto model = ts::DirectForecaster::fit(data.x, data.y, options);
+  std::cout << "coefficients: intercept, x lag 1, x lag 2, y lag 1, y lag 2\n";
+  for (int i = 0; i < model.num_steps(); ++i) show(("horizon " + std::to_string(model.step(i).horizon)).c_str(), model.step(i).beta);
+  show("in-sample mse", model.loss(data.x, data.y));
+  show("forecast", model.forecast(data.x, data.y));
+}
+```
+
+Output
+
+```text
+coefficients: intercept, x lag 1, x lag 2, y lag 1, y lag 2
+horizon 1       -0.0375   1.3136  -0.0441   0.3412   0.0828
+horizon 2       -0.1097   1.5844   0.0906   0.0938   0.0203
+horizon 3       -0.1804   2.0210   0.2619  -0.4782   0.2008
+in-sample mse    0.2997   1.1248   1.9809
+forecast         0.1748   0.1451   0.0814
+```
+
+### Example 2
+
+A predictor whose future values are known (a leading predictor) lowers the error sharply; the forecast then takes those future values.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  const Data data = make_data(300);
+  ts::DirectForecasterOptions options;
+  options.lag.horizon = {1, 2, 3};
+  options.lag.response_lags = {1};
+  options.lag.leading_predictors = {0};
+  options.lag.leading_predictor_lags = {{0, 1}};
+  const auto model = ts::DirectForecaster::fit(data.x, data.y, options);
+  show("in-sample mse", model.loss(data.x, data.y));
+  const Series future = pluss::make_series({0.5, 0.2, -0.4}, {3, 1}, f64);
+  show("forecast", model.forecast(data.x, data.y, future));
+}
+```
+
+Output
+
+```text
+in-sample mse    0.0070   0.0116   0.0490
+forecast         0.4695   0.5768  -0.2074
+```
+
+### Example 3
+
+The first rows have no lagged values: their predictions are NaN, never zero, and the loss ignores them.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  const Data data = make_data(300);
+  ts::DirectForecasterOptions options;
+  options.lag.horizon = {1};
+  options.lag.response_lags = {1, 2};
+  options.lag.predictor_lags = {{1}};
+  const auto model = ts::DirectForecaster::fit(data.x, data.y, options);
+  const auto p = model.predict(data.x, data.y).to_vec<double>();
+  std::cout << "prediction at rows 0, 1, 2: " << p[0] << " " << p[1] << " " << std::fixed << std::setprecision(3) << p[2] << "\n";
+  std::cout << "mae " << model.loss(data.x, data.y, ts::RegressionLoss::MAE).to_vec<double>()[0] << "\n";
+}
+```
+
+Output
+
+```text
+prediction at rows 0, 1, 2: nan nan -0.360
+mae 0.470
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`DirectForecasterOptions`](DirectForecasterOptions.md)
+- [`LagPlanOptions`](LagPlanOptions.md)
+- [`DirectCVForecaster`](DirectCVForecaster.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

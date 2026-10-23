@@ -1,0 +1,10 @@
+# The five failure flags
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+Five flags mean the solver could not deliver. Each is triggered here by a specific condition, and the result still carries the last point reached so you can inspect it.
+
+@@example Numerical/optimization/guide/optima/23_exit_failures.cpp@@
+
+Impossible constraints produce different verdicts depending on their kind and the method. The interior method keeps bounds and linear rows strictly satisfied, so linear rows that contradict a bound (`x0 + x1 <= -1` with `x >= 0`) end the run before it starts with `NoFeasiblePoint`. A nonlinear inequality that no point satisfies, `x0^2 + x1^2 + 1 <= 0`, is different: the interior method gives it a slack variable and can start, so the verdict is `ConstraintStationary` once the violation can no longer be reduced (the gradient of its square vanishes), with the violation staying at `1`. Sequential QP tries to recover from the same inequality and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method for the same reason. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.

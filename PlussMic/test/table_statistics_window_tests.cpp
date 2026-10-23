@@ -101,7 +101,7 @@ void test_statistics() {
       {"A1", Slate(pluss::make_series(std::vector<double>{10, 20, 30, 40}))},
       {"A2", Slate(pluss::make_series(std::vector<double>{1, 2, 3, 4}))},
   }, Slate(pluss::make_note({"1001", "1002", "1003", "1004"})));
-  expect(pluss::table::detail::label_kind(axis_frame.label().values()) == pluss::table::LabelKind::Case,
+  expect(pluss::table::detail::label_kind(axis_frame.labels().values()) == pluss::table::LabelKind::Case,
          "DataFrame constructor labels should be case label provenance");
   const auto column_sum = axis_frame.features({"A1", "A2"}).sum();
   expect(column_sum.size() == 2,
@@ -242,19 +242,19 @@ void test_statistics() {
                            {"score", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
                        },
                        Slate(pluss::make_note({"b", "a", "b", "c"})));
-  expect(label_df.label().distinct().as_note().vector() ==
+  expect(label_df.labels().distinct().as_note().vector() ==
              std::vector<std::string_view>({"b", "a", "c"}),
-         "DataFrame::label().distinct should return distinct label values");
-  expect(label_df.label().duplicated().as_series().to_vec<bool>() ==
+         "DataFrame::labels().distinct should return distinct label values");
+  expect(label_df.labels().duplicated().as_series().to_vec<bool>() ==
              std::vector<bool>({false, false, true, false}),
-         "DataFrame::label().duplicated should mark duplicate follower labels");
-  expect(label_df.label().repeated().as_series().to_vec<bool>() ==
+         "DataFrame::labels().duplicated should mark duplicate follower labels");
+  expect(label_df.labels().repeated().as_series().to_vec<bool>() ==
              std::vector<bool>({true, false, true, false}),
-         "DataFrame::label().repeated should mark every member of repeated label groups");
-  expect(label_df.label().drop({.duplicated = true}).ncases() == 3,
-         "DataFrame::label().drop({.duplicated=true}) should drop duplicate follower label rows");
-  expect(label_df.label().drop({.repeated = true}).ncases() == 2,
-         "DataFrame::label().drop({.repeated=true}) should drop all members of repeated label groups");
+         "DataFrame::labels().repeated should mark every member of repeated label groups");
+  expect(label_df.labels().drop({.duplicated = true}).ncases() == 3,
+         "DataFrame::labels().drop({.duplicated=true}) should drop duplicate follower label rows");
+  expect(label_df.labels().drop({.repeated = true}).ncases() == 2,
+         "DataFrame::labels().drop({.repeated=true}) should drop all members of repeated label groups");
   expect(label_df.features({"score"}).repeated().as_series().to_vec<bool>() ==
              std::vector<bool>({false, false, false, false}),
          "DataFrame::repeated(feature) should mark all members of repeated row-value groups");
@@ -267,57 +267,57 @@ void test_statistics() {
   expect(repeated_rows.features({"name"}).repeated().as_series().to_vec<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
          "DataFrame::repeated should mark every member of repeated groups");
-  expect(label_df.label().has("a").as_series().to_vec<bool>() ==
+  expect(label_df.labels().has("a").as_series().to_vec<bool>() ==
              std::vector<bool>({false, true, false, false}),
-         "DataFrame::label().has should test label membership");
-  expect(label_df.label().isnull().as_series().to_vec<bool>() ==
+         "DataFrame::labels().has should test label membership");
+  expect(label_df.labels().isnull().as_series().to_vec<bool>() ==
              std::vector<bool>({false, false, false, false}),
-         "DataFrame::label().isnull should evaluate label nullness");
-  expect(label_df.label().notnull().as_series().to_vec<bool>() ==
+         "DataFrame::labels().isnull should evaluate label nullness");
+  expect(label_df.labels().notnull().as_series().to_vec<bool>() ==
              std::vector<bool>({true, true, true, true}),
-         "DataFrame::label().notnull should evaluate label non-nullness");
-  expect(label_df.label().slice(1, 3).as_note().vector() ==
+         "DataFrame::labels().notnull should evaluate label non-nullness");
+  expect(label_df.labels().slice(1, 3).as_note().vector() ==
              std::vector<std::string_view>({"a", "b"}),
-         "DataFrame::label().slice should slice label values");
+         "DataFrame::labels().slice should slice label values");
   const std::array<std::int64_t, 2> label_take_idx{3, 0};
-  expect(label_df.label().take(label_take_idx).as_note().vector() ==
+  expect(label_df.labels().take(label_take_idx).as_note().vector() ==
              std::vector<std::string_view>({"c", "b"}),
-         "DataFrame::label().take should take label values by position");
-  expect(!label_df.label().monotonic(),
-         "DataFrame::label().monotonic should detect unsorted labels");
-  expect(label_df.label().sort().label().monotonic(),
-         "DataFrame::label().sort should produce monotonic labels");
-  expect(label_df.label().depth() == 0,
-         "DataFrame::label().depth should be zero for unsorted flat labels");
-  expect(label_df.label().codes().features("label").as_series().to_vec<std::int64_t>() ==
+         "DataFrame::labels().take should take label values by position");
+  expect(!label_df.labels().monotonic(),
+         "DataFrame::labels().monotonic should detect unsorted labels");
+  expect(label_df.labels().sort().labels().monotonic(),
+         "DataFrame::labels().sort should produce monotonic labels");
+  expect(label_df.labels().depth() == 0,
+         "DataFrame::labels().depth should be zero for unsorted flat labels");
+  expect(label_df.labels().codes().features("label").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 0, 2}),
-         "DataFrame::label().codes should expose factor codes for labels");
-  expect(label_df.label().levels().features("label").as_note().vector() ==
+         "DataFrame::labels().codes should expose factor codes for labels");
+  expect(label_df.labels().levels().features("label").as_note().vector() ==
              std::vector<std::string_view>({"b", "a", "c"}),
-         "DataFrame::label().levels should expose distinct label levels");
+         "DataFrame::labels().levels should expose distinct label levels");
   const auto peer_labels = Slate(pluss::make_note({"b", "d", "a"}));
-  expect(label_df.label().unite(peer_labels).as_note().vector() ==
+  expect(label_df.labels().unite(peer_labels).as_note().vector() ==
              std::vector<std::string_view>({"b", "a", "c", "d"}),
-         "DataFrame::label().unite should preserve left order then append right-only labels");
-  expect(label_df.label().intersect(peer_labels).as_note().vector() ==
+         "DataFrame::labels().unite should preserve left order then append right-only labels");
+  expect(label_df.labels().intersect(peer_labels).as_note().vector() ==
              std::vector<std::string_view>({"b", "a"}),
-         "DataFrame::label().intersect should preserve left order for common labels");
-  expect(label_df.label().diff(peer_labels).as_note().vector() ==
+         "DataFrame::labels().intersect should preserve left order for common labels");
+  expect(label_df.labels().diff(peer_labels).as_note().vector() ==
              std::vector<std::string_view>({"c"}),
-         "DataFrame::label().diff should return left labels missing from the target");
-  expect(label_df.label().symdiff(peer_labels).as_note().vector() ==
+         "DataFrame::labels().diff should return left labels missing from the target");
+  expect(label_df.labels().symdiff(peer_labels).as_note().vector() ==
              std::vector<std::string_view>({"c", "d"}),
-         "DataFrame::label().symdiff should return labels exclusive to either side");
-  expect(label_df.label().find(Slate(pluss::make_note({"a", "missing", "b"})))
+         "DataFrame::labels().symdiff should return labels exclusive to either side");
+  expect(label_df.labels().find(Slate(pluss::make_note({"a", "missing", "b"})))
              .as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({1, -1, 0}),
-         "DataFrame::label().find should return exact-match positions and -1 for misses");
-  expect(label_df.label().pos("b").as_series().to_vec<std::int64_t>() ==
+         "DataFrame::labels().find should return exact-match positions and -1 for misses");
+  expect(label_df.labels().pos("b").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 2}),
-         "DataFrame::label().pos should return all positions for duplicate labels");
-  expect(label_df.label().slice("a", "c").as_note().vector() ==
+         "DataFrame::labels().pos should return all positions for duplicate labels");
+  expect(label_df.labels().slice("a", "c").as_note().vector() ==
              std::vector<std::string_view>({"a", "b", "c"}),
-         "DataFrame::label().slice(label,label) should return inclusive label-value slices");
+         "DataFrame::labels().slice(label,label) should return inclusive label-value slices");
   const auto slate_label_ops =
       Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))
           .label().set(Slate(pluss::make_note({"x", "y", "x"})));
@@ -389,12 +389,12 @@ void test_statistics() {
   const auto numeric_label_df = DataFrame({
       {"score", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
   }, Slate(pluss::make_series(std::vector<std::int64_t>{10, 20, 10})));
-  const auto df_numeric_intersect = numeric_label_df.label().intersect(
+  const auto df_numeric_intersect = numeric_label_df.labels().intersect(
       Slate(pluss::make_series(std::vector<std::int64_t>{20, 30, 10})));
   expect(df_numeric_intersect.kind() == pluss::table::SlateKind::Series &&
              df_numeric_intersect.as_series().scalar_type() == pluss::codem::ScalarType::Int64 &&
              df_numeric_intersect.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({10, 20}),
-         "DataFrame::label().intersect should preserve numeric label dtype through Slate delegation");
+         "DataFrame::labels().intersect should preserve numeric label dtype through Slate delegation");
 
   const auto source_labeled = Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))
                                   .label().set(Slate(pluss::make_note({"b", "a", "c"})));
@@ -624,7 +624,7 @@ void test_statistics() {
   const auto filter_mask = Slate(pluss::make_series(std::vector<bool>{true, false}))
                                .label().set(Slate(pluss::make_note({"1003", "1001"})));
   const auto filtered_axis = axis_frame.filter(filter_mask);
-  expect(filtered_axis.label().values().as_note().vector() ==
+  expect(filtered_axis.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"1003"}),
          "DataFrame::filter(Slate) should align Slate masks by case labels by default");
   bool filter_pos_threw = false;
@@ -1165,7 +1165,7 @@ void test_slate_delegation_and_advanced_windows() {
   const auto resample_calendar = resample_values.ts().calendar(resample_axis);
   expect(resample_calendar.get("axis_year").has_value() &&
              resample_calendar.get("axis_weekday").has_value() &&
-             resample_calendar.label().values().as_timeline().day().to_vec<std::int32_t>() ==
+             resample_calendar.labels().values().as_timeline().day().to_vec<std::int32_t>() ==
                  std::vector<std::int32_t>({1, 1, 2}),
          "Slate ts calendar(axis) should expand the supplied time axis into calendar features");
   const auto resample_frame = DataFrame({
@@ -1178,7 +1178,7 @@ void test_slate_delegation_and_advanced_windows() {
           .label = pluss::Timeline::ResampleLabel::Right,
       },
       pluss::subsp::stats::ts::ResampleOp::Sum);
-  expect(frame_right_labeled.label().values().as_timeline().day().to_vec<std::int32_t>() ==
+  expect(frame_right_labeled.labels().values().as_timeline().day().to_vec<std::int32_t>() ==
              std::vector<std::int32_t>({2, 3}) &&
              frame_right_labeled.features("x").as_series().to_vec<double>() ==
              std::vector<double>({3.0, 3.0}),
@@ -1209,11 +1209,11 @@ void test_slate_delegation_and_advanced_windows() {
   const auto lhs_frame = DataFrame({
       {"when", lhs_axis},
       {"x", lhs_values},
-  }).label().set("when", true);
+  }).labels().set("when", true);
   const auto rhs_frame = DataFrame({
       {"when", rhs_axis},
       {"x", rhs_values},
-  }).label().set("when", true);
+  }).labels().set("when", true);
   const auto frame_ts_sum = lhs_frame.features({"x"}).ts().add(rhs_frame);
   expect(pluss::table::detail::valid_at(frame_ts_sum.features("x"), 0) &&
              !pluss::table::detail::valid_at(frame_ts_sum.features("x"), 1) &&

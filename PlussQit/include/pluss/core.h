@@ -42,6 +42,13 @@
 #include "pluss/pluss_type.h"
 #include "pluss/dispense.h"
 
+// The full SDK historically exposed Series scalar-cast conveniences through
+// this umbrella. Keep that source contract when PlussTils is installed while
+// allowing PlussQit to remain independently consumable.
+#if __has_include("pluss/tils/aux/scalar_cast_compat.h")
+#include "pluss/tils/aux/scalar_cast_compat.h"
+#endif
+
 // Backward-compat RNG seed forwarding.
 // Some existing callsites use `pluss::rng_seed(...)` directly.
 #if __has_include("pluss/tils/aux/rng_seed.h")

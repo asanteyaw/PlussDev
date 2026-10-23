@@ -21,6 +21,7 @@ Notes:
 - Supports `Direction::Forward` and `Direction::Reverse`.
 - Honors `gap_size` and `max_lag` to avoid leakage.
 - Throws on invalid combinations (for example `max_lag >= min_train_size`).
+- Unspecified sizes follow `n - train - test - gap = step * (num_test_sets - 1)`: with none given they are all `floor((n - gap) / (num_test_sets + 1))`; with only `test_size` or `step_size` given the other equals it and the training size takes the rest; with `min_train_size` alone, test and step are `floor((n - gap - min_train_size) / num_test_sets)`.
 
 Example usage:
 
@@ -298,6 +299,7 @@ Return -> `Series`: matrix `[n, d_h]` where `d_h` is active feature count for th
 Notes:
 
 - Throws if `horizon_step` is not present in the fitted model.
+- Rows that lack a lagged value (the first rows) are NaN, not zero.
 
 Example usage:
 
@@ -326,7 +328,9 @@ Return -> `Series`: vector `[H]` of forecasts ordered by fitted horizon.
 
 Notes:
 
-- Current implementation is for no-future-leading-data path; if leading predictors require future values, this method throws.
+- The forecast is made from the last observation (origin `n`) for every horizon.
+- If leading predictors reach into the future this overload throws; use the overload `forecast(x, y, x_future, cfg)`, where `x_future` holds the predictor values after the last row (at least as many rows as the largest horizon).
+- Throws if the history is shorter than the longest lag.
 
 Example usage:
 
@@ -1468,7 +1472,9 @@ Notes:
 
 - `lag_order > 0` and `alpha in (0,1)` are required.
 - Supports `JohansenStat::Trace` and `JohansenStat::MaxEigen`.
-- `selected_rank` is clamped to `[0, k-1]`.
+- Critical values and p-values come from the simulated asymptotic (non-standard) distributions for the deterministic terms chosen (none; unrestricted constant; unrestricted constant and trend) and `m = k - r` series; at most 12 series are supported.
+- `lag_order` is the order of the VAR in levels; the `lag_order - 1` lagged differences and the deterministic terms are concentrated out.
+- `selected_rank` is the first `r` whose hypothesis "rank <= r" is not rejected, at most `k - 1`.
 
 Example usage:
 
@@ -1503,7 +1509,7 @@ Return -> `VecmFit`: fitted rank, `alpha`, `beta`, impact matrix, short-run gamm
 Notes:
 
 - `rank = -1` auto-selects rank via trace-stat Johansen test.
-- `impact` is reduced-rank projected when `rank < k`.
+- For `0 < rank < k` the estimate is Johansen's maximum likelihood one: `beta` (cointegrating vectors, normalised so the leading `r x r` block is the identity) from the canonical correlations, `alpha` (adjustment loadings) by regression, `impact = beta * alpha'` with `Delta y_t = y_{t-1} impact + ...`. `rank = 0` is the VAR in differences and `rank = k` the unrestricted least-squares impact (with optional `ridge`).
 - `gamma` has shape `[lag_order-1, k, k]` for `lag_order > 1`, else empty first dimension.
 
 Example usage:

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -219,7 +219,7 @@ index, with no explicit <code class="docutils literal notranslate"><span class="
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.label().set(&quot;date&quot;) first
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrameTsAccessor::sort: cases must be Timeline/TimeIndex. Use df.labels().set(&quot;date&quot;) first
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">untimed</span></code>’s case labels are the default integer index — no <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/
@@ -233,7 +233,7 @@ time axis to sort by.</p>
 <li><p>With no explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code>, this method requires the frame’s own case
 labels to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — it throws if they’re a plain
 numeric or <code class="docutils literal notranslate"><span class="pre">Note</span></code> index instead.</p></li>
-<li><p>This is distinct from <a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label().sort()</span></code></span></a>,
+<li><p>This is distinct from <a class="reference internal" href="../dataframe/labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::labels().sort()</span></code></span></a>,
 which sorts by whatever kind the case labels happen to be; <code class="docutils literal notranslate"><span class="pre">ts().sort()</span></code> is
 specifically the time-axis-aware entry point within the <code class="docutils literal notranslate"><span class="pre">ts()</span></code> accessor.</p></li>
 </ul>
@@ -244,7 +244,7 @@ specifically the time-axis-aware entry point within the <code class="docutils li
 <li><p><a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::rolling</span></code></span></a> (calendar-duration overload),
 <a class="reference internal" href="resample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::resample</span></code></span></a>: other methods that rely on the
 same time-axis requirement this method sorts by.</p></li>
-<li><p><a class="reference internal" href="../dataframe/label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label</span></code></span></a>: the general case-label accessor,
+<li><p><a class="reference internal" href="../dataframe/labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::labels</span></code></span></a>: the general case-label accessor,
 including its own <code class="docutils literal notranslate"><span class="pre">sort()</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

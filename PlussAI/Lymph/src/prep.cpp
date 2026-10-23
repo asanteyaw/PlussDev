@@ -187,7 +187,7 @@ template <>
       }
       columns.emplace_back(std::move(out_name), pluss::table::Slate(col));
     }
-    return pluss::table::DataFrame(std::move(columns), frame.label().values());
+    return pluss::table::DataFrame(std::move(columns), frame.labels().values());
   }
 
   auto out = frame;
@@ -937,7 +937,7 @@ pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::DataFrame
                                      : (name + "_index");
     columns.emplace_back(out_name, pluss::table::Slate(idx.reshape({frame.ncases()})));
   }
-  return pluss::table::DataFrame(std::move(columns), frame.label().values());
+  return pluss::table::DataFrame(std::move(columns), frame.labels().values());
 }
 
 Series prep::CategoryIndexer::learn_map(const pluss::table::Slate& feature,

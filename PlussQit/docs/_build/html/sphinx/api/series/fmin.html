@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -71,8 +71,8 @@ inputs are rejected.</p>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
 <p>The selected finite operand receives the upstream sensitivity. A finite tie
-splits it equally, which preserves symmetry between the two inputs. A <code class="docutils literal notranslate"><span class="pre">NaN</span></code>
-operand receives no sensitivity when the other side supplies the result.</p>
+goes entirely to the left operand (<code class="docutils literal notranslate"><span class="pre">self</span></code>), matching libtorch. A <code class="docutils literal notranslate"><span class="pre">NaN</span></code> operand
+receives no sensitivity when the other side supplies the result.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>

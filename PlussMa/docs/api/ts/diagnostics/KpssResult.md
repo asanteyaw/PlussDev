@@ -1,0 +1,27 @@
+<!-- generated from KpssResult.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::KpssResult`
+
+Result of `ts::kpss_test`.
+
+`KpssResult` carries the statistic and what is needed to read it.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `stat` | `double` | — | The KPSS statistic. |
+| `pvalue` | `double` | — | Interpolated from the critical-value table; bounded between 0.01 and 0.10. |
+| `critical` | `double` | — | Critical value at `alpha` for the chosen specification. |
+| `reject` | `bool` | — | True when the statistic exceeds the critical value: stationarity is rejected. |
+| `long_run_var` | `double` | — | The long-run variance estimate used. |
+| `lags` | `std::int64_t` | — | The bandwidth used. |
+| `effective_n` | `std::int64_t` | — | Observations used. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`kpss_test`](kpss_test.md)

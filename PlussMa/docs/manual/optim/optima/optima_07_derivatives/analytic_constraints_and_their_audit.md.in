@@ -1,0 +1,10 @@
+# Analytic constraints and their audit
+
+[Back to Derivatives](../optima_07_derivatives.md)
+
+
+Nonlinear constraints take the same forms. The analytic form returns the residuals and, for each block of parameters, a Jacobian of shape `[number of constraints, block size]`. A residual kind your problem does not have (here, equalities) may be left undefined. The problem minimizes `x^2 + y^2` subject to `x y >= 4`, written `4 - x y <= 0`.
+
+@@example Numerical/optimization/guide/optima/83_analytic_constraints.cpp@@
+
+The traced and the analytic constraint give the same run: 5 iterations, `x = y = 2`, a violation of 5.9e-08. The audit of the constraint callbacks compares the analytic Jacobian with the traced one, and with a doubled `d/dx` entry it reports a difference of 2.5 and fails. The traced constraint stays in the problem for this purpose; when only the analytic form is present there is nothing to audit against, and the report says so instead of passing.

@@ -6,6 +6,7 @@
 // every soundness bug found while scaling the stack up (presolve verdicts that disagreed with HiGHS).
 #include "linprog_reference.h"
 #include "milp_reference.h"
+#include "pluss/subsp/math/lp/aggregate.h"
 #include "pluss/subsp/math/lp/ipm.h"
 #include "pluss/subsp/math/lp/lu.h"
 #include "pluss/subsp/math/lp/mip.h"
@@ -208,6 +209,24 @@ int main() {
           for (int j = 0; j < M.cols; ++j) cz += M.cost[static_cast<std::size_t>(j)] * s.ray[static_cast<std::size_t>(j)];
           expect(cz < -1e-9, tag + ": ray does not improve the objective");
         }
+        {
+          lp::LpOptions race; // force the concurrent simplex / interior-point race (and the interior point alone) on tiny models
+          race.method = lp::LpMethod::Race;
+          race.race_min_rows = 1;
+          race.race_ipm_delay_seconds = 0.0;
+          race.race_min_nonzeros = 1;
+          const auto rr = lp::solve(M, race);
+          expect(static_cast<int>(rr.status) == lane.status, tag + ": race status " + std::to_string(static_cast<int>(rr.status)));
+          if (lane.status == 0) {
+            expect(std::abs(rr.objective - lane.objective) < 1e-6 * (1 + std::abs(lane.objective)), tag + ": race objective");
+            expect(primal_violation(M, rr.x, false) < 1e-5, tag + ": race primal feasibility");
+          }
+          lp::LpOptions only_ipm;
+          only_ipm.method = lp::LpMethod::InteriorPoint;
+          const auto ri = lp::solve(M, only_ipm);
+          expect(static_cast<int>(ri.status) == lane.status, tag + ": ipm-only status");
+          ++tally["race / ipm-only solves"];
+        }
         ++tally[std::string("simplex ") + (st == 0 ? "optimal" : st == 1 ? "infeasible" : "unbounded")];
         // interior point
         const auto ip = lp::solve_ipm(M);
@@ -369,6 +388,120 @@ int main() {
         }
       }
       ++tally["warm-start re-solves vs cold solves"];
+    }
+
+    // ---- 5b. presolve vs no presolve on LPs with eliminable structure (implied-free column singletons, singleton rows, fixed columns)
+    {
+      Lcg rng{31337};
+      for (int t = 0; t < 200; ++t) {
+        const int nx = rng.range(3, 7), mrows = rng.range(2, 4), n = nx + mrows + 1, m = mrows + 1;
+        std::vector<double> ae(static_cast<std::size_t>(m * n), 0.0), c(static_cast<std::size_t>(n)), lb(static_cast<std::size_t>(n), 0.0), ub(static_cast<std::size_t>(n)), be(static_cast<std::size_t>(m));
+        for (int i = 0; i < mrows; ++i) {
+          for (int k = 0; k < nx; ++k) ae[static_cast<std::size_t>(i * n + k)] = rng.uni() < 0.6 ? rng.range(-4, 5) : 0.0;
+          ae[static_cast<std::size_t>(i * n + nx + i)] = rng.uni() < 0.5 ? 1.0 : -2.0; // singleton column of row i
+          be[static_cast<std::size_t>(i)] = rng.range(-6, 6);
+        }
+        // last row: a singleton row on x0 (folded into a bound) plus the cost structure
+        ae[static_cast<std::size_t>(mrows * n + 0)] = rng.range(1, 3);
+        be[static_cast<std::size_t>(mrows)] = rng.range(0, 6);
+        for (int j = 0; j < n; ++j) {
+          c[static_cast<std::size_t>(j)] = rng.range(-5, 5);
+          if (j < nx) ub[static_cast<std::size_t>(j)] = rng.range(1, 6);
+          else if (j < nx + mrows) { lb[static_cast<std::size_t>(j)] = -INFINITY; ub[static_cast<std::size_t>(j)] = rng.uni() < 0.5 ? INFINITY : 100.0; }
+          else { lb[static_cast<std::size_t>(j)] = 2.0; ub[static_cast<std::size_t>(j)] = 2.0; } // fixed column
+        }
+        const auto M = make_model(n, 0, m, {}, ae, c, {}, be, lb, ub);
+        lp::LpOptions off;
+        off.presolve.enabled = false;
+        const auto ref = lp::solve(M, off), got = lp::solve(M);
+        lp::LpOptions primal_only;
+        primal_only.want_duals = false; // objective and x come straight from the reduced solve + postsolve of x (no re-solve on the original)
+        const auto fast = lp::solve(M, primal_only);
+        const std::string tag = "presolve equivalence #" + std::to_string(t);
+        expect(ref.status == got.status, tag + ": status " + std::to_string(static_cast<int>(got.status)) + " vs " + std::to_string(static_cast<int>(ref.status)));
+        if (ref.status == lp::SolveStatus::Optimal) {
+          expect(std::abs(ref.objective - got.objective) < 1e-7 * (1 + std::abs(ref.objective)), tag + ": objective");
+          expect(primal_violation(M, got.x, false) < 1e-6, tag + ": primal feasibility of the expanded point");
+          double dfeas = 0.0;
+          expect(dual_gap(M, got, dfeas) < 1e-6 && dfeas < 1e-6, tag + ": dual certificate after postsolve");
+          expect(fast.status == lp::SolveStatus::Optimal && std::abs(fast.objective - ref.objective) < 1e-7 * (1 + std::abs(ref.objective)), tag + ": primal-only objective");
+          expect(primal_violation(M, fast.x, false) < 1e-6, tag + ": primal-only postsolved point feasible");
+        }
+      }
+      ++tally["presolve vs no-presolve equivalence LPs"];
+    }
+
+    // ---- 5c. doubleton-equation aggregation (aggregate.h): random LPs rich in two-entry equality rows, with and without the stage
+    {
+      Lcg rng{2468};
+      int aggregated = 0, aggregated_long = 0;
+      for (int t = 0; t < 300; ++t) {
+        const int n = rng.range(5, 10), md = rng.range(2, 5), mg = rng.range(1, 3), m = md + mg;
+        std::vector<double> ae(static_cast<std::size_t>(md * n), 0.0), ai(static_cast<std::size_t>(mg * n), 0.0), c(static_cast<std::size_t>(n)), lb(static_cast<std::size_t>(n)), ub(static_cast<std::size_t>(n)), be(static_cast<std::size_t>(md)), bi(static_cast<std::size_t>(mg));
+        const bool longer = t % 2 == 1; // odd cases: equality rows of 3-5 entries (implied-free substitution), even: doubletons
+        for (int i = 0; i < md; ++i) { // equalities a x_p + b x_q (+ ...) = rhs
+          const int entries = longer ? rng.range(3, 5) : 2;
+          int first = rng.range(0, n - 1);
+          for (int e = 0; e < entries; ++e) {
+            const int col = (first + e * 2 + e / 2) % n;
+            ae[static_cast<std::size_t>(i * n + col)] = (rng.uni() < 0.5 ? 1.0 : -1.0) * rng.range(1, 3);
+          }
+          be[static_cast<std::size_t>(i)] = rng.range(-3, 6);
+        }
+        for (int i = 0; i < mg; ++i) {
+          for (int j = 0; j < n; ++j) ai[static_cast<std::size_t>(i * n + j)] = rng.uni() < 0.5 ? rng.range(-3, 4) : 0.0;
+          bi[static_cast<std::size_t>(i)] = rng.range(2, 12);
+        }
+        for (int j = 0; j < n; ++j) {
+          c[static_cast<std::size_t>(j)] = rng.range(-5, 5);
+          const int kind = rng.range(0, 3);
+          lb[static_cast<std::size_t>(j)] = kind == 3 ? -INFINITY : 0.0;
+          ub[static_cast<std::size_t>(j)] = kind == 0 ? INFINITY : rng.range(2, 8);
+          if (longer && rng.uni() < 0.4) { lb[static_cast<std::size_t>(j)] = -1000.0; ub[static_cast<std::size_t>(j)] = 1000.0; } // wide bounds: usually implied free
+        }
+        const auto M = make_model(n, mg, md, ai, ae, c, bi, be, lb, ub);
+        const auto agg = lp::aggregate(M);
+        aggregated += agg.changed();
+        if (t % 2 == 1 && agg.changed()) {
+          bool long_row = false;
+          for (const auto &r : agg.stack) long_row |= r.pool_len > 1;
+          aggregated_long += long_row;
+        }
+        lp::LpOptions off;
+        off.presolve.enabled = false;
+        lp::LpOptions fast;
+        fast.want_duals = false;
+        const auto ref = lp::solve(M, off), got = lp::solve(M), quick = lp::solve(M, fast);
+        const std::string tag = "aggregation equivalence #" + std::to_string(t);
+        const bool ref_decided = ref.status == lp::SolveStatus::Optimal || ref.status == lp::SolveStatus::Infeasible || ref.status == lp::SolveStatus::Unbounded;
+        if (!ref_decided)
+          continue;
+        expect(ref.status == got.status && ref.status == quick.status, tag + ": status " + std::to_string(static_cast<int>(got.status)) + "/" + std::to_string(static_cast<int>(quick.status)) + " vs " + std::to_string(static_cast<int>(ref.status)));
+        if (ref.status == lp::SolveStatus::Optimal) {
+          expect(std::abs(ref.objective - got.objective) < 1e-7 * (1 + std::abs(ref.objective)), tag + ": objective");
+          if (std::getenv("LP_DUMP") && std::abs(ref.objective - quick.objective) >= 1e-7 * (1 + std::abs(ref.objective))) {
+            std::fprintf(stderr, "model rows %d cols %d ref %.10g quick %.10g\n", M.rows, M.cols, ref.objective, quick.objective);
+            for (int i = 0; i < M.rows; ++i) {
+              std::fprintf(stderr, "row %d [%g,%g]:", i, M.row_lo[static_cast<std::size_t>(i)], M.row_hi[static_cast<std::size_t>(i)]);
+              for (int j = 0; j < M.cols; ++j)
+                for (auto q = M.a.start[static_cast<std::size_t>(j)]; q < M.a.start[static_cast<std::size_t>(j) + 1]; ++q)
+                  if (M.a.index[static_cast<std::size_t>(q)] == i) std::fprintf(stderr, " %+g*x%d", M.a.value[static_cast<std::size_t>(q)], j);
+              std::fprintf(stderr, "\n");
+            }
+            for (int j = 0; j < M.cols; ++j) std::fprintf(stderr, "x%d cost %g bounds [%g,%g]\n", j, M.cost[static_cast<std::size_t>(j)], M.col_lo[static_cast<std::size_t>(j)], M.col_hi[static_cast<std::size_t>(j)]);
+            std::fprintf(stderr, "stack:");
+            for (const auto &r : agg.stack) std::fprintf(stderr, " (row %d col %d len %d)", r.row, r.col, r.pool_len);
+            std::fprintf(stderr, "\n");
+          }
+          expect(std::abs(ref.objective - quick.objective) < 1e-7 * (1 + std::abs(ref.objective)), tag + ": primal-only objective");
+          expect(primal_violation(M, quick.x, false) < 1e-6, tag + ": postsolved point feasible");
+          double dfeas = 0.0;
+          expect(dual_gap(M, got, dfeas) < 1e-6 && dfeas < 1e-6, tag + ": dual certificate");
+        }
+      }
+      expect(aggregated_long > 20, "implied-free substitutions must be exercised (" + std::to_string(aggregated_long) + ")");
+      expect(aggregated > 100, "aggregation test must exercise the stage (" + std::to_string(aggregated) + " models aggregated)");
+      ++tally["doubleton aggregation equivalence LPs"];
     }
 
     // ---- 6. MPS reader (free format) on an embedded model with RANGES, negative-upper-bound and integer markers

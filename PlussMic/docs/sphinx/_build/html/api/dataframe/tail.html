@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -123,7 +123,7 @@ original case labels.</p>
 <li><p>For the top of a frame instead of the bottom, use <a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head(n,</span> <span class="pre">render)</span></code></span></a>,
 which has an identical signature and clamping behavior.</p></li>
 <li><p>Case labels are preserved verbatim from the source frame — if you need a fresh
-<code class="docutils literal notranslate"><span class="pre">0</span></code>-based index on the result, combine this with <a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code></span></a> or
+<code class="docutils literal notranslate"><span class="pre">0</span></code>-based index on the result, combine this with <a class="reference internal" href="labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code></span></a> or
 a reset step rather than expecting <code class="docutils literal notranslate"><span class="pre">tail()</span></code> to renumber for you.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tail()</span></code> never triggers a copy of the underlying column storage beyond what is
 needed to build the smaller result frame.</p></li>

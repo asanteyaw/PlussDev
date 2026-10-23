@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The same problem, four algorithms &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="What happens to the constraints on the way" href="what_happens_to_the_constraints_on_the_way.html" />
+    <link rel="prev" title="Optima 3: Choosing and Tuning an Algorithm" href="../optima_03_choosing_an_algorithm.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from the_same_problem_four_algorithms.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="the-same-problem-four-algorithms">
+<h1>The same problem, four algorithms<a class="headerlink" href="#the-same-problem-four-algorithms" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../optima_03_choosing_an_algorithm.html"><span class="std std-doc">Back to Choosing and Tuning an Algorithm</span></a></p>
+<p>The first program solves one problem with all four algorithms. It has a nonlinear equality, a nonlinear inequality and bounds, and it is started on the boundary of the inequality and on two bounds, which is a deliberately awkward start. The table has the same columns as the report from chapter 2, so every number can be compared across rows.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">namespace</span><span class="w"> </span><span class="nn">optim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">optim</span><span class="p">;</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Pack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">ParameterPack</span><span class="o">&lt;</span><span class="n">optim</span><span class="o">::</span><span class="n">Trace</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">())}).</span><span class="n">to</span><span class="p">(</span><span class="n">f64</span><span class="p">);</span>
+<span class="w">  </span><span class="p">};</span>
+
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="kt">double</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">v</span><span class="p">).</span><span class="n">to</span><span class="p">(</span><span class="n">f64</span><span class="p">);</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">four</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="kt">double</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">pack_scalars</span><span class="p">({{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="p">(</span><span class="n">a</span><span class="p">)},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="p">(</span><span class="n">b</span><span class="p">)},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="p">(</span><span class="n">c</span><span class="p">)},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="p">(</span><span class="n">d</span><span class="p">)}});</span>
+<span class="w">  </span><span class="p">};</span>
+
+<span class="w">  </span><span class="c1">// minimize a*d*(a + b + c) + c</span>
+<span class="w">  </span><span class="c1">//   subject to a*b*c*d &gt;= 25, a^2 + b^2 + c^2 + d^2 = 40, 1 &lt;= each &lt;= 5</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">Pack</span><span class="o">&amp;</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;d&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">constraints</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">optim</span><span class="o">::</span><span class="n">constraints</span><span class="p">()</span>
+<span class="w">          </span><span class="p">.</span><span class="n">nl_ineq</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Pack</span><span class="o">&amp;</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">25.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;d&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">})</span>
+<span class="w">          </span><span class="p">.</span><span class="n">nl_eq</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Pack</span><span class="o">&amp;</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">+</span>
+<span class="w">                   </span><span class="n">optim</span><span class="o">::</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;d&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">40.0</span><span class="p">;</span>
+<span class="w">          </span><span class="p">})</span>
+<span class="w">          </span><span class="p">.</span><span class="n">lbs</span><span class="p">(</span><span class="n">four</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">          </span><span class="p">.</span><span class="n">ubs</span><span class="p">(</span><span class="n">four</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">));</span>
+
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">Row</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="p">;</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaAlgorithm</span><span class="w"> </span><span class="n">algorithm</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Row</span><span class="o">&gt;</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;MeritMethod&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaAlgorithm</span><span class="o">::</span><span class="n">MeritMethod</span><span class="p">},</span>
+<span class="w">                                 </span><span class="p">{</span><span class="s">&quot;SequentialQP&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaAlgorithm</span><span class="o">::</span><span class="n">SequentialQP</span><span class="p">},</span>
+<span class="w">                                 </span><span class="p">{</span><span class="s">&quot;WorkingSet&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaAlgorithm</span><span class="o">::</span><span class="n">WorkingSet</span><span class="p">},</span>
+<span class="w">                                 </span><span class="p">{</span><span class="s">&quot;InternalProtocol&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaAlgorithm</span><span class="o">::</span><span class="n">InternalProtocol</span><span class="p">}};</span>
+
+<span class="w">  </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaState</span><span class="w"> </span><span class="n">merit_result</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;algorithm&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;flag&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;iters&quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;evals&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;objective&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;violation</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">    </span><span class="n">options</span><span class="p">.</span><span class="n">algorithm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">.</span><span class="n">algorithm</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">optima</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="n">four</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">options</span><span class="p">,</span><span class="w"> </span><span class="n">constraints</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">row</span><span class="p">.</span><span class="n">algorithm</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">OptimaAlgorithm</span><span class="o">::</span><span class="n">MeritMethod</span><span class="p">)</span><span class="w"> </span><span class="n">merit_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">row</span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">exit_flag</span><span class="p">)</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">iteration</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">function_evaluations</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">evaluation</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">scientific</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">evaluation</span><span class="p">.</span><span class="n">max_constraint_violation</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">defaultfloat</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">MeritMethod ended at a = &quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">merit_result</span><span class="p">.</span><span class="n">params</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, b = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">merit_result</span><span class="p">.</span><span class="n">params</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">).</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, c = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">merit_result</span><span class="p">.</span><span class="n">params</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">).</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, d = &quot;</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">merit_result</span><span class="p">.</span><span class="n">params</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">&quot;d&quot;</span><span class="p">).</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; (a is at its lower bound 1, b at its upper bound 5)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>algorithm        flag  iters  evals  objective     violation
+MeritMethod      1     66     180    27.146428     1.28e-08
+SequentialQP     1     4      5      17.014017     8.24e-08
+WorkingSet       1     4      6      17.014017     8.24e-08
+InternalProtocol 1     8      12     17.014018     8.84e-08
+
+MeritMethod ended at a = 1.0000, b = 5.0000, c = 1.4495, d = 3.4495 (a is at its lower bound 1, b at its upper bound 5)
+</pre></div>
+</div>
+<p>All four exit with flag <code class="docutils literal notranslate"><span class="pre">1</span></code>, but they do not agree. Sequential QP, the working-set method and the interior method reach <code class="docutils literal notranslate"><span class="pre">17.0140</span></code>, the best known value for this problem, in 4, 4 and 8 iterations. The merit method needs 66 iterations and ends at <code class="docutils literal notranslate"><span class="pre">27.1464</span></code>. That second value is not a failure: the last line shows it is a different point, with <code class="docutils literal notranslate"><span class="pre">a</span></code> on its lower bound and <code class="docutils literal notranslate"><span class="pre">b</span></code> on its upper bound, and the solver certifies it as a local solution. A flag of <code class="docutils literal notranslate"><span class="pre">1</span></code> means “a local solution”, and this table is the reason to remember it. The same row-by-row difference, fewer iterations for the quadratic-model methods, holds across the rest of the chapter.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/optim/optima/optima_03_choosing_an_algorithm/the_same_problem_four_algorithms.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

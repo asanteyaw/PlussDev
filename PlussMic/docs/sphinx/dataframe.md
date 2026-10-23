@@ -46,7 +46,7 @@ df.describe();
 
 auto city = df.features("city");
 auto sales = df.features("sales");
-auto case_axis = df.label().values();
+auto case_axis = df.labels().values();
 
 auto first_row = df.case_study().at(0);
 auto first_value = df.case_study().at(0).features({"city"});

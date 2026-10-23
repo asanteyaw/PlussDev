@@ -1,0 +1,10 @@
+# Two objectives
+
+[Back to Black Boxes](../dfo_04_black_boxes.md)
+
+
+The black box returns a vector of objectives. The solver minimises one scalar built from them and also keeps the Pareto set, the points that no other evaluated point beats on every objective. The weights state how much each objective matters.
+
+@@example Numerical/optimization/guide/dfo/333_two_objectives.cpp@@
+
+The weights slide the answer along the trade-off between the two objectives, exactly as the formula says. `result.pareto_points` and `result.pareto_objectives` hold the non-dominated points (as rows) and their objective vectors. They are an archive of the search, not a computed front: they cover the region the search visited, which is densest near the chosen compromise. To map a whole front, run several weightings and gather their archives.

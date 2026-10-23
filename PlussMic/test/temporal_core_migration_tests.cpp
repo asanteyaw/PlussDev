@@ -403,7 +403,7 @@ void test_dataframe_case_study_accessor() {
       {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
       {"units", Slate(pluss::make_series({10, 7, 12, 5}))},
       {"active", Slate(pluss::make_series({true, false, true, false}))},
-  }).label().set(Slate(pluss::make_note({"A", "B", "B", "D"})));
+  }).labels().set(Slate(pluss::make_note({"A", "B", "B", "D"})));
 
   expect(frame.case_study().at(-1).features("city").as_note().at(0) == "Tamale",
          "case_study().at must normalize negative positions");
@@ -450,7 +450,7 @@ void test_dataframe_case_study_accessor() {
       {"region", Slate(pluss::make_note({"West", "West", "East"}))},
       {"account", Slate(pluss::make_note({"101", "102", "201"}))},
       {"sales", Slate(pluss::make_series({3, 5, 8}))},
-  }).label().set({"region", "account"});
+  }).labels().set({"region", "account"});
   expect(structured.case_study().pick(
              DataFrame::CasePick{.label = "region", .value = "West"}).ncases() == 2,
          "case_study().pick must support partial structured-label matches");
@@ -473,7 +473,7 @@ void test_dataframe_case_study_accessor() {
                "case_study().where must reject length-mismatched masks");
 
   const auto numbered = DataFrame({{"v", Slate(pluss::make_series({4, 9, 16, 25}))}})
-      .label().set(Slate(pluss::make_series({10, 20, 30, 40})));
+      .labels().set(Slate(pluss::make_series({10, 20, 30, 40})));
   expect(numbered.case_study().labels(20).features("v").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>{9},
          "case_study().labels must accept integer labels");

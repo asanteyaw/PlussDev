@@ -1,0 +1,87 @@
+# apiref_manifest_distr.toml -- the `Distributions` guides of PlussMa.
+
+[framework.distr]
+nav_title = "Distributions guide"
+nav_prefix = "manual/distr/"
+root_page = "manual/distr.html"
+title = "Distributions"
+summary = "Probability families, sampling and maximum-likelihood fitting."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "distr/distributions/dist_01_evaluating_and_sampling"
+page = "manual/distr/distributions/dist_01_evaluating_and_sampling.md"
+title = "Evaluating and Sampling"
+maxdepth = 2
+children = ["dist_01_evaluating_and_sampling/densities_distribution_functions_and_tails", "dist_01_evaluating_and_sampling/random_draws", "dist_01_evaluating_and_sampling/families_by_kind"]
+
+[[family]]
+path = "distr/distributions/dist_02_maximum_likelihood"
+page = "manual/distr/distributions/dist_02_maximum_likelihood.md"
+title = "Maximum Likelihood"
+maxdepth = 2
+children = ["dist_02_maximum_likelihood/the_closed_form_families", "dist_02_maximum_likelihood/numerical_estimates_correlation_and_fixed_parame"]
+
+[[family]]
+path = "distr/distributions/dist_03_heavy_tails_and_mixtures"
+page = "manual/distr/distributions/dist_03_heavy_tails_and_mixtures.md"
+title = "Heavy Tails and Mixtures"
+maxdepth = 2
+children = ["dist_03_heavy_tails_and_mixtures/heavy_tails", "dist_03_heavy_tails_and_mixtures/mixtures"]
+
+[[family]]
+path = "distr/distributions"
+page = "manual/distr/distributions.md"
+title = "distributions"
+maxdepth = 2
+children = ["distributions/dist_01_evaluating_and_sampling", "distributions/dist_02_maximum_likelihood", "distributions/dist_03_heavy_tails_and_mixtures"]
+
+[[symbol]]
+qualname = "distr::dist_01_evaluating_and_sampling::Densities, distribution functions and tails"
+kind = "page"
+family = "distr/distributions/dist_01_evaluating_and_sampling"
+page = "manual/distr/distributions/dist_01_evaluating_and_sampling/densities_distribution_functions_and_tails.md"
+summary = "Densities, distribution functions and tails"
+
+[[symbol]]
+qualname = "distr::dist_01_evaluating_and_sampling::Random draws"
+kind = "page"
+family = "distr/distributions/dist_01_evaluating_and_sampling"
+page = "manual/distr/distributions/dist_01_evaluating_and_sampling/random_draws.md"
+summary = "Random draws"
+
+[[symbol]]
+qualname = "distr::dist_01_evaluating_and_sampling::Families by kind"
+kind = "page"
+family = "distr/distributions/dist_01_evaluating_and_sampling"
+page = "manual/distr/distributions/dist_01_evaluating_and_sampling/families_by_kind.md"
+summary = "Families by kind"
+
+[[symbol]]
+qualname = "distr::dist_02_maximum_likelihood::The closed-form families"
+kind = "page"
+family = "distr/distributions/dist_02_maximum_likelihood"
+page = "manual/distr/distributions/dist_02_maximum_likelihood/the_closed_form_families.md"
+summary = "The closed-form families"
+
+[[symbol]]
+qualname = "distr::dist_02_maximum_likelihood::Numerical estimates, correlation and fixed parameters"
+kind = "page"
+family = "distr/distributions/dist_02_maximum_likelihood"
+page = "manual/distr/distributions/dist_02_maximum_likelihood/numerical_estimates_correlation_and_fixed_parame.md"
+summary = "Numerical estimates, correlation and fixed parameters"
+
+[[symbol]]
+qualname = "distr::dist_03_heavy_tails_and_mixtures::Heavy tails"
+kind = "page"
+family = "distr/distributions/dist_03_heavy_tails_and_mixtures"
+page = "manual/distr/distributions/dist_03_heavy_tails_and_mixtures/heavy_tails.md"
+summary = "Heavy tails"
+
+[[symbol]]
+qualname = "distr::dist_03_heavy_tails_and_mixtures::Mixtures"
+kind = "page"
+family = "distr/distributions/dist_03_heavy_tails_and_mixtures"
+page = "manual/distr/distributions/dist_03_heavy_tails_and_mixtures/mixtures.md"
+summary = "Mixtures"

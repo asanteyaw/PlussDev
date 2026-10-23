@@ -1,0 +1,8 @@
+# A direct call
+
+[Back to The Nelder–Mead Minimiser](../dfo_06_nelder_mead.md)
+
+
+@@example Numerical/optimization/guide/dfo/351_nelder_mead_standalone.cpp@@
+
+The accuracy is about 1e-5 in the variables: a function value of 1e-9 and a tolerance of 1e-4 on the simplex size. For more digits, tighten the tolerances (Program 2) or polish with another method (Chapter 5).

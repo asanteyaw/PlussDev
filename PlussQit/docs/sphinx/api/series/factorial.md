@@ -307,8 +307,8 @@ y tracks slope: false
     <span class="label">Previous</span>
     <span class="title">factor</span>
   </a>
-  <a class="next-link" href="fftshift.html">
+  <a class="next-link" href="fft.html">
     <span class="label">Next</span>
-    <span class="title">fftshift</span>
+    <span class="title">fft</span>
   </a>
 </div>

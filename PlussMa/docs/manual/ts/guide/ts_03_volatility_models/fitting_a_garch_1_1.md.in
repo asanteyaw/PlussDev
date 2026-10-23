@@ -1,0 +1,8 @@
+# Fitting a GARCH(1, 1)
+
+[Back to Volatility Models](../ts_03_volatility_models.md)
+
+
+@@example Stats/time_series/guide/1211_garch_fit.cpp@@
+
+The estimates of `α` (0.143) and `β` (0.673) are close to their true values 0.15 and 0.75. The constant `ω` (0.089 against 0.05) is estimated with the least precision: a larger `ω` with a smaller `β` produces nearly the same variance process, which is the usual weakly identified direction of a GARCH likelihood. The persistence `α + β` is 0.82, so the forecasts climb from the current low variance (0.377) to the unconditional level 0.487 within about 50 steps and stay there.

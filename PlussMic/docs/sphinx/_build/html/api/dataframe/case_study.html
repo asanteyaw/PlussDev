@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=c8d94b85"></script>
+    <script src="../../_static/api_nav.js?v=b9d2e63b"></script>
     <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -67,7 +67,7 @@ selection deliberately remains on the returned frame:</p>
 </pre></div>
 </div>
 <p>The <a class="reference internal" href="../../dataframe_case_study_accessor_api_reference.html"><span class="doc std std-doc">DataFrameCaseStudyAccessor API Reference</span></a>
-teaches every terminal separately, including overloads, duplicate-label behavior,
+covers every terminal separately, including overloads, duplicate-label behavior,
 negative positions, inclusive versus half-open bounds, mask alignment, structured
 case levels, and failures.</p>
 </section>
@@ -96,7 +96,7 @@ overloading those root names further.</p>
 </pre></div>
 </div>
 <p>Select by case label, retaining all duplicate matches:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">labels</span><span class="p">().</span><span class="n">set</span><span class="p">(</span>
 <span class="w">    </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;coast&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;coast&quot;</span><span class="p">})));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">coast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">label</span><span class="p">(</span><span class="s">&quot;coast&quot;</span><span class="p">);</span>
 <span class="n">assert</span><span class="p">(</span><span class="n">coast</span><span class="p">.</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>

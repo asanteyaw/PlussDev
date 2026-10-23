@@ -1,0 +1,16 @@
+<!-- generated from qp.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Quadratic programs
+
+Chapters, in reading order:
+
+- [Quadratic Programming](qp/qp_01_quadratic_programs.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+qp/qp_01_quadratic_programs
+```
+<!-- apiref:toctree:end -->

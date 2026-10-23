@@ -61,10 +61,10 @@ auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
-std::cout << orders.label().has();
+std::cout << orders.labels().has();
 
-auto labeled = orders.label().set("region");
-std::cout << labeled.label().has();
+auto labeled = orders.labels().set("region");
+std::cout << labeled.labels().has();
 ```
 
 ### Output
@@ -81,10 +81,10 @@ one-level `case_axis_`, so `has()` becomes `true`.
 Example 2. Elementwise membership against a single value, and against several.
 
 ```cpp
-auto eq_east = labeled.label().has("east");
+auto eq_east = labeled.labels().has("east");
 std::cout << eq_east;
 
-auto in_set = labeled.label().has(Slate(pluss::make_note({"west", "north"})));
+auto in_set = labeled.labels().has(Slate(pluss::make_note({"west", "north"})));
 std::cout << in_set;
 ```
 
@@ -119,7 +119,7 @@ auto readings = DataFrame(
     Slate(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
 std::cout << readings;
 
-auto eq_ten = readings.label().has(10.0);
+auto eq_ten = readings.labels().has(10.0);
 std::cout << eq_ten;
 ```
 

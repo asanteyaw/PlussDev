@@ -24,6 +24,7 @@
 
 #include "pluss/subsp/natsci/chemistry/thermo.h"
 #include "pluss/subsp/natsci/common/constants.h"
+#include "pluss/subsp/natsci/common/dynamics.h"
 
 #include <cmath>
 #include <string>
@@ -119,6 +120,41 @@ public:
   [[nodiscard]] const std::vector<std::string> &names() const { return names_; }
   [[nodiscard]] const Series &molar_masses() const { return mass_; }
 
+  // Composition conversions use a trailing species axis and retain every
+  // leading batch/spatial axis. Keeping them here ensures every transport
+  // consumer uses the same cached molar masses and normalization convention.
+  [[nodiscard]] Series mole_fractions(const Series &mass_fractions) const {
+    dynamics::require(mass_fractions.dim() > 0 &&
+                          mass_fractions.size(-1) == species(),
+                      "transport: mass fractions need a trailing species "
+                      "axis matching the transport model");
+    const Series moles = mass_fractions.div(mass_);
+    return moles.div(moles.sum(-1, true));
+  }
+
+  [[nodiscard]] Series mass_fractions(const Series &mole_fractions) const {
+    dynamics::require(mole_fractions.dim() > 0 &&
+                          mole_fractions.size(-1) == species(),
+                      "transport: mole fractions need a trailing species "
+                      "axis matching the transport model");
+    const Series mass = mole_fractions.mul(mass_);
+    return mass.div(mass.sum(-1, true));
+  }
+
+  // Binary diffusion products D_jk p [Pa m^2/s]. This is separated from the
+  // full species-property evaluation so diffusion-only solvers do not compute
+  // viscosity and conductivity that they will discard.
+  [[nodiscard]] Series binary_diffusion(const Series &t) const {
+    const double kb = boltzmann();
+    const Series temp = t.unsqueeze(-1).unsqueeze(-1);
+    const Series tstar_pair = temp.div(eps_pair_);
+    const Series kt = temp.mul(kb);
+    return kt.pow(1.5)
+        .mul(reduced_mass_.reciprocal().mul(2.0 * M_PI).sqrt())
+        .div(omega11(tstar_pair).mul(sigma_pair_.square().mul(M_PI)))
+        .mul(3.0 / 16.0);
+  }
+
   struct Species final {
     Series viscosity = pluss::series::undefined();    // [..., S] Pa s
     Series conductivity = pluss::series::undefined(); // [..., S] W/m/K
@@ -165,16 +201,7 @@ public:
     const Series f_trans = c1.mul(crot_).div(1.5).neg().add(1.0).mul(2.5);
     const Series lambda = eta.div(mass_).mul(r).mul(
         f_trans.mul(1.5).add(crot_.mul(f_rot)).add(cv_int.mul(f_int)));
-    // binary diffusion D_jk p
-    const Series tp = temp.unsqueeze(-1);        // [..., 1, 1]
-    const Series tstar_pair = tp.div(eps_pair_); // [..., S, S]
-    const Series ktp = tp.mul(kb);
-    const Series d_pair =
-        ktp.pow(1.5)
-            .mul(reduced_mass_.reciprocal().mul(2.0 * M_PI).sqrt())
-            .div(omega11(tstar_pair).mul(sigma_pair_.square().mul(M_PI)))
-            .mul(3.0 / 16.0);
-    return {eta, lambda, d_pair};
+    return {eta, lambda, binary_diffusion(t)};
   }
 
   // Wilke mixture viscosity. x [..., S].
@@ -224,6 +251,14 @@ public:
     return m_mix.sub(xx.mul(mass_))
         .div(m_mix.mul(sum))
         .div(pressure.unsqueeze(-1));
+  }
+
+  [[nodiscard]] Series mixture_diffusion_chemkin(const Series &temperature,
+                                                 const Series &x,
+                                                 const Series &pressure) const {
+    Species diffusion_only;
+    diffusion_only.binary_diffusion = binary_diffusion(temperature);
+    return mixture_diffusion_chemkin(diffusion_only, x, pressure);
   }
 
 private:

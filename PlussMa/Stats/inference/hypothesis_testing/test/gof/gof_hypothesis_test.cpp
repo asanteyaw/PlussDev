@@ -92,6 +92,18 @@ int main() {
       expect(r.expected.defined() && r.expected.numel() == 6, "chisq_indep expected shape");
     }
 
+    {
+      // exact Kolmogorov-Smirnov p-values; reference values from an independent implementation
+      const auto v = [](std::vector<double> d) { return pluss::make_series(d, {static_cast<std::int64_t>(d.size())}).to(ScalarType::Float64); };
+      const auto a = v({5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1});
+      const auto b = v({4.8, 5.2, 5.0, 4.7, 5.6, 4.9, 5.1, 4.6, 5.3});
+      expect(std::abs(hyp::kstest(a, 5.5, 0.5).pvalue - 0.7316200977) < 1e-6, "one-sample KS exact p-value");
+      expect(std::abs(hyp::kstest2(a, b).pvalue - 0.1423282) < 1e-6, "two-sample KS exact p-value");
+      hyp::TestOptions approx;
+      approx.method = hyp::PValueMethod::Approximate;
+      expect(std::abs(hyp::kstest(a, 5.5, 0.5, approx).pvalue - 0.7316200977) > 1e-3, "approximate and exact KS p-values differ at n = 8");
+    }
+
     std::cout << "gof_hypothesis_test passed\n";
     return 0;
   } catch (const std::exception& e) {

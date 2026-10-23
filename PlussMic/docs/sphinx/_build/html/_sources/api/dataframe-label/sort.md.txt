@@ -51,10 +51,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region", false);
+auto labeled = orders.labels().set("region", false);
 std::cout << labeled;
 
-auto ascending = labeled.label().sort();
+auto ascending = labeled.labels().sort();
 std::cout << ascending;
 ```
 
@@ -87,7 +87,7 @@ west  | west    200
 ```
 
 ```cpp
-auto descending = labeled.label().sort(false);
+auto descending = labeled.labels().sort(false);
 std::cout << descending;
 ```
 
@@ -118,13 +118,13 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"west", "east", "west", "east"}))},
      {"city",   Slate(pluss::make_note({"LA", "Boston", "SF", "NYC"}))},
      {"sales",  Slate(pluss::make_series({30.0, 10.0, 40.0, 20.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
-auto flat_sorted = grouped.label().sort();
+auto flat_sorted = grouped.labels().sort();
 std::cout << flat_sorted;
 
-auto city_first = grouped.label().sort(DataFrame::SortLabelOptions{.names = {"city", "region"}});
+auto city_first = grouped.labels().sort(DataFrame::SortLabelOptions{.names = {"city", "region"}});
 std::cout << city_first;
 ```
 

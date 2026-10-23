@@ -1,0 +1,8 @@
+# Queries outside the table
+
+[Back to Linear Interpolation](../interp_01_linear.md)
+
+
+@@example Numerical/interpolation/guide/802_edge_modes.cpp@@
+
+Choose by what an out-of-range query means. `Clamp` is right when the quantity really levels off at the ends and quietly hides a mistake otherwise. `Linear` extrapolates the trend and is only as good as the data's linearity. `Error` finds queries that should not happen; use it while developing and in code where the table must cover every query.

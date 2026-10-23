@@ -1,4 +1,5 @@
 #include "CodeM/compat/Invoke.h"
+#include "CodeM/compat/Fourier.h"
 #include "CodeM/core/Scalar.h"
 #include "CodeM/core/Half.h"
 #include "CodeM/core/Complex.h"
@@ -6,7 +7,7 @@
 
 #include "CodeM/core/OpsInternal.h"
 #include "CodeM/core/TypePromotion.h"
-#include "CodeM/core/SeriesSlim.h"
+#include "CodeM/core/Series.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesTape.h"
@@ -3476,10 +3477,8 @@ static Series stft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop
   if (was_1d) x = x.unsqueeze(0);
   if (center) x = stft_pad_center_(x, n_fft / 2, pad_mode);
 
-  const std::int64_t batch = x.sizes()[0];
   const std::int64_t len = x.sizes()[1];
   PLUSS_CHECK(n_fft <= len, "stft: expected n_fft <= (padded) signal length");
-  const std::int64_t n_frames = 1 + (len - n_fft) / hop;
 
   Series frames = x.unfold(1, n_fft, hop);  // [batch, n_frames, n_fft]
 
@@ -3496,40 +3495,15 @@ static Series stft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop
     frames = frames.mul(w);
   }
 
-  const std::int64_t n_freq = onesided ? (n_fft / 2 + 1) : n_fft;
-  const Series nrange = Series::arange(0, n_fft, 1, rdt).to(x.platform()).reshape({n_fft, 1});
-  const Series krange = Series::arange(0, n_freq, 1, rdt).to(x.platform()).reshape({1, n_freq});
-  const Series ang = nrange.mul(krange).mul(2.0 * kPi / static_cast<double>(n_fft));
-  const Series cos_mat = ang.cos();       // [n_fft, n_freq]
-  const Series nsin_mat = ang.sin().neg();
-
-  Series flat = frames.reshape({batch * n_frames, n_fft});
-  Series re = pluss::series::undefined();
-  Series im = pluss::series::undefined();
-  if (complex_transform) {
-    const Series basis = ops_internal::complex_from_parts(cos_mat, nsin_mat, cdt);
-    const Series transformed = flat.to(cdt).matmul(basis)
-                                   .reshape({batch, n_frames, n_freq});
-    re = ops_internal::real(transformed);
-    im = ops_internal::imag(transformed);
-  } else {
-    re = flat.matmul(cos_mat).reshape({batch, n_frames, n_freq});
-    im = flat.matmul(nsin_mat).reshape({batch, n_frames, n_freq});
-  }
-  if (normalized) {
-    const double s = 1.0 / std::sqrt(static_cast<double>(n_fft));
-    re = re.mul(s);
-    im = im.mul(s);
-  }
-  re = re.transpose(1, 2);  // [batch, n_freq, n_frames]
-  im = im.transpose(1, 2);
-  if (was_1d) {
-    re = re.squeeze(0);
-    im = im.squeeze(0);
-  }
-  if (return_complex) {
-    return ops_internal::complex_from_parts(re, im, cdt);
-  }
+  const std::string_view norm = normalized ? "ortho" : "backward";
+  Series transformed = (!complex_transform && onesided)
+      ? fourier::rfft(frames, n_fft, -1, norm)
+      : fourier::fft(frames, n_fft, -1, norm);
+  transformed = transformed.transpose(1, 2);  // [batch, n_freq, n_frames]
+  if (was_1d) transformed = transformed.squeeze(0);
+  if (return_complex) return transformed;
+  const Series re = ops_internal::real(transformed);
+  const Series im = ops_internal::imag(transformed);
   return re.pile({im}, re.dim());  // [..., n_freq, n_frames, 2]
 }
 
@@ -3585,34 +3559,11 @@ static Series istft_impl(const Series& self, std::int64_t n_fft, std::int64_t ho
 
   const ScalarType rdt = (self.scalar_type() == ScalarType::Complex64) ? ScalarType::Float32
                                                                        : ScalarType::Float64;
-  Series re = ops_internal::real(spec).transpose(1, 2);  // [B, n_frames, n_freq]
-  Series im = ops_internal::imag(spec).transpose(1, 2);
-
-  // inverse DFT as a real matmul with per-bin weights (1 at DC / Nyquist, 2 on
-  // the interior bins when onesided) and the 1/N (or 1/sqrt(N)) scaling.
-  std::vector<double> wk(static_cast<std::size_t>(n_freq), 1.0);
-  if (onesided)
-    for (std::int64_t k = 1; k < n_freq - (n_fft % 2 == 0 ? 1 : 0); ++k) wk[static_cast<std::size_t>(k)] = 2.0;
-  const double denom = normalized ? std::sqrt(static_cast<double>(n_fft))
-                                  : static_cast<double>(n_fft);
-  Series Cinv = Series::empty({n_freq, n_fft}, rdt);
-  Series Sinv = Series::empty({n_freq, n_fft}, rdt);
-  for (std::int64_t k = 0; k < n_freq; ++k) {
-    for (std::int64_t nn = 0; nn < n_fft; ++nn) {
-      const double a = 2.0 * kPi * static_cast<double>(k) * static_cast<double>(nn) /
-                       static_cast<double>(n_fft);
-      const double w = wk[static_cast<std::size_t>(k)] / denom;
-      write_real_(Cinv, k * n_fft + nn, w * std::cos(a));
-      write_real_(Sinv, k * n_fft + nn, -w * std::sin(a));
-    }
-  }
-  Cinv = Cinv.to(spec.platform());
-  Sinv = Sinv.to(spec.platform());
-
-  Series re_flat = re.reshape({batch * n_frames, n_freq});
-  Series im_flat = im.reshape({batch * n_frames, n_freq});
-  Series frames = re_flat.matmul(Cinv).add(im_flat.matmul(Sinv))
-                     .reshape({batch, n_frames, n_fft});  // [B, n_frames, n_fft]
+  const Series frame_spectra = spec.transpose(1, 2);  // [B, n_frames, n_freq]
+  const std::string_view norm = normalized ? "ortho" : "backward";
+  Series frames = onesided
+      ? fourier::irfft(frame_spectra, n_fft, -1, norm)
+      : ops_internal::real(fourier::ifft(frame_spectra, n_fft, -1, norm));
 
   // window (centered/padded to n_fft), applied to the reconstructed frames.
   Series w = window.defined() ? window.to(rdt).to(spec.platform())
@@ -6656,6 +6607,18 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     return stft_impl(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]), window,
                      as_bool(args[4]), as_string(args[5]), as_bool(args[6]),
                      as_bool(args[7]), as_bool(args[8]));
+  }
+
+  if (op == "fft" || op == "ifft" || op == "rfft" || op == "irfft") {
+    PLUSS_CHECK(args.size() == 3,
+                std::string(op) + ": expected n, dim, and norm arguments");
+    const auto n = as_i64(args[0]);
+    const auto dim = as_i64(args[1]);
+    const auto& norm = as_string(args[2]);
+    if (op == "fft") return fourier::fft(self, n, dim, norm);
+    if (op == "ifft") return fourier::ifft(self, n, dim, norm);
+    if (op == "rfft") return fourier::rfft(self, n, dim, norm);
+    return fourier::irfft(self, n, dim, norm);
   }
 
   if (op == "istft") {

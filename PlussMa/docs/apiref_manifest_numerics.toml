@@ -1,0 +1,255 @@
+# apiref_manifest_numerics.toml -- the `Numerical methods` guides of PlussMa.
+
+[framework.numerics]
+nav_title = "Numerical methods guide"
+nav_prefix = "manual/numerics/"
+root_page = "manual/numerics.html"
+title = "Numerical methods"
+summary = "Numerical integration, differential equations, interpolation and large linear systems."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "numerics/integration/integration_01_data_and_functions"
+page = "manual/numerics/integration/integration_01_data_and_functions.md"
+title = "Data and Functions"
+maxdepth = 2
+children = ["integration_01_data_and_functions/integrating_data", "integration_01_data_and_functions/integrating_a_function", "integration_01_data_and_functions/the_rules", "integration_01_data_and_functions/tolerance_and_honest_failure"]
+
+[[family]]
+path = "numerics/integration/integration_02_beyond_one_interval"
+page = "manual/numerics/integration/integration_02_beyond_one_interval.md"
+title = "Beyond One Interval"
+maxdepth = 2
+children = ["integration_02_beyond_one_interval/infinite_limits", "integration_02_beyond_one_interval/batches_and_derivatives", "integration_02_beyond_one_interval/integrals_over_a_box", "integration_02_beyond_one_interval/monte_carlo", "integration_02_beyond_one_interval/the_dispatcher_and_the_closed_forms"]
+
+[[family]]
+path = "numerics/integration"
+page = "manual/numerics/integration.md"
+title = "integration"
+maxdepth = 2
+children = ["integration/integration_01_data_and_functions", "integration/integration_02_beyond_one_interval"]
+
+[[family]]
+path = "numerics/ode/ode_01_solving_and_stepping"
+page = "manual/numerics/ode/ode_01_solving_and_stepping.md"
+title = "Solving and Stepping"
+maxdepth = 2
+children = ["ode_01_solving_and_stepping/a_first_solve_and_the_order_of_the_method", "ode_01_solving_and_stepping/letting_the_solver_choose_the_steps"]
+
+[[family]]
+path = "numerics/ode/ode_02_events_stiffness_and_gradients"
+page = "manual/numerics/ode/ode_02_events_stiffness_and_gradients.md"
+title = "Events, Stiffness and Gradients"
+maxdepth = 2
+children = ["ode_02_events_stiffness_and_gradients/stopping_at_an_event", "ode_02_events_stiffness_and_gradients/a_stiff_linear_system", "ode_02_events_stiffness_and_gradients/gradients_through_a_solve"]
+
+[[family]]
+path = "numerics/ode"
+page = "manual/numerics/ode.md"
+title = "ode"
+maxdepth = 2
+children = ["ode/ode_01_solving_and_stepping", "ode/ode_02_events_stiffness_and_gradients"]
+
+[[family]]
+path = "numerics/interpolation/interp_01_linear"
+page = "manual/numerics/interpolation/interp_01_linear.md"
+title = "Linear Interpolation"
+maxdepth = 2
+children = ["interp_01_linear/reading_a_table", "interp_01_linear/queries_outside_the_table", "interp_01_linear/batches_complex_values_and_gradients", "interp_01_linear/accuracy"]
+
+[[family]]
+path = "numerics/interpolation"
+page = "manual/numerics/interpolation.md"
+title = "interpolation"
+maxdepth = 2
+children = ["interpolation/interp_01_linear"]
+
+[[family]]
+path = "numerics/krylov/krylov_01_symmetric_systems"
+page = "manual/numerics/krylov/krylov_01_symmetric_systems.md"
+title = "Symmetric Systems"
+maxdepth = 2
+children = ["krylov_01_symmetric_systems/conjugate_gradients_with_an_operator", "krylov_01_symmetric_systems/preconditioning", "krylov_01_symmetric_systems/batches", "krylov_01_symmetric_systems/a_sparse_matrix_as_an_operator"]
+
+[[family]]
+path = "numerics/krylov/krylov_02_general_systems_and_exponentials"
+page = "manual/numerics/krylov/krylov_02_general_systems_and_exponentials.md"
+title = "General Systems and Exponentials"
+maxdepth = 2
+children = ["krylov_02_general_systems_and_exponentials/the_restart_length", "krylov_02_general_systems_and_exponentials/heat_flow"]
+
+[[family]]
+path = "numerics/krylov"
+page = "manual/numerics/krylov.md"
+title = "krylov"
+maxdepth = 2
+children = ["krylov/krylov_01_symmetric_systems", "krylov/krylov_02_general_systems_and_exponentials"]
+
+[[symbol]]
+qualname = "numerics::integration_01_data_and_functions::Integrating data"
+kind = "page"
+family = "numerics/integration/integration_01_data_and_functions"
+page = "manual/numerics/integration/integration_01_data_and_functions/integrating_data.md"
+summary = "Integrating data"
+
+[[symbol]]
+qualname = "numerics::integration_01_data_and_functions::Integrating a function"
+kind = "page"
+family = "numerics/integration/integration_01_data_and_functions"
+page = "manual/numerics/integration/integration_01_data_and_functions/integrating_a_function.md"
+summary = "Integrating a function"
+
+[[symbol]]
+qualname = "numerics::integration_01_data_and_functions::The rules"
+kind = "page"
+family = "numerics/integration/integration_01_data_and_functions"
+page = "manual/numerics/integration/integration_01_data_and_functions/the_rules.md"
+summary = "The rules"
+
+[[symbol]]
+qualname = "numerics::integration_01_data_and_functions::Tolerance and honest failure"
+kind = "page"
+family = "numerics/integration/integration_01_data_and_functions"
+page = "manual/numerics/integration/integration_01_data_and_functions/tolerance_and_honest_failure.md"
+summary = "Tolerance and honest failure"
+
+[[symbol]]
+qualname = "numerics::integration_02_beyond_one_interval::Infinite limits"
+kind = "page"
+family = "numerics/integration/integration_02_beyond_one_interval"
+page = "manual/numerics/integration/integration_02_beyond_one_interval/infinite_limits.md"
+summary = "Infinite limits"
+
+[[symbol]]
+qualname = "numerics::integration_02_beyond_one_interval::Batches and derivatives"
+kind = "page"
+family = "numerics/integration/integration_02_beyond_one_interval"
+page = "manual/numerics/integration/integration_02_beyond_one_interval/batches_and_derivatives.md"
+summary = "Batches and derivatives"
+
+[[symbol]]
+qualname = "numerics::integration_02_beyond_one_interval::Integrals over a box"
+kind = "page"
+family = "numerics/integration/integration_02_beyond_one_interval"
+page = "manual/numerics/integration/integration_02_beyond_one_interval/integrals_over_a_box.md"
+summary = "Integrals over a box"
+
+[[symbol]]
+qualname = "numerics::integration_02_beyond_one_interval::Monte Carlo"
+kind = "page"
+family = "numerics/integration/integration_02_beyond_one_interval"
+page = "manual/numerics/integration/integration_02_beyond_one_interval/monte_carlo.md"
+summary = "Monte Carlo"
+
+[[symbol]]
+qualname = "numerics::integration_02_beyond_one_interval::The dispatcher and the closed forms"
+kind = "page"
+family = "numerics/integration/integration_02_beyond_one_interval"
+page = "manual/numerics/integration/integration_02_beyond_one_interval/the_dispatcher_and_the_closed_forms.md"
+summary = "The dispatcher and the closed forms"
+
+[[symbol]]
+qualname = "numerics::ode_01_solving_and_stepping::A first solve, and the order of the method"
+kind = "page"
+family = "numerics/ode/ode_01_solving_and_stepping"
+page = "manual/numerics/ode/ode_01_solving_and_stepping/a_first_solve_and_the_order_of_the_method.md"
+summary = "A first solve, and the order of the method"
+
+[[symbol]]
+qualname = "numerics::ode_01_solving_and_stepping::Letting the solver choose the steps"
+kind = "page"
+family = "numerics/ode/ode_01_solving_and_stepping"
+page = "manual/numerics/ode/ode_01_solving_and_stepping/letting_the_solver_choose_the_steps.md"
+summary = "Letting the solver choose the steps"
+
+[[symbol]]
+qualname = "numerics::ode_02_events_stiffness_and_gradients::Stopping at an event"
+kind = "page"
+family = "numerics/ode/ode_02_events_stiffness_and_gradients"
+page = "manual/numerics/ode/ode_02_events_stiffness_and_gradients/stopping_at_an_event.md"
+summary = "Stopping at an event"
+
+[[symbol]]
+qualname = "numerics::ode_02_events_stiffness_and_gradients::A stiff linear system"
+kind = "page"
+family = "numerics/ode/ode_02_events_stiffness_and_gradients"
+page = "manual/numerics/ode/ode_02_events_stiffness_and_gradients/a_stiff_linear_system.md"
+summary = "A stiff linear system"
+
+[[symbol]]
+qualname = "numerics::ode_02_events_stiffness_and_gradients::Gradients through a solve"
+kind = "page"
+family = "numerics/ode/ode_02_events_stiffness_and_gradients"
+page = "manual/numerics/ode/ode_02_events_stiffness_and_gradients/gradients_through_a_solve.md"
+summary = "Gradients through a solve"
+
+[[symbol]]
+qualname = "numerics::interp_01_linear::Reading a table"
+kind = "page"
+family = "numerics/interpolation/interp_01_linear"
+page = "manual/numerics/interpolation/interp_01_linear/reading_a_table.md"
+summary = "Reading a table"
+
+[[symbol]]
+qualname = "numerics::interp_01_linear::Queries outside the table"
+kind = "page"
+family = "numerics/interpolation/interp_01_linear"
+page = "manual/numerics/interpolation/interp_01_linear/queries_outside_the_table.md"
+summary = "Queries outside the table"
+
+[[symbol]]
+qualname = "numerics::interp_01_linear::Batches, complex values and gradients"
+kind = "page"
+family = "numerics/interpolation/interp_01_linear"
+page = "manual/numerics/interpolation/interp_01_linear/batches_complex_values_and_gradients.md"
+summary = "Batches, complex values and gradients"
+
+[[symbol]]
+qualname = "numerics::interp_01_linear::Accuracy"
+kind = "page"
+family = "numerics/interpolation/interp_01_linear"
+page = "manual/numerics/interpolation/interp_01_linear/accuracy.md"
+summary = "Accuracy"
+
+[[symbol]]
+qualname = "numerics::krylov_01_symmetric_systems::Conjugate gradients with an operator"
+kind = "page"
+family = "numerics/krylov/krylov_01_symmetric_systems"
+page = "manual/numerics/krylov/krylov_01_symmetric_systems/conjugate_gradients_with_an_operator.md"
+summary = "Conjugate gradients with an operator"
+
+[[symbol]]
+qualname = "numerics::krylov_01_symmetric_systems::Preconditioning"
+kind = "page"
+family = "numerics/krylov/krylov_01_symmetric_systems"
+page = "manual/numerics/krylov/krylov_01_symmetric_systems/preconditioning.md"
+summary = "Preconditioning"
+
+[[symbol]]
+qualname = "numerics::krylov_01_symmetric_systems::Batches"
+kind = "page"
+family = "numerics/krylov/krylov_01_symmetric_systems"
+page = "manual/numerics/krylov/krylov_01_symmetric_systems/batches.md"
+summary = "Batches"
+
+[[symbol]]
+qualname = "numerics::krylov_01_symmetric_systems::A sparse matrix as an operator"
+kind = "page"
+family = "numerics/krylov/krylov_01_symmetric_systems"
+page = "manual/numerics/krylov/krylov_01_symmetric_systems/a_sparse_matrix_as_an_operator.md"
+summary = "A sparse matrix as an operator"
+
+[[symbol]]
+qualname = "numerics::krylov_02_general_systems_and_exponentials::The restart length"
+kind = "page"
+family = "numerics/krylov/krylov_02_general_systems_and_exponentials"
+page = "manual/numerics/krylov/krylov_02_general_systems_and_exponentials/the_restart_length.md"
+summary = "The restart length"
+
+[[symbol]]
+qualname = "numerics::krylov_02_general_systems_and_exponentials::Heat flow"
+kind = "page"
+family = "numerics/krylov/krylov_02_general_systems_and_exponentials"
+page = "manual/numerics/krylov/krylov_02_general_systems_and_exponentials/heat_flow.md"
+summary = "Heat flow"

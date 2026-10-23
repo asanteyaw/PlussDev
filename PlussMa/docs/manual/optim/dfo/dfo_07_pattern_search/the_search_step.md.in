@@ -1,0 +1,8 @@
+# The search step
+
+[Back to The Pattern Search Minimiser](../dfo_07_pattern_search.md)
+
+
+@@example Numerical/optimization/guide/dfo/363_pattern_search_search_step.cpp@@
+
+Searching earns its evaluations on smooth functions: along a successful direction `ExpandAlongSuccess` costs almost nothing extra and is two to three orders of magnitude more accurate here at the same budget. The random strategies spend many trials (1732 trials, 52 successes) but converge fully within the budget. Use them when the function has structure the poll cannot see.

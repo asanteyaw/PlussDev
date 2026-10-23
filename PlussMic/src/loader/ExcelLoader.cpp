@@ -1100,7 +1100,7 @@ void save_excel(const pluss::table::DataFrame& frame,
     cols.push_back(slate_for_excel_io(frame.features(name)));
   }
   const bool include_cases = options.add_cases || options.cases;
-  const auto case_values = include_cases ? slate_for_excel_io(frame.label().values()) : pluss::table::Slate{};
+  const auto case_values = include_cases ? slate_for_excel_io(frame.labels().values()) : pluss::table::Slate{};
 
   std::string sheet_xml;
   sheet_xml += R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";

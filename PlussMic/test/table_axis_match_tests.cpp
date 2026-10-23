@@ -22,6 +22,15 @@ using pluss::table::Atlas;
 using pluss::scribble::Registry;
 using pluss::scribble::Axel;
 
+template <typename T>
+concept HasLabelsAccessor = requires(const T& value) { value.labels(); };
+
+template <typename T>
+concept HasLabelAccessor = requires(const T& value) { value.label(); };
+
+static_assert(HasLabelsAccessor<DataFrame>);
+static_assert(!HasLabelAccessor<DataFrame>);
+
 [[noreturn]] void fail(std::string_view message) {
   throw std::runtime_error(std::string(message));
 }
@@ -68,7 +77,7 @@ void test_union_matching_for_frame_math() {
   const auto positional = left.add(right);
   expect(positional.features() == std::vector<std::string>({"x", "y"}),
          "default frame arithmetic should preserve left feature labels under positional semantics");
-  expect(positional.label().values().as_note().vector() ==
+  expect(positional.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
          "default frame arithmetic should preserve left case labels under positional semantics");
   expect(positional.features("x").as_series().to_vec<double>() ==
@@ -77,7 +86,7 @@ void test_union_matching_for_frame_math() {
   const auto result = left.add(right, {.align = pluss::table::AlignBy::Both});
   expect(result.features() == std::vector<std::string>({"x", "y", "z"}),
          "union matching should preserve left feature order and append right-only features");
-  expect(result.label().values().as_note().vector() ==
+  expect(result.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B"}),
          "union matching should preserve left case order and append right-only cases");
 
@@ -116,7 +125,7 @@ void test_explicit_common_matching() {
 
   expect(matched.left.features() == std::vector<std::string>({"y"}),
          "common feature matching should retain shared features only");
-  expect(matched.left.label().values().as_note().vector() ==
+  expect(matched.left.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A"}),
          "common case matching should retain shared cases only");
   expect(matched.left.features("y").as_series().to_vec<double>() ==
@@ -175,7 +184,7 @@ void test_case_aware_horizontal_composition() {
       {"B", "A"});
 
   const auto combined = left.combine(right);
-  expect(combined.label().values().as_note().vector() ==
+  expect(combined.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B"}),
          "horizontal composition should match cases by label");
   expect(pluss::table::detail::validity_mask(combined.features("x"))->to_vec<bool>() ==
@@ -192,7 +201,7 @@ void test_case_aware_horizontal_composition() {
       make_frame(
           {{"x", Slate(pluss::make_series(std::vector<double>{9.0}))}},
           {"A"}));
-  expect(updated.label().values().as_note().vector() ==
+  expect(updated.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
          "update should keep the left case axis");
   expect(updated.features("x").as_series().to_vec<double>() ==
@@ -218,7 +227,7 @@ void test_vertical_case_extension() {
   expect(extended.features() ==
              std::vector<std::string>({"x", "y", "z"}),
          "case extension should use the stable feature union");
-  expect(extended.label().values().as_note().vector() ==
+  expect(extended.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B", "A"}),
          "case extension should append the full case axes");
   expect(pluss::table::detail::validity_mask(extended.features("x"))->to_vec<bool>() ==
@@ -232,7 +241,7 @@ void test_vertical_case_extension() {
       left.extend(right, FrameMatchRule::Common, true);
   expect(common.features() == std::vector<std::string>({"y"}),
          "common case extension should retain shared features only");
-  expect(common.label().values().as_series().to_vec<std::int64_t>() ==
+  expect(common.labels().values().as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "fresh case extension should create one contiguous case axis");
 
@@ -444,11 +453,11 @@ void test_vectorized_group_reductions() {
       {"revenue", Slate(pluss::make_series(std::vector<double>{20.0, 30.0, 40.0, 10.0, 50.0}))},
   });
   const auto multi_pivot = sales.pivot_table(multi_options);
-  expect(multi_pivot.label().names() == std::vector<std::string>({"city", "quarter"}),
+  expect(multi_pivot.labels().names() == std::vector<std::string>({"city", "quarter"}),
          "pivot_table(options) should promote multi-key rows into a structured case axis");
-  expect(multi_pivot.label().part("city").as_note().vector() ==
+  expect(multi_pivot.labels().part("city").as_note().vector() ==
              std::vector<std::string_view>({"Accra", "Accra", "Tema", "Tema"}) &&
-             multi_pivot.label().part("quarter").as_note().vector() ==
+             multi_pivot.labels().part("quarter").as_note().vector() ==
                  std::vector<std::string_view>({"Q1", "Q2", "Q1", "Q2"}),
          "pivot_table(options) should preserve lexicographic row-key ordering");
   expect(multi_pivot.features() ==
@@ -473,8 +482,8 @@ void test_vectorized_group_reductions() {
   expect(pivot_with_totals.get("units_sum :: All").has_value() &&
              pivot_with_totals.get("revenue_sum :: All").has_value(),
          "pivot_table(options) should add total columns when margins=true");
-  expect(pivot_with_totals.label().part("city").as_note().vector().back() == "All" &&
-             pivot_with_totals.label().part("quarter").as_note().vector().back() == "",
+  expect(pivot_with_totals.labels().part("city").as_note().vector().back() == "All" &&
+             pivot_with_totals.labels().part("quarter").as_note().vector().back() == "",
          "pivot_table(options) should append a bottom total row on a structured case axis");
   expect(pivot_with_totals.features("units_sum :: Phone").as_series().to_vec<double>() ==
              std::vector<double>({3.0, 0.0, 0.0, 5.0, 8.0}),
@@ -656,7 +665,7 @@ void test_group_yield_and_ndistinct() {
   expect(yielded.features("amount").as_series().to_vec<double>() ==
              std::vector<double>({10.0, 40.0, 20.0, 30.0, 60.0}),
          "group().yield() should preserve original within-group row order");
-  expect(yielded.label().values().as_note().vector() ==
+  expect(yielded.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r1", "r3", "r0", "r2", "r5"}),
          "group().yield() should carry matching case labels through regrouping");
 
@@ -671,7 +680,7 @@ void test_group_yield_and_ndistinct() {
       {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
       {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 102, 201, 202}))},
       {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-  }).label().set(
+  }).labels().set(
       DataFrame::SetLabelOptions{
           .features = {"region", "account"},
           .drop = false,
@@ -809,10 +818,10 @@ void test_contingency_and_split() {
   const auto ordered_case = split_frame.split(0.4);
   expect(ordered_case.first.ncases() == 3 && ordered_case.second.ncases() == 2,
          "split(frac) should allocate frac of rows to the second output");
-  expect(ordered_case.first.label().values().as_note().vector() ==
+  expect(ordered_case.first.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r0", "r1", "r2"}),
          "ordered row split should preserve the leading rows in the first output");
-  expect(ordered_case.second.label().values().as_note().vector() ==
+  expect(ordered_case.second.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r3", "r4"}),
          "ordered row split should preserve the trailing rows in the second output");
 
@@ -827,8 +836,8 @@ void test_contingency_and_split() {
   const auto random_case = split_frame.split(0.4, 7);
   expect(random_case.first.ncases() == 3 && random_case.second.ncases() == 2,
          "randomized row split should preserve the requested row counts");
-  std::vector<std::string_view> combined_labels = random_case.first.label().values().as_note().vector();
-  const auto rhs_labels = random_case.second.label().values().as_note().vector();
+  std::vector<std::string_view> combined_labels = random_case.first.labels().values().as_note().vector();
+  const auto rhs_labels = random_case.second.labels().values().as_note().vector();
   combined_labels.insert(combined_labels.end(), rhs_labels.begin(), rhs_labels.end());
   std::sort(combined_labels.begin(), combined_labels.end());
   expect(combined_labels ==
@@ -942,7 +951,7 @@ void test_bundelize_and_tabelize_interop() {
   const auto rebuilt = catalog.tabelize();
   expect(rebuilt.features() == orders.features(),
          "Catalog::tabelize() should rebuild feature names from a kindelized frame");
-  expect(rebuilt.label().values().as_note().vector() == orders.label().values().as_note().vector(),
+  expect(rebuilt.labels().values().as_note().vector() == orders.labels().values().as_note().vector(),
          "Catalog::tabelize() should preserve case labels on a round-trip");
 
   const auto registry = orders.scribbelize();
@@ -1077,13 +1086,13 @@ void test_lengthen_reshape() {
   expect(long_form.features("value").as_series().to_vec<double>() ==
              std::vector<double>({1.0, 2.0, 3.0, 4.0}),
          "lengthen should concatenate homogeneous value payloads");
-  expect(long_form.label().values().as_series().to_vec<std::int64_t>() ==
+  expect(long_form.labels().values().as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "lengthen should create fresh contiguous cases by default");
 
   const auto preserved =
       frame.lengthen({"id"}, {"a", "b"}, "source", "measure", false);
-  expect(preserved.label().values().as_note().vector() ==
+  expect(preserved.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"C1", "C2", "C1", "C2"}),
          "lengthen should tile original cases when requested");
 
@@ -1101,22 +1110,22 @@ void test_hierarchical_case_axis_engine() {
       {"cost", Slate(pluss::make_series(std::vector<double>{8.0, 4.0, 12.0, 16.0}))},
   });
 
-  const auto indexed = frame.label().set(
+  const auto indexed = frame.labels().set(
       DataFrame::SetLabelOptions{
           .features = {"region", "account"},
           .drop = false,
           .verify = true,
           .sort = false});
-  expect(indexed.label().has(), "label().set should attach structured case labels");
-  expect(indexed.label().names() == std::vector<std::string>({"region", "account"}),
+  expect(indexed.labels().has(), "label().set should attach structured case labels");
+  expect(indexed.labels().names() == std::vector<std::string>({"region", "account"}),
          "label().set should preserve case-label names");
-  expect(indexed.label().part("region").as_note().vector()[0] == "West",
+  expect(indexed.labels().part("region").as_note().vector()[0] == "West",
          "label().part(name) should expose a typed case label");
 
   const auto selected = indexed.case_study().pick(
       DataFrame::CasePick{.label = "region", .value = "West"});
   expect(selected.ncases() == 2 &&
-             selected.label().part("account").as_series().to_vec<std::int64_t>() ==
+             selected.labels().part("account").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({102, 101}),
          "case_study(level,value) should perform partial hierarchical selection");
 
@@ -1128,14 +1137,14 @@ void test_hierarchical_case_axis_engine() {
          "case_study(key) should match a full structured key");
 
   const auto projected = indexed.features({"sales", "cost"});
-  expect(projected.label().has() && projected.label().names() == indexed.label().names(),
+  expect(projected.labels().has() && projected.labels().names() == indexed.labels().names(),
          "feature selection should preserve hierarchical case metadata");
 
-  const auto sorted = indexed.label().sort(
+  const auto sorted = indexed.labels().sort(
       DataFrame::SortLabelOptions{.names = {"region", "account"}});
-  expect(sorted.label().part("region").as_note().vector() ==
+  expect(sorted.labels().part("region").as_note().vector() ==
              std::vector<std::string_view>({"East", "East", "West", "West"}) &&
-             sorted.label().part("account").as_series().to_vec<std::int64_t>() ==
+             sorted.labels().part("account").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({201, 202, 101, 102}),
          "label().sort(names) should sort by typed case labels");
 
@@ -1166,32 +1175,32 @@ void test_hierarchical_case_axis_engine() {
              east_only.features("sales").as_series().to_vec<double>() == std::vector<double>({30.0, 40.0}),
          "group(...).by(LabelGroup).filter(...) should keep full label groups");
 
-  const auto renamed = indexed.label().rename({{"account", "acct"}});
-  expect(renamed.label().names() == std::vector<std::string>({"region", "acct"}),
+  const auto renamed = indexed.labels().rename({{"account", "acct"}});
+  expect(renamed.labels().names() == std::vector<std::string>({"region", "acct"}),
          "label().rename should rename a structured case label");
-  const auto reordered = renamed.label().order({"acct", "region"});
-  expect(reordered.label().names() == std::vector<std::string>({"acct", "region"}),
+  const auto reordered = renamed.labels().order({"acct", "region"});
+  expect(reordered.labels().names() == std::vector<std::string>({"acct", "region"}),
          "label().order should reorder structured case labels");
-  const auto dropped = reordered.label().drop({"region"});
-  expect(dropped.label().names() == std::vector<std::string>({"acct"}),
+  const auto dropped = reordered.labels().drop({"region"});
+  expect(dropped.labels().names() == std::vector<std::string>({"acct"}),
          "label().drop should remove selected structured case labels");
-  const auto reset = indexed.label().reset(
+  const auto reset = indexed.labels().reset(
       DataFrame::ResetLabelOptions{.drop = false, .names = {"region_case", "account_case"}});
   expect(reset.get("region_case").has_value() && reset.get("account_case").has_value() &&
-             !reset.label().has(),
+             !reset.labels().has(),
          "label().reset should materialize case labels as ordinary features and clear hierarchy");
 
   const auto collision_left = DataFrame({
       {"region", Slate(pluss::make_note({"A"}))},
       {"account", Slate(pluss::make_note(std::vector<std::string>{std::string("B") + '\x1F' + "C"}))},
       {"value", Slate(pluss::make_series(std::vector<double>{10.0}))},
-  }).label().set({"region", "account"}, false, "\x1F")
+  }).labels().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision_right = DataFrame({
       {"region", Slate(pluss::make_note(std::vector<std::string>{std::string("A") + '\x1F' + "B"}))},
       {"account", Slate(pluss::make_note({"C"}))},
       {"value", Slate(pluss::make_series(std::vector<double>{1.0}))},
-  }).label().set({"region", "account"}, false, "\x1F")
+  }).labels().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision = collision_left.add(
       collision_right,
@@ -1208,11 +1217,11 @@ void test_stack_unstack_hierarchical_cases() {
       {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
       {"quarter", Slate(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
       {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-  }).label().set({"region", "account", "quarter"}, true);
+  }).labels().set({"region", "account", "quarter"}, true);
 
   const auto wide = frame.unstack("quarter");
-  expect(wide.label().has() &&
-             wide.label().names() == std::vector<std::string>({"region", "account"}) &&
+  expect(wide.labels().has() &&
+             wide.labels().names() == std::vector<std::string>({"region", "account"}) &&
              wide.features() == std::vector<std::string>({"Q1", "Q2"}) &&
              wide.features("Q1").as_series().to_vec<double>() ==
                  std::vector<double>({10.0, 30.0}) &&
@@ -1221,8 +1230,8 @@ void test_stack_unstack_hierarchical_cases() {
          "unstack should move one case level into wide features");
 
   const auto long_again = wide.stack("quarter", "sales");
-  expect(long_again.label().has() &&
-             long_again.label().names() == std::vector<std::string>({"region", "account", "quarter"}) &&
+  expect(long_again.labels().has() &&
+             long_again.labels().names() == std::vector<std::string>({"region", "account", "quarter"}) &&
              long_again.features("sales").as_series().to_vec<double>() ==
                  std::vector<double>({10.0, 30.0, 20.0, 40.0}),
          "stack should move features into the case hierarchy and keep typed values");
@@ -1231,7 +1240,7 @@ void test_stack_unstack_hierarchical_cases() {
       {"region", Slate(pluss::make_note({"West", "West"}))},
       {"quarter", Slate(pluss::make_note({"Q1", "Q1"}))},
       {"sales", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-  }).label().set({"region", "quarter"}, true);
+  }).labels().set({"region", "quarter"}, true);
   expect_throw([&]() { (void)duplicate.unstack("quarter"); },
                "unstack should reject duplicate output cells");
 }
@@ -1439,8 +1448,8 @@ void test_align_reindex_equivalent() {
       },
       {"r1", "r2"});
 
-  const auto cases = frame.label().align(Slate(pluss::make_note({"r2", "missing", "r1"})));
-  expect(cases.label().values().as_note().vector() ==
+  const auto cases = frame.labels().align(Slate(pluss::make_note({"r2", "missing", "r1"})));
+  expect(cases.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing", "r1"}),
          "align_caselbl should conform the case-label axis exactly");
   const auto case_values = cases.features("A").as_series().to_vec<double>();
@@ -1457,7 +1466,7 @@ void test_align_reindex_equivalent() {
   });
   expect(both.features() == std::vector<std::string>({"B", "C", "A"}),
          "align should conform feature labels exactly");
-  expect(both.label().values().as_note().vector() ==
+  expect(both.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing"}),
          "align should conform case labels exactly");
   expect(both.features("A").as_series().to_vec<double>() ==

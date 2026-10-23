@@ -1,0 +1,9 @@
+# Numerical integration
+
+Chapters, in reading order:
+
+- [Integration 1: Data and Functions](integration/integration_01_data_and_functions.md)
+- [Integration 2: Beyond One Interval](integration/integration_02_beyond_one_interval.md)
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

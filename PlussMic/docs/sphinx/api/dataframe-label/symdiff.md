@@ -40,10 +40,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
 auto other = Slate(pluss::make_note({"west", "south"}));
-auto out = labeled.label().symdiff(other);
+auto out = labeled.labels().symdiff(other);
 std::cout << out;
 ```
 

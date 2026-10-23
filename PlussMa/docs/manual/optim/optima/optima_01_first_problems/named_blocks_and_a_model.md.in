@@ -1,0 +1,10 @@
+# Named blocks and a model
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+Named blocks shine when the unknowns mean something. This program fits a straight line to five points. The objective reads like the model, with `slope` and `intercept` as separate blocks, and the answer is read back by those names.
+
+@@example Numerical/optimization/guide/optima/07_named_blocks.cpp@@
+
+The slope `1.9601` and intercept `1.0999` match the closed-form least-squares line for these data, `1.96` and `1.10`, to the solver tolerance. The result keeps both blocks, in order.

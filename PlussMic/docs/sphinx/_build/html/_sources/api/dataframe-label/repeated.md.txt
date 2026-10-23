@@ -47,9 +47,9 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-auto out = labeled.label().repeated();
+auto out = labeled.labels().repeated();
 std::cout << out;
 ```
 
@@ -74,12 +74,12 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 
-auto by_region = grouped.label().repeated({"region"});
+auto by_region = grouped.labels().repeated({"region"});
 std::cout << by_region;
 
-auto by_full_key = grouped.label().repeated();
+auto by_full_key = grouped.labels().repeated();
 std::cout << by_full_key;
 ```
 

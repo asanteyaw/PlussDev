@@ -1,0 +1,8 @@
+# Seasonal models
+
+[Back to ARIMA Models](../ts_02_arima_models.md)
+
+
+@@example Stats/time_series/guide/1209_seasonal_models.cpp@@
+
+The multiplicative seasonal AR model recovers both coefficients (0.449 and 0.562; true 0.5 and 0.6). A non-seasonal AR(2), with the same number of coefficients, fits dramatically worse (log-likelihood −84.7 against −40.1), because it cannot represent the dependence at lags 12 and 13. The forecasts carry the seasonal pattern forward.

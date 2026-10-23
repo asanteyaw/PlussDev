@@ -208,3 +208,51 @@ TEST_CASE("ts partition masks match index outputs", "[ts][partition][mask]") {
     }));
   }
 }
+
+namespace {
+struct Win { std::int64_t train_start, train_end, test_start, test_end; };
+void require_windows(const TsPartition& p, const std::vector<Win>& expected) {
+  REQUIRE(static_cast<std::size_t>(p.num_test_sets()) == expected.size());
+  for (std::size_t i = 0; i < expected.size(); ++i) {
+    const auto& w = p.window(static_cast<std::int64_t>(i));
+    // reference windows are 1-based and inclusive
+    REQUIRE(w.train_start + 1 == expected[i].train_start);
+    REQUIRE(w.train_end + 1 == expected[i].train_end);
+    REQUIRE(w.test_start + 1 == expected[i].test_start);
+    REQUIRE(w.test_end + 1 == expected[i].test_end);
+  }
+}
+}  // namespace
+
+// Reference windows from an independent implementation of the same partitioning rules, covering how unspecified sizes are filled in.
+TEST_CASE("ts partition default sizes match reference windows", "[ts][partition][reference]") {
+  {
+    PartitionOptions o;
+    o.gap_size = 2;
+    require_windows(TsPartition::expanding_window(100, 3, o), {{1, 26, 29, 52}, {1, 50, 53, 76}, {1, 74, 77, 100}});
+    require_windows(TsPartition::sliding_window(100, 3, o), {{3, 26, 29, 52}, {27, 50, 53, 76}, {51, 74, 77, 100}});
+  }
+  {
+    PartitionOptions o;
+    o.test_size = 10;  // the step defaults to the test size and the training size takes what is left
+    require_windows(TsPartition::sliding_window(100, 4, o), {{1, 60, 61, 70}, {11, 70, 71, 80}, {21, 80, 81, 90}, {31, 90, 91, 100}});
+  }
+  {
+    PartitionOptions o;
+    o.train_size = 30;
+    o.step_size = 5;  // the test size takes what is left
+    require_windows(TsPartition::sliding_window(100, 4, o), {{1, 30, 31, 85}, {6, 35, 36, 90}, {11, 40, 41, 95}, {16, 45, 46, 100}});
+  }
+  {
+    PartitionOptions o;
+    o.min_train_size = 40;
+    require_windows(TsPartition::expanding_window(100, 3, o), {{1, 40, 41, 60}, {1, 60, 61, 80}, {1, 80, 81, 100}});
+  }
+  {
+    PartitionOptions o;
+    o.direction = Direction::Forward;
+    o.gap_size = 1;
+    o.step_size = 7;
+    require_windows(TsPartition::expanding_window(100, 3, o), {{1, 78, 80, 86}, {1, 85, 87, 93}, {1, 92, 94, 100}});
+  }
+}

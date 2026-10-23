@@ -246,13 +246,13 @@ std::vector<double> sigma2_path_(const std::vector<double>& e,
     return out;
   }
 
-  const double sum = coeff_sum_(p);
-  const double var_uncond = (sum < 1.0 - stationarity_margin)
-                                ? (p.omega / std::max(1e-15, 1.0 - sum))
-                                : std::numeric_limits<double>::quiet_NaN();
-  const double var0 = (std::isfinite(var_uncond) && var_uncond > variance_floor)
-                          ? var_uncond
-                          : std::max(sample_var_(e), variance_floor);
+  // Pre-sample variance: the mean squared residual, so the likelihood does not depend on the candidate parameters through its start-up value.
+  double mean_sq = 0.0;
+  for (const double v : e) {
+    mean_sq += v * v;
+  }
+  const double var0 = std::max(mean_sq / static_cast<double>(n), variance_floor);
+  (void)stationarity_margin;
 
   const std::int64_t m = static_cast<std::int64_t>(p.arch.size());
   const std::int64_t q = static_cast<std::int64_t>(p.garch.size());

@@ -16,6 +16,7 @@
 #include "pluss/subsp/math/lp/sparse.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -31,6 +32,7 @@ struct IpmOptions final {
   double primal_regularization = 1e-9;
   int refinement_sweeps = 3;
   double time_limit_seconds = 1e30;
+  const std::atomic<bool> *stop = nullptr; // cooperative cancellation (also handed to the crossover simplex)
   std::int32_t dense_column_threshold = 0; // 0 = automatic (max(200, 10% of rows)); columns above it are handled by Woodbury
   bool crossover = true;
   int verbose = 0;
@@ -46,6 +48,7 @@ struct IpmSolution final {
   int iterations{0};
   bool crossed_over{false};
   std::int64_t crossover_iterations{0};
+  std::vector<VarStatus> basis; // after crossover: optimal basis (structurals then row logicals)
   double seconds{0.0};
   std::vector<double> ray;         // Unbounded
   std::vector<double> farkas;      // Infeasible (row multipliers)
@@ -162,7 +165,7 @@ inline StdForm build_standard_form(const Model &mod) {
 
 class InteriorPoint final {
 public:
-  InteriorPoint(const Model &model, const IpmOptions &opt) : model_(model), opt_(opt) { model_.validate(); }
+  InteriorPoint(const Model &model, const IpmOptions &opt) : model_(model), opt_(opt) { model_.validate(); model_.canonicalize_infinities(); }
 
   IpmSolution solve() {
     const auto t0 = std::chrono::steady_clock::now();
@@ -458,7 +461,7 @@ private:
     double best_tau = tau_, best_kappa = kappa_;
     for (int it = 0; it < opt_.max_iterations; ++it) {
       out.iterations = it;
-      if (std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count() > opt_.time_limit_seconds) {
+      if (std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count() > opt_.time_limit_seconds || (opt_.stop && opt_.stop->load(std::memory_order_relaxed))) {
         out.status = SolveStatus::TimeLimit;
         break;
       }
@@ -811,7 +814,9 @@ private:
       if (std::isinf(lo) && std::isinf(hi))
         basis[static_cast<std::size_t>(j)] = VarStatus::Free;
     }
-    Simplex sx(model_, opt_.simplex);
+    SimplexOptions cx_opts = opt_.simplex;
+    cx_opts.stop = opt_.stop;
+    Simplex sx(model_, cx_opts);
     if (!sx.set_basis(basis))
       return;
     auto sol = sx.solve();
@@ -822,6 +827,7 @@ private:
       out.objective = sol.objective;
       out.crossed_over = true;
       out.crossover_iterations = sol.iterations;
+      out.basis = sol.basis;
     }
   }
 
@@ -840,7 +846,9 @@ private:
   bool dense_ready_{false};
 };
 
-inline IpmSolution solve_ipm(const Model &model, const IpmOptions &opt = {}) {
+inline IpmSolution solve_ipm(const Model &model_in, const IpmOptions &opt = {}) {
+  Model model = model_in;
+  model.canonicalize_infinities(); // sentinel infinities (1e30, 1e300) -> real infinities, see sparse.h kInfThreshold
   InteriorPoint ip(model, opt);
   auto out = ip.solve();
   if (out.status == SolveStatus::Unbounded) {

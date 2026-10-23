@@ -1,0 +1,107 @@
+<!-- generated from MvGjr.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::MvGjr`
+
+Fits a constant-conditional-correlation model with a GJR-GARCH variance for every series.
+
+## Signature
+
+```cpp
+ts::MvGjrFit ts::MvGjr::fit_mle(const pluss::Series& y, const ts::MvGjrOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## Construction
+
+`MvGjr` has no instances: it is a namespace for the static `fit_mle`, which returns an [`MvGjrFit`](MvGjrFit.md).
+
+## Methods
+
+### `fit_mle`
+
+```cpp
+ts::MvGjrFit ts::MvGjr::fit_mle(const pluss::Series& y, const ts::MvGjrOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+Fits the model in two stages. First a univariate [`Gjr`](Gjr.md) model is fitted to each column of `y`. Then the standardised residuals of all columns are correlated to give a constant correlation matrix; the covariance of series `i` and `j` at time `t` is then `corr[i][j] · sqrt(h_i,t · h_j,t)`. The correlation is estimated from the standardised residuals after the marginals are fitted, optionally shrunk towards the identity.
+
+`const pluss::Series& y`
+: The returns as an `n × k` matrix, one column per series.
+
+`const ts::MvGjrOptions& options`
+: Options of the univariate models and of the correlation; see [`MvGjrOptions`](MvGjrOptions.md).
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); computation is in double precision.
+
+**Returns.** An [`MvGjrFit`](MvGjrFit.md).
+
+**Errors.** `y` must have at least 8 rows.
+
+## Practical Examples
+
+### Example 1
+
+Fit two series with correlated shocks (true correlation 0.6) and read the estimated correlation and the log-likelihood.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+Series pair(int n) {
+  std::vector<double> y(2 * n);
+  double h1 = 0.4, h2 = 0.4, p1 = 0.0, p2 = 0.0;
+  for (int t = 0; t < n; ++t) {
+    double u = std::sin(12.9898 * (t + 1.0) + 78.233) * 43758.5453, w = std::sin(12.9898 * (t + 40001.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    w -= std::floor(w);
+    const double z1 = (u - 0.5) * std::sqrt(12.0), z2 = (w - 0.5) * std::sqrt(12.0);
+    h1 = 0.05 + 0.15 * p1 * p1 + 0.75 * h1;
+    h2 = 0.10 + 0.10 * p2 * p2 + 0.80 * h2;
+    p1 = std::sqrt(h1) * z1;
+    p2 = std::sqrt(h2) * (0.6 * z1 + 0.8 * z2);
+    y[2 * t] = p1;
+    y[2 * t + 1] = p2;
+  }
+  return pluss::make_series(y, {n, 2}, f64);
+}
+
+int main() {
+  const Series y = pair(1500);
+  const auto fit = ts::MvGjr::fit_mle(y);
+  const auto corr = fit.corr.to_vec<double>();
+  std::cout << std::fixed << std::setprecision(3) << "estimated correlation " << corr[1] << ", log-likelihood " << fit.loglik(y) << "\n";
+}
+```
+
+Output
+
+```text
+estimated correlation 0.612, log-likelihood -3338.331
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`MvGjrOptions`](MvGjrOptions.md)
+- [`MvGjrFit`](MvGjrFit.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

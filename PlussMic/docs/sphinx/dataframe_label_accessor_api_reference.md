@@ -1,6 +1,6 @@
 # DataFrameLabelAccessor API Reference
 
-This page documents the public case-label accessor returned by `DataFrame::label()`.
+This page documents the public case-label accessor returned by `DataFrame::labels()`.
 
 ## Using This Reference
 

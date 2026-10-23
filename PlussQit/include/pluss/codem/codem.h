@@ -408,6 +408,19 @@ inline Series index_put(const Series& self,
 
 } // namespace pluss
 
+// Long-standing shorthand scalar names. Keep these unqualified aliases for
+// source compatibility; the canonical declarations remain in namespace pluss.
+using pluss::f32_t;
+using pluss::f64_t;
+using pluss::i8_t;
+using pluss::i16_t;
+using pluss::i32_t;
+using pluss::i64_t;
+using pluss::u8_t;
+using pluss::u16_t;
+using pluss::u32_t;
+using pluss::u64_t;
+
 namespace pluss::mps {
 
 inline bool is_ready() noexcept {

@@ -1,0 +1,10 @@
+# The Marcus integral
+
+[Back to Jumps and the Marcus Integral](../stochastic_03_jumps_and_marcus.md)
+
+
+The chain rule says `∫ x² dx = x³/3`. A good integral of jump paths should satisfy it. The program integrates `x²` against the path of Program 2 by the Marcus rule, by the Stratonovich average, and by the Ito sum.
+
+@@example Probability/random_processes/guide/sde/22_marcus_vs_ito.cpp@@
+
+The chain-rule value is 0.00164677. Marcus gives 0.00164654, off by 2.4e-7, which is the trapezoid error of the small Brownian steps and shrinks with the grid. The Stratonovich average is off by 0.0781 and the Ito sum by 0.1967, because both treat a jump step as if the path were straight enough to average two ends or to read the start. The last line lets the library find the jump steps by size (a step whose increment exceeds 8 standard deviations); it gives 0.001497, a little off because jumps smaller than that threshold are treated as Brownian. When you know where the jumps are, pass the mask.

@@ -1,0 +1,10 @@
+# Preconditioning
+
+[Back to Symmetric Systems](../krylov_01_symmetric_systems.md)
+
+
+`pcg` takes a second callable, `precondition(r)`, returning `M r` where `M` approximates `A⁻¹`. The preconditioner must itself be symmetric positive definite.
+
+@@example Numerical/linear_algebra/guide/902_preconditioning.cpp@@
+
+The matrix has diagonal entries spanning four decades, so its eigenvalues are spread over four decades and plain conjugate gradients needs 664 iterations. Dividing by the diagonal (Jacobi) rescales the system so its eigenvalues cluster near 1, and 16 iterations suffice, a fortyfold saving for a preconditioner that costs one elementwise multiply. A good preconditioner is the biggest lever on iteration count; the best one is cheap to apply and resembles `A⁻¹`.

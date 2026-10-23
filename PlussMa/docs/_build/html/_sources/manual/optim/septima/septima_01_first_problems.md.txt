@@ -1,0 +1,56 @@
+<!-- generated from septima_01_first_problems.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Septima 1: First Problems
+
+Septima minimizes a function by following its gradient. You write the function once; the library takes the gradient for you, takes a step, and repeats until the step, the gradient and any constraint violation are all small. It is a first-order method: it never builds a Hessian or solves a linear system, so each iteration is cheap and its memory grows only with the number of parameters. After this chapter you can minimize a function with Adam or L-BFGS, hand it the parameters in the form that suits your model, read what the run returns, and tell how it ended.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+An iteration does four things. It evaluates the objective and its gradient (by reverse-mode automatic differentiation, so you never write the gradient), takes a step with the chosen optimizer, updates the multipliers of any constraints (chapter 2), and then asks whether to stop. The pieces you handle are few:
+
+| Piece | What it is |
+|---|---|
+| `optim::septima(objective, start, options, constraints)` | the one call that runs the solver and returns a `SeptimaResult` |
+| `objective` | a function of the parameters that returns one number, written on `Trace` values (or on plain `Series` values) |
+| `start` | the starting parameters: one `Series`, a list of them, or a named `ParameterPack` |
+| `SeptimaSolveOptions` | the budget and the tolerances; its member `step` holds the optimizer settings |
+| `SeptimaConstraints` | bounds, equalities and inequalities (chapter 2); omit it for an unconstrained problem |
+| `SeptimaResult` | the answer and everything about how the run went |
+
+There are two optimizers. **Adam** takes a step of roughly a fixed size, set by its learning rate, in a direction smoothed over recent gradients; it needs no line search and tolerates noisy or badly scaled gradients, and it is the default. **L-BFGS** remembers a short history of steps and gradients and uses it to take much longer, curvature-aware steps; it needs far fewer iterations on smooth problems. You choose with `options.step.optimizer`.
+
+The defaults are a starting point, not a tuned recipe. The first program shows how much that matters.
+
+## Programs
+
+- [The smallest problem, and why the defaults are not enough](septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no.md)
+- [A curved valley](septima_01_first_problems/a_curved_valley.md)
+- [Three ways to hand over the same objective](septima_01_first_problems/three_ways_to_hand_over_the_same_objective.md)
+- [Reading the result](septima_01_first_problems/reading_the_result.md)
+- [How a run ends](septima_01_first_problems/how_a_run_ends.md)
+- [Watching a run](septima_01_first_problems/watching_a_run.md)
+
+## What to remember
+
+- `septima(objective, start, options, constraints)` runs the solver; the gradient comes from automatic differentiation of your objective.
+- The defaults are not tuned. Adam's default learning rate (0.001) and budget (200 iterations) will not solve most problems; set the learning rate to the scale of your parameters, or use L-BFGS.
+- `Converged` needs all three of gradient, step and violation within tolerance. A run that ends with `MaxIterations` or `NoProgress` may still have a good answer: read `objective_value`, `stationarity` and `step_inf_norm`.
+- `stationarity` is the measure of optimality; `gradient_inf_norm` is the objective's gradient alone and is not zero at a constrained optimum.
+- Pass parameters as one block, a list of blocks, or named blocks; write the objective on `Trace` or on `Series`. The result is the same.
+- A progress hook sees every iteration and can stop the run.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no
+septima_01_first_problems/a_curved_valley
+septima_01_first_problems/three_ways_to_hand_over_the_same_objective
+septima_01_first_problems/reading_the_result
+septima_01_first_problems/how_a_run_ends
+septima_01_first_problems/watching_a_run
+```
+<!-- apiref:toctree:end -->

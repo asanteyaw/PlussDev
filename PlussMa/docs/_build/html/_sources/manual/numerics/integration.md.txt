@@ -1,0 +1,18 @@
+<!-- generated from integration.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Numerical integration
+
+Chapters, in reading order:
+
+- [Integration 1: Data and Functions](integration/integration_01_data_and_functions.md)
+- [Integration 2: Beyond One Interval](integration/integration_02_beyond_one_interval.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integration/integration_01_data_and_functions
+integration/integration_02_beyond_one_interval
+```
+<!-- apiref:toctree:end -->

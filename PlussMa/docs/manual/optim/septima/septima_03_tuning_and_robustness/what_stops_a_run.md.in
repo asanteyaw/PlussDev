@@ -1,0 +1,12 @@
+# What stops a run
+
+[Back to Tuning and Robustness](../septima_03_tuning_and_robustness.md)
+
+
+Three gradient tolerances on the ten-variable chain with L-BFGS, and then a problem whose curvature differs by a factor of 10 000 between its two variables.
+
+@@example Numerical/optimization/guide/septima/125_stopping_rules.cpp@@
+
+With a gradient tolerance of 1e-3 the run converges in 99 iterations. With 1e-6 and 1e-9 it ends in 124 iterations with `NoProgress`, at the same gradient (2.5e-04) and the same objective (3.3e-10): this method, without a line search, cannot bring the gradient lower than that, so asking for more changes the flag and nothing else. **If a run ends with `NoProgress` and the gradient is within a small factor of what you need, the answer is usually the answer; loosen the tolerance to match what you can use, and the flag will say so.**
+
+On the stretched quadratic, both Adam runs converge (in 531 and 422 iterations), and L-BFGS in 5. Adam divides each coordinate's step by the size of that coordinate's own gradients, so a stretch along the axes costs it little. L-BFGS learns the curvature itself and needs far fewer iterations.

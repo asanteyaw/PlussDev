@@ -17,7 +17,7 @@ Series::antidiff(const Series& x) -> SeriesAntidiffProxy
 
 `antidiff` is a namespace-like accessor for numerical antidifferentiation of
 an already-sampled `Series`: composite-trapezoidal integration
-(`trapezoid`) and its running form (`cumulative_trapezoid`). Like
+(`trapezoid`) and its running form (`cumulative_trapezoid`), stochastic integrals of sampled values (`ito`, `strat`, `theta`) and quadratic variation and covariation. Like
 `linearalg`, it does not compute a value by itself — it selects the method
 family and keeps the owning `Series` as the values being integrated.
 

@@ -24,7 +24,21 @@ struct PresolveOptions final {
   int max_passes = 20;
   bool dual_fixing = true;
   bool tighten_integer_bounds = true;
+  bool column_singletons = true;      // eliminate implied-free column singletons of equality rows
   bool coefficient_tightening = true; // MIP only: strengthen big-M style coefficients of one-sided rows (Savelsbergh 1994)
+};
+
+// A singleton row  lo <= a x_j <= hi  (bounds already shifted by removed columns) that was folded into the bounds of column j.
+struct SingletonRow final {
+  std::int32_t row, col;
+  double coef, lo, hi;
+};
+
+// Column x_j that appeared in exactly one (equality) row i and whose bounds are implied by that row: eliminated with the row
+// (x_j = (b_i - sum_k a_ik x_k) / a_ij), costs of the other columns of the row adjusted.
+struct Substitution final {
+  std::int32_t row, col;
+  double coef;
 };
 
 struct PresolveResult final {
@@ -33,6 +47,10 @@ struct PresolveResult final {
   std::vector<std::int32_t> col_map, row_map;   // reduced index -> original index
   std::vector<double> fixed_value;               // size original cols: value of removed columns (NaN if kept)
   std::vector<char> col_removed, row_removed;
+  std::vector<Substitution> substitutions;      // in removal order
+  SparseMatrix orig_rows;                       // transpose of the input matrix (row access for the substitution postsolve)
+  std::vector<double> orig_row_lo;
+  std::vector<SingletonRow> singletons;         // in removal order; used to rebuild the basis of the original model
   std::vector<double> orig_col_lo, orig_col_hi; // bounds of the input model (to place removed columns on the right side)
   std::int32_t original_rows{0}, original_cols{0};
   double objective_offset{0.0};
@@ -46,10 +64,23 @@ struct PresolveResult final {
         x[static_cast<std::size_t>(j)] = fixed_value[static_cast<std::size_t>(j)];
     for (std::size_t k = 0; k < col_map.size(); ++k)
       x[static_cast<std::size_t>(col_map[k])] = xr[k];
+    for (std::size_t t = substitutions.size(); t-- > 0;) { // latest elimination first: its row only holds columns that are known by now
+      const auto &sb = substitutions[t];
+      const auto i = static_cast<std::size_t>(sb.row);
+      double rest = 0.0;
+      for (std::int64_t q = orig_rows.start[i]; q < orig_rows.start[i + 1]; ++q) {
+        const auto k = static_cast<std::size_t>(orig_rows.index[static_cast<std::size_t>(q)]);
+        if (k != static_cast<std::size_t>(sb.col))
+          rest += orig_rows.value[static_cast<std::size_t>(q)] * x[k];
+      }
+      x[static_cast<std::size_t>(sb.col)] = (orig_row_lo[i] - rest) / sb.coef;
+    }
     return x;
   }
-  // basis of the reduced model -> crash basis of the original model (size cols + rows)
-  [[nodiscard]] std::vector<VarStatus> expand_basis(const std::vector<VarStatus> &br) const {
+  // basis of the reduced model -> crash basis of the original model (size cols + rows). `xr` is the reduced primal solution: a column
+  // that sits at a bound created by a singleton row becomes basic and that row's logical becomes non-basic (the row is tight), which
+  // gives the removed row its dual value and keeps the basis dual feasible; without it the expanded basis is far from optimal.
+  [[nodiscard]] std::vector<VarStatus> expand_basis(const std::vector<VarStatus> &br, const std::vector<double> &xr = {}) const {
     const auto n0 = static_cast<std::size_t>(original_cols), m0 = static_cast<std::size_t>(original_rows);
     std::vector<VarStatus> b(n0 + m0, VarStatus::AtLower);
     for (std::size_t i = 0; i < m0; ++i)
@@ -69,6 +100,37 @@ struct PresolveResult final {
       b[static_cast<std::size_t>(col_map[k])] = br[k];
     for (std::size_t i = 0; i < row_map.size(); ++i)
       b[n0 + static_cast<std::size_t>(row_map[i])] = br[nr + i];
+    // singleton rows, latest first: the row that created the binding bound takes over from its column
+    std::vector<std::size_t> reduced_index(n0, std::numeric_limits<std::size_t>::max());
+    for (std::size_t k = 0; k < nr; ++k)
+      reduced_index[static_cast<std::size_t>(col_map[k])] = k;
+    for (std::size_t t = singletons.size(); t-- > 0;) {
+      const auto &sr = singletons[t];
+      const auto j = static_cast<std::size_t>(sr.col);
+      const auto i = static_cast<std::size_t>(sr.row);
+      if (b[n0 + i] != VarStatus::Basic || b[j] == VarStatus::Basic)
+        continue;
+      double v;
+      if (col_removed[j])
+        v = fixed_value[j];
+      else if (reduced_index[j] < xr.size())
+        v = xr[reduced_index[j]];
+      else
+        continue;
+      const double act = sr.coef * v;
+      const double scale = 1.0 + std::abs(act);
+      const bool at_lo = !std::isinf(sr.lo) && std::abs(act - sr.lo) <= 1e-9 * scale;
+      const bool at_hi = !std::isinf(sr.hi) && std::abs(act - sr.hi) <= 1e-9 * scale;
+      if (!at_lo && !at_hi)
+        continue;
+      // the column must be nonbasic at exactly the value this row pins (not at an original bound that happens to coincide)
+      b[j] = VarStatus::Basic;
+      b[n0 + i] = at_lo ? VarStatus::AtLower : VarStatus::AtUpper;
+    }
+    for (const auto &sb : substitutions) { // eliminated column is basic, its (equality) row non-basic: row dual = c_j / a_ij
+      b[static_cast<std::size_t>(sb.col)] = VarStatus::Basic;
+      b[n0 + static_cast<std::size_t>(sb.row)] = VarStatus::AtLower;
+    }
     return b;
   }
 };
@@ -84,11 +146,13 @@ inline PresolveResult presolve(const Model &in, const PresolveOptions &opt = {})
   r.fixed_value.assign(n, std::numeric_limits<double>::quiet_NaN());
   Model w = in; // working copy (bounds are tightened in place)
   r.orig_col_lo = in.col_lo;
+  r.orig_row_lo = in.row_lo;
   r.orig_col_hi = in.col_hi;
   const bool has_int = !in.integer.empty();
   auto is_int = [&](std::size_t j) { return has_int && in.integer[j]; };
   const SparseMatrix &a = in.a;
   const SparseMatrix at = a.transposed(); // rows as "columns"
+  r.orig_rows = at;
   std::vector<std::int32_t> row_cnt(m, 0), col_cnt(n, 0);
   for (std::size_t j = 0; j < n; ++j)
     col_cnt[j] = static_cast<std::int32_t>(a.start[j + 1] - a.start[j]);
@@ -202,6 +266,7 @@ inline PresolveResult presolve(const Model &in, const PresolveOptions &opt = {})
           round_int_bounds(jj);
           if (w.col_lo[jj] > w.col_hi[jj] + tol)
             return fail(SolveStatus::Infeasible);
+          r.singletons.push_back({static_cast<std::int32_t>(i), static_cast<std::int32_t>(jj), aij, w.row_lo[i], w.row_hi[i]});
           remove_row(i);
           changed = true;
           continue;
@@ -294,6 +359,71 @@ inline PresolveResult presolve(const Model &in, const PresolveOptions &opt = {})
           if (w.col_lo[k] > w.col_hi[k] + 1e-9)
             return fail(SolveStatus::Infeasible);
         }
+      }
+    }
+    // ---- column singletons in equality rows with implied-free bounds: eliminate column and row (no fill-in)
+    if (opt.column_singletons) {
+      for (std::size_t j = 0; j < n; ++j) {
+        if (r.col_removed[j] || col_cnt[j] != 1 || is_int(j))
+          continue;
+        std::size_t i = m;
+        double aij = 0.0;
+        for (std::int64_t p = a.start[j]; p < a.start[j + 1]; ++p) {
+          const auto ii = static_cast<std::size_t>(a.index[static_cast<std::size_t>(p)]);
+          if (!r.row_removed[ii]) {
+            i = ii;
+            aij = a.value[static_cast<std::size_t>(p)];
+          }
+        }
+        if (i >= m || std::abs(aij) < 1e-9 || std::isinf(w.row_lo[i]) || w.row_lo[i] != w.row_hi[i] || row_cnt[i] < 2 || row_cnt[i] > 5000)
+          continue;
+        double amin = 0.0, amax = 0.0, amax_abs = 0.0;
+        int min_inf = 0, max_inf = 0;
+        for (std::int64_t q = at.start[i]; q < at.start[i + 1]; ++q) {
+          const auto k = static_cast<std::size_t>(at.index[static_cast<std::size_t>(q)]);
+          if (r.col_removed[k] || k == j)
+            continue;
+          const double v = at.value[static_cast<std::size_t>(q)];
+          amax_abs = std::max(amax_abs, std::abs(v));
+          const double lo = w.col_lo[k], hi = w.col_hi[k];
+          if (v > 0) {
+            if (std::isinf(lo)) ++min_inf; else amin += v * lo;
+            if (std::isinf(hi)) ++max_inf; else amax += v * hi;
+          } else {
+            if (std::isinf(hi)) ++min_inf; else amin += v * hi;
+            if (std::isinf(lo)) ++max_inf; else amax += v * lo;
+          }
+        }
+        if (amax_abs > 1e3 * std::abs(aij))
+          continue; // the elimination would amplify the other coefficients in the costs
+        // implied range of x_j = (b - activity) / aij
+        double ilo = -kInf, ihi = kInf;
+        const double b = w.row_lo[i];
+        const double e_lo = max_inf == 0 ? (b - amax) / aij : (aij > 0 ? -kInf : kInf);
+        const double e_hi = min_inf == 0 ? (b - amin) / aij : (aij > 0 ? kInf : -kInf);
+        if (aij > 0) { ilo = e_lo; ihi = e_hi; } else { ilo = e_hi; ihi = e_lo; }
+        const double ftol = 1e-9 * (1.0 + std::abs(b));
+        if ((!std::isinf(w.col_lo[j]) && !(ilo >= w.col_lo[j] - ftol)) || (!std::isinf(w.col_hi[j]) && !(ihi <= w.col_hi[j] + ftol)))
+          continue; // not implied free
+        // eliminate: costs of the row's other columns absorb c_j
+        const double cj = w.cost[j];
+        if (cj != 0.0) {
+          for (std::int64_t q = at.start[i]; q < at.start[i + 1]; ++q) {
+            const auto k = static_cast<std::size_t>(at.index[static_cast<std::size_t>(q)]);
+            if (r.col_removed[k] || k == j)
+              continue;
+            w.cost[k] -= cj * at.value[static_cast<std::size_t>(q)] / aij;
+          }
+          w.offset += cj * b / aij;
+        }
+        r.col_removed[j] = 1;
+        r.fixed_value[j] = 0.0; // recomputed by expand() from the row
+        ++r.removed_cols;
+        for (std::int64_t p = a.start[j]; p < a.start[j + 1]; ++p) { // j's single live row is i: nothing else to shift
+        }
+        r.substitutions.push_back({static_cast<std::int32_t>(i), static_cast<std::int32_t>(j), aij});
+        remove_row(i);
+        changed = true;
       }
     }
     // ---- dual fixing (locks)

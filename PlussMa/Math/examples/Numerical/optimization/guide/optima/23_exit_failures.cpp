@@ -1,4 +1,4 @@
-// The five flags that mean the solver could not deliver a solution. Each comes with the program
+// The flags that mean the solver could not deliver a solution. Each comes with the program
 // state that triggers it, and the result still carries the last point reached.
 #include <pluss/ma.h>
 
@@ -41,9 +41,16 @@ int main() {
   const auto impossible_equality = optim::constraints().nl_eq(
       [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) + 1.0; });
 
-  // NoFeasiblePoint: the interior-point method needs a strictly feasible start region and finds none.
+  // NoFeasiblePoint: the interior method keeps bounds and linear rows strictly satisfied, so it first looks for
+  // a point inside them. Here x0 + x1 <= -1 contradicts x >= 0, and it finds none.
   optim::OptimaOptions interior;
   interior.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  const auto impossible_linear = optim::constraints()
+                                     .lbs(vec({0.0, 0.0}))
+                                     .ln_ineq(pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2}).to(f64), vec({-1.0}));
+  report("interior method, impossible linear rows", optim::optima(objective, vec({1.0, 1.0}), interior, impossible_linear));
+
+  // ConstraintStationary also covers a nonlinear inequality that no point satisfies.
   report("interior method, impossible inequality", optim::optima(objective, vec({0.0, 0.0}), interior, impossible_inequality));
 
   // NoProgress: the recovery step could not reduce the violation, so the run gave up.

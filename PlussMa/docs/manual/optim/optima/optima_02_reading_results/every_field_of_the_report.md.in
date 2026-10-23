@@ -1,0 +1,26 @@
+# Every field of the report
+
+[Back to Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+
+`result.output` is the structured report. This program prints each field of one solve so you can match it against the table below.
+
+@@example Numerical/optimization/guide/optima/25_output_fields.cpp@@
+
+| Field | Meaning |
+|---|---|
+| `algorithm` | The method's label: `merit-method`, `sqp`, `working-set` or `internal-protocol`. |
+| `iterations`, `function_evaluations` | Major iterations and the number of objective evaluations. The second is far larger when line searches or recovery steps run. |
+| `constraint_violation` | The largest violation of any constraint at the returned point. |
+| `first_order_optimality` | How far the returned point is from satisfying the optimality conditions. For sequential QP and the working-set method it is the largest component of the Lagrangian gradient at the returned point, using the multiplier estimate in `result.multipliers`, measured on the scale the optimality tolerance uses: for sequential QP and the interior method it is divided by the larger of 1 and the size of the gradient at the start. A start where the gradient is enormous therefore makes a large absolute residual look small (chapter 8, Program 4). |
+| `step_size`, `line_search_fraction` | The fraction of the full step the last iteration accepted. |
+| `backend_parameter` | The method's own control parameter: the penalty weight for the QP methods and the merit method, the barrier parameter for the interior method. Sequential QP sets its penalty weight from the size of the multipliers at each iteration, so it moves between iterations; here it ended at `3.5769`. |
+| `complementarity` | The complementarity residual; meaningful for the interior method, zero otherwise. |
+| `krylov_iterations` | Iterations spent in the iterative linear solver, when it is used. |
+| `best_feasible_available`, `returned_best_feasible` | Whether a feasible checkpoint was recorded, and whether the answer in `params` is that checkpoint. |
+| `best_feasible_value`, `best_feasible_constraint_violation`, `best_feasible_first_order_optimality` | The checkpoint's objective value, violation and stationarity. Infinity when no checkpoint exists. |
+| `multiplier_max_norm`, `active_multiplier_count` | The largest multiplier magnitude, and how many constraints are active. |
+| `detail_message` | The expanded message, including the stall diagnostic for a failed run. |
+| `stall_category`, `stall_measure`, `stall_reference` | The stall category, the quantity that triggered it, and the threshold it was compared with. |
+
+The solve is a success: `first_order_optimality` is `1e-8`, so the returned point satisfies the optimality conditions to high accuracy in only nine evaluations. `multiplier_max_norm` is `3.2426`, the multiplier of the one active constraint.

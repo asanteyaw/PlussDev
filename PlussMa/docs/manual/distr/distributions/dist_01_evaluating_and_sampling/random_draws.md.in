@@ -1,0 +1,8 @@
+# Random draws
+
+[Back to Evaluating and Sampling](../dist_01_evaluating_and_sampling.md)
+
+
+@@example Stats/distributions/guide/1302_sampling.cpp@@
+
+With 200 000 draws the sample mean agrees with the exact mean to about three decimals (the standard error of a mean is sd / √n: 0.0045 for the first normal), the variance to within a percent, and the fraction of draws below a threshold with the distribution function there. The same seed gives identical draws, a different seed different ones, and `sample_like` returns an array of the same shape and dtype as its template.

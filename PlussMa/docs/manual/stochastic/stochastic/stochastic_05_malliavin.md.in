@@ -1,0 +1,30 @@
+# Stochastic 5: Malliavin Calculus
+
+Ordinary calculus differentiates with respect to a number. Malliavin calculus differentiates with respect to the noise itself: how much does a random quantity `F` change if the Brownian increment in one step is nudged? The answer is a number per increment, and it unlocks things the pathwise derivative cannot do. After this chapter you can compute the discrete Malliavin derivative of any functional of a path, integrate an anticipating process with the Skorokhod integral, and price a sensitivity of a payoff that has a jump in it.
+
+## The mental model
+
+Discretize a Wiener path into increments `ΔW_1, …, ΔW_n`. A functional `F` of the path is a function of those increments, and the **Malliavin derivative** is its gradient with respect to them: `D_i F = ∂F / ∂(ΔW_i)`. The library computes it by autodiff in one reverse pass, whatever `n` is. For `F = W_T²` it is `2 W_T` on every increment; for `F = max(W)` it is 1 on the increments up to the position of the maximum and 0 after it.
+
+The **Skorokhod integral** extends the Ito integral to processes `u` that may look into the future:
+
+```
+δ(u) = Σ u_i ΔW_i − Σ (∂u_i / ∂ΔW_i) Δt
+```
+
+For an adapted `u` the second sum vanishes and `δ(u)` is the Ito sum. The two are linked by the duality `E[F δ(u)] = E[Σ u_i D_i F Δt]`, which is what makes the Malliavin derivative useful for estimating derivatives of expectations: integrating by parts moves the derivative from the payoff onto a weight.
+
+## A guided tour
+
+- [The derivative of two functionals](stochastic_05_malliavin/the_derivative_of_two_functionals.md)
+- [The Skorokhod integral](stochastic_05_malliavin/the_skorokhod_integral.md)
+- [A digital option's delta](stochastic_05_malliavin/a_digital_option_s_delta.md)
+
+## What to remember
+
+- `D_i F = ∂F/∂ΔW_i` is the gradient of a functional with respect to the Brownian increments; it costs one reverse pass.
+- The Skorokhod integral is the Ito sum for adapted integrands and still defined for anticipating ones.
+- Use pathwise derivatives for smooth payoffs and a Malliavin weight for payoffs with jumps. The weight must be derived for the model and the sensitivity at hand; the library provides the derivative and the integral that make that derivation checkable.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

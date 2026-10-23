@@ -1,0 +1,22 @@
+<!-- generated from linprog.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Linear programming
+
+Chapters, in reading order:
+
+- [Linear Programming 1: First Programs](linprog/linprog_01_first_programs.md)
+- [Linear Programming 2: Prices and Certificates](linprog/linprog_02_prices_and_certificates.md)
+- [Linear Programming 3: Methods, Warm Starts and Sweeps](linprog/linprog_03_methods_warm_starts_and_sweeps.md)
+- [Linear Programming 4: Large Sparse Models](linprog/linprog_04_large_sparse_models.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog/linprog_01_first_programs
+linprog/linprog_02_prices_and_certificates
+linprog/linprog_03_methods_warm_starts_and_sweeps
+linprog/linprog_04_large_sparse_models
+```
+<!-- apiref:toctree:end -->

@@ -218,6 +218,160 @@ void test_sod_shock_tube() {
   expect(std::abs(end_p.index_select(0, sample).mean().item<double>() -
                   0.303130) < 0.035,
          "Sod left-star pressure is outside the finite-volume tolerance");
+
+  gas::RunOptions high_order = options;
+  high_order.step.recon = gas::Recon::Weno5;
+  high_order.step.flux = gas::FluxScheme::Hllc;
+  const auto weno_path =
+      gas::evolve_to(initial, grid, seconds(0.0), seconds(0.1), {}, high_order);
+  const auto weno_end = final_state(weno_path, grid);
+  const Series weno_rho = weno_end.density().si_value();
+  const Series weno_pressure = gas::pressure(weno_end, grid).si_value();
+  expect(weno_rho.gt(0.0).logical_and(weno_rho.isfinite()).all().item<bool>() &&
+             weno_pressure.gt(0.0)
+                 .logical_and(weno_pressure.isfinite())
+                 .all()
+                 .item<bool>(),
+         "WENO5/HLLC Sod evolution lost positivity or finiteness");
+  expect(std::abs(weno_rho.sum().item<double>() - rho.sum().item<double>()) <
+                 2e-11 &&
+             std::abs(weno_end.energy().si_value().sum().item<double>() -
+                      initial.energy().si_value().sum().item<double>()) < 2e-11,
+         "WENO5/HLLC Sod evolution lost periodic conservation");
+}
+
+void test_hllc_contact_free_stream_and_reverse() {
+  constexpr std::int64_t n = 40;
+  const auto grid = grid1(n, 1.0 / n);
+  const Series lane = pluss::series::arange(0, n, 1, ScalarType::Float64);
+  const Series left = lane.lt(n / 2);
+  const Series rho = left.where(pluss::series::full_like(lane, 1.0),
+                                pluss::series::full_like(lane, 2.0));
+  const Series pressure = pluss::series::ones_like(rho);
+  const Series speed = pluss::series::zeros_like(rho).unsqueeze(0);
+  const auto contact = primitive(rho, speed, pressure, grid);
+
+  gas::Options rusanov;
+  rusanov.recon = gas::Recon::Cell;
+  rusanov.flux = gas::FluxScheme::Rusanov;
+  gas::Options hllc = rusanov;
+  hllc.flux = gas::FluxScheme::Hllc;
+  const auto diffuse = gas::rate(contact, grid, {}, rusanov);
+  const auto resolved = gas::rate(contact, grid, {}, hllc);
+  expect(diffuse.density.si_value().abs().max().item<double>() > 1.0,
+         "Rusanov contact oracle did not expose density diffusion");
+  expect(resolved.density.si_value().abs().max().item<double>() < 1e-13 &&
+             resolved.momentum.si_value().abs().max().item<double>() < 1e-13 &&
+             resolved.energy.si_value().abs().max().item<double>() < 1e-13,
+         "HLLC did not exactly preserve a stationary contact");
+
+  const auto plane = grid2(7, 5, 0.2, 0.3);
+  const Series plane_rho =
+      pluss::series::full({2, 7, 5}, 1.25, ScalarType::Float64);
+  const Series plane_pressure = pluss::series::full_like(plane_rho, 0.9);
+  const Series u = pluss::series::full_like(plane_rho, 0.3);
+  const Series v = pluss::series::full_like(plane_rho, -0.1);
+  const Series plane_velocity = u.unsqueeze(1).unite({v.unsqueeze(1)}, 1);
+  const auto free_stream =
+      primitive(plane_rho, plane_velocity, plane_pressure, plane);
+  const auto free_rate = gas::rate(free_stream, plane, {}, hllc);
+  expect(free_rate.density.si_value().abs().max().item<double>() < 1e-13 &&
+             free_rate.momentum.si_value().abs().max().item<double>() < 1e-13 &&
+             free_rate.energy.si_value().abs().max().item<double>() < 1e-13,
+         "HLLC did not preserve a batched multidimensional free stream");
+
+  Series amplitude = pluss::series::full({}, 0.03, ScalarType::Float64);
+  amplitude.tracks_slope_(true);
+  const Series wave = lane.mul(6.283185307179586 / n).sin();
+  const auto tracked =
+      primitive(wave.mul(amplitude).add(1.1), wave.mul(0.1).unsqueeze(0),
+                wave.mul(0.02).add(1.0), grid);
+  gas::rate(tracked, grid, {}, hllc).energy.si_value().square().sum().reverse();
+  expect(amplitude.has_sensitivity() &&
+             std::isfinite(amplitude.sensitivity().item<double>()),
+         "HLLC severed reverse sensitivity");
+
+  expect_failure(
+      [&] {
+        gas::Options invalid = hllc;
+        invalid.flux = static_cast<gas::FluxScheme>(99);
+        (void)gas::rate(contact, grid, {}, invalid);
+      },
+      "an unknown gas flux scheme was accepted");
+}
+
+void test_muscl_limiter_contracts() {
+  const Series back =
+      pluss::series::make({1.0, 1.0, -1.0, 0.0, 2.0}, ScalarType::Float64);
+  const Series forward =
+      pluss::series::make({1.0, 3.0, -2.0, 1.0, -1.0}, ScalarType::Float64);
+  expect(gas::detail::limited_slope(back, forward, gas::Recon::Cell)
+             .equal(pluss::series::zeros_like(back)),
+         "piecewise-constant reconstruction produced a slope");
+  expect(gas::detail::limited_slope(back, forward, gas::Recon::Minmod)
+             .allclose(pluss::series::make({1.0, 1.0, -1.0, 0.0, 0.0},
+                                           ScalarType::Float64),
+                       0.0, 0.0),
+         "minmod limiter values are incorrect");
+  expect(gas::detail::limited_slope(back, forward, gas::Recon::Mc)
+             .allclose(pluss::series::make({1.0, 2.0, -1.5, 0.0, 0.0},
+                                           ScalarType::Float64),
+                       0.0, 0.0),
+         "monotonized-central limiter values are incorrect");
+  expect(gas::detail::limited_slope(back, forward, gas::Recon::VanLeer)
+             .allclose(pluss::series::make({1.0, 1.5, -4.0 / 3.0, 0.0, 0.0},
+                                           ScalarType::Float64),
+                       2e-15, 2e-15),
+         "van Leer harmonic limiter values are incorrect");
+
+  constexpr std::int64_t n = 24;
+  const auto grid = grid1(n, 1.0 / n);
+  const Series rho = pluss::series::full({n}, 1.1, ScalarType::Float64);
+  const Series velocity = pluss::series::full({1, n}, 0.2, ScalarType::Float64);
+  const Series pressure = pluss::series::full_like(rho, 0.9);
+  const auto state = primitive(rho, velocity, pressure, grid);
+  for (const auto recon : {gas::Recon::Mc, gas::Recon::VanLeer}) {
+    gas::Options options;
+    options.recon = recon;
+    options.flux = gas::FluxScheme::Hllc;
+    const auto value = gas::rate(state, grid, {}, options);
+    expect(value.density.si_value().abs().max().item<double>() < 1e-14 &&
+               value.momentum.si_value().abs().max().item<double>() < 1e-14 &&
+               value.energy.si_value().abs().max().item<double>() < 1e-14,
+           "a MUSCL limiter failed exact free-stream preservation");
+  }
+}
+
+void test_weno5_reconstruction() {
+  const auto scalar = [](double value) {
+    return pluss::series::full({}, value, ScalarType::Float64);
+  };
+  const auto average = [&](double center) {
+    return scalar(center * center + 1.0 / 12.0);
+  };
+  const Series left = gas::detail::weno5_left(
+      average(-2.0), average(-1.0), average(0.0), average(1.0), average(2.0));
+  const Series right = gas::detail::weno5_left(
+      average(3.0), average(2.0), average(1.0), average(0.0), average(-1.0));
+  expect(std::abs(left.item<double>() - 0.25) < 2e-14 &&
+             std::abs(right.item<double>() - 0.25) < 2e-14,
+         "WENO5 did not reconstruct an exact quadratic cell average at the "
+         "shared face");
+
+  constexpr std::int64_t n = 32;
+  const auto grid = grid1(n, 1.0 / n);
+  const Series rho = pluss::series::full({n}, 1.2, ScalarType::Float64);
+  const auto state =
+      primitive(rho, pluss::series::full({1, n}, -0.15, ScalarType::Float64),
+                pluss::series::full_like(rho, 0.95), grid);
+  gas::Options options;
+  options.recon = gas::Recon::Weno5;
+  options.flux = gas::FluxScheme::Hllc;
+  const auto value = gas::rate(state, grid, {}, options);
+  expect(value.density.si_value().abs().max().item<double>() < 2e-13 &&
+             value.momentum.si_value().abs().max().item<double>() < 2e-13 &&
+             value.energy.si_value().abs().max().item<double>() < 2e-13,
+         "periodic WENO5 failed exact free-stream preservation");
 }
 
 void test_failures_and_reverse_sensitivity() {
@@ -270,6 +424,9 @@ int main() {
     test_constant_batch_and_cfl();
     test_periodic_conservation_and_fixed_path();
     test_sod_shock_tube();
+    test_hllc_contact_free_stream_and_reverse();
+    test_muscl_limiter_contracts();
+    test_weno5_reconstruction();
     test_failures_and_reverse_sensitivity();
     std::cout << "NatSci compressible-flow checks passed\n";
     return 0;

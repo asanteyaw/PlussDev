@@ -188,11 +188,12 @@ fftshift/ifftshift: dim out of range
 - [`ifftshift()`](ifftshift.md) restores index-zero frequency layout.
 - [`roll()`](roll.md) performs a general circular shift with explicit amounts.
 - [`dct()`](dct.md) and [`dst()`](dst.md) compute real transform coefficients.
+- [`fft()`](fft.md), [`ifft()`](ifft.md), [`rfft()`](rfft.md) and [`irfft()`](irfft.md) produce the spectra that this reorders.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="factorial.html">
+  <a class="prev-link" href="fft.html">
     <span class="label">Previous</span>
-    <span class="title">factorial</span>
+    <span class="title">fft</span>
   </a>
   <a class="next-link" href="fill.html">
     <span class="label">Next</span>

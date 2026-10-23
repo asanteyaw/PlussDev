@@ -44,8 +44,8 @@ manual explains how to choose and combine those APIs.
 
 This manual does not use one token example per feature. Important APIs are
 shown in several contexts: a minimal call, a realistic workflow, option and
-error cases, and combinations with adjacent APIs. A short example teaches the
-shape of a call; later examples teach how to use it in a program.
+error cases, and combinations with adjacent APIs. A short example shows the
+shape of a call; later examples show how to use it in a program.
 
 In-memory frames are created directly when the lesson is about table
 operations. I/O chapters use files such as `"sales.csv"` and
@@ -89,7 +89,7 @@ operations against the current PlussMic build. A table shown after
 `df.to_string()` is its `to_string()` result; output from `head()`, `show()`, or
 another renderer is never substituted. When output reveals surprising
 behavior, the source and tests are checked first; source-level defects are
-fixed before the manual teaches the behavior as correct.
+fixed before the manual presents the behavior as correct.
 
 ```{toctree}
 :maxdepth: 2

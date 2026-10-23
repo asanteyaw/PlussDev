@@ -4,6 +4,7 @@
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
 #include "pluss/subsp/stats/distr.h"
+#include "pluss/subsp/stats/tails.h"
 
 #include <algorithm>
 #include <chrono>
@@ -91,6 +92,31 @@ double norm_quantile_(double p, Config cfg) {
   return 0.5 * (lo + hi);
 }
 
+double t_cdf_(double x, double dof, Config cfg) {
+  const Series q = pluss::make_series(std::vector<double>{x}, {1}, cfg);
+  return clamp01_(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q).item<double>());
+}
+
+double t_quantile_(double p, double dof, Config cfg) {
+  if (p <= 0.0) {
+    return -std::numeric_limits<double>::infinity();
+  }
+  if (p >= 1.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  double lo = -128.0;
+  double hi = 128.0;
+  for (std::int64_t i = 0; i < 140; ++i) {
+    const double mid = 0.5 * (lo + hi);
+    if (t_cdf_(mid, dof, cfg) < p) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return 0.5 * (lo + hi);
+}
+
 void check_options_(const QuantileOptions& options, const char* op) {
   PLUSS_CHECK(std::isfinite(options.tau) && options.tau > 0.0 && options.tau < 1.0,
               std::string(op) + ": tau must be in (0,1)");
@@ -131,34 +157,6 @@ std::string fmt_short_(double x) {
   return oss.str();
 }
 
-std::string now_date_() {
-  const auto now = std::chrono::system_clock::now();
-  const std::time_t tt = std::chrono::system_clock::to_time_t(now);
-  std::tm tm{};
-#if defined(_WIN32)
-  localtime_s(&tm, &tt);
-#else
-  localtime_r(&tt, &tm);
-#endif
-  std::ostringstream oss;
-  oss << std::put_time(&tm, "%a, %d %b %Y");
-  return oss.str();
-}
-
-std::string now_time_() {
-  const auto now = std::chrono::system_clock::now();
-  const std::time_t tt = std::chrono::system_clock::to_time_t(now);
-  std::tm tm{};
-#if defined(_WIN32)
-  localtime_s(&tm, &tt);
-#else
-  localtime_r(&tt, &tm);
-#endif
-  std::ostringstream oss;
-  oss << std::put_time(&tm, "%H:%M:%S");
-  return oss.str();
-}
-
 struct CleanData {
   Series y = pluss::series::undefined();
   Series x = pluss::series::undefined();
@@ -175,7 +173,7 @@ CleanData sanitize_inputs_(const Series& y, const Series& x, bool drop_missing, 
   const std::int64_t n = yv.numel();
   PLUSS_CHECK(xm.sizes()[0] == n, std::string(op) + ": row mismatch between y and X");
   const std::int64_t p = xm.sizes()[1];
-  PLUSS_CHECK(n > 0 && p > 0, std::string(op) + ": empty y or X");
+  PLUSS_CHECK(n > 0 && p >= 0, std::string(op) + ": empty y or X");
 
   const Series row_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false));
   const std::int64_t n_clean = static_cast<std::int64_t>(std::llround(scalar_(row_ok.to(ScalarType::Float64).sum())));
@@ -254,23 +252,36 @@ double quantile_loss_(const Series& resid, double tau, Config cfg) {
   return scalar_(pos.sum());
 }
 
-double density_at_zero_(const Series& resid, Config cfg) {
+// Density of the residuals at zero, by an Epanechnikov kernel with the Hall-Sheather bandwidth (Koenker 2005; the estimator used by the
+// standard quantile-regression packages). The bandwidth is scaled by min(sd(y), IQR(residuals) / 1.34), so a few wild observations do not
+// inflate it and with it the standard errors, as a bandwidth based on the residual standard deviation would.
+double density_at_zero_(const Series& resid, const Series& endog, double tau, Config cfg) {
   const std::int64_t n = resid.numel();
   if (n <= 0) {
     return std::numeric_limits<double>::quiet_NaN();
   }
   const Series r = resid.reshape({n}).to(f64_cfg_like_(resid, cfg).platform, ScalarType::Float64);
-  const double mean = scalar_(r.mean());
-  const double var = scalar_(r.sub(mean).mul(r.sub(mean)).mean());
-  const double sd = std::sqrt(std::max(0.0, var));
-  double h = 1.06 * sd * std::pow(static_cast<double>(n), -0.2);
-  if (!std::isfinite(h) || h < 1e-8) {
-    h = 1e-4;
+  const double dn = static_cast<double>(n);
+  const double z = norm_quantile_(tau, cfg);
+  const double phi = std::exp(-0.5 * z * z) / std::sqrt(2.0 * std::numbers::pi);
+  const double hall_sheather = std::pow(dn, -1.0 / 3.0) * std::pow(norm_quantile_(0.975, cfg), 2.0 / 3.0) *
+                               std::pow(1.5 * phi * phi / (2.0 * z * z + 1.0), 1.0 / 3.0);
+  const double iqr = quantile_value_(r, 0.75, cfg) - quantile_value_(r, 0.25, cfg);
+  const Series y = endog.reshape({n}).to(r.platform(), ScalarType::Float64);
+  const double ymean = scalar_(y.mean());
+  const double ysd = std::sqrt(std::max(0.0, scalar_(y.sub(ymean).mul(y.sub(ymean)).mean())));
+  double bw = hall_sheather;
+  while ((tau - bw <= 0.0 || tau + bw >= 1.0) && bw > 1e-12) {
+    bw *= 0.5;  // keep tau +- bw inside (0, 1): for an extreme tau and a small sample the rule alone would leave the unit interval
   }
-  const double normc = 1.0 / std::sqrt(2.0 * std::numbers::pi);
+  const double scale = std::min(ysd, iqr / 1.34);
+  double h = scale * (norm_quantile_(tau + bw, cfg) - norm_quantile_(tau - bw, cfg));
+  if (!std::isfinite(h) || h < 1e-8) {
+    h = 1e-8;
+  }
   const Series u = r.div(h);
-  const Series dens = u.mul(u).mul(-0.5).exp().mul(normc / h);
-  return std::max(kMinInfo, scalar_(dens.mean()));
+  const Series kernel = u.abs().le(1.0).where(u.mul(u).mul(-1.0).add(1.0).mul(0.75), pluss::series::zeros_like(u));
+  return std::max(kMinInfo, scalar_(kernel.sum()) / (dn * h));
 }
 
 } // namespace
@@ -280,6 +291,7 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
   check_options_(options, op);
 
   const auto clean = sanitize_inputs_(y, x, options.drop_missing, cfg, op);
+  PLUSS_CHECK(clean.p > 0 || options.add_intercept, std::string(op) + ": a model needs at least one predictor or an intercept");
   const auto out_cfg = f64_cfg_like_(clean.x, cfg);
 
   const Series X = build_design_(clean.x, options.add_intercept, out_cfg);
@@ -339,21 +351,38 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
   const std::int64_t df_resid = std::max<std::int64_t>(0, n - rank);
   const std::int64_t df_model = options.add_intercept ? std::max<std::int64_t>(0, rank - 1) : rank;
 
-  const double f0 = density_at_zero_(resid_vec, out_cfg);
+  const double f0 = density_at_zero_(resid_vec, ycol, options.tau, out_cfg);
   const Series pinv_x = pluss::subsp::math::linalg::pinverse(X, options.rcond);
   const Series xtx_inv = pinv_x.matmul(pinv_x.transpose(0, 1));
-  const double scale = (options.tau * (1.0 - options.tau)) / std::max(kMinInfo, f0 * f0);
-  const Series cov = xtx_inv.mul(scale);
+  Series cov = xtx_inv.mul(options.tau * (1.0 - options.tau) / std::max(kMinInfo, f0 * f0));
+  if (options.covariance == QuantileCovariance::Robust) {
+    // heteroskedasticity-robust sandwich: (X'X)^-1 X' D X (X'X)^-1 with D_i = (tau / f0)^2 above the line and ((1 - tau) / f0)^2 below
+    const double up = options.tau / std::max(1e-6, f0);
+    const double down = (1.0 - options.tau) / std::max(1e-6, f0);
+    const Series d = resid.reshape({n, 1}).gt(0.0).where(
+        pluss::series::full({n, 1}, up * up, out_cfg),
+        pluss::series::full({n, 1}, down * down, out_cfg));
+    const Series xtdx = X.transpose(0, 1).matmul(X.mul(d));
+    cov = xtx_inv.matmul(xtdx).matmul(xtx_inv);
+  }
   const Series std_err = cov.diagonal().reshape({k}).maximum(0.0).sqrt();
 
   const Series coef = beta.reshape({k});
   const Series t_v = coef.div(std_err.maximum(std::sqrt(kEps)));
-  const Series p_v = pluss::series::ones({k}, out_cfg)
-                         .sub(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(t_v.abs()))
-                         .mul(2.0)
-                         .clamp(0.0, 1.0);
-  const double zcrit = norm_quantile_(1.0 - options.alpha * 0.5, out_cfg);
-  const Series delta = std_err.mul(zcrit);
+  // Student t with the residual degrees of freedom, as for least squares
+  Series p_v = pluss::series::full({k}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  double crit = std::numeric_limits<double>::quiet_NaN();
+  if (df_resid > 0) {
+    const double dof = static_cast<double>(df_resid);
+    const auto tv = t_v.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    std::vector<double> pv(tv.size());
+    for (std::size_t i = 0; i < tv.size(); ++i) {
+      pv[i] = pluss::subsp::stats::tails::student_t_two_sided(tv[i], dof);
+    }
+    p_v = pluss::make_series(pv, {k}, out_cfg);
+    crit = t_quantile_(1.0 - options.alpha * 0.5, dof, out_cfg);
+  }
+  const Series delta = std_err.mul(crit);
   const Series ci = coef.sub(delta).reshape({k, 1}).unite({coef.add(delta).reshape({k, 1})}, 1);
 
   if (rank < k) {
@@ -439,8 +468,8 @@ std::ostream& print_quantile_summary(std::ostream& os, const QuantileFitResult& 
   row("Dep. Variable:", fit.response_name, "Pseudo R-squared:", fmt_short_(fit.pseudo_rsquared));
   row("Model:", "Quantile", "Tau:", fmt_short_(fit.tau));
   row("Method:", "IRLS", "No. Iterations:", std::to_string(fit.iterations));
-  row("Date:", now_date_(), "Converged:", fit.converged ? "true" : "false");
-  row("Time:", now_time_(), "Objective:", fmt_short_(fit.objective));
+  row("Rank:", std::to_string(fit.rank), "Converged:", fit.converged ? "true" : "false");
+  row("Alpha:", fmt_short_(fit.alpha), "Objective:", fmt_short_(fit.objective));
   row("No. Observations:", std::to_string(fit.nobs), "Df Residuals:", std::to_string(fit.df_resid));
   row("Df Model:", std::to_string(fit.df_model), "Residual Density(0):", fmt_short_(fit.residual_density0));
   os << "==============================================================================\n";

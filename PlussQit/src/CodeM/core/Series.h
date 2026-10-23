@@ -61,6 +61,13 @@ namespace ops_internal {
 struct SeriesFactoryAccess;
 } // namespace ops_internal
 
+// Stochastic-calculus value types used by `Series::calc.diff.ito(...)` and
+// friends; defined after `Series` (they hold Series members).
+struct SeriesItoState;
+struct SeriesJumpMeasure;
+struct SeriesItoDifferential;
+struct SeriesItoOptions;
+
 struct TernaryCompareBuilder;
 
 // Forward declaration for tensor memory/layout format used by generated APIs.
@@ -863,6 +870,9 @@ public:
   //   series1.linearalg(series2).matmul()
   class SeriesLinearAlgProxy final {
   public:
+    using GenEigOptions = pluss::subsp::linearalg::GenEigOptions;
+    using GenEigResult = pluss::subsp::linearalg::GenEigResult;
+
     explicit SeriesLinearAlgProxy(const Series &self) : self_(&self) {}
     SeriesLinearAlgProxy(const Series &self, const Series &other)
         : self_(&self), peers_{other} {}
@@ -929,6 +939,37 @@ public:
     }
     pluss::subsp::linearalg::SvdDecomposition
     svd(bool full_matrices = true) const;
+    pluss::subsp::linearalg::EigenDecomposition eigh(bool upper = false) const;
+    template <class ApplyA, class ApplyB, class SolveA>
+    GenEigResult
+    gen_eigh(ApplyA &&apply_a, ApplyB &&apply_b, SolveA &&solve_a,
+             const GenEigOptions &options = {}) const;
+    Series eigvalsh(bool upper = false) const {
+      return pluss::subsp::linearalg::eigvalsh(self(), upper);
+    }
+    Series sylv(const Series &b, const Series &c) const {
+      return pluss::subsp::linearalg::sylv(self(), b, c);
+    }
+    Series lyap(
+        const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return pluss::subsp::linearalg::lyap(self(), q, options);
+    }
+    Series dlyap(
+        const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return pluss::subsp::linearalg::dlyap(self(), q, options);
+    }
+    Series care(
+        const Series &g, const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return pluss::subsp::linearalg::care(self(), g, q, options);
+    }
+    Series dare(
+        const Series &g, const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return pluss::subsp::linearalg::dare(self(), g, q, options);
+    }
 
     Series triangular_solve(const Series &b, bool upper = true,
                             bool unitriangular = false) const {
@@ -975,6 +1016,9 @@ public:
 
   class SeriesLinearAlgAccessor final {
   public:
+    using GenEigOptions = pluss::subsp::linearalg::GenEigOptions;
+    using GenEigResult = pluss::subsp::linearalg::GenEigResult;
+
     SeriesLinearAlgAccessor() = default;
     explicit SeriesLinearAlgAccessor(Series &owner) : owner_(&owner) {}
 
@@ -1024,6 +1068,37 @@ public:
     }
     pluss::subsp::linearalg::SvdDecomposition
     svd(bool full_matrices = true) const;
+    pluss::subsp::linearalg::EigenDecomposition eigh(bool upper = false) const;
+    template <class ApplyA, class ApplyB, class SolveA>
+    GenEigResult
+    gen_eigh(ApplyA &&apply_a, ApplyB &&apply_b, SolveA &&solve_a,
+             const GenEigOptions &options = {}) const;
+    Series eigvalsh(bool upper = false) const {
+      return (*this)().eigvalsh(upper);
+    }
+    Series sylv(const Series &b, const Series &c) const {
+      return (*this)().sylv(b, c);
+    }
+    Series lyap(
+        const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return (*this)().lyap(q, options);
+    }
+    Series dlyap(
+        const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return (*this)().dlyap(q, options);
+    }
+    Series care(
+        const Series &g, const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return (*this)().care(g, q, options);
+    }
+    Series dare(
+        const Series &g, const Series &q,
+        pluss::subsp::linearalg::MatrixEqOptions options = {}) const {
+      return (*this)().dare(g, q, options);
+    }
     Series triangular_solve(const Series &b, bool upper = true,
                             bool unitriangular = false) const {
       return (*this)().triangular_solve(b, upper, unitriangular);
@@ -1093,6 +1168,28 @@ public:
                             : cumulative_trapezoid(peer1(), dim);
     }
 
+    // Stochastic integrals of already-sampled values. The receiver holds the
+    // integrand sampled at every grid point of the path (n samples along
+    // `dim`, or n - 1 for `ito`, which only needs the left endpoints); the
+    // peer given to `antidiff(w)` is the integrator path `w` (n samples).
+    //   f.antidiff(w).ito()        sum f_i (w_{i+1} - w_i)         Ito
+    //   f.antidiff(w).strat()      sum (f_i + f_{i+1})/2 dw_i      Stratonovich
+    //   f.antidiff(w).theta(th)    (1 - th) f_i + th f_{i+1}       0 / 1/2 / 1
+    // The sums only mean what their names say when f_i was computed from the
+    // path up to sample i (an adapted integrand); a Series cannot verify
+    // that. PlussMa's `subsp::math::sde` checks it before forwarding here.
+    // Without a peer, `w.antidiff().quadratic_variation()` is sum dw^2 and
+    // `x.antidiff(y).covariation()` is sum dx dy.
+    Series ito(std::int64_t dim = -1) const;
+    Series ito_cumulative(std::int64_t dim = -1) const;
+    Series strat(std::int64_t dim = -1) const;
+    Series strat_cumulative(std::int64_t dim = -1) const;
+    Series theta(double theta, std::int64_t dim = -1) const;
+    Series quadratic_variation(std::int64_t dim = -1) const;
+    Series quadratic_variation_cumulative(std::int64_t dim = -1) const;
+    Series covariation(std::int64_t dim = -1) const;
+    Series covariation_cumulative(std::int64_t dim = -1) const;
+
   private:
     const Series &self() const {
       PLUSS_CHECK(self_ != nullptr, "Series.antidiff(): null self");
@@ -1140,6 +1237,12 @@ public:
     }
     Series cumulative_trapezoid(std::int64_t dim = -1) const {
       return (*this)().cumulative_trapezoid(dim);
+    }
+    Series quadratic_variation(std::int64_t dim = -1) const {
+      return (*this)().quadratic_variation(dim);
+    }
+    Series quadratic_variation_cumulative(std::int64_t dim = -1) const {
+      return (*this)().quadratic_variation_cumulative(dim);
     }
 
   private:
@@ -1199,10 +1302,273 @@ public:
     // The integration-only subset kept under its original name.
     using AntidiffOptions = CalcOptions;
 
-    SeriesCalcAccessor() = default;
-    explicit SeriesCalcAccessor(Series &owner) : owner_(&owner) {}
+    // Integrand of a stochastic integral, vectorized over the time axis: `t` is
+    // the time of every grid point (broadcastable against `w`) and `w` the
+    // integrator's value there. It must act pointwise; since it never sees the
+    // integrator's future, a pointwise integrand cannot anticipate.
+    using IntegrandFn = std::function<Series(const Series &t, const Series &w)>;
+    using ItoFn = std::function<Series(const std::vector<Series> &)>;
 
-    void rebind(Series &owner) noexcept { owner_ = &owner; }
+    // `x.calc.diff` -- derivatives of a callable at the receiver:
+    //   x.calc.diff(fn), x.calc.diff(fn, order)       ordinary derivatives
+    //   x.calc.diff.ito(g, mu, sigma, ...)            Ito differential of g(X)
+    //   x.calc.diff.strat(g, mu, sigma, ...)   Stratonovich differential
+    // See `SeriesItoDifferential` for what the stochastic forms return.
+    class DiffAccessor final {
+    public:
+      DiffAccessor() = default;
+
+      template <class Fn> [[nodiscard]] Series operator()(Fn &&fn) const {
+        return Series::calc_diff_(
+            owner(),
+            std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+            opts_.order, opts_);
+      }
+      template <class Fn>
+      [[nodiscard]] Series operator()(Fn &&fn, std::int64_t order) const {
+        CalcOptions o = opts_;
+        o.order = order;
+        return Series::calc_diff_(
+            owner(),
+            std::function<Series(const Series &)>(std::forward<Fn>(fn)), order,
+            o);
+      }
+
+      // Ito's formula for g(X) when X is an Ito process dX = mu dt + sigma dW
+      // (+ jumps). The receiver is the state X; the points are independent
+      // copies, so g must act elementwise. `sigma` has the shape of X (one
+      // Brownian factor) or shape(X) + [m] (m factors driving every state).
+      [[nodiscard]] SeriesItoDifferential
+      ito(const std::function<Series(const Series &)> &g, const Series &mu,
+          const Series &sigma) const;
+      [[nodiscard]] SeriesItoDifferential
+      ito(const std::function<Series(const Series &)> &g, const Series &mu,
+          const Series &sigma, const SeriesJumpMeasure &jumps) const;
+      // Two states (the receiver and `other`): the multivariate formula,
+      // including the covariation term. `ito_product` is g(x, y) = x y.
+      [[nodiscard]] SeriesItoDifferential
+      ito(const std::function<Series(const Series &, const Series &)> &g,
+          const Series &mu, const Series &sigma,
+          const SeriesItoState &other) const;
+      [[nodiscard]] SeriesItoDifferential
+      ito(const std::function<Series(const Series &, const Series &)> &g,
+          const Series &mu, const Series &sigma, const SeriesItoState &other,
+          const SeriesJumpMeasure &jumps) const;
+      [[nodiscard]] SeriesItoDifferential
+      ito_product(const Series &mu, const Series &sigma,
+                  const SeriesItoState &other) const;
+      [[nodiscard]] SeriesItoDifferential
+      ito_quotient(const Series &mu, const Series &sigma,
+                   const SeriesItoState &other) const;
+      // Any number of states; `others` follow the receiver in g's argument
+      // list. With `options.time` set, g's first argument is time.
+      [[nodiscard]] SeriesItoDifferential
+      ito(const ItoFn &g, const Series &mu, const Series &sigma,
+          const std::vector<SeriesItoState> &others,
+          const SeriesJumpMeasure *jumps,
+          const SeriesItoOptions &options) const;
+      // g(t, X): time-dependent function of one state.
+      [[nodiscard]] SeriesItoDifferential
+      ito_at(const Series &time,
+             const std::function<Series(const Series &, const Series &)> &g,
+             const Series &mu, const Series &sigma) const;
+
+      // Stratonovich differential: the ordinary chain rule, no second-order
+      // correction. This is also the right rule for pathwise (Young)
+      // integration against fractional Brownian motion with Hurst > 1/2.
+      [[nodiscard]] SeriesItoDifferential
+      strat(const std::function<Series(const Series &)> &g,
+                   const Series &mu, const Series &sigma) const;
+      [[nodiscard]] SeriesItoDifferential strat(
+          const std::function<Series(const Series &, const Series &)> &g,
+          const Series &mu, const Series &sigma,
+          const SeriesItoState &other) const;
+      [[nodiscard]] SeriesItoDifferential
+      strat(const ItoFn &g, const Series &mu, const Series &sigma,
+                   const std::vector<SeriesItoState> &others,
+                   const SeriesItoOptions &options) const;
+
+      // Marcus (canonical) differential. The process is
+      //   dX = mu dt + sigma o dW + h(X-) <> dJ,
+      // a Stratonovich diffusion plus jumps that move the state along the
+      // flow of dy/du = h(y) z, u in [0, 1] (Marcus 1978/81; Kurtz, Pardoux,
+      // Protter 1995). The ordinary chain rule survives: g(X) jumps by exactly
+      // g(phi_z(X-)) - g(X-), and the continuous part is the Stratonovich one.
+      // `jumps.sizes[0]` holds the jump sizes z_k of the (scalar) driver J.
+      // With `compensated`, the jump part is a martingale and the drift gains
+      // sum_k nu_k (g(phi_k(x)) - g(x) - g'(x) h(x) z_k).
+      [[nodiscard]] SeriesItoDifferential
+      marcus(const std::function<Series(const Series &)> &g, const Series &mu,
+             const Series &sigma,
+             const std::function<Series(const Series &)> &h,
+             const SeriesJumpMeasure &jumps) const;
+      [[nodiscard]] SeriesItoDifferential
+      marcus(const std::function<Series(const Series &)> &g, const Series &mu,
+             const Series &sigma,
+             const std::function<Series(const Series &)> &h,
+             const SeriesJumpMeasure &jumps,
+             const SeriesItoOptions &options) const;
+      // Where the jump of size z leaves the state: the time-one flow of
+      // dy/du = h(y) z started at the receiver (one jump size per point;
+      // z broadcasts against the receiver).
+      [[nodiscard]] Series
+      marcus_flow(const std::function<Series(const Series &)> &h,
+                  const Series &z, std::int64_t steps = 32) const;
+
+      // Discrete Malliavin derivative. The receiver holds Brownian
+      // increments dW_i along `dim`; F is a functional of them returning one
+      // value per remaining index (batch). The result has the shape of the
+      // receiver: D_i F = dF/d(dW_i), the derivative of the discretized
+      // functional with respect to each increment (the Malliavin derivative
+      // D_t F is this value on the cell of dW_i). `malliavin_path` takes the
+      // path W (n samples) as the receiver and differentiates with respect
+      // to its n - 1 increments, so F sees W rebuilt from them.
+      [[nodiscard]] Series
+      malliavin(const std::function<Series(const Series &)> &F,
+                std::int64_t dim = 0) const;
+      [[nodiscard]] Series
+      malliavin_path(const std::function<Series(const Series &)> &F,
+                     std::int64_t dim = 0) const;
+      // Skorokhod integral (the divergence, adjoint of the Malliavin
+      // derivative) of a process u = u(dW) that may look into the future:
+      //   delta(u) = sum_i u_i dW_i - sum_i (du_i / d dW_i) dt.
+      // For an adapted u it reduces to the Ito sum. One reverse pass per
+      // increment: use it for the grid sizes of a test or a Greek, not for
+      // millions of steps.
+      [[nodiscard]] Series
+      skorokhod(const std::function<Series(const Series &)> &u, double dt,
+                std::int64_t dim = 0) const;
+
+      // Convert drift between conventions for the SAME process
+      // dX = mu dt + sigma(X) dW, with sigma(X) a callable of the state (shape
+      // of X, or shape(X) + [m]):  mu_stratonovich = mu_ito - 1/2 sigma sigma'
+      // and back. Elementwise: every point is a one-dimensional process.
+      [[nodiscard]] Series strat_drift(
+          const Series &ito_drift,
+          const std::function<Series(const Series &)> &sigma) const;
+      [[nodiscard]] Series
+      ito_drift(const Series &strat_drift,
+                const std::function<Series(const Series &)> &sigma) const;
+
+    private:
+      friend class SeriesCalcAccessor;
+      const Series &owner() const {
+        PLUSS_CHECK(owner_ != nullptr, "Series.calc.diff: unbound accessor");
+        return *owner_;
+      }
+      Series *owner_{nullptr};
+      CalcOptions opts_{};
+    };
+
+    // `x.calc.antidiff` -- integrals ending at the receiver (anchored
+    // Riemann integrals), and stochastic integrals along the receiver as a
+    // path:
+    //   x.calc.antidiff(fn, lower)               Riemann integral lower -> x
+    //   w.calc.antidiff.ito(f, t0, t1)           integral of f(t, w) dw, Ito
+    //   w.calc.antidiff.strat(f, t0, t1)  same, Stratonovich
+    //   w.calc.antidiff.theta(f, th, t0, t1)     th = 0 Ito, 1/2 Strat., 1
+    //   backward
+    // The path `w` has the time axis `dim` (default 0) and the grid is
+    // uniform from t0 to t1, or given explicitly as a time Series.
+    class AntidiffAccessor final {
+    public:
+      AntidiffAccessor() = default;
+
+      template <class Fn> [[nodiscard]] Series operator()(Fn &&fn) const {
+        PLUSS_CHECK(opts_.lower.has_value(),
+                    "Series.calc.antidiff: no lower bound; pass one or bind "
+                    "it with x.calc({.lower = a})");
+        return Series::calc_antidiff_(
+            owner(),
+            std::function<Series(const Series &)>(std::forward<Fn>(fn)),
+            *opts_.lower, opts_);
+      }
+      template <class Fn>
+      [[nodiscard]] Series operator()(Fn &&fn, double lower) const {
+        return Series::calc_antidiff_(
+            owner(),
+            std::function<Series(const Series &)>(std::forward<Fn>(fn)), lower,
+            opts_);
+      }
+      template <class Fn>
+      [[nodiscard]] Series operator()(Fn &&fn, double lower,
+                                      const CalcOptions &options) const {
+        return Series::calc_antidiff_(
+            owner(),
+            std::function<Series(const Series &)>(std::forward<Fn>(fn)), lower,
+            options);
+      }
+
+      // Total integral over the path (the time axis is reduced).
+      [[nodiscard]] Series ito(const IntegrandFn &f, double t0, double t1,
+                               std::int64_t dim = 0) const;
+      [[nodiscard]] Series ito(const IntegrandFn &f, const Series &times,
+                               std::int64_t dim = 0) const;
+      [[nodiscard]] Series strat(const IntegrandFn &f, double t0,
+                                        double t1, std::int64_t dim = 0) const;
+      [[nodiscard]] Series strat(const IntegrandFn &f,
+                                        const Series &times,
+                                        std::int64_t dim = 0) const;
+      // Marcus (canonical) integral of f(t, w) along a path that jumps:
+      // Stratonovich averaging on the continuous steps, and over a step
+      // flagged as a jump the integral of f along the straight segment,
+      //   dw * integral_0^1 f(t, w_i + s dw) ds   (8-point Gauss-Legendre),
+      // which is what makes the ordinary chain rule hold for jump paths. The
+      // flag is `jump_mask` (true on jump steps, broadcastable against the
+      // n - 1 increments) or, in the third form, every step whose |dw|
+      // exceeds `jump_threshold`.
+      [[nodiscard]] Series marcus(const IntegrandFn &f, const Series &jump_mask,
+                                  double t0, double t1,
+                                  std::int64_t dim = 0) const;
+      [[nodiscard]] Series marcus(const IntegrandFn &f, const Series &jump_mask,
+                                  const Series &times,
+                                  std::int64_t dim = 0) const;
+      [[nodiscard]] Series marcus(const IntegrandFn &f, double jump_threshold,
+                                  double t0, double t1,
+                                  std::int64_t dim = 0) const;
+      [[nodiscard]] Series marcus_cumulative(const IntegrandFn &f,
+                                             const Series &jump_mask,
+                                             double t0, double t1,
+                                             std::int64_t dim = 0) const;
+      // Evaluation point inside each step: (1 - theta) f(left) + theta
+      // f(right).
+      [[nodiscard]] Series theta(const IntegrandFn &f, double theta, double t0,
+                                 double t1, std::int64_t dim = 0) const;
+      [[nodiscard]] Series theta(const IntegrandFn &f, double theta,
+                                 const Series &times,
+                                 std::int64_t dim = 0) const;
+      // Running integral: same shape as the path, zero at the first sample.
+      [[nodiscard]] Series ito_cumulative(const IntegrandFn &f, double t0,
+                                          double t1,
+                                          std::int64_t dim = 0) const;
+      [[nodiscard]] Series ito_cumulative(const IntegrandFn &f,
+                                          const Series &times,
+                                          std::int64_t dim = 0) const;
+      [[nodiscard]] Series strat_cumulative(const IntegrandFn &f,
+                                                   double t0, double t1,
+                                                   std::int64_t dim = 0) const;
+      [[nodiscard]] Series strat_cumulative(const IntegrandFn &f,
+                                                   const Series &times,
+                                                   std::int64_t dim = 0) const;
+
+    private:
+      friend class SeriesCalcAccessor;
+      const Series &owner() const {
+        PLUSS_CHECK(owner_ != nullptr,
+                    "Series.calc.antidiff: unbound accessor");
+        return *owner_;
+      }
+      Series *owner_{nullptr};
+      CalcOptions opts_{};
+    };
+
+    SeriesCalcAccessor() = default;
+    explicit SeriesCalcAccessor(Series &owner) : owner_(&owner) { sync_(); }
+
+    void rebind(Series &owner) noexcept {
+      owner_ = &owner;
+      sync_();
+    }
 
     // `x.calc()` is the accessor itself; `x.calc(options)` is the same accessor
     // with defaults bound, usable for one expression.
@@ -1211,26 +1577,15 @@ public:
     operator()(const CalcOptions &options) const {
       SeriesCalcAccessor bound(*owner_ptr());
       bound.options_ = options;
+      bound.sync_();
       return bound;
     }
     [[nodiscard]] const CalcOptions &options() const noexcept {
       return options_;
     }
 
-    // Derivative of fn at the receiver. One name, one optional order.
-    template <class Fn> [[nodiscard]] Series diff(Fn &&fn) const {
-      return Series::calc_diff_(
-          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
-          options_.order, options_);
-    }
-    template <class Fn>
-    [[nodiscard]] Series diff(Fn &&fn, std::int64_t order) const {
-      CalcOptions o = options_;
-      o.order = order;
-      return Series::calc_diff_(
-          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
-          order, o);
-    }
+    DiffAccessor diff;
+    AntidiffAccessor antidiff;
 
     // Named derivative shapes. These are constrained views of the same
     // transform engine as diff(), not independent differentiation systems.
@@ -1250,30 +1605,13 @@ public:
           options_);
     }
 
-    // Anchored (repeated) integral of fn from `lower` to the receiver.
-    template <class Fn> [[nodiscard]] Series antidiff(Fn &&fn) const {
-      PLUSS_CHECK(options_.lower.has_value(),
-                  "Series.calc.antidiff: no lower bound; pass one or bind it "
-                  "with x.calc({.lower = a})");
-      return Series::calc_antidiff_(
-          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
-          *options_.lower, options_);
-    }
-    template <class Fn>
-    [[nodiscard]] Series antidiff(Fn &&fn, double lower) const {
-      return Series::calc_antidiff_(
-          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
-          lower, options_);
-    }
-    template <class Fn>
-    [[nodiscard]] Series antidiff(Fn &&fn, double lower,
-                                  const CalcOptions &options) const {
-      return Series::calc_antidiff_(
-          owner(), std::function<Series(const Series &)>(std::forward<Fn>(fn)),
-          lower, options);
-    }
-
   private:
+    void sync_() noexcept {
+      diff.owner_ = owner_;
+      diff.opts_ = options_;
+      antidiff.owner_ = owner_;
+      antidiff.opts_ = options_;
+    }
     Series *owner_ptr() const {
       PLUSS_CHECK(owner_ != nullptr, "Series.calc: unbound accessor");
       return owner_;
@@ -2595,6 +2933,12 @@ public:
   using LinearAlgAccessor = SeriesLinearAlgAccessor;
   using AntidiffAccessor = SeriesAntidiffAccessor;
   using CalcAccessor = SeriesCalcAccessor;
+  // Public spellings of the stochastic-calculus value types used by
+  // `calc.diff.ito(...)` and friends.
+  using ItoState = SeriesItoState;
+  using JumpMeasure = SeriesJumpMeasure;
+  using ItoOptions = SeriesItoOptions;
+  using ItoDifferential = SeriesItoDifferential;
   using TraverseAccessor = SeriesTraverseAccessor;
 
   // Statistical accessor:
@@ -2673,6 +3017,33 @@ private:
   calc_antidiff_(const Series &upper,
                  std::function<Series(const Series &)> callback, double lower,
                  const SeriesCalcAccessor::AntidiffOptions &options);
+  static SeriesItoDifferential calc_ito_(
+      const Series &x, const SeriesCalcAccessor::ItoFn &g, const Series &mu,
+      const Series &sigma, const std::vector<SeriesItoState> &others,
+      const SeriesJumpMeasure *jumps, const SeriesItoOptions &options,
+      bool ito_convention,
+      const std::function<std::vector<Series>(const std::vector<Series> &)>
+          *marcus_h = nullptr);
+  static Series calc_malliavin_(const Series &receiver,
+                                const std::function<Series(const Series &)> &F,
+                                std::int64_t dim, bool from_path);
+  static Series calc_skorokhod_(const Series &increments,
+                                const std::function<Series(const Series &)> &u,
+                                double dt, std::int64_t dim);
+  static Series calc_marcus_integral_(
+      const Series &path, const SeriesCalcAccessor::IntegrandFn &f,
+      const Series &times, const Series &jump_mask, std::int64_t dim,
+      bool cumulative);
+  static Series array_stochastic_integral_(const Series &values,
+                                           const Series &path, double theta,
+                                           std::int64_t dim, bool cumulative);
+  static Series
+  calc_convention_drift_(const Series &x, const Series &drift,
+                         const std::function<Series(const Series &)> &sigma,
+                         double sign);
+  static Series calc_stochastic_integral_(
+      const Series &path, const SeriesCalcAccessor::IntegrandFn &f,
+      const Series &times, double theta, std::int64_t dim, bool cumulative);
 
   template <class> struct detail_false_ : std::false_type {};
 
@@ -2824,6 +3195,51 @@ private:
 
   // Internal construction hook used by ops_internal implementations.
   friend struct ops_internal::SeriesFactoryAccess;
+};
+
+// An Ito process observed at a point: the state and its coefficients,
+//   dX = mu dt + sigma dW.
+// `sigma` has the shape of `x` (a single Brownian factor) or shape(x) + [m]
+// (m factors; every state in one calculation shares the same m factors, which
+// is what makes covariations between states meaningful).
+struct SeriesItoState {
+  Series x;
+  Series mu;
+  Series sigma;
+};
+
+// The jump part of a Levy-driven process as an atomic measure. Atom k is a
+// jump of size sizes[j][k] in state j that occurs at rate intensity[k] per unit
+// time. A compound Poisson process with rate lambda and jump law p_k is
+// intensity[k] = lambda p_k; a Levy measure with a density is represented by
+// quadrature atoms and weights. Each sizes[j] is [K] or [K] + shape(x),
+// intensity is [K] or [K] + shape(x).
+//
+// compensated = false: X = ... + (sum of the jumps).
+// compensated = true:  X = ... + (sum of the jumps) - (sum_k intensity_k
+//                      size_k) dt, i.e. the jump part is a martingale.
+struct SeriesJumpMeasure {
+  std::vector<Series> sizes;
+  Series intensity;
+  bool compensated{false};
+};
+
+struct SeriesItoOptions {
+  // g(t, x...) instead of g(x...): the first argument g receives is time.
+  Series time;
+  // Marcus jumps: Runge-Kutta steps used to follow the flow of a jump.
+  std::int64_t flow_steps{32};
+};
+
+// Differential of g(X): dg = drift dt + diffusion . dW + jumps.
+struct SeriesItoDifferential {
+  Series value;      // g at the point
+  Series drift;      // coefficient of dt (in the representation of the input)
+  Series diffusion;  // coefficients of the m Brownian factors, shape(x) + [m]
+  Series jump_sizes; // g(x + z_k) - g(x), shape [K] + shape(x); undefined
+                     // without jumps
+  Series jump_intensity; // [K] or [K] + shape(x); undefined without jumps
+  bool jumps_compensated{false};
 };
 
 inline ExtractSpec::ExtractSpec(const Series &idx) : kind(Kind::AdvancedIndex) {

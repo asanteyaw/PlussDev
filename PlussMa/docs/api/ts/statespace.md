@@ -1,0 +1,108 @@
+<!-- generated from statespace.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# ts statespace
+
+`statespace` is the Kalman filter and its relatives for linear Gaussian state-space models: a hidden state `x_t` that evolves in time and an observation `y_t` that is a noisy view of it,
+
+`x_{t+1} = A x_t + B w_t`,  `y_t = C x_t + D v_t`,
+
+with `w_t` and `v_t` independent standard normal vectors. Trends, seasonal patterns, time-varying regressions and ARMA models are all of this form. `Ssm` filters and smooths a series, forecasts it with uncertainty, handles missing observations, gives the exact log-likelihood and simulates from the model.
+
+The model is described by an [`SsmModel`](statespace/SsmModel.md) holding the four matrices and the distribution of the state *before* the first observation; noise standard deviations (not variances) go in `B` and `D`. The library does not search over unknown noise levels for you: evaluate the log-likelihood over a grid, or pass it to any optimiser, to estimate them.
+
+## The Surface
+
+| Entity | What it gives you |
+|---|---|
+| [`Ssm`](statespace/Ssm.md) | Filtering, smoothing, forecasting and simulation for a linear Gaussian state-space model |
+| [`SsmFilterResult`](statespace/SsmFilterResult.md) | Result of `Ssm::filter` |
+| [`SsmForecastResult`](statespace/SsmForecastResult.md) | Result of `Ssm::forecast` |
+| [`SsmModel`](statespace/SsmModel.md) | The matrices and initial moments of a linear Gaussian state-space model |
+| [`SsmOptions`](statespace/SsmOptions.md) | Options of the state-space filter and smoother |
+| [`SsmSimResult`](statespace/SsmSimResult.md) | Result of `Ssm::simulate` |
+| [`SsmSmoothResult`](statespace/SsmSmoothResult.md) | Result of `Ssm::smooth` |
+
+## How To Call It
+
+Filter a noisy rising series with a local linear trend model and print the filtered level and slope.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// A noisy upward trend: y_t = 1 + 0.3 t + e_t.
+std::vector<double> trending(int n) {
+  const auto e = noise(n);
+  std::vector<double> y(n);
+  for (int t = 0; t < n; ++t) y[t] = 1.0 + 0.3 * t + e[t];
+  return y;
+}
+// Local linear trend: the state is (level, slope); level' = level + slope + level_sd w1, slope' = slope + slope_sd w2, y = level + obs_sd v.
+ts::SsmModel trend_model(double level_sd, double slope_sd, double obs_sd) {
+  ts::SsmModel m;
+  m.transition = pluss::make_series({1.0, 1.0, 0.0, 1.0}, {2, 2}, f64);
+  m.state_loading = pluss::make_series({level_sd, 0.0, 0.0, slope_sd}, {2, 2}, f64);
+  m.observation = pluss::make_series({1.0, 0.0}, {1, 2}, f64);
+  m.innovation_loading = pluss::make_series({obs_sd}, {1, 1}, f64);
+  m.mean0 = pluss::make_series({0.0, 0.0}, {2}, f64);
+  m.cov0 = pluss::make_series({25.0, 0.0, 0.0, 1.0}, {2, 2}, f64);
+  return m;
+}
+
+int main() {
+  const Series y = pluss::make_series(trending(40), {40, 1}, f64);
+  const auto fit = ts::Ssm::filter(y, trend_model(0.2, 0.05, 0.3));
+  for (int t : {0, 5, 20, 39}) {
+    const auto x = fit.filtered_states.select(0, t).to_vec<double>();
+    std::cout << std::fixed << std::setprecision(3) << "t = " << t << "  level " << x[0] << "  slope " << x[1] << "\n";
+  }
+  std::cout << "log-likelihood " << fit.loglik << "\n";
+}
+```
+
+Output
+
+```text
+t = 0  level 1.236  slope 0.047
+t = 5  level 2.699  slope 0.323
+t = 20  level 7.360  slope 0.347
+t = 39  level 12.793  slope 0.323
+log-likelihood -22.639
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+statespace/Ssm
+statespace/SsmFilterResult
+statespace/SsmForecastResult
+statespace/SsmModel
+statespace/SsmOptions
+statespace/SsmSimResult
+statespace/SsmSmoothResult
+```
+<!-- apiref:toctree:end -->

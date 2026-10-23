@@ -1,0 +1,402 @@
+<!-- generated from ArimaFit.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::ArimaFit`
+
+The result of an ARIMA fit: the estimated coefficients and the methods that evaluate the fitted model.
+
+## Signature
+
+```cpp
+ts::ArimaFit fit = ts::Arima::fit_mle(y, options);
+```
+
+## Construction
+
+Obtained from [`Arima::fit_mle`](Arima.md); it can also be filled in by hand to evaluate or simulate a model with known coefficients.
+
+## State
+
+| Field | Meaning |
+|---|---|
+| `mean` | the sample mean removed before fitting (when `demean` was on) |
+| `intercept` | the additional constant estimated by the fit |
+| `sigma` | the innovation standard deviation |
+| `ar`, `ma` | the autoregressive and moving-average coefficients, in the convention `x_t = a_1 x_{t−1} + … + e_t + b_1 e_{t−1} + …` |
+| `sar`, `sma` | the seasonal autoregressive and moving-average coefficients |
+| `beta` | the regression coefficients (empty without regressors) |
+| `diff_order`, `seasonal_diff_order`, `seasonal_period` | the differencing and period that the methods apply |
+| `exact_likelihood` | which likelihood `loglik`, `loglik_per_obs`, `score` and `observed_inf` evaluate |
+
+The level a stationary model reverts to is `mean + intercept / (1 − Σ a)`.
+
+## Methods
+
+### `infer`
+
+```cpp
+pluss::Series infer(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+pluss::Series infer(const pluss::Series& y, const pluss::Series& x, pluss::codem::Config cfg = {}) const;
+```
+
+The one-step-ahead prediction errors (innovations) of the fitted model on `y`: each observation minus its prediction from the past. For a correctly specified model they are close to white noise with standard deviation `sigma`, which is how a fit is checked. The result has the length of `y`; positions consumed by differencing hold `NaN`.
+
+`const pluss::Series& y`
+: The observed series in time order (a vector or an `n × 1` matrix).
+
+`const pluss::Series& x`
+: Exogenous regressors: an `n × k` matrix (or a vector) with one row per observation of `y`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the fit itself runs in double precision.
+
+**Returns.** A `Series` of innovations, the same length as `y`.
+
+### `loglik`
+
+```cpp
+double loglik(const pluss::Series& y) const;
+double loglik(const pluss::Series& y, const pluss::Series& x) const;
+```
+
+The log-likelihood of `y` under the fitted parameters, exact or conditional according to `exact_likelihood`. Use it to compare fits by information criteria: Akaike's `2k − 2 loglik` or Schwarz's `k log n − 2 loglik`, with `k` the number of estimated parameters (coefficients, the mean and the variance).
+
+`const pluss::Series& y`
+: The observed series in time order (a vector or an `n × 1` matrix).
+
+`const pluss::Series& x`
+: Exogenous regressors: an `n × k` matrix (or a vector) with one row per observation of `y`.
+
+**Returns.** The total log-likelihood as a `double`.
+
+### `loglik_per_obs`
+
+```cpp
+pluss::Series loglik_per_obs(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+pluss::Series loglik_per_obs(const pluss::Series& y, const pluss::Series& x, pluss::codem::Config cfg = {}) const;
+```
+
+The contribution of each observation to the log-likelihood. Their sum is `loglik`; looking at them shows which observations the model finds surprising.
+
+`const pluss::Series& y`
+: The observed series in time order (a vector or an `n × 1` matrix).
+
+`const pluss::Series& x`
+: Exogenous regressors: an `n × k` matrix (or a vector) with one row per observation of `y`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the fit itself runs in double precision.
+
+**Returns.** A `Series`, one value per observation.
+
+### `score`
+
+```cpp
+pluss::Series score(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+pluss::Series score(const pluss::Series& y, const pluss::Series& x, pluss::codem::Config cfg = {}) const;
+```
+
+The gradient of the log-likelihood with respect to the estimated parameters (numerical, step `finite_diff_eps`): the intercept, the autoregressive coefficients, the seasonal autoregressive coefficients, the moving-average coefficients, the seasonal moving-average coefficients and the regression coefficients, in that order. At a maximum it is close to zero, which is a quick check that the search converged.
+
+`const pluss::Series& y`
+: The observed series in time order (a vector or an `n × 1` matrix).
+
+`const pluss::Series& x`
+: Exogenous regressors: an `n × k` matrix (or a vector) with one row per observation of `y`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the fit itself runs in double precision.
+
+**Returns.** A `Series` with one entry per estimated parameter.
+
+### `observed_inf`
+
+```cpp
+pluss::Series observed_inf(const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+pluss::Series observed_inf(const pluss::Series& y, const pluss::Series& x, pluss::codem::Config cfg = {}) const;
+```
+
+The observed information matrix: minus the numerical Hessian of the log-likelihood at the fitted parameters, in the parameter order of `score`. Its inverse estimates the covariance of the estimates.
+
+`const pluss::Series& y`
+: The observed series in time order (a vector or an `n × 1` matrix).
+
+`const pluss::Series& x`
+: Exogenous regressors: an `n × k` matrix (or a vector) with one row per observation of `y`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the fit itself runs in double precision.
+
+**Returns.** A square `Series` with one row and column per estimated parameter.
+
+### `forecast`
+
+```cpp
+pluss::Series forecast(std::int64_t horizon, const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+pluss::Series forecast(std::int64_t horizon, const pluss::Series& y, const pluss::Series& x_hist, const pluss::Series& x_future, pluss::codem::Config cfg = {}) const;
+```
+
+Point forecasts `horizon` steps beyond the end of `y`, computed recursively from the fitted model (differenced models are integrated back to the level of `y`). Forecasts of a stationary model decay towards its mean; those of a differenced model continue from the last value at the estimated drift. A model fitted with regressors needs their future values `x_future` (one row per step).
+
+`std::int64_t horizon`
+: How many steps ahead to forecast (greater than 0).
+
+`const pluss::Series& y`
+: The observed series in time order (a vector or an `n × 1` matrix).
+
+`const pluss::Series& x_hist`
+: The regressors over the history of `y`.
+
+`const pluss::Series& x_future`
+: The regressors over the forecast steps, `horizon` rows.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the fit itself runs in double precision.
+
+**Returns.** A `Series` of `horizon` forecasts.
+
+**Errors.** `horizon` must be positive.
+
+### `simulate`
+
+```cpp
+pluss::Series simulate(std::int64_t num_observations, pluss::codem::Config cfg = {}, std::uint64_t seed = 0) const;
+pluss::Series simulate(const pluss::Series& x, pluss::codem::Config cfg = {}, std::uint64_t seed = 0) const;
+```
+
+Draws a series from the fitted model with Gaussian innovations of standard deviation `sigma`. The same `seed` gives the same series. With regressors, pass them as `x` (one row per simulated observation).
+
+`std::int64_t num_observations`
+: Length of the simulated series.
+
+`const pluss::Series& x`
+: Exogenous regressors: an `n × k` matrix (or a vector) with one row per observation of `y`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned series); the fit itself runs in double precision.
+
+`std::uint64_t seed`
+: Seed of the random stream (default 0, a fixed stream).
+
+**Returns.** A `Series` of simulated observations.
+
+## Practical Examples
+
+### Example 1
+
+Evaluate a fitted model: the innovations should look like white noise with the fitted standard deviation, the score should be near zero, and the forecasts decay towards the mean.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  const auto fit = ts::Arima::fit_mle(y);
+  const Series innovations = fit.infer(y);
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "innovation sd " << innovations.std().item<double>() << " (fitted sigma " << fit.sigma << ")\n";
+  show("score", fit.score(y));
+  show("forecast", fit.forecast(5, y));
+}
+```
+
+Output
+
+```text
+innovation sd 0.2849 (fitted sigma 0.2841)
+score            0.0000   0.0000
+forecast         0.2706   0.1929   0.1423   0.1094   0.0880
+```
+
+### Example 2
+
+Simulate from the fitted model; the same seed reproduces the same series, and the fitted model can be evaluated on the simulated data.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  const auto fit = ts::Arima::fit_mle(y);
+  const Series a = fit.simulate(300, f64, 11ULL);
+  const Series b = fit.simulate(300, f64, 11ULL);
+  std::cout << "same seed, same series: " << std::boolalpha << ((a - b).abs().max().item<double>() == 0.0) << "\n";
+  std::cout << std::fixed << std::setprecision(2) << "log-likelihood of the simulated series under the fit: " << fit.loglik(a) << "\n";
+}
+```
+
+Output
+
+```text
+same seed, same series: true
+log-likelihood of the simulated series under the fit: -41.89
+```
+
+### Example 3
+
+The per-observation log-likelihoods add up to the total; the information matrix has one row per estimated parameter.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(200, 0.7);
+  const auto fit = ts::Arima::fit_mle(y);
+  std::cout << std::fixed << std::setprecision(4) << "sum of per-observation values " << fit.loglik_per_obs(y).sum().item<double>() << ", loglik " << fit.loglik(y) << "\n";
+  const Series information = fit.observed_inf(y);
+  std::cout << "information matrix is " << information.sizes()[0] << " x " << information.sizes()[1] << "\n";
+}
+```
+
+Output
+
+```text
+sum of per-observation values -32.3468, loglik -32.3468
+information matrix is 2 x 2
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`Arima`](Arima.md)
+- [`ArimaOptions`](ArimaOptions.md)
+- [`ljung_box`](../diagnostics/ljung_box.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

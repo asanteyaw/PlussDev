@@ -1,0 +1,10 @@
+# What presolve removes
+
+[Back to Large Sparse Models](../linprog_04_large_sparse_models.md)
+
+
+Presolve simplifies the model before the solver sees it. It turns a row with one variable into a bound, substitutes out a variable whose bounds are equal, drops an empty row, and drops a row that the bounds already guarantee. The program builds a model with each of these hidden in it.
+
+@@example Numerical/optimization/guide/lp/216_presolve.cpp@@
+
+`lp::presolve` removes 3 of the 4 rows and 1 of the 5 columns, in 2 passes: the singleton row `x2 <= 4`, the empty row, the redundant row `x0 + x1 <= 100`, and the fixed column `x3 = 1`. The solution with presolve on and off is the same, objective 9 at `(5, 0, 0, 1, 0)`, and it is reported in the numbering of the original model, with all five columns, even though the solver worked on a model with one row. Leave presolve on. Turn it off only to diagnose a surprising result: if the answer changes, report it.

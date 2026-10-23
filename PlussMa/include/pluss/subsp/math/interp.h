@@ -45,7 +45,7 @@ enum class EdgeMode { Clamp, Linear, Error };
                                 "query must share a platform");
   if (!coordinate.isfinite().all().item<bool>() ||
       !query.isfinite().all().item<bool>() ||
-      !values.isfinite().all().item<bool>())
+      !(values.dtype().is_complex() ? values.abs() : values).isfinite().all().item<bool>())
     throw std::invalid_argument(
         "math::interp::linear: coordinate, values, and query must be finite");
   if (!coordinate.diff(1, 0).gt(0.0).all().item<bool>())

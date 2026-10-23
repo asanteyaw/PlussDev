@@ -1,0 +1,45 @@
+<!-- generated from stochastic_03_jumps_and_marcus.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Stochastic 3: Jumps and the Marcus Integral
+
+Prices gap, defaults arrive, claims come in lumps. A process that jumps needs two things the continuous theory does not have: a rule for what a jump does to `g(X)`, and a decision about how a jump should be integrated against. This chapter covers both. After it you can describe the jump part of a process to the library, tell the raw form from the compensated one, simulate a path with jumps, and use the Marcus (canonical) integral when you need the ordinary chain rule to survive a jump.
+
+## The mental model
+
+A jump of size `z` does not need a derivative. It moves the state from `x` to `x + z`, and `g(X)` moves by the plain difference `g(x + z) − g(x)`, however rough `g` is. The jump part of the process is therefore described by its **atoms**: atom `k` jumps by `sizes[k]` and arrives at rate `intensity[k]` per unit time. A compound Poisson process is a handful of atoms; a Levy measure with a density is its quadrature, with the atom rate equal to the density times the width of the cell.
+
+| Form | `X` contains | Drift of `g(X)` |
+|---|---|---|
+| raw (`compensated = false`) | the sum of the jumps | the continuous part only; the jumps come back as `g(x + z) − g(x)` |
+| compensated (`compensated = true`) | the jumps minus their mean, a martingale | the continuous part plus `∫ [g(x + z) − g(x) − g'(x) z] ν(dz)` |
+
+The Marcus (canonical) convention answers a different question: how does a jump interact with a coefficient `h(X)` that multiplies it? The Marcus rule moves the state along the flow of the equation `dy/du = h(y) z` for `u` from 0 to 1, so the jump is a limit of ever-faster smooth motion. Under that rule the ordinary chain rule holds across jumps, just as it does for the Stratonovich integral (Marcus 1978, 1981; Kurtz, Pardoux and Protter 1995; Chechkin and Pavlyukevich 2014).
+
+## A guided tour
+
+- [A Levy measure as atoms](stochastic_03_jumps_and_marcus/a_levy_measure_as_atoms.md)
+- [A path with jumps](stochastic_03_jumps_and_marcus/a_path_with_jumps.md)
+- [The Marcus integral](stochastic_03_jumps_and_marcus/the_marcus_integral.md)
+- [What a jump does to the state](stochastic_03_jumps_and_marcus/what_a_jump_does_to_the_state.md)
+- [The Marcus differential](stochastic_03_jumps_and_marcus/the_marcus_differential.md)
+
+## What to remember
+
+- A jump needs no derivative: it moves `g(X)` by `g(x + z) − g(x)`. Describe the jump part by atoms (sizes and rates); a Levy measure is its quadrature.
+- Raw jumps leave the drift alone; compensated jumps add `∫ [g(x + z) − g(x) − g'(x) z] ν(dz)` to it.
+- A path with jumps has quadratic variation far from the elapsed time, and the diagnostics will say so.
+- Use the Marcus integral and differential when the ordinary chain rule must hold across jumps; the jump steps are integrated along the flow of the coefficient, and the accuracy of the flow is a knob.
+- There is no Marcus SDE solver yet: the integral, the differential and the flow are provided, simulating a full jump equation under the Marcus rule is not.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic_03_jumps_and_marcus/a_levy_measure_as_atoms
+stochastic_03_jumps_and_marcus/a_path_with_jumps
+stochastic_03_jumps_and_marcus/the_marcus_integral
+stochastic_03_jumps_and_marcus/what_a_jump_does_to_the_state
+stochastic_03_jumps_and_marcus/the_marcus_differential
+```
+<!-- apiref:toctree:end -->

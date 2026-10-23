@@ -38,9 +38,57 @@ std::int64_t resolve_positive_size_(const std::optional<std::int64_t>& provided,
   return value;
 }
 
-std::int64_t default_block_(std::int64_t num_observations, std::int64_t num_test_sets) {
-  const std::int64_t denom = std::max<std::int64_t>(1, num_test_sets + 1);
-  return std::max<std::int64_t>(1, num_observations / denom);
+struct FoldSizes {
+  std::int64_t train = 1;
+  std::int64_t test = 1;
+  std::int64_t step = 1;
+};
+
+// Fills in whichever of the training, test and step sizes the caller left open. With k test sets, gap g and n observations the three satisfy
+//   k - 1 = (n - train - test - g) / step,
+// and an unknown value follows from that relation; with nothing given all three equal floor((n - g) / (k + 1)); when only one of test or step is given the
+// other equals it.
+FoldSizes resolve_fold_sizes_(const std::optional<std::int64_t>& train_opt,
+                              const std::optional<std::int64_t>& test_opt,
+                              const std::optional<std::int64_t>& step_opt,
+                              std::int64_t n,
+                              std::int64_t k,
+                              std::int64_t gap) {
+  const auto at_least_one = [](std::int64_t v) { return std::max<std::int64_t>(1, v); };
+  FoldSizes out;
+  if (train_opt) require_positive_(*train_opt, "train size");
+  if (test_opt) require_positive_(*test_opt, "test_size");
+  if (step_opt) require_positive_(*step_opt, "step_size");
+  const bool has_train = train_opt.has_value(), has_test = test_opt.has_value(), has_step = step_opt.has_value();
+  if (!has_train && !has_test && !has_step) {
+    out.train = out.test = out.step = at_least_one((n - gap) / (k + 1));
+  } else if (!has_train && !has_test) {
+    out.test = out.step = *step_opt;
+    out.train = at_least_one(n - gap - out.test - out.step * (k - 1));
+  } else if (!has_train && !has_step) {
+    out.test = out.step = *test_opt;
+    out.train = at_least_one(n - gap - out.test - out.step * (k - 1));
+  } else if (!has_test && !has_step) {
+    out.train = *train_opt;
+    out.test = out.step = at_least_one((n - gap - out.train) / k);
+  } else if (!has_test) {
+    out.train = *train_opt;
+    out.step = *step_opt;
+    out.test = at_least_one(n - gap - out.train - out.step * (k - 1));
+  } else if (!has_train) {
+    out.test = *test_opt;
+    out.step = *step_opt;
+    out.train = at_least_one(n - gap - out.test - out.step * (k - 1));
+  } else if (!has_step) {
+    out.train = *train_opt;
+    out.test = *test_opt;
+    out.step = (k > 1) ? at_least_one((n - gap - out.test - out.train) / (k - 1)) : out.test;
+  } else {
+    out = {*train_opt, *test_opt, *step_opt};
+  }
+  PLUSS_CHECK(n - (out.train + out.test + gap) - out.step * (k - 1) >= 0,
+              "subsp::stats::ts::TsPartition: the requested sizes do not fit num_test_sets folds in num_observations");
+  return out;
 }
 
 PartitionWindow make_window_(std::int64_t train_start,
@@ -91,12 +139,12 @@ std::vector<PartitionWindow> build_expanding_windows_(std::int64_t num_observati
                                                        const PartitionOptions& options) {
   require_positive_(num_test_sets, "num_test_sets");
 
-  const std::int64_t block = default_block_(num_observations, num_test_sets);
   const std::int64_t gap_size = options.gap_size;
   const std::int64_t max_lag = options.max_lag;
-  const std::int64_t test_size = resolve_positive_size_(options.test_size, block, "test_size");
-  const std::int64_t step_size = resolve_positive_size_(options.step_size, block, "step_size");
-  const std::int64_t min_train_size = resolve_positive_size_(options.min_train_size, block, "min_train_size");
+  const FoldSizes sizes = resolve_fold_sizes_(options.min_train_size, options.test_size, options.step_size, num_observations, num_test_sets, gap_size);
+  const std::int64_t test_size = sizes.test;
+  const std::int64_t step_size = sizes.step;
+  const std::int64_t min_train_size = sizes.train;
   const std::int64_t max_train_size = resolve_positive_size_(
       options.max_train_size,
       std::max<std::int64_t>(1, num_observations - 1),
@@ -147,12 +195,12 @@ std::vector<PartitionWindow> build_sliding_windows_(std::int64_t num_observation
                                                      const PartitionOptions& options) {
   require_positive_(num_test_sets, "num_test_sets");
 
-  const std::int64_t block = default_block_(num_observations, num_test_sets);
   const std::int64_t gap_size = options.gap_size;
   const std::int64_t max_lag = options.max_lag;
-  const std::int64_t train_size = resolve_positive_size_(options.train_size, block, "train_size");
-  const std::int64_t test_size = resolve_positive_size_(options.test_size, block, "test_size");
-  const std::int64_t step_size = resolve_positive_size_(options.step_size, block, "step_size");
+  const FoldSizes sizes = resolve_fold_sizes_(options.train_size, options.test_size, options.step_size, num_observations, num_test_sets, gap_size);
+  const std::int64_t train_size = sizes.train;
+  const std::int64_t test_size = sizes.test;
+  const std::int64_t step_size = sizes.step;
 
   PLUSS_CHECK(max_lag < train_size,
               "subsp::stats::ts::TsPartition: expected max_lag < train_size for sliding_window");
@@ -266,9 +314,8 @@ TsPartition TsPartition::expanding_window(std::int64_t num_observations,
   require_non_negative_(options.gap_size, "gap_size");
   require_non_negative_(options.max_lag, "max_lag");
   const auto windows = build_expanding_windows_(num_observations, num_test_sets, options);
-  const std::int64_t step_size = resolve_positive_size_(options.step_size,
-                                                        default_block_(num_observations, num_test_sets),
-                                                        "step_size");
+  const std::int64_t step_size = resolve_fold_sizes_(
+      options.min_train_size, options.test_size, options.step_size, num_observations, num_test_sets, options.gap_size).step;
   return TsPartition(PartitionType::ExpandingWindow,
                      options.direction,
                      num_observations,
@@ -285,9 +332,8 @@ TsPartition TsPartition::sliding_window(std::int64_t num_observations,
   require_non_negative_(options.gap_size, "gap_size");
   require_non_negative_(options.max_lag, "max_lag");
   const auto windows = build_sliding_windows_(num_observations, num_test_sets, options);
-  const std::int64_t step_size = resolve_positive_size_(options.step_size,
-                                                        default_block_(num_observations, num_test_sets),
-                                                        "step_size");
+  const std::int64_t step_size = resolve_fold_sizes_(
+      options.train_size, options.test_size, options.step_size, num_observations, num_test_sets, options.gap_size).step;
   return TsPartition(PartitionType::SlidingWindow,
                      options.direction,
                      num_observations,

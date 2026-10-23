@@ -1,0 +1,85 @@
+# ts plot
+
+`plot` draws the two plots that guide time-series modelling: the autocorrelation and partial autocorrelation functions with their white-noise confidence band, and the residuals against time. Each has two forms: a `*_payload` function returning the plotted numbers (for your own tables or plotting), and a drawing function that adds the picture to a `pluss::pl::Studio` figure, which can be saved as SVG, PDF or PNG (`save_svg(path)`, `save_pdf(path)`, `save_png(path, dpi)`).
+
+## The Surface
+
+| Entity | What it gives you |
+|---|---|
+| [`CorrPlotOptions`](plot/CorrPlotOptions.md) | Options of the autocorrelation plots and payloads |
+| [`CorrPlotPayload`](plot/CorrPlotPayload.md) | The numbers behind an autocorrelation plot |
+| [`plot_acf`](plot/plot_acf.md) | Draws the autocorrelation plot of a series into a `pluss::pl::Studio` figure |
+| [`plot_acf_payload`](plot/plot_acf_payload.md) | The numbers behind the autocorrelation plot: lags, values and the white-noise band |
+| [`plot_pacf`](plot/plot_pacf.md) | Draws the partial autocorrelation plot of a series into a `pluss::pl::Studio` figure |
+| [`plot_pacf_payload`](plot/plot_pacf_payload.md) | The numbers behind the partial autocorrelation plot: lags, values and the white-noise band |
+| [`plot_residuals`](plot/plot_residuals.md) | Draws the residuals of a model against time into a `pluss::pl::Studio` figure |
+| [`plot_residuals_payload`](plot/plot_residuals_payload.md) | The numbers behind a residual plot: the time index and the residuals |
+| [`ResidualPlotOptions`](plot/ResidualPlotOptions.md) | Options of the residual plot |
+| [`ResidualPlotPayload`](plot/ResidualPlotPayload.md) | The numbers behind a residual plot |
+
+## How To Call It
+
+Compute the numbers behind the autocorrelation plot of an autoregressive series.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const Series y = ar1(300, 0.7);
+  ts::plot::CorrPlotOptions options;
+  options.max_lag = 4;
+  const auto payload = ts::plot::acf_payload(y, options);
+  const auto lags = payload.lags.to_vec<std::int64_t>();
+  const auto values = payload.values.to_vec<double>();
+  for (std::size_t i = 0; i < lags.size(); ++i) std::cout << "lag " << lags[i] << "  " << std::fixed << std::setprecision(3) << values[i] << "\n";
+  std::cout << "95% band: +/- " << payload.conf_high << "\n";
+}
+```
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

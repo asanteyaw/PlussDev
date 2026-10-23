@@ -1,0 +1,8 @@
+# Asymmetric responses
+
+[Back to Volatility Models](../ts_03_volatility_models.md)
+
+
+@@example Stats/time_series/guide/1212_leverage.cpp@@
+
+The returns respond five times as strongly to negative shocks (0.25) as to positive ones (0.05). A symmetric GARCH cannot represent this and its likelihood is lower by about 17 units; GJR and EGARCH both capture the asymmetry and are preferred by Akaike's criterion over GARCH by more than 25 points. GJR recovers the generating values (`ω` 0.050, `γ` 0.208, `β` 0.762; `α` is estimated at 0.031 against 0.05, the usual trade-off with `γ`). The EGARCH asymmetry coefficient is negative: a negative standardised shock raises the log-variance. EGARCH coefficients are on the log scale and cannot be compared with the GJR ones directly; compare the models by likelihood and criteria.

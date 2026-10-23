@@ -1,0 +1,10 @@
+# When the objective is not a number
+
+[Back to Choosing and Tuning an Algorithm](../optima_03_choosing_an_algorithm.md)
+
+
+Real models return `NaN` or infinity in regions the optimizer should never have visited: a log of a negative number, a variance that has gone negative. The three cases below are the ones that matter: a start with no value, a region of `NaN`, and a wall of `+infinity`.
+
+@@example Numerical/optimization/guide/optima/44_nonfinite_regions.cpp@@
+
+A start without a value is a failure for all four, flag `-4`, and the start is returned untouched: no algorithm can step from a point it cannot evaluate. In the other two cases every algorithm backs off the bad region and converges to `x = 3`. This is the behaviour to rely on when an optimizer wanders into a bad region. It does not make a start without a value usable.

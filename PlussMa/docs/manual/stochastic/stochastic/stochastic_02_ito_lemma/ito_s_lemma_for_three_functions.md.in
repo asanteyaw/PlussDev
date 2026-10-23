@@ -1,0 +1,10 @@
+# Ito's lemma for three functions
+
+[Back to Differentials and Ito's Lemma](../stochastic_02_ito_lemma.md)
+
+
+The program evaluates `g = x²`, `exp(x)` and `sin(x)` at the states `x = 0.5, 1, −0.3` with drifts `0.1, 0.2, −0.1` and volatilities `0.3, 0.5, 0.2`, and compares each result with the formula above.
+
+@@example Probability/random_processes/guide/sde/11_ito_lemma.cpp@@
+
+The difference from the closed form is at most `1.1e-16`, which is rounding. For `x²` the lemma has the familiar form: drift `2xμ + σ²`, diffusion `2xσ`. At `x = 1` the drift is 0.65000 and the diffusion 1.00000.

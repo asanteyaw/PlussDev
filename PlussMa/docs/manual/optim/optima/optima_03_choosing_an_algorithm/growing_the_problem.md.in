@@ -1,0 +1,10 @@
+# Growing the problem
+
+[Back to Choosing and Tuning an Algorithm](../optima_03_choosing_an_algorithm.md)
+
+
+The cost of a method shows in how its work grows with the number of variables. The problem is a smoothing fit with `n` variables, `2(n - 1)` difference constraints, one equality and bounds, whose solution has many active constraints. Iterations and function evaluations are shown; an asterisk would mark a run that did not converge.
+
+@@example Numerical/optimization/guide/optima/48_growing_problem.cpp@@
+
+Sequential QP, the working-set method and the interior method each need 7 to 15 iterations at every size, and between 8 and 28 evaluations. The merit method needs more iterations as the problem grows (38, 60, 84) and more evaluations (67, 119, 196). When each evaluation is expensive, evaluations are the number to watch: sequential QP is the cheapest at every size (8, 9 and 13), the interior method comes next (16, 19 and 18), and the working-set method is the most expensive at 16 variables (28).

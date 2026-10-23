@@ -37,24 +37,23 @@ auto dims(const pluss::Series &value) {
   return common::SeriesQuantity<common::Dimensionless>::from_si(value);
 }
 
-astro::Elements simple_elem(const pluss::Series &axis,
-                            const pluss::Series &ecc,
+astro::Elements simple_elem(const pluss::Series &axis, const pluss::Series &ecc,
                             const pluss::Series &tilt,
                             const pluss::Series &node,
                             const pluss::Series &peri,
                             const pluss::Series &phase) {
-  return astro::make_elem(
-      common::SeriesQuantity<common::Length>::from_si(axis), dims(ecc),
-      dims(tilt), dims(node), dims(peri), dims(phase));
+  return astro::make_elem(common::SeriesQuantity<common::Length>::from_si(axis),
+                          dims(ecc), dims(tilt), dims(node), dims(peri),
+                          dims(phase));
 }
 
 void test_vallado_state() {
   constexpr double km = 1000.0;
   const auto state = astro::make_state(
-      common::SeriesQuantity<common::Length>::from_si(pluss::series::make(
-          {6524.834 * km, 6862.875 * km, 6448.296 * km})),
-      common::SeriesQuantity<common::Speed>::from_si(pluss::series::make(
-          {4.901327 * km, 5.533756 * km, -1.976341 * km})));
+      common::SeriesQuantity<common::Length>::from_si(
+          pluss::series::make({6524.834 * km, 6862.875 * km, 6448.296 * km})),
+      common::SeriesQuantity<common::Speed>::from_si(
+          pluss::series::make({4.901327 * km, 5.533756 * km, -1.976341 * km})));
   const auto elem = astro::to_elem(state, mu(398600.4418 * km * km * km));
   constexpr double deg = std::numbers::pi / 180.0;
   expect(close(elem.axis().si_value().item<double>(), 36127.3376 * km, 2e-7),
@@ -80,11 +79,11 @@ void test_vallado_state() {
 }
 
 void test_singular_conventions() {
-  const auto circular = astro::make_state(
-      common::SeriesQuantity<common::Length>::from_si(
-          pluss::series::make({0.0, 2.0, 0.0})),
-      common::SeriesQuantity<common::Speed>::from_si(
-          pluss::series::make({-std::sqrt(0.5), 0.0, 0.0})));
+  const auto circular =
+      astro::make_state(common::SeriesQuantity<common::Length>::from_si(
+                            pluss::series::make({0.0, 2.0, 0.0})),
+                        common::SeriesQuantity<common::Speed>::from_si(
+                            pluss::series::make({-std::sqrt(0.5), 0.0, 0.0})));
   const auto elem = astro::to_elem(circular, mu(1.0));
   expect(close(elem.axis().si_value().item<double>(), 2.0),
          "circular axis is incorrect");
@@ -93,8 +92,7 @@ void test_singular_conventions() {
   expect(close(elem.node().si_value().item<double>(), 0.0) &&
              close(elem.peri().si_value().item<double>(), 0.0),
          "circular equatorial singular angles were not canonicalized");
-  expect(close(elem.phase().si_value().item<double>(),
-               std::numbers::pi / 2.0),
+  expect(close(elem.phase().si_value().item<double>(), std::numbers::pi / 2.0),
          "circular equatorial phase did not become true longitude");
   const auto rebuilt = astro::from_elem(elem, mu(1.0));
   expect(rebuilt.position().si_value().allclose(circular.position().si_value(),
@@ -125,9 +123,9 @@ void test_high_rank_batches() {
   expect(back.phase().si_value().allclose(phase, 2e-10, 2e-10),
          "batched true anomaly did not round trip");
 
-  const auto matrix = simple_elem(
-      axis.select(0, 0), ecc.select(0, 0), tilt.select(0, 0),
-      node.select(0, 0), peri.select(0, 0), phase.select(0, 0));
+  const auto matrix =
+      simple_elem(axis.select(0, 0), ecc.select(0, 0), tilt.select(0, 0),
+                  node.select(0, 0), peri.select(0, 0), phase.select(0, 0));
   expect_shape(astro::from_elem(matrix, mu(7.0)).position().si_value(),
                {3, 4, 3}, "rank-three Cartesian output changed shape");
 
@@ -140,10 +138,10 @@ void test_high_rank_batches() {
 }
 
 void test_hyperbola_and_diagnostics() {
-  const auto elem = simple_elem(
-      pluss::series::make(-2.0), pluss::series::make(1.5),
-      pluss::series::make(0.3), pluss::series::make(0.2),
-      pluss::series::make(0.4), pluss::series::make(0.5));
+  const auto elem =
+      simple_elem(pluss::series::make(-2.0), pluss::series::make(1.5),
+                  pluss::series::make(0.3), pluss::series::make(0.2),
+                  pluss::series::make(0.4), pluss::series::make(0.5));
   const auto state = astro::from_elem(elem, mu(5.0));
   const auto back = astro::to_elem(state, mu(5.0));
   expect(back.axis().si_value().allclose(elem.axis().si_value(), 1e-10, 1e-10),
@@ -163,10 +161,10 @@ void test_hyperbola_and_diagnostics() {
   }
   expect(rejected_period, "hyperbolic orbit was assigned a period");
 
-  const auto ellipse = simple_elem(
-      pluss::series::make(4.0), pluss::series::make(0.25),
-      pluss::series::make(0.0), pluss::series::make(0.0),
-      pluss::series::make(0.0), pluss::series::make(0.0));
+  const auto ellipse =
+      simple_elem(pluss::series::make(4.0), pluss::series::make(0.25),
+                  pluss::series::make(0.0), pluss::series::make(0.0),
+                  pluss::series::make(0.0), pluss::series::make(0.0));
   expect(close(astro::peri(ellipse).si_value().item<double>(), 3.0),
          "elliptic periapsis distance is incorrect");
   expect(close(astro::apo(ellipse).si_value().item<double>(), 5.0),
@@ -179,10 +177,10 @@ void test_hyperbola_and_diagnostics() {
 void test_graph_and_failures() {
   auto phase = pluss::series::make(0.35);
   phase.tracks_slope_(true);
-  const auto elem = simple_elem(
-      pluss::series::make(2.0), pluss::series::make(0.2),
-      pluss::series::make(0.4), pluss::series::make(0.3),
-      pluss::series::make(0.7), phase);
+  const auto elem =
+      simple_elem(pluss::series::make(2.0), pluss::series::make(0.2),
+                  pluss::series::make(0.4), pluss::series::make(0.3),
+                  pluss::series::make(0.7), phase);
   astro::from_elem(elem, mu(3.0)).position().si_value().sum().reverse();
   expect(phase.has_sensitivity() &&
              std::isfinite(phase.sensitivity().item<double>()),
@@ -200,11 +198,11 @@ void test_graph_and_failures() {
 
   bool radial = false;
   try {
-    const auto state = astro::make_state(
-        common::SeriesQuantity<common::Length>::from_si(
-            pluss::series::make({1.0, 0.0, 0.0})),
-        common::SeriesQuantity<common::Speed>::from_si(
-            pluss::series::make({1.0, 0.0, 0.0})));
+    const auto state =
+        astro::make_state(common::SeriesQuantity<common::Length>::from_si(
+                              pluss::series::make({1.0, 0.0, 0.0})),
+                          common::SeriesQuantity<common::Speed>::from_si(
+                              pluss::series::make({1.0, 0.0, 0.0})));
     (void)astro::to_elem(state, mu(1.0));
   } catch (const std::domain_error &) {
     radial = true;
@@ -244,43 +242,41 @@ void test_anomaly_solver() {
   expect(recovered.allclose(expected, 2e-11, 2e-11),
          "true/mean anomaly conversion did not round trip");
 
-  const auto many_turns = astro::solve_mean(
-      pluss::series::make(0.4),
-      pluss::series::make(200.0 * std::numbers::pi + 0.3));
-  expect(std::isfinite(astro::to_true(pluss::series::make(0.4),
-                                     many_turns.anomaly)
-                           .item<double>()),
-         "many-revolution elliptic anomaly overflowed an unselected branch");
+  const auto many_turns =
+      astro::solve_mean(pluss::series::make(0.4),
+                        pluss::series::make(200.0 * std::numbers::pi + 0.3));
+  expect(
+      std::isfinite(astro::to_true(pluss::series::make(0.4), many_turns.anomaly)
+                        .item<double>()),
+      "many-revolution elliptic anomaly overflowed an unselected branch");
 }
 
 void test_two_body_advance() {
-  const auto circle = simple_elem(
-      pluss::series::make(4.0), pluss::series::make(0.0),
-      pluss::series::make(0.0), pluss::series::make(0.0),
-      pluss::series::make(0.0), pluss::series::make(0.0));
+  const auto circle =
+      simple_elem(pluss::series::make(4.0), pluss::series::make(0.0),
+                  pluss::series::make(0.0), pluss::series::make(0.0),
+                  pluss::series::make(0.0), pluss::series::make(0.0));
   const auto quarter = astro::advance(
-      circle, common::ScalarQuantity<common::Time>::from_si(2.0 *
-                                                            std::numbers::pi),
+      circle,
+      common::ScalarQuantity<common::Time>::from_si(2.0 * std::numbers::pi),
       mu(4.0));
   expect(close(quarter.elements.phase().si_value().item<double>(),
                std::numbers::pi / 2.0, 1e-11),
          "circular quarter-period advance is incorrect");
-  expect(close(astro::mean_rate(circle, mu(4.0)).si_value().item<double>(),
-               0.25),
-         "mean motion is incorrect");
+  expect(
+      close(astro::mean_rate(circle, mu(4.0)).si_value().item<double>(), 0.25),
+      "mean motion is incorrect");
   const auto restored = astro::advance(
       quarter.elements,
-      common::ScalarQuantity<common::Time>::from_si(-2.0 *
-                                                    std::numbers::pi),
+      common::ScalarQuantity<common::Time>::from_si(-2.0 * std::numbers::pi),
       mu(4.0));
-  expect(close(restored.elements.phase().si_value().item<double>(), 0.0,
-               1e-11),
+  expect(close(restored.elements.phase().si_value().item<double>(), 0.0, 1e-11),
          "negative elapsed time did not reverse circular propagation");
 
-  const auto ellipse = simple_elem(
-      pluss::series::make(3.0), pluss::series::make(0.6),
-      pluss::series::make(0.4), pluss::series::make(0.2),
-      pluss::series::make(0.7), pluss::series::make(1.3));
+  const auto ellipse =
+      simple_elem(pluss::series::make(3.0), pluss::series::make(0.6),
+                  pluss::series::make(0.4), pluss::series::make(0.2),
+                  pluss::series::make(0.7), pluss::series::make(1.3));
   const double orbit_period =
       astro::period(ellipse, mu(2.0)).si_value().item<double>();
   const auto full = astro::advance(
@@ -294,10 +290,10 @@ void test_two_body_advance() {
                                                   2e-11, 2e-11),
          "one elliptic period did not return to the initial state");
 
-  const auto hyperbola = simple_elem(
-      pluss::series::make(-3.0), pluss::series::make(1.4),
-      pluss::series::make(0.3), pluss::series::make(0.2),
-      pluss::series::make(0.5), pluss::series::make(0.1));
+  const auto hyperbola =
+      simple_elem(pluss::series::make(-3.0), pluss::series::make(1.4),
+                  pluss::series::make(0.3), pluss::series::make(0.2),
+                  pluss::series::make(0.5), pluss::series::make(0.1));
   const auto escaped = astro::advance(
       hyperbola, common::ScalarQuantity<common::Time>::from_si(0.7), mu(2.0));
   const auto escaped_state = astro::from_elem(escaped.elements, mu(2.0));
@@ -309,10 +305,8 @@ void test_two_body_advance() {
   const pluss::Series axis = pluss::series::full({2, 3, 4}, 5.0);
   const auto batch = simple_elem(
       axis, pluss::series::full_like(axis, 0.3),
-      pluss::series::full_like(axis, 0.2),
-      pluss::series::full_like(axis, 0.4),
-      pluss::series::full_like(axis, 0.6),
-      pluss::series::full_like(axis, 0.8));
+      pluss::series::full_like(axis, 0.2), pluss::series::full_like(axis, 0.4),
+      pluss::series::full_like(axis, 0.6), pluss::series::full_like(axis, 0.8));
   const auto elapsed = common::SeriesQuantity<common::Time>::from_si(
       pluss::series::make({0.0, 0.5})
           .to(axis.scalar_type())
@@ -331,10 +325,10 @@ void test_advance_graph_and_convergence() {
   elapsed_value.tracks_slope_(true);
   const auto elapsed =
       common::SeriesQuantity<common::Time>::from_si(elapsed_value);
-  const auto circle = simple_elem(
-      pluss::series::make(4.0), pluss::series::make(0.0),
-      pluss::series::make(0.0), pluss::series::make(0.0),
-      pluss::series::make(0.0), pluss::series::make(0.3));
+  const auto circle =
+      simple_elem(pluss::series::make(4.0), pluss::series::make(0.0),
+                  pluss::series::make(0.0), pluss::series::make(0.0),
+                  pluss::series::make(0.0), pluss::series::make(0.3));
   auto moved = astro::advance(circle, elapsed, mu(4.0));
   moved.elements.phase().si_value().reverse();
   expect(elapsed_value.has_sensitivity() &&
@@ -343,13 +337,13 @@ void test_advance_graph_and_convergence() {
 
   auto eccentric_time = pluss::series::make(0.2);
   eccentric_time.tracks_slope_(true);
-  const auto eccentric = simple_elem(
-      pluss::series::make(4.0), pluss::series::make(0.5),
-      pluss::series::make(0.0), pluss::series::make(0.0),
-      pluss::series::make(0.0), pluss::series::make(0.4));
+  const auto eccentric =
+      simple_elem(pluss::series::make(4.0), pluss::series::make(0.5),
+                  pluss::series::make(0.0), pluss::series::make(0.0),
+                  pluss::series::make(0.0), pluss::series::make(0.4));
   auto eccentric_move = astro::advance(
-      eccentric,
-      common::SeriesQuantity<common::Time>::from_si(eccentric_time), mu(4.0));
+      eccentric, common::SeriesQuantity<common::Time>::from_si(eccentric_time),
+      mu(4.0));
   eccentric_move.elements.phase().si_value().reverse();
   const double final_phase =
       eccentric_move.elements.phase().si_value().item<double>();
@@ -366,8 +360,8 @@ void test_advance_graph_and_convergence() {
   loose.tolerance = 1e-15;
   loose.check_every = 1;
   loose.strict = false;
-  const auto incomplete = astro::solve_mean(
-      pluss::series::make(0.999), pluss::series::make(0.02), loose);
+  const auto incomplete = astro::solve_mean(pluss::series::make(0.999),
+                                            pluss::series::make(0.02), loose);
   expect(!incomplete.converged.all().item<bool>(),
          "one-step diagnostic solve unexpectedly reported convergence");
 
@@ -382,6 +376,429 @@ void test_advance_graph_and_convergence() {
   expect(failed_closed, "strict Kepler solve did not fail closed");
 }
 
+void test_universal_state_advance() {
+  constexpr double gm_value = 3.9860043543609598e14;
+  constexpr double radius = 1.0e11;
+  const double speed = std::sqrt(gm_value / radius);
+  const double inv_sqrt2 = 1.0 / std::sqrt(2.0);
+  const auto nasa_state = astro::make_state(
+      common::SeriesQuantity<common::Length>::from_si(
+          pluss::series::make({0.0, radius * inv_sqrt2, radius * inv_sqrt2})),
+      common::SeriesQuantity<common::Speed>::from_si(
+          pluss::series::make({0.0, -speed * inv_sqrt2, speed * inv_sqrt2})));
+  const auto half =
+      astro::advance(nasa_state,
+                     common::ScalarQuantity<common::Time>::from_si(
+                         std::numbers::pi * radius / speed),
+                     mu(gm_value));
+  expect(half.converged.item<bool>(),
+         "NASA circular half-period solve did not converge");
+  expect(half.state.position().si_value().allclose(
+             nasa_state.position().si_value().neg(), 2e-12, 2e-7) &&
+             half.state.velocity().si_value().allclose(
+                 nasa_state.velocity().si_value().neg(), 2e-12, 2e-12),
+         "NASA circular half-period state is incorrect");
+  const auto restored =
+      astro::advance(half.state,
+                     common::ScalarQuantity<common::Time>::from_si(
+                         -std::numbers::pi * radius / speed),
+                     mu(gm_value));
+  expect(restored.state.position().si_value().allclose(
+             nasa_state.position().si_value(), 3e-12, 3e-7) &&
+             restored.state.velocity().si_value().allclose(
+                 nasa_state.velocity().si_value(), 3e-12, 3e-12),
+         "negative elapsed time did not reverse universal propagation");
+
+  const auto unchanged = astro::advance(
+      nasa_state, common::ScalarQuantity<common::Time>::from_si(0.0),
+      mu(gm_value));
+  expect(unchanged.state.position().si_value().equal(
+             nasa_state.position().si_value()) &&
+             unchanged.state.velocity().si_value().equal(
+                 nasa_state.velocity().si_value()),
+         "zero-time universal propagation was not an exact identity");
+
+  const auto ellipse =
+      simple_elem(pluss::series::make(4.0), pluss::series::make(0.7),
+                  pluss::series::make(0.3), pluss::series::make(0.4),
+                  pluss::series::make(0.8), pluss::series::make(1.2));
+  const auto ellipse_state = astro::from_elem(ellipse, mu(3.0));
+  const auto state_path = astro::advance(
+      ellipse_state, common::ScalarQuantity<common::Time>::from_si(1.7),
+      mu(3.0));
+  const auto element_path = astro::from_elem(
+      astro::advance(
+          ellipse, common::ScalarQuantity<common::Time>::from_si(1.7), mu(3.0))
+          .elements,
+      mu(3.0));
+  expect(state_path.state.position().si_value().allclose(
+             element_path.position().si_value(), 2e-11, 2e-11) &&
+             state_path.state.velocity().si_value().allclose(
+                 element_path.velocity().si_value(), 2e-11, 2e-11),
+         "universal elliptic propagation disagrees with the element path");
+
+  const auto hyper =
+      simple_elem(pluss::series::make(-3.0), pluss::series::make(1.6),
+                  pluss::series::make(0.2), pluss::series::make(0.5),
+                  pluss::series::make(0.7), pluss::series::make(0.15));
+  const auto hyper_state = astro::from_elem(hyper, mu(2.0));
+  const auto hyper_state_path = astro::advance(
+      hyper_state, common::ScalarQuantity<common::Time>::from_si(0.8), mu(2.0));
+  const auto hyper_element_path = astro::from_elem(
+      astro::advance(hyper, common::ScalarQuantity<common::Time>::from_si(0.8),
+                     mu(2.0))
+          .elements,
+      mu(2.0));
+  expect(hyper_state_path.state.position().si_value().allclose(
+             hyper_element_path.position().si_value(), 3e-11, 3e-11) &&
+             hyper_state_path.state.velocity().si_value().allclose(
+                 hyper_element_path.velocity().si_value(), 3e-11, 3e-11),
+         "universal hyperbolic propagation disagrees with the element path");
+}
+
+void test_parabolic_batches_and_graph() {
+  const pluss::Series eccentricity =
+      pluss::series::make({0.999999, 1.0, 1.000001, 1.8});
+  const pluss::Series radius = pluss::series::ones_like(eccentricity);
+  const pluss::Series zero = pluss::series::zeros_like(eccentricity);
+  const pluss::Series speed = eccentricity.add(1.0).sqrt();
+  const auto state = astro::make_state(
+      common::SeriesQuantity<common::Length>::from_si(
+          radius.unsqueeze(-1)
+              .unite({zero.unsqueeze(-1), zero.unsqueeze(-1)}, -1)
+              .reshape({2, 2, 3})),
+      common::SeriesQuantity<common::Speed>::from_si(
+          zero.unsqueeze(-1)
+              .unite({speed.unsqueeze(-1), zero.unsqueeze(-1)}, -1)
+              .reshape({2, 2, 3})));
+  const auto elapsed = common::SeriesQuantity<common::Time>::from_si(
+      pluss::series::make({0.0, 0.25}).reshape({2, 1}));
+  const auto moved = astro::advance(state, elapsed, mu(1.0));
+  expect_shape(moved.state.position().si_value(), {2, 2, 3},
+               "universal propagation changed the batched state shape");
+  expect(moved.converged.all().item<bool>(),
+         "near-parabolic mixed batch did not converge");
+  const auto before_energy = astro::energy(state, mu(1.0)).si_value();
+  const auto after_energy = astro::energy(moved.state, mu(1.0)).si_value();
+  expect(after_energy.allclose(before_energy, 2e-10, 2e-10),
+         "universal propagation did not conserve specific energy");
+  expect(std::abs(before_energy.reshape({4}).select(0, 1).item<double>()) <
+             1e-13,
+         "the parabolic regression lane does not have zero energy");
+
+  const pluss::Series r_storage =
+      pluss::series::make({1.0, 2.0, 0.0, 0.0, 0.0, 0.0}, {3, 2});
+  const pluss::Series v_storage =
+      pluss::series::make({0.0, 0.0, 1.0, std::sqrt(0.75), 0.0, 0.0}, {3, 2});
+  const auto strided =
+      astro::make_state(common::SeriesQuantity<common::Length>::from_si(
+                            r_storage.transpose(0, 1)),
+                        common::SeriesQuantity<common::Speed>::from_si(
+                            v_storage.transpose(0, 1)));
+  const auto strided_move =
+      astro::advance(strided,
+                     common::SeriesQuantity<common::Time>::from_si(
+                         pluss::series::make({0.1, -0.2})),
+                     mu(1.0));
+  expect_shape(strided_move.state.position().si_value(), {2, 3},
+               "strided batch changed shape");
+  expect(strided_move.converged.all().item<bool>(),
+         "strided batch did not converge");
+
+  const pluss::Series f32_zero =
+      pluss::series::zeros({2, 3, 4}, pluss::ScalarType::Float32);
+  const pluss::Series f32_one = pluss::series::ones_like(f32_zero);
+  const auto f32_state = astro::make_state(
+      common::SeriesQuantity<common::Length>::from_si(
+          f32_one.unsqueeze(-1).unite(
+              {f32_zero.unsqueeze(-1), f32_zero.unsqueeze(-1)}, -1)),
+      common::SeriesQuantity<common::Speed>::from_si(
+          f32_zero.unsqueeze(-1).unite(
+              {f32_one.unsqueeze(-1), f32_zero.unsqueeze(-1)}, -1)));
+  const auto f32_move =
+      astro::advance(f32_state,
+                     common::SeriesQuantity<common::Time>::from_si(
+                         pluss::series::make({0.0F, 0.1F}).reshape({2, 1, 1})),
+                     common::ScalarQuantity<astro::GravParam>::from_si(1.0));
+  expect_shape(f32_move.state.position().si_value(), {2, 3, 4, 3},
+               "rank-four Float32 state changed shape");
+  expect(f32_move.state.position().si_value().scalar_type() ==
+                 pluss::ScalarType::Float32 &&
+             f32_move.state.velocity().si_value().scalar_type() ==
+                 pluss::ScalarType::Float32,
+         "universal propagation promoted Float32 state storage");
+
+  auto tracked_time = pluss::series::make(0.15);
+  tracked_time.tracks_slope_(true);
+  const auto tracked = astro::advance(
+      astro::make_state(common::SeriesQuantity<common::Length>::from_si(
+                            pluss::series::make({1.0, 0.0, 0.0})),
+                        common::SeriesQuantity<common::Speed>::from_si(
+                            pluss::series::make({0.0, 1.0, 0.0}))),
+      common::SeriesQuantity<common::Time>::from_si(tracked_time), mu(1.0));
+  tracked.state.position().si_value().select(-1, 1).reverse();
+  expect(tracked_time.has_sensitivity() &&
+             std::isfinite(tracked_time.sensitivity().item<double>()),
+         "universal propagation severed elapsed-time reverse history");
+}
+
+void test_universal_failures() {
+  const auto zero_velocity =
+      astro::make_state(common::SeriesQuantity<common::Length>::from_si(
+                            pluss::series::make({1.0, 0.0, 0.0})),
+                        common::SeriesQuantity<common::Speed>::from_si(
+                            pluss::series::make({0.0, 0.0, 0.0})));
+  bool rejected_zero_velocity = false;
+  try {
+    (void)astro::advance(zero_velocity,
+                         common::ScalarQuantity<common::Time>::from_si(1.0),
+                         mu(1.0));
+  } catch (const std::domain_error &) {
+    rejected_zero_velocity = true;
+  }
+  expect(rejected_zero_velocity,
+         "universal propagation accepted zero velocity");
+
+  const auto radial =
+      astro::make_state(common::SeriesQuantity<common::Length>::from_si(
+                            pluss::series::make({1.0, 0.0, 0.0})),
+                        common::SeriesQuantity<common::Speed>::from_si(
+                            pluss::series::make({1.0, 0.0, 0.0})));
+  bool rejected_radial = false;
+  try {
+    (void)astro::advance(
+        radial, common::ScalarQuantity<common::Time>::from_si(1.0), mu(1.0));
+  } catch (const std::domain_error &) {
+    rejected_radial = true;
+  }
+  expect(rejected_radial, "universal propagation accepted radial motion");
+
+  astro::KeplerOptions one_step;
+  one_step.max_steps = 1;
+  one_step.tolerance = 1e-15;
+  one_step.check_every = 1;
+  one_step.strict = false;
+  const auto diagnostic = astro::advance(
+      astro::make_state(common::SeriesQuantity<common::Length>::from_si(
+                            pluss::series::make({1.0, 0.0, 0.0})),
+                        common::SeriesQuantity<common::Speed>::from_si(
+                            pluss::series::make({0.0, std::sqrt(1.999), 0.0}))),
+      common::ScalarQuantity<common::Time>::from_si(5.0), mu(1.0), one_step);
+  expect(!diagnostic.converged.item<bool>(),
+         "one-step universal diagnostic unexpectedly converged");
+  one_step.strict = true;
+  bool failed_closed = false;
+  try {
+    (void)astro::advance(
+        astro::make_state(
+            common::SeriesQuantity<common::Length>::from_si(
+                pluss::series::make({1.0, 0.0, 0.0})),
+            common::SeriesQuantity<common::Speed>::from_si(
+                pluss::series::make({0.0, std::sqrt(1.999), 0.0}))),
+        common::ScalarQuantity<common::Time>::from_si(5.0), mu(1.0), one_step);
+  } catch (const std::runtime_error &) {
+    failed_closed = true;
+  }
+  expect(failed_closed, "strict universal propagation did not fail closed");
+}
+
+void test_lambert_vallado_and_endpoint() {
+  constexpr double km = 1000.0;
+  const auto start = common::SeriesQuantity<common::Length>::from_si(
+      pluss::series::make({5000.0 * km, 10000.0 * km, 2100.0 * km}));
+  const auto finish = common::SeriesQuantity<common::Length>::from_si(
+      pluss::series::make({-14600.0 * km, 2500.0 * km, 7000.0 * km}));
+  const auto flight = common::ScalarQuantity<common::Time>::from_si(3600.0);
+  const auto earth = mu(398600.0 * km * km * km);
+  const auto transfer = astro::lambert(start, finish, flight, earth);
+  const pluss::Series expected_depart = pluss::series::make(
+      {-5.99249464 * km, 1.92536342 * km, 3.24563653 * km});
+  const pluss::Series expected_arrive = pluss::series::make(
+      {-3.31245850 * km, -4.19661901 * km, -0.38528906 * km});
+  expect(transfer.converged.item<bool>() &&
+             transfer.residual.abs().item<double>() < 1e-10,
+         "Vallado Lambert transfer did not converge");
+  expect(transfer.depart.si_value().allclose(expected_depart, 2e-8, 1e-2) &&
+             transfer.arrive.si_value().allclose(expected_arrive, 2e-8,
+                                                  1e-2),
+         "Vallado Lambert velocities are incorrect");
+
+  const auto initial = astro::make_state(start, transfer.depart);
+  const auto reached = astro::advance(initial, flight, earth);
+  expect(reached.state.position().si_value().allclose(finish.si_value(),
+                                                      2e-10, 2e-3),
+         "Lambert departure velocity did not reach the requested endpoint");
+  expect(reached.state.velocity().si_value().allclose(
+             transfer.arrive.si_value(), 2e-10, 2e-6),
+         "Lambert arrival velocity disagrees with state propagation");
+}
+
+void test_lambert_sense_and_plane() {
+  const auto start = common::SeriesQuantity<common::Length>::from_si(
+      pluss::series::make({1.0, 0.0, 0.0}));
+  const auto finish = common::SeriesQuantity<common::Length>::from_si(
+      pluss::series::make({0.0, 1.0, 0.0}));
+  const auto flight = common::ScalarQuantity<common::Time>::from_si(
+      std::numbers::pi / 2.0);
+  const auto prograde = astro::lambert(start, finish, flight, mu(1.0));
+  expect(prograde.depart.si_value().allclose(
+             pluss::series::make({0.0, 1.0, 0.0}), 2e-11, 2e-11) &&
+             prograde.arrive.si_value().allclose(
+                 pluss::series::make({-1.0, 0.0, 0.0}), 2e-11, 2e-11),
+         "prograde quarter-circle Lambert transfer is incorrect");
+
+  astro::LambertOptions retrograde_options;
+  retrograde_options.sense = astro::OrbitSense::Retrograde;
+  const auto retrograde =
+      astro::lambert(start, finish,
+                     common::ScalarQuantity<common::Time>::from_si(5.0),
+                     mu(1.0), retrograde_options);
+  const pluss::Series retro_momentum =
+      start.si_value().cross(retrograde.depart.si_value(), -1);
+  expect(retro_momentum.select(-1, 2).item<double>() < 0.0,
+         "retrograde Lambert transfer has prograde angular momentum");
+  const auto retro_end = astro::advance(
+      astro::make_state(start, retrograde.depart),
+      common::ScalarQuantity<common::Time>::from_si(5.0), mu(1.0));
+  expect(retro_end.state.position().si_value().allclose(finish.si_value(),
+                                                        2e-10, 2e-10),
+         "retrograde Lambert transfer missed its endpoint");
+
+  const auto rotated_finish = common::SeriesQuantity<common::Length>::from_si(
+      pluss::series::make({0.0, 0.0, 1.0}));
+  const auto normal =
+      common::SeriesQuantity<common::Dimensionless>::from_si(
+          pluss::series::make({0.0, -1.0, 0.0}));
+  const auto rotated =
+      astro::lambert(start, rotated_finish, flight, mu(1.0), normal);
+  expect(rotated.depart.si_value().allclose(
+             pluss::series::make({0.0, 0.0, 1.0}), 2e-11, 2e-11) &&
+             rotated.arrive.si_value().allclose(
+                 pluss::series::make({-1.0, 0.0, 0.0}), 2e-11, 2e-11),
+         "explicit-plane Lambert transfer is incorrect");
+}
+
+void test_lambert_batches_and_graph() {
+  const pluss::Series zero =
+      pluss::series::zeros({2, 3, 4}, pluss::ScalarType::Float64);
+  const pluss::Series one = pluss::series::ones_like(zero);
+  const auto start = common::SeriesQuantity<common::Length>::from_si(
+      one.unsqueeze(-1).unite(
+          {zero.unsqueeze(-1), zero.unsqueeze(-1)}, -1));
+  const auto finish = common::SeriesQuantity<common::Length>::from_si(
+      zero.unsqueeze(-1).unite(
+          {one.unsqueeze(-1), zero.unsqueeze(-1)}, -1));
+  const auto flight = common::SeriesQuantity<common::Time>::from_si(
+      pluss::series::make({std::numbers::pi / 2.0,
+                           std::numbers::pi / 2.0})
+          .reshape({2, 1, 1}));
+  const auto batch = astro::lambert(start, finish, flight, mu(1.0));
+  expect_shape(batch.depart.si_value(), {2, 3, 4, 3},
+               "rank-four Lambert velocity changed shape");
+  expect(batch.converged.all().item<bool>(),
+         "rank-four Lambert batch did not converge");
+
+  const pluss::Series f32_start_storage =
+      pluss::series::make({1.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F}, {3, 2})
+          .to(pluss::ScalarType::Float32);
+  const pluss::Series f32_finish_storage =
+      pluss::series::make({0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F}, {3, 2})
+          .to(pluss::ScalarType::Float32);
+  const auto f32 = astro::lambert(
+      common::SeriesQuantity<common::Length>::from_si(
+          f32_start_storage.transpose(0, 1)),
+      common::SeriesQuantity<common::Length>::from_si(
+          f32_finish_storage.transpose(0, 1)),
+      common::SeriesQuantity<common::Time>::from_si(
+          pluss::series::make(
+              {static_cast<float>(std::numbers::pi / 2.0),
+               static_cast<float>(std::numbers::pi / 2.0)})
+              .to(pluss::ScalarType::Float32)),
+      common::ScalarQuantity<astro::GravParam>::from_si(1.0));
+  expect_shape(f32.depart.si_value(), {2, 3},
+               "strided Lambert batch changed shape");
+  expect(f32.depart.si_value().scalar_type() == pluss::ScalarType::Float32 &&
+             f32.converged.all().item<bool>(),
+         "strided Float32 Lambert transfer changed dtype or failed");
+
+  auto tracked_flight = pluss::series::make(2.0);
+  tracked_flight.tracks_slope_(true);
+  const auto tracked = astro::lambert(
+      common::SeriesQuantity<common::Length>::from_si(
+          pluss::series::make({1.0, 0.0, 0.0})),
+      common::SeriesQuantity<common::Length>::from_si(
+          pluss::series::make({0.0, 1.0, 0.0})),
+      common::SeriesQuantity<common::Time>::from_si(tracked_flight), mu(1.0));
+  tracked.depart.si_value().sum().reverse();
+  const double analytic = tracked_flight.sensitivity().item<double>();
+  const auto departure_sum = [](double flight) {
+    return astro::lambert(
+               common::SeriesQuantity<common::Length>::from_si(
+                   pluss::series::make({1.0, 0.0, 0.0})),
+               common::SeriesQuantity<common::Length>::from_si(
+                   pluss::series::make({0.0, 1.0, 0.0})),
+               common::ScalarQuantity<common::Time>::from_si(flight), mu(1.0))
+        .depart.si_value()
+        .sum()
+        .item<double>();
+  };
+  constexpr double step = 1e-5;
+  const double finite_difference =
+      (departure_sum(2.0 + step) - departure_sum(2.0 - step)) /
+      (2.0 * step);
+  expect(tracked_flight.has_sensitivity() && std::isfinite(analytic) &&
+             close(analytic, finite_difference, 2e-7),
+         "Lambert flight-time reverse rule disagrees with finite differences");
+}
+
+void test_lambert_failures() {
+  const auto start = common::SeriesQuantity<common::Length>::from_si(
+      pluss::series::make({1.0, 0.0, 0.0}));
+  const auto finish = common::SeriesQuantity<common::Length>::from_si(
+      pluss::series::make({0.0, 1.0, 0.0}));
+  bool bad_time = false;
+  try {
+    (void)astro::lambert(
+        start, finish, common::ScalarQuantity<common::Time>::from_si(0.0),
+        mu(1.0));
+  } catch (const std::invalid_argument &) {
+    bad_time = true;
+  }
+  expect(bad_time, "Lambert solve accepted zero flight time");
+
+  bool collinear = false;
+  try {
+    (void)astro::lambert(
+        start,
+        common::SeriesQuantity<common::Length>::from_si(
+            pluss::series::make({2.0, 0.0, 0.0})),
+        common::ScalarQuantity<common::Time>::from_si(1.0), mu(1.0));
+  } catch (const std::domain_error &) {
+    collinear = true;
+  }
+  expect(collinear, "Lambert solve accepted collinear endpoints");
+
+  astro::LambertOptions limited;
+  limited.max_steps = 1;
+  limited.tolerance = 1e-15;
+  limited.strict = false;
+  const auto diagnostic = astro::lambert(
+      start, finish, common::ScalarQuantity<common::Time>::from_si(3.0),
+      mu(1.0), limited);
+  expect(!diagnostic.converged.item<bool>(),
+         "one-step Lambert diagnostic unexpectedly converged");
+  limited.strict = true;
+  bool strict_failure = false;
+  try {
+    (void)astro::lambert(
+        start, finish, common::ScalarQuantity<common::Time>::from_si(3.0),
+        mu(1.0), limited);
+  } catch (const std::runtime_error &) {
+    strict_failure = true;
+  }
+  expect(strict_failure, "strict Lambert solve did not fail closed");
+}
+
 } // namespace
 
 int main() {
@@ -394,6 +811,13 @@ int main() {
     test_anomaly_solver();
     test_two_body_advance();
     test_advance_graph_and_convergence();
+    test_universal_state_advance();
+    test_parabolic_batches_and_graph();
+    test_universal_failures();
+    test_lambert_vallado_and_endpoint();
+    test_lambert_sense_and_plane();
+    test_lambert_batches_and_graph();
+    test_lambert_failures();
     std::cout << "NatSci astro orbital checks passed\n";
     return 0;
   } catch (const std::exception &error) {
@@ -401,4 +825,3 @@ int main() {
     return 1;
   }
 }
-

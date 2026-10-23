@@ -1,0 +1,123 @@
+<!-- generated from fill_gaps.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::fill_gaps`
+
+Replaces missing values (`NaN`) in a series by carrying values forward or backward, or by a constant.
+
+## Signature
+
+```cpp
+pluss::Series ts::fill_gaps(const pluss::Series& x, ts::GapFillMode mode = ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt);
+```
+
+## What It Does
+
+`fill_gaps` returns a copy of the series in which every `NaN` has been replaced. Forward filling treats a missing value as 'unchanged since the last observation' (a leading gap stays missing, as there is nothing to carry); backward filling pulls the next observation back (a trailing gap stays missing); the two other modes write a fixed value. Filling is a modelling choice: it invents data, so apply it deliberately, and prefer a model that handles missing values (the state-space filter does) over filling when you can.
+
+## Parameters
+
+`const pluss::Series& x`
+: A one-dimensional series in time order. A series with more than one dimension is rejected.
+
+`GapFillMode mode`
+: How to fill: `Forward` carries the last observed value on (default), `Backward` brings the next observed value back, `Zero` writes 0, `Constant` writes `constant`.
+
+`std::optional<double> constant`
+: The value written by the `Constant` mode; it must be given for that mode and is ignored by the others.
+
+## Returns
+
+A `Series` of the same length as `x` with the gaps filled.
+
+## Errors
+
+- `Constant` mode without a `constant` is rejected.
+
+## Practical Examples
+
+### Example 1
+
+The four fill modes on one series with three gaps.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+
+int main() {
+  const double nan = std::nan("");
+  const Series g = pluss::make_series({1.0, nan, nan, 4.0, nan, 6.0}, f64);
+  show("series", g);
+  show("forward", ts::fill_gaps(g));
+  show("backward", ts::fill_gaps(g, ts::GapFillMode::Backward));
+  show("zero", ts::fill_gaps(g, ts::GapFillMode::Zero));
+  show("constant 9", ts::fill_gaps(g, ts::GapFillMode::Constant, 9.0));
+}
+```
+
+Output
+
+```text
+series           1.0000      nan      nan   4.0000      nan   6.0000
+forward          1.0000   1.0000   1.0000   4.0000   4.0000   6.0000
+backward         1.0000   4.0000   4.0000   4.0000   6.0000   6.0000
+zero             1.0000   0.0000   0.0000   4.0000   0.0000   6.0000
+constant 9       1.0000   9.0000   9.0000   4.0000   9.0000   6.0000
+```
+
+### Example 2
+
+A leading gap cannot be filled forward and a trailing gap cannot be filled backward: those stay `NaN`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+
+int main() {
+  const double nan = std::nan("");
+  const Series g = pluss::make_series({nan, 2.0, nan, 4.0, nan}, f64);
+  show("series", g);
+  show("forward", ts::fill_gaps(g));
+  show("backward", ts::fill_gaps(g, ts::GapFillMode::Backward));
+}
+```
+
+Output
+
+```text
+series              nan   2.0000      nan   4.0000      nan
+forward             nan   2.0000   2.0000   4.0000   4.0000
+backward         2.0000   2.0000   4.0000   4.0000      nan
+```
+
+
+## See Also
+
+- [`resample`](resample.md)

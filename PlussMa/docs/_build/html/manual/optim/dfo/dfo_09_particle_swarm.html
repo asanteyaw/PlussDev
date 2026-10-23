@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Derivative-Free Optimization 9: The Particle Swarm Minimisers &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="A direct call" href="dfo_09_particle_swarm/a_direct_call.html" />
+    <link rel="prev" title="The self-adapting variant" href="dfo_08_differential_evolution/the_self_adapting_variant.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from dfo_09_particle_swarm.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="derivative-free-optimization-9-the-particle-swarm-minimisers">
+<h1>Derivative-Free Optimization 9: The Particle Swarm Minimisers<a class="headerlink" href="#derivative-free-optimization-9-the-particle-swarm-minimisers" title="Link to this heading">¶</a></h1>
+<p>Particle swarm imitates a flock: many particles move through the search region, each pulled toward the best place it has seen itself and the best place any particle has seen. It needs only function values, scales better with the number of variables than a simplex, and is the usual choice for rugged functions in a box. Two standalone minimisers exist: <code class="docutils literal notranslate"><span class="pre">particle_swarm_minimizer</span></code>, the classic scheme, and <code class="docutils literal notranslate"><span class="pre">particle_swarm_dv_minimizer</span></code>, a variant that mixes in differential evolution. After this chapter you can run either, set its parameters on purpose, stop it sensibly and judge which to use.</p>
+<p>Every program is complete and its output is the output of that program. Counts are evaluations of the objective; a “generation” is one move of every particle.</p>
+<section id="the-method">
+<h2>The method<a class="headerlink" href="#the-method" title="Link to this heading">¶</a></h2>
+<p>Each particle has a position and a velocity. In every generation each velocity becomes</p>
+<blockquote>
+<div><p>inertia × velocity + cognitive × (random) × (own best − position) + social × (random) × (swarm best − position)</p>
+</div></blockquote>
+<p>and the particle moves by it. Three forces: <strong>inertia</strong> keeps the particle going, <strong>cognitive</strong> pulls it back toward its own best, <strong>social</strong> pulls it toward the swarm’s best. By default the inertia falls linearly from <code class="docutils literal notranslate"><span class="pre">inertia_max</span></code> (0.99) to <code class="docutils literal notranslate"><span class="pre">inertia_min</span></code> (0.1) over the run: wide exploration first, fine search at the end. With bounds, particles are kept inside the box.</p>
+</section>
+<section id="the-calls">
+<h2>The calls<a class="headerlink" href="#the-calls" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">PopulationSolverOutcome</span><span class="w"> </span><span class="nf">particle_swarm_minimizer</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="n">initial</span><span class="p">,</span><span class="w"> </span><span class="n">ParticleSwarmConfig</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">PopulationSolverOutcome</span><span class="w"> </span><span class="nf">particle_swarm_dv_minimizer</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="n">initial</span><span class="p">,</span><span class="w"> </span><span class="n">ParticleSwarmDvConfig</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">ParticleSwarmConfig</span></code></p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">population_size</span></code></p></td>
+<td><p>particles</p></td>
+<td><p>200</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cognitive</span></code>, <code class="docutils literal notranslate"><span class="pre">social</span></code></p></td>
+<td><p>pull toward own best / swarm best</p></td>
+<td><p>2, 2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inertia</span></code>, <code class="docutils literal notranslate"><span class="pre">linear_inertia_schedule</span></code></p></td>
+<td><p>constant inertia, or (schedule on) the schedule below</p></td>
+<td><p>1, on</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inertia_max</span></code>, <code class="docutils literal notranslate"><span class="pre">inertia_min</span></code></p></td>
+<td><p>start and end of the schedule</p></td>
+<td><p>0.99, 0.1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_varying_acceleration</span></code>, <code class="docutils literal notranslate"><span class="pre">final_cognitive</span></code>, <code class="docutils literal notranslate"><span class="pre">final_social</span></code></p></td>
+<td><p>move the pulls to these values over the run</p></td>
+<td><p>off, 0.5, 2.5</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">velocity_clamp_ratio</span></code></p></td>
+<td><p>speed limit as a fraction of the box width (0 = none)</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">center_particle</span></code></p></td>
+<td><p>include a particle at the centre of the region</p></td>
+<td><p>on</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">initial_radius</span></code></p></td>
+<td><p>initial positions are drawn from start ± this, cut to the bounds; infinite means the whole box when bounded, ±0.5 around the start otherwise. The start is always one particle</p></td>
+<td><p>infinite</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lower_bounds</span></code>, <code class="docutils literal notranslate"><span class="pre">upper_bounds</span></code></p></td>
+<td><p>optional box</p></td>
+<td><p>none</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_generations</span></code>, <code class="docutils literal notranslate"><span class="pre">max_evaluations</span></code></p></td>
+<td><p>budgets (0 means 1000 generations, and a derived evaluation budget)</p></td>
+<td><p>1000, 0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_every</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_improvement_tolerance</span></code></p></td>
+<td><p>early-stop test (<code class="docutils literal notranslate"><span class="pre">check_every</span></code> 0 turns it off)</p></td>
+<td><p>0, 1e-8</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rng_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">execution_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">display</span></code></p></td>
+<td><p>as for differential evolution</p></td>
+<td><p>5489, <code class="docutils literal notranslate"><span class="pre">Vectorized</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">ParticleSwarmDvConfig</span></code> has the common fields plus <code class="docutils literal notranslate"><span class="pre">inertia</span></code>, <code class="docutils literal notranslate"><span class="pre">inertia_damp</span></code> (inertia is multiplied by it each generation), <code class="docutils literal notranslate"><span class="pre">beta</span></code>, <code class="docutils literal notranslate"><span class="pre">social</span></code>, <code class="docutils literal notranslate"><span class="pre">crossover_rate</span></code> and <code class="docutils literal notranslate"><span class="pre">stagnation_limit</span></code> (a particle with no improvement for that many generations is re-seeded, uniformly over the region the swarm started in). The facade’s <code class="docutils literal notranslate"><span class="pre">DfoOptions::particle_swarm</span></code> and <code class="docutils literal notranslate"><span class="pre">particle_swarm_dv</span></code> hold the same structures.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dfo_09_particle_swarm/a_direct_call.html"><span class="std std-doc">A direct call</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_09_particle_swarm/the_parameters.html"><span class="std std-doc">The parameters</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_09_particle_swarm/the_differential_evolution_variant.html"><span class="std std-doc">The differential-evolution variant</span></a></p></li>
+<li><p><a class="reference internal" href="dfo_09_particle_swarm/stopping_and_execution_modes.html"><span class="std std-doc">Stopping and execution modes</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Give bounds, and let the swarm cover them (the default).</p></li>
+<li><p>Use at least 5 to 10 particles per variable.</p></li>
+<li><p>Keep the linear inertia schedule for full precision.</p></li>
+<li><p>Budget by evaluations; use the early-stop test only on unimodal functions.</p></li>
+<li><p>Try the differential-evolution variant when the classic swarm stagnates, not as the first choice.</p></li>
+<li><p>Fix <code class="docutils literal notranslate"><span class="pre">rng_seed</span></code> to reproduce; use several seeds to judge a rugged problem.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/dfo/dfo_09_particle_swarm.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

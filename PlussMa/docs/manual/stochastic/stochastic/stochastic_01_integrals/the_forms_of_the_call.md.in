@@ -1,0 +1,10 @@
+# The forms of the call
+
+[Back to Stochastic Integrals](../stochastic_01_integrals.md)
+
+
+A path is a `Series`, and the integrals are methods of its `calc.antidiff` accessor. The integrand is a function `f(t, w)` called once, with the times and path values of every grid point stacked along the time axis, so it must act pointwise. The program shows a time-dependent integrand, an explicit non-uniform time grid, a path stored with time on the last axis, and the running integral.
+
+@@example Probability/random_processes/guide/sde/04_series_integral_forms.cpp@@
+
+The first and fourth lines are identical because the transposed path holds the same samples. The warped grid changes the times given to `f` but not the increments, so its value differs. The running integral has the shape of the path, starts at zero, and ends at the value of the total (−0.23277).

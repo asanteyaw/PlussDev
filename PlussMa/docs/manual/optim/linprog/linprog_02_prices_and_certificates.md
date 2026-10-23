@@ -1,0 +1,39 @@
+<!-- generated from linprog_02_prices_and_certificates.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Linear Programming 2: Prices and Certificates
+
+A linear program's answer carries more than the best plan. Every constraint has a price, the amount by which the optimum would improve if its limit were relaxed by one unit, and every verdict, whether optimal, infeasible or unbounded, comes with a certificate you can check by arithmetic. After this chapter you can read the prices of a solution, confirm them without trusting the solver, and verify a verdict of infeasible or unbounded.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+For a minimization, the **dual value** of a row is the rate at which the optimal objective changes as the row's right-hand side increases. Because the objective is linear and the plan changes in steps, the price is exact for small changes and holds until the set of binding constraints changes. Three facts organize everything:
+
+- A constraint that is not binding at the optimum, with idle capacity, has a price of zero. Relaxing it changes nothing. This is complementary slackness.
+- A binding constraint has a nonzero price, whose sign tells which way the objective moves. For a `<=` row of a minimization the dual value is zero or negative: more room can only help.
+- At an optimum the **dual objective** (a sum over the right-hand sides weighted by the prices) equals the **primal objective**. A pair of a feasible point and a feasible dual with equal objectives is a proof of optimality, because the dual objective bounds the primal from below.
+
+The result holds these as `dual_eq` (one value per equality row, the change of the optimum per unit of `b_eq`) and `dual_ub` (one per `<=` row).
+
+## Programs
+
+- [Prices, checked by re-solving](linprog_02_prices_and_certificates/prices_checked_by_re_solving.md)
+- [Certificates you can check](linprog_02_prices_and_certificates/certificates_you_can_check.md)
+
+## What to remember
+
+- A dual value is a price: the change of the optimum per unit of a right-hand side. Zero for a row with idle capacity, nonzero for a binding row.
+- Check a price by re-solving with the right-hand side moved up and down; the central difference matches.
+- Primal and dual objectives are equal at an optimum, and that equality is the proof.
+- An infeasible result carries Farkas multipliers; an unbounded result carries a ray. Both can be verified from the original data. Their scale is arbitrary.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog_02_prices_and_certificates/prices_checked_by_re_solving
+linprog_02_prices_and_certificates/certificates_you_can_check
+```
+<!-- apiref:toctree:end -->

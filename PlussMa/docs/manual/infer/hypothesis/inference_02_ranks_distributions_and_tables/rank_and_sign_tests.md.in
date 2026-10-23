@@ -1,0 +1,14 @@
+# Rank and sign tests
+
+[Back to Ranks, Distributions and Tables](../inference_02_ranks_distributions_and_tables.md)
+
+
+| Test | Question | Uses |
+|---|---|---|
+| `ranksum(x, y)` | does one sample tend to be larger than the other? | ranks of the pooled data |
+| `signrank(x, median0)`, `signrank(x, y)` | is the median `median0` / are paired differences centred on zero? | ranks of the absolute differences and their signs |
+| `signtest(x, median0)`, `signtest(x, y)` | the same, using only the signs | counts of positives and negatives; exact binomial p-value |
+
+@@example Stats/inference/guide/1104_rank_and_sign_tests.cpp@@
+
+For these small samples the default p-value is the exact one; the approximate p-value differs in the second digit (0.0207 against 0.0164 for the rank-sum test, and 0.0355 against 0.0313 for the paired signed-rank test), always because a continuous curve is fitted to a discrete distribution with few support points. The sign test is the weakest of the three because it ignores the sizes of the differences: with seven positive differences and one negative it gives p = 0.07, where the signed-rank test, which also sees that the positive differences are large, gives 0.03. None of the three assumes normality.

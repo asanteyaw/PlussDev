@@ -383,7 +383,7 @@ Semantics are described at a high level; see the corresponding header for exact 
 
 The former flat `Note::tex_*` spellings have been removed. TeX operations
 live on `note.tex()`; use the [Note TeX Accessor API Reference](sphinx/note_tex_accessor_api_reference.md) for the
-canonical method inventory and per-operation teaching pages.
+canonical method inventory and per-operation pages.
 
 ## Accessors (2)
 

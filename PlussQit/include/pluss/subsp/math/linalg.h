@@ -1,7 +1,5 @@
 #pragma once
 
-#include "pluss/codem/series_factory.h"
-
 #include <algorithm>
 #include <cmath>
 #include <complex>
@@ -10,6 +8,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "pluss/codem/series_factory.h"
 
 #if defined(__APPLE__)
 #include <Accelerate/Accelerate.h>
@@ -862,9 +862,19 @@ inline Series cholesky_inverse(const Series& factor, bool upper = false) {
 
 inline Series lu_solve(const Series& b, const Series& lu) {
   detail::require_square_(lu, "subsp::math::linalg::lu_solve");
-  auto a = lu.to(pluss::pCPU, ScalarType::Float64).contiguous();
+  const bool complex = detail::is_complex_(lu) || detail::is_complex_(b);
+  const ScalarType complex_dtype =
+      lu.scalar_type() == ScalarType::Complex128 ||
+              b.scalar_type() == ScalarType::Complex128 ||
+              lu.scalar_type() == ScalarType::Float64 ||
+              b.scalar_type() == ScalarType::Float64
+          ? ScalarType::Complex128
+          : ScalarType::Complex64;
+  const ScalarType work_dtype =
+      complex ? ScalarType::Complex128 : ScalarType::Float64;
+  auto a = lu.to(pluss::pCPU, work_dtype).contiguous();
   const auto n = a.sizes()[0];
-  auto rhs = b.to(pluss::pCPU, ScalarType::Float64).contiguous();
+  auto rhs = b.to(pluss::pCPU, work_dtype).contiguous();
   if (rhs.dim() == 1) {
     const std::vector<std::int64_t> shape{lu.sizes()[0], 1};
     rhs = rhs.reshape(shape);
@@ -875,6 +885,22 @@ inline Series lu_solve(const Series& b, const Series& lu) {
   const auto nrhs = rhs.sizes()[1];
   int ni = static_cast<int>(n);
   int nrhsi = static_cast<int>(nrhs);
+  if (complex) {
+    auto a_col =
+        detail::row_to_col_major_t_(a.to_vec<std::complex<double>>(), n, n);
+    auto b_col = detail::row_to_col_major_t_(rhs.to_vec<std::complex<double>>(),
+                                             n, nrhs);
+    std::vector<int> ipiv(static_cast<std::size_t>(n), 0);
+    int info = 0;
+    zgesv_(&ni, &nrhsi, a_col.data(), &ni, ipiv.data(), b_col.data(), &ni,
+           &info);
+    if (info < 0)
+      ::pluss::throw_error("subsp::math::linalg::lu_solve: invalid LAPACK arg");
+    if (info > 0)
+      ::pluss::throw_error("subsp::math::linalg::lu_solve: singular matrix");
+    return detail::complex_matrix_from_row_major_(
+        detail::col_to_row_major_t_(b_col, n, nrhs), n, nrhs, complex_dtype);
+  }
   auto a_col = detail::row_to_col_major_(a.to_vec<double>(), n, n);
   auto b_col = detail::row_to_col_major_(rhs.to_vec<double>(), n, nrhs);
   std::vector<int> ipiv(static_cast<std::size_t>(n), 0);
@@ -884,6 +910,14 @@ inline Series lu_solve(const Series& b, const Series& lu) {
   if (info > 0) ::pluss::throw_error("subsp::math::linalg::lu_solve: singular matrix");
   return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
 #else
+  if (complex) {
+    const auto rr = rhs.to_vec<std::complex<double>>();
+    const auto inv =
+        detail::inverse_gauss_t_(a.to_vec<std::complex<double>>(), n);
+    return detail::complex_matrix_from_row_major_(
+        detail::matmul_t_(inv, n, n, rr, rhs.sizes()[1]), n, rhs.sizes()[1],
+        complex_dtype);
+  }
   const auto rr = rhs.to_vec<double>();
   auto inv = inverse(lu);
   auto invr = inv.to_vec<double>();
@@ -1080,40 +1114,144 @@ inline SVDResult svd(const Series& a, bool full_matrices = true) {
 #endif
 }
 
-// Symmetric eigendecomposition: a = eigenvectors * diag(eigenvalues) * eigenvectors^T,
-// with eigenvalues in ascending order (matches LAPACK dsyev / numpy / torch linalg.eigh
-// convention). Only the triangle named by `upper` is read; the other is ignored, exactly
-// like cholesky(). Complex input is not supported (L-SR1's compact SR1 representation only
-// ever needs the spectrum of small real symmetric matrices).
-inline EighResult eigh(const Series& a, bool upper = false) {
-  detail::require_square_(a, "subsp::math::linalg::eigh");
-  if (detail::is_complex_(a)) {
-    ::pluss::throw_error("subsp::math::linalg::eigh: complex input not supported");
+// Batched symmetric/Hermitian eigendecomposition on the trailing matrix axes.
+// Eigenvalues are ascending and eigenvectors are columns.  LAPACK operates on
+// one matrix at a time, but input/output storage is transferred once per batch.
+inline EighResult eigh(const Series &a, bool upper = false) {
+  if (!a.defined() || a.dim() < 2 || a.size(-2) != a.size(-1)) {
+    ::pluss::throw_error(
+        "subsp::math::linalg::eigh: expected shape [..., n, n]");
   }
-  const auto n64 = a.sizes()[0];
+  if (!a.dtype().is_floating() && !a.dtype().is_complex()) {
+    ::pluss::throw_error(
+        "subsp::math::linalg::eigh: expected floating or complex values");
+  }
+  const auto n64 = a.size(-1);
+  if (n64 == 0) {
+    ::pluss::throw_error(
+        "subsp::math::linalg::eigh: matrix extent must be positive");
+  }
 #if defined(__APPLE__)
   int n = static_cast<int>(n64);
-  auto row = detail::to_row_major_f64_(a);
-  auto col = detail::row_to_col_major_(row, n, n);
+  if (static_cast<std::int64_t>(n) != n64) {
+    ::pluss::throw_error("subsp::math::linalg::eigh: matrix extent exceeds "
+                         "LAPACK integer range");
+  }
+  const std::int64_t matrix_size = n64 * n64;
+  const std::int64_t batch_count = a.numel() / matrix_size;
+  std::vector<std::int64_t> value_shape(a.sizes().begin(), a.sizes().end() - 1);
+  std::vector<std::int64_t> vector_shape(a.sizes().begin(), a.sizes().end());
+  const ScalarType value_dtype =
+      a.scalar_type() == ScalarType::Float32 ||
+              a.scalar_type() == ScalarType::Complex64
+          ? ScalarType::Float32
+          : ScalarType::Float64;
   char jobz = 'V';
   char uplo = upper ? 'U' : 'L';
-  std::vector<double> w(static_cast<std::size_t>(n), 0.0);
-  int info = 0;
+  std::vector<double> eigenvalues(static_cast<std::size_t>(batch_count * n64),
+                                  0.0);
 
+  if (detail::is_complex_(a)) {
+    const auto row = detail::to_row_major_c128_(a);
+    std::vector<std::complex<double>> vectors(row.size());
+    std::vector<__LAPACK_double_complex> col(
+        static_cast<std::size_t>(matrix_size));
+    std::vector<double> page_values(static_cast<std::size_t>(n), 0.0);
+    std::vector<double> rwork(static_cast<std::size_t>(std::max(1, 3 * n - 2)),
+                              0.0);
+    int lwork = -1;
+    __LAPACK_double_complex wkopt{};
+    int info = 0;
+    zheev_(&jobz, &uplo, &n, col.data(), &n, page_values.data(), &wkopt, &lwork,
+           rwork.data(), &info);
+    if (info != 0) {
+      ::pluss::throw_error(
+          "subsp::math::linalg::eigh: zheev workspace query failed");
+    }
+    lwork = std::max(1, static_cast<int>(wkopt.real()));
+    std::vector<__LAPACK_double_complex> work(static_cast<std::size_t>(lwork));
+
+    for (std::int64_t page = 0; page < batch_count; ++page) {
+      const std::size_t offset = static_cast<std::size_t>(page * matrix_size);
+      for (std::int64_t r = 0; r < n64; ++r) {
+        for (std::int64_t c = 0; c < n64; ++c) {
+          const auto value =
+              row[offset + static_cast<std::size_t>(r * n64 + c)];
+          col[static_cast<std::size_t>(c * n64 + r)] = value;
+        }
+      }
+      info = 0;
+      zheev_(&jobz, &uplo, &n, col.data(), &n, page_values.data(), work.data(),
+             &lwork, rwork.data(), &info);
+      if (info != 0) {
+        ::pluss::throw_error(
+            "subsp::math::linalg::eigh: zheev failed to converge");
+      }
+      std::copy(page_values.begin(), page_values.end(),
+                eigenvalues.begin() + page * n64);
+      for (std::int64_t r = 0; r < n64; ++r) {
+        for (std::int64_t c = 0; c < n64; ++c) {
+          vectors[offset + static_cast<std::size_t>(r * n64 + c)] =
+              col[static_cast<std::size_t>(c * n64 + r)];
+        }
+      }
+    }
+    Series values = pluss::make_series(
+        eigenvalues, value_shape,
+        Config{}.with_dtype(value_dtype).with_platform(pluss::pCPU));
+    Series basis = pluss::make_series(
+        vectors, vector_shape,
+        Config{}.with_dtype(a.scalar_type()).with_platform(pluss::pCPU));
+    return EighResult{std::move(values), std::move(basis)};
+  }
+
+  const auto row = detail::to_row_major_f64_(a);
+  std::vector<double> vectors(row.size(), 0.0);
+  std::vector<double> col(static_cast<std::size_t>(matrix_size), 0.0);
+  std::vector<double> page_values(static_cast<std::size_t>(n), 0.0);
   int lwork = -1;
   double wkopt = 0.0;
-  dsyev_(&jobz, &uplo, &n, col.data(), &n, w.data(), &wkopt, &lwork, &info);
-  if (info != 0) ::pluss::throw_error("subsp::math::linalg::eigh: dsyev workspace query failed");
+  int info = 0;
+  dsyev_(&jobz, &uplo, &n, col.data(), &n, page_values.data(), &wkopt, &lwork,
+         &info);
+  if (info != 0) {
+    ::pluss::throw_error(
+        "subsp::math::linalg::eigh: dsyev workspace query failed");
+  }
   lwork = std::max(1, static_cast<int>(wkopt));
   std::vector<double> work(static_cast<std::size_t>(lwork), 0.0);
-  dsyev_(&jobz, &uplo, &n, col.data(), &n, w.data(), work.data(), &lwork, &info);
-  if (info != 0) {
-    ::pluss::throw_error("subsp::math::linalg::eigh: dsyev failed to converge");
+
+  for (std::int64_t page = 0; page < batch_count; ++page) {
+    const std::size_t offset = static_cast<std::size_t>(page * matrix_size);
+    for (std::int64_t r = 0; r < n64; ++r) {
+      for (std::int64_t c = 0; c < n64; ++c) {
+        col[static_cast<std::size_t>(c * n64 + r)] =
+            row[offset + static_cast<std::size_t>(r * n64 + c)];
+      }
+    }
+    info = 0;
+    dsyev_(&jobz, &uplo, &n, col.data(), &n, page_values.data(), work.data(),
+           &lwork, &info);
+    if (info != 0) {
+      ::pluss::throw_error(
+          "subsp::math::linalg::eigh: dsyev failed to converge");
+    }
+    std::copy(page_values.begin(), page_values.end(),
+              eigenvalues.begin() + page * n64);
+    for (std::int64_t r = 0; r < n64; ++r) {
+      for (std::int64_t c = 0; c < n64; ++c) {
+        vectors[offset + static_cast<std::size_t>(r * n64 + c)] =
+            col[static_cast<std::size_t>(c * n64 + r)];
+      }
+    }
   }
-  // `col` now holds the eigenvectors as columns, in LAPACK's column-major layout.
-  return EighResult{
-      detail::vector_from_values_(w),
-      detail::matrix_from_row_major_(detail::col_to_row_major_(col, n, n), n, n)};
+  Series values = pluss::make_series(
+      eigenvalues, value_shape,
+      Config{}.with_dtype(value_dtype).with_platform(pluss::pCPU));
+  Series basis = pluss::make_series(
+      vectors, vector_shape,
+      Config{}.with_dtype(a.scalar_type()).with_platform(pluss::pCPU));
+  return EighResult{std::move(values), std::move(basis)};
 #else
   (void)upper;
   (void)n64;

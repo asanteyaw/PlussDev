@@ -1,0 +1,49 @@
+<!-- generated from stochastic_01_integrals.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Stochastic 1: Stochastic Integrals
+
+An integral `∫ f dW` against a Wiener path cannot be defined as the limit of ordinary Riemann sums, because the path wiggles too much: its squared increments add up to the elapsed time rather than to zero. Where in each step the integrand is read changes the answer, and that is the whole subject of this chapter. After it you can simulate Wiener paths, compute Ito, Stratonovich and in-between integrals along them, know which sample of the path each one reads, and have the library refuse an integrand that peeks into the future.
+
+## The mental model
+
+Split the interval into steps. Over a step the path moves by `ΔW`. The integral adds up `f · ΔW` over the steps, and the only choice is where in the step `f` is evaluated.
+
+| Convention | Reads `f` at | Called | Property |
+|---|---|---|---|
+| Ito (`θ = 0`) | the start of the step | non-anticipating | a martingale when `f` is adapted; `∫ W dW = (W² − T)/2` |
+| Stratonovich (`θ = ½`) | the average of both ends | midpoint | obeys the ordinary chain rule; `∫ W ∘ dW = W²/2` |
+| Backward (`θ = 1`) | the end of the step | anticipating | `∫ W dW = (W² + T)/2` |
+
+The difference is not numerical error that shrinks with the step. For `f = W` the Stratonovich integral exceeds the Ito one by half the quadratic variation of the path, and the quadratic variation is the elapsed time however fine the grid.
+
+## A guided tour
+
+- [A Wiener path](stochastic_01_integrals/a_wiener_path.md)
+- [Ito and Stratonovich on the same path](stochastic_01_integrals/ito_and_stratonovich_on_the_same_path.md)
+- [The family in between](stochastic_01_integrals/the_family_in_between.md)
+- [The forms of the call](stochastic_01_integrals/the_forms_of_the_call.md)
+- [Values that were not simulated](stochastic_01_integrals/values_that_were_not_simulated.md)
+- [Integrands that look into the future](stochastic_01_integrals/integrands_that_look_into_the_future.md)
+- [Is it a standard Wiener path?](stochastic_01_integrals/is_it_a_standard_wiener_path.md)
+
+## What to remember
+
+- Where the integrand is read decides the integral: start of the step is Ito, midpoint is Stratonovich, end is backward. The three differ by multiples of the quadratic variation, which does not vanish as the grid is refined.
+- The difference between conventions is exact for the sampled path: Strat − Ito is `QV/2`.
+- Integrands are called once on the whole time axis and must be pointwise; the wrapper checks adaptedness by redrawing the future of the path.
+- Read `quadratic_variation_ratio` and `warnings` before trusting a value computed on a path you did not simulate.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic_01_integrals/a_wiener_path
+stochastic_01_integrals/ito_and_stratonovich_on_the_same_path
+stochastic_01_integrals/the_family_in_between
+stochastic_01_integrals/the_forms_of_the_call
+stochastic_01_integrals/values_that_were_not_simulated
+stochastic_01_integrals/integrands_that_look_into_the_future
+stochastic_01_integrals/is_it_a_standard_wiener_path
+```
+<!-- apiref:toctree:end -->

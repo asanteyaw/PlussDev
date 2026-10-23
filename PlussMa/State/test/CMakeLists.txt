@@ -1,0 +1,4 @@
+add_executable(math_state_test state_test.cpp)
+target_link_libraries(math_state_test PRIVATE pluss)
+target_compile_features(math_state_test PRIVATE cxx_std_20)
+add_test(NAME math_state_test COMMAND math_state_test)

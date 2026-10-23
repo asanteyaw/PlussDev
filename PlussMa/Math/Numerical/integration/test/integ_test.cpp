@@ -790,6 +790,15 @@ int main() {
            "integra() Auto's MonteCarlo fallback value is within 6 standard errors of the true answer", &failures);
   }
 
+  // integra() Auto must not replace a nearly-converged quadrature value by a noisier Monte Carlo one: sqrt(x) on [0, 1] misses the
+  // default 1e-10 tolerance by a small margin (error about 1e-9) but is still far more accurate than 1e6 random samples (about 1e-4).
+  {
+    IntegrandFn f = [](const Series& x) { return x.sqrt(); };
+    const auto r = pluss::integ::integra(f, 0.0, 1.0);
+    expect_near(scalar_f64(r.value), 2.0 / 3.0, 1e-7, "integra() Auto keeps the more accurate quadrature value", &failures);
+    expect(r.strategy_used == IntegraStrategy::Quadrature, "integra() Auto reports Quadrature when it is the better answer", &failures);
+  }
+
   if (failures != 0) {
     std::cerr << "integ_test failed with " << failures << " failure(s)\n";
     return 1;

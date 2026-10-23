@@ -88,7 +88,7 @@ struct NodeOrder final {
 
 class MipSolver final {
 public:
-  MipSolver(const Model &model, const MipOptions &opt) : opt_(opt), orig_(model) {}
+  MipSolver(const Model &model, const MipOptions &opt) : opt_(opt), orig_(model) { orig_.canonicalize_infinities(); }
 
   MipResult solve() {
     const auto t0 = std::chrono::steady_clock::now();

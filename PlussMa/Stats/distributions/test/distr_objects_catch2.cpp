@@ -1,3 +1,4 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/ma.h>
 
@@ -757,4 +758,63 @@ TEST_CASE("gaussian mixture validates component metadata before delegation", "[d
   };
   REQUIRE_THROWS(zero_weight_sum.pdf(x));
   REQUIRE_THROWS(zero_weight_sum.cgf(pluss::make_series(0.0, f64)));
+}
+
+// Reference values from independent maximum-likelihood fits (scipy-style optimisation of the exact log-likelihood; EM run to convergence).
+TEST_CASE("maximum likelihood fits reach the exact optimum", "[distr][mle][reference]") {
+  using namespace pluss::subsp::stats::distr;
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const auto series = [&](std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}, f64); };
+
+  const auto g = series({0.8, 1.1, 1.9, 2.7, 3.6, 4.9, 2.2, 1.4, 3.1, 0.6});
+  const auto gfit = Gamma{1.0, 1.0, 0.0}.MLE(g);
+  REQUIRE(gfit.shape == Catch::Approx(2.791118015).epsilon(1e-8));
+  REQUIRE(gfit.scale == Catch::Approx(0.798962992).epsilon(1e-8));
+  REQUIRE(gfit.loglik(g).item<double>() == Catch::Approx(-15.772395065).epsilon(1e-9));
+  const auto gse = gfit.stderr(g).to_vec<double>();
+  REQUIRE(gse[2] == 0.0);  // the location is held fixed
+  const auto gv = gfit.vcov(g).to_vec<double>();
+  REQUIRE(gv[1] != 0.0);   // the shape and the scale are correlated: the full covariance, not only its diagonal
+
+  const auto b = series({0.10, 0.22, 0.35, 0.41, 0.57, 0.68, 0.81, 0.30, 0.62, 0.45});
+  const auto bfit = Beta{0.0, 1.0, 1.0, 1.0}.MLE(b);
+  REQUIRE(bfit.alpha == Catch::Approx(2.189731620).epsilon(1e-8));
+  REQUIRE(bfit.beta == Catch::Approx(2.685464131).epsilon(1e-8));
+
+  const auto c = series({0, 0, 1, 2, 4, 7, 3, 6, 0, 1, 5, 2});
+  const auto nfit = NegativeBinomial{1.0, 0.5}.MLE(c);
+  REQUIRE(nfit.r == Catch::Approx(1.620101531).epsilon(1e-7));
+  REQUIRE(nfit.p == Catch::Approx(0.385423252).epsilon(1e-7));
+
+  // Laplace: the location has the standard error scale / sqrt(n), not a placeholder
+  const auto lfit = Laplace{0.0, 1.0}.MLE(g);
+  REQUIRE(lfit.stderr(g).to_vec<double>()[0] == Catch::Approx(lfit.scale / std::sqrt(10.0)).epsilon(1e-12));
+
+  // Gaussian mixture: EM converges to the same optimum from different starts
+  std::vector<double> mix;
+  for (int i = 0; i < 60; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    mix.push_back((i % 3 == 0 ? -2.0 : 1.5) + (u - 0.5) * 2.0);
+  }
+  const auto xs = series(mix);
+  const auto w0 = series({0.5, 0.5}), s0 = series({1.0, 1.0});
+  const auto fit_a = GaussianMixture{w0, series({-1.0, 1.0}), s0}.MLE(xs);
+  const auto fit_b = GaussianMixture{w0, series({-3.0, 3.0}), s0}.MLE(xs);
+  REQUIRE(fit_a.loglik(xs).item<double>() == Catch::Approx(-85.76929012).epsilon(1e-9));
+  REQUIRE(fit_b.loglik(xs).item<double>() == Catch::Approx(-85.76929012).epsilon(1e-9));
+  REQUIRE(fit_a.weights.to_vec<double>()[0] == Catch::Approx(0.33334178).epsilon(1e-6));
+}
+
+TEST_CASE("generalised hyperbolic and NIG densities are accurate", "[distr][bessel][reference]") {
+  using namespace pluss::subsp::stats::distr;
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const auto x = pluss::make_series(std::vector<double>{-2.5, -1.0, 0.4, 3.0}, {4}, f64);
+  // exact values (arbitrary precision) of the NIG(alpha 2, beta 0.5, mu 0.1, delta 1.2) density
+  const auto p = Nig{2.0, 0.5, 0.1, 1.2}.pdf(x).to_vec<double>();
+  const std::vector<double> expected{0.00134548612717506, 0.08192507289386157, 0.5594923065755876, 0.01053281724362568};
+  for (std::size_t i = 0; i < 4; ++i) REQUIRE(p[i] == Catch::Approx(expected[i]).epsilon(1e-9));
+  // the Gh with lambda = -1/2 is the NIG: they agree to rounding
+  const auto q = Gh{-0.5, 2.0, 0.5, 0.1, 1.2}.pdf(x).to_vec<double>();
+  for (std::size_t i = 0; i < 4; ++i) REQUIRE(q[i] == Catch::Approx(p[i]).epsilon(1e-10));
 }

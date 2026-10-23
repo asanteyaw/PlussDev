@@ -1,0 +1,21 @@
+# `pluss::subsp::stats::ts::CorrPlotPayload`
+
+The numbers behind an autocorrelation plot.
+
+`CorrPlotPayload` is plain data.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `lags` | `pluss::Series` | — | The lags plotted, in increasing order. |
+| `values` | `pluss::Series` | — | The autocorrelations (or partial autocorrelations) at those lags. |
+| `conf_low, conf_high` | `double` | — | The limits `∓z/√n` of the white-noise band. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`acf_payload`](plot_acf_payload.md)

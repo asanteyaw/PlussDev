@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -51,7 +51,8 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">nanmedian()</span></code> is median after NaN values have been removed. Every reduction
 lane is filtered independently, ordered, then reduced: an odd valid count
-selects one centre and an even valid count averages two centres. It skips NaN
+selects one centre and an even valid count selects the lower of the two
+centres (the same rule as <a class="reference internal" href="median.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">median()</span></code></span></a>). It skips NaN
 only; <code class="docutils literal notranslate"><span class="pre">inf</span></code> and <code class="docutils literal notranslate"><span class="pre">-inf</span></code> remain valid sortable values.</p>
 <p>If filtering leaves no valid value in a population, the result is NaN. This is
 important: an all-missing lane is not silently converted to zero.</p>
@@ -118,10 +119,10 @@ data=5.0000
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2, 5, 9]
+data=[1, 5, 9]
 </pre></div>
 </div>
-<p>The first lane uses <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3]</span></code>, so it returns <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">+</span> <span class="pre">3)</span> <span class="pre">/</span> <span class="pre">2</span> <span class="pre">=</span> <span class="pre">2</span></code>.</p>
+<p>The first lane uses <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3]</span></code>, so it returns its lower centre, <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 <p>Example 3. The difference from <code class="docutils literal notranslate"><span class="pre">median()</span></code> is exactly the NaN policy.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">missing</span><span class="p">.</span><span class="n">median</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">missing</span><span class="p">.</span><span class="n">nanmedian</span><span class="p">();</span>
@@ -158,7 +159,7 @@ data=nan
 </section>
 <section id="id4">
 <h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>quantile: dim out of range
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>median: dim out of range
 </pre></div>
 </div>
 </section>
@@ -174,7 +175,7 @@ data=nan
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">nanmedian()</span></code> when NaN means missing observation. It filters each lane
-independently, follows the normal odd/even median rule, and returns NaN where
+independently, follows the median rule (lower centre for even counts), and returns NaN where
 no valid observations survive.</p>
 </section>
 <section id="see-also">

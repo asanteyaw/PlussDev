@@ -1,0 +1,10 @@
+# Curved constraints and the second-order correction
+
+[Back to Sequential QP in Depth](../optima_04_sequential_qp.md)
+
+
+Near the solution of a curved equality constraint, the best step of the linearized model can raise both the objective and the violation of the true problem, so a good step is rejected (the Maratos effect). A second-order correction re-solves the subproblem with the constraint measured at the trial point, which cancels the curvature error.
+
+@@example Numerical/optimization/guide/optima/54_second_order_correction.cpp@@
+
+All three runs reach the minimum, `-1` at `x = 1`. With the correction off the run takes 8 iterations and 18 evaluations; with one or two corrections it takes 7 iterations and the same 18 evaluations. The saving is one iteration, because the problem is small and the starting point is close to the solution, but the cause is exactly the one above, and the correction is cheap insurance on any problem with curved equality constraints.

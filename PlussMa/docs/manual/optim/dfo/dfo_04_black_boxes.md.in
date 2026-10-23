@@ -1,0 +1,48 @@
+# Derivative-Free Optimization 4: Black Boxes
+
+A black box is a function you can call but not look inside: a simulation, a solver run, a measurement. It may fail on some inputs, return several objectives, report constraints alongside, and cost seconds per call. This chapter covers the `blackbox` interface and the mesh adaptive solver behind it, `MadsAdvanced`. After it you can report failures honestly, use the cache, trade several objectives with weights, and choose how constraints are treated.
+
+Every program is complete and its output is the output of that program.
+
+## The interface
+
+Instead of `objective`, set `blackbox`. It returns a `BlackboxEvaluation`:
+
+| Field | Meaning | Default |
+|---|---|---|
+| `objectives` | one or more real values (a vector) | required |
+| `constraints` | zero or more values, feasible when every entry is `<= 0` | none |
+| `evaluation_ok` | `false` marks the call as a failure; its values are ignored | `true` |
+| `count_evaluation` | `false` keeps the call out of the evaluation budget (use it for cheap pre-checks) | `true` |
+
+Setting `blackbox` makes `Auto` choose `MadsAdvanced`. You can also pass a blackbox to `OrthoMads` or `LtMads`, which share its machinery.
+
+The options live in `DfoOptions::mads`:
+
+| Option | Meaning | Default |
+|---|---|---|
+| `constraint_handling` | `Ignore`, `ExtremeBarrier`, `ProgressiveBarrier` | `Ignore` |
+| `progressive_barrier_penalty` | merit penalty per unit of violation | 100 |
+| `multiobjective_scalarization` | `WeightedSum` or `Chebyshev` | `WeightedSum` |
+| `objective_weights`, `objective_reference` | weights, and the reference point for `Chebyshev` | equal weights |
+| `enable_cache`, `cache_round_digits` | remember evaluated points (rounded to this many digits) | on, 12 |
+| `search_points` | extra trial points per iteration before the poll | 0 |
+| `surrogate_mode` | `Off` or `CandidateOrdering` (rank candidates with a cheap local model) | `Off` |
+
+## Programs
+
+- [A function that fails](dfo_04_black_boxes/a_function_that_fails.md)
+- [The cache](dfo_04_black_boxes/the_cache.md)
+- [Two objectives](dfo_04_black_boxes/two_objectives.md)
+- [Constraint handling](dfo_04_black_boxes/constraint_handling.md)
+
+## Checklist
+
+1. Report failures with `evaluation_ok = false`, not with a large number.
+2. Leave the cache on for deterministic functions.
+3. For several objectives, choose the weights deliberately and read the Pareto archive to see what else was found.
+4. Pick the constraint-handling policy to match the problem; with `ProgressiveBarrier` set the penalty above the objective's slope.
+5. Verify constraints at the returned point.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

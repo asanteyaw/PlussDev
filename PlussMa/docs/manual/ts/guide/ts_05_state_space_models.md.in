@@ -1,0 +1,52 @@
+# Time Series 5: State-Space Models
+
+A state-space model describes an observed series as the noisy view of a hidden state that evolves in time. Trends, seasonal patterns, regressions with time-varying coefficients and ARMA models are all of this form, and one algorithm, the Kalman filter, handles every one of them: it updates the state estimate observation by observation, copes with missing values, and gives the exact Gaussian log-likelihood. After this chapter you can write a model in state-space form, filter and smooth a series, forecast with uncertainty, choose unknown noise levels by likelihood, and simulate.
+
+Every program is complete and its output is the output of that program.
+
+## The model
+
+> x_{t+1} = A x_t + B w_t,    y_t = C x_t + D v_t,
+
+with `w_t` and `v_t` independent standard normal vectors. `SsmModel` holds the matrices and the distribution of the state *before* the first observation:
+
+| Field | Shape | Meaning |
+|---|---|---|
+| `transition` | m × m | `A`, how the state evolves |
+| `state_loading` | m × k | `B`, how the state shocks enter |
+| `observation` | n × m | `C`, how the state shows in the observation |
+| `innovation_loading` | n × h | `D`, observation noise |
+| `mean0`, `cov0` | m, m × m | mean and covariance of the state before the first observation |
+
+Because the initial moments describe the state one step before the first observation, the first forecast of the state is `A mean0` with covariance `A cov0 A' + B B'`. A large `cov0` expresses ignorance about the starting level. Only the matrices appear: noise *standard deviations* go in `B` and `D`, so the noise covariances are `B B'` and `D D'`.
+
+All functions are static members of `Ssm`:
+
+| Function | Result |
+|---|---|
+| `filter(y, model)` | `SsmFilterResult`: `filtered_states` [T, m], `filtered_states_cov` [T, m, m], `forecasted_states` and `forecasted_states_cov` (the prediction for time t made at t − 1), `forecasted_obs`, `forecasted_obs_cov`, `forecast_obs_error`, `kalman_gain` [T, m, n], `data_used` [T, n], `loglik_per_obs` [T] and `loglik` |
+| `smooth(y, model)` | `SsmSmoothResult`: the filter result plus `smoothed_states` and `smoothed_states_cov` |
+| `forecast(h, y, model)` | `SsmForecastResult`: `observations`, `observations_cov`, `states`, `states_cov` for the h steps after the data |
+| `forecast(h, model)` | the same from the initial state alone |
+| `simulate(T, model, num_paths, cfg, seed)` | `SsmSimResult`: `observations`, `states`, `state_disturbance`, `obs_innovation` (with a leading path dimension when `num_paths > 1`) |
+
+Here `y` is a T × n matrix. Missing observations are NaN: the update is skipped there (`data_used` is 0) and the uncertainty widens until data return. `SsmOptions::tolerance` (default 0) makes the filter ignore an observation channel whose forecast variance is at or below that value, which guards against channels carrying no information.
+
+The log-likelihood is the exact one for the model and the supplied noise levels. The library does not search over noise levels for you; evaluating `loglik` over a grid, or passing it to any of the optimisers of the numerical chapters, estimates them by maximum likelihood.
+
+## Programs
+
+- [Filtering a local linear trend](ts_05_state_space_models/filtering_a_local_linear_trend.md)
+- [Smoothing across a gap, and forecasting](ts_05_state_space_models/smoothing_across_a_gap_and_forecasting.md)
+- [Simulation as a check](ts_05_state_space_models/simulation_as_a_check.md)
+
+## Checklist
+
+1. Write the model as `x_{t+1} = A x_t + B w_t`, `y_t = C x_t + D v_t` and enter standard deviations (not variances) in `B` and `D`.
+2. Give the initial state a wide `cov0` when you do not know the starting level.
+3. Mark missing observations with NaN rather than dropping them, so the time index stays intact.
+4. Choose unknown noise levels by maximising `loglik`; check the result with `smooth` and `simulate`.
+5. Use filtered states for real-time decisions and smoothed states for looking back.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

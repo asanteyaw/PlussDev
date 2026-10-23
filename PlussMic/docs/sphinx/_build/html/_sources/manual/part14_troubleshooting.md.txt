@@ -78,7 +78,7 @@ auto dates = typed.cast({
 The manual examples are compiled and run against the current SDK. If an output
 looks surprising, do not assume the manual should normalize it. Check the
 source path, add a focused regression test, and fix source-level defects before
-teaching the behavior as correct.
+presenting the behavior as correct.
 
 For missing values, the expected `fillnull` contract is:
 

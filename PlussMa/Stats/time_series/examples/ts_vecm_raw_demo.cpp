@@ -21,7 +21,7 @@ int main() {
   truth.include_trend = false;
   truth.alpha = pluss::make_series(std::vector<double>{-0.55, 0.42}, {2, 1}, cfg);
   truth.beta = pluss::make_series(std::vector<double>{1.0, -1.0}, {2, 1}, cfg);
-  truth.impact = truth.alpha.matmul(truth.beta.transpose(0, 1));
+  truth.impact = truth.beta.matmul(truth.alpha.transpose(0, 1));
   truth.gamma = pluss::make_series(
       std::vector<double>{
           0.08, 0.01,

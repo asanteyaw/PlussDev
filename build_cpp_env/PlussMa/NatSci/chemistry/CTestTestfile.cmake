@@ -7,6 +7,7 @@
 subdirs("electrochemistry")
 subdirs("equilibrium")
 subdirs("kinetics")
+subdirs("polymers")
 subdirs("spectroscopy")
 subdirs("transport")
 subdirs("quantum")

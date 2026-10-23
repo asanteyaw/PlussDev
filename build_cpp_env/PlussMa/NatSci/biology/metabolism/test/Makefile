@@ -193,6 +193,20 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/rule
+
+# Convenience name for target.
+control_test: PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/rule
+.PHONY : control_test
+
+# fast build rule for target.
+control_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/build
+.PHONY : control_test/fast
+
+# Convenience name for target.
 PlussMa/NatSci/biology/metabolism/test/CMakeFiles/genome_scale_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/metabolism/test/CMakeFiles/genome_scale_test.dir/rule
 .PHONY : PlussMa/NatSci/biology/metabolism/test/CMakeFiles/genome_scale_test.dir/rule
@@ -219,6 +233,58 @@ metabolism_test: PlussMa/NatSci/biology/metabolism/test/CMakeFiles/metabolism_te
 metabolism_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/metabolism_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/metabolism_test.dir/build
 .PHONY : metabolism_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/rule
+
+# Convenience name for target.
+modes_test: PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/rule
+.PHONY : modes_test
+
+# fast build rule for target.
+modes_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/build
+.PHONY : modes_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/rule
+
+# Convenience name for target.
+pathway_thermodynamics_test: PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/rule
+.PHONY : pathway_thermodynamics_test
+
+# fast build rule for target.
+pathway_thermodynamics_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/build
+.PHONY : pathway_thermodynamics_test/fast
+
+control_test.o: control_test.cpp.o
+.PHONY : control_test.o
+
+# target to build an object file
+control_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/control_test.cpp.o
+.PHONY : control_test.cpp.o
+
+control_test.i: control_test.cpp.i
+.PHONY : control_test.i
+
+# target to preprocess a source file
+control_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/control_test.cpp.i
+.PHONY : control_test.cpp.i
+
+control_test.s: control_test.cpp.s
+.PHONY : control_test.s
+
+# target to generate assembly for a file
+control_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/control_test.dir/control_test.cpp.s
+.PHONY : control_test.cpp.s
 
 genome_scale_test.o: genome_scale_test.cpp.o
 .PHONY : genome_scale_test.o
@@ -268,6 +334,54 @@ metabolism_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/metabolism_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/metabolism_test.dir/metabolism_test.cpp.s
 .PHONY : metabolism_test.cpp.s
 
+modes_test.o: modes_test.cpp.o
+.PHONY : modes_test.o
+
+# target to build an object file
+modes_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/modes_test.cpp.o
+.PHONY : modes_test.cpp.o
+
+modes_test.i: modes_test.cpp.i
+.PHONY : modes_test.i
+
+# target to preprocess a source file
+modes_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/modes_test.cpp.i
+.PHONY : modes_test.cpp.i
+
+modes_test.s: modes_test.cpp.s
+.PHONY : modes_test.s
+
+# target to generate assembly for a file
+modes_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/modes_test.dir/modes_test.cpp.s
+.PHONY : modes_test.cpp.s
+
+pathway_thermodynamics_test.o: pathway_thermodynamics_test.cpp.o
+.PHONY : pathway_thermodynamics_test.o
+
+# target to build an object file
+pathway_thermodynamics_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/pathway_thermodynamics_test.cpp.o
+.PHONY : pathway_thermodynamics_test.cpp.o
+
+pathway_thermodynamics_test.i: pathway_thermodynamics_test.cpp.i
+.PHONY : pathway_thermodynamics_test.i
+
+# target to preprocess a source file
+pathway_thermodynamics_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/pathway_thermodynamics_test.cpp.i
+.PHONY : pathway_thermodynamics_test.cpp.i
+
+pathway_thermodynamics_test.s: pathway_thermodynamics_test.cpp.s
+.PHONY : pathway_thermodynamics_test.s
+
+# target to generate assembly for a file
+pathway_thermodynamics_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/build.make PlussMa/NatSci/biology/metabolism/test/CMakeFiles/pathway_thermodynamics_test.dir/pathway_thermodynamics_test.cpp.s
+.PHONY : pathway_thermodynamics_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -283,14 +397,26 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... control_test"
 	@echo "... genome_scale_test"
 	@echo "... metabolism_test"
+	@echo "... modes_test"
+	@echo "... pathway_thermodynamics_test"
+	@echo "... control_test.o"
+	@echo "... control_test.i"
+	@echo "... control_test.s"
 	@echo "... genome_scale_test.o"
 	@echo "... genome_scale_test.i"
 	@echo "... genome_scale_test.s"
 	@echo "... metabolism_test.o"
 	@echo "... metabolism_test.i"
 	@echo "... metabolism_test.s"
+	@echo "... modes_test.o"
+	@echo "... modes_test.i"
+	@echo "... modes_test.s"
+	@echo "... pathway_thermodynamics_test.o"
+	@echo "... pathway_thermodynamics_test.i"
+	@echo "... pathway_thermodynamics_test.s"
 .PHONY : help
 
 

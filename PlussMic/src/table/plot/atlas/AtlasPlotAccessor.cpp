@@ -490,7 +490,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
     PLUSS_CHECK(frame.get(feature).has_value(),
                 std::string(where) + ": missing feature '" + std::string(feature) + "' in one or more frames");
     max_cases = std::max(max_cases, frame.ncases());
-    all_case_labeled = all_case_labeled && slate_prefers_labels(frame.label().values());
+    all_case_labeled = all_case_labeled && slate_prefers_labels(frame.labels().values());
   }
 
   AtlasGrid3D out;
@@ -504,7 +504,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
 
     for (const auto p : positions) {
       const auto& frame = frames[static_cast<std::size_t>(p)];
-      const auto labels = slate_to_labels(frame.label().values());
+      const auto labels = slate_to_labels(frame.labels().values());
       require_size(static_cast<std::int64_t>(labels.size()), frame.ncases(), where, "case labels");
       for (const auto& label : labels) {
         if (!union_index.contains(label)) {
@@ -521,7 +521,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
 
     for (const auto p : positions) {
       const auto& frame = frames[static_cast<std::size_t>(p)];
-      const auto labels = slate_to_labels(frame.label().values());
+      const auto labels = slate_to_labels(frame.labels().values());
       const auto values = slate_to_numeric_values(frame.features(feature), where, feature);
       require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
 
@@ -594,7 +594,7 @@ struct ResolvedFrameAxis {
 ResolvedFrameAxis resolve_frame_axis(const DataFrame& frame,
                                      std::optional<std::string_view> x_feature,
                                      std::string_view where) {
-  const auto& axis_slate = x_feature.has_value() ? frame.features(*x_feature) : frame.label().values();
+  const auto& axis_slate = x_feature.has_value() ? frame.features(*x_feature) : frame.labels().values();
   const auto axis_label = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
   ResolvedFrameAxis axis;
   axis.label = axis_label;

@@ -1,0 +1,10 @@
+# The smallest call
+
+[Back to Your First Constrained Problems](../optima_01_first_problems.md)
+
+
+Start with no constraints at all. The objective is the squared distance to a target point, so the answer is the target. This shows the whole shape of a call: an objective written with `Trace`, a starting `Series`, and a result you read by block name.
+
+@@example Numerical/optimization/guide/optima/01_minimal.cpp@@
+
+The solver reaches the target `(1, 2)` to within its tolerance, reports `converged: true`, and exits with flag `1`, which is the code for `Converged`. The answer is accurate to the stopping tolerance, not guaranteed to the last digit, so always judge a result against the tolerance rather than against an exact printed value.

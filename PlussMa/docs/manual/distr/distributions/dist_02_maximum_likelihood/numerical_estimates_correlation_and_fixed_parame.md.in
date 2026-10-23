@@ -1,0 +1,8 @@
+# Numerical estimates, correlation and fixed parameters
+
+[Back to Maximum Likelihood](../dist_02_maximum_likelihood.md)
+
+
+@@example Stats/distributions/guide/1305_fixed_parameters_and_correlation.cpp@@
+
+The gamma shape and scale are estimated together; their estimates are almost perfectly negatively correlated (−0.90): a larger shape goes with a smaller scale, because the mean `shape × scale` is determined much more precisely than either. The standard errors printed come from the full information matrix, so they are the exact values (they agree with the closed-form Fisher information of the gamma, `ψ′(shape)` and `1/scale` per observation). The location of the gamma is fixed at the object's value and reported with zero uncertainty. The beta is fitted on the support stored in the object: the same data moved to [−1, 3] and fitted with a beta on [−1, 3] give the same parameters. The negative binomial's `r` and `p` are strongly correlated too (0.97). Counts from a binomial are under-dispersed, so `r` is returned at its upper limit.

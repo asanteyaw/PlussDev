@@ -1,0 +1,8 @@
+# Direct forecasts
+
+[Back to Direct Forecasting and Model Comparison](../ts_06_direct_forecasting.md)
+
+
+@@example Stats/time_series/guide/1225_direct_forecasting.cpp@@
+
+The series is built from its own past and from an exogenous driver. The coefficients differ by horizon because each horizon is a different regression, and the in-sample error grows with the horizon (0.30, 1.12, 1.98): the further ahead, the less the present tells. When the driver is known in advance (a *leading* predictor), the error falls to 0.007, 0.012 and 0.049, close to the variance of the noise of the generating process (0.0075) at one step, and the forecast takes the three known future values of the driver as input. The first rows of the fitted values are NaN and are excluded from the loss.

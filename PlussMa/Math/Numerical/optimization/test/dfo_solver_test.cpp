@@ -1,3 +1,4 @@
+#include <limits>
 #include "../dfo_solver.h"
 
 #include <cmath>
@@ -248,6 +249,92 @@ int main() {
   expect(rdiag.diagnostics.search_successes > 0,
          "PatternSearch search success diagnostics were not propagated through DFO",
          &failures);
+
+  // Constraints through the facade must be respected and solved to the constrained optimum, not merely to a feasible point.
+  // Three problems with known answers: a half-space (minimize |x|^2 with x0 + x1 >= 1: f = 0.5 at (0.5, 0.5)), an equality
+  // (the same with x0 + x1 = 1) and a disc (the point of the unit disc nearest to (2, 1): f = (sqrt 5 - 1)^2 = 1.5279). A
+  // fixed set of coordinate directions stops at (1, 0) or (0, 1) on the first, and a MADS route that ignores the constraint
+  // returns the unconstrained minimum (0, 0), which violates it.
+  {
+    const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+    const auto sphere2 = [](const Series& x) { return x.square().sum(); };
+    const auto towards = [&c64](const Series& x) {
+      return x.sub(pluss::make_series(std::vector<double>{2.0, 1.0}, {2}, c64)).square().sum();
+    };
+    const auto half_space = [](const Series& x) { return x.sum().mul(-1.0).add(1.0).reshape({1}); };
+    const auto disc = [](const Series& x) { return x.square().sum().sub(1.0).reshape({1}); };
+    const Series start = pluss::make_series(std::vector<double>{2.0, 2.0}, {2}, c64);
+
+    DfoProblem half;
+    half.initial = start; half.objective = sphere2; half.constraints = half_space;
+    DfoProblem equal;
+    equal.initial = start; equal.objective = sphere2;
+    equal.constraints_values = [](const Series& x) { DfoConstraintValues v; v.equality = x.sum().sub(1.0).reshape({1}); return v; };
+    DfoProblem round;
+    round.initial = start; round.objective = towards; round.constraints = disc;
+
+    DfoOptions options;
+    options.max_iterations = 4000;
+    options.max_evaluations = 40000;
+    const auto near = [](double value, double target, double tolerance) { return std::abs(value - target) <= tolerance; };
+
+    const auto a = DFO::solve(half, options);
+    expect(a.selected_solver == DfoSolverKind::PatternSearch && near(a.minimum, 0.5, 1e-4) && a.status == DfoStatus::Converged,
+           "constrained auto route reaches the half-space optimum", &failures);
+    const auto b = DFO::solve(equal, options);
+    expect(near(b.minimum, 0.5, 1e-4) && b.status == DfoStatus::Converged, "equality constraint is solved to its optimum", &failures);
+    const auto d = DFO::solve(round, options);
+    expect(near(d.minimum, 1.5279, 1e-3) && d.status == DfoStatus::Converged, "curved constraint is solved to its optimum", &failures);
+
+    for (const auto solver : {DfoSolverKind::OrthoMads, DfoSolverKind::LtMads, DfoSolverKind::MadsAdvanced}) {
+      DfoOptions mads = options;
+      mads.solver = solver;
+      const auto r = DFO::solve(half, mads);
+      const auto x = r.minimizer.to_vec<double>();
+      expect(x[0] + x[1] >= 1.0 - 1e-9, "MADS route respects a constraint that was supplied", &failures);
+      expect(r.minimum < 0.53, "MADS route is within a few percent of the constrained optimum", &failures);
+    }
+  }
+
+  {
+    // Nelder-Mead used to ignore bounds entirely. The unconstrained minimum (3, -1) lies outside the box [0,2]^2.
+    DfoProblem boxed;
+    boxed.initial = pluss::make_series(std::vector<double>{1.0, 1.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU));
+    std::int64_t outside = 0;
+    boxed.objective = [&outside](const Series& x) {
+      const auto v = x.to_vec<double>();
+      if (v[0] < 0.0 || v[0] > 2.0 || v[1] < 0.0 || v[1] > 2.0) ++outside;
+      return x.sub(pluss::make_series(std::vector<double>{3.0, -1.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU))).square().sum();
+    };
+    boxed.lower_bounds = pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU));
+    boxed.upper_bounds = pluss::make_series(std::vector<double>{2.0, 2.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU));
+    DfoOptions options;
+    options.solver = DfoSolverKind::NelderMead;
+    const auto r = DFO::solve(boxed, options);
+    const auto x = r.minimizer.to_vec<double>();
+    expect(outside == 0, "Nelder-Mead never evaluates outside the bounds", &failures);
+    expect(std::abs(x[0] - 2.0) < 1e-3 && std::abs(x[1]) < 1e-3 && std::abs(r.minimum - 2.0) < 1e-3,
+           "Nelder-Mead returns the boxed optimum (2, 0)", &failures);
+  }
+
+  {
+    // An infinite objective value means "this point is not allowed". Nelder-Mead must treat it as a very bad value
+    // (the simplex moves away) and not throw. Minimise (a+1)^2 + (b-2)^2 over a >= 0: optimum (0, 2), value 1.
+    DfoProblem walled;
+    const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+    walled.initial = pluss::make_series(std::vector<double>{3.0, 3.0}, {2}, c64);
+    walled.objective = [c64](const Series& x) {
+      const auto v = x.to_vec<double>();
+      const double value = v[0] < 0.0 ? std::numeric_limits<double>::infinity() : (v[0] + 1.0) * (v[0] + 1.0) + (v[1] - 2.0) * (v[1] - 2.0);
+      return pluss::make_series(value).to(ScalarType::Float64);
+    };
+    DfoOptions options;
+    options.solver = DfoSolverKind::NelderMead;
+    const auto r = DFO::solve(walled, options);
+    const auto x = r.minimizer.to_vec<double>();
+    expect(std::abs(r.minimum - 1.0) < 1e-3 && x[0] >= 0.0 && x[0] < 1e-2 && std::abs(x[1] - 2.0) < 1e-2,
+           "Nelder-Mead treats +Inf as a forbidden region and finds the wall optimum", &failures);
+  }
 
   if (failures != 0) {
     std::cerr << "dfo_solver_test: " << failures << " failure(s)\n";

@@ -33,6 +33,17 @@ void test_sqrt_lanes() {
   expect(nf.root.sub(c.sqrt()).abs().max().item<double>() < 1e-8, "newton with central-difference derivative");
   const auto sc = roots::secant(f, c.add(1.0), c.add(2.0));
   expect(sc.root.sub(c.sqrt()).abs().max().item<double>() < 1e-11, "secant");
+
+  const auto hh = roots::householder(
+      [&](const Series &x) {
+        return roots::Derivatives{x.square().sub(c), x.mul(2.0),
+                                  pluss::series::full_like(x, 2.0),
+                                  pluss::series::zeros_like(x)};
+      },
+      c.add(1.0), {12, 1e-13, 1e-13, 1});
+  expect(hh.root.sub(c.sqrt()).abs().max().item<double>() < 1e-13 &&
+             hh.residual.abs().max().item<double>() < 1e-12,
+         "householder with shared derivatives");
 }
 
 void test_transcendental() {
@@ -80,6 +91,23 @@ void test_many_lanes() {
   expect(r.root.sub(c.sqrt()).abs().max().item<double>() < 1e-11, "200000 lanes solved together");
   expect(s < 5.0, "batched solve of 200000 lanes is fast (" + std::to_string(s) + " s)");
 }
+
+void test_householder_graph() {
+  Series parameter = pluss::series::make(2.0);
+  parameter.tracks_slope_(true);
+  const auto result = roots::householder(
+      [parameter](const Series &x) {
+        return roots::Derivatives{x.square().sub(parameter), x.mul(2.0),
+                                  pluss::series::full_like(x, 2.0),
+                                  pluss::series::zeros_like(x)};
+      },
+      pluss::series::make(1.0), {12, 1e-13, 1e-13, 1});
+  result.root.reverse();
+  expect(parameter.has_sensitivity() &&
+             std::abs(parameter.sensitivity().item<double>() -
+                      0.5 / std::sqrt(2.0)) < 1e-11,
+         "householder preserves reverse history");
+}
 } // namespace
 
 int main() {
@@ -90,5 +118,6 @@ int main() {
   run("transcendental", test_transcendental);
   run("rates_and_tolerances", test_rates_and_tolerances);
   run("many_lanes", test_many_lanes);
+  run("householder_graph", test_householder_graph);
   std::cout << "math roots checks passed\n";
 }

@@ -1,0 +1,12 @@
+# How a search ends
+
+[Back to Choosing Whole Things](../milp_01_integer_programs.md)
+
+
+Infeasible, optimal, and a search cut off by a node limit.
+
+@@example Numerical/optimization/guide/lp/213_search_status.cpp@@
+
+The program `2x = 1` with `x` an integer is `Infeasible`: its relaxation is feasible at `x = 0.5`, and no whole number works. The second part is a 24-item knapsack whose payoffs are close to the costs, which leaves many near-ties to prove. With a limit of 20 nodes the search stops with `NodeLimit` having found a solution worth 660 and proved that none exceeds 666.587: the answer is within 6.587 of the best possible. With 200 nodes it has 665 and the bound 666.299, a gap of 1.299. Allowed to finish, it proves 665 optimal in 273 nodes with a gap of 0. The node counts can exceed the limit a little because nodes are solved in batches.
+
+A node limit gives an *anytime* answer: the best solution so far, with a proof of how far it can be from optimal. When the gap is small enough for your purpose, stop there; when it is not, raise the limit. The best bound is reported as the objective of the minimization, so with a negated payoff a *larger* bound means a *weaker* guarantee, which the program prints as a positive gap.

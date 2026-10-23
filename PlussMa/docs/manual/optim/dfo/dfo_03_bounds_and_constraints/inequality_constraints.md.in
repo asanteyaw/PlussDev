@@ -1,0 +1,10 @@
+# Inequality constraints
+
+[Back to Bounds and Constraints](../dfo_03_bounds_and_constraints.md)
+
+
+`constraints` returns a vector with one entry per constraint.
+
+@@example Numerical/optimization/guide/dfo/321_inequality_constraints.cpp@@
+
+The answer is on the boundary of the disc, as it must be, since the objective wants to go further out. `violation` is the largest positive constraint value of the returned point; 0 means feasible. The run stopped on its iteration budget while still creeping along the boundary, which is typical of constrained direct search: the last digits are slow, and the objective agrees with the exact value to 1e-4.

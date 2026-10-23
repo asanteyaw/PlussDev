@@ -288,7 +288,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
                              .sort();
   expect(to_f64(sorted_df.features("value")) == std::vector<double>({10.0, 20.0, 30.0}),
          "features(...).ts({.axis}).sort() should batch-delegate sorting by the time axis");
-  const auto sorted_df_iso = sorted_df.label().values().tl().iso();
+  const auto sorted_df_iso = sorted_df.labels().values().tl().iso();
   expect(sorted_df_iso.as_note().vector() ==
              std::vector<std::string_view>({
                  "2024-01-01T00:00:00.000000000+00:00",
@@ -418,7 +418,7 @@ void test_selection_first_note_tl_and_ts_time_rolling() {
       {"price", Slate(pluss::make_series(std::vector<double>{10.0, 12.0, 20.0}))},
       {"volume", Slate(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}))},
   });
-  auto values = df.label().set("date", false).features({"price", "volume"});
+  auto values = df.labels().set("date", false).features({"price", "volume"});
 
   auto rolling = values.ts().rolling("2D", WindowStatistic::Sum);
   const auto price = to_f64(rolling.features("price"));

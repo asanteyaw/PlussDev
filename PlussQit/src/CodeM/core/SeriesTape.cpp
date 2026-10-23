@@ -64,16 +64,28 @@ std::shared_ptr<SourceLink> source_link_copy_(const Series& s) {
   return st ? st->source_link : nullptr;
 }
 
+struct NodeSnapshot {
+  std::optional<Series> sens;
+  std::shared_ptr<SourceLink> link;
+  bool keep{false};
+};
+
+// One lock and one hash lookup for everything the reverse sweep needs from a node.
+NodeSnapshot snapshot_(const Series& s) {
+  std::scoped_lock lk(g_mu);
+  NodeSnapshot out;
+  if (auto* st = find_locked_(s)) {
+    out.sens = st->sensitivity;
+    out.link = st->source_link;
+    out.keep = st->keep_sensitivity;
+  }
+  return out;
+}
+
 std::optional<Series> sensitivity_copy_(const Series& s) {
   std::scoped_lock lk(g_mu);
   auto* st = find_locked_(s);
   return st ? st->sensitivity : std::nullopt;
-}
-
-bool keep_sensitivity_copy_(const Series& s) {
-  std::scoped_lock lk(g_mu);
-  auto* st = find_locked_(s);
-  return st ? st->keep_sensitivity : false;
 }
 
 void clear_sensitivity_locked_(const Series& s) {
@@ -88,8 +100,7 @@ void topo_visit_(const Series& s,
                  std::vector<Series>& out) {
   const auto* key = key_of_(s);
   if (key == nullptr) return;
-  if (seen.find(key) != seen.end()) return;
-  seen.insert(key);
+  if (!seen.insert(key).second) return;
 
   auto link = source_link_copy_(s);
   if (link) {
@@ -374,6 +385,7 @@ void backpropagate(const Series& loss,
 
   std::vector<Series> topo;
   std::unordered_set<const SeriesImpl*> seen;
+  seen.reserve(1024);
   topo_visit_(loss, seen, topo);
 
   if (options.reset_sensitivity_before_run) {
@@ -420,8 +432,9 @@ void backpropagate(const Series& loss,
   for (auto it = topo.rbegin(); it != topo.rend(); ++it) {
     ++visited_nodes;
     const auto& cur = *it;
-    auto sens = sensitivity_copy_(cur);
-    auto link = source_link_copy_(cur);
+    auto snap = snapshot_(cur);
+    auto& sens = snap.sens;
+    auto& link = snap.link;
     if (!sens.has_value() || !link || !link->propagate) {
       continue;
     }
@@ -496,7 +509,7 @@ void backpropagate(const Series& loss,
       }
     }
 
-    if (!keep_sensitivity_copy_(cur) && key_of_(cur) != root_key) {
+    if (!snap.keep && key_of_(cur) != root_key) {
       clear_sensitivity(cur);
     }
   }

@@ -257,15 +257,13 @@ std::pair<std::vector<double>, std::vector<double>> sigma2_logh_path_(const std:
     return {sigma2, logh};
   }
 
-  const double bsum = garch_sum_(p);
-  const double init_logh_candidate = (bsum < 1.0 - stationarity_margin)
-                                         ? (p.omega / std::max(1e-15, 1.0 - bsum))
-                                         : std::numeric_limits<double>::quiet_NaN();
-  const double init_logh = std::isfinite(init_logh_candidate)
-                               ? init_logh_candidate
-                               : std::log(std::max(variance_floor,
-                                                   std::accumulate(e.begin(), e.end(), 0.0, [](double acc, double v) { return acc + v * v; }) /
-                                                       static_cast<double>(e.size())));
+  // Pre-sample log-variance: log of the mean squared residual, independent of the candidate parameters.
+  double mean_sq = 0.0;
+  for (const double v : e) {
+    mean_sq += v * v;
+  }
+  const double init_logh = std::log(std::max(variance_floor, mean_sq / static_cast<double>(n)));
+  (void)stationarity_margin;
 
   const std::int64_t m = static_cast<std::int64_t>(p.arch.size());
   const std::int64_t q = static_cast<std::int64_t>(p.garch.size());
@@ -275,12 +273,11 @@ std::pair<std::vector<double>, std::vector<double>> sigma2_logh_path_(const std:
 
     for (std::int64_t i = 1; i <= m; ++i) {
       const std::int64_t idx = t - i;
-      double z = 0.0;
-      if (idx >= 0) {
-        z = e[static_cast<std::size_t>(idx)] / std::sqrt(std::max(sigma2[static_cast<std::size_t>(idx)], variance_floor));
+      if (idx >= 0) {  // pre-sample shocks contribute their expectation, which is zero
+        const double z = e[static_cast<std::size_t>(idx)] / std::sqrt(std::max(sigma2[static_cast<std::size_t>(idx)], variance_floor));
+        lt += p.arch[static_cast<std::size_t>(i - 1)] * (std::abs(z) - kSqrt2OverPi);
+        lt += p.asym[static_cast<std::size_t>(i - 1)] * z;
       }
-      lt += p.arch[static_cast<std::size_t>(i - 1)] * (std::abs(z) - kSqrt2OverPi);
-      lt += p.asym[static_cast<std::size_t>(i - 1)] * z;
     }
 
     for (std::int64_t j = 1; j <= q; ++j) {
@@ -531,27 +528,68 @@ Series EgarchFit::forecast(std::int64_t horizon, const Series& y, Config cfg) co
   const auto [sigma2_hist, logh_hist] = sigma2_logh_path_(centered, to_params_(*this), variance_floor, stationarity_margin);
 
   const auto p = to_params_(*this);
-  const double bsum = garch_sum_(p);
-  const double init_logh = (bsum < 1.0 - stationarity_margin)
-                               ? (p.omega / std::max(1e-15, 1.0 - bsum))
-                               : std::log(std::max(variance_floor,
-                                                   std::accumulate(centered.begin(), centered.end(), 0.0, [](double a, double v) { return a + v * v; }) /
-                                                       static_cast<double>(centered.size())));
+  const std::int64_t n = static_cast<std::int64_t>(centered.size());
+  const std::int64_t m = static_cast<std::int64_t>(p.arch.size());
+  const std::int64_t q = static_cast<std::int64_t>(p.garch.size());
+
+  // Standardised residuals observed so far; shocks beyond the sample are unknown (zero mean, standard normal).
+  std::vector<double> z_hist(static_cast<std::size_t>(n), 0.0);
+  for (std::int64_t t = 0; t < n; ++t) {
+    z_hist[static_cast<std::size_t>(t)] =
+        centered[static_cast<std::size_t>(t)] / std::sqrt(std::max(sigma2_hist[static_cast<std::size_t>(t)], variance_floor));
+  }
+
+  // log h_{T+k} = mu[k] + sum over unknown shocks s of A[k][s] (|z_s| - sqrt(2/pi)) + G[k][s] z_s. The mean part mu[k] uses everything known;
+  // the variance forecast is E[h] = exp(mu) times the normal moment generating function of each shock's contribution, which is exact.
+  std::vector<double> mu(static_cast<std::size_t>(horizon + 1), 0.0);
+  std::vector<std::vector<double>> A(static_cast<std::size_t>(horizon + 1), std::vector<double>(static_cast<std::size_t>(horizon + 1), 0.0));
+  std::vector<std::vector<double>> G = A;
+  double mean_sq_hist = 0.0;
+  for (const double v : centered) {
+    mean_sq_hist += v * v;
+  }
+  const double init_logh = std::log(std::max(variance_floor, mean_sq_hist / static_cast<double>(std::max<std::int64_t>(n, 1))));
+  const auto logh_at = [&](std::int64_t k) { return (n + k - 1 >= 0) ? logh_hist[static_cast<std::size_t>(n + k - 1)] : init_logh; };
+  const auto z_at = [&](std::int64_t k) { return (n + k - 1 >= 0) ? z_hist[static_cast<std::size_t>(n + k - 1)] : 0.0; };
 
   std::vector<double> out(static_cast<std::size_t>(horizon), variance_floor);
   for (std::int64_t h = 1; h <= horizon; ++h) {
-    double lt = p.omega;
-    for (std::int64_t j = 1; j <= static_cast<std::int64_t>(p.garch.size()); ++j) {
-      const std::int64_t idx = h - j;
-      if (idx <= 0) {
-        const std::int64_t obs = static_cast<std::int64_t>(logh_hist.size()) + idx - 1;
-        const double lprev = (obs >= 0) ? logh_hist[static_cast<std::size_t>(obs)] : init_logh;
-        lt += p.garch[static_cast<std::size_t>(j - 1)] * lprev;
+    double mean_part = p.omega;
+    for (std::int64_t i = 1; i <= m; ++i) {
+      const std::int64_t k = h - i;
+      if (k <= 0) {
+        const double z = z_at(k);
+        mean_part += p.arch[static_cast<std::size_t>(i - 1)] * (std::abs(z) - kSqrt2OverPi) + p.asym[static_cast<std::size_t>(i - 1)] * z;
       } else {
-        lt += p.garch[static_cast<std::size_t>(j - 1)] * std::log(out[static_cast<std::size_t>(idx - 1)]);
+        A[static_cast<std::size_t>(h)][static_cast<std::size_t>(k)] += p.arch[static_cast<std::size_t>(i - 1)];
+        G[static_cast<std::size_t>(h)][static_cast<std::size_t>(k)] += p.asym[static_cast<std::size_t>(i - 1)];
       }
     }
-    out[static_cast<std::size_t>(h - 1)] = std::max(std::exp(std::clamp(lt, -100.0, 100.0)), variance_floor);
+    for (std::int64_t j = 1; j <= q; ++j) {
+      const std::int64_t k = h - j;
+      const double bj = p.garch[static_cast<std::size_t>(j - 1)];
+      if (k <= 0) {
+        mean_part += bj * logh_at(k);
+      } else {
+        mean_part += bj * mu[static_cast<std::size_t>(k)];
+        for (std::int64_t s = 1; s < k; ++s) {
+          A[static_cast<std::size_t>(h)][static_cast<std::size_t>(s)] += bj * A[static_cast<std::size_t>(k)][static_cast<std::size_t>(s)];
+          G[static_cast<std::size_t>(h)][static_cast<std::size_t>(s)] += bj * G[static_cast<std::size_t>(k)][static_cast<std::size_t>(s)];
+        }
+      }
+    }
+    mu[static_cast<std::size_t>(h)] = mean_part;
+
+    double log_mgf = 0.0;
+    for (std::int64_t s = 1; s < h; ++s) {
+      const double a = A[static_cast<std::size_t>(h)][static_cast<std::size_t>(s)];
+      const double g = G[static_cast<std::size_t>(h)][static_cast<std::size_t>(s)];
+      // E exp(a(|z|-c) + g z) = exp(-a c) [exp((a+g)^2/2) Phi(a+g) + exp((a-g)^2/2) Phi(a-g)]
+      const double upper = std::exp(0.5 * (a + g) * (a + g)) * 0.5 * std::erfc(-(a + g) / std::sqrt(2.0));
+      const double lower = std::exp(0.5 * (a - g) * (a - g)) * 0.5 * std::erfc(-(a - g) / std::sqrt(2.0));
+      log_mgf += -a * kSqrt2OverPi + std::log(upper + lower);
+    }
+    out[static_cast<std::size_t>(h - 1)] = std::max(std::exp(std::clamp(mean_part + log_mgf, -100.0, 100.0)), variance_floor);
   }
 
   return pluss::make_series(out, {horizon}, out_cfg);
@@ -575,12 +613,11 @@ Series EgarchFit::simulate(std::int64_t num_observations, Config cfg, std::uint6
     double lt = p.omega;
     for (std::int64_t i = 1; i <= static_cast<std::int64_t>(p.arch.size()); ++i) {
       const std::int64_t idx = t - i;
-      double zi = 0.0;
       if (idx >= 0) {
-        zi = e[static_cast<std::size_t>(idx)] / std::sqrt(std::max(h[static_cast<std::size_t>(idx)], variance_floor));
+        const double zi = e[static_cast<std::size_t>(idx)] / std::sqrt(std::max(h[static_cast<std::size_t>(idx)], variance_floor));
+        lt += p.arch[static_cast<std::size_t>(i - 1)] * (std::abs(zi) - kSqrt2OverPi);
+        lt += p.asym[static_cast<std::size_t>(i - 1)] * zi;
       }
-      lt += p.arch[static_cast<std::size_t>(i - 1)] * (std::abs(zi) - kSqrt2OverPi);
-      lt += p.asym[static_cast<std::size_t>(i - 1)] * zi;
     }
     for (std::int64_t j = 1; j <= static_cast<std::int64_t>(p.garch.size()); ++j) {
       const std::int64_t idx = t - j;

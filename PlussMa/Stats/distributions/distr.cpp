@@ -1,3 +1,4 @@
+#include "bessel_k.h"
 #include "pluss/subsp/stats/distr.h"
 #include "pluss/subsp/stats/rng.h"
 
@@ -499,28 +500,7 @@ double bessel_i_series_scalar_(double nu, double x) {
   return acc;
 }
 
-double bessel_k_series_scalar_(double order, double x) {
-  if (!(x > 0.0)) {
-    return std::numeric_limits<double>::infinity();
-  }
-  if (x > 32.0) {
-    const double nu2 = order * order;
-    const double corr = 1.0 + (4.0 * nu2 - 1.0) / (8.0 * x);
-    return std::max(std::sqrt(std::numbers::pi_v<double> / (2.0 * x)) * std::exp(-x) * std::max(corr, kEps),
-                    std::numeric_limits<double>::min());
-  }
-  const double nu = (std::abs(std::sin(std::numbers::pi_v<double> * order)) < 1e-8) ? (order + 1e-6) : order;
-  const double s = std::sin(std::numbers::pi_v<double> * nu);
-  const double raw = (std::numbers::pi_v<double> * 0.5) *
-                     (bessel_i_series_scalar_(-nu, x) - bessel_i_series_scalar_(nu, x)) / s;
-  if (std::isfinite(raw) && raw > 0.0) {
-    return raw;
-  }
-  const double nu2 = order * order;
-  const double corr = 1.0 + (4.0 * nu2 - 1.0) / (8.0 * x);
-  return std::max(std::sqrt(std::numbers::pi_v<double> / (2.0 * x)) * std::exp(-x) * std::max(corr, kEps),
-                  std::numeric_limits<double>::min());
-}
+double bessel_k_series_scalar_(double order, double x) { return besselk::k(order, x); }
 
 double normal_pdf_scalar_(double x, double mean, double stddev) {
   const double z = (x - mean) / stddev;
@@ -2945,7 +2925,7 @@ double gig_logpdf_scalar_(double y, double lambda, double chi, double psi) {
   }
   const double z = std::sqrt(chi * psi);
   return 0.5 * lambda * std::log(psi / chi) + (lambda - 1.0) * std::log(y) -
-         std::log(2.0) - std::log(bessel_k_series_scalar_(lambda, z)) -
+         std::log(2.0) - besselk::log_k(lambda, z) -
          0.5 * (chi / y + psi * y);
 }
 
@@ -3046,9 +3026,9 @@ double gh_logpdf_scalar_(double y, double lambda, double alpha, double beta, dou
          0.5 * std::log(2.0 * std::numbers::pi_v<double>) -
          (lambda - 0.5) * std::log(alpha) -
          lambda * std::log(delta) -
-         std::log(bessel_k_series_scalar_(lambda, zeta)) +
+         besselk::log_k(lambda, zeta) +
          0.5 * (lambda - 0.5) * std::log(delta * delta + (y - mu) * (y - mu)) +
-         std::log(bessel_k_series_scalar_(lambda - 0.5, alpha * r)) +
+         besselk::log_k(lambda - 0.5, alpha * r) +
          beta * (y - mu);
 }
 

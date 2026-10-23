@@ -1,0 +1,59 @@
+<!-- generated from krylov_01_symmetric_systems.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Large Linear Systems 1: Symmetric Systems
+
+When the matrix is large, sparse or structured, forming and factorising it is wasteful or impossible; all you need is to be able to multiply by it. Krylov methods solve `A x = b` using only that. This chapter covers the symmetric positive definite case, solved by conjugate gradients. After it you can solve a system given as a function, speed it up with a preconditioner, solve a batch at once, and describe a sparse matrix as an operator.
+
+Every program is complete and its output is the output of that program. Iteration counts are shown because they are the same on every machine; no running times are claimed.
+
+## The mental model
+
+An *operator* is any callable `apply(Series x) -> Series` that returns `A x` for a vector `x` (or a batch of vectors, with the unknowns on the trailing axes). `solve_dims` lists the axes that hold the unknowns (usually `{-1}`); axes in front of them are independent lanes solved together.
+
+```cpp
+krylov::CgResult krylov::cg (apply, rhs, solve_dims, CgOptions options = {}, initial = undefined);
+krylov::CgResult krylov::pcg(apply, precondition, rhs, solve_dims, CgOptions options = {}, initial = undefined);
+```
+
+| `CgOptions` | Meaning | Default |
+|---|---|---|
+| `max_iterations` | iteration cap | 128 |
+| `relative_tolerance`, `absolute_tolerance` | stop when `‖r‖ ≤ max(relative · ‖b‖, absolute)` for every lane | 1e-10, 1e-12 |
+| `curvature_tolerance` | a direction with `pᵀAp` below this is reported as a breakdown | 0 |
+| `check_interval` | lanes are tested every this many iterations; 0 runs the whole budget with no host check | 8 |
+
+| `CgResult` | Meaning |
+|---|---|
+| `solution` | `x`, with the shape of `rhs` |
+| `residual_norm`, `relative_residual` | final residual, per lane |
+| `converged`, `breakdown` | per-lane flags |
+| `iterations` | iterations run (the same for all lanes) |
+
+The matrix must be symmetric positive definite. A breakdown means a direction of non-positive curvature was met: the operator is not positive definite there.
+
+## Programs
+
+- [Conjugate gradients with an operator](krylov_01_symmetric_systems/conjugate_gradients_with_an_operator.md)
+- [Preconditioning](krylov_01_symmetric_systems/preconditioning.md)
+- [Batches](krylov_01_symmetric_systems/batches.md)
+- [A sparse matrix as an operator](krylov_01_symmetric_systems/a_sparse_matrix_as_an_operator.md)
+
+## Checklist
+
+1. Write the operator as a function of a vector; do not build the matrix.
+2. Conjugate gradients only for symmetric positive definite systems; check `breakdown`.
+3. Add a preconditioner when iterations exceed a few dozen; a diagonal one is a start.
+4. Solve batches in one call; read `converged` per lane.
+5. For a sparse matrix you hold as triplets, use `linear_operator::coo`.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+krylov_01_symmetric_systems/conjugate_gradients_with_an_operator
+krylov_01_symmetric_systems/preconditioning
+krylov_01_symmetric_systems/batches
+krylov_01_symmetric_systems/a_sparse_matrix_as_an_operator
+```
+<!-- apiref:toctree:end -->

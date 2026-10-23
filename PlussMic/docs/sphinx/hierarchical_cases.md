@@ -9,33 +9,33 @@ look like joined strings, but operations use the structured case-label payloads.
 
 ## API Signature
 
-`DataFrame::label().set(options: SetLabelOptions) -> DataFrame`
+`DataFrame::labels().set(options: SetLabelOptions) -> DataFrame`
 
-`DataFrame::label().set(feature_name: string_view, drop_feature: bool = true) -> DataFrame`
+`DataFrame::labels().set(feature_name: string_view, drop_feature: bool = true) -> DataFrame`
 
-`DataFrame::label().set(feature_names: initializer_list<string_view>, drop_features: bool = true, separator: string_view = "\x1F") -> DataFrame`
+`DataFrame::labels().set(feature_names: initializer_list<string_view>, drop_features: bool = true, separator: string_view = "\x1F") -> DataFrame`
 
-`DataFrame::label().has() -> bool`
+`DataFrame::labels().has() -> bool`
 
-`DataFrame::label().names() -> vector<string>`
+`DataFrame::labels().names() -> vector<string>`
 
-`DataFrame::label().part(name: string_view) -> Slate`
+`DataFrame::labels().part(name: string_view) -> Slate`
 
-`DataFrame::label().part(position: int64) -> Slate`
+`DataFrame::labels().part(position: int64) -> Slate`
 
 `DataFrameCaseStudyAccessor::pick(const CasePick& pick) const -> DataFrame`
 
-`DataFrame::label().sort(options: SortLabelOptions) -> DataFrame`
+`DataFrame::labels().sort(options: SortLabelOptions) -> DataFrame`
 
 `DataFrame::group().by(keys: LabelGroup).agg(specs) -> DataFrame`
 
-`DataFrame::label().rename(renames: RangeView<LabelRename>) -> DataFrame`
+`DataFrame::labels().rename(renames: RangeView<LabelRename>) -> DataFrame`
 
-`DataFrame::label().order(names: RangeView<string_view>) -> DataFrame`
+`DataFrame::labels().order(names: RangeView<string_view>) -> DataFrame`
 
-`DataFrame::label().drop(names: RangeView<string_view>) -> DataFrame`
+`DataFrame::labels().drop(names: RangeView<string_view>) -> DataFrame`
 
-`DataFrame::label().reset(options: ResetLabelOptions) -> DataFrame`
+`DataFrame::labels().reset(options: ResetLabelOptions) -> DataFrame`
 
 `DataFrame::stack(feature_name: string = "feature", value_name: string = "value") -> DataFrame`
 
@@ -98,12 +98,12 @@ look like joined strings, but operations use the structured case-label payloads.
 ### Example 1: create structured cases
 
 ```cpp
-auto indexed = sales.label().set(DataFrame::SetLabelOptions{
+auto indexed = sales.labels().set(DataFrame::SetLabelOptions{
     .features = {"region", "account", "quarter"},
     .drop = false,
     .verify = true,
 });
-auto names = indexed.label().names();
+auto names = indexed.labels().names();
 auto regions = indexed.caselbl("region");
 ```
 
@@ -162,7 +162,7 @@ East   | 70          | 2
 ### Example 5: unstack and stack
 
 ```cpp
-auto compact = sales.label().set({"region", "account", "quarter"}, true);
+auto compact = sales.labels().set({"region", "account", "quarter"}, true);
 auto wide = compact.unstack("quarter");
 auto long_again = wide.stack("quarter", "sales");
 ```
@@ -176,10 +176,10 @@ Expected output:
 ### Example 6: rename, reorder, drop, and reset case labels
 
 ```cpp
-auto renamed = indexed.label().rename({{"account", "acct"}});
-auto reordered = renamed.label().order({"region", "quarter", "acct"});
-auto dropped = reordered.label().drop({"quarter"});
-auto reset = indexed.label().reset(DataFrame::ResetLabelOptions{
+auto renamed = indexed.labels().rename({{"account", "acct"}});
+auto reordered = renamed.labels().order({"region", "quarter", "acct"});
+auto dropped = reordered.labels().drop({"quarter"});
+auto reset = indexed.labels().reset(DataFrame::ResetLabelOptions{
     .drop = false,
     .names = {"region_case", "account_case", "quarter_case"},
 });
@@ -187,9 +187,9 @@ auto reset = indexed.label().reset(DataFrame::ResetLabelOptions{
 
 Expected output:
 
-- `renamed.label().names() == {"region", "acct", "quarter"}`
-- `reordered.label().names() == {"region", "quarter", "acct"}`
-- `dropped.label().names() == {"region", "acct"}`
+- `renamed.labels().names() == {"region", "acct", "quarter"}`
+- `reordered.labels().names() == {"region", "quarter", "acct"}`
+- `dropped.labels().names() == {"region", "acct"}`
 - `reset` has ordinary features named `region_case`, `account_case`, and `quarter_case`, and no structured case labels.
 
 ## Demo

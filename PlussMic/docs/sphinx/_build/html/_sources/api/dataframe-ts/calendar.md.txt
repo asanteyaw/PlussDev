@@ -130,7 +130,7 @@ try {
 ### Output
 
 ```text
-DataFrameTsAccessor::calendar: cases must be Timeline/TimeIndex. Use df.label().set("date") first
+DataFrameTsAccessor::calendar: cases must be Timeline/TimeIndex. Use df.labels().set("date") first
 ```
 
 `untimed` never had a `Timeline`/`TimeIndex` axis attached — no `TsOptions.axis`

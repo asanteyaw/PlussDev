@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -98,7 +98,7 @@ data=[2, 2, 2, 1, 2, 0]
 data=[2, 1, 0]
 </pre></div>
 </div>
-<p>That is the cleanest way to teach the overload split: same probabilities,
+<p>That is the cleanest way to show the overload split: same probabilities,
 different sampling contract.</p>
 <p>Example 3. Explicit seeds replay categorical draws exactly.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">multinomial</span><span class="p">(</span><span class="n">probs_span</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">);</span>

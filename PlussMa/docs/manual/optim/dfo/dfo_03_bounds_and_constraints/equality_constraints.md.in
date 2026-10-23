@@ -1,0 +1,10 @@
+# Equality constraints
+
+[Back to Bounds and Constraints](../dfo_03_bounds_and_constraints.md)
+
+
+Put them in `constraints_values`, whose result has an `inequality` and an `equality` part; fill either or both.
+
+@@example Numerical/optimization/guide/dfo/322_equality_constraints.cpp@@
+
+An equality is harder than an inequality for a method that only compares values: a feasible point must lie on a surface of lower dimension, and a random poll almost never does. Pattern search handles it with an augmented Lagrangian, a penalty that grows with the violation. The violation therefore settles near 1e-7, not at zero; the constraint is met to a tolerance.

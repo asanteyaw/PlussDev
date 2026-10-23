@@ -1,0 +1,57 @@
+# Optima 4: Sequential QP in Depth
+
+Sequential QP is the default algorithm of `optima(...)`, and on most smooth constrained problems it is also the one that needs the fewest evaluations. This chapter opens the loop. After it you can read a run iteration by iteration, name the setting that explains what you see, and tell the settings that change the answer from the ones that only change the cost.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+Each iteration does four things.
+
+1. **Model.** Linearize the constraints at the current point and build a quadratic model of the objective whose curvature `B` is a running estimate (quasi-Newton by default).
+2. **Subproblem.** Solve that quadratic program for a step `d`. The subproblem has *elastic* variables that let the linearized constraints be violated at a price, so it always has a solution even when the linearization is inconsistent. The price is the penalty weight.
+3. **Line search.** Shorten the step until a merit function, the objective plus the penalty weight times the constraint violation, falls enough.
+4. **Repair.** If the line search keeps failing, try a second-order correction; if that fails, reset the curvature; if that fails, restore feasibility by minimizing the violation alone.
+
+| Setting | Where it acts | Changes the answer? |
+|---|---|---|
+| `optimality_tolerance`, `constraint_tolerance`, `step_tolerance`, `value_progress_tolerance` | when to stop | the precision of the answer |
+| `initial_step_size`, `backtracking`, `armijo`, `max_line_search_iterations` | step 3 | cost, and whether the run succeeds |
+| `initial_penalty` | step 2 and 3 | almost never |
+| `max_second_order_corrections` | step 4 | cost near curved constraints |
+| `enable_restoration`, `max_restoration_*` | step 4 | only after repeated failure |
+| `linear_system_solver`, `system_structure`, `max_krylov_iterations`, `iterative_dimension_threshold` | step 2 | cost for large problems |
+| `hessian_approximation`, `problem_scaling` | step 1 | cost; chapter 6 |
+
+## A guided tour
+
+- [Watching the loop](optima_04_sequential_qp/watching_the_loop.md)
+- [The penalty weight](optima_04_sequential_qp/the_penalty_weight.md)
+- [The line search](optima_04_sequential_qp/the_line_search.md)
+- [Curved constraints and the second-order correction](optima_04_sequential_qp/curved_constraints_and_the_second_order_correcti.md)
+- [Restoration, the last resort](optima_04_sequential_qp/restoration_the_last_resort.md)
+- [The subproblem solvers](optima_04_sequential_qp/the_subproblem_solvers.md)
+- [Stopping tolerances](optima_04_sequential_qp/stopping_tolerances.md)
+
+## Decisions
+
+| Question | Answer |
+|---|---|
+| A run ends with flag `-6` and the line-search message | Raise `max_line_search_iterations`; keep `initial_step_size` at 1. |
+| Many evaluations per iteration | Leave `backtracking` at 0.5, the cheapest in Program 3 (14 evaluations against 17 and 18), and look at `armijo` (0.1 took 21). |
+| Equality constraints are curved and progress crawls near the solution | Keep `max_second_order_corrections` at its default 2. |
+| Thousands of variables | Leave `linear_system_solver` on `Auto`; conjugate gradients switch on at the threshold. |
+| The penalty weight seems wrong | It almost never is; read the trace of Program 1. |
+
+## Pitfalls
+
+- Starving the line search (a budget of one or two trial steps) can look like a solver failure. On the problem of Program 5 it is a configuration failure; Program 3's problem tolerates it.
+- A smaller `initial_step_size` looks like caution and is the most expensive setting here: it left one run unconverged after 100 iterations and another stopped with a failure.
+- Tolerances are relative to the problem's own scale. A flat-looking final iteration is not a reason to loosen them.
+
+## Where next
+
+Chapter 5 opens the working-set method and the interior method, the two other quadratic-model algorithms, and shows when each beats sequential QP.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

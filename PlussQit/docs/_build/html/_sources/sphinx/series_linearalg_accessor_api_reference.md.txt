@@ -53,6 +53,11 @@ announce that an operation follows linear-algebra shape rules.
   factors of a rectangular matrix
 - [`svd`](api/series-linearalg/svd.md): obtain singular vectors and singular
   values together
+- [`eigh`](api/series-linearalg/eigh.md) and
+  [`eigvalsh`](api/series-linearalg/eigvalsh.md): eigenvalues and orthonormal
+  eigenvectors, or eigenvalues alone, of a symmetric or Hermitian matrix
+- [`gen_eigh`](api/series-linearalg/gen_eigh.md): lowest positive generalized
+  eigenpairs from matrix-free Hermitian operator and inverse actions
 - [`svd_u`](api/series-linearalg/svd_u.md),
   [`svd_s`](api/series-linearalg/svd_s.md), and
   [`svd_vh`](api/series-linearalg/svd_vh.md): request one SVD component
@@ -138,6 +143,9 @@ api/series-linearalg/cholesky_inverse
 api/series-linearalg/cholesky_solve
 api/series-linearalg/det
 api/series-linearalg/dot
+api/series-linearalg/eigh
+api/series-linearalg/eigvalsh
+api/series-linearalg/gen_eigh
 api/series-linearalg/inverse
 api/series-linearalg/logdet
 api/series-linearalg/lu_solve

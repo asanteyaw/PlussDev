@@ -1593,99 +1593,37 @@ Series GammaFit::nll(const Series& x) const {
   return loglik(x).neg();
 }
 
-Series GammaFit::score(const Series& x) const {
-  const auto values = fit_data_f64_(x, "GammaFit::score");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 3 || !(p[0] > 0.0) || !(p[1] > 0.0)) return kFitPenalty;
-    const auto all_gt_loc = std::all_of(values.begin(), values.end(), [loc = p[2]](double v) { return v > loc; });
-    if (!all_gt_loc) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Gamma{p[0], p[1], p[2]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> p = {shape, scale, location};
-  return fit_detail::vec_series(fit_detail::fd_grad(p, fn), {3}, x);
-}
+PLUSS_DISTR_FIT_STATS(GammaFit,
+                      (std::vector<double>{shape, scale, location}),
+                      (std::vector<bool>{true, true, false}),
+                      fit_detail::gamma_loglik)
 
-Series GammaFit::fisher_inf(const Series& x) const {
-  return observed_inf(x);
-}
-
-Series GammaFit::observed_inf(const Series& x) const {
-  const auto values = fit_data_f64_(x, "GammaFit::observed_inf");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 3 || !(p[0] > 0.0) || !(p[1] > 0.0)) return kFitPenalty;
-    const auto all_gt_loc = std::all_of(values.begin(), values.end(), [loc = p[2]](double v) { return v > loc; });
-    if (!all_gt_loc) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Gamma{p[0], p[1], p[2]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> p = {shape, scale, location};
-  return info_diag_matrix_series_(info_diag_from_loglik_(p, fn), x);
-}
-
-Series GammaFit::vcov(const Series& x) const {
-  const auto values = fit_data_f64_(x, "GammaFit::vcov");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 3 || !(p[0] > 0.0) || !(p[1] > 0.0)) return kFitPenalty;
-    const auto all_gt_loc = std::all_of(values.begin(), values.end(), [loc = p[2]](double v) { return v > loc; });
-    if (!all_gt_loc) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Gamma{p[0], p[1], p[2]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> p = {shape, scale, location};
-  return vcov_diag_matrix_series_(info_diag_from_loglik_(p, fn), x, "GammaFit::vcov");
-}
-
-Series GammaFit::stderr(const Series& x) const {
-  const auto values = fit_data_f64_(x, "GammaFit::stderr");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 3 || !(p[0] > 0.0) || !(p[1] > 0.0)) return kFitPenalty;
-    const auto all_gt_loc = std::all_of(values.begin(), values.end(), [loc = p[2]](double v) { return v > loc; });
-    if (!all_gt_loc) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Gamma{p[0], p[1], p[2]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> p = {shape, scale, location};
-  return fit_detail::vec_series(stderr_from_info_diag_(info_diag_from_loglik_(p, fn)), {3}, x);
-}
-
-Series GammaFit::confint(const Series& x, double level) const {
-  const auto values = fit_data_f64_(x, "GammaFit::confint");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 3 || !(p[0] > 0.0) || !(p[1] > 0.0)) return kFitPenalty;
-    const auto all_gt_loc = std::all_of(values.begin(), values.end(), [loc = p[2]](double v) { return v > loc; });
-    if (!all_gt_loc) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Gamma{p[0], p[1], p[2]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> p = {shape, scale, location};
-  return confint_matrix_series_(p, stderr_from_info_diag_(info_diag_from_loglik_(p, fn)), x, level, "GammaFit::confint");
-}
 
 GammaFit Gamma::MLE(const Series& x) const {
   PLUSS_CHECK(!(shape_series.defined() || scale_series.defined() || location_series.defined()),
               "Gamma::MLE: Series parameters are unsupported; fit APIs return scalar parameter estimates");
   const auto values = fit_data_f64_(x, "Gamma::MLE");
-  std::vector<double> shifted(values.size(), 0.0);
-  std::transform(values.begin(), values.end(), shifted.begin(), [loc = location](double v) {
-    PLUSS_CHECK(v > loc, "Gamma::MLE: x must satisfy x > location");
-    return v - loc;
-  });
-  const double n = static_cast<double>(shifted.size());
-  const double mean = std::accumulate(shifted.begin(), shifted.end(), 0.0) / n;
-  const double var = std::transform_reduce(shifted.begin(),
-                                           shifted.end(),
-                                           0.0,
-                                           std::plus<>{},
-                                           [mean](double v) {
-                                             const double d = v - mean;
-                                             return d * d;
-                                           }) /
-                     n;
-  PLUSS_CHECK(mean > 0.0 && var > 0.0, "Gamma::MLE: data imply non-positive mean/variance");
-  const double shape_hat = std::max(1e-8, mean * mean / var);
-  const double scale_hat = std::max(1e-8, var / mean);
-  return GammaFit{shape_hat, scale_hat, location};
+  const double n = static_cast<double>(values.size());
+  double sum = 0.0, sum_log = 0.0;
+  for (double v : values) {
+    PLUSS_CHECK(v > location, "Gamma::MLE: x must satisfy x > location");
+    sum += v - location;
+    sum_log += std::log(v - location);
+  }
+  // The shape solves log a - digamma(a) = log(mean) - mean(log x) (location is held at the object's value); Newton from a closed-form start.
+  const double mean = sum / n;
+  const double s = std::log(mean) - sum_log / n;
+  PLUSS_CHECK(s > 0.0, "Gamma::MLE: the data are degenerate (all values equal)");
+  double a = (3.0 - s + std::sqrt((s - 3.0) * (s - 3.0) + 24.0 * s)) / (12.0 * s);
+  for (int it = 0; it < 100; ++it) {
+    const double f = std::log(a) - fit_detail::digamma(a) - s;
+    const double df = 1.0 / a - fit_detail::trigamma(a);
+    const double next = std::max(a - f / df, 0.5 * a);
+    const bool done = std::abs(next - a) < 1e-14 * a;
+    a = next;
+    if (done) break;
+  }
+  return GammaFit{a, mean / a, location};
 }
 
 InverseGaussian InverseGaussianFit::model() const {
@@ -1803,14 +1741,17 @@ Series LaplaceFit::nll(const Series& x) const {
   return loglik(x).neg();
 }
 
+// The Laplace log-likelihood has a kink at the location, so its Hessian is not available numerically; the Fisher information is
+// known in closed form: 1/scale^2 per observation for both parameters.
 Series LaplaceFit::score(const Series& x) const {
   const auto values = fit_data_f64_(x, "LaplaceFit::score");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 2 || !(p[1] > 0.0)) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Laplace{p[0], p[1]}.logpdf(xs).sum().item<double>();
-  };
-  return fit_detail::vec_series(fit_detail::fd_grad({location, scale}, fn), {2}, x);
+  double sign_sum = 0.0, abs_sum = 0.0;
+  for (double v : values) {
+    sign_sum += (v > location) - (v < location);
+    abs_sum += std::abs(v - location);
+  }
+  const double n = static_cast<double>(values.size());
+  return fit_detail::vec_series({sign_sum / scale, -n / scale + abs_sum / (scale * scale)}, {2}, x);
 }
 
 Series LaplaceFit::fisher_inf(const Series& x) const {
@@ -1819,57 +1760,29 @@ Series LaplaceFit::fisher_inf(const Series& x) const {
 
 Series LaplaceFit::observed_inf(const Series& x) const {
   const auto values = fit_data_f64_(x, "LaplaceFit::observed_inf");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 2 || !(p[1] > 0.0)) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Laplace{p[0], p[1]}.logpdf(xs).sum().item<double>();
-  };
-  return info_diag_matrix_series_(info_diag_from_loglik_({location, scale}, fn), x);
+  const double v = static_cast<double>(values.size()) / (scale * scale);
+  return fit_detail::matrix_series({v, 0.0, 0.0, v}, 2, x);
 }
 
 Series LaplaceFit::vcov(const Series& x) const {
   const auto values = fit_data_f64_(x, "LaplaceFit::vcov");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 2 || !(p[1] > 0.0)) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Laplace{p[0], p[1]}.logpdf(xs).sum().item<double>();
-  };
-  return vcov_diag_matrix_series_(info_diag_from_loglik_({location, scale}, fn), x, "LaplaceFit::vcov");
+  const double v = scale * scale / static_cast<double>(values.size());
+  return fit_detail::matrix_series({v, 0.0, 0.0, v}, 2, x);
 }
 
 Series LaplaceFit::stderr(const Series& x) const {
   const auto values = fit_data_f64_(x, "LaplaceFit::stderr");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 2 || !(p[1] > 0.0)) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Laplace{p[0], p[1]}.logpdf(xs).sum().item<double>();
-  };
-  return fit_detail::vec_series(stderr_from_info_diag_(info_diag_from_loglik_({location, scale}, fn)), {2}, x);
+  const double se = scale / std::sqrt(static_cast<double>(values.size()));
+  return fit_detail::vec_series({se, se}, {2}, x);
 }
 
 Series LaplaceFit::confint(const Series& x, double level) const {
   const auto values = fit_data_f64_(x, "LaplaceFit::confint");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 2 || !(p[1] > 0.0)) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Laplace{p[0], p[1]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> p = {location, scale};
-  const Series ci = confint_matrix_series_(
-      p,
-      stderr_from_info_diag_(info_diag_from_loglik_(p, fn)),
-      x,
-      level,
-      "LaplaceFit::confint")
-                        .to(x.platform(), ScalarType::Float64);
-  Series lower = ci.select(1, 0).reshape({2}).to(x.platform(), ScalarType::Float64);
-  const Series upper = ci.select(1, 1).reshape({2}).to(x.platform(), ScalarType::Float64);
-  const Series idx = Series::arange(0, 2, 1, ScalarType::Int64)
-                         .to(x.platform(), ScalarType::Int64);
-  const Series second = idx.eq(1);
-  lower = second.where(lower.clamp_min(0.0), lower);
-  return lower.reshape({2, 1}).unite({upper.reshape({2, 1})}, 1).to(x.platform(), ScalarType::Float64);
+  const double se = scale / std::sqrt(static_cast<double>(values.size()));
+  const double z = wald_z_value_(level, "LaplaceFit::confint");
+  return fit_detail::interval_series({location, scale}, {se, se}, z, x);
 }
+
 
 LaplaceFit Laplace::MLE(const Series& x) const {
   auto values = fit_data_f64_(x, "Laplace::MLE");
@@ -1905,70 +1818,11 @@ Series BetaFit::nll(const Series& x) const {
   return loglik(x).neg();
 }
 
-Series BetaFit::score(const Series& x) const {
-  const auto values = fit_data_f64_(x, "BetaFit::score");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 4 || !(p[1] > p[0]) || !(p[2] > 0.0) || !(p[3] > 0.0)) return kFitPenalty;
-    const auto in_bounds = std::all_of(values.begin(), values.end(), [lo = p[0], hi = p[1]](double v) { return v > lo && v < hi; });
-    if (!in_bounds) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Beta{p[0], p[1], p[2], p[3]}.logpdf(xs).sum().item<double>();
-  };
-  return fit_detail::vec_series(fit_detail::fd_grad({low, high, alpha, beta}, fn), {4}, x);
-}
+PLUSS_DISTR_FIT_STATS(BetaFit,
+                      (std::vector<double>{low, high, alpha, beta}),
+                      (std::vector<bool>{false, false, true, true}),
+                      fit_detail::beta_loglik)
 
-Series BetaFit::fisher_inf(const Series& x) const {
-  return observed_inf(x);
-}
-
-Series BetaFit::observed_inf(const Series& x) const {
-  const auto values = fit_data_f64_(x, "BetaFit::observed_inf");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 4 || !(p[1] > p[0]) || !(p[2] > 0.0) || !(p[3] > 0.0)) return kFitPenalty;
-    const auto in_bounds = std::all_of(values.begin(), values.end(), [lo = p[0], hi = p[1]](double v) { return v > lo && v < hi; });
-    if (!in_bounds) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Beta{p[0], p[1], p[2], p[3]}.logpdf(xs).sum().item<double>();
-  };
-  return info_diag_matrix_series_(info_diag_from_loglik_({low, high, alpha, beta}, fn), x);
-}
-
-Series BetaFit::vcov(const Series& x) const {
-  const auto values = fit_data_f64_(x, "BetaFit::vcov");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 4 || !(p[1] > p[0]) || !(p[2] > 0.0) || !(p[3] > 0.0)) return kFitPenalty;
-    const auto in_bounds = std::all_of(values.begin(), values.end(), [lo = p[0], hi = p[1]](double v) { return v > lo && v < hi; });
-    if (!in_bounds) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Beta{p[0], p[1], p[2], p[3]}.logpdf(xs).sum().item<double>();
-  };
-  return vcov_diag_matrix_series_(info_diag_from_loglik_({low, high, alpha, beta}, fn), x, "BetaFit::vcov");
-}
-
-Series BetaFit::stderr(const Series& x) const {
-  const auto values = fit_data_f64_(x, "BetaFit::stderr");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 4 || !(p[1] > p[0]) || !(p[2] > 0.0) || !(p[3] > 0.0)) return kFitPenalty;
-    const auto in_bounds = std::all_of(values.begin(), values.end(), [lo = p[0], hi = p[1]](double v) { return v > lo && v < hi; });
-    if (!in_bounds) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Beta{p[0], p[1], p[2], p[3]}.logpdf(xs).sum().item<double>();
-  };
-  return fit_detail::vec_series(stderr_from_info_diag_(info_diag_from_loglik_({low, high, alpha, beta}, fn)), {4}, x);
-}
-
-Series BetaFit::confint(const Series& x, double level) const {
-  const auto values = fit_data_f64_(x, "BetaFit::confint");
-  const auto fn = [&values](const std::vector<double>& p) -> double {
-    if (p.size() != 4 || !(p[1] > p[0]) || !(p[2] > 0.0) || !(p[3] > 0.0)) return kFitPenalty;
-    const auto in_bounds = std::all_of(values.begin(), values.end(), [lo = p[0], hi = p[1]](double v) { return v > lo && v < hi; });
-    if (!in_bounds) return kFitPenalty;
-    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
-    return Beta{p[0], p[1], p[2], p[3]}.logpdf(xs).sum().item<double>();
-  };
-  const std::vector<double> p = {low, high, alpha, beta};
-  return confint_matrix_series_(p, stderr_from_info_diag_(info_diag_from_loglik_(p, fn)), x, level, "BetaFit::confint");
-}
 
 BetaFit Beta::MLE(const Series& x) const {
   PLUSS_CHECK(!(low_series.defined() || high_series.defined() || alpha_series.defined() || beta_series.defined()),
@@ -1976,27 +1830,42 @@ BetaFit Beta::MLE(const Series& x) const {
   const auto values = fit_data_f64_(x, "Beta::MLE");
   const double width = high - low;
   PLUSS_CHECK(width > 0.0, "Beta::MLE: high must be > low");
-  std::vector<double> z(values.size(), 0.0);
-  std::transform(values.begin(), values.end(), z.begin(), [lo = low, hi = high](double v) {
-    PLUSS_CHECK(v > lo && v < hi, "Beta::MLE: x must satisfy low < x < high");
-    return (v - lo) / (hi - lo);
-  });
-  const double n = static_cast<double>(z.size());
-  const double m = std::accumulate(z.begin(), z.end(), 0.0) / n;
-  const double v = std::transform_reduce(z.begin(),
-                                         z.end(),
-                                         0.0,
-                                         std::plus<>{},
-                                         [m](double zi) {
-                                           const double d = zi - m;
-                                           return d * d;
-                                         }) /
-                   n;
-  PLUSS_CHECK(v > 0.0, "Beta::MLE: sample variance must be > 0");
-  const double common = std::max(1e-6, m * (1.0 - m) / v - 1.0);
-  const double alpha_hat = std::max(1e-8, m * common);
-  const double beta_hat = std::max(1e-8, (1.0 - m) * common);
-  return BetaFit{low, high, alpha_hat, beta_hat};
+  const double n = static_cast<double>(values.size());
+  double mean = 0.0, g1 = 0.0, g2 = 0.0;
+  for (double v : values) {
+    PLUSS_CHECK(v > low && v < high, "Beta::MLE: x must satisfy low < x < high");
+    const double z = (v - low) / width;
+    mean += z;
+    g1 += std::log(z);
+    g2 += std::log1p(-z);
+  }
+  mean /= n;
+  g1 /= n;
+  g2 /= n;
+  double var = 0.0;
+  for (double v : values) {
+    const double d = (v - low) / width - mean;
+    var += d * d;
+  }
+  var /= n;
+  PLUSS_CHECK(var > 0.0, "Beta::MLE: sample variance must be > 0");
+  // Newton on the score equations digamma(a) - digamma(a + b) = mean(log z), digamma(b) - digamma(a + b) = mean(log(1 - z)), from the moment estimates.
+  const double common = std::max(1e-3, mean * (1.0 - mean) / var - 1.0);
+  double a = std::max(1e-3, mean * common), b = std::max(1e-3, (1.0 - mean) * common);
+  for (int it = 0; it < 200; ++it) {
+    const double psi_ab = fit_detail::digamma(a + b), tri_ab = fit_detail::trigamma(a + b);
+    const double fa = fit_detail::digamma(a) - psi_ab - g1, fb = fit_detail::digamma(b) - psi_ab - g2;
+    const double h11 = fit_detail::trigamma(a) - tri_ab, h22 = fit_detail::trigamma(b) - tri_ab, h12 = -tri_ab;
+    const double det = h11 * h22 - h12 * h12;
+    if (!(std::abs(det) > 1e-300)) break;
+    const double da = (h22 * fa - h12 * fb) / det, db = (h11 * fb - h12 * fa) / det;
+    const double na = std::max(a - da, 0.5 * a), nb = std::max(b - db, 0.5 * b);
+    const bool done = std::abs(na - a) < 1e-14 * a && std::abs(nb - b) < 1e-14 * b;
+    a = na;
+    b = nb;
+    if (done) break;
+  }
+  return BetaFit{low, high, a, b};
 }
 
 Series NormalTrunc::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {

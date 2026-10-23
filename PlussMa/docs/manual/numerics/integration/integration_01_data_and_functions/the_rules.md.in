@@ -1,0 +1,12 @@
+# The rules
+
+[Back to Data and Functions](../integration_01_data_and_functions.md)
+
+
+`QuadraOptions` chooses the rule and the effort: `rule` (`Trapezoidal`, `Simpson`, `GaussLegendre`, `Auto`), `nodes` (starting count for the first two), `panels` and `gauss_points` (5 or 10; for Gauss–Legendre), `adaptive` (double the resolution until the error estimate meets `tolerance`), `tolerance` (default 1e-10) and `max_refinements` (default 10).
+
+@@example Numerical/integration/guide/603_rules_compared.cpp@@
+
+- On the **smooth** integrands, Gauss–Legendre needs 480 evaluations for full accuracy, Simpson hundreds to thousands, the trapezoid rule hundreds of thousands: the higher the order of the rule, the fewer nodes a given accuracy needs.
+- On the **oscillatory** integrand the gap widens, since the trapezoid rule needs half a million evaluations.
+- On the **kink** no rule is fast: all lose their order of accuracy at a point where the function is not smooth, and they converge only by brute-force refinement. If you know where the kink is, split the interval there and integrate each smooth piece.

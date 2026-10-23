@@ -1,0 +1,40 @@
+# Root Finding: Solving Equations
+
+A root of f is a value x with f(x) = 0. Pluss solves scalar equations in **batches**: every solver advances all lanes of a Series together with ordinary array operations, so one call solves a single equation or a whole parameter sweep with a different equation in each lane. After this chapter you can pick a method, set its stopping rules, solve many equations at once, check that a root is real, and differentiate a root with respect to a parameter.
+
+Every program is complete and its output is the output of that program.
+
+## The solvers
+
+All live in `pluss::subsp::math::roots`. `f` is a `std::function<Series(const Series&)>` that maps a Series of any shape to a Series of the same shape.
+
+| Solver | Needs | Idea |
+|---|---|---|
+| `bisect(f, lo, hi)` | a bracket: f(lo), f(hi) of opposite signs | halve each lane's interval; slow but certain |
+| `illinois(f, a, b)` | a bracket | regula falsi with the Illinois correction; superlinear, never leaves the bracket |
+| `newton(f, x, df)` | a start, optionally the derivative | Newton–Raphson; `df` empty uses a central difference |
+| `secant(f, x0, x1)` | two starts | derivative-free, superlinear |
+| `householder(evaluate, x)` | a start, and f with its first three derivatives | fourth-order iteration; its root also carries sensitivities |
+
+`Options` is `{max_iterations, x_tolerance, f_tolerance, check_every, derivative_step}` with defaults `{100, 0, 0, 8, 1e-6}`. A tolerance of 0 means "off": with both off, all `max_iterations` run. With a tolerance set, the solver stops once **every** lane meets it, checked every `check_every` iterations (set it to 1 for the earliest stop; checking costs a host synchronisation, which is why it is not done every time).
+
+`Result` holds `root`, `residual` (f at the root), `iterations`, and `bracketed` (false when some lane of a bracketed solver had no sign change).
+
+## Programs
+
+- [A first root](roots_01_solving_equations/a_first_root.md)
+- [Many equations at once](roots_01_solving_equations/many_equations_at_once.md)
+- [The methods compared](roots_01_solving_equations/the_methods_compared.md)
+- [Tolerances, check cadence and brackets](roots_01_solving_equations/tolerances_check_cadence_and_brackets.md)
+- [A fourth-order solver and the derivative of the root](roots_01_solving_equations/a_fourth_order_solver_and_the_derivative_of_the.md)
+
+## Checklist
+
+1. With a bracket, start with `illinois`; use `bisect` when you must be certain.
+2. Without one, `newton` (analytic derivative if you have it), or `secant`.
+3. Set `f_tolerance` or `x_tolerance` to stop early; lower `check_every` for the earliest stop.
+4. Read `bracketed` and `residual` before trusting a root.
+5. Put the whole sweep in one Series; do not loop over equations yourself.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

@@ -1,0 +1,8 @@
+# Heavy tails
+
+[Back to Heavy Tails and Mixtures](../dist_03_heavy_tails_and_mixtures.md)
+
+
+@@example Stats/distributions/guide/1306_heavy_tails.cpp@@
+
+The sample comes from an NIG with a heavy left tail. The fit recovers it (alpha 1.75 for a true 1.5, within one and a half standard errors; beta −0.50 against −0.4). Against a normal with the same mean and variance the log-likelihood rises by about 100 for two extra parameters (Akaike's criterion falls from 4527 to 4329). Most telling is the tail: the sample has a fraction 0.0035 of values below −3, the normal fit assigns that region a probability of 0.00006, sixty times too small, and the NIG fit 0.00364.

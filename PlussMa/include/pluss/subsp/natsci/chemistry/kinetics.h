@@ -59,8 +59,16 @@ public:
     const auto ns = static_cast<std::int64_t>(species.size());
     const auto nr = static_cast<std::int64_t>(reactions.size());
     dynamics::require(nr > 0, "kinetics: need at least one reaction");
+    std::vector<double> molar_masses;
+    molar_masses.reserve(species.size());
+    bool any_molar_mass = false;
+    bool all_molar_masses = true;
     for (const auto &s : species) {
       names_.push_back(s.name);
+      any_molar_mass = any_molar_mass || s.molar_mass > 0.0;
+      all_molar_masses =
+          all_molar_masses && s.molar_mass > 0.0 && std::isfinite(s.molar_mass);
+      molar_masses.push_back(s.molar_mass);
       for (const auto &e : s.composition)
         if (std::find(elements_.begin(), elements_.end(), e.first) ==
             elements_.end())
@@ -139,6 +147,11 @@ public:
     const auto vec2 = [&](const std::vector<double> &v) {
       return cast(pluss::make_series(v, {static_cast<std::int64_t>(v.size())}));
     };
+    dynamics::require(!any_molar_mass || all_molar_masses,
+                      "kinetics: molar masses must be finite and positive for "
+                      "either every species or none");
+    if (all_molar_masses)
+      molar_masses_ = vec2(molar_masses);
     stoich_ = mat(stoich, nr, ns);
     std::vector<double> both(fwd);
     both.insert(both.end(), rev.begin(), rev.end());
@@ -216,6 +229,14 @@ public:
   }
   [[nodiscard]] const Series &stoichiometry() const { return stoich_; }
   [[nodiscard]] const Series &composition() const { return composition_; }
+  [[nodiscard]] bool has_molar_masses() const noexcept {
+    return molar_masses_.defined();
+  }
+  [[nodiscard]] const Series &molar_masses() const {
+    dynamics::require(has_molar_masses(),
+                      "kinetics: this mechanism has no molar-mass data");
+    return molar_masses_;
+  }
   [[nodiscard]] std::int64_t index(const std::string &name) const {
     for (std::size_t i = 0; i < names_.size(); ++i)
       if (names_[i] == name)
@@ -359,6 +380,7 @@ private:
          fall_eff_ = pluss::series::undefined(),
          fall_idx_ = pluss::series::undefined();
   Series composition_ = pluss::series::undefined();
+  Series molar_masses_ = pluss::series::undefined();
 };
 
 } // namespace pluss::subsp::natsci::chemistry::kinetics

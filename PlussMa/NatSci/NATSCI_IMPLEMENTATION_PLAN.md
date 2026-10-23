@@ -623,6 +623,154 @@ conversion. Timings are descriptive, not test thresholds; numerical parity is.
 A2 deliberately defers universal-variable/parabolic propagation, Lambert transfer, perturbed
 osculating-element evolution, ephemerides, and coordinate/time standards.
 
+### Phase A3: universal-variable state propagation
+
+Status: **implemented**.
+
+A3 closes the two-body initial-value gap left intentionally by A2. The overload
+`advance(OrbitState, elapsed, mu, options)` propagates Cartesian position and velocity
+directly, without converting through classical elements. It therefore covers elliptic,
+parabolic, and hyperbolic motion with one contract, including lanes on and immediately to
+either side of `e = 1`. The element overload remains useful when callers already own
+osculating elements; the state overload is the robust route near the parabolic singularity.
+
+The solve uses the dimensionless universal root `u = chi / sqrt(r0)`. Its normalized time,
+energy, and radial-velocity terms keep the Newton equation independent of the caller's
+physical scale while the `Quantity` boundary still enforces SI dimensions. `StatePropResult`
+returns the propagated state, normalized root, normalized residual, lane-wise convergence
+mask, and step count. Strict mode throws if any lane misses tolerance; diagnostic mode
+returns the mask and intermediate result.
+
+The Stumpff `C` and `S` functions use direct circular or hyperbolic forms away from zero and
+fifth-order power series in the near-parabolic region. Branch inputs are masked before eager
+evaluation, so an inactive square root, logarithm, or hyperbolic function cannot inject a
+NaN or overflow into another conic family. Position and velocity are reconstructed with the
+four Lagrange coefficients. Zero position, zero velocity, radial motion, non-positive GM,
+invalid solver options, non-finite inputs, and strict non-convergence fail explicitly.
+
+#### A3 reuse and performance audit
+
+| Concern | Canonical owner used by A3 |
+| --- | --- |
+| Newton iteration, convergence cadence, and reverse-connected updates | `subsp::math::roots::newton` |
+| vector norms/products, branch masks, broadcasting, dtype/platform dispatch | `pluss::Series` |
+| state shape/layout validation and SI dimensions | A1 `OrbitState` plus `NatSci/common::Quantity` |
+| solver policy and dtype-aware default tolerances | the existing A2 `KeplerOptions` machinery |
+| reverse sensitivities through elapsed time and state expressions | the existing Series tape |
+
+There is no orbit or component host loop. All leading state axes are batch axes, elapsed
+time and GM broadcast across those axes, and every Newton step is one Series graph. Host
+access is limited to whole-batch validation and convergence checks at the configured cadence.
+The permanent verifier covers NASA's circular half-period state, zero-time identity, negative-
+time reversal, elliptic and hyperbolic parity with A2, exact and near-parabolic energy
+conservation, rank-four Float32 storage, multidimensional elapsed-time broadcasting,
+non-contiguous state views, reverse sensitivity, diagnostic non-convergence, and strict
+failures.
+
+The permanent CPU benchmark propagates 32,768 rank-four Cartesian states. On the 2026-10-15
+development run, one batched call took 55.495 ms median versus 72.533 ms when dispatched as
+16 leading-axis pages, a 1.307x advantage with identical states. The same run measured
+6.910 ms versus 11.197 ms for element conversion and 19.215 ms versus 27.175 ms for A2
+element propagation. Timings are descriptive, not pass thresholds; value parity is enforced.
+
+#### A3 reference audit
+
+- NASA NAIF SPICELIB 2.2.0 `PROP2B`, inspected 2026-10-15: the direct state-to-state
+  universal-variable contract, its advantage near `e = 1`, positive-GM and degenerate-state
+  failures, unreasonable-time failure policy, and the independent 100,000,000 km circular
+  half-period regression vector. The implementation cited there is based on Danby,
+  *Fundamentals of Celestial Mechanics*, 2nd edition, pp. 168-180.
+- poliastro current `core/propagation/vallado.py`, inspected 2026-10-15: the universal Kepler
+  residual, elliptic/hyperbolic/parabolic initial estimates, Newton denominator, and Lagrange
+  reconstruction coefficients. PlussMa normalizes the equation, evaluates whole Series
+  batches, uses its shared root owner, and adds branch-safe Stumpff evaluation rather than copying the scalar loop.
+- G. Bau and J. Roa, *Uniform formulation for orbit computation: the intermediate elements*,
+  inspected 2026-10-15: the Sundman time transformation, Stumpff-series definition and its
+  convergence for every argument, and the conic-independent motivation for universal
+  variables.
+- Local MATLAB R2025b's `matlabshared.orbit.internal.TwoBodyKeplerian` was located, but the
+  installed implementation is a protected `.p` file. No inspectable MATLAB universal-variable
+  source was available, so MATLAB is not claimed as an A3 implementation oracle.
+
+A3 does not solve Lambert boundary-value transfers, perturbed motion, ephemeris/frame/time
+standards, collision trajectories, or rectilinear conics. The public state constructor can
+represent radial data for other diagnostics, but this propagator rejects it deliberately to
+match its nondegenerate conic contract.
+
+### Phase A4: zero-revolution Lambert transfer
+
+Status: **implemented**.
+
+A4 solves the two-point, fixed-time two-body boundary-value problem. `lambert(start, finish,
+flight, mu, options)` returns the departure and arrival velocity fields required to travel
+between two Cartesian position fields. A second overload accepts an explicit dimensionless
+reference normal. The normal makes the transfer plane meaningful outside the XY plane;
+`LambertOptions::sense` then selects the prograde or retrograde branch relative to that plane.
+The default overload uses the positive Z direction.
+
+The implementation uses Izzo's Lancaster-Blanchard `x` parameterization for the
+zero-revolution family. Geometry is reduced to chord length, semiperimeter, and signed
+`lambda`; the nondimensional time-of-flight equation uses Battin's hypergeometric series near
+`x = 1`, Lagrange's form in the neighboring interval, and Lancaster's expression elsewhere.
+One fourth-order Householder solve handles every batch lane, after which radial and transverse
+terminal velocity components are reconstructed without converting through orbital elements.
+
+`LambertResult` carries departure velocity, arrival velocity, the solved `x`, final residual,
+lane-wise convergence mask, and iteration count. Strict mode rejects any unconverged lane;
+diagnostic mode returns its best iterate. Non-positive flight time or GM, zero position,
+collinear endpoints, an unusable reference normal, incompatible shapes/dtypes/platforms,
+non-finite values, and invalid solver controls fail explicitly.
+
+#### A4 reuse, differentiation, and performance audit
+
+| Concern | Canonical owner used by A4 |
+| --- | --- |
+| fourth-order iteration and convergence cadence | `subsp::math::roots::householder` |
+| converged-root reverse rule | the shared Householder implicit-function bridge |
+| vector geometry, masks, broadcasting, and backend dispatch | `pluss::Series` |
+| SI dimensions and state layout | `NatSci/common::Quantity` and A1 Cartesian contracts |
+| endpoint verification | A3 universal-variable `advance(OrbitState, ...)` |
+
+The Householder owner evaluates value and the first three `x` derivatives together so the
+time-of-flight intermediates are reused. Once converged, it detaches the iteration history and
+reattaches the root through the implicit equation. This gives
+`dx/dp = -(partial F / partial p) / (partial F / partial x)` for captured Series parameters,
+including flight time and transfer geometry, without retaining every solver iteration on the
+reverse tape.
+
+There is no transfer-lane or Cartesian-component host loop. Position fields may have arbitrary
+leading batch axes, while flight time, GM, and the reference normal broadcast through Series
+operations. The permanent verifier covers the standard Vallado transfer, propagation back to
+the requested endpoint, prograde and retrograde motion, a non-XY transfer plane, rank-four
+Float64 batches, strided Float32 input, reverse sensitivity, strict failures, and diagnostic
+non-convergence.
+
+The permanent CPU benchmark solves 32,768 rank-four transfers. On the 2026-10-15 development
+run, one batched call took 86.631 ms median versus 110.067 ms for 16 leading-axis page calls, a
+1.271x advantage with identical departure velocities. Timings are descriptive rather than test
+thresholds; value parity is enforced before reporting them.
+
+#### A4 reference audit
+
+- D. Izzo, *Revisiting Lambert's Problem*, 2015: the signed `lambda` geometry, nondimensional
+  time-of-flight variable, initial estimates, Householder derivatives, and terminal-velocity
+  reconstruction used as the primary algorithmic specification.
+- ESA PyKEP `src/lambert_problem.cpp`, inspected 2026-10-15: an executable reference for the
+  Battin/Lagrange/Lancaster branches, Householder update, transfer-sense handling, and the
+  radial/transverse reconstruction formulas. PlussMa independently expresses those formulas as
+  batched Series operations and delegates iteration to its shared root machinery.
+- R. H. Gooding and the NASA universal-variable Lambert literature, including NASA report
+  `19700027262`: branch geometry, conic-independent formulation, and failure-domain checks.
+- Vallado, *Fundamentals of Astrodynamics and Applications*: the 3600-second Earth-transfer
+  regression case and its published terminal velocities.
+- Local MATLAB R2025b was searched across the installed toolbox tree. No inspectable orbital
+  Lambert implementation was present, so MATLAB is not claimed as an A4 source oracle.
+
+A4 intentionally exposes only the zero-revolution solution family. Multi-revolution transfer
+has distinct left/right roots for each revolution count; adding a scalar revolution option
+without a result contract that preserves both families would silently discard valid solutions.
+That extension remains a separate phase rather than being approximated inside this API.
+
 ### Cross-domain quantum ownership
 
 Quantum physics and quantum chemistry share state vectors, operators, normalization,
@@ -632,10 +780,409 @@ quantum foundation. Chemistry will add molecular geometry, basis sets, electron 
 SCF, electronic energies, and molecular gradients while consuming that foundation; it
 must not fork complex linear algebra, state validation, or propagation kernels.
 
-### Phase P3: incompressible flow
+### Phase Q1: shared quantum state and operator algebra
 
-Status: **complete. P3a-P3f implement and validate the periodic and bounded solver stack;
-P3g supplies reproducible throughput measurements.**
+Status: **implemented**.
+
+The neutral numerical owner is `natsci::common::quantum`. Both
+`physics::quantum` and `chemistry::quantum` are public facades over the same `Ket`, `Op`, and
+functional kernels. Physics can therefore add Hamiltonian evolution and open-system dynamics,
+while chemistry can add molecular bases, integrals, SCF, and electronic structure without
+forking Hilbert-space representation or density-matrix semantics.
+
+`Ket` stores amplitudes with shape `[..., N]`; `Op` stores operators with shape
+`[..., N, N]`. Every leading axis is a batch axis. Each wrapper also retains an ordered vector
+of subsystem sizes whose product must equal `N`. This metadata prevents operations between
+incompatible Hilbert spaces and makes tensor products and partial traces unambiguous. The
+wrappers are lightweight Series handles plus small dimension vectors; Series remains the sole
+owner of numerical storage.
+
+The first functional surface provides `ket`, `op`, `norm`, `normalize`, `inner`, `prob`, `dag`,
+`trace`, `is_herm`, `density`, pure- and mixed-state `expect`, `purity`, state/operator `tensor`,
+and `partial_trace`. Complex inner products conjugate the left operand. `density` constructs
+`|psi><psi|`; expectation uses `<psi|A|psi>` or `Tr(rho A)` according to the state form.
+Partial trace interprets its index list as the subsystems to keep and always returns an `Op`,
+including the one-dimensional trivial space when every subsystem is traced out.
+
+#### Q1 centralization and performance audit
+
+| Concern | Canonical owner |
+| --- | --- |
+| amplitude/operator storage, broadcasting, matmul, conjugation, autodiff | `pluss::Series` |
+| Hilbert factorization, validation, and quantum contractions | `common::quantum` |
+| physics naming and future dynamics | `physics::quantum` facade |
+| chemistry naming and future electronic structure | `chemistry::quantum` facade |
+
+There are no host loops over states, amplitudes, matrix entries, or batch lanes. Norms,
+probabilities, density matrices, expectation values, tensor products, and traces are Series
+expressions. Partial trace loops only over the small subsystem-index metadata; each subsystem
+is contracted across every batch and matrix lane at once with an identity mask and Series
+reductions. This also avoids depending on the current 2-D-only `Series::diagonal`
+implementation. Complex finiteness is checked through real and imaginary Series components
+because the lower-level complex `isfinite` predicate is not yet implemented.
+
+The permanent verifier covers real and complex normalization, conjugating inner products,
+Born probabilities, Pauli-Y expectation, pure-state density and purity, Hermiticity, state and
+operator tensor products, both Bell-state reductions, batched Bell reductions across two leading
+axes, a non-adjacent GHZ reduction that traces the middle subsystem, tracing every subsystem,
+batched observables, non-contiguous state views, reverse sensitivity, and stable validation
+failures. A chemistry-side executable constructs and checks a projector through the chemistry
+facade, proving both domains consume the same implementation.
+
+The permanent CPU benchmark evaluates an eight-level observable for 32,768 states with shape
+`[16,16,8,16,8]`. Three warmed 2026-10-15 process runs measured 3.417-3.699 ms median per
+batched call versus 9.386-9.594 ms for 16 leading-axis page calls, a 2.557-2.768x advantage
+with identical values. Timings are descriptive; numerical parity is enforced before reporting
+them.
+
+#### Q1 reference audit
+
+- QuTiP 5 `Qobj`, `states.py`, tensor, expectation, and partial-trace implementations and
+  tests, inspected 2026-10-15: state/operator distinctions, retained subsystem dimensions,
+  ket-to-density projection, conjugating overlaps, tensor ordering, and the contract that
+  partial trace returns a density operator.
+- QuTiP 5 user guide, *Using Tensor Products and Partial Traces*: subsystem ordering, tensor
+  composition, Bell-state reductions, and keep-index semantics.
+- Nielsen and Chuang, *Quantum Computation and Quantum Information*: Hilbert tensor products,
+  density operators, Born probabilities, expectation values, reduced states, and purity.
+- Local MATLAB R2025b was searched for inspectable quantum-state and partial-trace sources. The
+  installed core tree exposes documentation/support-package references but no suitable source
+  oracle, so MATLAB is not claimed as a Q1 implementation reference.
+
+### Phase Q2: spectra, metrics, channels, and closed evolution
+
+Status: **implemented**.
+
+The spectral primitive is owned by `Series::linearalg`, not NatSci. `eigh()` and `eigvalsh()`
+now accept real symmetric or complex Hermitian input with shape `[..., N, N]`. On CPU, the
+entire contiguous batch crosses the host boundary once and LAPACK solves each page in place;
+eigenvalues have shape `[..., N]`, are ascending, and retain the input's real precision, while
+eigenvectors have shape `[..., N, N]` and retain the input dtype. MPS and CUDA use their
+existing explicitly enabled CPU solver bridges and return results to the originating platform.
+
+`common::quantum` consumes that general primitive through `spectrum` and `ground`. It adds
+Hermiticity and Hilbert-space validation but does not own another eigensolver. The same spectral
+path supplies positive-semidefinite square roots, von Neumann `entropy`, and mixed-state
+fidelity. Density validation checks Hermiticity, non-negative spectrum within tolerance, and
+unit trace. Its decomposition is returned to the caller and reused, so entropy and matrix square
+roots do not diagonalize the same state twice.
+
+The fidelity convention is explicit. `root_fidelity` returns
+`Tr(sqrt(sqrt(rho) sigma sqrt(rho)))`, reducing to the absolute overlap for two kets.
+`fidelity` returns its square, reducing to the squared overlap for two kets. Pure/mixed overloads
+use the expectation identity rather than converting both arguments and invoking the general
+matrix formula.
+
+`Channel` is a validated Kraus family. Construction checks one shared Hilbert space/platform and
+`sum K_i^dag K_i = I` once. Complete positivity follows from the Kraus form; `apply` evaluates
+`sum K_i rho K_i^dag` with Series matrix products and supports pure or mixed inputs. The only
+host loop visits the short Kraus metadata list; no state or matrix lanes are extracted.
+
+For a constant Hermitian Hamiltonian, `unitary` computes `exp(-i H t / hbar)` through the
+existing differentiable, batched `Series::linearalg.matrix_exp()`. `schrod` evaluates an entire
+strictly increasing time grid at once. The first requested time is the initial-state origin, so a
+grid beginning at a nonzero physical time does not spuriously pre-evolve the supplied state.
+Real Hamiltonians and complex states are promoted through the canonical Series dtype table before
+matrix multiplication.
+
+Three warmed 2026-10-15 CPU process runs measured 512 complex Hermitian 4x4 spectra at
+0.880-0.896 ms through one batched call versus 6.344-6.481 ms through 512 page calls, a
+7.207-7.230x advantage. A 256-point eight-state Schrodinger path measured 12.967-13.101 ms in
+one time-grid call versus 18.373-18.413 ms through separate propagators, a 1.403-1.418x
+advantage. Every benchmark checks full numerical parity before reporting timing.
+
+### Phase Q3: matrix-form Lindblad evolution
+
+Status: **implemented for constant and time-dependent Hamiltonians and collapse operators**.
+
+`lindblad` reuses `pluss::subsp::math::ode::fluxa` instead of adding a private integrator. Its
+right-hand side remains in matrix form:
+
+```text
+d rho / dt = -i [H, rho] / hbar
+             + sum_i (C_i rho C_i^dag
+                      - 1/2 (C_i^dag C_i rho + rho C_i^dag C_i)).
+```
+
+This avoids materializing a dense `N^2 x N^2` Liouvillian. Historical fixed-step RK4 remains the
+default so existing trajectories do not silently change. `SolveMethod::RK45` selects the shared
+Dormand-Prince 5(4) controller with weighted RMS error, accepted/rejected-step accounting, exact
+endpoint landing, and bounded step sizes. `SolveMethod::ImplicitMidpoint` selects adaptive step
+doubling around a matrix-free Crank-Nicolson solve; each implicit system delegates to the shared
+batched complex GMRES engine. Host control flow visits requested spans, adaptive decisions, and
+the short collapse-operator list only. Matrix entries and batch lanes remain Series operations.
+
+`OpFn` and `CollapseFn` make the Hamiltonian and collapse family functions of time. Requested
+grid points are validated for Hermiticity, shared Hilbert space, platform, and dtype promotion;
+the numerical stages then evaluate the callbacks at their actual stage or midpoint times. This
+separates physical time dependence from solver policy instead of encoding a sampled operator
+sequence into an interpolation convention. The solver preserves the computed trajectory rather
+than silently renormalizing or projecting each step, allowing callers and tests to observe
+numerical drift.
+
+### Phase Q4: sparse and matrix-free propagation
+
+Status: **implemented**.
+
+`math::linear_operator::CooMap` is the reusable sparse owner. Its row and column vectors are
+immutable Int64 structure; numerical values remain a floating or complex Series. Application is
+implemented with batched `gather`, multiplication, and `scatter_add`, so it does not allocate a
+dense matrix, loop over nonzeros on the host, or sever gradients with respect to sparse values.
+The same map applies to every column of a batched matrix, and its adjoint swaps structural indices
+and conjugates values. Quantum's `SparseOp` adds Hilbert-space metadata and an explicit Hermitian
+contract but delegates all numerical action to that common map.
+
+`math::krylov::gmres` supplies restarted, complex-capable matrix-free linear solves. Arnoldi bases,
+Hessenberg coefficients, and independent batch lanes remain Series values on the originating
+platform. Only restart-boundary convergence decisions synchronize with the host. The small
+Hessenberg least-squares problem uses the existing differentiable batched pseudoinverse, so
+implicit solves retain reverse links through operator applications.
+
+For a constant sparse Hamiltonian, `SolveMethod::Krylov` evaluates the exponential action through
+an Arnoldi projection rather than integrating many small ODE steps. It materializes only the small
+projected Hessenberg matrix, returns the final-subdiagonal residual estimate, and fails if the
+requested tolerance is not met. RK4, RK45, and implicit midpoint remain available for sparse
+Hamiltonians; time-dependent operators deliberately use those actual-time integrators rather than
+pretending one exponential represents a varying generator. Sparse Lindblad evolution composes
+left and right COO actions directly and still never forms the dense Liouvillian.
+
+The permanent verifier now includes a commuting time-dependent Hamiltonian with a closed-form
+rotation, a time-dependent damping rate with analytic survival probability, sparse and dense
+Schrodinger parity, sparse amplitude damping, a stiff damping mode through implicit midpoint,
+nonsymmetric/complex/batched GMRES, differentiability of GMRES and COO values, reverse-time RK45,
+and oversized-step rejection. These augment the original constant amplitude-damping and trace
+preservation checks.
+
+The focused verifier also covers complex batched eigensystems and reconstruction, precision and
+shape retention, pure and maximally mixed entropy, pure/pure and pure/mixed and mixed/mixed
+fidelity, unitary closure, nonzero time origins, Kraus completeness and amplitude damping,
+non-Hermitian spectra, invalid density operators, and repeated-time rejection. The chemistry
+facade exports the identical engine.
+
+#### Q2-Q3 reference audit
+
+- LAPACK `DSYEV`/`ZHEEV` contracts and the local Accelerate headers: triangle selection,
+  workspace query, column eigenvectors, convergence reporting, and ascending eigenvalues.
+- QuTiP 5 `core/metrics.py` and `entropy.py`: pure-state shortcuts, the unsquared root-fidelity
+  convention, PSD spectral truncation, and von Neumann entropy from density eigenvalues.
+- QuTiP 5 `solver/sesolve.py`, `solver/mesolve.py`, and the dynamics guide: `-iH` as the
+  Schrodinger generator, requested-time state trajectories, collapse-operator semantics, and the
+  matrix-form Lindblad alternative to a superoperator.
+- Gorini, Kossakowski, and Sudarshan (1976), and Lindblad (1976): the completely positive,
+  trace-preserving Markovian generator used by the solver.
+- Nielsen and Chuang, *Quantum Computation and Quantum Information*: unitary propagation,
+  operator-sum channels, von Neumann entropy, and state fidelity.
+- Local MATLAB R2025b was searched again for inspectable quantum solver code. No suitable source
+  oracle is installed, so MATLAB is not claimed as a Q2-Q3 implementation reference.
+
+#### Q4 and solver reference audit
+
+- Local PyTorch source at `torch/csrc/autograd/FunctionsManual.cpp` and
+  `tools/autograd/derivatives.yaml`, inspected 2026-10-15: Hermitian eigensystem reverse formula,
+  conjugate phase-invariance requirement, and eigenvector-gradient failure at repeated spectra.
+  Pluss uses an independent implementation and keeps eigenvalue-only gradients valid at repeated
+  eigenvalues.
+- Local SciPy `sparse/linalg/_isolve/iterative.py`, inspected 2026-10-15: restarted complex GMRES,
+  conjugating inner products, modified Gram-Schmidt, true-residual convergence, and breakdown
+  treatment. Pluss batches coefficients as Series and solves the projected least-squares problem
+  with its existing pseudoinverse rather than reproducing SciPy's scalar Givens loop.
+- Local SciPy `sparse/linalg/_expm_multiply.py`, inspected 2026-10-15: matrix-free exponential
+  action contract, multiple requested times, shape behavior, and the Al-Mohy/Higham algorithm
+  provenance. Pluss currently uses an Arnoldi projected exponential with a residual estimate, not
+  SciPy's trace-shifted Taylor implementation.
+- Local SciPy `integrate/_ivp/rk.py`, `radau.py`, and `bdf.py`, plus local MATLAB R2025b
+  `explicitRungeKutta.m` and `ode15sImpl.m`, inspected 2026-10-15: embedded-error control,
+  accepted/rejected steps, endpoint handling, and separation between explicit and stiff solver
+  contracts. Pluss's stiff route is adaptive implicit midpoint with GMRES, not an unclaimed Radau,
+  BDF, or `ode15s` clone.
+
+The former limits on time dependence, fixed RK4, dense-only evolution, and first-order
+eigensystem differentiation are closed. Remaining deliberate boundaries are full-spectrum dense
+operations such as entropy, fixed Hilbert dimensions over one solve, no event/discontinuity
+schedule for operator callbacks, and no preconditioner in quantum's implicit route. These are
+stated future phases rather than permissive options with weaker behavior.
+
+### Phase QC1: restricted Hartree-Fock over AO integrals
+
+Status: **implemented**.
+
+The first chemistry-specific electronic-structure layer is
+`chemistry::quantum::rhf`. It accepts atomic-orbital overlap, core-Hamiltonian, and
+electron-repulsion integrals plus nuclear repulsion energy. Integrals use chemists' notation,
+`(mu nu | lambda sigma)`, with all leading dimensions treated as broadcast batch dimensions.
+The solver is deliberately downstream of integral generation: molecular geometry, basis parsing,
+and Gaussian integral evaluation can evolve independently without creating another SCF loop.
+
+`rhf` implements closed-shell, even-electron Roothaan-Hall iteration. The overlap metric is
+diagonalized once to construct the symmetric orthogonalizer `S^-1/2`; every Fock solve then uses
+the existing batched `Series::linearalg.eigh`. Coulomb and exchange matrices are rank-six-capable
+Series contractions over the two density axes. Occupied-orbital density construction, total and
+electronic energy, RMS density change, and per-lane diagnostics are likewise whole-Series
+expressions. No AO-index or batch-lane host loop exists. The sole host loop controls SCF
+iterations, and convergence synchronizes only the aggregate boolean needed to stop that loop.
+
+The public `AoIntegrals`, `HfOptions`, and `RhfResult` records preserve dtype, platform, batch
+shape, final Fock and density matrices, metric-orthonormal coefficients, orbital energies,
+per-lane convergence, energy/orbital-gradient residuals, and density-change diagnostics. A
+second `rhf` overload accepts an initial density for restart or domain-specific guess policy. The
+default core-Hamiltonian guess and
+optional linear damping are policies of this functional solver; no stateful SCF object or second
+numerical path exists.
+
+Contract validation rejects undefined, non-floating, cross-platform, nonsquare, nonfinite, or
+nonbroadcastable inputs; odd or overfilled electron counts; non-symmetric one-electron matrices;
+non-positive overlap metrics; and, by default, ERIs that violate bra, ket, or pair permutation
+symmetry. The symmetry audit can be disabled only when a producer already guarantees the same
+contract and validation cost is material.
+
+The permanent verifier covers the shared chemistry/physics quantum facade, an analytic
+one-orbital system, reverse sensitivities with respect to overlap, core, ERI, and nuclear energy,
+a non-orthogonal two-orbital oracle, metric orthonormality, density restart, unequal singleton
+batch broadcasting through non-contiguous expanded views, lane-specific nuclear energies, and
+strict spin/metric/ERI failures.
+
+#### QC1 centralization audit
+
+| Concern | Canonical owner |
+| --- | --- |
+| storage, broadcasting, reductions, contractions, platform, reverse history | `pluss::Series` |
+| symmetric/Hermitian batched eigensystems and their reverse rule | `Series::linearalg.eigh` |
+| reusable state/operator algebra and propagation | `natsci::common::quantum` |
+| AO-integral convention, closed-shell density, J/K build, SCF policy | `natsci::chemistry::quantum` |
+| molecular basis and integral production | deferred chemistry producer layer |
+
+#### QC1 reference audit
+
+- PySCF `pyscf/scf/hf.py` on the upstream master branch, inspected 2026-10-15: separation of
+  `get_fock`, generalized eigensolve, occupation, density construction, effective potential,
+  electronic energy, and dual energy/orbital-gradient convergence in the SCF kernel. PlussMa uses
+  its own Series-native contracts and does not copy PySCF's object hierarchy or host-array loop.
+- Psi4 Hartree-Fock documentation, inspected 2026-10-15: chemists'-notation ERIs, the
+  Roothaan-Hall generalized eigenproblem, restricted closed-shell specialization, symmetric
+  orthogonalization, core-Hamiltonian guess, energy/density convergence, damping/DIIS roles, and
+  in-core versus direct/density-fitted J/K construction boundaries.
+- The existing PlussQit batched `eigh` implementation and Q2 reverse tests were audited before
+  construction. QC1 delegates to that owner rather than adding a chemistry eigensolver.
+- The two-orbital regression vector was independently evaluated from the stated matrices with a
+  separate scalar 2x2 generalized-eigen/SCF script. The one-orbital energy and all four reverse
+  sensitivities have closed analytic forms, so neither test merely compares the implementation
+  with itself.
+
+QC1 intentionally starts from supplied dense AO integrals and restricted closed shells.
+Unrestricted/open-shell references, direct and density-fitted J/K builders, basis/integral
+generation, analytic nuclear gradients, and post-HF methods are later chemistry phases; they are
+not represented as inert options on this solver.
+
+### Phase QC2: Pulay CDIIS and orbital-gradient convergence
+
+Status: **implemented**.
+
+QC2 adds Pulay's commutator direct inversion in the iterative subspace to the single RHF
+solver; it does not introduce a second SCF implementation. Each raw Fock matrix is paired with
+the orthogonalized AO residual `X^T(FDS - SDF)X`. The bounded residual history forms one batched
+Gram matrix per leading lane, and the augmented Pulay system is solved through the existing
+batched `Series::linearalg.pinverse`. A relative singular-value cutoff handles linearly dependent
+history vectors without diagonal bias. `diis_start`, `diis_space`, and `diis_rcond` expose only
+policies that alter computation; setting `diis_space` to zero selects the unaccelerated fixed-
+point path.
+
+The CDIIS residual is not mislabeled as the physical stopping gradient. Convergence independently
+evaluates the restricted occupied-virtual orbital gradient `2 C_vir^T F C_occ`, using the raw
+Fock matrix generated by the candidate density. Its lane-wise RMS must satisfy
+`gradient_tolerance` together with the total-energy change. A fully occupied finite basis has an
+empty virtual block and therefore an exact zero orbital gradient. `density_rms` remains available
+as a diagnostic but is not an alternate hidden stopping rule.
+
+All AO, occupied, virtual, history-Gram, and batch-lane arithmetic remains in Series operations.
+Host loops are bounded by the small DIIS history and assemble Series blocks; they never iterate
+over AO entries or batch lanes. The permanent verifier covers accelerated and unaccelerated
+agreement, restart, independent lane-wise Pulay solves, singleton batch broadcasting, strided
+Float32 inputs, a full-occupancy zero-gradient case, reverse sensitivities through the solver,
+bounded non-convergence, and invalid DIIS policies.
+
+#### QC2 reference audit
+
+- Pulay, *Convergence acceleration of iterative sequences. The case of SCF iteration*, Chemical
+  Physics Letters 73 (1980), DOI `10.1016/0009-2614(80)80396-4`: residual-history extrapolation
+  under the affine coefficient constraint.
+- PySCF upstream `pyscf/scf/diis.py`, `pyscf/lib/diis.py`, and `pyscf/scf/hf.py`, inspected
+  2026-10-15: the orthogonalized `SDF-FDS` CDIIS vector, bounded Fock/error history, augmented
+  Pulay solve, separate raw-Fock orbital-gradient check, and dual energy/gradient convergence.
+  PlussMa independently expresses these contracts as batched Series operations and uses its own
+  pseudoinverse owner.
+- Psi4 SCF `D_CONVERGENCE` documentation, inspected 2026-10-15: the density criterion is defined
+  from the RMS or maximum orbital gradient, not from density-matrix change alone.
+
+QC2 does not add EDIIS/ADIIS, level shifting, fractional occupation, or automatic retry policy.
+Those strategies have distinct objective and state contracts and remain later SCF phases rather
+than inert switches on CDIIS.
+
+### Phase QC3: unrestricted Hartree-Fock and spin diagnostics
+
+Status: **implemented**.
+
+QC3 adds `chemistry::quantum::uhf` to the same AO-integral and SCF policy layer as `rhf`.
+Callers provide alpha and beta electron counts explicitly. Each spin density uses unit orbital
+occupation; the two Fock matrices share the Coulomb field of the total density while exchange
+contracts only the same-spin density. The electronic energy is evaluated from both spin channels
+without converting through an RHF density. `HfOptions` is now the one policy record shared by RHF
+and UHF rather than two records that could drift.
+
+UHF keeps one coupled Pulay problem. Each history entry contributes the sum of its alpha and beta
+commutator inner products to the Gram matrix, and one affine coefficient vector extrapolates both
+Fock histories. The stopping residual is the RMS of the concatenated alpha and beta occupied-
+virtual Fock blocks. Empty occupied or virtual blocks contribute zero elements rather than a
+fabricated gradient. Linear damping, bounded non-convergence, the overlap cutoff, and the
+energy/gradient convergence pair retain the RHF meanings.
+
+`UhfResult` exposes both spin-resolved orbital spectra, coefficients, densities, and Fock matrices,
+along with total/electronic energy, density and gradient RMS values, energy change, convergence,
+iteration/DIIS counts, and the determinant expectation value `<S^2>`. The spin diagnostic uses the
+AO metric overlap between occupied alpha and beta orbitals, so it reports zero for a closed-shell
+singlet, `3/4` for a one-electron doublet, and exposes spin contamination when opposite-spin
+spatial subspaces separate. `UhfGuess` supplies both density matrices for restart without adding a
+stateful solver object.
+
+All AO contractions, metric transforms, spin-density construction, joint residual products,
+energies, gradients, and spin diagnostics are Series expressions over complete batch lanes. The
+only host loops remain the bounded SCF iteration and the small Pulay history assembly. UHF reuses
+the RHF integral preparation, symmetric orthogonalizer, orbital solve, Coulomb/exchange kernels,
+commutator residual, pseudoinverse-based Pulay solve, and final-orbital reporting.
+
+The permanent verifier covers closed-shell RHF parity, a one-electron generalized-eigenvalue
+oracle, empty-beta doublet spin, metric electron count, density restart, accelerated versus
+unaccelerated agreement, broadcast batch lanes, joint DIIS, strided Float32 storage, analytic
+reverse sensitivities, and invalid spin populations and restart densities.
+
+#### QC3 reference audit
+
+- PySCF upstream `pyscf/scf/uhf.py`, inspected 2026-10-16: separate unit-occupation spin density
+  matrices; total-density Coulomb and same-spin exchange; spin-resolved occupied-virtual orbital
+  gradients; UHF electronic-energy contraction; explicit `(n_alpha, n_beta)` occupations; and the
+  occupied alpha/beta overlap formula for `<S^2>`. PlussMa independently expresses these contracts
+  as batched Series operations and does not copy PySCF's object hierarchy or host-array kernels.
+- PySCF upstream `pyscf/scf/diis.py` and the UHF `get_fock` route, inspected 2026-10-16: one CDIIS
+  update over the coupled spin Fock/density state rather than unrelated alpha and beta solvers.
+- Psi4 Hartree-Fock documentation, inspected 2026-10-16: UHF's independent real alpha/beta orbital
+  spaces, orbital-gradient stationarity, DIIS as gradient-based convergence acceleration, and the
+  distinction between a converged stationary point and a stability-certified minimum.
+- The one-electron verifier uses the closed generalized characteristic polynomial
+  `det(H - e S)` and analytic energy derivatives. Closed-shell UHF is separately required to match
+  the existing RHF result, so neither numerical oracle is generated by the UHF implementation.
+
+QC3 does not add ROHF, broken-symmetry initial-guess generation, stability Hessians, level shifting,
+or direct/density-fitted J/K production. Those are separate physical or algorithmic contracts and
+remain later phases rather than inactive fields on `HfOptions`.
+
+### Phase P3: fluid dynamics
+
+Status: **P3a-P3i implement and validate the periodic and bounded incompressible stack;
+P3j-P3k provide periodic compressible Euler and Navier--Stokes--Fourier flow; P3l-a/b add
+bounded inviscid and constant-transport thermal-wall gas flow; P3m-a/b add contact-resolving
+HLLC fluxes and periodic WENO5 reconstruction; P3n-a/b add Sutherland transport and
+conservative nonreacting species transport; P3n-c adds the composition-dependent ideal-gas
+closure and conservative stiff homogeneous chemistry source; P3g supplies reproducible
+throughput measurements.**
 
 P3 is deliberately bounded to constant-density incompressible Newtonian flow on Cartesian
 grids. It will provide a complete, verified core before NatSci moves to biology and
@@ -964,7 +1511,7 @@ so asynchronous backends cannot report enqueue time as completed work. The harne
 median and minimum wall time, physical cells per second, and stage-cell updates per second;
 CSV output supports durable regression records.
 
-The initial arm64 macOS CPU baseline uses `Float64`, a `64 x 64` grid, one warm-up, three
+The initial arm64 macOS CPU baseline uses `Float32`, a `64 x 64` grid, one warm-up, three
 measured rounds, and the production CG inspection interval of eight iterations:
 
 | Path | Periodic physical cells/s | Bounded physical cells/s |
@@ -981,6 +1528,25 @@ path. This separates integrator stage count from a regression in one stage. The 
 also runs on MPS, but tiny `64 x 64` grids are launch-bound there and are not a NatSci
 acceptance gate. Physics remains CPU-correctness-first; backend acceleration is adopted
 only after a measured workload justifies a specialized kernel.
+
+The 2026-10-18 extension adds complete compressible residual and step paths. It first rejects
+non-finite reference residuals, then times HLLC-WENO, HLLC-WENO plus Sutherland transport, and
+SSPRK3 with Sutherland transport on the same `64 x 64` Float32 state. Five measured rounds after
+two warm-ups produced:
+
+| Path | Periodic physical cells/s | Bounded physical cells/s |
+| --- | ---: | ---: |
+| HLLC-WENO residual | 247,073 | 162,703 |
+| HLLC-WENO + Sutherland residual | 231,257 | 145,918 |
+| Sutherland SSPRK3 | 75,077 | 48,039 |
+
+The corresponding SSPRK3 rates are 225,231 periodic and 144,117 bounded stage-cells/s. The
+bounded case includes no-slip adiabatic walls, three-layer WENO ghost construction, harmonic
+variable conductivity, wall viscosity, and all face validation; it therefore measures the
+production boundary path rather than a periodic proxy. The benchmark exposed a Float32 dtype
+promotion in the fractional Sutherland power. The constitutive constants and exponent now use
+rank-zero dtype/platform-matched Series, and a permanent Float32 regression guards coefficient
+and residual dtype preservation.
 
 #### P3a reference audit
 
@@ -1328,10 +1894,689 @@ References read for P3j:
   PlussQit `Series` operations: reused for grids, exact-stop marching, dimension safety,
   trajectory packing, batching, platform retention, and reverse graphs.
 
-This tranche is not viscous compressible Navier--Stokes: heat conduction, species/source
-terms, physical boundaries, entropy-stable/high-order Riemann solvers, low-Mach treatment,
-and AMR remain separate work. Turbulence closure, non-Newtonian constitutive models,
-interface-tracked multiphase flow, and unstructured meshes also remain separate families.
+P3j by itself is not viscous compressible Navier--Stokes. P3k adds the Newtonian/Fourier
+transport terms while retaining this Euler path as its exact zero-transport specialization.
+Species/source terms, physical gas boundaries, entropy-stable/high-order Riemann solvers,
+low-Mach treatment, and AMR remain separate work. Turbulence closure, non-Newtonian
+constitutive models, interface-tracked multiphase flow, and unstructured meshes also remain
+separate families.
+
+#### Phase P3k: periodic compressible Navier--Stokes--Fourier flow
+
+Status: **complete for constant Newtonian viscosity, physical bulk viscosity, and constant
+Fourier conductivity on periodic one-, two-, and three-dimensional Cartesian grids.**
+
+P3k extends the P3j conservative owner; it does not introduce a second gas state, time
+integrator, trajectory type, or reconstruction path. `gas::Transport` contains dimensioned
+SI shear viscosity `mu`, physical bulk viscosity `zeta`, and thermal conductivity `k`.
+`gas::Model` now carries the dimensioned specific gas constant used to recover
+`T = p / (rho R)`. The defaults preserve the former inviscid behavior: every transport
+coefficient is exactly zero, and the rate kernel returns the existing Euler result without
+performing diffusive arithmetic.
+
+The viscous stress is
+`tau = mu (grad(u) + grad(u)^T - 2/3 I div(u)) + zeta I div(u)`.
+The public input is `zeta >= 0`, not the potentially negative second-viscosity coefficient;
+this keeps validation aligned with physical dissipation. The conservative diffusive flux is
+`(0, tau, tau.u + k grad(T))`. `gas::heat_flux` separately reports the physical Fourier
+flux `q = -k grad(T)`, making the sign difference between heat flow and the conservative
+right-hand flux explicit.
+
+Cell-centred gradients and stresses are Series expressions. Face fluxes are centred
+averages of adjacent cell values and their face differences telescope exactly on a periodic
+grid, so mass, momentum, and total energy retain finite-volume conservation. All cells and
+leading batch lanes remain inside Series kernels; host loops visit only the one-to-three
+geometric axes and stress components. `common::spatial::sym_grad` is the single reusable
+symmetric-gradient owner used by both compressible and incompressible constitutive paths.
+
+`gas::limits` reports the acoustic, diffusive, and selected limits independently. The
+diffusive guard uses the larger of `(4 mu / 3 + zeta) / rho` and
+`k / (rho cv)`, with `cv = R / (gamma - 1)`, and the Cartesian explicit bound
+`diffusion / (alpha_max sum(1 / dx_d^2))`. Every SSP stage receives the same combined
+operator and is validated for positive density and pressure; adaptive evolution recomputes
+the combined limit from each accepted state. Temperature, stress, heat flux, and the full
+conservative rate are public diagnostics, retain dtype/platform/batch shape, and remain on
+the Series reverse graph.
+
+The permanent `compressible_viscous_test` requires exact zero-transport Euler recovery,
+the independent discrete one-dimensional identities
+`d(rho u)/dt = (4 mu / 3 + zeta) D(Du)` and
+`dE/dt = k D(DT)`, correct Fourier-flux sign, two-lane temperature recovery, unmixed
+three-dimensional shear diffusion, periodic conservation, the analytic explicit diffusion
+limit, invalid-coefficient and unstable-step rejection, and reverse sensitivity through a
+viscous step. The original Sod and Euler conservation verifier remains green independently.
+
+References read for P3k:
+
+- SU2 official *Governing Equations in SU2*, compressible Navier--Stokes section: the
+  conservative convective/viscous flux split, Newtonian Stokes stress, and
+  `tau.u + k grad(T)` energy flux sign.
+- NASA Reference Publication 1232, *The Compressible Navier--Stokes Equations and
+  Algorithms for Their Numerical Solution*, section 2.1: continuity, momentum, total
+  energy, deviatoric stress, and heat-conducting-fluid scope.
+- NASA AIAA 2015-0294, equations 1--5: an independent conservative-state, viscous-flux,
+  ideal-gas pressure, temperature, and bulk-correction formulation.
+- Local PlussMa `common::spatial`, dimensioned quantities, P3j finite-volume fluxes, and
+  `common::solve::march_to`: audited and extended as the canonical grid, constitutive,
+  state, and scheduler owners instead of being duplicated.
+- Local MATLAB R2025b `toolbox/pde` and installed examples were searched for an inspectable
+  compressible Navier--Stokes implementation. Only generic heat-conduction coefficient
+  machinery was found, so MATLAB is not claimed as a P3k numerical oracle.
+
+The next closure phases are deliberately separate: bounded compressible wall/inlet/outlet
+fluxes and temperature-dependent transport; higher-resolution shock fluxes; scalable
+multigrid; non-Newtonian rheology; LES/RANS closure; multiphase interfaces; AMR;
+unstructured/curvilinear meshes; and MPI decomposition. This ordering keeps each new
+physical or mesh contract verifiable instead of hiding unfinished behavior behind options.
+
+#### Phase P3l-a: bounded inviscid compressible flow
+
+Status: **complete for conservative Cartesian slip, prescribed-state, transmissive, and
+prescribed-static-pressure faces; characteristic inlets/far fields and viscous thermal walls
+remain P3l-b.**
+
+P3l-a extends the same `gas::State`, finite-volume rate, SSP stages, CFL policy, trajectory,
+and reconstruction owner from P3j. A `spatial::BoxGrid` overload changes only face topology:
+interior faces remain one vectorized Series flux field, while each geometric end face is
+replaced by the numerical flux between its adjacent cell and a boundary-generated exterior
+state. Interior differences therefore telescope exactly, and changes in total conserved
+quantities are attributable to physical boundary fluxes rather than periodic wrap.
+
+`gas::Bounds` requires exactly one rule for every low/high face. `slip` reflects only normal
+velocity, preserving density, pressure, and every tangential component. `fixed` accepts a
+dimensioned primitive state and broadcasts scalar, component-vector, face-profile, or batched
+face-profile data only when dtype, platform, and the resulting face layout match the interior.
+`outlet(face)` is zero-normal-gradient transmission. `outlet(face, pressure)` mirrors static
+pressure through the face while extrapolating density and velocity; it rejects a non-positive
+exterior pressure instead of clipping it.
+
+The API deliberately does not expose `far`, `inlet`, or `wall` labels yet. A prescribed
+primitive state is not a characteristic subsonic inlet, a fixed exterior state is not a
+far-field invariant boundary, and tangential velocity reflection in an inviscid Rusanov flux
+is not physical no-slip shear. Likewise, nonzero transport is rejected for `BoxGrid` rather
+than silently using inviscid ghost states for viscous stress or heat flux. P3l-b must add total
+condition/mass-flow inlet policies, subsonic/supersonic characteristic selection, no-slip
+adiabatic/isothermal/heat-flux walls, corners, and their independent nozzle/Couette/flat-plate
+gates before P3l is complete.
+
+Reconstruction does not wrap across the domain: bounded minmod uses edge-replicated neighbors,
+and physical face fluxes replace terminal interior placeholders. Slopes for density, momentum,
+and energy are each computed once per axis and reused by both reconstructed sides. Cells,
+components, batches, and face profiles remain Series expressions; host loops visit only the
+one-to-three spatial axes and momentum components. The same route retains reverse sensitivity
+through fixed and adaptive SSP integration.
+
+The permanent `compressible_boundary_test` covers batched prescribed free streams, matching
+pressure outlets, global mass/energy conservation at closed slip faces, two-dimensional
+tangential free streams, minmod integration, exact terminal time and stage accounting, reverse
+sensitivity, incomplete face sets, malformed profile broadcasting, and explicit rejection of
+bounded viscous transport.
+
+References read for P3l-a:
+
+- SU2 official *Markers and Boundary Conditions* documentation: separate Euler/symmetry,
+  far-field, inlet, outlet, heat-flux, and isothermal-wall policy families rather than one
+  generic ghost-value flag.
+- SU2 official inviscid bump tutorial: subsonic inlet/outlet data are characteristic contracts,
+  with stagnation or mass-flow inlet data and static-pressure outlet data. This is why P3l-a
+  names direct primitive prescription `fixed`, not `inlet`.
+- SU2 AIAA SciTech 2014 formulation paper: inviscid wall, no-slip adiabatic/isothermal wall,
+  far-field, and characteristic inlet/outlet are physically distinct boundary operators.
+- NASA subsonic-boundary and entropy-stable-wall literature inspected for the acceptance plan:
+  incoming/outgoing characteristic count and wall energy consistency are required before the
+  deferred names become public.
+- Local PlussMa `common::spatial::BoxGrid`, face ordering, Series reconstruction, P3j fluxes,
+  and `common::solve::march_to`: reused as canonical topology, arithmetic, and scheduling
+  owners. No duplicate cell or batch loop was introduced.
+
+#### Phase P3l-b: characteristic and viscous thermal boundaries
+
+Status: **complete for ideal-gas characteristic far fields, subsonic/supersonic pressure
+outlets, stationary or tangentially moving no-slip walls, and adiabatic, fixed-temperature,
+or prescribed-outward-heat-flux thermal data with constant or Sutherland transport. Inlet
+characteristics are completed in P3l-c; published validation cases remain release gates.**
+
+`far(face, primitive)` now classifies every face lane independently. Supersonic outflow copies
+the complete interior state, supersonic inflow uses the complete ambient state, and subsonic
+flow combines the outgoing interior and incoming ambient acoustic invariants. Entropy and
+tangential velocity follow the upwind direction. A pressure outlet retains the outgoing
+Riemann invariant while imposing static pressure; backflow and a target pressure that reverses
+the reconstructed normal velocity fail explicitly instead of producing an inlet by accident.
+
+`wall(face)` is a stationary adiabatic no-slip wall. Overloads accept tangential wall speed,
+while `wall_temp` and `wall_heat` select fixed temperature or outward heat flux. The inviscid
+face remains impermeable and does not acquire tangential Rusanov wall friction. A separate
+diffusive face assembly constructs velocity ghosts, computes one batched Newtonian stress
+field, and inserts traction, `tau dot u_wall` work, and Fourier heat transfer into the same
+finite-volume balance. Fixed-temperature data is imposed weakly through the half-cell heat
+flux; cell energy is never overwritten. Prescribed positive heat flux means energy leaves the
+fluid. Normal wall motion is rejected because it requires ALE geometry and grid-work terms.
+
+The bounded explicit step limit now combines acoustic and viscous/thermal restrictions, and
+every SSP stage recomputes the boundary traction and heat flux from its own state. Cell, face,
+component, and batch arithmetic remains in Series expressions; host loops visit only the one
+to three coordinate axes and stress components.
+
+Independent gates cover the acoustic invariants and entropy choice, supersonic inflow/outflow,
+pressure-outlet backflow, exact linear Couette shear, moving-wall power `mu U^2/H`, linear
+isothermal conduction, prescribed-flux global energy accounting, adiabatic conservation,
+combined stability limits, reverse sensitivity, and malformed wall data. HLLC is used for the
+Couette oracle so Rusanov's intentional diffusion of a stationary shear contact is not mistaken
+for physical viscosity.
+
+References read for P3l-b:
+
+- Poinsot and Lele, *Boundary Conditions for Direct Simulations of Compressible Viscous
+  Flows*, Journal of Computational Physics 101 (1992): incoming/outgoing characteristic
+  counting and non-reflecting boundary construction.
+- NASA/TM-2014-218282: independent no-slip velocity conditions plus adiabatic normal
+  temperature gradient, prescribed wall temperature, or mixed thermal data for compressible
+  Navier--Stokes walls.
+- NASA Wind-US official boundary-condition guide: viscous walls impose no slip, zero pressure
+  gradient, and a separate adiabatic or constant-temperature condition; moving walls prescribe
+  tangential speed.
+- SU2 official marker documentation and compressible wall implementation audit: heat-flux and
+  isothermal no-slip markers are distinct, and isothermal energy transfer is imposed weakly as
+  a conservative wall flux.
+- Local `spatial::BoxGrid`, face ordering, conservative gas flux, SSP stage, and quantity
+  machinery: reused as owners; the wall implementation adds no cell-wise host loop.
+
+#### Phase P3l-c: subsonic inlet characteristics
+
+Status: **complete for ideal-gas total-condition and density-speed subsonic inlets on every
+Cartesian face. Published nozzle, flat-plate, and corner-interaction datasets remain release
+verification gates for the complete P3l claim.**
+
+`inlet(face, total_temperature, total_pressure, direction)` takes one outgoing acoustic
+invariant from the adjacent interior state. A fixed 48-iteration batched bisection solves the
+subsonic Mach number from the stagnation relations and unit inflow direction; all face and batch
+lanes advance together as Series expressions. Static temperature, pressure, density, speed, and
+energy then follow from the ideal-gas isentropic relations. The solver rejects a non-unit or
+outward direction and total data for which the outgoing characteristic has no inward subsonic
+root.
+
+The density-speed overload specifies mass flux per unit area through `rho |u|` and uses the same
+outgoing invariant to determine sound speed and static pressure. It rejects a zero/reversed or
+supersonic result; complete supersonic inflow remains the existing prescribed primitive-state
+contract because every characteristic enters the domain there. Viscous ghost velocity and
+temperature use the reconstructed inlet state, while WENO computes one characteristic exterior
+state per boundary face and broadcasts it through the three ghost averages.
+
+Independent checks recover a known Mach-0.2 state generated from stagnation relations, recover
+the same state from density and speed, preserve a uniform WENO5/HLLC duct between matching total
+inlet and static-pressure outlet, and reject outward direction and incompatible supersonic data.
+
+References read for P3l-c:
+
+- NASA/AIAA 2018-0334, *Formulation and Implementation of Inflow/Outflow Boundary Conditions
+  to Simulate Propulsive Effects*: stagnation-property subsonic inflow retains one outgoing
+  interior Riemann invariant and determines static state from total pressure and temperature.
+- SU2 official inlet documentation and inviscid-bump tutorial: total temperature, total
+  pressure, and unit flow direction define total-condition inlet data; density, speed, and
+  direction define the mass-flow form; static-pressure outlet supplies the complementary
+  subsonic downstream condition.
+- NASA compressor/inlet characteristic formulations: subsonic inflow receives one datum from
+  the interior, while supersonic inflow prescribes the complete state.
+
+#### Phase P3m-a: shared HLLC contact flux
+
+Status: **complete for ideal-gas HLLC on periodic and bounded Cartesian grids, with guarded
+per-face Rusanov fallback; Roe, WENO, low-Mach, and carbuncle controls remain later P3m work.**
+
+`gas::Options::flux` selects `FluxScheme::Rusanov` or `FluxScheme::Hllc`. Both mesh families
+call one canonical numerical-face function; boundary code no longer owns a second physical or
+Rusanov flux implementation. HLLC uses left/right acoustic wave bounds, the Rankine--Hugoniot
+contact speed, and conservative star states. Tangential momentum is carried in each side's star
+state, so the same kernel applies along every Cartesian axis and in one, two, or three
+dimensions.
+
+Degenerate star denominators are masked before division. A face falls back to Rusanov when its
+contact denominator is scale-small, a star gap collapses, contact/star energy is non-finite, or
+either star density/pressure violates the configured floors. This fallback is lane-local: one
+bad face does not downgrade another cell or batch lane. It is a robustness guard, not a claim of
+formal positivity preservation; a complete positivity limiter remains in P3m.
+
+The defining regression is a stationary contact with equal velocity and pressure but a density
+jump. HLLC preserves all conserved rates to roundoff while Rusanov produces the expected density
+diffusion. Additional gates require batched two-dimensional free-stream preservation, bounded
+fixed/outlet free streams, invalid-policy rejection, and finite reverse sensitivity. Existing
+Sod, conservation, viscous, and bounded tests remain independent.
+
+References read for P3m-a:
+
+- Toro, Spruce, and Speares, *Restoration of the Contact Surface in the HLL-Riemann Solver*,
+  Shock Waves 4 (1994), DOI `10.1007/BF01414629`: three-wave structure, contact speed, star
+  states, and the contact-restoration purpose of HLLC.
+- NASA/AIAA FUN3D HLLC formulation (AIAA J. 2008-3090): piecewise left, left-star,
+  right-star, and right flux selection from the Rankine--Hugoniot states.
+- SU2 official convective-scheme documentation and HLLC wedge regression configuration:
+  HLLC as a production-selectable compressible convective flux used with MUSCL reconstruction.
+- Local P3j Rusanov, admissibility fallback, minmod reconstruction, and Series reverse kernels:
+  centralized and extended rather than copied into a parallel HLLC solver.
+
+#### Phase P3m-b: shared limiters and WENO5
+
+Status: **complete for shared minmod, monotonized-central, van Leer, and periodic or bounded
+scalar-component WENO5 reconstruction. Roe fluxes, low-Mach preconditioning, and a formal
+positivity limiter remain later P3m gates.**
+
+One limiter kernel now serves periodic and bounded MUSCL reconstruction. Periodic WENO5 uses
+the Jiang--Shu three-stencil candidate polynomials, scale-aware smoothness regularization, and
+nonlinear weights, then supplies the canonical HLLC/Rusanov face engine. It reconstructs
+complete density, momentum, and energy Series without extracting cells or batch lanes. Bounded
+WENO5 obtains three face-normal ghost averages from the actual boundary policy: wall states are
+mirrored, prescribed states are extended, and far-field/outlet states are reconstructed through
+their characteristic contracts. Axis-wise finite-volume reconstruction does not require corner
+ghost values, so multidimensional behavior is deterministic and independent of face traversal.
+
+Verification requires exact quadratic cell-average face recovery, periodic and bounded
+free-stream preservation, bounded Sod positivity/finiteness with HLLC, rejection of axes shorter
+than the formal stencil, reverse sensitivity, and unchanged MUSCL limiter behavior.
+
+References read for P3m-b:
+
+- Jiang and Shu, *Efficient Implementation of Weighted ENO Schemes*, Journal of Computational
+  Physics 126 (1996): fifth-order candidate stencils, smoothness indicators, and nonlinear
+  weights.
+- Zhang and Shu, *Positivity-preserving high order finite difference WENO schemes for
+  compressible Euler equations*, Journal of Computational Physics 231 (2012): positivity is a
+  separate limiting contract, which is why admissibility fallback is not labelled a formal
+  positivity-preserving WENO method.
+- SU2 official convective-scheme documentation: MUSCL limiters and higher-order reconstruction
+  remain policies around one numerical-flux owner rather than separate solvers.
+
+#### Phase P3m-c: Roe, entropy repair, and low-Mach dissipation
+
+Status: **complete for ideal-gas Roe fluxes on periodic and bounded Cartesian grids, acoustic
+Harten--Hyman entropy smoothing, an optional scale-relative entropy floor, Rieper low-Mach
+dissipation scaling, lane-local Rusanov face fallback, admissible reconstruction scaling,
+batch-conservative stage limiting, and optional multidimensional H-correction. A face-local
+Hu--Adams--Shu cut-off limiter would improve locality further but is not required for positivity
+of an accepted stage.**
+
+`FluxScheme::Roe` is implemented by the same canonical face owner as Rusanov and HLLC. Roe
+density, velocity, total enthalpy, sound speed, wave strengths, eigenvalues, and conservative
+eigenvectors are assembled with `Series` operations over every face and batch lane. Only the
+small physical component count is traversed in C++; no cell or batch value is extracted to the
+host. The linearly degenerate contact and shear waves retain their exact Roe eigenvalues, while
+the two acoustic waves receive the transonic entropy repair. This distinction preserves an exact
+stationary contact instead of diffusing it through an indiscriminate eigenvalue floor.
+
+`RoeMach::Rieper` scales the normal-velocity jump by the clamped local face Mach number. It
+therefore changes only artificial upwind dissipation: physical Euler fluxes, equations of state,
+signal speeds, and acoustic time-step limits remain unchanged. The policy returns continuously to
+classic Roe at Mach one. Invalid Roe averages or non-finite flux lanes fall back to Rusanov at the
+same face. Each reconstructed face state is first tested against the density and pressure floors.
+An invalid candidate is scaled toward its own donor-cell average by a vectorized bisection over
+the convex admissible set, retaining the largest representable admissible fraction instead of
+discarding the entire reconstruction. If a complete high-order Euler/SSP stage is still
+inadmissible, the stage is recomputed with cell reconstruction and Rusanov flux. A second
+vectorized bisection finds the largest admissible convex fraction of the high-order stage for
+every cell, then the spatial minimum is applied once per independent batch lane. Both endpoint
+updates are conservative, so the shared lane coefficient preserves mass, momentum, and energy;
+valid lanes remain exactly on their high-order endpoint. An inadmissible first-order fallback is
+a hard error.
+
+`RoeShock::HFix` implements the Sanders--Morano--Druguet multidimensional dissipation
+used by Athena. Each reconstructed face receives
+`eta = 0.5 * abs((u_R + c_R) - (u_L - c_L))`; a target face takes the maximum of its own value
+and the four surrounding acoustic jumps for every transverse direction. That value floors every
+Roe characteristic magnitude, including linearly degenerate fields. The policy is therefore
+explicit and off by default: ordinary Roe continues to preserve stationary contacts and shear,
+while long-lived grid-aligned shocks can request the deliberate transverse damping. Periodic and
+bounded grids share the Roe kernel; bounded H stencils replicate the nearest physical-edge value
+and boundary fluxes receive the corresponding edge plane of the same floor field.
+
+The permanent verifier reconstructs a nontrivial one-dimensional Roe flux independently, checks
+the exact stationary-contact and multidimensional shear-wave properties and transonic eigenvalue
+limit, measures the analytical Rieper dissipation ratio, preserves periodic and bounded batched
+Float32 free streams, crosses a strong pressure jump with WENO5/SSPRK3, retains reverse
+sensitivity, proves conservative fractional fallback and lane isolation, reconstructs the exact
+periodic H stencil independently, damps an odd-even grid mode, preserves periodic and bounded
+free streams, and rejects invalid policy values. The benchmark executes classic, low-Mach, and
+H-corrected Roe through the real periodic and bounded WENO paths rather than timing an isolated
+algebra surrogate. On the focused `32 x 32` CPU run, H correction cost less than 5% over both
+periodic and bounded Roe; it remains an opt-in cost.
+
+References read for P3m-c:
+
+- Roe, *Approximate Riemann Solvers, Parameter Vectors, and Difference Schemes*, Journal of
+  Computational Physics 43 (1981), DOI `10.1016/0021-9991(81)90128-5`: Roe averages, Property U,
+  wave decomposition, and exact resolution of isolated linearly degenerate waves.
+- Harten and Hyman, *Self Adjusting Grid Methods for One-Dimensional Hyperbolic Conservation
+  Laws*, Journal of Computational Physics 50 (1983): transonic entropy repair for Roe-type
+  linearizations.
+- Rieper, *A Low-Mach Number Fix for Roe's Approximate Riemann Solver*, Journal of Computational
+  Physics 230 (2011), DOI `10.1016/j.jcp.2011.03.025`: local-Mach scaling of the normal velocity
+  jump without changing the physical Euler flux.
+- Miczek, Roeppke, and Edelmann, *New Numerical Solver for Flows at Various Mach Numbers*,
+  Astronomy & Astrophysics 576 (2015): low-Mach asymptotics, kinetic-energy dissipation, and the
+  requirement that flux preconditioning leave the physical equations unchanged.
+- SU2 `roe.cpp` and official convective-scheme documentation: production Roe eigenstructure,
+  entropy-floor policy, L2Roe/LMRoe separation, and low-Mach regression practice. The formulas
+  were independently expressed with Pluss `Series`; no source was copied.
+- Zhang and Shu, *On Positivity-Preserving High Order Discontinuous Galerkin Schemes for
+  Compressible Euler Equations on Rectangular Meshes*, Journal of Computational Physics 229
+  (2010): convexity of the positive-density/positive-pressure admissible set and linear scaling
+  toward a valid cell average.
+- Hu, Adams, and Shu, *Positivity-preserving method for high-order conservative schemes solving
+  compressible Euler equations*, Journal of Computational Physics 242 (2013): limiting a
+  high-order update toward a positivity-preserving first-order Lax--Friedrichs endpoint, density
+  before pressure, and application at every SSP stage. The present limiter uses one conservative
+  coefficient per batch lane rather than their more local face cut-off.
+- Sanders, Morano, and Druguet, *Multidimensional Dissipation for Upwind Schemes: Stability and
+  Applications to Gas Dynamics*, Journal of Computational Physics 145 (1998): transverse
+  multidimensional dissipation and the H stencil for grid-aligned shock instability.
+- Stone et al., *Athena: A New Code for Astrophysical MHD*, Astrophysical Journal Supplement 178
+  (2008), Appendix C, and the official Athena `integrate_2d_vl.c`/`roe.c` sources: the acoustic
+  `eta` measure, four transverse neighbours, and `max(abs(lambda), eta_H)` characteristic floor.
+  The implementation here generalizes the same stencil over arbitrary Cartesian rank with
+  `Series` operations; no source was copied.
+
+#### Phase P3m-d: canonical compressible-flow acceptance suite
+
+Status: **complete for Lax, Shu--Osher, translated isentropic-vortex convergence, a Cartesian
+Quirk carbuncle stress case, and the Woodward--Colella double-Mach reflection at its canonical
+`t = 0.2`. The suite exercises bounded and periodic Cartesian flow, WENO5, HLLC, Roe with
+H-correction, positivity limiting, mixed face policies, time-dependent boundaries, and SSP-RK
+stage timing through production entry points.**
+
+`compressible_benchmarks_test` is intentionally separate from local kernel tests. Lax density,
+velocity, and pressure are compared in mean absolute error with an independently implemented
+scalar exact ideal-gas Riemann solution: pressure is found from the two shock/rarefaction
+functions and every self-similar region is sampled at cell centres. The oracle neither calls a
+Pluss flux nor evolves a Series. Shu--Osher has no elementary closed final solution, so its
+acceptance contract does not invent point values: the WENO5/HLLC result must remain admissible,
+the shock must traverse the expected domain region, and the transmitted density-wave standard
+deviation must exceed both a physical floor and the same mesh evolved by the deliberately
+diffusive cell/Rusanov path. The smooth vortex is compared directly with its analytic periodic
+translation at two resolutions; the measured density error must converge above the stated order
+and the fine-grid error must remain below an absolute envelope.
+
+The Quirk case is the Cartesian perturbation variant used by fixed-grid solvers: a Mach-6 planar
+shock advances through deterministic grid-scale pre-shock noise. Because the exact solution is
+one-dimensional, transverse density variance is the defect measure. The H-corrected Roe result
+must suppress that defect relative to classic Roe rather than merely remain finite. The
+double-Mach case uses the published `[0,4] x [0,1]`, gamma-1.4, Mach-10 states and the canonical
+end time. Automated invariants check positive finite density and pressure, exact traversal of the
+moving top-shock rule through the final SSP stage, agreement of the top-row shock classification
+with its analytic motion, downstream travel of the reflected Mach stem, and compression above
+the incident post-shock density.
+
+Two reusable boundary contracts were added rather than embedding benchmark logic in the
+integrator. `blend(mask, a, b)` composes two rules on one physical face using a Boolean Series;
+mask broadcasting is dtype- and platform-strict, and both ordinary exterior states and WENO
+ghost bands preserve the reflective depth of the selected branch. Viscous velocity, stress-work,
+temperature, heat-flux, and Sutherland-viscosity paths use the same composition. `BoundFn`
+provides boundaries as a function of physical time. The shared step core evaluates it at the
+actual SSP abscissae: `t_n` for Euler, `t_n` and `t_n + dt` for RK2, and `t_n`, `t_n + dt`, and
+`t_n + dt/2` for RK3. Positivity fallback reuses the boundary object from that stage. Constant
+`Bounds`, fixed-step evolution, and adaptive evolution all delegate to this one stepping core.
+
+References read for P3m-d:
+
+- Toro, *Riemann Solvers and Numerical Methods for Fluid Dynamics*, third edition, chapters 4
+  and 6: exact ideal-gas pressure functions, Newton solve, star state, and self-similar sampling
+  used by the independent Lax oracle.
+- Shu and Osher, *Efficient Implementation of Essentially Non-oscillatory Shock-Capturing
+  Schemes, II*, Journal of Computational Physics 83 (1989), DOI
+  `10.1016/0021-9991(89)90222-2`, and the NASA High-Fidelity CFD Workshop Shu--Osher
+  specification: Mach-3 shock/density-wave initial data, domain, and final-time contract.
+- Yee, Vinokur, and Djomehri, *Low-Dissipative High-Order Shock-Capturing Methods Using
+  Characteristic-Based Filters*, Journal of Computational Physics 150 (1999), and the official
+  FLASH isentropic-vortex verification page: periodic minimum-image construction, analytic
+  thermodynamic perturbation, and translation by the free-stream velocity.
+- Quirk, *A Contribution to the Great Riemann Solver Debate*, International Journal for
+  Numerical Methods in Fluids 18 (1994), DOI `10.1002/fld.1650180603`: the moving Mach-6
+  odd-even-decoupling stress test and its one-dimensional exact character.
+- Stone et al., *Athena: A New Code for Astrophysical MHD*, Astrophysical Journal Supplement
+  178 (2008), Appendix C: growth of transverse perturbations at grid-aligned shocks and the
+  H-correction acceptance rationale.
+- Woodward and Colella, *The Numerical Simulation of Two-Dimensional Fluid Flow with Strong
+  Shocks*, Journal of Computational Physics 54 (1984), DOI
+  `10.1016/0021-9991(84)90142-6`, together with the official FLASH double-Mach setup: incident
+  states, split lower wall, moving exact top boundary, supersonic inflow, outflow, and `t = 0.2`
+  comparison time.
+
+#### Phase P3n-a: temperature-dependent single-gas transport
+
+Status: **complete for periodic and bounded calorically perfect gas flow with Sutherland
+viscosity, configurable bulk-viscosity ratio, fixed-Prandtl conductivity, harmonic interior and
+prescribed-temperature wall conductivity, and wall-temperature viscosity. Tabulated transport,
+passive scalars, and multispecies diffusion remain P3n-b.**
+
+`SutherlandLaw` computes viscosity from the local static-temperature Series, bulk viscosity as
+a configured non-negative ratio, and conductivity from `mu cp / Pr`. The resulting
+`TransportField` preserves every batch/spatial lane, dtype, platform, and reverse graph.
+Harmonic face conductivity is used for variable-coefficient Fourier transfer. SSP stages and
+adaptive limits recompute coefficients from their own state; constant and Sutherland transport
+cannot be enabled together. Public field consumers validate shape, platform, finiteness, and
+sign once at their boundary, while the constitutive hot path avoids duplicate reductions.
+
+The permanent verifier compares four temperatures with independently evaluated reference
+values, checks the exact reference viscosity and fixed-Prandtl relation, batch-lane isolation,
+constant-temperature stress equivalence, zero uniform-temperature heat flux, explicit
+two-stage SSP reconstruction, diffusive stability selection, reverse sensitivity, and invalid
+parameters/layouts.
+
+References read for P3n-a:
+
+- NASA Wind-US official `VISCOSITY` and chemistry-data documentation: reference-temperature
+  Sutherland formula, species parameterization, and the distinction between Sutherland and
+  multicomponent Wilke transport.
+- NASA Wind-US utilities guide: equivalent `T^(3/2)/(T+S)` parameterization and the limits of
+  reducing higher-order NASA transport fits to a Sutherland curve.
+- Cantera transport source and PlussMa's existing Cantera-validated chemistry transport layer:
+  audited so later species mixing reuses the chemistry owner rather than duplicating it in
+  fluids.
+
+#### Phase P3n-b: conservative nonreacting species transport
+
+Status: **complete for periodic calorically perfect gas flow with conservative species
+advection, mixture-averaged molecular diffusion, synchronized SSP stepping, fixed/adaptive
+trajectories, batched multidimensional fields, and reverse sensitivity. Finite-rate chemistry,
+species-enthalpy energy flux, and bounded species conditions remain subsequent P3n work.**
+
+`physics/fluids/compressible_species.h` composes a gas `State` with species partial densities
+stored as `[..., species, spatial...]`. Its factory accepts normalized mass fractions and
+materializes `rho Y`; the partial densities, rather than fractions, are the evolved conserved
+variables. Gas and species updates consume one `gas::detail::axis_fluxes` result per physical
+axis. The species advective flux is the canonical Riemann mass flux multiplied by the
+mass-flux-upwind face composition. Face fractions are reconstructed with the selected gas
+reconstruction, clipped to the physical simplex, and renormalized, so their flux sum remains
+the gas mass flux even when nonlinear WENO weights differ by species.
+
+Molecular properties remain owned by `chemistry::transport::GasTransport`. A diffusion-only
+binary-coefficient entry point avoids evaluating unused viscosity and conductivity. The fluid
+adapter moves only the species axis, computes mole fractions and CHEMKIN mixture diffusivities
+in the chemistry layout, and moves the result back. Face fluxes use a direct two-point mole-
+fraction gradient, harmonic diffusivity, face density, and Cantera's mass-averaged correction
+`j_k <- j_k - Y_k sum_j j_j`; therefore the net diffusive mass flux is zero at every face.
+No cell or species host loop appears in the hot path. C++ loops cover only the small number of
+spatial directions and SSP stages.
+
+One shared batch-wise positivity fraction blends high-order and cell/Rusanov fallback updates
+across density, momentum, energy, and every partial density. This retains conservation while
+preventing independent species clipping after a step. The species diffusion limit is combined
+with the gas acoustic/viscous limit. `evolve` and `evolve_to` use the common `StateVector`
+marcher and retain `species_density` in every trajectory state.
+
+The permanent `compressible_species_test` verifies exact uniform-composition transport,
+per-species periodic conservation, `sum rhoY = rho`, zero-sum corrected diffusion flux,
+variance decay, combined stability limits, fixed and terminal-time-exact adaptive paths,
+rank-four `[batch, species, x, y]` layouts, reverse sensitivity, and fail-closed composition,
+layout, and transport-cardinality diagnostics. The complete fluid suite passes 14/14 tests.
+
+References read for P3n-b:
+
+- Cantera `MixTransport.cpp` and `MixTransport.h` (main branch, read 2026-10-19):
+  mixture-averaged diffusive mass flux relative to the mass-averaged velocity and the explicit
+  `-Y_k sum_j j_j` correction that enforces zero total species diffusion flux.
+- Kee, Coltrin, and Glarborg, *Chemically Reacting Flow: Theory and Practice* (2003), as cited
+  by Cantera's mixture-averaged transport owner: CHEMKIN mixture-diffusion convention and
+  species/mole/mass relations.
+- Toro, *Riemann Solvers and Numerical Methods for Fluid Dynamics*, third edition: passive
+  conservative quantities must share the hydrodynamic face mass flux rather than solve an
+  unrelated scalar Riemann problem.
+- Strang, *On the Construction and Comparison of Difference Schemes*, SIAM Journal on
+  Numerical Analysis 5 (1968), DOI `10.1137/0705041`: reviewed for the subsequent symmetric
+  flow/reaction source-splitting phase; no reaction split is claimed in P3n-b.
+
+#### Phase P3n-c: reacting-mixture EOS and homogeneous chemistry
+
+Status: **complete for a conservative composition-dependent ideal-gas state, vectorized NASA-7
+thermodynamic closure, safeguarded energy-to-temperature recovery, instantaneous finite-rate
+mass sources, and stiff adiabatic constant-volume chemistry updates. Spatial reacting Riemann
+fluxes, species-enthalpy diffusion, and symmetric flow/reaction splitting remain P3n-d.**
+
+`chemistry::thermo::IdealGas` is the single thermodynamic owner shared by chemistry and fluids.
+The kinetics mechanism now retains optional species molar masses in its canonical species order;
+the ideal-gas model requires complete positive mass data and caches their reciprocals once. Its
+public operations preserve every leading batch or spatial axis while the trailing axis denotes
+species. Concentrations, mean molar mass, density, pressure, species-weighted internal energy and
+enthalpy, `cp`, `cv`, `gamma`, and sound speed are assembled entirely from Series operations.
+Internal energy includes NASA-7 formation energy, so reaction heat release is represented by the
+conserved energy and changing composition rather than an artificial source added to a
+calorically-perfect gas equation.
+
+The inverse closure `T(e,Y)` uses lane-wise bracketed Newton iteration over the common NASA
+validity interval. Endpoint energies first prove that every requested lane is recoverable; each
+Newton proposal is accepted only inside its live bracket and otherwise falls back to bisection.
+The implementation uses one batched Series graph for all cells and species, retains reverse
+sensitivity, rejects non-monotone heat capacity or non-convergence, and never extracts a cell or
+species to a host loop.
+
+`physics/fluids/compressible_reacting.h` introduces a thermochemical `State` containing `rho`,
+`rho*u`, total energy density, and `rho*Y`. `reacting::Model` owns one mechanism/EOS pair and
+validates reaction mass balance against the supplied molar masses once. Primitive and conserved
+constructors, velocity, temperature, pressure, sound speed, and mass fractions all route through
+the same checked thermodynamic snapshot, avoiding duplicate temperature inversions in public hot
+paths. The instantaneous source is `d(rhoY_k)/dt = M_k omega_k`; density, momentum, and total
+energy rates are exactly zero for the closed adiabatic source problem.
+
+`react()` delegates the stiff `[T,C]` solve to the existing vectorized Rosenbrock chemistry
+reactor. After integration, one uniform lane-wise mass projection removes solver-tolerance drift
+without changing species ratios; `sum(rhoY)` therefore equals `rho` exactly. The operator leaves
+`rho`, momentum, and total chemical energy bitwise unchanged, then validates the resulting state
+by recovering temperature from that conserved energy. No claim of a coupled reacting-flow step is
+made until the spatial thermochemical flux and Strang composition are implemented.
+
+The permanent `reacting_ideal_gas_test` checks mixture identities, independent scalar pressure,
+density/pressure and energy/temperature round trips on both NASA intervals, multidimensional
+lanes, agreement with the established reactor energy convention, mechanism mass balance, reverse
+sensitivity through inversion, and range/layout/composition failures. The permanent
+`compressible_reacting_test` checks primitive recovery, positive pressure and sound speed,
+cell-wise zero-sum mass sources, exact conservation of `rho`, momentum, and total energy through a
+stiff exothermic step, exact species-density closure, expected reactant/product movement,
+temperature rise, reverse sensitivity, and fail-closed invalid mechanisms and widths. Chemistry
+tests pass 2/2 and the complete fluids suite passes 14/14.
+
+References read for P3n-c:
+
+- Cantera `src/thermo/IdealGasPhase.cpp` and `src/thermo/ThermoPhase.cpp` (main branch, read
+  2026-10-19): mass-specific mixture properties, `u_k = R T (h_k/RT - 1)`, ideal-gas pressure and
+  sound speed, and bounded Newton recovery of temperature from internal energy with `cv` as the
+  derivative.
+- Cantera `src/zeroD/IdealGasReactor.cpp` (main branch, read 2026-10-19): species mass sources
+  `M_k omega_k` and the adiabatic internal-energy temperature balance used by the shared reactor.
+- AMReX-Combustion PelePhysics `Source/Eos/Fuego.H` (development branch, read 2026-10-19):
+  `EY2T`, `RTY2P`, `RTY2Cs`, species internal energies, mixture heat capacities, and the
+  conserved-variable EOS boundary used by reacting-flow solvers.
+- Shampine and Reichelt, *The MATLAB ODE Suite*, SIAM Journal on Scientific Computing 18 (1997),
+  together with MATLAB R2025b `ode23s.m`: the already-centralized modified Rosenbrock stiff
+  integrator reused by the homogeneous source operator.
+- Strang, *On the Construction and Comparison of Difference Schemes* (1968): symmetric
+  source/transport composition remains the specified P3n-d coupling contract, not an implicit
+  claim of this homogeneous-source tranche.
+
+#### Industrial CFD acceptance programme
+
+The target beyond P3k is an industrial CFD system, not merely a larger catalogue of flow
+functions. No release may describe the solver as industrial-grade until every gate below is
+implemented, independently verified, regression-tested, benchmarked, and exposed through a
+stable public contract. Partially implemented policies are not added as inert option fields.
+
+1. **P3l, bounded compressible flow.** Conservative finite-volume boundary faces must
+   support symmetry/slip walls, no-slip adiabatic walls, prescribed heat flux and wall
+   temperature, total/static inlet data, pressure outlets, far fields, and correct
+   subsonic/supersonic characteristic selection. Corner and edge ghost construction must be
+   deterministic. Verification includes inviscid wall reflection, Couette heat transfer,
+   laminar flat-plate skin friction, subsonic nozzle mass flow, and conservation accounting
+   that separates physical boundary flux from numerical drift.
+2. **P3m, production convective fluxes.** The canonical face engine must support HLLC and
+   Roe-class contact-resolving fluxes alongside Rusanov, MUSCL limiters and fifth-order WENO
+   reconstruction, entropy/positivity safeguards, and low-Mach preconditioning. Required
+   tests include Sod, Lax, Shu--Osher, double Mach reflection, isentropic vortex convergence,
+   carbuncle stress cases, and exact uniform/free-stream preservation on every mesh family.
+3. **P3n, transport and species.** Constant transport expands to Sutherland and tabulated
+   viscosity/conductivity, fixed-Prandtl and modelled-Prandtl closure, passive scalars,
+   multispecies diffusion, finite-rate reactions, source splitting, and chemistry coupling.
+   Shared thermo/chemistry owners remain in NatSci common/chemistry; fluids performs only
+   conservative assembly and transport-specific checks.
+4. **P3o, scalable elliptic and implicit solves.** Geometric multigrid is required for
+   structured pressure/Helmholtz systems, with algebraic-multigrid integration for general
+   meshes. Newton--Krylov and higher-order IMEX/BDF paths must expose convergence reason,
+   nonlinear/linear iterations, residual histories, preconditioner work, and fail-closed
+   termination. Single-grid CG remains a small-problem fallback, not the production claim.
+5. **P3p, turbulence.** DNS remains an explicit resolution choice; LES begins with
+   Smagorinsky/WALE and dynamic filtering, while RANS begins with verified SA and SST
+   variants plus wall-distance and wall-treatment machinery. Every model is compared with
+   NASA Turbulence Modeling Resource flat-plate, channel, airfoil, and separated-flow cases;
+   model constants and exact variant names are serialized into results.
+6. **P3q, rheology and phases.** Generalized-Newtonian power-law, Carreau--Yasuda, and
+   Bingham regularizations reuse one constitutive-rate interface. Multiphase work adds
+   conservative VOF, bounded interface compression, surface tension, contact angles, and
+   phase-aware material interpolation before any broader multiphase claim. Dam-break,
+   static-drop pressure jump, capillary-wave, and rising-bubble suites are release gates.
+7. **P3r, mesh hierarchy.** Curvilinear metrics must satisfy a discrete geometric
+   conservation law. Block-structured AMR requires conservative prolongation/restriction,
+   refluxing, subcycling, tagging, load balancing, and coarse/fine ghost ownership.
+   Unstructured finite-volume support requires explicit cell/face/connectivity storage,
+   quality metrics, partition-independent residuals, and boundary-region metadata. Existing
+   Series Cartesian operators remain optimized specializations behind shared face/reduction
+   concepts rather than being discarded.
+8. **P3s, parallel execution.** A partition owner must centralize interior/halo Series,
+   deterministic local/global indexing, nonblocking halo exchange, collective reductions,
+   and restart redistribution. MPI+threads is the CPU baseline. Strong/weak scaling,
+   communication overlap, bitwise restart equivalence where feasible, deterministic
+   reductions where requested, and sanitizer/fault diagnostics are mandatory.
+9. **P3t, operational reliability.** Versioned checkpoints, mesh/field provenance,
+   residual and conservation telemetry, configurable output cadence, restart across process
+   counts, resource limits, NaN localization, and stable diagnostics are part of the solver,
+   not application-specific afterthoughts. Every benchmark stores equations, models,
+   discretization, tolerances, compiler/build identity, and timing counters.
+
+Cross-cutting implementation rules:
+
+- Series expressions own cell, face, component, batch, and local-partition arithmetic;
+  host loops may visit only bounded topology metadata, mesh blocks, or partitions.
+- One face-flux contract serves Euler, viscous gas, species, turbulence, and AMR refluxing.
+  One transport contract serves incompressible, compressible, non-Newtonian, and chemistry
+  consumers. One Krylov/multigrid report schema serves every implicit subsystem.
+- Every new model has a scalar-independent batched verifier, manufactured/convergence test,
+  conservation test, malformed-input suite, reverse-sensitivity decision, and throughput
+  baseline before it enters the public aggregate headers.
+- Reference solutions are generated independently or taken from published benchmark data;
+  an implementation is never used to manufacture its own expected outputs.
+- Performance acceptance records memory traffic, allocations, cells/s, stage-cells/s,
+  parallel efficiency, and solver work. Optimization may change layout or fusion, but not
+  weaken residual, positivity, conservation, or reproducibility gates.
+
+Architecture references for the industrial programme:
+
+- SU2 official governing-equation, boundary-marker, turbulence, and verification material:
+  conservative compressible/incompressible contracts and production boundary semantics.
+- PETSc official KSP/SNES/TS/PCMG/GAMG manuals: composable Krylov, nonlinear,
+  implicit-time, geometric-multigrid, and algebraic-multigrid contracts with explicit
+  convergence reasons.
+- AMReX official `AmrCore`, `MultiFab`, ghost-cell, refluxing, checkpoint, load-balancing,
+  MPI+X, GPU, and regression documentation: block-structured AMR ownership and scalable
+  execution patterns. Pluss will adapt the architecture to Series rather than copy code.
+- NASA Turbulence Modeling Resource: exact SA/SST variants, canonical grids, boundary data,
+  and verification/validation cases for turbulence release gates.
+- hypre and p4est official designs will be reviewed before the AMG and forest-mesh phases;
+  OpenFOAM and MFEM will be secondary source audits for finite-volume boundary, mesh, and
+  field-ownership edge cases.
 
 ### Phase P4: thermodynamics
 
@@ -2001,3 +3246,156 @@ All three are built from ND Series ops (batched `matrix_exp`, batched Newton, on
 - Update (same day): hypersparse LU solves (reach-based FTRAN/BTRAN), index-list vector updates in the dual simplex (no O(m) loops left except cheap scans), incremental CHUZR, node propagation, root probing, clique cuts.
   LP: NETLIB 90/90 and Kennington 16/16 equal to HiGHS (ken-18, 105k rows: unfinished after 227 s before, 58 s now; pds-10 12 s -> 3 s; ken-11 10 s -> 1.4 s). MIPLIB 60 s: 14/26 proven optimal and equal to HiGHS
   (qiu now ends at the limit with the optimal incumbent; nw04 9 s vs 2.7 s before because probing costs time on 87k columns). Still open: conflict analysis, supernodal Cholesky, multithreading, closing the gap to HiGHS on large degenerate LPs (cre-b/osa-60 ~20 s vs ~1-14 s).
+
+- Update (2026-10-15), after reading the HiGHS simplex source: (1) postsolve now rebuilds the basis for removed singleton rows (the column becomes basic, the row non-basic), so the warm start on the original model needs ~0 pivots
+  (ken-18 with duals 49 s -> 17 s, pds-20 56 -> 30 s, pds-10 3.3 -> 1.7 s); (2) implied-free column singletons of equality rows are eliminated with their row (primal postsolve from the original row, verified by mutation);
+  (3) `lp::solve` with `LpMethod::Auto` races presolve+simplex against the interior point with crossover on the original model for large models (two threads, cooperative cancellation); (4) refactor interval 300;
+  (5) the primal shortcut after postsolve is guarded by an objective + feasibility check (it returned wrong "optimal" values without the guard). NETLIB 90/90 and Kennington 16/16 equal HiGHS with dual certificates; MIPLIB 14/26 optimal.
+  Remaining gap vs HiGHS: presolve strength (doubleton-equation aggregation, dominated columns need a dynamic matrix) - pds-20 30 s vs 1.2 s, dfl001 25 s vs 4.9 s, ken-18 17 s vs 3.8 s.
+
+- Update (2026-10-15, later): `lp/aggregate.h` is the layered LP-only second presolve stage the user agreed to (dynamic row/column lists, doubleton-equation aggregation, postsolve of x and of the basis including the case where a column sits at a bound
+  inherited from an eliminated column); `presolve.h` is untouched and still the only presolve MILP uses. `lp::solve` chains presolve -> aggregate -> presolve ... until nothing changes. Verified: 300 random doubleton-rich LPs (primal-only and dual
+  certificate paths, mutation-checked), NETLIB 90 + Kennington 16 vs HiGHS with dual certificates. Times (with duals, race on): ken-18 17 s -> 5.9 s (HiGHS 3.8 s), pds-20 30 s -> 14 s (10.5 s simplex only; HiGHS 1.2 s), cre-b 3.3 s -> 1.7 s;
+  Kennington total 84 s -> 52 s. Remaining: dfl001 27 s vs 4.9 s (our LU has no Markowitz ordering, so fill is higher), osa-60, dominated-column presolve.
+
+## Chemistry: polymers (2026-10-15)
+
+- `chemistry/polymers.h` (namespace `chemistry::polymers`, test `NatSci/chemistry/polymers/test/polymers_test.cpp`, reference generator `NatSci/chemistry/verification/gen_polymers_ref.py`), all batched over lanes:
+  worm-like / freely-jointed / freely-rotating chain statistics and force-extension (Langevin, Marko-Siggia with batched bisection inversion); Flory-Schulz, Carothers and Poisson distributions with Mn/Mw/Mz;
+  free-radical polymerization by the closed method of moments (initiator, propagation, combination + disproportionation termination, transfer to monomer) with the quasi-steady-state results;
+  Mayo-Lewis, azeotrope, Skeist drift and Meyer-Lowry; Flory-Huggins free energy, chemical potentials, spinodal, critical point and the binodal.
+- Verification (every oracle independent of the formula under test): worm-like chain <R^2> and <Rg^2> against quadrature of their definitions (rel. 1e-9); freely-rotating chain against the brute-force double sum, and its continuum limit against the worm-like chain;
+  Langevin against mpmath (50 digits, including the small-force series branch); distributions against scipy.stats; **radical moments against chain-length-resolved kinetics** (every live and dead length an explicit species, combination by convolution, scipy Radau;
+  worst relative error 2e-5 over 5 time points, monomer mass balance 1e-7); Skeist ODE against DOP853 and the Meyer-Lowry closed form against both (1e-9); Flory-Huggins symmetric binodal against the exact relation ln((1+m)/(1-m)) = chi N m
+  and asymmetric binodals against scipy fsolve (down to a dilute phase of 8e-6), plus the coexistence residuals (1e-11).
+- Bugs caught while building it: the chain-resolved oracle needs N >> the chain length (a 700-species truncation hid a 5e-4 error that was the oracle's, not the model's; N = 1200); the binodal Newton collapsed onto the trivial root a = b until the
+  equations were divided by the gap (centre/half-gap variables, Landau-expansion start, quadratic chi continuation); `max_rel` helper ignored NaN (std::max) and falsely passed - it now fails on non-finite values.
+- Sources: NOT read in this session (paywalled or not fetched): Kratky & Porod 1949, Benoit & Doty 1953, Marko & Siggia 1995, Flory 1936/1940/1942, Mayo & Lewis 1944, Meyer & Lowry 1965, Odian 4th ed., Kiparissides 1996. The formulas are standard and every one is
+  checked numerically against its own definition or a first-principles simulation as listed above, but the literature itself is unread here; a primary-source pass would be the next step if wanted.
+- Not yet: step-growth with full distribution kinetics, gelation (Flory-Stockmayer), polymer dynamics (Rouse/Zimm), copolymer sequence statistics beyond the terminal model, residual-monomer/diffusion-controlled (gel effect) termination.
+
+## LP / MILP: deferred TODO list (recorded 2026-10-15, to resume later)
+
+1. Forrest-Tomlin basis update (replace the product-form eta file) - the main cause of the remaining gap on dense bases: pilot87 ~8 s vs 2.9 s, dfl001 ~9 s vs 4.9 s, osa-60 ~15 s vs 13 s.
+2. MILP conflict analysis (HiGHS-style) - node counts are still above HiGHS on several MIPLIB instances (air04/air05/10teams/bienst1/danoint/markshare2/mas74/noswot/qiu/rout unsolved in 60 s).
+3. Supernodal sparse Cholesky for the interior point (pds-class problems and anything where the interior point should win).
+4. Multithreading (parallel interior point, parallel branch-and-bound / dives); today everything is single-threaded except the opt-in `LpMethod::Race`.
+5. Smaller items: dominated-column presolve, `dual implied free` rows for inequalities, partial pricing for very wide LPs, tighter race scheduling (the race currently costs more than it gains, so `Auto` = simplex).
+
+## Population balance (2026-10-15)
+
+- `common/population_balance.h` (namespace `common::population_balance`, test `NatSci/common/test/population_balance_test.cpp`), shared by chemistry (crystallization, aggregation, breakage) and biology (size-structured populations), batched over lanes:
+  uniform / geometric / integer grids; exact cell moments; SSP-RK3 (Shu-Osher); growth + nucleation + outflow by cell-centred finite volumes with van Leer MUSCL reconstruction (second order on smooth profiles, monotone at fronts,
+  nucleation as an inflow flux with a linear-extrapolation ghost cell); aggregation and breakage on a fixed pivot grid (Kumar & Ramkrishna 1996) as dense assignment tensors, so a right-hand side is a few matrix products over all lanes.
+- Verified against closed forms (no second implementation of the scheme): pure translation (second-order convergence, ratio > 3 on 100/200/400 cells; number conserved to 1e-12); size-dependent growth G = a(1 + bL) against the characteristics;
+  nucleation with growth (mu_0 = flux * t exactly, mu_1 = G B t^2 / 2); MSMPR crystallizer steady state n = (B/G) exp(-L/(G tau)) with total number B tau and second moment; discrete Smoluchowski with the constant kernel against the exact
+  N_k = a^{k-1}/(1+a)^{k+1}, additive kernel M0 = exp(-M1 t), product kernel before gelation (M0 = 1 - t/2, M2 = 1/(1-t)); fixed-pivot aggregation on a coarse geometric grid reproduces the exact N(t) = N0/(1 + K N0 t/2) and conserves mass to 1e-9;
+  breakage with constant selection rate and uniform daughters conserves mass to 1e-12 and M0 grows like exp(t).
+- Findings while building it: domains must exceed the tail (the MSMPR second moment is 3% off with a 6-sigma-short domain); fragments below the lowest bin edge must be included in the breakage operator or mass leaks (1e-11 per event);
+  the initial first-order boundary cell was fixed by a linear-extrapolation ghost through the inflow state. Time: the discrete aggregation tests dominate (~30 s) - the pair tensor is dense B^2 x B.
+- Not yet: quadrature method of moments (QMOM / DQMOM), size-structured cell division with a Malthusian eigenvalue, non-uniform-grid limiter, coupled crystallizer with supersaturation balance.
+
+- Polymers, second tranche (2026-10-15): `chemistry/step_growth.h` and `chemistry/polymer_dynamics.h` (both in the `polymers_test`).
+  Step growth: second-order, third-order (self-catalysed) and stoichiometrically-imbalanced conversion kinetics (closed forms checked against DOP853 integration of the rate laws to 1e-10); closed moment equations M0..M3 reproducing the Flory
+  distribution averages; AB_{f-1} branching X_n, X_w and gel point checked against the Smoluchowski kinetics of the reactive group pairs (kernel (f-2)(i+j)+2, LSODA, N = 900; agreement ~1e-6 for f = 3 and 4, X_w -> 17 at a = 0.4);
+  A_f + B_g gelation: critical conversion 1/sqrt(r(f-1)(g-1)) and the sol fraction from the Stockmayer / Macosko-Miller branching generating functions (batched bisection for the smallest root) checked against Monte Carlo random bonding of 10^5 molecules
+  (union-find components, agreement < 8e-3, six cases incl. f = g = 3).
+  Rouse / Zimm: exact Rouse modes (eigenvalues vs eigvalsh, Doi-Edwards large-N limits tau_p, viscosity c zeta N^2 b^2 / 36, D = kT/(N zeta), G(t)); Zimm with the preaveraged Oseen interaction (spectrum of L^T A L from the Cholesky factor of H and `linalg::eigh`, vs numpy eigvals(H A) to 1e-9;
+  D = kT/(N^2 zeta) sum H, fitted exponent between 0.45 and 0.75 approaching 1/2, h* = 0 recovers Rouse).
+- Still open in polymers: reversible / cyclising step growth, diffusion-controlled (gel-effect) termination, entangled dynamics (reptation), copolymer sequence statistics beyond the terminal model. Sources again unread (Flory 1936/1953, Stockmayer 1943-44, Macosko & Miller 1976, Rouse 1953, Zimm 1956, Doi & Edwards 1986);
+  every formula is checked against an independent numerical oracle as listed.
+
+## Biochemistry: enzyme mechanisms and biochemical thermodynamics (2026-10-15)
+
+- `biology/systems/enzymes.h` (+ `math/lambert_w.h`, test `NatSci/biology/systems/test/enzymes_test.cpp`, oracles `NatSci/biology/verification/gen_enzymes_ref.py`):
+  steady-state rate laws (uncompetitive, mixed / non-competitive, substrate inhibition (Haldane), reversible Michaelis-Menten with the Haldane relationship, rapid-equilibrium ordered and random bi-bi, ping-pong bi-bi, Morrison tight binding);
+  a general MECHANISM ENGINE (King-Altman by linear algebra: states + first-/pseudo-first-order steps -> rate matrix -> batched steady-state null vector -> net product flux), so any ordered / ping-pong / random / branched mechanism with dead-end complexes is a list of steps;
+  integrated Michaelis-Menten via the Lambert W function (Schnell-Mendoza; new batched `lambert_w0` working from log x so huge arguments do not overflow) and the total quasi-steady-state approximation, plus the full mass-action rates.
+- `biology/metabolism/thermodynamics.h`: Alberty-style transformed Gibbs energies (Legendre transform at fixed pH, pseudoisomer groups through the proton binding polynomial), transformed reaction energies, apparent equilibrium constants and an extended Debye-Hueckel activity coefficient
+  with the constants supplied by the caller (the literature values are not embedded because they were not verified here).
+- Verification: Lambert W against mpmath (60 digits, z up to 700); the engine against SymPy EXACT rational steady states for Michaelis-Menten, ordered bi-bi (5 states, 10 steps, with products) and ping-pong (4 states) over lanes with and without products (1e-11);
+  the engine reproduces the closed forms it must contain - the uncompetitive law and Haldane substrate inhibition follow exactly from dead-end complexes (1e-12), Cleland's ping-pong form equals the engine's initial rate, mixed -> competitive / uncompetitive limits;
+  Morrison against the numerical binding equilibrium (1e-9); progress curves against full mass-action integration (Radau, 1e-12): Schnell-Mendoza 1.7e-3 in the QSSA regime but 0.43 when E0 ~ S0, where the total QSSA keeps 2e-2 (7.6e-5 in the QSSA regime) - the reason both are provided;
+  transformed Gibbs energies / apparent K' against an explicit species-level equilibrium with stepwise Henderson-Hasselbalch fractions (ATP, ADP, Pi with 1, 1, 3 protons, six pH values, two temperatures; 1e-9 in ln K').
+- Not yet: allosteric KNF / Monod-Wyman-Changeux enzyme kinetics with substrate (binding.h has MWC for ligands only), enzyme parameter fitting and identifiability, protein folding and denaturation, nucleic-acid melting, pH / metal (Mg2+) binding of ATP with literature constants, thermodynamic constraints in FBA (loop law uses none).
+
+## Source-verified pass: reversible step growth, enzymes, thermodynamics, folding, nucleic acids, estimation, MDF (2026-10-15)
+
+Requested rule: correctness first, authoritative sources read, implementations from the local MATLAB install and the GitHub projects named earlier used as oracles. Documents READ (SHA-256 prefixes) and what each verified:
+
+| Source | What it settled |
+| --- | --- |
+| eQuilibrator `equilibrator-cache` (GitLab) `thermodynamic_constants.py` 40b1f3e3, `models/compound.py` ccbfb160, `models/compound_microspecies.py` 350c5f37 | Alberty's Legendre transform with extended Debye-Hueckel (a1, a2, a3, B = 1.6), Mg2+ term, microspecies logsumexp. `metabolism/thermodynamics.h` now follows it exactly (charge, N_H, N_Mg, pH, pMg, I, T). Finding: eQuilibrator uses R = 8.31e-3; CODATA is used here. alpha(298.15)/RT = 1.1758, matching Alberty's 1.17582 |
+| Cantera `DebyeHuckel.cpp` c6315f8d, `WaterProps.cpp` 07d2749a | Independent cross-check of the Debye-Hueckel A: Cantera default 1.172576 (0.3% below Alberty's value, a different dielectric-constant source) |
+| Biopython `Bio/SeqUtils/MeltingTemp.py` 4f3cbc58 (run as the oracle) | nearest-neighbour tables (DNA_NN1-4, RNA_NN1-3, R_DNA_NN1 generated into `nucleic_acid_tables.h`), `Tm_NN` formula, salt corrections 1-7; `biophysics/nucleic_acids.h` reproduces 105 Biopython Tm values to 1e-9 deg C |
+| PyFolding `models.py` 8b277549 (imported and run as the oracle), `constants.py` 06987b30 | equilibrium denaturation (two-state, sloping baselines, three-state, dimer) and chevron models in `biophysics/protein_folding.h`. Findings: PyFolding's sloping model writes the signal as native baseline + (difference baseline) F, not Y_N(1-F) + Y_U F; its dimer formula loses digits for K >> Pt (rationalised form used here, checked against 60-digit arithmetic) |
+| arXiv 1701.06122, Einav & Phillips, J. Phys. Chem. B 121 (2017) 3813, 631b627a | MWC active-state probability, leakiness, dynamic range, EC50, effective Hill coefficient (eq. 1-12) for `enzymes.h` allosteric kinetics; verified against explicit enumeration of all 2^(m+1) microstates and against the mass-action mechanism in the rapid-exchange limit |
+| MIT OpenCourseWare 10.569 Synthesis of Polymers, lecture 3 (P. Hammond), 6f8c4879 | closed-system K = p^2/(1-p)^2, X_n = 1 + sqrt(K); open-system K = X_n (X_n - 1) [W]/[M]0; verified by integrating the rate law (DOP853) and by a population balance with random coupling + random scission relaxing to the most probable distribution |
+| MATLAB R2025b Statistics Toolbox `nlinfit.m` f4cd502b (`LMfit`), `nlparci.m` 00fc70f0, `private/statjacobian.m` feccfec3 (also RUN in `matlab -batch` as the oracle) | Levenberg-Marquardt, forward-difference Jacobian, intervals; `common/estimation.h` matches nlinfit/nlparci (beta 1e-6, intervals 1e-5) and even reproduces nlinfit's failure from a bad start (SSE 11.746) |
+| Data2Dynamics `PLE/arPLEInit.m` d7be7e20 | profile-likelihood thresholds chi2inv(1 - alpha, 1) pointwise / chi2inv(1 - alpha, p) simultaneous |
+| Noor et al. 2014 PLoS Comput. Biol. 10:e1003483 (open access, read), equilibrator-pathway `thermo_models.py` fbaa046b | MDF linear program and its shadow prices; `metabolism/pathway_thermodynamics.h` (MDF + thermodynamics-based flux balance as a MILP on the sparse stack), verified against scipy/HiGHS and by exhaustive enumeration of direction patterns |
+
+NOT obtainable (paywalled / blocked): Monod, Wyman & Changeux 1965; Koshland, Nemethy & Filmer 1966 (KNF is therefore not implemented; the Adair form is); Flory 1936/1953; Stockmayer 1943-44; Rouse 1953; Zimm 1956; Doi & Edwards; Schnell & Mendoza 1997; Tzafriri 2003; Marko & Siggia 1995; Becktel & Schellman 1987; SantaLucia 1998 (the Biopython tables cite it); Alberty's book; Odian; Cleland 1963; King & Altman 1956; Henry et al. 2007 (TFA formulation follows the standard big-M statement, checked by enumeration, not against the paper). The MIT lecture is course material, not a primary paper.
+Constants / conventions found by reading: eQuilibrator R = 8.31 kJ/(mol K); Biopython uses R = 1.987 cal/(mol K) for Tm; PyFolding RT at 298.15 K with R = 1.987204118e-3.
+
+## Spatial models tranche (2026-10-15)
+
+`subsp/natsci/biology/spatial/reaction_diffusion.h` (Series-native cell-centred finite-difference Laplacian, 1-3 D, Periodic/Neumann/Dirichlet via ghost cells in the py-pde convention, batched `[..., S, spatial...]`, RK4 `integrate`) and `spatial/turing.h` (2x2 Turing conditions, band edges and k_c^2, growth rate, n-species `unstable_modes`, Brusselator / Schnakenberg / Gray-Scott kinetics with steady states and Jacobians). Test `NatSci/biology/spatial/test/spatial_test.cpp` (CTest `spatial_test`):
+
+* Laplacian: second-order convergence for each boundary type; Neumann heat eigenmode decays at the exact discrete rate 4D/h^2 sin^2(n pi / 2N).
+* Turing: 600 random 2x2 systems (42 unstable) against numpy eigenvalue scans (flag, band edges, growth samples); analytic Jacobians against central differences; Gray-Scott steady states against fsolve.
+* PDE: small-perturbation growth of a Brusselator Turing mode equals Re lambda(k_d^2) of the dispersion relation; morphogen gradient vs cosh solution; Fisher-KPP front speed vs 2 sqrt(rD) with the asymptotic -3/(2 lambda t) shift; 1-D Gray-Scott against MATLAB `pdepe` (gen_spatial_ref.m).
+
+Sources read: py-pde boundary-discretization documentation and Brusselator example (ghost-cell conventions). NOT obtained: Turing 1952, Pearson 1993, Prigogine-Lefever 1968, Gray-Scott 1984, Bramson 1983, Fisher/KPP originals (the -3/2 log t shift is as quoted in arXiv:1510.03329 (sha 7c7734df), checked by the simulation). Re-sourced 2026-10-19: Ablowitz-Zeppetella speed/profile via Roques arXiv:2511.10104 (sha 93b084a1) plus a SymPy proof that the closed form solves the PDE exactly; the 1979 paper itself is paywalled.
+
+## Metabolic control analysis (2026-10-19)
+
+`biology/metabolism/control.h`: elasticities (central differences, or analytic via `common::reaction::flux_jacobian`), unscaled/scaled concentration and flux control coefficients with moiety conservation handled through Gamma (normal equations + one refinement; no independent-row choice), response coefficients `C dv/dp`, summation and connectivity defect audits, conservation laws from the SVD of N, and a general-rate-law Newton steady state with conservation closure. Source read: COPASI `copasi/steadystate/CMCAMethod.cpp` (sha afeb4f85cb57): C^S = -L (N_R E L)^-1 N_R, C^J = I + E C^S, scaling by v/x. Not obtained: Kacser & Burns 1973, Heinrich & Rapoport 1974 (the theorems are verified numerically instead). Test `control_test` on an ATP/ADP-conserving 5-reaction network with Michaelis-Menten rates, 4 lanes: matches COPASI's link-matrix formula, finite differences of re-solved steady states under enzyme scaling (the definition), both theorems, and parameter responses vs re-solved steady states. Note: connectivity holds on the free directions ker Gamma (`C^J E B = 0`, `C^S E B = -B`), not on the full species space when moieties are conserved.
+
+## Ionization (2026-10-19)
+
+`biophysics/ionization.h`: Henderson-Hasselbalch net charge, Van Slyke buffer capacity and a batched bisection isoelectric point for any set of ionizable groups; `protein_groups` encodes the Bjellqvist pK table as implemented in Biopython `Bio/SeqUtils/IsoelectricPoint.py` (read, sha 93a0d329ba63; Bjellqvist 1993/1994 papers not obtained). Test `ionization_test`: 200 sequences x 6 pH values vs Biopython `charge_at_pH` to 1e-10; pI vs Biopython within its own 1e-4 bisection (and its [4.05, 12] clamp checked); Q(pI)=0; beta = -dQ/dpH; beta_max = ln10/4 at pH = pK. Generator `verification/gen_ionization_ref.py` (loads the Biopython file directly, no Bio package).
+
+## Population engine v2 (2026-10-19)
+
+Assessment before: `population/` was 740 lines of closed-form rates (growth, interaction, selection, ecology, one-matrix structured) plus a 10-line alias of the Gillespie engine: no discrete-time dynamics, no stochastic demography, no integral projection, no delays, no community or evolutionary theory. Added (each header with an oracle-verified CTest, all lane-batched Series code, no per-element loops except time stepping):
+
+| Header | Content | Oracles |
+| --- | --- | --- |
+| `maps.h` | logistic, Ricker, Beverton-Holt, Hassell, Maynard Smith-Slatkin maps with analytic derivatives; attractors, Lyapunov exponents, period detection, periodic points and multipliers, superstable cycles (Feigenbaum cascade) | exact 2-cycle formula, ln 2 at r = 4, numpy long-run exponents over parameter sweeps, mpmath 50-digit superstable parameters (R_n, delta -> 4.669) |
+| `demography.h` | fundamental matrix, R0, generation time, damping ratio (Hotelling deflation + Gelfand radius), fixed-design LTRE, chain-rule sensitivities to lower-level parameters, transient amplification (2-norm), life tables (Euler-Lotka by Newton, Fisher reproductive value, quadrature weights), Tuljapurkar approximation, stochastic growth rate and quasi-extinction by lane-parallel simulation (i.i.d. and Markov environments) | R package popbio's own functions sourced from the CRAN mirror (read: fundamental.matrix.R, net.reproductive.rate.R, generation.time.R, damping.ratio.R, LTRE.R, stoch.growth.rate.R, eigen.analysis.R); popbio rounds the moduli in damping.ratio to 5 decimals, so the exact |lambda| ratio is the primary check; exact reflection-principle recursion for quasi-extinction; scalar environments with closed forms; Leslie-matrix identity for the life table; continuous Euler-Lotka r = m0 - c - mu |
+| `birth_death.h` | birth-death generators, transient law (matrix exponential), exact mean time to extinction, quasi-stationary distribution, linear birth-death closed forms, Galton-Watson extinction, Brownian first-passage viability and the Dennis regression estimator | scipy expm / solve / eig, Gillespie cross-check, brentq roots of the offspring pgf, Monte Carlo with Brownian-bridge crossing correction, numpy lstsq |
+| `ipm.h` | midpoint-rule integral projection models: lambda, stable density, reproductive value, sensitivity/elasticity kernels, life expectancy, R0, spreading speed of integrodifference equations | exact Gaussian-growth kernel (lambda = c, AR(1) stationary density, v = 1), numpy full eig, first-order perturbation check, scipy minimisation for the Laplace kernel, direct front simulation with the pulled-front correction |
+| `delay.h` | method-of-steps RK4 DDE integrator with Hermite history, Hutchinson and Nicholson laws, complex Lambert W0 (path-following Newton) and the exact rightmost-root theory, Hopf onset | mpmath complex Lambert W, characteristic-equation residual, measured envelope rate and frequency of the linear regime, independent scipy DOP853 method-of-steps solutions to 2e-6 |
+| `community.h` | spectral abscissa without an eigensolver, random community matrices with pair correlation tau (elliptic law), GLV invasion growth rates, chemostat/Monod resource competition with R*, adaptive dynamics (selection gradient, second derivatives, convergence/evolutionary stability, branching, singular strategies, canonical equation) | numpy eigvals, May and Allesina-Tang criteria, sympy second derivatives of Gaussian logistic competition (f_yy = 1/sa^2 - 1/sk^2, f_xy = -1/sa^2), fsolve, simulated exclusion, RK4 canonical-equation flow vs closed form |
+
+Sources read this tranche: popbio R sources (CRAN mirror, sha prefixes d4a2fad5, c95fc302, 6c893bb8, 23b415a2, bcd38ea2), Allesina & Tang arXiv:1105.2071 (via ar5iv: criteria quoted above), arXiv:1005.3862 (adaptive-dynamics conditions (1)-(4) and the Gaussian example, sha 6a3206d9), Biopython not involved. NOT obtained: Caswell (2001), Tuljapurkar (1990), Easterling-Ellner-Dixon (2000), Ellner-Rees (2006), Kot-Lewis-van den Driessche (1996), May (1972/1976), Hutchinson (1948), Gurney-Blythe-Nisbet (1980), Dennis-Munholland-Scott (1991), Dieckmann-Law (1996), Geritz et al. (1998), Tilman (1982); the Brownian first-passage formula and the IDE/Hopf results are therefore checked by simulation and independent solvers rather than against those papers.
+
+Population v2 TODO (shelved 2026-10-19): host-parasitoid / coupled-map lattices; McKendrick-von Foerster PDE solver; environmental-noise SDE growth (Lande); maturation-delay stage models; fitting layer (IPM vital-rate regression, ML PVA) on common/estimation.h.
+
+## Proton linkage, elementary flux modes, flux sampling (2026-10-19)
+
+* `biophysics/linkage.h`: Wyman proton linkage. Independent-site and polyprotic proton partition functions (stable log-sum-exp), mean bound protons, apparent constants K_app = K_ref Z_b / Z_f, linked binding with depletion (reuses `binding::receptor_ligand`), buffer-linked observed enthalpy. Test `linkage_test`: ln Z and <H> vs brute-force enumeration of all 2^5 protonation microstates (mpmath), `d log K / dpH = <H>_f - <H>_b` vs finite differences, low/high-pH limits, the textbook bell-shaped enzyme profile 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) from the polyprotic fractions, equivalence of two equivalent sites with statistical-factor polyprotic constants. Wyman 1964 and Baker-Murphy 1996 were not obtained.
+* `metabolism/modes.h`: elementary flux modes by the nullspace / double-description algorithm (reversible reactions split, 2-cycles dropped, sign-canonical output, combinatorial adjacency test plus an exact rank test on the final columns: the adjacency test alone let a non-elementary mode through on the first random network, caught by the oracle). Test `modes_test`: 8 random networks (4 metabolites, 9 reactions, mixed reversibility) match brute-force minimal-support enumeration exactly, plus a dead-end hand case. Host-side combinatorics by nature (Schuster-Hilgetag 1994, Urbanczik-Wagner 2005, Terzer-Stelling 2008 not obtained).
+* `metabolism/modes.h` `sample_fluxes`: hit-and-run over `S v = 0, l <= v <= u` with chains as Series lanes, Chebyshev-centre start (LP; infinite bounds must be passed as real infinities, 1e300 silently gave radius 0), fixed fluxes kept exact. Test: exact moments of a triangle (mean 1/3, var 1/18, cov -1/36) and of a box in the nullspace (means, variance 1/3, fourth moment 1/5, fixed flux preserved). Fixed 2026-10-19 (user flagged both): bounds with |b| >= 1e20 (inf, 1e300, ...) are treated as unbounded and every unbounded side is truncated at +-`bound_cap` (default 1000, COBRA convention; samples are uniform on the truncated polytope, `Sample::truncated_bounds` reports how many sides were cut); reactions pinned by the network (blocked, implied equalities) are found by one batched flux-variability solve and held exactly (`Sample::fixed_reactions`); a polytope with no interior even after that raises instead of returning degenerate samples. Tests: uniform on a truncated [0, 10] given as inf / 1e300 / 1e25, a blocked reaction stays exactly 0 with the rest uniform, a single-point flux space raises.
+
+### linprog sentinel-infinity fix at the source (2026-10-19)
+The sampler's "1e300 gives radius 0" was a solver bug, not a sampler quirk. Reproduced: bounds of +-1e30 made the dense `linprog` report Infeasible (objective 2e30), +-1e300 gave NaN, and the sparse pipeline returned a wrong optimum (-3 instead of -2.5). Fix: any bound or row side with |x| >= 1e20 (HiGHS convention, `lp::kInfThreshold`) is a real infinity at every entry point: dense `linprog::standardize`, `lp::solve` / `solve_simplex_pipeline` (via `Model::has_huge_values` / `canonicalize_infinities`), `solve_ipm` and `InteriorPoint`, `MipSolver`, dense `milp::solve` (so an integer variable with a sentinel bound now raises the clear "must have finite bounds" error instead of exploding). A vacuous dense row written with a sentinel right-hand side (`b_ub`/`b_eq` beyond 1e20 or non-finite) now raises, because rows are shared by all lanes and cannot be dropped per lane. Regression: `linprog_infinity_test` (inf, 1e20, 1e30, 1e300 through dense LP, sparse simplex, interior point, a hand-built Model with sentinel row sides, dense MILP, sparse branch-and-cut). Still documented, not changed: interior-point accuracy with pinned objective floors (use the simplex, `exact_options()`).
+
+### Interior point with pinned objective floors (2026-10-20)
+User asked for the "pinned objective floor" accuracy limit to be fixed rather than documented. Reproduced on random degenerate networks (flux variability at fraction 1, m = 40..80): the batched interior point left lanes at IterationLimit and `flux_variability` threw "a variability LP did not reach optimality". Fix in `linprog::solve_unchunked`: new `Options::polish` (default true) re-solves every lane that ends IterationLimit or NearOptimal with the exact simplex and merges x, objective, duals, status and certificates back (a lane the simplex also cannot decide keeps the interior-point answer and status). Verdicts PrimalInfeasible / Unbounded are untouched. Regression `linprog_polish_test`: polished interior point equals the simplex to 1e-7 on 2 networks x 2r FVA lanes, `polish=false` still fails on the first (documents the need), infeasible/unbounded verdicts unchanged. Found on the way and NOT fixed here: the dense simplex needs 25,259 pivots on a degenerate 100 x 320 LP (cap 14,899 at the default `max_iterations = 150` returns IterationLimit) where the sparse dual simplex is instant; real metabolic networks are unaffected (warm-started iJO1366 passes) but routing `Method::Simplex` through the sparse stack (or adding bound perturbation) is the proper follow-up.
+
+## Biomechanics (2026-10-20)
+
+New `biology/biomechanics/` (umbrella `biomechanics.h`, included from `biology.h`); every header Series-native and lane-batched, every test against an independent oracle, generators in `NatSci/biology/verification/gen_{muscle,chain,tissue,hemo,locomotion}_ref.py`:
+
+| Header | Content | Oracle |
+| --- | --- | --- |
+| `muscle.h` | Hill-type muscle-tendon unit in the De Groote-Fregly (2016) form: active/passive force-length, force-velocity and its inverse, tendon force-length, activation dynamics, pennation geometry, isometric tendon-fiber equilibrium (vectorised bisection), explicit tendon-dynamics state rates and an RK4 simulator with time-varying excitation / length | Curve constants PARSED from OpenSim `DeGrooteFregly2016Muscle.h` (sha prefix c430bfc2; `.cpp` 704304cd) into an independent numpy model; scipy brentq equilibria; scipy DOP853 trajectories; the model's defining key points f_act(1) = 1, f_v(0) = 1, f_v(-1) = 0, tendon force 1 at strain 0.049, passive force 1 at strain 0.6 |
+| `chain.h` | planar serial multibody (limb) dynamics: recursive Newton-Euler inverse dynamics with end-point force, mass matrix, Coriolis/gravity bias, forward dynamics, kinematics, energy, RK4 simulation | sympy Lagrangian derivation of M, h and J^T F for a 3-link chain, DOP853 PD-controlled trajectory, energy conservation, hanging/horizontal static checks |
+| `tissue.h` | incompressible hyperelasticity: neo-Hookean, Mooney-Rivlin, Yeoh, Gent, Fung-type, Ogden; uniaxial / equibiaxial / planar / simple-shear stresses; fibre-reinforced artery (HGO / GOH dispersion form) | sympy dW/dF with the pressure eliminated per boundary condition; the oracle caught a wrong simple-shear normal-stress difference (missing W2 term) in the first draft |
+| `hemodynamics.h` | 2- and 3-element Windkessel (impedance, exact exponential integrator), Poiseuille resistance, Womersley pulsatile flow in a rigid tube (flow, velocity, wall shear, impedance) with a complex Bessel J0/J1 by Miller's recurrence (normalised by cos z for large Im z), Moens-Korteweg and Bramwell-Hill wave speeds | mpmath complex Bessel (|z| up to 64), Womersley by substitution into the momentum equation and the axial force balance (this exposed a wrong sign of i that mpmath alone, sharing the formula, could not), Poiseuille limit, scipy ODE for the Windkessel steady cycle, BH = MK identity |
+| `locomotion.h` | SLIP running/hopping apex map (batched event-driven stance with secant-refined liftoff), linear inverted pendulum closed forms, orbital energy, capture point, time to position | DOP853 with touchdown/liftoff events, energy conservation over consecutive steps, LIPM ODE |
+
+Sources read: OpenSim `DeGrooteFregly2016Muscle.{h,cpp}` (GitHub opensim-core), Abaqus Analysis User's Guide page "Anisotropic hyperelastic behavior" for the exact HGO / GOH energy and the Macaulay bracket (the original Gasser-Ogden-Holzapfel paper was behind a bot check). NOT obtained: De Groote et al. 2016, Hill 1938, Zajac 1989, Thelen 2003, Millard 2013, Holzapfel-Gasser-Ogden 2000, Gasser-Ogden-Holzapfel 2006, Womersley 1955, Frank 1899, Westerhof 2009, Blickhan 1989, Geyer et al. 2005, Kajita et al. 2001, Hof 2008, Pratt 2006; the results are checked against independent computation (sympy, mpmath, scipy), exact limits and conservation laws instead.
+Not built (candidates): Millard 2012 muscle curves, muscle-driven multibody coupling (moment arms), full 3-D multibody, QLV viscoelasticity (needs E1), 1-D arterial network wave propagation, bone remodelling, contact mechanics.

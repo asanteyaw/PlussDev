@@ -1,0 +1,128 @@
+<!-- generated from diagnostics.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# ts diagnostics
+
+`diagnostics` describes a series before a model is chosen: its autocorrelation and partial autocorrelation functions, and the tests that read them — the Ljung–Box test for white noise, the augmented Dickey–Fuller and KPSS tests for a unit root and for stationarity, and the ARCH-LM test for volatility clustering.
+
+The tests return a result struct holding the statistic, its p-value, the critical value at the requested level and a `reject` flag; `ljung_box` returns one entry per requested lag set. The two unit-root tests have opposite null hypotheses (ADF: a unit root; KPSS: stationarity), so use them together.
+
+## The Surface
+
+| Entity | What it gives you |
+|---|---|
+| [`acf`](diagnostics/acf.md) | The sample autocorrelation function of a series: its correlation with itself at lags 0 through `max_lag` |
+| [`AcfOptions`](diagnostics/AcfOptions.md) | Options of `ts::acf` |
+| [`adf_test`](diagnostics/adf_test.md) | The augmented Dickey–Fuller test for a unit root |
+| [`AdfOptions`](diagnostics/AdfOptions.md) | Options of `ts::adf_test` |
+| [`AdfResult`](diagnostics/AdfResult.md) | Result of `ts::adf_test` |
+| [`arch_lm`](diagnostics/arch_lm.md) | Engle's ARCH-LM test for volatility clustering: are the squared values of a series autocorrelated? |
+| [`ArchLmOptions`](diagnostics/ArchLmOptions.md) | Options of `ts::arch_lm` |
+| [`ArchLmResult`](diagnostics/ArchLmResult.md) | Result of `ts::arch_lm` |
+| [`kpss_test`](diagnostics/kpss_test.md) | The KPSS test of the null that a series is stationary around a level or a trend |
+| [`KpssOptions`](diagnostics/KpssOptions.md) | Options of `ts::kpss_test` |
+| [`KpssResult`](diagnostics/KpssResult.md) | Result of `ts::kpss_test` |
+| [`ljung_box`](diagnostics/ljung_box.md) | The Ljung–Box test that a series, or a model's residuals, is white noise up to a set of lags |
+| [`LjungBoxOptions`](diagnostics/LjungBoxOptions.md) | Options of `ts::ljung_box` |
+| [`LjungBoxResult`](diagnostics/LjungBoxResult.md) | Result of `ts::ljung_box` |
+| [`pacf`](diagnostics/pacf.md) | The sample partial autocorrelation function: the correlation at each lag that remains after removing the effect of the shorter lags |
+| [`PacfOptions`](diagnostics/PacfOptions.md) | Options of `ts::pacf` |
+
+## How To Call It
+
+Compute the autocorrelations of an autoregressive series and test whether it is white noise.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+Series ar1(int n, double phi) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double carry = 0.0;
+  for (int i = 0; i < n; ++i) {
+    carry = phi * carry + e[i];
+    x[i] = carry;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+Series walk(int n) {
+  const auto e = noise(n);
+  std::vector<double> x(n);
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += e[i];
+    x[i] = sum;
+  }
+  return pluss::make_series(x, {n}, f64);
+}
+
+int main() {
+  const auto e = noise(200);
+  std::vector<double> x(200);
+  double carry = 0.0;
+  for (int t = 0; t < 200; ++t) {
+    carry = 0.7 * carry + e[t];
+    x[t] = carry;
+  }
+  const Series y = pluss::make_series(x, {200}, f64);
+
+  ts::AcfOptions options;
+  options.max_lag = 4;
+  show("acf", ts::acf(y, options));
+  const auto test = ts::ljung_box(y);
+  std::cout << "Ljung-Box p-value = " << test.pvalue.to_vec<double>()[0] << "\n";
+}
+```
+
+Output
+
+```text
+acf              1.0000   0.6502   0.4426   0.4037   0.3413
+Ljung-Box p-value = 0.0000
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+diagnostics/acf
+diagnostics/AcfOptions
+diagnostics/adf_test
+diagnostics/AdfOptions
+diagnostics/AdfResult
+diagnostics/arch_lm
+diagnostics/ArchLmOptions
+diagnostics/ArchLmResult
+diagnostics/kpss_test
+diagnostics/KpssOptions
+diagnostics/KpssResult
+diagnostics/ljung_box
+diagnostics/LjungBoxOptions
+diagnostics/LjungBoxResult
+diagnostics/pacf
+diagnostics/PacfOptions
+```
+<!-- apiref:toctree:end -->

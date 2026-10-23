@@ -38,10 +38,10 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
-auto out = grouped.label().codes();
+auto out = grouped.labels().codes();
 std::cout << out;
 ```
 
@@ -83,9 +83,9 @@ Example 2. Factorize an unstructured, single flat case axis — one built by
 ```cpp
 auto orders = DataFrame(
     {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto tagged = orders.label().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
+auto tagged = orders.labels().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
 
-auto out2 = tagged.label().codes();
+auto out2 = tagged.labels().codes();
 std::cout << out2;
 ```
 
@@ -104,7 +104,7 @@ r4   | 3
 ```
 
 `tagged`'s case labels came from `set(const Slate&)` — the raw-axis overload,
-which never populates `case_axis_` — so `.label().has()` is `false` here, and
+which never populates `case_axis_` — so `.labels().has()` is `false` here, and
 `codes()` takes the unstructured branch: one column, always named `"label"`,
 factorizing the whole flat slate. Contrast with a frame built by promoting a
 *named* feature (like `set("region")`), which — even with only one promoted

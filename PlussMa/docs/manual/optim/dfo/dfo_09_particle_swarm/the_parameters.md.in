@@ -1,0 +1,12 @@
+# The parameters
+
+[Back to The Particle Swarm Minimisers](../dfo_09_particle_swarm.md)
+
+
+@@example Numerical/optimization/guide/dfo/382_particle_swarm_knobs.cpp@@
+
+Each cell is one seed. On this problem nearly every setting finds the global minimum with every seed, so the table mainly shows that the defaults are forgiving. Where there is a difference:
+
+- A **small swarm** (30 particles) fails on one seed in three, with value 0.995: too few particles to cover a rugged box. Use at least 5 to 10 particles per variable, and more for rugged functions.
+- **Constant inertia** 0.7 settles to about 1e-14 instead of exactly 0: without the shrinking schedule the particles never quite stop moving. Keep the schedule on when you need full precision.
+- The pull weights, the speed clamp, the time-varying pulls and the centre particle made no difference here. They matter on harder functions; change one at a time, over several seeds, if you tune.

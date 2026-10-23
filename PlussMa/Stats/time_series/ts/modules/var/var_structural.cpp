@@ -4,6 +4,7 @@
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
 #include "pluss/subsp/stats/distr.h"
+#include "pluss/subsp/stats/tails.h"
 
 #include <algorithm>
 #include <cmath>
@@ -475,11 +476,11 @@ GrangerResult run_granger_(const VarFit& fit,
     double critical = 0.0;
     if (options.stat == GrangerStat::F) {
       stat = wald / static_cast<double>(q);
-      pvalue = clamp01_(1.0 - f_cdf_(stat, q, dof2, out_cfg));
+      pvalue = clamp01_(pluss::subsp::stats::tails::f_sf(stat, static_cast<double>(q), static_cast<double>(dof2)));
       critical = f_quantile_(1.0 - options.alpha, q, dof2, out_cfg);
     } else {
       stat = wald;
-      pvalue = clamp01_(1.0 - chisq_cdf_(stat, q, out_cfg));
+      pvalue = clamp01_(pluss::subsp::stats::tails::chi2_sf(stat, static_cast<double>(q)));
       critical = chisq_quantile_(1.0 - options.alpha, q, out_cfg);
     }
 
@@ -545,7 +546,11 @@ Series VarFit::fevd(const FevdOptions& options, Config cfg) const {
     const Series cov_h = psi_h.transpose(0, 1).matmul(cov).matmul(psi_h);
     den = den.add(cov_h.mul(eye).sum(0, false).reshape({dims.k}));
 
-    const Series fevd_h = num.div(den.reshape({1, dims.k}).clamp_min(kEps));
+    Series fevd_h = num.div(den.reshape({1, dims.k}).clamp_min(kEps));
+    if (options.method == IrfMethod::Generalized) {
+      // Generalized shocks are not orthogonal, so the raw shares do not add up to one; normalise each variable's shares (Pesaran and Shin).
+      fevd_h = fevd_h.div(fevd_h.sum(0, true).clamp_min(kEps));
+    }
     pages.push_back(fevd_h.reshape({1, dims.k, dims.k}));
   }
 

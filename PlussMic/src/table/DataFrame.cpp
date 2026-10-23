@@ -1491,7 +1491,7 @@ DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMath
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), frame.label().values());
+  return DataFrame(std::move(columns), frame.labels().values());
 }
 
 DataFrame dataframe_math_frame(const DataFrame& lhs,
@@ -1527,7 +1527,7 @@ DataFrame fill_numeric_missing_for_alignment_(const DataFrame& frame, const Alig
   for (std::size_t i = 0; i < cols.size(); ++i) {
     out.emplace_back(names[i], fill_numeric_missing_for_alignment_(cols[i], options));
   }
-  return DataFrame(std::move(out), frame.label().values()).title(frame.title());
+  return DataFrame(std::move(out), frame.labels().values()).title(frame.title());
 }
 
 DataFrame positional_rhs_like_lhs_(const DataFrame& lhs,
@@ -1549,7 +1549,7 @@ DataFrame positional_rhs_like_lhs_(const DataFrame& lhs,
   for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
     out.emplace_back(lhs_names[i], rhs_cols[i]);
   }
-  return DataFrame(std::move(out), lhs.label().values()).title(rhs.title());
+  return DataFrame(std::move(out), lhs.labels().values()).title(rhs.title());
 }
 
 FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
@@ -1575,7 +1575,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
       for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
         renamed.emplace_back(lhs_names[i], rhs_cols[i]);
       }
-      const auto renamed_rhs = DataFrame(std::move(renamed), rhs.label().values()).title(rhs.title());
+      const auto renamed_rhs = DataFrame(std::move(renamed), rhs.labels().values()).title(rhs.title());
       return lhs.match(renamed_rhs, FrameMatchOptions{
           .cases = FrameMatchRule::Unite,
           .features = FrameMatchRule::KeepLeft,
@@ -1597,7 +1597,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
       for (std::size_t i = 0; i < rhs_cols.size(); ++i) {
         relabeled.emplace_back(rhs_names[i], rhs_cols[i]);
       }
-      const auto relabeled_rhs = DataFrame(std::move(relabeled), lhs.label().values()).title(rhs.title());
+      const auto relabeled_rhs = DataFrame(std::move(relabeled), lhs.labels().values()).title(rhs.title());
       return lhs.match(relabeled_rhs, FrameMatchOptions{
           .cases = FrameMatchRule::KeepLeft,
           .features = FrameMatchRule::Unite,
@@ -1665,7 +1665,7 @@ DataFrame dataframe_math_frame(const DataFrame& lhs,
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), matched.left.label().values()).title(lhs.title());
+  return DataFrame(std::move(columns), matched.left.labels().values()).title(lhs.title());
 }
 
 Slate align_slate_to_feature_axis_(
@@ -1736,7 +1736,7 @@ Slate align_slate_to_case_axis_(
     positions[slate_scalar_string_at(labels, i)].push_back(i);
   }
 
-  const auto target_cases = frame.label().values();
+  const auto target_cases = frame.labels().values();
   std::unordered_map<std::string, std::size_t> seen;
   seen.reserve(static_cast<std::size_t>(frame.ncases()));
   std::vector<std::int64_t> rows;
@@ -1809,7 +1809,7 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
       columns.emplace_back(names[i], reverse ? apply_math_slate_pair(aligned, cols[i], op)
                                              : apply_math_slate_pair(cols[i], aligned, op));
     }
-    return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
+    return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
   }
 
   Slate aligned;
@@ -1845,7 +1845,7 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
         names[i],
         apply_math_slate_scalar(cols[i], values[i], op, reverse));
   }
-  return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
+  return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
 }
 
 DataFrame dataframe_math_slate(const DataFrame& frame,
@@ -1900,7 +1900,7 @@ DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp
   for (std::size_t i = 0; i < cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), frame.label().values());
+  return DataFrame(std::move(columns), frame.labels().values());
 }
 
 DataFrame dataframe_cmp_frame(const DataFrame& lhs,
@@ -1965,7 +1965,7 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs,
   for (std::size_t i = 0; i < lhs_cols.size(); ++i) {
     columns.emplace_back(names[i], std::move(out[i]));
   }
-  return DataFrame(std::move(columns), matched.left.label().values()).title(lhs.title());
+  return DataFrame(std::move(columns), matched.left.labels().values()).title(lhs.title());
 }
 
 DataFrame dataframe_cmp_slate(const DataFrame& frame,
@@ -1993,7 +1993,7 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
         aligned = other;
         break;
       case AlignBy::Caselbl:
-        aligned = other.align(frame.label().values(), options);
+        aligned = other.align(frame.labels().values(), options);
         break;
       case AlignBy::Feature:
         PLUSS_FAIL("DataFrame::compare(Slate, Axis::Case): AlignBy::Feature is not valid for case-axis Slate alignment");
@@ -2004,7 +2004,7 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
     for (std::size_t i = 0; i < cols.size(); ++i) {
       columns.emplace_back(names[i], apply_cmp_slate_pair(cols[i], aligned, op));
     }
-    return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
+    return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
   }
 
   Slate aligned;
@@ -2038,7 +2038,7 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
     }
     columns.emplace_back(names[i], apply_cmp_slate_scalar(cols[i], values[i], op));
   }
-  return DataFrame(std::move(columns), frame.label().values()).title(frame.title());
+  return DataFrame(std::move(columns), frame.labels().values()).title(frame.title());
 }
 
 DataFrame dataframe_cmp_slate(const DataFrame& frame,
@@ -2253,7 +2253,7 @@ private:
   Slate resolve_feature(std::string_view ident) const {
     const auto low = lower_copy(owned_name(ident));
     if (low == "case" || low == "cases") {
-      return frame_.label().values();
+      return frame_.labels().values();
     }
     return frame_.features(ident);
   }

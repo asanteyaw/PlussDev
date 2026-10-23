@@ -117,6 +117,32 @@ Series fit_beta_(const Series& x, const Series& y, const DirectForecasterOptions
   return beta;
 }
 
+// Rows (of an n x p matrix) in which every entry is finite, as an n-vector of 0/1 in work precision.
+Series finite_rows_(const Series& x, Config cfg) {
+  const Config out_cfg = work_cfg_(cfg);
+  const double p = static_cast<double>(x.sizes()[1]);
+  const Series count = x.isfinite().to(out_cfg.platform, ScalarType::Float64).sum(1, false).reshape({x.sizes()[0]});
+  return count.sub(p).abs().lt(0.5).to(out_cfg.platform, ScalarType::Float64);
+}
+
+// Indices of the nonzero entries of a 0/1 vector.
+Series true_indices_(const Series& flags, Config cfg) {
+  const Config out_cfg = work_cfg_(cfg);
+  const Series nz = flags.gt(0.5).nonzero();
+  if (!nz.defined() || nz.numel() == 0) {
+    return pluss::series::empty({0}, Config{}.with_dtype(ScalarType::Int64).with_platform(out_cfg.platform));
+  }
+  return nz.select(1, 0).reshape({nz.sizes()[0]}).to(out_cfg.platform, ScalarType::Int64);
+}
+
+// Predictions are NaN in rows whose features are not all available (the first rows, before enough history exists).
+Series blank_unavailable_(const Series& pred, const Series& valid_rows, Config cfg) {
+  const Config out_cfg = work_cfg_(cfg);
+  const std::int64_t rows = pred.sizes()[0];
+  const Series keep = valid_rows.reshape({rows, 1}).gt(0.5);
+  return keep.where(pred, pluss::series::full({rows, pred.sizes()[1]}, std::numeric_limits<double>::quiet_NaN(), out_cfg));
+}
+
 Series concat_columns_(const std::vector<Series>& columns, std::int64_t rows, Config cfg) {
   const Config out_cfg = work_cfg_(cfg);
   if (columns.empty()) {
@@ -187,15 +213,19 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
     Series x_step = select_rows_(design, row_start, nobs, out_cfg);
     const Series active_cols_idx = active_columns_index_for_horizon_(mask, static_cast<std::int64_t>(i), out_cfg);
     x_step = select_columns_(x_step, active_cols_idx, out_cfg);
+    // Only rows with a complete feature vector and an observed response take part in the fit.
+    const Series usable = finite_rows_(x_step, out_cfg).mul(yv.isfinite().to(out_cfg.platform, ScalarType::Float64));
+    const Series rows = true_indices_(usable, out_cfg);
+    PLUSS_CHECK(rows.numel() > 0, "subsp::stats::ts::DirectForecaster::fit: no observation has a complete set of lagged predictors");
+    x_step = x_step.index_select(0, rows);
     if (options.fit_intercept) {
       x_step = prepend_intercept_(x_step, out_cfg);
     }
-    x_step = x_step.nan_to_num(0.0, 0.0, 0.0);
     steps.push_back(DirectStepModel{
         .horizon = h,
         .active_columns = {},
         .active_columns_index = active_cols_idx,
-        .beta = fit_beta_(x_step, yv, options, out_cfg),
+        .beta = fit_beta_(x_step, yv.index_select(0, rows), options, out_cfg),
     });
   }
 
@@ -216,11 +246,12 @@ Series DirectForecaster::predict(const Series& x, const Series& y, Config cfg) c
     const std::int64_t row_start = lag_plan_.max_lead - (step_model.horizon - 1);
     Series x_step = select_rows_(design, row_start, nobs, out_cfg);
     x_step = select_columns_(x_step, step_active_columns_index_(step_model, out_cfg), out_cfg);
+    const Series valid = finite_rows_(x_step, out_cfg);
+    x_step = x_step.nan_to_num(0.0, 0.0, 0.0);
     if (options_.fit_intercept) {
       x_step = prepend_intercept_(x_step, out_cfg);
     }
-    x_step = x_step.nan_to_num(0.0, 0.0, 0.0);
-    preds.push_back(x_step.matmul(step_model.beta.reshape({step_model.beta.numel(), 1})));
+    preds.push_back(blank_unavailable_(x_step.matmul(step_model.beta.reshape({step_model.beta.numel(), 1})), valid, out_cfg));
   }
   return concat_columns_(preds, nobs, out_cfg);
 }
@@ -239,32 +270,34 @@ Series DirectForecaster::prepared_predictors(const Series& x, const Series& y, s
   if (options_.fit_intercept) {
     x_step = prepend_intercept_(x_step, out_cfg);
   }
-  return x_step.nan_to_num(0.0, 0.0, 0.0);
+  return x_step;  // NaN where a lagged value is not yet available
 }
 
-Series DirectForecaster::forecast(const Series& x, const Series& y, Config cfg) const {
-  PLUSS_CHECK(!steps_.empty(), "subsp::stats::ts::DirectForecaster::forecast: model has no fitted steps");
-  PLUSS_CHECK(!leading_requires_future_(lag_plan_),
-              "subsp::stats::ts::DirectForecaster::forecast: future leading predictors are not supported yet; "
-              "remove leading predictors or use predict with observed data");
-  const auto out_cfg = work_cfg_(cfg);
-  const auto idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(out_cfg.platform).with_pinned(out_cfg.pinned);
-  const Series yv = as_vector_(y, "DirectForecaster::forecast").to(out_cfg.platform, out_cfg.dtype);
-  const std::int64_t nobs = yv.numel();
-  const Series design = build_lagged_predictors(x, yv, lag_plan_, out_cfg);
+namespace {
 
+// One forecast per horizon from the last observed origin. `design` was built from `nobs` observed rows (plus any future leading values); the row that holds
+// the features of the last observation is the same for every horizon.
+Series forecast_from_design_(const Series& design,
+                             const LagPlan& plan,
+                             const std::vector<DirectStepModel>& steps,
+                             const DirectForecasterOptions& options,
+                             std::int64_t nobs,
+                             Config out_cfg) {
+  const auto idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(out_cfg.platform).with_pinned(out_cfg.pinned);
+  const std::int64_t origin_row = plan.max_lead + nobs;
+  PLUSS_CHECK(origin_row < design.sizes()[0],
+              "subsp::stats::ts::DirectForecaster::forecast: the model has no lags, so a forecast needs future values of its leading predictors");
   std::vector<Series> out_cols;
-  out_cols.reserve(steps_.size());
-  for (const auto& step_model : steps_) {
-    const std::int64_t row_start = lag_plan_.max_lead - (step_model.horizon - 1);
-    const std::int64_t row_idx_value = row_start + nobs - 1;
-    const Series row_idx = pluss::make_series(std::vector<std::int64_t>{row_idx_value}, {1}, idx_cfg);
+  out_cols.reserve(steps.size());
+  for (const auto& step_model : steps) {
+    const Series row_idx = pluss::make_series(std::vector<std::int64_t>{origin_row}, {1}, idx_cfg);
     Series x_row = design.index_select(0, row_idx);
     x_row = select_columns_(x_row, step_active_columns_index_(step_model, out_cfg), out_cfg);
-    if (options_.fit_intercept) {
+    PLUSS_CHECK(x_row.isfinite().all().item<double>() == 1.0,
+                "subsp::stats::ts::DirectForecaster::forecast: the history is too short for the lags of this model");
+    if (options.fit_intercept) {
       x_row = prepend_intercept_(x_row, out_cfg);
     }
-    x_row = x_row.nan_to_num(0.0, 0.0, 0.0);
     out_cols.push_back(x_row.matmul(step_model.beta.reshape({step_model.beta.numel(), 1})));
   }
   if (out_cols.empty()) {
@@ -273,9 +306,39 @@ Series DirectForecaster::forecast(const Series& x, const Series& y, Config cfg) 
   if (out_cols.size() == 1) {
     return out_cols.front().reshape({1});
   }
-  const Series forecast_2d =
-      out_cols.front().unite(std::vector<Series>(out_cols.begin() + 1, out_cols.end()), 1);
+  const Series forecast_2d = out_cols.front().unite(std::vector<Series>(out_cols.begin() + 1, out_cols.end()), 1);
   return forecast_2d.reshape({forecast_2d.sizes()[1]});
+}
+
+}  // namespace
+
+Series DirectForecaster::forecast(const Series& x, const Series& y, Config cfg) const {
+  PLUSS_CHECK(!steps_.empty(), "subsp::stats::ts::DirectForecaster::forecast: model has no fitted steps");
+  PLUSS_CHECK(!leading_requires_future_(lag_plan_),
+              "subsp::stats::ts::DirectForecaster::forecast: the model uses future values of leading predictors; pass them as x_future");
+  const auto out_cfg = work_cfg_(cfg);
+  const Series yv = as_vector_(y, "DirectForecaster::forecast").to(out_cfg.platform, out_cfg.dtype);
+  const std::int64_t nobs = yv.numel();
+  const Series design = build_lagged_predictors(x, yv, lag_plan_, out_cfg);
+  return forecast_from_design_(design, lag_plan_, steps_, options_, nobs, out_cfg);
+}
+
+Series DirectForecaster::forecast(const Series& x, const Series& y, const Series& x_future, Config cfg) const {
+  PLUSS_CHECK(!steps_.empty(), "subsp::stats::ts::DirectForecaster::forecast: model has no fitted steps");
+  const auto out_cfg = work_cfg_(cfg);
+  const Series yv = as_vector_(y, "DirectForecaster::forecast").to(out_cfg.platform, out_cfg.dtype);
+  const std::int64_t nobs = yv.numel();
+  const Series xf = as_matrix_(x_future, "DirectForecaster::forecast").to(out_cfg.platform, out_cfg.dtype);
+  const Series xm = as_matrix_(x, "DirectForecaster::forecast").to(out_cfg.platform, out_cfg.dtype);
+  PLUSS_CHECK(xf.sizes()[1] == xm.sizes()[1], "subsp::stats::ts::DirectForecaster::forecast: x_future must have the same columns as x");
+  const std::int64_t horizon_max = *std::max_element(lag_plan_.horizon.begin(), lag_plan_.horizon.end());
+  PLUSS_CHECK(!leading_requires_future_(lag_plan_) || xf.sizes()[0] >= horizon_max,
+              "subsp::stats::ts::DirectForecaster::forecast: x_future needs at least as many rows as the largest horizon");
+  const std::int64_t extra = xf.sizes()[0];
+  const Series x_ext = xm.unite({xf}, 0);
+  const Series y_ext = yv.unite({pluss::series::full({extra}, std::numeric_limits<double>::quiet_NaN(), out_cfg)}, 0);
+  const Series design = build_lagged_predictors(x_ext, y_ext, lag_plan_, out_cfg);
+  return forecast_from_design_(design, lag_plan_, steps_, options_, nobs, out_cfg);
 }
 
 Series DirectForecaster::loss(const Series& x, const Series& y, RegressionLoss kind, Config cfg) const {
@@ -287,10 +350,12 @@ Series DirectForecaster::loss(const Series& x, const Series& y, RegressionLoss k
 
   const Series y_expanded = yv.reshape({nobs, 1}).expand(std::vector<std::int64_t>{nobs, pred.sizes()[1]});
   const Series residual = pred.sub(y_expanded);
-  if (kind == RegressionLoss::MSE) {
-    return residual.mul(residual).mean(0, false).reshape({pred.sizes()[1]});
-  }
-  return residual.abs().mean(0, false).reshape({pred.sizes()[1]});
+  // Rows without a prediction (not enough history) or without an observed response are left out of the average.
+  const Series usable = residual.isfinite().to(out_cfg.platform, ScalarType::Float64);
+  const Series count = usable.sum(0, false).reshape({pred.sizes()[1]}).clamp_min(1.0);
+  const Series clean = residual.nan_to_num(0.0, 0.0, 0.0);
+  const Series per = (kind == RegressionLoss::MSE) ? clean.mul(clean).mul(usable) : clean.abs().mul(usable);
+  return per.sum(0, false).reshape({pred.sizes()[1]}).div(count);
 }
 
 const DirectStepModel& DirectForecaster::step(std::int64_t i) const {

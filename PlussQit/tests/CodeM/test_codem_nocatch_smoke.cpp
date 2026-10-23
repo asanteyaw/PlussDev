@@ -512,6 +512,7 @@ void test_storage_pool_robustness() {
 
   std::cout << "[RUN] storage_pool:toggle\n";
   ScopedEnvVar restore(env_key, "1");
+  pluss::codem::Storage::reload_pool_env();
 
   void* pooled_first = nullptr;
   {
@@ -528,6 +529,7 @@ void test_storage_pool_robustness() {
 
   {
     ScopedEnvVar disable(env_key, "off");
+    pluss::codem::Storage::reload_pool_env();
     void* disabled_ptr = nullptr;
     {
       pluss::codem::Storage s(4096, 64);
@@ -537,6 +539,7 @@ void test_storage_pool_robustness() {
     expect_true((reinterpret_cast<std::uintptr_t>(disabled_ptr) % 64) == 0, "disabled-path allocation alignment");
   }
 
+  pluss::codem::Storage::reload_pool_env();
   // Re-enabling should continue to use the previously cached pooled block.
   void* pooled_third = nullptr;
   {

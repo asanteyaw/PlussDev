@@ -1,0 +1,8 @@
+# Comparing models out of sample
+
+[Back to Direct Forecasting and Model Comparison](../ts_06_direct_forecasting.md)
+
+
+@@example Stats/time_series/guide/1226_comparing_forecasts.cpp@@
+
+Model B, which adds the lags of the exogenous series, has the lower squared error in three of the four folds. The Diebold–Mariano test on the pooled out-of-sample errors puts the mean loss difference at 0.021 with p = 0.03, so the improvement is unlikely to be chance at the 5% level. The folds show that the gain is not uniform (fold 4 favours A slightly); look at the folds as well as the test.

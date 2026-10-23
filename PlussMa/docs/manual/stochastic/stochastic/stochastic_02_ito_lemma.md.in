@@ -1,0 +1,34 @@
+# Stochastic 2: Differentials and Ito's Lemma
+
+If `X` moves by `dX = μ dt + σ dW`, then a smooth function `g(X)` moves by `dg = (g'μ + ½ g''σ²) dt + g'σ dW`. The extra `½ g''σ²` is what the ordinary chain rule misses, and it exists because `dW²` is `dt`, not zero. This chapter computes such differentials for you: you give `g`, `μ` and `σ`, and the library differentiates `g` by autodiff, so no formula for `g'` or `g''` is ever typed. After it you can get the drift and diffusion of any function of a process, with one noise source or several, for products and quotients, with explicit time dependence, and in the Stratonovich convention.
+
+## The mental model
+
+The method is `x.calc.diff.ito(g, mu, sigma)`. The receiver `x` is the state; every element is an independent point, so a whole grid or a whole batch of paths is handled in one call. `g` maps a `Series` to a `Series` of the same shape; `mu` and `sigma` give the drift and volatility at each point. The result holds `drift` and `diffusion`, both with the shape of `x` (the diffusion gains a trailing axis when there are several noise sources).
+
+```
+drift     = g'(x) μ + ½ g''(x) σ²
+diffusion = g'(x) σ
+```
+
+Stratonovich differentials, `x.calc.diff.strat(g, mu, sigma)`, use the ordinary chain rule: drift `g' μ`, no second-order term. The two are the same process written in two conventions, related by moving half of `σσ'` between the drifts.
+
+## A guided tour
+
+- [Ito's lemma for three functions](stochastic_02_ito_lemma/ito_s_lemma_for_three_functions.md)
+- [Several sources of noise](stochastic_02_ito_lemma/several_sources_of_noise.md)
+- [Products and quotients](stochastic_02_ito_lemma/products_and_quotients.md)
+- [Explicit time dependence](stochastic_02_ito_lemma/explicit_time_dependence.md)
+- [The Stratonovich convention](stochastic_02_ito_lemma/the_stratonovich_convention.md)
+- [Checking a prediction by simulation](stochastic_02_ito_lemma/checking_a_prediction_by_simulation.md)
+
+## What to remember
+
+- `ito(g, μ, σ)` returns `g'μ + ½g''σ²` and `g'σ`; `g` is differentiated by autodiff, so any smooth function works.
+- With several noise sources the diffusion has a trailing axis and the second-order term sums `σ_k²`; for two correlated states the covariation enters.
+- Time dependence goes through `ito_at`; `g` receives the time as its first argument.
+- Stratonovich is the ordinary chain rule; `strat_drift` and `ito_drift` convert a drift between conventions.
+- A differential is a prediction: check it against a simulation when the stakes warrant.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

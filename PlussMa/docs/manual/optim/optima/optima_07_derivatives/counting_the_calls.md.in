@@ -1,0 +1,10 @@
+# Counting the calls
+
+[Back to Derivatives](../optima_07_derivatives.md)
+
+
+Each way of supplying derivatives costs a different number of calls into your own functions. The four-variable benchmark is solved by sequential QP with the BFGS model and a traced gradient, with the BFGS model and a hand-written gradient, and with the exact Hessian. Every call into the objective callbacks is counted.
+
+@@example Numerical/optimization/guide/optima/85_callback_counts.cpp@@
+
+With BFGS the run takes 4 iterations and 6 calls to the objective, whether the gradient is traced or written by hand; the hand-written one appears in the `analytic` column instead, with the same count and the same answer. The exact model reaches the same optimum in 5 iterations and 7 traced calls, and adds 24 calls to the dual callback. That is 6 Hessians of 4 variables each: a Hessian is assembled from one Hessian-vector product per variable. The number of dual calls grows with the problem as `n` per iteration, which is the cost of exactness (chapter 6); a function whose evaluation is cheap, or whose curvature is learned slowly by the quasi-Newton models, can repay it. A function whose evaluation is expensive is better served by BFGS or the limited-memory model.

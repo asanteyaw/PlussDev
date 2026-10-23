@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Septima 2: Constraints &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Bounds" href="septima_02_constraints/bounds.html" />
+    <link rel="prev" title="Watching a run" href="septima_01_first_problems/watching_a_run.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from septima_02_constraints.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="septima-2-constraints">
+<h1>Septima 2: Constraints<a class="headerlink" href="#septima-2-constraints" title="Link to this heading">¶</a></h1>
+<p>Chapter 1 minimized a function with nothing in its way. Real problems have limits: a parameter must stay positive, two quantities must add up to a total, a measure must not exceed a cap. This chapter shows the three kinds of constraint Septima accepts, how each is enforced, and what to expect. After it you can state a constrained problem, read the multipliers, tell whether a constrained run has converged, and compare Septima with Optima on the same problem.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="the-mental-model">
+<h2>The mental model<a class="headerlink" href="#the-mental-model" title="Link to this heading">¶</a></h2>
+<p>Septima uses only gradients, so it enforces constraints in the way first-order methods do. It treats the three kinds differently.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Constraint</p></th>
+<th class="head"><p>Written as</p></th>
+<th class="head"><p>Enforced by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Bounds</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">constraints.lbs</span></code>, <code class="docutils literal notranslate"><span class="pre">constraints.ubs</span></code>: one <code class="docutils literal notranslate"><span class="pre">Series</span></code> per parameter block, in block order</p></td>
+<td><p><strong>projection</strong>: after every step each parameter is clipped into its bounds, so the iterates never leave the box</p></td>
+</tr>
+<tr class="row-odd"><td><p>Equalities</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">constraints.equalities</span></code>: a function from the list of blocks to a list of residual <code class="docutils literal notranslate"><span class="pre">Series</span></code>, which must be zero</p></td>
+<td><p><strong>augmented Lagrangian</strong> (the method of multipliers)</p></td>
+</tr>
+<tr class="row-even"><td><p>Inequalities</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">constraints.inequalities</span></code>: the same, with residuals that must be at most zero</p></td>
+<td><p><strong>augmented Lagrangian</strong>, with a non-negative multiplier</p></td>
+</tr>
+</tbody>
+</table>
+<p>An inequality residual is positive when the constraint is violated, as in Optima. The residual functions receive the current parameter blocks as <code class="docutils literal notranslate"><span class="pre">Series</span></code> and return a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;Series&gt;</span></code>; a residual may itself be a vector, with one entry per constraint.</p>
+<p>The augmented Lagrangian adds to the objective, for each equality residual <code class="docutils literal notranslate"><span class="pre">h</span></code>, the terms <code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">*</span> <span class="pre">h</span> <span class="pre">+</span> <span class="pre">0.5</span> <span class="pre">*</span> <span class="pre">rho</span> <span class="pre">*</span> <span class="pre">h^2</span></code>, and for each inequality residual <code class="docutils literal notranslate"><span class="pre">h</span></code> the term <code class="docutils literal notranslate"><span class="pre">(max(0,</span> <span class="pre">lambda</span> <span class="pre">+</span> <span class="pre">rho</span> <span class="pre">*</span> <span class="pre">h)^2</span> <span class="pre">-</span> <span class="pre">lambda^2)</span> <span class="pre">/</span> <span class="pre">(2</span> <span class="pre">*</span> <span class="pre">rho)</span></code>, which is flat while the constraint is comfortably slack and grows once it is violated. <code class="docutils literal notranslate"><span class="pre">rho</span></code> is the <strong>penalty</strong>, <code class="docutils literal notranslate"><span class="pre">lambda</span></code> the <strong>multiplier</strong>. The run is organised in cycles:</p>
+<ol class="arabic simple">
+<li><p><strong>Solve.</strong> The optimizer (Adam or L-BFGS) works on the augmented function, with the multipliers held fixed.</p></li>
+<li><p><strong>Update.</strong> Once that function is solved well enough, each multiplier moves by the penalty times its residual: <code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">+=</span> <span class="pre">rho</span> <span class="pre">*</span> <span class="pre">h</span></code> for an equality, <code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">=</span> <span class="pre">max(0,</span> <span class="pre">lambda</span> <span class="pre">+</span> <span class="pre">rho</span> <span class="pre">*</span> <span class="pre">h)</span></code> for an inequality. “Well enough” means that the stationarity of the augmented function is at most <code class="docutils literal notranslate"><span class="pre">dual_update_ratio</span></code> (0.1) times the larger of the current violation and the multipliers’ distance from complementarity, or that the optimizer can no longer move, or that <code class="docutils literal notranslate"><span class="pre">dual_update_max_steps</span></code> (50) steps have passed.</p></li>
+<li><p><strong>Raise the penalty if needed.</strong> If, after an update that followed a solved inner problem, the violation is still more than <code class="docutils literal notranslate"><span class="pre">penalty_growth_trigger</span></code> (a quarter) of what it was at the previous update, the penalty is multiplied by <code class="docutils literal notranslate"><span class="pre">penalty_growth</span></code> (10), up to <code class="docutils literal notranslate"><span class="pre">max_penalty</span></code>. A penalty that was too small for the problem is therefore raised by the run itself.</p></li>
+</ol>
+<p>At the answer the multipliers are the Lagrange multipliers, the prices of the constraints. The solver reports convergence when <code class="docutils literal notranslate"><span class="pre">stationarity</span></code> (defined in chapter 1: the gradient of the augmented problem with the components that an active bound blocks removed), the last step and <code class="docutils literal notranslate"><span class="pre">constraint_violation</span></code> are all within tolerance.</p>
+<p>Because the penalty and the multiplier step set themselves, the settings rarely need tuning. The starting penalty (<code class="docutils literal notranslate"><span class="pre">equality_penalty</span></code> and <code class="docutils literal notranslate"><span class="pre">inequality_penalty</span></code>, default 10) matters little, as Program 2 shows.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="septima_02_constraints/bounds.html"><span class="std std-doc">Bounds</span></a></p></li>
+<li><p><a class="reference internal" href="septima_02_constraints/an_equality_constraint.html"><span class="std std-doc">An equality constraint</span></a></p></li>
+<li><p><a class="reference internal" href="septima_02_constraints/an_inequality_constraint.html"><span class="std std-doc">An inequality constraint</span></a></p></li>
+<li><p><a class="reference internal" href="septima_02_constraints/the_same_problem_in_both_solvers.html"><span class="std std-doc">The same problem in both solvers</span></a></p></li>
+</ul>
+</section>
+<section id="settings-you-will-use">
+<h2>Settings you will use<a class="headerlink" href="#settings-you-will-use" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting (in <code class="docutils literal notranslate"><span class="pre">options.step</span></code> unless noted)</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">equality_penalty</span></code>, <code class="docutils literal notranslate"><span class="pre">inequality_penalty</span></code></p></td>
+<td><p>starting weight of the quadratic penalty</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dual_learning_rate</span></code></p></td>
+<td><p>step of the multiplier update; 0 means the penalty itself</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dual_update_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">dual_update_max_steps</span></code>, <code class="docutils literal notranslate"><span class="pre">dual_update_floor</span></code></p></td>
+<td><p>when the augmented problem counts as solved</p></td>
+<td><p>0.1, 50, 1e-10</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">penalty_growth</span></code>, <code class="docutils literal notranslate"><span class="pre">penalty_growth_trigger</span></code>, <code class="docutils literal notranslate"><span class="pre">max_penalty</span></code></p></td>
+<td><p>when and how the run raises the penalty; a growth of 1 keeps it fixed</p></td>
+<td><p>10, 0.25, 1e8</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">project_bounds</span></code></p></td>
+<td><p>clip into bounds after every step; if <code class="docutils literal notranslate"><span class="pre">false</span></code> the bounds are only measured</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">enable_constraint_autodiff</span></code></p></td>
+<td><p>include the penalty and multiplier terms in the gradient; if <code class="docutils literal notranslate"><span class="pre">false</span></code> only bounds are enforced</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">constraint_tolerance</span></code> (in the solve options)</p></td>
+<td><p>violation allowed at convergence</p></td>
+<td><p>1e-6</p></td>
+</tr>
+</tbody>
+</table>
+<p>The multipliers are in <code class="docutils literal notranslate"><span class="pre">result.state.lambda_equalities</span></code> and <code class="docutils literal notranslate"><span class="pre">result.state.lambda_inequalities</span></code>, one <code class="docutils literal notranslate"><span class="pre">Series</span></code> per residual function, shaped like the residuals. <code class="docutils literal notranslate"><span class="pre">result.state.penalty_scale</span></code> is the factor by which the run raised the penalty, and <code class="docutils literal notranslate"><span class="pre">result.state.dual_updates</span></code> the number of multiplier updates.</p>
+</section>
+<section id="what-to-remember">
+<h2>What to remember<a class="headerlink" href="#what-to-remember" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Bounds are enforced exactly, by clipping. Equalities and inequalities are enforced by the method of multipliers, and converge to the true solution and the true multipliers.</p></li>
+<li><p>The schedule sets itself: the multiplier step is the penalty, the multipliers are updated once the augmented problem is solved, and the penalty is raised when the violation does not shrink. The starting penalty rarely matters.</p></li>
+<li><p>A converged multiplier is the true Lagrange multiplier, so Septima can report the price of each constraint.</p></li>
+<li><p>Read <code class="docutils literal notranslate"><span class="pre">stationarity</span></code> for optimality and <code class="docutils literal notranslate"><span class="pre">constraint_violation</span></code> for feasibility. The solver’s violation ends near its tolerance (1e-6), looser than Optima’s.</p></li>
+<li><p>Do not override <code class="docutils literal notranslate"><span class="pre">dual_learning_rate</span></code> with a value far below the penalty: the run then inflates the penalty and the multipliers stay wrong.</p></li>
+<li><p>For a small problem with nonlinear constraints that must hold to high precision, Optima needs far fewer evaluations.</p></li>
+</ul>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/septima/septima_02_constraints.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

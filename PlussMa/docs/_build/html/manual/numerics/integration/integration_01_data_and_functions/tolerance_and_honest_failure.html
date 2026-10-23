@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tolerance and honest failure &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Integration 2: Beyond One Interval" href="../integration_02_beyond_one_interval.html" />
+    <link rel="prev" title="The rules" href="the_rules.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from tolerance_and_honest_failure.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="tolerance-and-honest-failure">
+<h1>Tolerance and honest failure<a class="headerlink" href="#tolerance-and-honest-failure" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../integration_01_data_and_functions.html"><span class="std std-doc">Back to Data and Functions</span></a></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cmath&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">integ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">integ</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">f64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
+<span class="n">Series</span><span class="w"> </span><span class="nf">vec</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">())}).</span><span class="n">to</span><span class="p">(</span><span class="n">f64</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">pi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.14159265358979323846</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="nf">rule_name</span><span class="p">(</span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraRule</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">case</span><span class="w"> </span><span class="no">integ</span><span class="o">::</span><span class="no">QuadraRule</span><span class="o">::</span><span class="no">Trapezoidal</span><span class="p">:</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;Trapezoidal&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">case</span><span class="w"> </span><span class="no">integ</span><span class="o">::</span><span class="no">QuadraRule</span><span class="o">::</span><span class="no">Simpson</span><span class="p">:</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;Simpson&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">case</span><span class="w"> </span><span class="no">integ</span><span class="o">::</span><span class="no">QuadraRule</span><span class="o">::</span><span class="no">GaussLegendre</span><span class="p">:</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;GaussLegendre&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">default</span><span class="o">:</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;Auto&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">integ</span><span class="o">::</span><span class="n">IntegrandFn</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sqrt</span><span class="p">();</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;setting&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;converged&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;evaluations&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;error estimate&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;actual error</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraOptions</span><span class="w"> </span><span class="n">o</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">integ</span><span class="o">::</span><span class="n">quadra</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">o</span><span class="p">);</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">converged</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">evaluations</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">scientific</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">error_estimate</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">3.0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">defaultfloat</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraOptions</span><span class="w"> </span><span class="n">simpson</span><span class="p">;</span>
+<span class="w">  </span><span class="n">simpson</span><span class="p">.</span><span class="n">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraRule</span><span class="o">::</span><span class="n">Simpson</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Simpson, tolerance 1e-10&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">simpson</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">loose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">simpson</span><span class="p">;</span><span class="w"> </span><span class="n">loose</span><span class="p">.</span><span class="n">tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Simpson, tolerance 1e-6&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">loose</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">more</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">simpson</span><span class="p">;</span><span class="w"> </span><span class="n">more</span><span class="p">.</span><span class="n">max_refinements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Simpson, 16 refinements allowed&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">more</span><span class="p">);</span>
+<span class="w">  </span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraOptions</span><span class="w"> </span><span class="n">gl</span><span class="p">;</span>
+<span class="w">  </span><span class="n">gl</span><span class="p">.</span><span class="n">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraRule</span><span class="o">::</span><span class="n">GaussLegendre</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;GaussLegendre, tolerance 1e-10&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">gl</span><span class="p">);</span>
+<span class="w">  </span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraOptions</span><span class="w"> </span><span class="n">automatic</span><span class="p">;</span>
+<span class="w">  </span><span class="n">automatic</span><span class="p">.</span><span class="n">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">integ</span><span class="o">::</span><span class="n">QuadraRule</span><span class="o">::</span><span class="n">Auto</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Auto (tries Gauss-Legendre first)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">automatic</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">fixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">simpson</span><span class="p">;</span><span class="w"> </span><span class="n">fixed</span><span class="p">.</span><span class="n">adaptive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="n">fixed</span><span class="p">.</span><span class="n">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1025</span><span class="p">;</span>
+<span class="w">  </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Simpson, fixed 1025 nodes&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fixed</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>setting                           converged  evaluations  error estimate  actual error
+Simpson, tolerance 1e-10          no         526091       1.1e-09         6.0e-10
+Simpson, tolerance 1e-6           yes        7973         5.6e-07         3.1e-07
+Simpson, 16 refinements allowed   yes        4210446      4.9e-11         2.7e-11
+GaussLegendre, tolerance 1e-10    no         327520       1.9e-10         1.1e-10
+Auto (tries Gauss-Legendre first) no         1379701      2.8e-09         1.5e-09
+Simpson, fixed 1025 nodes         yes        1027         inf             2.5e-06
+</pre></div>
+</div>
+<p>The integral of <code class="docutils literal notranslate"><span class="pre">sqrt(x)</span></code> has an infinite slope at 0, which slows every rule. Under the default settings Simpson, Gauss–Legendre and <code class="docutils literal notranslate"><span class="pre">Auto</span></code> end with <code class="docutils literal notranslate"><span class="pre">converged</span></code> false, yet their values are accurate to 1e-9: the estimate sits just above the 1e-10 tolerance. Read <code class="docutils literal notranslate"><span class="pre">converged</span></code> together with <code class="docutils literal notranslate"><span class="pre">error_estimate</span></code>: a loose tolerance (1e-6) converges cheaply, a larger refinement allowance converges at great cost, and a fixed node count (<code class="docutils literal notranslate"><span class="pre">adaptive</span></code> off) gives no estimate at all (<code class="docutils literal notranslate"><span class="pre">inf</span></code>) but, here, still 2.5e-6 accuracy. <code class="docutils literal notranslate"><span class="pre">Auto</span></code> tries Gauss–Legendre, then Simpson, then the trapezoid rule, so on a failing integrand it spends the effort of all three.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/numerics/integration/integration_01_data_and_functions/tolerance_and_honest_failure.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

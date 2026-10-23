@@ -1,0 +1,33 @@
+# Time Series 7: Plots
+
+The most useful plots of a time series are the autocorrelation plots, which suggest the structure of a model, and the plots of the residuals, which tell whether the model has captured it. `pluss::subsp::stats::ts::plot` provides both, in two forms: functions that return the plotted numbers (`*_payload`), and functions that draw them into a `pluss::pl::Studio` figure, which can be saved as SVG, PDF or PNG (`save_svg(path)`, `save_pdf(path)`, `save_png(path, dpi)`). After this chapter you can draw autocorrelation and residual plots and read them.
+
+Every program is complete and its output is the output of that program. The programs save their figures when the environment variable `PLUSSMA_GUIDE_ASSETS` names a directory, which is how the pictures below were made.
+
+## The functions
+
+| Function | Result |
+|---|---|
+| `plot::acf_payload(x, CorrPlotOptions)` | `CorrPlotPayload`: `lags`, `values` (the autocorrelations) and the band limits `conf_low`, `conf_high` |
+| `plot::pacf_payload(x, CorrPlotOptions)` | the same for the partial autocorrelations |
+| `plot::residuals_payload(r)` | `ResidualPlotPayload`: `index` and `residuals` |
+| `plot::acf(studio, x, options)` | draws the autocorrelation stems, the band and the zero line into `studio` and returns it |
+| `plot::pacf(studio, x, options)` | the same for the partial autocorrelations |
+| `plot::residuals(studio, r, ResidualPlotOptions)` | draws the residuals against time (`show_zero_line`, `trace_width`) |
+
+`CorrPlotOptions`: `max_lag` (default 20), `norm` (`AcfNorm::Biased` or `Unbiased`), `demean` (true), `include_zero_lag` (false), `show_confidence_band` (true), `confidence_level` (0.95), `trace_width`. The band is the white-noise band `±z/√n`, with `z` the normal quantile of `confidence_level` (so 1.96/√n at 95%): under no autocorrelation about one bar in twenty lies outside it. The autocorrelations are the biased estimates by default (the form used by the Ljung–Box test) and the partial autocorrelations come from the Yule–Walker equations.
+
+## Programs
+
+- [Autocorrelation and partial autocorrelation](ts_07_plots/autocorrelation_and_partial_autocorrelation.md)
+- [Plots of the residuals](ts_07_plots/plots_of_the_residuals.md)
+
+## Checklist
+
+1. Plot the autocorrelation and partial autocorrelation of the (differenced) series first: a geometric decay with a cut-off in the partial plot suggests an autoregression, the reverse a moving average.
+2. After fitting, plot the autocorrelation of the residuals: bars outside the band beyond the chance rate mean structure is left.
+3. Look at the residual series itself for changing variance or outliers (and test the squares for ARCH effects; Chapter 3).
+4. Use the `*_payload` functions when you want the numbers for your own plotting or tables.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

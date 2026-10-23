@@ -1,0 +1,11 @@
+# Warm starts and options
+
+[Back to Quadratic Programming](../qp_01_quadratic_programs.md)
+
+
+@@example Numerical/optimization/guide/qp/514_warm_start_and_options.cpp@@
+
+- **Warm start.** A slightly changed problem restarted from the previous `warm()` takes fewer iterations than a cold start (50 against 80 here). The benefit grows with how close the new problem is, which is the situation in model predictive control.
+- **Tolerances** trade iterations for accuracy: 1e-9 doubles the work and gains four digits; 1e-3 halves it and loses two.
+- **Penalty.** The starting `rho` hardly matters, because the penalty is rebalanced during the run: starts spanning three orders of magnitude (0.005, 0.1, 5) all converge within about a hundred iterations. Switch `adaptive_rho` off and the starting value matters a great deal; a poor one needs several times the iterations, or fails within the cap.
+- **Iteration cap.** Stopping at the cap returns the current iterate with `converged` false. Check it.

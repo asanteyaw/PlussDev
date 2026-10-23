@@ -15,7 +15,7 @@ AtlasLabelAccessor::reset() const -> Atlas
 
 Returns a copy of the bound atlas with its depth-axis labels cleared back to the default
 integer sequence `0, 1, 2, ..., depth() - 1` — the depth-axis counterpart to
-[`DataFrame::label().reset()`](../dataframe-label/reset.md).
+[`DataFrame::labels().reset()`](../dataframe-label/reset.md).
 
 ## Parameters
 

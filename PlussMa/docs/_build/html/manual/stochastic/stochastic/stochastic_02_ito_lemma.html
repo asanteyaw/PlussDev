@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Stochastic 2: Differentials and Ito’s Lemma &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Ito’s lemma for three functions" href="stochastic_02_ito_lemma/ito_s_lemma_for_three_functions.html" />
+    <link rel="prev" title="Is it a standard Wiener path?" href="stochastic_01_integrals/is_it_a_standard_wiener_path.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from stochastic_02_ito_lemma.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="stochastic-2-differentials-and-ito-s-lemma">
+<h1>Stochastic 2: Differentials and Ito’s Lemma<a class="headerlink" href="#stochastic-2-differentials-and-ito-s-lemma" title="Link to this heading">¶</a></h1>
+<p>If <code class="docutils literal notranslate"><span class="pre">X</span></code> moves by <code class="docutils literal notranslate"><span class="pre">dX</span> <span class="pre">=</span> <span class="pre">μ</span> <span class="pre">dt</span> <span class="pre">+</span> <span class="pre">σ</span> <span class="pre">dW</span></code>, then a smooth function <code class="docutils literal notranslate"><span class="pre">g(X)</span></code> moves by <code class="docutils literal notranslate"><span class="pre">dg</span> <span class="pre">=</span> <span class="pre">(g'μ</span> <span class="pre">+</span> <span class="pre">½</span> <span class="pre">g''σ²)</span> <span class="pre">dt</span> <span class="pre">+</span> <span class="pre">g'σ</span> <span class="pre">dW</span></code>. The extra <code class="docutils literal notranslate"><span class="pre">½</span> <span class="pre">g''σ²</span></code> is what the ordinary chain rule misses, and it exists because <code class="docutils literal notranslate"><span class="pre">dW²</span></code> is <code class="docutils literal notranslate"><span class="pre">dt</span></code>, not zero. This chapter computes such differentials for you: you give <code class="docutils literal notranslate"><span class="pre">g</span></code>, <code class="docutils literal notranslate"><span class="pre">μ</span></code> and <code class="docutils literal notranslate"><span class="pre">σ</span></code>, and the library differentiates <code class="docutils literal notranslate"><span class="pre">g</span></code> by autodiff, so no formula for <code class="docutils literal notranslate"><span class="pre">g'</span></code> or <code class="docutils literal notranslate"><span class="pre">g''</span></code> is ever typed. After it you can get the drift and diffusion of any function of a process, with one noise source or several, for products and quotients, with explicit time dependence, and in the Stratonovich convention.</p>
+<section id="the-mental-model">
+<h2>The mental model<a class="headerlink" href="#the-mental-model" title="Link to this heading">¶</a></h2>
+<p>The method is <code class="docutils literal notranslate"><span class="pre">x.calc.diff.ito(g,</span> <span class="pre">mu,</span> <span class="pre">sigma)</span></code>. The receiver <code class="docutils literal notranslate"><span class="pre">x</span></code> is the state; every element is an independent point, so a whole grid or a whole batch of paths is handled in one call. <code class="docutils literal notranslate"><span class="pre">g</span></code> maps a <code class="docutils literal notranslate"><span class="pre">Series</span></code> to a <code class="docutils literal notranslate"><span class="pre">Series</span></code> of the same shape; <code class="docutils literal notranslate"><span class="pre">mu</span></code> and <code class="docutils literal notranslate"><span class="pre">sigma</span></code> give the drift and volatility at each point. The result holds <code class="docutils literal notranslate"><span class="pre">drift</span></code> and <code class="docutils literal notranslate"><span class="pre">diffusion</span></code>, both with the shape of <code class="docutils literal notranslate"><span class="pre">x</span></code> (the diffusion gains a trailing axis when there are several noise sources).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">drift</span>     <span class="o">=</span> <span class="n">g</span><span class="s1">&#39;(x) μ + ½ g&#39;&#39;(x) σ²</span>
+<span class="n">diffusion</span> <span class="o">=</span> <span class="n">g</span><span class="s1">&#39;(x) σ</span>
+</pre></div>
+</div>
+<p>Stratonovich differentials, <code class="docutils literal notranslate"><span class="pre">x.calc.diff.strat(g,</span> <span class="pre">mu,</span> <span class="pre">sigma)</span></code>, use the ordinary chain rule: drift <code class="docutils literal notranslate"><span class="pre">g'</span> <span class="pre">μ</span></code>, no second-order term. The two are the same process written in two conventions, related by moving half of <code class="docutils literal notranslate"><span class="pre">σσ'</span></code> between the drifts.</p>
+</section>
+<section id="a-guided-tour">
+<h2>A guided tour<a class="headerlink" href="#a-guided-tour" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="stochastic_02_ito_lemma/ito_s_lemma_for_three_functions.html"><span class="std std-doc">Ito’s lemma for three functions</span></a></p></li>
+<li><p><a class="reference internal" href="stochastic_02_ito_lemma/several_sources_of_noise.html"><span class="std std-doc">Several sources of noise</span></a></p></li>
+<li><p><a class="reference internal" href="stochastic_02_ito_lemma/products_and_quotients.html"><span class="std std-doc">Products and quotients</span></a></p></li>
+<li><p><a class="reference internal" href="stochastic_02_ito_lemma/explicit_time_dependence.html"><span class="std std-doc">Explicit time dependence</span></a></p></li>
+<li><p><a class="reference internal" href="stochastic_02_ito_lemma/the_stratonovich_convention.html"><span class="std std-doc">The Stratonovich convention</span></a></p></li>
+<li><p><a class="reference internal" href="stochastic_02_ito_lemma/checking_a_prediction_by_simulation.html"><span class="std std-doc">Checking a prediction by simulation</span></a></p></li>
+</ul>
+</section>
+<section id="what-to-remember">
+<h2>What to remember<a class="headerlink" href="#what-to-remember" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ito(g,</span> <span class="pre">μ,</span> <span class="pre">σ)</span></code> returns <code class="docutils literal notranslate"><span class="pre">g'μ</span> <span class="pre">+</span> <span class="pre">½g''σ²</span></code> and <code class="docutils literal notranslate"><span class="pre">g'σ</span></code>; <code class="docutils literal notranslate"><span class="pre">g</span></code> is differentiated by autodiff, so any smooth function works.</p></li>
+<li><p>With several noise sources the diffusion has a trailing axis and the second-order term sums <code class="docutils literal notranslate"><span class="pre">σ_k²</span></code>; for two correlated states the covariation enters.</p></li>
+<li><p>Time dependence goes through <code class="docutils literal notranslate"><span class="pre">ito_at</span></code>; <code class="docutils literal notranslate"><span class="pre">g</span></code> receives the time as its first argument.</p></li>
+<li><p>Stratonovich is the ordinary chain rule; <code class="docutils literal notranslate"><span class="pre">strat_drift</span></code> and <code class="docutils literal notranslate"><span class="pre">ito_drift</span></code> convert a drift between conventions.</p></li>
+<li><p>A differential is a prediction: check it against a simulation when the stakes warrant.</p></li>
+</ul>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/stochastic/stochastic/stochastic_02_ito_lemma.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

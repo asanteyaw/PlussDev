@@ -540,82 +540,23 @@ double positive_or_(double v, double fallback) {
   return (std::isfinite(v) && v > 0.0) ? v : fallback;
 }
 
-bool is_pow2_(std::int64_t n) {
-  return n > 0 && (n & (n - 1)) == 0;
-}
-
 std::int64_t next_pow2_(std::int64_t n) {
+  PLUSS_CHECK(n > 0, "subsp::math::finance::pricing: FFT length must be positive");
   std::int64_t out = 1;
   while (out < n) {
+    PLUSS_CHECK(out <= std::numeric_limits<std::int64_t>::max() / 2,
+                "subsp::math::finance::pricing: FFT length is too large");
     out <<= 1;
   }
   return out;
 }
 
-void fft_radix2_(std::vector<std::complex<double>>& a, bool inverse) {
-  const auto n = static_cast<std::int64_t>(a.size());
-  for (std::int64_t i = 1, j = 0; i < n; ++i) {
-    std::int64_t bit = n >> 1;
-    while (j & bit) {
-      j ^= bit;
-      bit >>= 1;
-    }
-    j ^= bit;
-    if (i < j) {
-      std::swap(a[static_cast<std::size_t>(i)], a[static_cast<std::size_t>(j)]);
-    }
-  }
-
-  for (std::int64_t len = 2; len <= n; len <<= 1) {
-    const double ang = (inverse ? 2.0 : -2.0) * kPi / static_cast<double>(len);
-    const std::complex<double> wlen(std::cos(ang), std::sin(ang));
-    for (std::int64_t i = 0; i < n; i += len) {
-      std::complex<double> w(1.0, 0.0);
-      const auto half = len >> 1;
-      for (std::int64_t j = 0; j < half; ++j) {
-        const auto u = a[static_cast<std::size_t>(i + j)];
-        const auto v = a[static_cast<std::size_t>(i + j + half)] * w;
-        a[static_cast<std::size_t>(i + j)] = u + v;
-        a[static_cast<std::size_t>(i + j + half)] = u - v;
-        w *= wlen;
-      }
-    }
-  }
-
-  if (inverse) {
-    const double inv_n = 1.0 / static_cast<double>(n);
-    for (auto& z : a) {
-      z *= inv_n;
-    }
-  }
-}
-
-void dft_fallback_(std::vector<std::complex<double>>& a, bool inverse) {
-  const auto n = static_cast<std::int64_t>(a.size());
-  std::vector<std::complex<double>> src = a;
-  const double sign = inverse ? 1.0 : -1.0;
-  for (std::int64_t k = 0; k < n; ++k) {
-    std::complex<double> acc(0.0, 0.0);
-    for (std::int64_t t = 0; t < n; ++t) {
-      const double ang = sign * 2.0 * kPi * static_cast<double>(k * t) / static_cast<double>(n);
-      acc += src[static_cast<std::size_t>(t)] * std::complex<double>(std::cos(ang), std::sin(ang));
-    }
-    a[static_cast<std::size_t>(k)] = acc;
-  }
-  if (inverse) {
-    const double inv_n = 1.0 / static_cast<double>(n);
-    for (auto& z : a) {
-      z *= inv_n;
-    }
-  }
-}
-
-void fft_any_(std::vector<std::complex<double>>& a, bool inverse) {
-  if (is_pow2_(static_cast<std::int64_t>(a.size()))) {
-    fft_radix2_(a, inverse);
-    return;
-  }
-  dft_fallback_(a, inverse);
+std::vector<std::complex<double>> fourier_(
+    const std::vector<std::complex<double>>& values, bool inverse) {
+  const auto n = static_cast<std::int64_t>(values.size());
+  const Series input = pluss::make_series(values, {n});
+  const Series output = inverse ? input.ifft() : input.fft();
+  return output.to_vec<std::complex<double>>();
 }
 
 std::vector<std::complex<double>> frft_(const std::vector<std::complex<double>>& x, double a) {
@@ -633,18 +574,13 @@ std::vector<std::complex<double>> frft_(const std::vector<std::complex<double>>&
     v[static_cast<std::size_t>(t + n - 1)] = std::complex<double>(std::cos(phase), std::sin(phase));
   }
 
-  auto fu = u;
-  auto fv = v;
-  fft_any_(fu, false);
-  fft_any_(fv, false);
-  for (std::int64_t i = 0; i < m; ++i) {
-    fu[static_cast<std::size_t>(i)] *= fv[static_cast<std::size_t>(i)];
-  }
-  fft_any_(fu, true);
+  const Series fu = pluss::make_series(u, {m}).fft();
+  const Series fv = pluss::make_series(v, {m}).fft();
+  const auto convolution = fu.mul(fv).ifft().to_vec<std::complex<double>>();
 
   std::vector<std::complex<double>> out(static_cast<std::size_t>(n), {0.0, 0.0});
   for (std::int64_t k = 0; k < n; ++k) {
-    const auto wk = fu[static_cast<std::size_t>(k + n - 1)];
+    const auto wk = convolution[static_cast<std::size_t>(k + n - 1)];
     const double phase = -kPi * a * static_cast<double>(k * k);
     out[static_cast<std::size_t>(k)] = wk * std::complex<double>(std::cos(phase), std::sin(phase));
   }
@@ -731,8 +667,7 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
 
   std::vector<std::complex<double>> transform;
   if (std::abs(frft_param - fft_param) < 1e-14) {
-    transform = x;
-    fft_any_(transform, false);
+    transform = fourier_(x, false);
   } else {
     transform = frft_(x, frft_param);
   }

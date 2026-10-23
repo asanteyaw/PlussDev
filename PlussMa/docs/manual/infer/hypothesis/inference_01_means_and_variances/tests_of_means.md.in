@@ -1,0 +1,8 @@
+# Tests of means
+
+[Back to Means and Variances](../inference_01_means_and_variances.md)
+
+
+@@example Stats/inference/guide/1101_t_tests.cpp@@
+
+How to read the output. Machine A is clearly above target: the mean is 5.6125, the t statistic 3.57 on 7 degrees of freedom, the p-value 0.0091, and the 95% interval [5.21, 6.02] excludes 5.0. Machine B is not distinguishable from the target (p = 0.84). Comparing the machines, the pooled-variance test gives p = 0.0088 and Welch's test, which does not assume equal variances and uses fewer, fractional degrees of freedom (11.8), gives a slightly larger p = 0.0127. Prefer Welch's test unless you have a reason to believe the variances are equal; here both agree. The paired test uses the same cups in the same order, which is a different design: it tests the mean of the differences, with 7 degrees of freedom for 8 pairs, and is only appropriate when each element of `x` is matched to the same-index element of `y`.

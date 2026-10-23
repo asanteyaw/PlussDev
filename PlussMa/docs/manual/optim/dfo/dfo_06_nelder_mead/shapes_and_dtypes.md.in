@@ -1,0 +1,8 @@
+# Shapes and dtypes
+
+[Back to The Nelder–Mead Minimiser](../dfo_06_nelder_mead.md)
+
+
+@@example Numerical/optimization/guide/dfo/354_nelder_mead_shapes_and_dtypes.cpp@@
+
+The shape you give is the shape you get back, and the objective always receives that shape, so matrix-valued parameters need no flattening code of your own.

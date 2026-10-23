@@ -226,7 +226,7 @@ auto schema = sales.rename("units", "quantity")
                  .reorder({"city", "price", "quantity"});
 std::cout << schema.to_string() << '\n';
 
-auto city_cases = sales.label().set("city", true);
+auto city_cases = sales.labels().set("city", true);
 std::cout << city_cases.features({"region", "units"}).to_string() << '\n';
 
 auto reset = city_cases.label().reset("city_case").features({"city_case", "units"});

@@ -1,0 +1,174 @@
+# Fitting an ARIMA model
+
+[Back to ARIMA Models](../ts_02_arima_models.md)
+
+Fitting an ARIMA model means choosing the autoregressive and moving-average coefficients that make the observed series most probable. `Arima::fit_mle` does this by maximising the exact Gaussian likelihood, which is evaluated with a Kalman filter started from the stationary distribution of the process. This page shows what a fit returns, how to judge whether it is believable, and how the three main knobs (the orders, differencing and the likelihood) change the answer.
+
+You tell the fitter only the *shape* of the model, through `ArimaOptions`: `ar_order` (p), `diff_order` (d) and `ma_order` (q). Everything else, the coefficients, the innovation standard deviation and the mean, is estimated. The coefficients are searched in a parameterisation that is stationary and invertible by construction, so the result is always a model you can forecast and simulate with.
+
+## Recover a known model
+
+The fastest way to learn what a fit tells you is to fit data whose truth you know. An `ArimaFit` can be filled in by hand and asked to `simulate`, so the program below draws 400 observations from an AR(1) with coefficient 0.7 and innovation standard deviation 0.5, then fits an AR(1) back to them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  ts::ArimaFit truth;
+  truth.ar = {0.7};
+  truth.sigma = 0.5;
+  const Series y = truth.simulate(400, f64, /*seed=*/11);
+
+  ts::ArimaOptions o;
+  o.ar_order = 1;
+  const ts::ArimaFit fit = ts::Arima::fit_mle(y, o, f64);
+
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "ar[0]      " << fit.ar[0] << "   (true 0.7000)\n";
+  std::cout << "sigma      " << fit.sigma << "   (true 0.5000)\n";
+  std::cout << "mean       " << fit.mean << "\n";
+  std::cout << "log-lik    " << fit.loglik(y) << "\n";
+}
+```
+
+The estimate lands near the truth, and how near is a statement about the sample, not about the model: with 400 observations the standard error of an AR(1) coefficient is about √((1 − 0.7²)/400) ≈ 0.036, so an estimate within a couple of hundredths of 0.7 is the normal case, and a different `seed` moves it by about that much. `mean` is the sample mean that was removed before fitting (`demean` is on by default); the coefficients describe the series around that level.
+
+## How precisely are the coefficients known?
+
+A point estimate without a spread is hard to act on. `observed_inf(y)` returns the observed information matrix, minus the Hessian of the log-likelihood at the fit, and the square roots of the diagonal of its inverse are the standard errors of the estimates. The rows and columns follow the order of `score`: the intercept, the autoregressive coefficients, the seasonal autoregressive coefficients, the moving-average coefficients, the seasonal moving-average coefficients and the regression coefficients. (The innovation variance is concentrated out of the likelihood, so it has no row.)
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  ts::ArimaFit truth;
+  truth.ar = {0.5};
+  truth.ma = {0.4};
+  truth.sigma = 1.0;
+  const Series y = truth.simulate(600, f64, /*seed=*/5);
+
+  ts::ArimaOptions o;
+  o.ar_order = 1;
+  o.ma_order = 1;
+  const ts::ArimaFit fit = ts::Arima::fit_mle(y, o, f64);
+
+  const Series info = fit.observed_inf(y, f64);
+  const Series cov = pluss::subsp::math::linalg::inverse(info);
+
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "parameters in the information matrix: " << info.size(0) << "\n";
+  std::cout << "intercept  " << fit.intercept << "  se " << std::sqrt(cov.index({0, 0}).item<double>()) << "\n";
+  std::cout << "ar[0]      " << fit.ar[0] << "  se " << std::sqrt(cov.index({1, 1}).item<double>()) << "\n";
+  std::cout << "ma[0]      " << fit.ma[0] << "  se " << std::sqrt(cov.index({2, 2}).item<double>()) << "\n";
+}
+```
+
+Read each estimate with its standard error: a coefficient more than two standard errors from zero is clearly present, and the true value (0.5 and 0.4 here) usually falls within two or three standard errors of the estimate (here the autoregressive estimate, 0.38, sits 2.4 standard errors below 0.5, which a single sample can do). The three parameters are estimated together, so the errors are larger than they would be for a model with one of the terms known. The ARMA(1,1) form is the one where this bites hardest: when the autoregressive and moving-average coefficients are close, the two factors nearly cancel and both become hard to pin down, which is a practical reason to prefer the smaller model when two fits explain the data about equally well.
+
+## Differencing inside the fit
+
+A series with a stochastic trend is not stationary, and fitting a stationary ARMA to its level gives coefficients pinned near the unit circle. Setting `diff_order = 1` makes the fitter difference the series first and model the changes; `forecast` later integrates the forecasts back to the level of the original series, so you never difference by hand.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  // A random walk with drift: the changes are AR(1) around a nonzero level.
+  ts::ArimaFit changes;
+  changes.ar = {0.4};
+  changes.intercept = 0.3;
+  changes.sigma = 1.0;
+  const Series dy = changes.simulate(300, f64, /*seed=*/3);
+  const Series y = dy.cumsum(0);
+
+  ts::ArimaOptions o;
+  o.ar_order = 1;
+  o.diff_order = 1;
+  const ts::ArimaFit fit = ts::Arima::fit_mle(y, o, f64);
+
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "ar[0]      " << fit.ar[0] << "   (true 0.4000)\n";
+  std::cout << "diff_order " << fit.diff_order << "\n";
+  const Series next = fit.forecast(3, y, f64);
+  std::cout << "last level " << y.index({y.size(0) - 1}).item<double>() << "\n";
+  std::cout << "forecasts  ";
+  for (int i = 0; i < 3; ++i) std::cout << next.index({i}).item<double>() << " ";
+  std::cout << "\n";
+}
+```
+
+The forecasts continue from the last observed *level*, and they keep rising because the model has a drift: after one difference the series is stationary around a positive mean, and integrating a positive mean produces a trend. Fitting a stationary model to the level of such a series would instead pull the autoregressive coefficient toward 1 and give forecasts that revert to a mean, which is the wrong picture for a trending series.
+
+## Exact or conditional likelihood
+
+By default the likelihood is exact, which uses every observation including the first few. Setting `exact_likelihood = false` switches to the conditional likelihood, which treats the first `max(p, q)` observations as given and is the faster, older recipe. The two agree closely on long series and differ on short ones, where the exact version is the more reliable because it does not discard information.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  ts::ArimaFit truth;
+  truth.ar = {0.8};
+  truth.sigma = 1.0;
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "n     exact ar   conditional ar\n";
+  for (int n : {25, 60, 400}) {
+    const Series y = truth.simulate(n, f64, /*seed=*/21);
+    ts::ArimaOptions exact;
+    exact.ar_order = 1;
+    ts::ArimaOptions conditional = exact;
+    conditional.exact_likelihood = false;
+    const auto a = ts::Arima::fit_mle(y, exact, f64);
+    const auto b = ts::Arima::fit_mle(y, conditional, f64);
+    std::cout << std::setw(4) << n << "  " << a.ar[0] << "     " << b.ar[0] << "\n";
+  }
+}
+```
+
+The gap shrinks as the sample grows; for 25 observations the choice matters, for 400 it does not. Keep the default unless you are reproducing a published fit that used the conditional recipe.
+
+## Decisions and pitfalls
+
+- **Look before you fit.** Choose `diff_order` from the ACF, PACF and unit-root tests of Chapter 1, and the orders from the criteria on [Choosing the orders](choosing_the_orders.md). Fitting every order blindly and keeping the best likelihood always picks the biggest model.
+- **Check the fit, not just the numbers.** A fit that converged can still describe the data badly. Run the residual checks in [Checking the residuals](checking_the_residuals.md) before trusting forecasts.
+- **A coefficient near ±1 is a signal.** An autoregressive coefficient close to 1 usually means the series needs differencing, not a bigger model.
+- **Weak identification inflates standard errors.** When an AR and an MA coefficient are both present and similar, expect large standard errors; try the smaller model.
+
+Where next: [Forecasting](forecasting.md) uses a fit to predict ahead, with the intervals that come from the innovation variance.

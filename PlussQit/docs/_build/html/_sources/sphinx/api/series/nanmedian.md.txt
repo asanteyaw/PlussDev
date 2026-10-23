@@ -15,7 +15,8 @@ Series::nanmedian(std::int64_t dim) const -> Series
 
 `nanmedian()` is median after NaN values have been removed. Every reduction
 lane is filtered independently, ordered, then reduced: an odd valid count
-selects one centre and an even valid count averages two centres. It skips NaN
+selects one centre and an even valid count selects the lower of the two
+centres (the same rule as [`median()`](median.md)). It skips NaN
 only; `inf` and `-inf` remain valid sortable values.
 
 If filtering leaves no valid value in a population, the result is NaN. This is
@@ -75,10 +76,10 @@ std::cout << table.nanmedian(0);
 
 ```text
 pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2, 5, 9]
+data=[1, 5, 9]
 ```
 
-The first lane uses `[1, 3]`, so it returns `(1 + 3) / 2 = 2`.
+The first lane uses `[1, 3]`, so it returns its lower centre, `1`.
 
 Example 3. The difference from `median()` is exactly the NaN policy.
 
@@ -122,7 +123,7 @@ catch (const std::exception& error) { std::cout << error.what(); }
 ### Output
 
 ```text
-quantile: dim out of range
+median: dim out of range
 ```
 
 ## Gotchas And Failure Modes
@@ -134,7 +135,7 @@ quantile: dim out of range
 ## Summary
 
 Use `nanmedian()` when NaN means missing observation. It filters each lane
-independently, follows the normal odd/even median rule, and returns NaN where
+independently, follows the median rule (lower centre for even counts), and returns NaN where
 no valid observations survive.
 
 ## See Also

@@ -206,6 +206,20 @@ kinetics_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/kinetics_test.dir/build.make PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/kinetics_test.dir/build
 .PHONY : kinetics_test/fast
 
+# Convenience name for target.
+PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/rule
+.PHONY : PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/rule
+
+# Convenience name for target.
+reacting_ideal_gas_test: PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/rule
+.PHONY : reacting_ideal_gas_test
+
+# fast build rule for target.
+reacting_ideal_gas_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/build.make PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/build
+.PHONY : reacting_ideal_gas_test/fast
+
 kinetics_test.o: kinetics_test.cpp.o
 .PHONY : kinetics_test.o
 
@@ -230,6 +244,30 @@ kinetics_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/kinetics_test.dir/build.make PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/kinetics_test.dir/kinetics_test.cpp.s
 .PHONY : kinetics_test.cpp.s
 
+reacting_ideal_gas_test.o: reacting_ideal_gas_test.cpp.o
+.PHONY : reacting_ideal_gas_test.o
+
+# target to build an object file
+reacting_ideal_gas_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/build.make PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/reacting_ideal_gas_test.cpp.o
+.PHONY : reacting_ideal_gas_test.cpp.o
+
+reacting_ideal_gas_test.i: reacting_ideal_gas_test.cpp.i
+.PHONY : reacting_ideal_gas_test.i
+
+# target to preprocess a source file
+reacting_ideal_gas_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/build.make PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/reacting_ideal_gas_test.cpp.i
+.PHONY : reacting_ideal_gas_test.cpp.i
+
+reacting_ideal_gas_test.s: reacting_ideal_gas_test.cpp.s
+.PHONY : reacting_ideal_gas_test.s
+
+# target to generate assembly for a file
+reacting_ideal_gas_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/build.make PlussMa/NatSci/chemistry/kinetics/test/CMakeFiles/reacting_ideal_gas_test.dir/reacting_ideal_gas_test.cpp.s
+.PHONY : reacting_ideal_gas_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,9 +284,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... kinetics_test"
+	@echo "... reacting_ideal_gas_test"
 	@echo "... kinetics_test.o"
 	@echo "... kinetics_test.i"
 	@echo "... kinetics_test.s"
+	@echo "... reacting_ideal_gas_test.o"
+	@echo "... reacting_ideal_gas_test.i"
+	@echo "... reacting_ideal_gas_test.s"
 .PHONY : help
 
 

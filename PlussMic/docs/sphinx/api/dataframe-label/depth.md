@@ -39,9 +39,9 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 
-auto out = grouped.label().depth();
+auto out = grouped.labels().depth();
 std::cout << out;
 ```
 
@@ -64,9 +64,9 @@ auto readings2 = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"NYC", "Boston", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped2 = readings2.label().set({"region", "city"}, true, "/");
+auto grouped2 = readings2.labels().set({"region", "city"}, true, "/");
 
-auto out2 = grouped2.label().depth();
+auto out2 = grouped2.labels().depth();
 std::cout << out2;
 ```
 

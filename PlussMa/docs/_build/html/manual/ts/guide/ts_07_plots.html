@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Time Series 7: Plots &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Autocorrelation and partial autocorrelation" href="ts_07_plots/autocorrelation_and_partial_autocorrelation.html" />
+    <link rel="prev" title="Comparing models out of sample" href="ts_06_direct_forecasting/comparing_models_out_of_sample.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from ts_07_plots.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="time-series-7-plots">
+<h1>Time Series 7: Plots<a class="headerlink" href="#time-series-7-plots" title="Link to this heading">¶</a></h1>
+<p>The most useful plots of a time series are the autocorrelation plots, which suggest the structure of a model, and the plots of the residuals, which tell whether the model has captured it. <code class="docutils literal notranslate"><span class="pre">pluss::subsp::stats::ts::plot</span></code> provides both, in two forms: functions that return the plotted numbers (<code class="docutils literal notranslate"><span class="pre">*_payload</span></code>), and functions that draw them into a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> figure, which can be saved as SVG, PDF or PNG (<code class="docutils literal notranslate"><span class="pre">save_svg(path)</span></code>, <code class="docutils literal notranslate"><span class="pre">save_pdf(path)</span></code>, <code class="docutils literal notranslate"><span class="pre">save_png(path,</span> <span class="pre">dpi)</span></code>). After this chapter you can draw autocorrelation and residual plots and read them.</p>
+<p>Every program is complete and its output is the output of that program. The programs save their figures when the environment variable <code class="docutils literal notranslate"><span class="pre">PLUSSMA_GUIDE_ASSETS</span></code> names a directory, which is how the pictures below were made.</p>
+<section id="the-functions">
+<h2>The functions<a class="headerlink" href="#the-functions" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">plot::acf_payload(x,</span> <span class="pre">CorrPlotOptions)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CorrPlotPayload</span></code>: <code class="docutils literal notranslate"><span class="pre">lags</span></code>, <code class="docutils literal notranslate"><span class="pre">values</span></code> (the autocorrelations) and the band limits <code class="docutils literal notranslate"><span class="pre">conf_low</span></code>, <code class="docutils literal notranslate"><span class="pre">conf_high</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">plot::pacf_payload(x,</span> <span class="pre">CorrPlotOptions)</span></code></p></td>
+<td><p>the same for the partial autocorrelations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">plot::residuals_payload(r)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ResidualPlotPayload</span></code>: <code class="docutils literal notranslate"><span class="pre">index</span></code> and <code class="docutils literal notranslate"><span class="pre">residuals</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">plot::acf(studio,</span> <span class="pre">x,</span> <span class="pre">options)</span></code></p></td>
+<td><p>draws the autocorrelation stems, the band and the zero line into <code class="docutils literal notranslate"><span class="pre">studio</span></code> and returns it</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">plot::pacf(studio,</span> <span class="pre">x,</span> <span class="pre">options)</span></code></p></td>
+<td><p>the same for the partial autocorrelations</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">plot::residuals(studio,</span> <span class="pre">r,</span> <span class="pre">ResidualPlotOptions)</span></code></p></td>
+<td><p>draws the residuals against time (<code class="docutils literal notranslate"><span class="pre">show_zero_line</span></code>, <code class="docutils literal notranslate"><span class="pre">trace_width</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">CorrPlotOptions</span></code>: <code class="docutils literal notranslate"><span class="pre">max_lag</span></code> (default 20), <code class="docutils literal notranslate"><span class="pre">norm</span></code> (<code class="docutils literal notranslate"><span class="pre">AcfNorm::Biased</span></code> or <code class="docutils literal notranslate"><span class="pre">Unbiased</span></code>), <code class="docutils literal notranslate"><span class="pre">demean</span></code> (true), <code class="docutils literal notranslate"><span class="pre">include_zero_lag</span></code> (false), <code class="docutils literal notranslate"><span class="pre">show_confidence_band</span></code> (true), <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> (0.95), <code class="docutils literal notranslate"><span class="pre">trace_width</span></code>. The band is the white-noise band <code class="docutils literal notranslate"><span class="pre">±z/√n</span></code>, with <code class="docutils literal notranslate"><span class="pre">z</span></code> the normal quantile of <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> (so 1.96/√n at 95%): under no autocorrelation about one bar in twenty lies outside it. The autocorrelations are the biased estimates by default (the form used by the Ljung–Box test) and the partial autocorrelations come from the Yule–Walker equations.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ts_07_plots/autocorrelation_and_partial_autocorrelation.html"><span class="std std-doc">Autocorrelation and partial autocorrelation</span></a></p></li>
+<li><p><a class="reference internal" href="ts_07_plots/plots_of_the_residuals.html"><span class="std std-doc">Plots of the residuals</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Plot the autocorrelation and partial autocorrelation of the (differenced) series first: a geometric decay with a cut-off in the partial plot suggests an autoregression, the reverse a moving average.</p></li>
+<li><p>After fitting, plot the autocorrelation of the residuals: bars outside the band beyond the chance rate mean structure is left.</p></li>
+<li><p>Look at the residual series itself for changing variance or outliers (and test the squares for ARCH effects; Chapter 3).</p></li>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">*_payload</span></code> functions when you want the numbers for your own plotting or tables.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/ts/guide/ts_07_plots.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

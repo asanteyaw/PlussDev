@@ -34,7 +34,7 @@ auto readings = DataFrame(
     {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
     Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
 
-auto out = readings.label().notnull();
+auto out = readings.labels().notnull();
 std::cout << out;
 ```
 

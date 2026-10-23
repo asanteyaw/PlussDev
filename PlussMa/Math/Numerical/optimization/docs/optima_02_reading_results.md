@@ -24,7 +24,7 @@ Whatever the verdict, `result.params` always holds a point: the last iterate, or
 | `Converged` | 1 | Constraint violation and first-order optimality are within tolerance, or the iterate is a stationary feasible point. | The solution. |
 | `MaxIterations` | 0 | The iteration budget was spent first. | The last iterate; `best_feasible` may be better. |
 | `Stopped` | -1 | Your progress hook returned `true`. | The point at which you stopped. |
-| `NoFeasiblePoint` | -2 | The interior method could not find a strictly feasible region to start from. | The start, nudged inward. |
+| `NoFeasiblePoint` | -2 | The interior method could not find a point strictly inside the bounds and linear rows to start from. | The start, nudged inward. |
 | `ObjectiveTargetReached` | -3 | A feasible point at or below `objective_limit` was found. | That point. |
 | `NonFiniteEvaluation` | -4 | The objective, gradient, a constraint or a Jacobian was not a finite number. | The point at which the non-finite value appeared. |
 | `InvalidProblem` | -5 | A callback broke its contract (wrong result shape, a thrown error). | The start. |
@@ -175,7 +175,7 @@ Only the first run is `converged`. The second spent its single allowed iteration
 Five flags mean the solver could not deliver. Each is triggered here by a specific condition, and the result still carries the last point reached so you can inspect it.
 
 ```cpp
-// The five flags that mean the solver could not deliver a solution. Each comes with the program
+// The flags that mean the solver could not deliver a solution. Each comes with the program
 // state that triggers it, and the result still carries the last point reached.
 #include <pluss/ma.h>
 
@@ -218,9 +218,16 @@ int main() {
   const auto impossible_equality = optim::constraints().nl_eq(
       [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) + 1.0; });
 
-  // NoFeasiblePoint: the interior-point method needs a strictly feasible start region and finds none.
+  // NoFeasiblePoint: the interior method keeps bounds and linear rows strictly satisfied, so it first looks for
+  // a point inside them. Here x0 + x1 <= -1 contradicts x >= 0, and it finds none.
   optim::OptimaOptions interior;
   interior.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  const auto impossible_linear = optim::constraints()
+                                     .lbs(vec({0.0, 0.0}))
+                                     .ln_ineq(pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2}).to(f64), vec({-1.0}));
+  report("interior method, impossible linear rows", optim::optima(objective, vec({1.0, 1.0}), interior, impossible_linear));
+
+  // ConstraintStationary also covers a nonlinear inequality that no point satisfies.
   report("interior method, impossible inequality", optim::optima(objective, vec({0.0, 0.0}), interior, impossible_inequality));
 
   // NoProgress: the recovery step could not reduce the violation, so the run gave up.
@@ -242,13 +249,14 @@ int main() {
 ### Output
 
 ```text
-interior method, impossible inequality: NoFeasiblePoint (-2), max violation 1
+interior method, impossible linear rows: NoFeasiblePoint (-2), max violation 1
+interior method, impossible inequality: ConstraintStationary (-7), max violation 1
 sequential QP, impossible inequality: NoProgress (-6), max violation 1
 interior method, impossible equality: ConstraintStationary (-7), max violation 1
 log of a negative start: NonFiniteEvaluation (-4), max violation 0
 objective returns a vector: InvalidProblem (-5), max violation 0
 ```
-The impossible inequality `x0^2 + x1^2 + 1 <= 0` produces two different verdicts depending on the method. The interior method, which needs a strictly feasible region to start from, returns `NoFeasiblePoint`. Sequential QP tries to recover and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method: the equality residual can no longer be reduced (the gradient of its squared norm vanishes), so no step can restore feasibility, and the violation stays at `1`. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.
+Impossible constraints produce different verdicts depending on their kind and the method. The interior method keeps bounds and linear rows strictly satisfied, so linear rows that contradict a bound (`x0 + x1 <= -1` with `x >= 0`) end the run before it starts with `NoFeasiblePoint`. A nonlinear inequality that no point satisfies, `x0^2 + x1^2 + 1 <= 0`, is different: the interior method gives it a slack variable and can start, so the verdict is `ConstraintStationary` once the violation can no longer be reduced (the gradient of its square vanishes), with the violation staying at `1`. Sequential QP tries to recover from the same inequality and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method for the same reason. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.
 
 ### Program 4: the ten stall categories
 
@@ -432,10 +440,10 @@ algorithm                             sqp
 iterations                            4
 function_evaluations                  9
 constraint_violation                  0.0000e+00
-first_order_optimality                1.1465e-08
+first_order_optimality                1.1464e-08
 step_size                             1.0000e+00
 line_search_fraction                  1.0000e+00
-backend_parameter                     1.0000e+01
+backend_parameter                     3.5769e+00
 complementarity                       0.0000e+00
 krylov_iterations                     0
 best_feasible_available               true
@@ -455,9 +463,9 @@ stall_reference                       0.0000e+00
 | `algorithm` | The method's label: `merit-method`, `sqp`, `working-set` or `internal-protocol`. |
 | `iterations`, `function_evaluations` | Major iterations and the number of objective evaluations. The second is far larger when line searches or recovery steps run. |
 | `constraint_violation` | The largest violation of any constraint at the returned point. |
-| `first_order_optimality` | How far the returned point is from satisfying the optimality conditions. For sequential QP and the working-set method it is the largest component of the Lagrangian gradient at the returned point, using the multiplier estimate in `result.multipliers`. |
+| `first_order_optimality` | How far the returned point is from satisfying the optimality conditions. For sequential QP and the working-set method it is the largest component of the Lagrangian gradient at the returned point, using the multiplier estimate in `result.multipliers`, measured on the scale the optimality tolerance uses: for sequential QP and the interior method it is divided by the larger of 1 and the size of the gradient at the start. A start where the gradient is enormous therefore makes a large absolute residual look small (chapter 8, Program 4). |
 | `step_size`, `line_search_fraction` | The fraction of the full step the last iteration accepted. |
-| `backend_parameter` | The method's own control parameter: the penalty weight for the QP methods and the merit method, the barrier parameter for the interior method. It stayed at `10`, its starting value, because the penalty is raised only when constraints stay violated. |
+| `backend_parameter` | The method's own control parameter: the penalty weight for the QP methods and the merit method, the barrier parameter for the interior method. Sequential QP sets its penalty weight from the size of the multipliers at each iteration, so it moves between iterations; here it ended at `3.5769`. |
 | `complementarity` | The complementarity residual; meaningful for the interior method, zero otherwise. |
 | `krylov_iterations` | Iterations spent in the iterative linear solver, when it is used. |
 | `best_feasible_available`, `returned_best_feasible` | Whether a feasible checkpoint was recorded, and whether the answer in `params` is that checkpoint. |
@@ -523,24 +531,24 @@ int main() {
 ```text
 -- reports::trace, default preset --
 iter=0 evals=1 objective=18.000000 viol=0.000000 stationarity=6.000000 backend=10.000000 step=0.000000 krylov=0 stall=none msg="initialized"
-iter=1 evals=6 objective=10.125000 viol=0.125000 stationarity=1.000000 backend=10.000000 step=0.125000 krylov=0 stall=none msg="step accepted"
-iter=2 evals=7 objective=10.503472 viol=0.003472 stationarity=0.018519 backend=10.000000 step=1.000000 krylov=0 stall=none msg="step accepted"
-iter=3 evals=8 objective=10.514709 viol=0.000003 stationarity=0.002169 backend=10.000000 step=1.000000 krylov=0 stall=none msg="step accepted"
-iter=4 evals=9 objective=10.514719 viol=0.000000 stationarity=0.000002 backend=10.000000 step=1.000000 krylov=0 stall=none msg="step accepted"
-iter=4 evals=9 objective=10.514719 viol=0.000000 stationarity=0.000000 backend=10.000000 step=1.000000 krylov=0 stall=none msg="optimality and feasibility tolerances satisfied"
-iter=4 evals=9 objective=10.514719 viol=0.000000 stationarity=0.000000 backend=10.000000 step=1.000000 krylov=0 stall=none msg="optimality and feasibility tolerances satisfied"
+iter=1 evals=6 objective=10.125000 viol=0.125000 stationarity=1.000000 backend=5.000000 step=0.125000 krylov=0 stall=none msg="step accepted"
+iter=2 evals=7 objective=10.503472 viol=0.003472 stationarity=0.013889 backend=3.371111 step=1.000000 krylov=0 stall=none msg="step accepted"
+iter=3 evals=8 objective=10.514709 viol=0.000003 stationarity=0.001657 backend=3.576542 step=1.000000 krylov=0 stall=none msg="step accepted"
+iter=4 evals=9 objective=10.514719 viol=0.000000 stationarity=0.000002 backend=3.576905 step=1.000000 krylov=0 stall=none msg="step accepted"
+iter=4 evals=9 objective=10.514719 viol=0.000000 stationarity=0.000000 backend=3.576905 step=1.000000 krylov=0 stall=none msg="optimality and feasibility tolerances satisfied"
+iter=4 evals=9 objective=10.514719 viol=0.000000 stationarity=0.000000 backend=3.576905 step=1.000000 krylov=0 stall=none msg="optimality and feasibility tolerances satisfied"
 -- reports::iter, three decimals --
-iter=1 evals=6 objective=10.125 viol=0.125 stationarity=1.000 backend=10.000 step=0.125 stall=none
-iter=2 evals=7 objective=10.503 viol=0.003 stationarity=0.019 backend=10.000 step=1.000 stall=none
-iter=3 evals=8 objective=10.515 viol=0.000 stationarity=0.002 backend=10.000 step=1.000 stall=none
-iter=4 evals=9 objective=10.515 viol=0.000 stationarity=0.000 backend=10.000 step=1.000 stall=none
-iter=4 evals=9 objective=10.515 viol=0.000 stationarity=0.000 backend=10.000 step=1.000 stall=none
+iter=1 evals=6 objective=10.125 viol=0.125 stationarity=1.000 backend=5.000 step=0.125 stall=none
+iter=2 evals=7 objective=10.503 viol=0.003 stationarity=0.014 backend=3.371 step=1.000 stall=none
+iter=3 evals=8 objective=10.515 viol=0.000 stationarity=0.002 backend=3.577 step=1.000 stall=none
+iter=4 evals=9 objective=10.515 viol=0.000 stationarity=0.000 backend=3.577 step=1.000 stall=none
+iter=4 evals=9 objective=10.515 viol=0.000 stationarity=0.000 backend=3.577 step=1.000 stall=none
 -- a custom preset: no start line, no final line, no message, no Krylov count --
-iter=1 evals=6 objective=10.1250 viol=0.1250 stationarity=1.0000 backend=10.0000 step=0.1250 stall=none
-iter=2 evals=7 objective=10.5035 viol=0.0035 stationarity=0.0185 backend=10.0000 step=1.0000 stall=none
-iter=3 evals=8 objective=10.5147 viol=0.0000 stationarity=0.0022 backend=10.0000 step=1.0000 stall=none
-iter=4 evals=9 objective=10.5147 viol=0.0000 stationarity=0.0000 backend=10.0000 step=1.0000 stall=none
-iter=4 evals=9 objective=10.5147 viol=0.0000 stationarity=0.0000 backend=10.0000 step=1.0000 stall=none
+iter=1 evals=6 objective=10.1250 viol=0.1250 stationarity=1.0000 backend=5.0000 step=0.1250 stall=none
+iter=2 evals=7 objective=10.5035 viol=0.0035 stationarity=0.0139 backend=3.3711 step=1.0000 stall=none
+iter=3 evals=8 objective=10.5147 viol=0.0000 stationarity=0.0017 backend=3.5765 step=1.0000 stall=none
+iter=4 evals=9 objective=10.5147 viol=0.0000 stationarity=0.0000 backend=3.5769 step=1.0000 stall=none
+iter=4 evals=9 objective=10.5147 viol=0.0000 stationarity=0.0000 backend=3.5769 step=1.0000 stall=none
 ```
 The default trace prints a start line, one line per iteration, and a final line, each with the objective, violation, stationarity, backend parameter, step and message. `reports::iter` drops the start and final lines, the Krylov count and the message, and takes the number of decimals. The custom preset does the same with four decimals. Notice the two lines that repeat at the end of the first trace: the last iteration is reported once as an iteration and once as `done`.
 
@@ -810,9 +818,9 @@ int main() {
 
 ```text
 -- compact_summary --
-algorithm=sqp exit=1 iterations=1 evaluations=2 objective=1.25 violation=0 first_order=2e-08 backend_parameter=10 complementarity=0 stall=none message=optimality and feasibility tolerances satisfied
+algorithm=sqp exit=1 iterations=1 evaluations=2 objective=1.25 violation=0 first_order=2e-08 backend_parameter=5 complementarity=0 stall=none message=optimality and feasibility tolerances satisfied
 -- print_summary (same line) --
-algorithm=sqp exit=1 iterations=1 evaluations=2 objective=1.25 violation=0 first_order=2e-08 backend_parameter=10 complementarity=0 stall=none message=optimality and feasibility tolerances satisfied
+algorithm=sqp exit=1 iterations=1 evaluations=2 objective=1.25 violation=0 first_order=2e-08 backend_parameter=5 complementarity=0 stall=none message=optimality and feasibility tolerances satisfied
 -- detailed_summary --
 algorithm=sqp
 exit=1
@@ -821,7 +829,7 @@ evaluations=2
 constraint_violation=0
 first_order_optimality=2e-08
 step_size=1
-backend_parameter=10
+backend_parameter=5
 complementarity=0
 krylov_iterations=0
 best_feasible_available=true

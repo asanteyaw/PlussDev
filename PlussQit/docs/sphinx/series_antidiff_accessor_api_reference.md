@@ -51,6 +51,11 @@ read off values a `Series` already holds. See
   running antiderivative, one value per sample point — torch parity with
   `torch.cumulative_trapezoid`
 
+- [`ito`, `strat`, `theta`](api/series-antidiff/stochastic_integrals.md): stochastic
+  integrals of an integrand that is already sampled, against a sampled path
+- [`quadratic_variation`, `covariation`](api/series-antidiff/quadratic_variation.md):
+  sums of squared and cross increments of sampled paths
+
 The handwritten reference covers the complete `Series::AntidiffAccessor`
 surface.
 
@@ -107,6 +112,8 @@ Two independent rows, one shared `x`, one call.
 
 api/series-antidiff/trapezoid
 api/series-antidiff/cumulative_trapezoid
+api/series-antidiff/stochastic_integrals
+api/series-antidiff/quadratic_variation
 ```
 
 <div class="pluss-inline-prev-next">

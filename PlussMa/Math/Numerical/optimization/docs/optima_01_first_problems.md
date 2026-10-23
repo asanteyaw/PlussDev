@@ -584,14 +584,14 @@ message            = optimality and feasibility tolerances satisfied
 linear inequality multiplier = 1.0000
 multiplier counts: linear eq 0, nonlinear eq 0, linear ineq 1, nonlinear ineq 0, lower bounds 2, upper bounds 2
 -- compact summary --
-algorithm=sqp exit=1 iterations=3 evaluations=4 objective=0.5 violation=0 first_order=5.35547e-09 backend_parameter=10 complementarity=0 stall=none message=optimality and feasibility tolerances satisfied
+algorithm=sqp exit=1 iterations=3 evaluations=4 objective=0.5 violation=0 first_order=5.35547e-09 backend_parameter=1.25 complementarity=0 stall=none message=optimality and feasibility tolerances satisfied
 ```
 `params` holds the answer, `evaluation` the objective value and feasibility at the answer, `iteration` and `function_evaluations` the work, `exit_flag` and `message` the reason, and `multipliers` how strongly each constraint pushes on the answer. The multiplier of the linear inequality is `1`, the price of tightening it: the objective would improve by about that much per unit the limit is relaxed. The zero counts for equalities show that multipliers exist only for the constraint families the problem uses. `converged` is true exactly when the exit flag is `Converged`.
 
 ## Decisions
 
 - **One vector or named blocks?** Use one vector when the unknowns are interchangeable coordinates, such as portfolio weights. Use named blocks when they mean different things or have different shapes, such as a matrix and an offset. Once you use blocks, build bounds as packs with the same names.
-- **Automatic or analytic gradient?** Start with `Trace`. Move to an analytic gradient only for a measured speed need, and audit it before trusting it.
+- **Automatic or analytic gradient?** Start with `Trace`. Move to an analytic gradient only when you have a reason to, and audit it before trusting it.
 - **Inline objective or a `ConstrainedProblem`?** Inline for one-off solves. A `ConstrainedProblem` when the problem is reused, stored, or passed around.
 - **Struct or builder?** The builder is shorter and chooses the right objective slot for the callable you give it. Fill the struct when you need slots the builder does not cover.
 
@@ -639,7 +639,7 @@ int main() {
 
 ```text
 refused: optim::evaluate_problem: lower bounds must have the same named blocks and shapes as the parameters (parameters: a[1], b[1]; lower bounds: x[2])
-with matching blocks: a = 0.5, b = 2.29885e-10
+with matching blocks: a = 0.5, b = 1.20218e-10
 ```
 The first call is refused with a message naming the parameter blocks and the bounds layout. The second succeeds once the bounds carry the block names `a` and `b`.
 

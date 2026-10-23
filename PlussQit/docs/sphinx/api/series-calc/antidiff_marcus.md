@@ -1,0 +1,150 @@
+<!-- pluss-hand-authored -->
+
+# Series::CalcAccessor::antidiff.marcus
+
+[Back to Series::CalcAccessor API Reference](../../series_calc_accessor_api_reference.md)
+
+## Signatures
+
+```cpp
+Series Series::CalcAccessor::AntidiffAccessor::marcus(
+    const IntegrandFn& f, const Series& jump_mask, double t0, double t1, std::int64_t dim = 0) const
+Series marcus(const IntegrandFn& f, const Series& jump_mask, const Series& times, std::int64_t dim = 0) const
+Series marcus(const IntegrandFn& f, double jump_threshold, double t0, double t1, std::int64_t dim = 0) const
+Series marcus_cumulative(const IntegrandFn& f, const Series& jump_mask, double t0, double t1,
+                         std::int64_t dim = 0) const
+```
+
+## What It Computes
+
+The Marcus (canonical) integral of `f(t, X_t)` against a path `X` that **jumps**. On a
+step that is not a jump it is the Stratonovich average. Over a step flagged as a jump
+it integrates `f` along the straight segment between the two samples:
+
+```text
+Δx · ∫₀¹ f(t, x_i + s Δx) ds          (8-point Gauss–Legendre)
+```
+
+This is what makes the ordinary chain rule hold for jump paths: for `f(x) = x²`, the
+whole integral equals `(X_T³ − X_0³)/3`, jumps included. The Stratonovich average
+over a big jump step does not (the trapezoid is poor for a curved integrand), and the
+Itô sum is off by the quadratic variation, which a jump contributes in full.
+
+## Parameters
+
+- The receiver is the jump path; the time axis is `dim`.
+- `jump_mask` has `n − 1` entries along `dim` (one per step), nonzero on steps that
+  contain a jump; it must broadcast against the increments.
+- `jump_threshold` (the third form) flags every step whose increment exceeds that
+  size in absolute value. Use an explicit mask when you know where the jumps are;
+  a jump smaller than the threshold is treated as continuous.
+- `t0`, `t1`, `times`, `dim`, `f`: as for [`antidiff.ito`](antidiff_ito.md).
+- `marcus_cumulative` returns the running integral.
+
+## Examples
+
+Example 1. `f(x) = x²` along a path with one large jump. The chain-rule value is
+`X_T³/3`; Marcus is close to it, the Stratonovich average and the Itô sum are not.
+
+```cpp
+auto path = pluss::make_series({0.0, 0.1, 0.15, 1.15, 1.2});
+auto mask = pluss::make_series({0.0, 0.0, 1.0, 0.0});
+auto square = [](const pluss::Series& t, const pluss::Series& x) { return x.mul(x); };
+
+auto marcus = path.calc.antidiff.marcus(square, mask, 0.0, 1.0);
+auto strat = path.calc.antidiff.strat(square, 0.0, 1.0);
+auto ito = path.calc.antidiff.ito(square, 0.0, 1.0);
+
+std::cout << "X_T^3/3  " << 1.2 * 1.2 * 1.2 / 3.0 << "\n";
+std::cout << "marcus   " << marcus << "\n";
+std::cout << "strat    " << strat << "\n";
+std::cout << "ito      " << ito << "\n";
+```
+
+### Output
+
+```text
+X_T^3/3  0.576
+marcus   pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0.57620833
+strat    pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0.742875
+ito      pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0.089125
+```
+
+Example 2. Letting the call find the jump steps by size.
+
+```cpp
+auto path = pluss::make_series({0.0, 0.1, 0.15, 1.15, 1.2});
+auto square = [](const pluss::Series& t, const pluss::Series& x) { return x.mul(x); };
+
+auto found = path.calc.antidiff.marcus(square, 0.5, 0.0, 1.0);
+
+std::cout << "threshold 0.5 " << found << "\n";
+```
+
+### Output
+
+```text
+threshold 0.5 pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0.57620833
+```
+
+Example 3. An explicit time grid.
+
+```cpp
+auto path = pluss::make_series({0.0, 0.1, 0.15, 1.15, 1.2});
+auto mask = pluss::make_series({0.0, 0.0, 1.0, 0.0});
+auto f = [](const pluss::Series& t, const pluss::Series& x) { return x.mul(t); };
+auto times = pluss::make_series({0.0, 0.2, 0.4, 0.6, 1.0});
+
+std::cout << "explicit grid " << path.calc.antidiff.marcus(f, mask, times) << "\n";
+```
+
+### Output
+
+```text
+explicit grid pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0.31025
+```
+
+Example 4. The running Marcus integral ends at the total.
+
+```cpp
+auto path = pluss::make_series({0.0, 0.1, 0.15, 1.15, 1.2});
+auto mask = pluss::make_series({0.0, 0.0, 1.0, 0.0});
+auto square = [](const pluss::Series& t, const pluss::Series& x) { return x.mul(x); };
+
+std::cout << "running " << path.calc.antidiff.marcus_cumulative(square, mask, 0.0, 1.0) << "\n";
+std::cout << "total   " << path.calc.antidiff.marcus(square, mask, 0.0, 1.0) << "\n";
+```
+
+### Output
+
+```text
+running pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[0, 0.0005, 0.0013125, 0.50714583, 0.57620833]
+total   pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=0.57620833
+```
+
+## Gotchas And Failure Modes
+
+- The mask is the user's statement of where the jumps are; nothing verifies it. A
+  continuous step flagged as a jump is integrated along the chord, which is also
+  accurate for a small step, so over-flagging costs little. Under-flagging a real
+  jump gives the Stratonovich answer there.
+- The chain-rule identity is exact only for the jump steps. The continuous steps
+  keep the trapezoid error of the Stratonovich average, which shrinks as the grid is
+  refined.
+
+## Summary
+
+`antidiff.marcus` integrates along a path that jumps so that the ordinary chain rule
+holds, by integrating `f` along the segment on jump steps.
+
+## See Also
+
+- [`antidiff.ito`](antidiff_ito.md): Itô and Stratonovich integrals.
+- [`diff.marcus`](diff_marcus.md): the differential counterpart.

@@ -172,7 +172,7 @@ const Slate& DataFrame::case_labels_() const { return impl_ref_().cases_; }
 
 const Slate& DataFrame::caselbl() const { return case_labels_(); }
 
-DataFrameLabelAccessor DataFrame::label() const {
+DataFrameLabelAccessor DataFrame::labels() const {
   return DataFrameLabelAccessor(*this);
 }
 
@@ -222,7 +222,7 @@ std::unordered_map<std::string, std::vector<std::int64_t>> build_case_lookup_(co
   std::unordered_map<std::string, std::vector<std::int64_t>> lookup;
   lookup.reserve(static_cast<std::size_t>(std::max<std::int64_t>(8, frame.ncases() * 2)));
   for (std::int64_t i = 0; i < frame.ncases(); ++i) {
-    lookup[slate_scalar_string_at(frame.label().values(), i)].push_back(i);
+    lookup[slate_scalar_string_at(frame.labels().values(), i)].push_back(i);
   }
   return lookup;
 }
@@ -607,42 +607,42 @@ DataFrame DataFrameLabelAccessor::align(const Slate& new_label, std::optional<do
 }
 
 Slate DataFrameLabelAccessor::unite(const Slate& other) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().unite(other);
 }
 
 Slate DataFrameLabelAccessor::intersect(const Slate& other) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().intersect(other);
 }
 
 Slate DataFrameLabelAccessor::diff(const Slate& other) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().diff(other);
 }
 
 Slate DataFrameLabelAccessor::symdiff(const Slate& other) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().symdiff(other);
 }
 
 Slate DataFrameLabelAccessor::find(const Slate& targets) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().find(targets);
 }
 
 Slate DataFrameLabelAccessor::pos(double value) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().pos(value);
 }
 
 Slate DataFrameLabelAccessor::pos(std::string_view value) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().pos(value);
 }
 
 Slate DataFrameLabelAccessor::slice(std::string_view start, std::string_view stop) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   return labels.label().set(labels).label().slice(start, stop);
 }
 
@@ -665,7 +665,7 @@ DataFrame DataFrameLabelAccessor::order(std::initializer_list<std::string_view> 
 DataFrame DataFrameLabelAccessor::names(pluss::msharp::RangeView::Of<std::string_view> names) const {
   const auto old_names = frame_.caselbls();
   PLUSS_CHECK(names.size() == old_names.size(),
-              "DataFrame::label().names: expected one name per current label level");
+              "DataFrame::labels().names: expected one name per current label level");
   std::vector<DataFrame::LabelRename> renames;
   renames.reserve(names.size());
   for (std::size_t i = 0; i < names.size(); ++i) {
@@ -688,7 +688,7 @@ DataFrame DataFrameLabelAccessor::drop(std::initializer_list<std::string_view> n
 
 DataFrame DataFrameLabelAccessor::drop(const DataFrame::LabelDropOptions& options) const {
   PLUSS_CHECK(!(options.duplicated && options.repeated),
-              "DataFrame::label().drop: use either duplicated or repeated, not both");
+              "DataFrame::labels().drop: use either duplicated or repeated, not both");
   if (!options.duplicated && !options.repeated) {
     if (options.names.empty()) {
       return frame_;
@@ -706,23 +706,23 @@ DataFrame DataFrameLabelAccessor::drop(const DataFrame::LabelDropOptions& option
   for (const auto& name : options.names) {
     views.push_back(name);
   }
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   const auto keys = selected_label_keys_(
       frame_.impl_ref_(),
       labels,
       pluss::msharp::RangeView::Of<std::string_view>(std::span<const std::string_view>(views.data(), views.size())),
-      "DataFrame::label().drop");
+      "DataFrame::labels().drop");
   auto mask = label_key_mask_(keys, labels, options.repeated, options.keep_first, options.keep_last,
-                              "DataFrame::label().drop");
+                              "DataFrame::labels().drop");
   return frame_.filter(mask.as_series().logical_not());
 }
 
 Slate DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names,
                                           bool keep_first,
                                           bool keep_last) const {
-  const auto labels = frame_.label().values();
-  const auto keys = selected_label_keys_(frame_.impl_ref_(), labels, names, "DataFrame::label().duplicated");
-  return label_key_mask_(keys, labels, false, keep_first, keep_last, "DataFrame::label().duplicated")
+  const auto labels = frame_.labels().values();
+  const auto keys = selected_label_keys_(frame_.impl_ref_(), labels, names, "DataFrame::labels().duplicated");
+  return label_key_mask_(keys, labels, false, keep_first, keep_last, "DataFrame::labels().duplicated")
       .name("duplicated");
 }
 
@@ -733,15 +733,15 @@ Slate DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view>
 }
 
 Slate DataFrameLabelAccessor::duplicated(bool keep_first, bool keep_last) const {
-  return frame_.label().values().duplicated(keep_first, keep_last)
-      .label().set(frame_.label().values())
+  return frame_.labels().values().duplicated(keep_first, keep_last)
+      .label().set(frame_.labels().values())
       .name("duplicated");
 }
 
 Slate DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> names) const {
-  const auto labels = frame_.label().values();
-  const auto keys = selected_label_keys_(frame_.impl_ref_(), labels, names, "DataFrame::label().repeated");
-  return label_key_mask_(keys, labels, true, false, false, "DataFrame::label().repeated")
+  const auto labels = frame_.labels().values();
+  const auto keys = selected_label_keys_(frame_.impl_ref_(), labels, names, "DataFrame::labels().repeated");
+  return label_key_mask_(keys, labels, true, false, false, "DataFrame::labels().repeated")
       .name("repeated");
 }
 
@@ -750,53 +750,53 @@ Slate DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> n
 }
 
 Slate DataFrameLabelAccessor::repeated() const {
-  return frame_.label().values().repeated().label().set(frame_.label().values()).name("repeated");
+  return frame_.labels().values().repeated().label().set(frame_.labels().values()).name("repeated");
 }
 
 Slate DataFrameLabelAccessor::distinct(bool dropnull) const {
-  return frame_.label().values().distinct(dropnull).name("distinct");
+  return frame_.labels().values().distinct(dropnull).name("distinct");
 }
 
 Slate DataFrameLabelAccessor::freq(std::int64_t top_n, bool dropnull) const {
-  return detail::freq_count_slate(frame_.label().values(), top_n, dropnull, "freq");
+  return detail::freq_count_slate(frame_.labels().values(), top_n, dropnull, "freq");
 }
 
 Slate DataFrameLabelAccessor::has(double value) const {
-  return frame_.label().values().has(value).label().set(frame_.label().values()).name("has");
+  return frame_.labels().values().has(value).label().set(frame_.labels().values()).name("has");
 }
 
 Slate DataFrameLabelAccessor::has(std::string_view value) const {
-  return frame_.label().values().has(value).label().set(frame_.label().values()).name("has");
+  return frame_.labels().values().has(value).label().set(frame_.labels().values()).name("has");
 }
 
 Slate DataFrameLabelAccessor::has(const Slate& values) const {
-  return frame_.label().values().has(values).label().set(frame_.label().values()).name("has");
+  return frame_.labels().values().has(values).label().set(frame_.labels().values()).name("has");
 }
 
 Slate DataFrameLabelAccessor::fillnull(double value) const {
-  return frame_.label().values().fillnull(value);
+  return frame_.labels().values().fillnull(value);
 }
 
 Slate DataFrameLabelAccessor::fillnull(std::string_view value) const {
-  return frame_.label().values().fillnull(value);
+  return frame_.labels().values().fillnull(value);
 }
 
 Slate DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const {
-  return frame_.label().values().fillnull(value);
+  return frame_.labels().values().fillnull(value);
 }
 
 Slate DataFrameLabelAccessor::isnull() const {
-  return frame_.label().values().isnull().label().set(frame_.label().values()).name("isnull");
+  return frame_.labels().values().isnull().label().set(frame_.labels().values()).name("isnull");
 }
 
 Slate DataFrameLabelAccessor::notnull() const {
-  return frame_.label().values().notnull().label().set(frame_.label().values()).name("notnull");
+  return frame_.labels().values().notnull().label().set(frame_.labels().values()).name("notnull");
 }
 
 DataFrame DataFrameLabelAccessor::map(const std::function<SlateValue(const SlateValue&)>& fn) const {
   const auto& src = frame_.impl_ref_();
   PLUSS_CHECK(!src.case_axis_.defined(),
-              "DataFrame::label().map: structured labels are not supported; map a label part instead");
+              "DataFrame::labels().map: structured labels are not supported; map a label part instead");
   return frame_.caselbl(frame_.caselbl().map(fn));
 }
 
@@ -806,23 +806,23 @@ Slate DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const 
   for (const auto idx : indices) {
     owned.push_back(idx);
   }
-  return frame_.label().values().take(std::span<const std::int64_t>(owned.data(), owned.size()));
+  return frame_.labels().values().take(std::span<const std::int64_t>(owned.data(), owned.size()));
 }
 
 Slate DataFrameLabelAccessor::slice(std::int64_t start, std::int64_t stop) const {
-  return frame_.label().values().slice(start, stop);
+  return frame_.labels().values().slice(start, stop);
 }
 
 DataFrame DataFrameLabelAccessor::swap(std::string_view left, std::string_view right) const {
   const auto current = names();
   const auto lhs = owned_name(left);
   const auto rhs = owned_name(right);
-  PLUSS_CHECK(lhs != rhs, "DataFrame::label().swap: label names must differ");
+  PLUSS_CHECK(lhs != rhs, "DataFrame::labels().swap: label names must differ");
   std::vector<std::string> ordered = current;
   auto lit = std::find(ordered.begin(), ordered.end(), lhs);
   auto rit = std::find(ordered.begin(), ordered.end(), rhs);
-  PLUSS_CHECK(lit != ordered.end(), "DataFrame::label().swap: unknown label '" + lhs + "'");
-  PLUSS_CHECK(rit != ordered.end(), "DataFrame::label().swap: unknown label '" + rhs + "'");
+  PLUSS_CHECK(lit != ordered.end(), "DataFrame::labels().swap: unknown label '" + lhs + "'");
+  PLUSS_CHECK(rit != ordered.end(), "DataFrame::labels().swap: unknown label '" + rhs + "'");
   std::iter_swap(lit, rit);
   std::vector<std::string_view> views;
   views.reserve(ordered.size());
@@ -834,7 +834,7 @@ DataFrame DataFrameLabelAccessor::swap(std::string_view left, std::string_view r
 }
 
 bool DataFrameLabelAccessor::monotonic(bool ascending, bool strict, bool nulls_last) const {
-  const auto labels = frame_.label().values();
+  const auto labels = frame_.labels().values();
   for (std::int64_t row = 1; row < labels.size(); ++row) {
     const auto cmp = detail::compare_rows(labels, row - 1, row, nulls_last);
     if (ascending) {
@@ -880,7 +880,7 @@ DataFrame DataFrameLabelAccessor::codes() const {
   const auto& src = frame_.impl_ref_();
   std::vector<std::pair<std::string, Slate>> columns;
   if (!src.case_axis_.defined()) {
-    const auto labels = frame_.label().values();
+    const auto labels = frame_.labels().values();
     std::unordered_map<std::string, std::int64_t> code_by_value;
     std::vector<std::int64_t> codes;
     codes.reserve(static_cast<std::size_t>(labels.size()));
@@ -904,14 +904,14 @@ DataFrame DataFrameLabelAccessor::codes() const {
       columns.emplace_back(level.name, make_i64_slate(codes));
     }
   }
-  return DataFrame(std::move(columns), frame_.label().values());
+  return DataFrame(std::move(columns), frame_.labels().values());
 }
 
 DataFrame DataFrameLabelAccessor::levels() const {
   const auto& src = frame_.impl_ref_();
   std::vector<std::pair<std::string, Slate>> columns;
   if (!src.case_axis_.defined()) {
-    columns.emplace_back("label", frame_.label().values().distinct(false).cast().note());
+    columns.emplace_back("label", frame_.labels().values().distinct(false).cast().note());
     return DataFrame(std::move(columns));
   }
   columns.reserve(src.case_axis_.levels.size());
@@ -2397,8 +2397,8 @@ DataFrameSortBuilder DataFrameSortBuilder::nulls_last() const {
 Slate DataFrameSortBuilder::order() const {
   const auto indices = ordered_indices_("DataFrame::sort.order");
   auto out = make_i64_slate(indices);
-  if (frame_.label().has()) {
-    out = out.label().set(frame_.label().values().take(
+  if (frame_.labels().has()) {
+    out = out.label().set(frame_.labels().values().take(
         std::span<const std::int64_t>(indices.data(), indices.size())));
   }
   return out;
@@ -3679,7 +3679,7 @@ DataFrame DataFrame::conform(const DataFrame& other) const {
   }
   auto out = DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
-  return out.label().align(other.label().values());
+  return out.labels().align(other.labels().values());
 }
 
 DataFrame DataFrame::unify(std::string_view left_on,

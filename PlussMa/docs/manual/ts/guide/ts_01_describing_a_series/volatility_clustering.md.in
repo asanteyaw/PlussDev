@@ -1,0 +1,8 @@
+# Volatility clustering
+
+[Back to Describing a Series](../ts_01_describing_a_series.md)
+
+
+@@example Stats/time_series/guide/1204_arch_effects.cpp@@
+
+A series whose scale alternates between calm and turbulent stretches has strongly autocorrelated squares (LM = 23 on one lag, p ≈ 2×10⁻⁶), while steady noise does not (p = 0.94 and 0.31). Rejecting means a constant-variance model is wrong and a GARCH-type model for the variance (a later chapter) is appropriate. For raw returns leave `demean` on; if the input is the residual vector of a mean model, whose mean is zero by construction, set it to false.

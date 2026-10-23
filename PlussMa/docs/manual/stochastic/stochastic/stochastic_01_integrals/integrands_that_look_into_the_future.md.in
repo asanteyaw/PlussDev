@@ -1,0 +1,10 @@
+# Integrands that look into the future
+
+[Back to Stochastic Integrals](../stochastic_01_integrals.md)
+
+
+An Ito integral is only meaningful for an adapted integrand, one whose value at a time depends on the path up to that time and no further. A callback can break that without anything visible going wrong. The wrapper tests the callback: it redraws the part of the path after a chosen sample and demands that the integrand's earlier values do not change.
+
+@@example Probability/random_processes/guide/sde/06_adapted_integrands.cpp@@
+
+The running maximum is adapted and accepted. A centered moving average reads samples after the current one, and the terminal value reads the last sample from the first: both are rejected, and the message says at which sample the integrand changed. The test detects any dependence on the path itself. It cannot detect state a callback captured from outside, for example a precomputed copy of the whole path, so passing the test is evidence, not proof.

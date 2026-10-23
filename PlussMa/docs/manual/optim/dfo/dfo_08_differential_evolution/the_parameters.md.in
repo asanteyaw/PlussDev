@@ -1,0 +1,13 @@
+# The parameters
+
+[Back to The Differential Evolution Minimisers](../dfo_08_differential_evolution.md)
+
+
+@@example Numerical/optimization/guide/dfo/372_differential_evolution_knobs.cpp@@
+
+Read this table with care. Each row is one run, and Program 3 shows that the seed alone moves the result by more than most rows differ. What does carry over is how the settings interact with a fixed budget:
+
+- **Population size and generations share the budget.** With 20000 evaluations, 600 members get about 33 generations and 30 members get about 660. On this three-variable problem the small population is the better use of the budget; on a harder problem it would collapse onto a local minimum for lack of diversity. Match the population to the dimension (5 to 10 members per variable is the usual minimum) and make the budget large enough for tens to hundreds of generations.
+- **Mutation factor** scales the steps: too large (1.2) and the population keeps jumping past the minimum, too small and it collapses early.
+- **Crossover rate** controls how many coordinates change per trial. A low rate suits separable functions such as Rastrigin, where each coordinate can be improved on its own; a high one suits functions where variables interact.
+- **`best_mix`** builds mutants around the best member. It speeds convergence when the budget is tight (the 0.7 row is the best here) and raises the risk of collapsing on a local minimum when the function is rugged.

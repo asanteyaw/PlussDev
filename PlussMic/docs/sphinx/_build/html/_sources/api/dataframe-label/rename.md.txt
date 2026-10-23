@@ -46,10 +46,10 @@ auto readings = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
      {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
      {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
-auto grouped = readings.label().set({"region", "city"}, true, "/");
+auto grouped = readings.labels().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
-for (const auto& name : grouped.label().names()) {
+for (const auto& name : grouped.labels().names()) {
   std::cout << name << " ";
 }
 ```
@@ -75,10 +75,10 @@ region city
 ```
 
 ```cpp
-auto renamed = grouped.label().rename({{"region", "area"}});
+auto renamed = grouped.labels().rename({{"region", "area"}});
 std::cout << renamed;
 
-for (const auto& name : renamed.label().names()) {
+for (const auto& name : renamed.labels().names()) {
   std::cout << name << " ";
 }
 ```
@@ -104,7 +104,7 @@ area city
 ```
 
 Only `"region"` was renamed to `"area"`; `"city"` is left exactly as it was.
-`renamed.label().part("area")` now reads what used to be `part("region")`;
+`renamed.labels().part("area")` now reads what used to be `part("region")`;
 the printed table is identical before and after — `rename()` only affects
 level metadata, never the values or their join.
 
@@ -112,9 +112,9 @@ Example 2. Rename both levels at once, with two `{from, to}` pairs in a single
 call.
 
 ```cpp
-auto renamed_both = grouped.label().rename({{"region", "area"}, {"city", "town"}});
+auto renamed_both = grouped.labels().rename({{"region", "area"}, {"city", "town"}});
 
-for (const auto& name : renamed_both.label().names()) {
+for (const auto& name : renamed_both.labels().names()) {
   std::cout << name << " ";
 }
 ```
@@ -138,7 +138,7 @@ auto orders = DataFrame(
     {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
 try {
-  auto out = orders.label().rename({{"region", "area"}});
+  auto out = orders.labels().rename({{"region", "area"}});
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";
@@ -159,7 +159,7 @@ different throw.
 
 ```cpp
 try {
-  auto out = grouped.label().rename({{"region", "area"}, {"city", "area"}});
+  auto out = grouped.labels().rename({{"region", "area"}, {"city", "area"}});
 } catch (const std::exception& e) {
   std::string msg(e.what());
   std::cout << msg.substr(0, msg.find('\n')) << "\n";

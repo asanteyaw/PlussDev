@@ -266,7 +266,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
   fig.mosaic(1, 2, 18.0, 18.0);
   fig.tight_layout(true, 4.0);
 
-  const auto x = slate_as_numeric(registered.label().values());
+  const auto x = slate_as_numeric(registered.labels().values());
   std::vector<std::string> x_labels;
   x_labels.reserve(x.size());
   for (const auto value : x) {
@@ -301,7 +301,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
 
 void draw_grouped_bar_panel(pl::Pane& pane, const DataFrame& pivoted, std::string_view x_label) {
   configure_pane(pane, true);
-  const auto x = slate_as_numeric(pivoted.label().values());
+  const auto x = slate_as_numeric(pivoted.labels().values());
   std::vector<std::string> x_labels;
   x_labels.reserve(x.size());
   for (const auto value : x) {
@@ -495,7 +495,7 @@ int main(int argc, char** argv) {
                    .by({"date"})
                    .agg({{"mean_total_count", "total_count", GroupOp::Mean}})
                    .arrange({"date"}, true, true)
-                   .label().set("date", false);
+                   .labels().set("date", false);
   auto fig_04 = daily.plot(build_plot_options("date")).line("mean_total_count", "date");
   fig_04.headline("Daily mean bike rentals (from hourly data)");
   save_and_optionally_show(fig_04, cli.out_dir, "04_daily_mean_time_series", cli.show);

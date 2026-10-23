@@ -182,6 +182,71 @@ int main() {
     expect(std::isfinite(vns_out.scalarized_minimum), "VNS returned non-finite scalarized value", &failures);
   }
 
+  {
+    // Disco must never report the value of a different point as the value of the point it returns: the reported minimum has to
+    // be the true objective at the returned minimiser, even when most evaluations fail.
+    const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+    auto objective = [](double a, double b) { return (a - 2.0) * (a - 2.0) + (b - 1.0) * (b - 1.0); };
+    auto flaky = [&](const Series& x) {
+      BlackboxEvaluation e;
+      const auto v = x.to_vec<double>();
+      double h = std::sin(12345.678 * v[0] + 9876.543 * v[1] + 0.5) * 43758.5453;
+      h -= std::floor(h);
+      if (h < 0.8) {
+        e.objectives = pluss::make_series(std::vector<double>{std::nan("")}, {1}, c64);
+        return e;
+      }
+      e.objectives = pluss::make_series(std::vector<double>{objective(v[0], v[1])}, {1}, c64);
+      return e;
+    };
+    DiscoMadsConfig dc;
+    dc.base.max_evaluations = 3000;
+    dc.rescue_trials = 12;
+    const auto out = discomads_blackbox_minimizer(flaky, pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, c64), dc);
+    const auto m = out.minimizer.to_vec<double>();
+    expect(std::abs(out.scalarized_minimum - objective(m[0], m[1])) < 1e-9,
+           "Disco reports the true objective at the returned minimiser", &failures);
+    MadsBlackboxAdvancedConfig plain;
+    plain.max_evaluations = 3000;
+    const auto base = mads_blackbox_minimizer(flaky, pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, c64), plain);
+    expect(out.scalarized_minimum <= base.scalarized_minimum + 1e-12,
+           "Disco is never worse than plain MADS on the same flaky function", &failures);
+  }
+
+  {
+    // The decomposition solvers spend part of the budget on a final full-space run; on a coupled function that run must help
+    // (the blocks alone cannot remove the error the coupling leaves).
+    const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+    const std::int64_t n = 10;
+    auto chain = [n](const Series& x) {
+      BlackboxEvaluation e;
+      const Series a = x.slice(0, 0, n - 1, 1), b = x.slice(0, 1, n, 1);
+      e.objectives = a.sub(b).square().sum().add(x.select(0, 0).sub(1.0).square()).reshape({1});
+      return e;
+    };
+    const Series start = pluss::series::full({n}, -1.0, c64);
+    for (const bool psd : {false, true}) {
+      double minimum[2] = {0.0, 0.0};
+      for (int with_polish = 0; with_polish < 2; ++with_polish) {
+        const double fraction = with_polish ? 0.5 : 0.0;
+        if (psd) {
+          PsdMadsConfig c;
+          c.base.max_evaluations = 8000;
+          c.base.max_iterations = 5000;
+          c.polish_fraction = fraction;
+          minimum[with_polish] = psdmads_blackbox_minimizer(chain, start, c).scalarized_minimum;
+        } else {
+          CoopMadsConfig c;
+          c.base.max_evaluations = 8000;
+          c.base.max_iterations = 5000;
+          c.polish_fraction = fraction;
+          minimum[with_polish] = coopmads_blackbox_minimizer(chain, start, c).scalarized_minimum;
+        }
+      }
+      expect(minimum[1] < minimum[0], "a full-space polish improves a decomposition solver on a coupled function", &failures);
+    }
+  }
+
   if (failures != 0) {
     std::cerr << "mads_blackbox_advanced_test: " << failures << " failure(s)\n";
     return 1;

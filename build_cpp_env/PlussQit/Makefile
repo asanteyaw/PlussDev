@@ -865,6 +865,20 @@ plussqit_codem_series_autodiff_reference_demo/fast:
 .PHONY : plussqit_codem_series_autodiff_reference_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_calc_accessor_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_calc_accessor_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_calc_accessor_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/build
+.PHONY : plussqit_codem_series_calc_accessor_reference_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_series_linearalg_product_reference_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_linearalg_product_reference_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_codem_series_linearalg_product_reference_demo.dir/rule
@@ -919,6 +933,20 @@ plussqit_codem_series_linearalg_decomposition_solve_reference_demo: PlussQit/CMa
 plussqit_codem_series_linearalg_decomposition_solve_reference_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_linearalg_decomposition_solve_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_linearalg_decomposition_solve_reference_demo.dir/build
 .PHONY : plussqit_codem_series_linearalg_decomposition_solve_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_series_linearalg_gen_eigh_reference_demo: PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/rule
+.PHONY : plussqit_codem_series_linearalg_gen_eigh_reference_demo
+
+# fast build rule for target.
+plussqit_codem_series_linearalg_gen_eigh_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/build
+.PHONY : plussqit_codem_series_linearalg_gen_eigh_reference_demo/fast
 
 # Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_series_matrix_reference_demo.dir/rule:
@@ -3120,6 +3148,30 @@ examples/CodeM/series_bounds_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_bounds_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_bounds_reference_demo.dir/examples/CodeM/series_bounds_reference_demo.cpp.s
 .PHONY : examples/CodeM/series_bounds_reference_demo.cpp.s
 
+examples/CodeM/series_calc_accessor_reference_demo.o: examples/CodeM/series_calc_accessor_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_calc_accessor_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_calc_accessor_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/examples/CodeM/series_calc_accessor_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_calc_accessor_reference_demo.cpp.o
+
+examples/CodeM/series_calc_accessor_reference_demo.i: examples/CodeM/series_calc_accessor_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_calc_accessor_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_calc_accessor_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/examples/CodeM/series_calc_accessor_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_calc_accessor_reference_demo.cpp.i
+
+examples/CodeM/series_calc_accessor_reference_demo.s: examples/CodeM/series_calc_accessor_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_calc_accessor_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_calc_accessor_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_calc_accessor_reference_demo.dir/examples/CodeM/series_calc_accessor_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_calc_accessor_reference_demo.cpp.s
+
 examples/CodeM/series_combine_reference_demo.o: examples/CodeM/series_combine_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_combine_reference_demo.o
 
@@ -3407,6 +3459,30 @@ examples/CodeM/series_linearalg_determinant_reference_demo.s: examples/CodeM/ser
 examples/CodeM/series_linearalg_determinant_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_linearalg_determinant_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_linearalg_determinant_reference_demo.dir/examples/CodeM/series_linearalg_determinant_reference_demo.cpp.s
 .PHONY : examples/CodeM/series_linearalg_determinant_reference_demo.cpp.s
+
+examples/CodeM/series_linearalg_gen_eigh_reference_demo.o: examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_linearalg_gen_eigh_reference_demo.o
+
+# target to build an object file
+examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.o
+.PHONY : examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.o
+
+examples/CodeM/series_linearalg_gen_eigh_reference_demo.i: examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_linearalg_gen_eigh_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.i
+.PHONY : examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.i
+
+examples/CodeM/series_linearalg_gen_eigh_reference_demo.s: examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_linearalg_gen_eigh_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_series_linearalg_gen_eigh_reference_demo.dir/examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.s
+.PHONY : examples/CodeM/series_linearalg_gen_eigh_reference_demo.cpp.s
 
 examples/CodeM/series_linearalg_product_reference_demo.o: examples/CodeM/series_linearalg_product_reference_demo.cpp.o
 .PHONY : examples/CodeM/series_linearalg_product_reference_demo.o
@@ -5232,6 +5308,30 @@ src/CodeM/Traverse/TraverseTypes.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/Traverse/TraverseTypes.cpp.s
 .PHONY : src/CodeM/Traverse/TraverseTypes.cpp.s
 
+src/CodeM/compat/Fourier.o: src/CodeM/compat/Fourier.cpp.o
+.PHONY : src/CodeM/compat/Fourier.o
+
+# target to build an object file
+src/CodeM/compat/Fourier.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/compat/Fourier.cpp.o
+.PHONY : src/CodeM/compat/Fourier.cpp.o
+
+src/CodeM/compat/Fourier.i: src/CodeM/compat/Fourier.cpp.i
+.PHONY : src/CodeM/compat/Fourier.i
+
+# target to preprocess a source file
+src/CodeM/compat/Fourier.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/compat/Fourier.cpp.i
+.PHONY : src/CodeM/compat/Fourier.cpp.i
+
+src/CodeM/compat/Fourier.s: src/CodeM/compat/Fourier.cpp.s
+.PHONY : src/CodeM/compat/Fourier.s
+
+# target to generate assembly for a file
+src/CodeM/compat/Fourier.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/compat/Fourier.cpp.s
+.PHONY : src/CodeM/compat/Fourier.cpp.s
+
 src/CodeM/compat/Invoke.o: src/CodeM/compat/Invoke.cpp.o
 .PHONY : src/CodeM/compat/Invoke.o
 
@@ -5279,6 +5379,30 @@ src/CodeM/compat/LinearAlgFunctional.s: src/CodeM/compat/LinearAlgFunctional.cpp
 src/CodeM/compat/LinearAlgFunctional.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/compat/LinearAlgFunctional.cpp.s
 .PHONY : src/CodeM/compat/LinearAlgFunctional.cpp.s
+
+src/CodeM/compat/MatrixEquations.o: src/CodeM/compat/MatrixEquations.cpp.o
+.PHONY : src/CodeM/compat/MatrixEquations.o
+
+# target to build an object file
+src/CodeM/compat/MatrixEquations.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/compat/MatrixEquations.cpp.o
+.PHONY : src/CodeM/compat/MatrixEquations.cpp.o
+
+src/CodeM/compat/MatrixEquations.i: src/CodeM/compat/MatrixEquations.cpp.i
+.PHONY : src/CodeM/compat/MatrixEquations.i
+
+# target to preprocess a source file
+src/CodeM/compat/MatrixEquations.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/compat/MatrixEquations.cpp.i
+.PHONY : src/CodeM/compat/MatrixEquations.cpp.i
+
+src/CodeM/compat/MatrixEquations.s: src/CodeM/compat/MatrixEquations.cpp.s
+.PHONY : src/CodeM/compat/MatrixEquations.s
+
+# target to generate assembly for a file
+src/CodeM/compat/MatrixEquations.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/compat/MatrixEquations.cpp.s
+.PHONY : src/CodeM/compat/MatrixEquations.cpp.s
 
 src/CodeM/compat/StatsFunctional.o: src/CodeM/compat/StatsFunctional.cpp.o
 .PHONY : src/CodeM/compat/StatsFunctional.o
@@ -5831,6 +5955,30 @@ src/CodeM/native/cpu/CumKernels.s: src/CodeM/native/cpu/CumKernels.cpp.s
 src/CodeM/native/cpu/CumKernels.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/CumKernels.cpp.s
 .PHONY : src/CodeM/native/cpu/CumKernels.cpp.s
+
+src/CodeM/native/cpu/FourierKernels.o: src/CodeM/native/cpu/FourierKernels.cpp.o
+.PHONY : src/CodeM/native/cpu/FourierKernels.o
+
+# target to build an object file
+src/CodeM/native/cpu/FourierKernels.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/FourierKernels.cpp.o
+.PHONY : src/CodeM/native/cpu/FourierKernels.cpp.o
+
+src/CodeM/native/cpu/FourierKernels.i: src/CodeM/native/cpu/FourierKernels.cpp.i
+.PHONY : src/CodeM/native/cpu/FourierKernels.i
+
+# target to preprocess a source file
+src/CodeM/native/cpu/FourierKernels.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/FourierKernels.cpp.i
+.PHONY : src/CodeM/native/cpu/FourierKernels.cpp.i
+
+src/CodeM/native/cpu/FourierKernels.s: src/CodeM/native/cpu/FourierKernels.cpp.s
+.PHONY : src/CodeM/native/cpu/FourierKernels.s
+
+# target to generate assembly for a file
+src/CodeM/native/cpu/FourierKernels.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cpu/FourierKernels.cpp.s
+.PHONY : src/CodeM/native/cpu/FourierKernels.cpp.s
 
 src/CodeM/native/cpu/GatherScatter.o: src/CodeM/native/cpu/GatherScatter.cpp.o
 .PHONY : src/CodeM/native/cpu/GatherScatter.o
@@ -12024,6 +12172,33 @@ tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s
 .PHONY : tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s
 
+tests/CodeM/test_patch93_optima_interior_exactness.o: tests/CodeM/test_patch93_optima_interior_exactness.cpp.o
+.PHONY : tests/CodeM/test_patch93_optima_interior_exactness.o
+
+# target to build an object file
+tests/CodeM/test_patch93_optima_interior_exactness.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch93_optima_interior_exactness.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch93_optima_interior_exactness.cpp.o
+.PHONY : tests/CodeM/test_patch93_optima_interior_exactness.cpp.o
+
+tests/CodeM/test_patch93_optima_interior_exactness.i: tests/CodeM/test_patch93_optima_interior_exactness.cpp.i
+.PHONY : tests/CodeM/test_patch93_optima_interior_exactness.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch93_optima_interior_exactness.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch93_optima_interior_exactness.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch93_optima_interior_exactness.cpp.i
+.PHONY : tests/CodeM/test_patch93_optima_interior_exactness.cpp.i
+
+tests/CodeM/test_patch93_optima_interior_exactness.s: tests/CodeM/test_patch93_optima_interior_exactness.cpp.s
+.PHONY : tests/CodeM/test_patch93_optima_interior_exactness.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch93_optima_interior_exactness.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch93_optima_interior_exactness.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch93_optima_interior_exactness.cpp.s
+.PHONY : tests/CodeM/test_patch93_optima_interior_exactness.cpp.s
+
 tests/CodeM/test_patch94_mps_take_put_stress.o: tests/CodeM/test_patch94_mps_take_put_stress.cpp.o
 .PHONY : tests/CodeM/test_patch94_mps_take_put_stress.o
 
@@ -12051,6 +12226,33 @@ tests/CodeM/test_patch94_mps_take_put_stress.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch94_mps_take_put_stress.cpp.s
 .PHONY : tests/CodeM/test_patch94_mps_take_put_stress.cpp.s
 
+tests/CodeM/test_patch94_optim_fwd_scalar.o: tests/CodeM/test_patch94_optim_fwd_scalar.cpp.o
+.PHONY : tests/CodeM/test_patch94_optim_fwd_scalar.o
+
+# target to build an object file
+tests/CodeM/test_patch94_optim_fwd_scalar.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch94_optim_fwd_scalar.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch94_optim_fwd_scalar.cpp.o
+.PHONY : tests/CodeM/test_patch94_optim_fwd_scalar.cpp.o
+
+tests/CodeM/test_patch94_optim_fwd_scalar.i: tests/CodeM/test_patch94_optim_fwd_scalar.cpp.i
+.PHONY : tests/CodeM/test_patch94_optim_fwd_scalar.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch94_optim_fwd_scalar.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch94_optim_fwd_scalar.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch94_optim_fwd_scalar.cpp.i
+.PHONY : tests/CodeM/test_patch94_optim_fwd_scalar.cpp.i
+
+tests/CodeM/test_patch94_optim_fwd_scalar.s: tests/CodeM/test_patch94_optim_fwd_scalar.cpp.s
+.PHONY : tests/CodeM/test_patch94_optim_fwd_scalar.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch94_optim_fwd_scalar.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch94_optim_fwd_scalar.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch94_optim_fwd_scalar.cpp.s
+.PHONY : tests/CodeM/test_patch94_optim_fwd_scalar.cpp.s
+
 tests/CodeM/test_patch95_mps_nonzero_stress.o: tests/CodeM/test_patch95_mps_nonzero_stress.cpp.o
 .PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.o
 
@@ -12077,6 +12279,60 @@ tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s
 .PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s
+
+tests/CodeM/test_patch95_stochastic_calc.o: tests/CodeM/test_patch95_stochastic_calc.cpp.o
+.PHONY : tests/CodeM/test_patch95_stochastic_calc.o
+
+# target to build an object file
+tests/CodeM/test_patch95_stochastic_calc.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch95_stochastic_calc.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch95_stochastic_calc.cpp.o
+.PHONY : tests/CodeM/test_patch95_stochastic_calc.cpp.o
+
+tests/CodeM/test_patch95_stochastic_calc.i: tests/CodeM/test_patch95_stochastic_calc.cpp.i
+.PHONY : tests/CodeM/test_patch95_stochastic_calc.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch95_stochastic_calc.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch95_stochastic_calc.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch95_stochastic_calc.cpp.i
+.PHONY : tests/CodeM/test_patch95_stochastic_calc.cpp.i
+
+tests/CodeM/test_patch95_stochastic_calc.s: tests/CodeM/test_patch95_stochastic_calc.cpp.s
+.PHONY : tests/CodeM/test_patch95_stochastic_calc.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch95_stochastic_calc.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch95_stochastic_calc.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch95_stochastic_calc.cpp.s
+.PHONY : tests/CodeM/test_patch95_stochastic_calc.cpp.s
+
+tests/CodeM/test_patch96_optima_curvature_models.o: tests/CodeM/test_patch96_optima_curvature_models.cpp.o
+.PHONY : tests/CodeM/test_patch96_optima_curvature_models.o
+
+# target to build an object file
+tests/CodeM/test_patch96_optima_curvature_models.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch96_optima_curvature_models.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch96_optima_curvature_models.cpp.o
+.PHONY : tests/CodeM/test_patch96_optima_curvature_models.cpp.o
+
+tests/CodeM/test_patch96_optima_curvature_models.i: tests/CodeM/test_patch96_optima_curvature_models.cpp.i
+.PHONY : tests/CodeM/test_patch96_optima_curvature_models.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch96_optima_curvature_models.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch96_optima_curvature_models.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch96_optima_curvature_models.cpp.i
+.PHONY : tests/CodeM/test_patch96_optima_curvature_models.cpp.i
+
+tests/CodeM/test_patch96_optima_curvature_models.s: tests/CodeM/test_patch96_optima_curvature_models.cpp.s
+.PHONY : tests/CodeM/test_patch96_optima_curvature_models.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch96_optima_curvature_models.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch96_optima_curvature_models.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch96_optima_curvature_models.cpp.s
+.PHONY : tests/CodeM/test_patch96_optima_curvature_models.cpp.s
 
 tests/CodeM/test_patch97_linalg_backend_info.o: tests/CodeM/test_patch97_linalg_backend_info.cpp.o
 .PHONY : tests/CodeM/test_patch97_linalg_backend_info.o
@@ -12353,6 +12609,30 @@ tests/CodeM/test_series_final_teachings.s: tests/CodeM/test_series_final_teachin
 tests/CodeM/test_series_final_teachings.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_final_teachings.cpp.s
 .PHONY : tests/CodeM/test_series_final_teachings.cpp.s
+
+tests/CodeM/test_series_fourier.o: tests/CodeM/test_series_fourier.cpp.o
+.PHONY : tests/CodeM/test_series_fourier.o
+
+# target to build an object file
+tests/CodeM/test_series_fourier.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_fourier.cpp.o
+.PHONY : tests/CodeM/test_series_fourier.cpp.o
+
+tests/CodeM/test_series_fourier.i: tests/CodeM/test_series_fourier.cpp.i
+.PHONY : tests/CodeM/test_series_fourier.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_fourier.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_fourier.cpp.i
+.PHONY : tests/CodeM/test_series_fourier.cpp.i
+
+tests/CodeM/test_series_fourier.s: tests/CodeM/test_series_fourier.cpp.s
+.PHONY : tests/CodeM/test_series_fourier.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_fourier.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_fourier.cpp.s
+.PHONY : tests/CodeM/test_series_fourier.cpp.s
 
 tests/CodeM/test_series_routing_manifest.o: tests/CodeM/test_series_routing_manifest.cpp.o
 .PHONY : tests/CodeM/test_series_routing_manifest.o
@@ -13261,6 +13541,7 @@ help:
 	@echo "... plussqit_codem_series_arithmetic_reference_demo"
 	@echo "... plussqit_codem_series_autodiff_reference_demo"
 	@echo "... plussqit_codem_series_bounds_reference_demo"
+	@echo "... plussqit_codem_series_calc_accessor_reference_demo"
 	@echo "... plussqit_codem_series_combine_reference_demo"
 	@echo "... plussqit_codem_series_comparison_reference_demo"
 	@echo "... plussqit_codem_series_complex_components_reference_demo"
@@ -13273,6 +13554,7 @@ help:
 	@echo "... plussqit_codem_series_introspection_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_decomposition_solve_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_determinant_reference_demo"
+	@echo "... plussqit_codem_series_linearalg_gen_eigh_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_product_reference_demo"
 	@echo "... plussqit_codem_series_linearalg_transform_reference_demo"
 	@echo "... plussqit_codem_series_logic_reference_demo"
@@ -13476,6 +13758,9 @@ help:
 	@echo "... examples/CodeM/series_bounds_reference_demo.o"
 	@echo "... examples/CodeM/series_bounds_reference_demo.i"
 	@echo "... examples/CodeM/series_bounds_reference_demo.s"
+	@echo "... examples/CodeM/series_calc_accessor_reference_demo.o"
+	@echo "... examples/CodeM/series_calc_accessor_reference_demo.i"
+	@echo "... examples/CodeM/series_calc_accessor_reference_demo.s"
 	@echo "... examples/CodeM/series_combine_reference_demo.o"
 	@echo "... examples/CodeM/series_combine_reference_demo.i"
 	@echo "... examples/CodeM/series_combine_reference_demo.s"
@@ -13512,6 +13797,9 @@ help:
 	@echo "... examples/CodeM/series_linearalg_determinant_reference_demo.o"
 	@echo "... examples/CodeM/series_linearalg_determinant_reference_demo.i"
 	@echo "... examples/CodeM/series_linearalg_determinant_reference_demo.s"
+	@echo "... examples/CodeM/series_linearalg_gen_eigh_reference_demo.o"
+	@echo "... examples/CodeM/series_linearalg_gen_eigh_reference_demo.i"
+	@echo "... examples/CodeM/series_linearalg_gen_eigh_reference_demo.s"
 	@echo "... examples/CodeM/series_linearalg_product_reference_demo.o"
 	@echo "... examples/CodeM/series_linearalg_product_reference_demo.i"
 	@echo "... examples/CodeM/series_linearalg_product_reference_demo.s"
@@ -13740,12 +14028,18 @@ help:
 	@echo "... src/CodeM/Traverse/TraverseTypes.o"
 	@echo "... src/CodeM/Traverse/TraverseTypes.i"
 	@echo "... src/CodeM/Traverse/TraverseTypes.s"
+	@echo "... src/CodeM/compat/Fourier.o"
+	@echo "... src/CodeM/compat/Fourier.i"
+	@echo "... src/CodeM/compat/Fourier.s"
 	@echo "... src/CodeM/compat/Invoke.o"
 	@echo "... src/CodeM/compat/Invoke.i"
 	@echo "... src/CodeM/compat/Invoke.s"
 	@echo "... src/CodeM/compat/LinearAlgFunctional.o"
 	@echo "... src/CodeM/compat/LinearAlgFunctional.i"
 	@echo "... src/CodeM/compat/LinearAlgFunctional.s"
+	@echo "... src/CodeM/compat/MatrixEquations.o"
+	@echo "... src/CodeM/compat/MatrixEquations.i"
+	@echo "... src/CodeM/compat/MatrixEquations.s"
 	@echo "... src/CodeM/compat/StatsFunctional.o"
 	@echo "... src/CodeM/compat/StatsFunctional.i"
 	@echo "... src/CodeM/compat/StatsFunctional.s"
@@ -13815,6 +14109,9 @@ help:
 	@echo "... src/CodeM/native/cpu/CumKernels.o"
 	@echo "... src/CodeM/native/cpu/CumKernels.i"
 	@echo "... src/CodeM/native/cpu/CumKernels.s"
+	@echo "... src/CodeM/native/cpu/FourierKernels.o"
+	@echo "... src/CodeM/native/cpu/FourierKernels.i"
+	@echo "... src/CodeM/native/cpu/FourierKernels.s"
 	@echo "... src/CodeM/native/cpu/GatherScatter.o"
 	@echo "... src/CodeM/native/cpu/GatherScatter.i"
 	@echo "... src/CodeM/native/cpu/GatherScatter.s"
@@ -14556,12 +14853,24 @@ help:
 	@echo "... tests/CodeM/test_patch93_mps_sorting_selection_stress.o"
 	@echo "... tests/CodeM/test_patch93_mps_sorting_selection_stress.i"
 	@echo "... tests/CodeM/test_patch93_mps_sorting_selection_stress.s"
+	@echo "... tests/CodeM/test_patch93_optima_interior_exactness.o"
+	@echo "... tests/CodeM/test_patch93_optima_interior_exactness.i"
+	@echo "... tests/CodeM/test_patch93_optima_interior_exactness.s"
 	@echo "... tests/CodeM/test_patch94_mps_take_put_stress.o"
 	@echo "... tests/CodeM/test_patch94_mps_take_put_stress.i"
 	@echo "... tests/CodeM/test_patch94_mps_take_put_stress.s"
+	@echo "... tests/CodeM/test_patch94_optim_fwd_scalar.o"
+	@echo "... tests/CodeM/test_patch94_optim_fwd_scalar.i"
+	@echo "... tests/CodeM/test_patch94_optim_fwd_scalar.s"
 	@echo "... tests/CodeM/test_patch95_mps_nonzero_stress.o"
 	@echo "... tests/CodeM/test_patch95_mps_nonzero_stress.i"
 	@echo "... tests/CodeM/test_patch95_mps_nonzero_stress.s"
+	@echo "... tests/CodeM/test_patch95_stochastic_calc.o"
+	@echo "... tests/CodeM/test_patch95_stochastic_calc.i"
+	@echo "... tests/CodeM/test_patch95_stochastic_calc.s"
+	@echo "... tests/CodeM/test_patch96_optima_curvature_models.o"
+	@echo "... tests/CodeM/test_patch96_optima_curvature_models.i"
+	@echo "... tests/CodeM/test_patch96_optima_curvature_models.s"
 	@echo "... tests/CodeM/test_patch97_linalg_backend_info.o"
 	@echo "... tests/CodeM/test_patch97_linalg_backend_info.i"
 	@echo "... tests/CodeM/test_patch97_linalg_backend_info.s"
@@ -14595,6 +14904,9 @@ help:
 	@echo "... tests/CodeM/test_series_final_teachings.o"
 	@echo "... tests/CodeM/test_series_final_teachings.i"
 	@echo "... tests/CodeM/test_series_final_teachings.s"
+	@echo "... tests/CodeM/test_series_fourier.o"
+	@echo "... tests/CodeM/test_series_fourier.i"
+	@echo "... tests/CodeM/test_series_fourier.s"
 	@echo "... tests/CodeM/test_series_routing_manifest.o"
 	@echo "... tests/CodeM/test_series_routing_manifest.i"
 	@echo "... tests/CodeM/test_series_routing_manifest.s"

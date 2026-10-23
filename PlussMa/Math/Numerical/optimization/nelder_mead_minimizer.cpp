@@ -101,9 +101,10 @@ Series evaluate(
   }
 
   const double host_value = scalar_as_f64(value, "nelder_mead_minimizer");
-  if (!std::isfinite(host_value)) {
+  // +Inf is a legitimate value ("this point is not allowed"); the simplex simply moves away from it. NaN and -Inf are not.
+  if (std::isnan(host_value) || host_value == -std::numeric_limits<double>::infinity()) {
     ::pluss::throw_error(
-        "subsp::math::optimization::nelder_mead_minimizer: objective returned a non-finite value");
+        "subsp::math::optimization::nelder_mead_minimizer: objective returned NaN or -Inf");
   }
 
   return value.to(flat_x.platform(), flat_x.scalar_type());
@@ -151,6 +152,9 @@ SimplexState initialize_state(
 bool has_converged(const SimplexState& state, const NelderMeadConfig& config) {
   const Series& best_x = state.vertices.front();
   const Series& best_value = state.values.front();
+
+  // A simplex whose best vertex is still +Inf has found no allowed point yet; it cannot have converged.
+  if (std::isinf(scalar_as_f64(best_value, "nelder_mead_minimizer"))) return false;
 
   double max_value_delta = 0.0;
   for (std::size_t i = 1; i < state.values.size(); ++i) {

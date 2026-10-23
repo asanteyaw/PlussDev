@@ -184,9 +184,9 @@ dtype=complex64 is_complex=true
   `Series` from real and imaginary parts.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="invalid_index.html">
+  <a class="prev-link" href="irfft.html">
     <span class="label">Previous</span>
-    <span class="title">invalid_index</span>
+    <span class="title">irfft</span>
   </a>
   <a class="next-link" href="is_contiguous.html">
     <span class="label">Next</span>

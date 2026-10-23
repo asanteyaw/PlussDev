@@ -709,6 +709,9 @@
   // Typed wrappers for `factorial` (staged migration off variadic surface).
   Series factorial() const { return pluss::codem::_compat::invoke("factorial", *this); }
 
+  // Typed wrappers for `fft` (staged migration off variadic surface).
+  Series fft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const { return pluss::codem::_compat::invoke("fft", *this, {n, dim, norm}); }
+
   // Typed wrappers for `fftshift` (staged migration off variadic surface).
   Series fftshift() const { return pluss::codem::_compat::invoke("fftshift", *this); }
 
@@ -902,6 +905,9 @@
 
   Series idst(std::int64_t dim) const { return pluss::codem::_compat::invoke("idst", *this, {dim}); }
 
+  // Typed wrappers for `ifft` (staged migration off variadic surface).
+  Series ifft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const { return pluss::codem::_compat::invoke("ifft", *this, {n, dim, norm}); }
+
   // Typed wrappers for `ifftshift` (staged migration off variadic surface).
   Series ifftshift() const { return pluss::codem::_compat::invoke("ifftshift", *this); }
 
@@ -985,6 +991,9 @@
   // `invalid` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // `invalid_index` has concrete declarations/definitions; variadic wrapper intentionally skipped.
+
+  // Typed wrappers for `irfft` (staged migration off variadic surface).
+  Series irfft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const { return pluss::codem::_compat::invoke("irfft", *this, {n, dim, norm}); }
 
   // `is_coalesced` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
@@ -1635,6 +1644,9 @@
 
   // Typed wrappers for `retains_grad` (staged migration off variadic surface).
   Series retains_grad() const { return pluss::codem::_compat::invoke("retains_grad", *this); }
+
+  // Typed wrappers for `rfft` (staged migration off variadic surface).
+  Series rfft(std::int64_t n=-1, std::int64_t dim=-1, const std::string& norm="backward") const { return pluss::codem::_compat::invoke("rfft", *this, {n, dim, norm}); }
 
   // Typed wrappers for `roll` (staged migration off variadic surface).
   Series roll(std::int64_t shift) const { return pluss::codem::_compat::invoke("roll", *this, {shift}); }

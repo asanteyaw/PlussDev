@@ -1,0 +1,82 @@
+# Intent layer for public_calls.md (read by generate_public_calls.rb).
+#
+# clang-doc reports every non-private, non-`detail` declaration in the umbrella headers, which cannot tell a deliberate API from a helper that
+# merely sits at namespace scope. This file records the author's intent for the NatSci code written by the biology/chemistry track:
+#   internal:    symbols that stay out of API prose (helpers, validators, unit-constant accessors, building blocks without a user story),
+#                keyed by header (path below include/pluss/subsp/natsci/) and unqualified name, with the reason.
+#   front_doors: the calls a user is meant to start from, per module namespace (shown first in the generated file).
+# A header that is not listed under `internal` has every reported symbol treated as intended public. New work: add its internals and front doors here
+# in the same commit that adds the header, then regenerate.
+
+internal:
+  - header: biology/biophysics/protein_folding.h
+    names: [gas_constant_kcal, rt_kcal]
+    reason: unit helpers (R in kcal/mol/K and RT); callers pass temperatures to the model functions
+  - header: biology/biophysics/nucleic_acids.h
+    names: [table]
+    reason: internal lookup into the generated nearest-neighbor tables; the supported entry is duplex_thermodynamics
+  - header: biology/population/birth_death.h
+    names: [normal_cdf]
+    reason: numeric helper for quasi_extinction_cdf
+  - header: biology/population/delay.h
+    names: [Complex, lambert_w0_complex]
+    reason: building block of rightmost_root (complex Lambert W as real/imaginary Series pair); not a supported standalone special function
+  - header: biology/biomechanics/hemodynamics.h
+    names: [cmul, cdiv, csub, cscale, cexp]
+    reason: complex-arithmetic helpers on (re, im) Series pairs; results are exposed through the Womersley / impedance calls
+  - header: biology/metabolism/fba.h
+    names: [validate]
+    reason: argument checker run by the solvers
+  - header: biology/metabolism/pathway_thermodynamics.h
+    names: [gas_constant_kj]
+    reason: unit helper
+  - header: biology/metabolism/thermodynamics.h
+    names: [gas_constant]
+    reason: unit helper
+  - header: biology/genetics/wright_fisher.h
+    names: [sample_binomial]
+    reason: sampling kernel of simulate(); not a distribution API
+  - header: common/dynamics.h
+    names: [require, require_finite, require_float, require_nonnegative, require_positive, require_species, require_square, matvec, prod_last]
+    reason: argument validators and small tensor helpers shared by the models; not part of the modelling API
+  - header: common/reaction.h
+    names: [positive_products]
+    reason: log-space power kernel used inside flux/propensity
+  - header: chemistry/spectroscopy.h
+    names: [avogadro, boltzmann, speed_of_light]
+    reason: constant accessors; physical constants are documented under common::constants
+  - header: chemistry/transport.h
+    names: [avogadro, boltzmann]
+    reason: constant accessors
+  - header: chemistry/thermo.h
+    names: [gas_constant]
+    reason: constant accessor
+  - header: common/electrochem.h
+    names: [faraday, gas_constant]
+    reason: constant accessors
+
+front_doors:
+  "pluss::eng::power": [zbase, ybase, ibase, pu, si, make, dc, ac, ptdf, lodf, outages, dispatch, opf, estimate, trace]
+  "pluss::eng::structure": [buckling, frame, mass, modes, solve, truss]
+  "pluss::natsci::biology::biomechanics::muscle": [active_force_length, passive_force_length, force_velocity, tendon_force_length, activation_rate, isometric_equilibrium, simulate]
+  "pluss::natsci::biology::biomechanics::chain": [make, inverse_dynamics, forward_dynamics, mass_matrix, bias_forces, forward_kinematics, energy, simulate]
+  "pluss::natsci::biology::biomechanics::tissue": [neo_hookean, mooney_rivlin, yeoh, gent, fung, uniaxial_stress, equibiaxial_stress, simple_shear, ogden_uniaxial, artery_stresses]
+  "pluss::natsci::biology::biomechanics::hemodynamics": [windkessel2_impedance, windkessel3_impedance, windkessel_capacitor_step, poiseuille_resistance, womersley_number, womersley_flow, womersley_velocity, womersley_wall_shear, bessel_j01, moens_korteweg, bramwell_hill]
+  "pluss::natsci::biology::biomechanics::locomotion": [slip_apex_map, lipm_state, lipm_capture_point, lipm_time_to_position]
+  "pluss::natsci::biology::population::growth": [logistic, gompertz, exponential, theta_logistic_rate]
+  "pluss::natsci::biology::population::maps": [iterate, attractor, lyapunov, detect_period, periodic_point, superstable_parameter]
+  "pluss::natsci::biology::population::structured": [leslie, project, dominant, sensitivity, elasticity]
+  "pluss::natsci::biology::population::demography": [fundamental_matrix, net_reproductive_rate, damping_ratio, life_table, ltre_fixed, tuljapurkar, simulate_growth, quasi_extinction_probability, amplification, lambda_gradient]
+  "pluss::natsci::biology::population::birth_death": [generator, transient, mean_time_to_extinction, quasi_stationary, linear_extinction_probability, ultimate_extinction, quasi_extinction_cdf, dennis_estimate]
+  "pluss::natsci::biology::population::ipm": [mesh, discretize, analyze, life_expectancy, net_reproductive_rate, spreading_speed]
+  "pluss::natsci::biology::population::delay": [integrate, hutchinson_rate, nicholson_rate, rightmost_root]
+  "pluss::natsci::biology::population::community": [spectral_abscissa, random_community, invasion_growth_rate, chemostat_rate, r_star, selection_gradient, classify, singular_strategy]
+  "pluss::natsci::biology::metabolism": [flux_balance, flux_variability, single_knockouts, elementary_modes, sample_fluxes]
+  "pluss::natsci::biology::metabolism::pathway_thermodynamics": [max_min_driving_force, thermodynamic_flux_balance]
+  "pluss::natsci::biology::metabolism::control": [coefficients, elasticities, steady_state, response, conservation_laws]
+  "pluss::natsci::biology::biophysics::ionization": [charge, isoelectric_point, buffer_capacity, protein_groups]
+  "pluss::natsci::biology::biophysics::linkage": [ln_partition_independent, ln_partition_polyprotic, log10_apparent_constant, bound_complex]
+  "pluss::natsci::biology::spatial": [laplacian, integrate, box]
+  "pluss::natsci::biology::spatial::turing": [turing_conditions, growth_rate, unstable_modes]
+  "pluss::natsci::chemistry::polymers": [molecular_weights, fh_binodal, mayo_lewis, wlc_force]
+  "pluss::natsci::chemistry::step_growth": [conversion_second_order, sol_gel, reversible_rates]

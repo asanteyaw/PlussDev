@@ -1,0 +1,8 @@
+# The error-correction model
+
+[Back to Vector Autoregressions and Cointegration](../ts_04_vector_models.md)
+
+
+@@example Stats/time_series/guide/1218_vecm_fit.cpp@@
+
+The cointegrating vector is estimated as (1, −0.979, −0.004): the first two series differ by a stationary quantity, and the third does not enter. The adjustment loadings say that the second series reacts to a positive deviation (`x − y` above its usual level) by rising (+0.486 per period), and the first series barely reacts; the long-run forecasts stay tied together.

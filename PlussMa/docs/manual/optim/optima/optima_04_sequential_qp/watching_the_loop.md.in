@@ -1,0 +1,10 @@
+# Watching the loop
+
+[Back to Sequential QP in Depth](../optima_04_sequential_qp.md)
+
+
+The progress hook receives one snapshot per iteration. The program prints the step taken, the penalty weight, the stationarity measure and the constraint violation on a four-variable problem with one nonlinear inequality and one nonlinear equality.
+
+@@example Numerical/optimization/guide/optima/51_sqp_trace.cpp@@
+
+Read the columns together. The violation falls from 1.39 to 8.2e-08 in four iterations while the objective settles at 17.01402. The penalty weight starts at 5.00 and falls to 1.21: the solver sets it from the size of the multipliers rather than keeping the starting guess. The full step (`1.00`) is accepted every time, which is the sign of a model that predicts the problem well. The last iteration appears twice, with stationarity 1.84e-05 and then 4.49e-07: the second line is the same point after the multiplier estimate has been refreshed, and it is that value which satisfies the tolerance.

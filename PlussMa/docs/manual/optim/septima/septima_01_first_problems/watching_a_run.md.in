@@ -1,0 +1,10 @@
+# Watching a run
+
+[Back to First Problems](../septima_01_first_problems.md)
+
+
+The progress hook is called after every iteration with a snapshot (iteration, function evaluations, objective, gradient, stationarity, step, violation, message). It returns `true` to keep going and `false` to stop with `Stopped`. This program prints every 150th iteration of an Adam run on the Rosenbrock valley with a learning rate of 0.05 and records when the objective first fell below 0.01.
+
+@@example Numerical/optimization/guide/septima/106_progress_trace.cpp@@
+
+The objective falls from 24.2 to 1.2e-05 over 1500 iterations, with the gradient falling from 216 to 2.5e-03 and the step shrinking as it goes. It first fell below 0.01 at iteration 831, which is the kind of thing a hook can act on: stop at a target value, log to a file, or adjust something outside the solver. A trace like this is also the quickest way to see whether a learning rate is too small (a slow, steady fall, as here), too large (the objective oscillating), or about right.

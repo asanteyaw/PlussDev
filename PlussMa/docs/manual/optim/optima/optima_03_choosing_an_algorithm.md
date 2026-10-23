@@ -1,0 +1,74 @@
+<!-- generated from optima_03_choosing_an_algorithm.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Optima 3: Choosing and Tuning an Algorithm
+
+`optima(...)` offers four algorithms behind one call, and they are not interchangeable. On an easy problem all four give the same answer; on a hard one they differ in how many evaluations they spend, in whether the intermediate points respect your constraints, and in which local minimum they settle into. This chapter is for the moment you have a working model and need to decide which algorithm to run and which of its settings are worth touching. After it you can predict how each algorithm will behave on your problem, choose one with a reason, and spot the options that matter.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+All four algorithms answer the same question: given where I am, how do I take a step that lowers the objective without breaking the constraints? They answer it differently.
+
+| Algorithm | The step | Constraint handling | Curvature |
+|---|---|---|---|
+| `MeritMethod` | Minimize the objective plus penalty terms, then adjust the penalties and multiplier estimates between rounds (an augmented Lagrangian). Steps are projected onto the bounds. | Violation is allowed and penalized; the penalty grows until it is small. | A quasi-Newton model of the penalized function. |
+| `SequentialQP` | Solve a quadratic model of the problem with the constraints linearized, then search along that step. | Iterates can be infeasible on the way; a restoration step is the fallback. | A quasi-Newton model of the Lagrangian. |
+| `WorkingSet` | The same quadratic steps, with an explicit set of constraints treated as active. It hands the run to sequential QP if it stalls or fails. | As sequential QP, with the active set tracked. | As sequential QP. |
+| `InternalProtocol` | A primal-dual interior step: constraints enter through a barrier whose strength is driven toward zero. | Bounds and linear rows stay strictly satisfied; nonlinear inequalities carry their own slack variables by default, so they may be violated on the way. | Quasi-Newton (dense or limited-memory) or an exact Hessian. |
+
+Three facts to hold on to. The default algorithm is `SequentialQP`. Each algorithm reads only its own options struct, so a setting on the wrong struct does nothing. And a result with exit flag `Converged` certifies a point that satisfies the first-order optimality conditions, which is a local statement: nothing in it says that a better point does not exist.
+
+## A guided tour
+
+- [The same problem, four algorithms](optima_03_choosing_an_algorithm/the_same_problem_four_algorithms.md)
+- [What happens to the constraints on the way](optima_03_choosing_an_algorithm/what_happens_to_the_constraints_on_the_way.md)
+- [Where you start decides where you end](optima_03_choosing_an_algorithm/where_you_start_decides_where_you_end.md)
+- [When the objective is not a number](optima_03_choosing_an_algorithm/when_the_objective_is_not_a_number.md)
+- [The curvature model](optima_03_choosing_an_algorithm/the_curvature_model.md)
+- [Badly scaled problems](optima_03_choosing_an_algorithm/badly_scaled_problems.md)
+- [The options that decide the outcome](optima_03_choosing_an_algorithm/the_options_that_decide_the_outcome.md)
+- [Growing the problem](optima_03_choosing_an_algorithm/growing_the_problem.md)
+- [The ready-made option sets](optima_03_choosing_an_algorithm/the_ready_made_option_sets.md)
+
+## Decisions
+
+| Situation | Choice |
+|---|---|
+| You have no particular constraint structure and want a good first try. | `SequentialQP`, the default. |
+| Many inequality constraints or bounds, or a problem that grows. | `InternalProtocol`. |
+| You want fewer excursions outside the feasible set than sequential QP gives, and can pay more evaluations. | `WorkingSet` (Programs 2 and 8). |
+| The objective is undefined where nonlinear constraints are violated. | `InternalProtocol` with `independent_nonlinear_slacks = false`. |
+| The model has several local minima. | Any algorithm, several starts; compare the objective value, not the flag. |
+| You want a simple baseline or a second opinion. | `MeritMethod`; it can settle at a different first-order point (Programs 1 and 7). |
+| You are tuning. | Start with `optimality_tolerance`, `max_iterations`, and the interior method's `initial_barrier_parameter`; leave the rest. |
+
+## Pitfalls
+
+- [Setting an option on the wrong struct](optima_03_choosing_an_algorithm/setting_an_option_on_the_wrong_struct.md)
+
+### Treating `Converged` as `Optimal`
+
+Programs 1, 3 and 7 each show a run that exits with flag `1` at a point that is not the best one found by the others. The flag certifies the first-order conditions at the returned point, nothing more. If the answer matters, solve from more than one start or with more than one algorithm and compare the objective values.
+
+## Where next
+
+Chapter 4 looks inside sequential QP: the quadratic subproblem, the merit function it searches along, and what its restoration step does when the linearized constraints are inconsistent.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima_03_choosing_an_algorithm/the_same_problem_four_algorithms
+optima_03_choosing_an_algorithm/what_happens_to_the_constraints_on_the_way
+optima_03_choosing_an_algorithm/where_you_start_decides_where_you_end
+optima_03_choosing_an_algorithm/when_the_objective_is_not_a_number
+optima_03_choosing_an_algorithm/the_curvature_model
+optima_03_choosing_an_algorithm/badly_scaled_problems
+optima_03_choosing_an_algorithm/the_options_that_decide_the_outcome
+optima_03_choosing_an_algorithm/growing_the_problem
+optima_03_choosing_an_algorithm/the_ready_made_option_sets
+optima_03_choosing_an_algorithm/setting_an_option_on_the_wrong_struct
+```
+<!-- apiref:toctree:end -->

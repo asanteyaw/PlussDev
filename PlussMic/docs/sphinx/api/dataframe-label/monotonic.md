@@ -49,12 +49,12 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-std::cout << labeled.label().monotonic();
+std::cout << labeled.labels().monotonic();
 
-auto sorted = labeled.label().sort();
-std::cout << sorted.label().monotonic();
+auto sorted = labeled.labels().sort();
+std::cout << sorted.labels().monotonic();
 ```
 
 ### Output
@@ -77,10 +77,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"east", "east", "north", "west"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-std::cout << labeled.label().monotonic();
-std::cout << labeled.label().monotonic(true, true);
+std::cout << labeled.labels().monotonic();
+std::cout << labeled.labels().monotonic(true, true);
 ```
 
 ### Output
@@ -103,10 +103,10 @@ using namespace pluss::table;
 auto orders = DataFrame(
     {{"region", Slate(pluss::make_note({"west", "north", "east"}))},
      {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0}))}});
-auto labeled = orders.label().set("region");
+auto labeled = orders.labels().set("region");
 
-std::cout << labeled.label().monotonic();
-std::cout << labeled.label().monotonic(false);
+std::cout << labeled.labels().monotonic();
+std::cout << labeled.labels().monotonic(false);
 ```
 
 ### Output
@@ -131,8 +131,8 @@ auto readings = DataFrame(
     Slate(pluss::make_series({10.0, 20.0, std::numeric_limits<double>::quiet_NaN()})));
 std::cout << readings;
 
-std::cout << readings.label().monotonic();
-std::cout << readings.label().monotonic(true, false, false);
+std::cout << readings.labels().monotonic();
+std::cout << readings.labels().monotonic(true, false, false);
 ```
 
 ### Output (readings)

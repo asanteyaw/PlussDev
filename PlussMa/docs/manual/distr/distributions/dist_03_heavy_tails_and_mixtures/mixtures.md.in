@@ -1,0 +1,8 @@
+# Mixtures
+
+[Back to Heavy Tails and Mixtures](../dist_03_heavy_tails_and_mixtures.md)
+
+
+@@example Stats/distributions/guide/1307_mixtures.cpp@@
+
+Two starts that differ greatly (component means at −1 and 1, or at −3 and 3) converge to the same fit, the maximum of the likelihood (−1211.70). Its weights, means and standard deviations are within about one standard error of the generating ones (weights 0.3 and 0.7 for 0.28 and 0.72; means −2.0 and 1.5 for −2.06 and 1.45; standard deviations 0.8 and 1.2 for 0.89 and 1.27: the first standard deviation is 0.6 standard errors from the truth). The interval printed for the first mean is −2.46 to −1.65. A single normal fits the same data much worse (log-likelihood −1255.5 against −1211.7, Akaike's criterion 2515 against 2433): the mixture, with five parameters, is clearly preferred.

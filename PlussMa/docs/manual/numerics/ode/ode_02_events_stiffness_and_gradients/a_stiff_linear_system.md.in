@@ -1,0 +1,10 @@
+# A stiff linear system
+
+[Back to Events, Stiffness and Gradients](../ode_02_events_stiffness_and_gradients.md)
+
+
+A stiff system has a fast mode that dies out quickly and a slow mode you care about. An explicit method must keep its step below the stability limit of the *fast* mode for the whole run, even when that mode is long gone. `ode::fluxa_linear(action, y0, t0, t1, options)` solves `y' = A(t) y` with an adaptive implicit midpoint rule: `action(t, y)` applies `A` without forming it, and each implicit step is solved by the shared Krylov (GMRES) solver, configured through `LinearOdeOptions::linear`.
+
+@@example Numerical/ode/guide/705_stiff_linear.cpp@@
+
+The explicit method is stable only for steps below about 3e-5 here, so it needs about 30,000 steps; the implicit method steps by the accuracy of the slow mode and needs about 350, nearly a hundred times fewer. The price is accuracy per step: the implicit midpoint rule is second order, and its final error (1e-5) is larger than the explicit run's. Use it for systems that are linear in the state and stiff; for a nonlinear stiff problem, linearise or choose the step budget accordingly.

@@ -1,0 +1,8 @@
+# The methods compared
+
+[Back to Root Finding: Solving Equations](../roots_01_solving_equations.md)
+
+
+@@example Numerical/optimization/guide/roots/503_method_comparison.cpp@@
+
+The table reads as rates. Bisection gains about one binary digit per step and its residual does not fall evenly, because the midpoint can land on either side of the root. Illinois starts slower here (its early steps are long) and then accelerates sharply. Newton, with the exact derivative or with the built-in central difference, is quadratic: the number of correct digits roughly doubles each step, and it is at rounding level by step 6 (the `0.0e+00` entries are residuals below 1e-16). The secant method, which needs no derivative, is nearly as fast. Use a bracketed method when you have a bracket and want certainty, Newton when you can supply or cheaply difference the derivative, and the secant method when you have neither.

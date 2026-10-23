@@ -23,7 +23,7 @@ Index-style set operations between two label slates (`.unite()`, `.intersect()`,
 missing-label handling (`.fillnull()`, `.isnull()`, `.notnull()`).
 
 `Slate::label()` is the 1D foundation this machinery is built on — a `DataFrame`'s
-own case-label axis is itself a `Slate`, and [`DataFrame::label()`](../dataframe/label.md)
+own case-label axis is itself a `Slate`, and [`DataFrame::labels()`](../dataframe/labels.md)
 adds frame-specific concerns (multi-level names, ordering, renaming, dropping,
 `codes()`/`levels()`) on top of this same 1D surface.
 
@@ -112,7 +112,7 @@ true
   labels), not merely whether the slate itself is defined.
 - `.set()`, `.range()`, `.reset()`, `.align()`, and `.fillnull()` are non-mutating —
   each returns a new `Slate`.
-- `DataFrame::label().values()` returns the frame's case-label slate as a whole;
+- `DataFrame::labels().values()` returns the frame's case-label slate as a whole;
   `Slate::label()` is where 1D relabeling and 1D label alignment actually live —
   the frame-level accessor delegates to this one under the hood.
 
@@ -120,7 +120,7 @@ true
 
 - [`Slate::nt`](nt.md), [`Slate::tl`](tl.md): the dedicated accessors for a
   slate's own *payload*, as opposed to its case-label axis.
-- [`DataFrame::label`](../dataframe/label.md): the frame-level counterpart, which adds
+- [`DataFrame::labels`](../dataframe/labels.md): the frame-level counterpart, which adds
   multi-level naming, ordering, and codes/levels machinery on top of this 1D surface.
 - [`Slate::append`](append.md): case-label handling during concatenation depends
   directly on `.label().has()`'s corrected semantics — both operands must agree on

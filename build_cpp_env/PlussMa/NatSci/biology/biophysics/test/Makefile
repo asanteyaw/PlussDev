@@ -206,6 +206,62 @@ biophysics_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/biophysics_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/biophysics_test.dir/build
 .PHONY : biophysics_test/fast
 
+# Convenience name for target.
+PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/rule
+
+# Convenience name for target.
+ionization_test: PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/rule
+.PHONY : ionization_test
+
+# fast build rule for target.
+ionization_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/build
+.PHONY : ionization_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/rule
+
+# Convenience name for target.
+linkage_test: PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/rule
+.PHONY : linkage_test
+
+# fast build rule for target.
+linkage_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/build
+.PHONY : linkage_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/rule
+
+# Convenience name for target.
+nucleic_acids_test: PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/rule
+.PHONY : nucleic_acids_test
+
+# fast build rule for target.
+nucleic_acids_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/build
+.PHONY : nucleic_acids_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/rule
+
+# Convenience name for target.
+protein_folding_test: PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/rule
+.PHONY : protein_folding_test
+
+# fast build rule for target.
+protein_folding_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/build
+.PHONY : protein_folding_test/fast
+
 biophysics_test.o: biophysics_test.cpp.o
 .PHONY : biophysics_test.o
 
@@ -230,6 +286,102 @@ biophysics_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/biophysics_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/biophysics_test.dir/biophysics_test.cpp.s
 .PHONY : biophysics_test.cpp.s
 
+ionization_test.o: ionization_test.cpp.o
+.PHONY : ionization_test.o
+
+# target to build an object file
+ionization_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/ionization_test.cpp.o
+.PHONY : ionization_test.cpp.o
+
+ionization_test.i: ionization_test.cpp.i
+.PHONY : ionization_test.i
+
+# target to preprocess a source file
+ionization_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/ionization_test.cpp.i
+.PHONY : ionization_test.cpp.i
+
+ionization_test.s: ionization_test.cpp.s
+.PHONY : ionization_test.s
+
+# target to generate assembly for a file
+ionization_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/ionization_test.dir/ionization_test.cpp.s
+.PHONY : ionization_test.cpp.s
+
+linkage_test.o: linkage_test.cpp.o
+.PHONY : linkage_test.o
+
+# target to build an object file
+linkage_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/linkage_test.cpp.o
+.PHONY : linkage_test.cpp.o
+
+linkage_test.i: linkage_test.cpp.i
+.PHONY : linkage_test.i
+
+# target to preprocess a source file
+linkage_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/linkage_test.cpp.i
+.PHONY : linkage_test.cpp.i
+
+linkage_test.s: linkage_test.cpp.s
+.PHONY : linkage_test.s
+
+# target to generate assembly for a file
+linkage_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/linkage_test.dir/linkage_test.cpp.s
+.PHONY : linkage_test.cpp.s
+
+nucleic_acids_test.o: nucleic_acids_test.cpp.o
+.PHONY : nucleic_acids_test.o
+
+# target to build an object file
+nucleic_acids_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/nucleic_acids_test.cpp.o
+.PHONY : nucleic_acids_test.cpp.o
+
+nucleic_acids_test.i: nucleic_acids_test.cpp.i
+.PHONY : nucleic_acids_test.i
+
+# target to preprocess a source file
+nucleic_acids_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/nucleic_acids_test.cpp.i
+.PHONY : nucleic_acids_test.cpp.i
+
+nucleic_acids_test.s: nucleic_acids_test.cpp.s
+.PHONY : nucleic_acids_test.s
+
+# target to generate assembly for a file
+nucleic_acids_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/nucleic_acids_test.dir/nucleic_acids_test.cpp.s
+.PHONY : nucleic_acids_test.cpp.s
+
+protein_folding_test.o: protein_folding_test.cpp.o
+.PHONY : protein_folding_test.o
+
+# target to build an object file
+protein_folding_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/protein_folding_test.cpp.o
+.PHONY : protein_folding_test.cpp.o
+
+protein_folding_test.i: protein_folding_test.cpp.i
+.PHONY : protein_folding_test.i
+
+# target to preprocess a source file
+protein_folding_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/protein_folding_test.cpp.i
+.PHONY : protein_folding_test.cpp.i
+
+protein_folding_test.s: protein_folding_test.cpp.s
+.PHONY : protein_folding_test.s
+
+# target to generate assembly for a file
+protein_folding_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/build.make PlussMa/NatSci/biology/biophysics/test/CMakeFiles/protein_folding_test.dir/protein_folding_test.cpp.s
+.PHONY : protein_folding_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,9 +398,25 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... biophysics_test"
+	@echo "... ionization_test"
+	@echo "... linkage_test"
+	@echo "... nucleic_acids_test"
+	@echo "... protein_folding_test"
 	@echo "... biophysics_test.o"
 	@echo "... biophysics_test.i"
 	@echo "... biophysics_test.s"
+	@echo "... ionization_test.o"
+	@echo "... ionization_test.i"
+	@echo "... ionization_test.s"
+	@echo "... linkage_test.o"
+	@echo "... linkage_test.i"
+	@echo "... linkage_test.s"
+	@echo "... nucleic_acids_test.o"
+	@echo "... nucleic_acids_test.i"
+	@echo "... nucleic_acids_test.s"
+	@echo "... protein_folding_test.o"
+	@echo "... protein_folding_test.i"
+	@echo "... protein_folding_test.s"
 .PHONY : help
 
 

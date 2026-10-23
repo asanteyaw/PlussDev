@@ -1030,6 +1030,81 @@ std::vector<std::vector<double>> active_inward_directions(
   return inward;
 }
 
+// Generators of the cone of feasible directions at x. With the outward normals n_i of the active constraints (the rows of
+// A x <= b, the bound rows -e_j / +e_j, and the equality rows, which are always active), the direction d_i that moves
+// strictly into the i-th active inequality (n_i . d_i = -1) while staying on every other active constraint
+// (n_j . d_i = 0) is d_i = -N^T (N N^T)^{-1} e_i. Together with a basis of the tangent space of the active constraints,
+// these d_i positively span the feasible cone, so polling along them cannot miss a feasible descent direction. Returns
+// nothing when the active normals are linearly dependent (the system is singular).
+std::vector<std::vector<double>> feasible_cone_generators(
+    const std::vector<double>& x,
+    const LinearConstraints& linear,
+    const BoundsPack& bounds,
+    double active_tol) {
+  std::vector<std::vector<double>> rows;
+  std::vector<std::size_t> inequality_rows;
+  const std::size_t n = static_cast<std::size_t>(linear.n_dim);
+
+  if (linear.has_eq) {
+    for (std::int64_t i = 0; i < linear.n_eq; ++i) {
+      std::vector<double> r(n, 0.0);
+      for (std::size_t j = 0; j < n; ++j) r[j] = linear.a_eq[static_cast<std::size_t>(i) * n + j];
+      rows.push_back(std::move(r));
+    }
+  }
+  if (linear.has_ineq) {
+    for (std::int64_t i = 0; i < linear.n_ineq; ++i) {
+      const double slack = linear.b_ineq[static_cast<std::size_t>(i)] - row_dot(linear.a_ineq, i, linear.n_dim, x);
+      if (slack > active_tol) continue;
+      std::vector<double> r(n, 0.0);
+      for (std::size_t j = 0; j < n; ++j) r[j] = linear.a_ineq[static_cast<std::size_t>(i) * n + j];
+      inequality_rows.push_back(rows.size());
+      rows.push_back(std::move(r));
+    }
+  }
+  if (bounds.enabled) {
+    for (std::size_t j = 0; j < n; ++j) {
+      if (std::abs(x[j] - bounds.lower_host[j]) <= active_tol) {
+        std::vector<double> r(n, 0.0);
+        r[j] = -1.0;
+        inequality_rows.push_back(rows.size());
+        rows.push_back(std::move(r));
+      }
+      if (std::abs(x[j] - bounds.upper_host[j]) <= active_tol) {
+        std::vector<double> r(n, 0.0);
+        r[j] = 1.0;
+        inequality_rows.push_back(rows.size());
+        rows.push_back(std::move(r));
+      }
+    }
+  }
+
+  std::vector<std::vector<double>> generators;
+  const std::int64_t k = static_cast<std::int64_t>(rows.size());
+  if (inequality_rows.empty() || k > static_cast<std::int64_t>(n)) {
+    return generators;
+  }
+  for (const std::size_t target : inequality_rows) {
+    std::vector<double> gram(static_cast<std::size_t>(k * k), 0.0);
+    std::vector<double> y(static_cast<std::size_t>(k), 0.0);
+    for (std::int64_t a = 0; a < k; ++a) {
+      for (std::int64_t b = 0; b < k; ++b) {
+        gram[static_cast<std::size_t>(a * k + b)] =
+            std::inner_product(rows[static_cast<std::size_t>(a)].begin(), rows[static_cast<std::size_t>(a)].end(),
+                               rows[static_cast<std::size_t>(b)].begin(), 0.0);
+      }
+    }
+    y[target] = 1.0;
+    if (!solve_linear_system(&gram, &y, k)) continue;
+    std::vector<double> d(n, 0.0);
+    for (std::int64_t a = 0; a < k; ++a) {
+      for (std::size_t j = 0; j < n; ++j) d[j] -= y[static_cast<std::size_t>(a)] * rows[static_cast<std::size_t>(a)][j];
+    }
+    generators.push_back(std::move(d));
+  }
+  return generators;
+}
+
 bool same_direction(
     const std::vector<double>& lhs,
     const std::vector<double>& rhs,
@@ -1151,15 +1226,15 @@ bool propose_trial_from_direction(
     return false;
   }
 
+  // With bounds the poll is made in scaled coordinates (x_j / range_j): every direction is stretched by the per-variable
+  // range, so a basis that is orthonormal in scaled coordinates stays well conditioned when the variables live on very
+  // different ranges.
+  // Without bounds the scale is only a magnitude guess taken from the current point, which is too crude to stretch a
+  // rotated basis with; there a non-coordinate direction keeps the single uniform factor.
+  const bool per_axis = bounds.enabled || is_coordinate_direction(direction);
   std::vector<double> scaled(direction.size(), 0.0);
-  if (is_coordinate_direction(direction)) {
-    for (std::size_t j = 0; j < direction.size(); ++j) {
-      scaled[j] = direction[j] * scale[j];
-    }
-  } else {
-    for (std::size_t j = 0; j < direction.size(); ++j) {
-      scaled[j] = direction[j] * mesh_scale_factor;
-    }
+  for (std::size_t j = 0; j < direction.size(); ++j) {
+    scaled[j] = direction[j] * (per_axis ? scale[j] : mesh_scale_factor);
   }
 
   const double alpha = ratio_test_alpha(x, scaled, linear, bounds, active_tol * 1e-3);
@@ -1277,8 +1352,17 @@ std::vector<std::vector<double>> make_poll_directions(
   }
 
   if (tangent_dirs.empty()) {
+    // The active constraints leave no tangent direction (a vertex of the feasible region). The polls must still keep
+    // the equality constraints exactly satisfied, so project onto the equality tangent space only; the ratio test then
+    // rejects the directions that point out through an active inequality or bound and keeps those that point in.
+    const auto eq_only = equality_constraint_normals(linear);
     for (const auto& d : raw_dirs) {
-      append_unique_direction(&tangent_dirs, d, 1.0 - 1e-12);
+      append_unique_direction(&tangent_dirs, project_to_active_tangent(d, eq_only), 1.0 - 1e-12);
+    }
+    if (tangent_dirs.empty()) {
+      for (const auto& d : raw_dirs) {
+        append_unique_direction(&tangent_dirs, d, 1.0 - 1e-12);
+      }
     }
   }
 
@@ -1312,6 +1396,12 @@ std::vector<std::vector<double>> make_poll_directions(
         blended = project_to_active_tangent(blended, eq_normals);
         append_unique_direction(&augmented, std::move(blended), 1.0 - 1e-8);
       }
+    }
+  }
+
+  for (auto& g : feasible_cone_generators(x, linear, bounds, active_tol)) {
+    if (normalize_direction(&g)) {
+      append_unique_direction(&augmented, std::move(g), 1.0 - 1e-8);
     }
   }
 
@@ -1477,7 +1567,10 @@ PSOutcome pattern_search_minimizer(
       PSConfig inner_cfg = config;
       inner_cfg.constraint_policy = PSConstraintPolicy::MeritPenalty;
       inner_cfg.nonlinear_constraints = {};
-      const std::int64_t outer_left = config.al_max_outer_iterations - outer;
+      // Each round gets a share of what is left, sized as if at most 12 rounds were planned, so that allowing more rounds
+      // (a high al_max_outer_iterations) does not starve the early ones; any round past the twelfth may use all that remains.
+      const std::int64_t outer_left =
+          std::max<std::int64_t>(1, std::min<std::int64_t>(12, config.al_max_outer_iterations) - outer);
       inner_cfg.max_iterations = std::max<std::int64_t>(1, remaining_iterations / std::max<std::int64_t>(1, outer_left));
       inner_cfg.max_evaluations = std::max<std::int64_t>(1, remaining_evaluations / std::max<std::int64_t>(1, outer_left));
       if (std::isfinite(config.time_limit_seconds)) {

@@ -842,7 +842,7 @@ public:
   const std::vector<std::string>& features() const;
   DTypes ptypes() const;
   DTypes dtypes() const;
-  DataFrameLabelAccessor label() const;
+  DataFrameLabelAccessor labels() const;
   DataFrameFeatureAxisAccessor feataxis() const;
   DataFrameCaseStudyAccessor case_study() const;
   std::optional<Slate> get(std::string_view feature_name) const;

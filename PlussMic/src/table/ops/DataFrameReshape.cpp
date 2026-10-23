@@ -433,7 +433,7 @@ DataFrame DataFrame::stack(std::string feature_name,
   options.drop = true;
   options.verify = false;
   options.sort = false;
-  return out.label().set(options).title(title());
+  return out.labels().set(options).title(title());
 }
 
 DataFrame DataFrame::unstack(const UnstackOptions& options) const {
@@ -546,7 +546,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
     set_options.drop = options.drop;
     set_options.verify = false;
     set_options.sort = false;
-    out = out.label().set(set_options);
+    out = out.labels().set(set_options);
   }
   return out.title(title());
 }

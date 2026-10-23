@@ -1,0 +1,258 @@
+<!-- generated from DirectCVForecaster.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pluss::subsp::stats::ts::DirectCVForecaster`
+
+One direct forecaster per training window of a partition, for out-of-sample evaluation.
+
+## Signature
+
+```cpp
+ts::DirectCVForecaster ts::DirectCVForecaster::fit(const pluss::Series& x, const pluss::Series& y, const ts::TsPartition& partition, const ts::DirectForecasterOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+## Construction
+
+Built by the static `fit`.
+
+## State
+
+`partition()`, `options()`, `num_folds()`, `num_steps()` and `fold_model(i)` expose the folds.
+
+## Methods
+
+### `fit`
+
+```cpp
+static ts::DirectCVForecaster ts::DirectCVForecaster::fit(const pluss::Series& x, const pluss::Series& y, const ts::TsPartition& partition, const ts::DirectForecasterOptions& options = {}, pluss::codem::Config cfg = {});
+```
+
+Fits a [`DirectForecaster`](DirectForecaster.md) on the training window of each fold of `partition`. The windows must be long enough for the lags and horizons.
+
+`const pluss::Series& x`
+: Predictors (undefined for none).
+
+`const pluss::Series& y`
+: The response.
+
+`const ts::TsPartition& partition`
+: The windows; its observation count must equal the length of `y`.
+
+`const ts::DirectForecasterOptions& options`
+: Lag plan and learner.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** A [`DirectCVForecaster`](DirectCVForecaster.md).
+
+**Errors.** A training or test window too short for the lag specification is rejected.
+
+### `cvpredict`
+
+```cpp
+pluss::Series cvpredict(const pluss::Series& x, const pluss::Series& y, pluss::codem::Config cfg = {}) const;
+```
+
+For each row of some test set, the prediction made by the model that was not trained on it; `NaN` for rows in no test set (and for rows in several test sets, their average). An `n × num_steps()` matrix.
+
+`const pluss::Series& x`
+: Predictors.
+
+`const pluss::Series& y`
+: The response.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** An `n × num_steps()` `Series`.
+
+### `cvloss`
+
+```cpp
+pluss::Series cvloss(const pluss::Series& x, const pluss::Series& y, ts::CVLossMode mode = ts::CVLossMode::Average, ts::RegressionLoss kind = ts::RegressionLoss::MSE, pluss::codem::Config cfg = {}) const;
+```
+
+The out-of-sample loss: with `Average`, one value per horizon over all test rows; with `Individual`, a `folds × horizons` matrix.
+
+`const pluss::Series& x`
+: Predictors.
+
+`const pluss::Series& y`
+: The response.
+
+`ts::CVLossMode mode`
+: `Average` (default) or `Individual`.
+
+`ts::RegressionLoss kind`
+: `MSE` or `MAE`.
+
+`pluss::codem::Config cfg`
+: Output configuration (dtype and platform of the returned arrays).
+
+**Returns.** A `Series` of losses.
+
+## Practical Examples
+
+### Example 1
+
+Per-fold squared error of two models, one using only the lags of the response and one adding the lags of the predictor.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  const Data data = make_data(400);
+  const auto partition = ts::TsPartition::expanding_window(400, 4);
+  ts::DirectForecasterOptions a, b;
+  a.lag.horizon = b.lag.horizon = {1};
+  a.lag.response_lags = b.lag.response_lags = {1, 2};
+  b.lag.predictor_lags = {{1, 2}};
+  const auto cv_a = ts::DirectCVForecaster::fit(Series{}, data.y, partition, a);
+  const auto cv_b = ts::DirectCVForecaster::fit(data.x, data.y, partition, b);
+  std::cout << std::fixed << std::setprecision(4) << "mean squared error per fold    fold 1    fold 2    fold 3    fold 4\n";
+  const auto la = cv_a.cvloss(Series{}, data.y, ts::CVLossMode::Individual).to_vec<double>();
+  const auto lb = cv_b.cvloss(data.x, data.y, ts::CVLossMode::Individual).to_vec<double>();
+  std::cout << "  y lags only            ";
+  for (double v : la) std::cout << std::setw(10) << v;
+  std::cout << "\n  y lags and x lags      ";
+  for (double v : lb) std::cout << std::setw(10) << v;
+  std::cout << "\n";
+}
+```
+
+Output
+
+```text
+mean squared error per fold    fold 1    fold 2    fold 3    fold 4
+  y lags only                0.3594    0.3977    0.2862    0.3302
+  y lags and x lags          0.3364    0.3583    0.2541    0.3399
+```
+
+### Example 2
+
+The averaged loss over all test rows, per horizon, and how many rows were tested.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+void show(const char* label, const Series& s) {
+  std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
+  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  std::cout << "\n";
+}
+std::vector<double> noise(int n, int offset) {
+  std::vector<double> e(n);
+  for (int i = 0; i < n; ++i) {
+    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
+    u -= std::floor(u);
+    e[i] = u - 0.5;
+  }
+  return e;
+}
+// y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t with x_t = 0.8 x_{t-1} + 2 u_t: a response driven by its own past and by an exogenous series x.
+struct Data {
+  Series x, y;
+};
+Data make_data(int n) {
+  const auto e = noise(n, 0), u = noise(n, 7000);
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 2.0 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}, f64), pluss::make_series(y, {n}, f64)};
+}
+
+int main() {
+  const Data data = make_data(400);
+  const auto partition = ts::TsPartition::expanding_window(400, 4);
+  ts::DirectForecasterOptions options;
+  options.lag.horizon = {1, 2};
+  options.lag.response_lags = {1, 2};
+  options.lag.predictor_lags = {{1}};
+  const auto cv = ts::DirectCVForecaster::fit(data.x, data.y, partition, options);
+  show("average mse", cv.cvloss(data.x, data.y));
+  const auto pred = cv.cvpredict(data.x, data.y);
+  double tested = 0.0;
+  for (double v : pred.select(1, 0).to_vec<double>()) tested += std::isfinite(v) ? 1.0 : 0.0;
+  std::cout << "rows with an out-of-sample prediction: " << tested << " of " << pred.sizes()[0] << "\n";
+}
+```
+
+Output
+
+```text
+average mse      0.3213   1.2483
+rows with an out-of-sample prediction: 320.0000 of 400
+```
+
+
+## Changelog
+
+- **0.1** — Initial documented surface.
+
+## See Also
+
+- [`TsPartition`](TsPartition.md)
+- [`DirectForecaster`](DirectForecaster.md)
+- [`dm_test`](dm_test.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

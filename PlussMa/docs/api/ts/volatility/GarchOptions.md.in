@@ -1,0 +1,30 @@
+# `pluss::subsp::stats::ts::GarchOptions`
+
+Options of `ts::Garch::fit_mle`.
+
+`GarchOptions` sets the model orders where they exist, the starting values and the search settings.
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `arch_order` | `std::int64_t` | 1 | Number of lagged squared shocks `p` in `h_t`. |
+| `garch_order` | `std::int64_t` | 1 | Number of lagged variances `q` in `h_t`. |
+| `omega0` | `double` | 0.02 | Starting value of the constant. |
+| `arch0` | `std::vector<double>` | {0.08} | Starting values of the shock coefficients (one per lag, or one value for all). |
+| `garch0` | `std::vector<double>` | {0.90} | Starting values of the variance coefficients. |
+| `demean` | `bool` | true | Subtract the sample mean first (held fixed during the search); with false the mean is zero. |
+| `variance_floor` | `double` | 1e-12 | Smallest conditional variance the recursion allows. |
+| `stationarity_margin` | `double` | 1e-6 | How far inside the stationarity boundary the persistence must stay. |
+| `finite_diff_eps` | `double` | 1e-5 | Step of the numerical derivatives used by `score` and `observed_inf`. |
+| `max_iterations, max_evaluations` | `std::int64_t` | 800, 6000 | Limits of the Nelder–Mead search. |
+| `simplex_delta` | `double` | 0.05 | Relative size of the initial simplex. |
+| `nm_restarts` | `std::int64_t` | 3 | Number of restarts of the search from perturbed points; the best result is kept. |
+
+## Guidance
+
+The defaults are a sensible starting point; change a field only for the reason its row gives.
+
+## See Also
+
+- [`Garch`](Garch.md)

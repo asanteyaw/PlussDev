@@ -1,0 +1,8 @@
+# Fitting a VAR and choosing the lag order
+
+[Back to Vector Autoregressions and Cointegration](../ts_04_vector_models.md)
+
+
+@@example Stats/time_series/guide/1214_var_fit.cpp@@
+
+The data come from a VAR(1) with coefficients 0.5, 0.2, 0.1, 0.6. Both criteria prefer one lag (Akaike's 199.4 against 206.3 for two lags; Schwarz's even more so), and the first-lag estimates (rows 0.52, 0.17 and 0.15, 0.54 in the layout described above) are close to the generating values; the larger-than-generating 0.17 reflects the correlation introduced by the first shock entering both equations. The covariance entries are the maximum-likelihood ones.

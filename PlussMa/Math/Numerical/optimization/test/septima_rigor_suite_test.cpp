@@ -447,6 +447,117 @@ int main() {
     expect(threw_iters, "septima should throw on invalid max_iterations", &failures);
   }
 
+  // 8) Stationarity accounts for constraints: a problem solved against an active bound converges, and without
+  //    constraints the stationarity is the objective gradient itself.
+  {
+    const Series target = make_vec({2.0, 1.0}, cfg);
+    for (const auto optimizer : {SeptimaOptimizer::Adam, SeptimaOptimizer::Lbfgs}) {
+      SeptimaSolveOptions opts{};  // library defaults
+      opts.max_iterations = 2000;
+      opts.step.optimizer = optimizer;
+      if (optimizer == SeptimaOptimizer::Adam) opts.step.adam.learning_rate = 0.05;
+      SeptimaConstraints boxed;
+      boxed.lbs = {make_vec({0.0, 0.0}, cfg)};
+      boxed.ubs = {make_vec({1.5, 1.5}, cfg)};
+      const auto objective = [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; };
+      const auto fit = pluss::optim::septima(objective, make_vec({0.0, 0.0}, cfg), opts, boxed);
+      expect(fit.exit_flag == SeptimaExitFlag::Converged, "an active bound must not prevent convergence", &failures);
+      expect_vec_near(to_vec_f64(fit.params[0]), {1.5, 1.0}, 1e-6, "boxed septima solution", &failures);
+      expect(fit.gradient_inf_norm > 0.4, "the objective gradient is nonzero at a bound-constrained optimum", &failures);
+      expect(fit.stationarity <= opts.gradient_tolerance, "projected stationarity vanishes at the optimum", &failures);
+
+      const auto free_fit = pluss::optim::septima(objective, make_vec({0.0, 0.0}, cfg), opts);
+      expect(free_fit.exit_flag == SeptimaExitFlag::Converged, "unconstrained septima converges", &failures);
+      expect(std::abs(free_fit.stationarity - free_fit.gradient_inf_norm) <= 1e-12,
+             "without constraints stationarity equals the objective gradient", &failures);
+    }
+  }
+
+  // 9) An inequality multiplier built up while the iterate was far outside the feasible set relaxes once the
+  //    constraint is slack: from a start far outside the unit disc, Adam must still reach the projection of the
+  //    target (2, 1) onto the disc, (2, 1) / sqrt(5), with the multiplier (sqrt(5) - 1) / 2.
+  {
+    const Series target = make_vec({2.0, 1.0}, cfg);
+    SeptimaSolveOptions opts{};
+    opts.max_iterations = 4000;
+    opts.gradient_tolerance = 1e-5;
+    opts.step_tolerance = 1e-5;
+    opts.step.adam.learning_rate = 0.02;
+    opts.step.inequality_penalty = 10.0;  // the multiplier step is the library default (the penalty)
+    SeptimaConstraints disc;
+    disc.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].square().sum() - 1.0}; };
+    const auto fit = pluss::optim::septima(
+        [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+        make_vec({-2.0, 1.5}, cfg), opts, disc);
+    expect_vec_near(to_vec_f64(fit.params[0]), {2.0 / std::sqrt(5.0), 1.0 / std::sqrt(5.0)}, 2e-3,
+                    "inequality solution from a far-outside start", &failures);
+    expect(std::abs(fit.state.lambda_inequalities[0].item<double>() - (std::sqrt(5.0) - 1.0) / 2.0) < 5e-3,
+           "inequality multiplier relaxes to its true value", &failures);
+  }
+
+  // 10) L-BFGS under constraints, with and without the line search, from an easy and a far-outside start. These used to
+  //     stall (the multiplier update never ran once the step was zero) or be driven far from the answer.
+  {
+    const Series target = make_vec({2.0, 1.0}, cfg);
+    const auto objective = [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; };
+    for (const auto line_search : {SeptimaLbfgsLineSearch::None, SeptimaLbfgsLineSearch::StrongWolfe}) {
+      for (const auto& start : {std::vector<double>{0.0, 0.0}, std::vector<double>{-2.0, 1.5}}) {
+        SeptimaSolveOptions opts{};
+        opts.max_iterations = 4000;
+        opts.gradient_tolerance = 1e-5;
+        opts.step_tolerance = 1e-5;
+        opts.step.optimizer = SeptimaOptimizer::Lbfgs;
+        opts.step.lbfgs.line_search = line_search;
+        SeptimaConstraints disc;
+        disc.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].square().sum() - 1.0}; };
+        const auto fit = pluss::optim::septima(objective, make_vec(start, cfg), opts, disc);
+        expect_vec_near(to_vec_f64(fit.params[0]), {2.0 / std::sqrt(5.0), 1.0 / std::sqrt(5.0)}, 2e-3, "lbfgs inequality solution", &failures);
+        expect(fit.constraint_violation < 1e-3, "lbfgs inequality violation", &failures);
+        expect(std::abs(fit.state.lambda_inequalities[0].item<double>() - (std::sqrt(5.0) - 1.0) / 2.0) < 5e-3, "lbfgs inequality multiplier", &failures);
+
+        SeptimaConstraints sum_to_two;
+        sum_to_two.equalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].sum() - 2.0}; };
+        const auto eq_fit = pluss::optim::septima(objective, make_vec(start, cfg), opts, sum_to_two);
+        expect_vec_near(to_vec_f64(eq_fit.params[0]), {1.5, 0.5}, 1e-3, "lbfgs equality solution", &failures);
+        expect(std::abs(eq_fit.state.lambda_equalities[0].item<double>() - 0.5) < 5e-3, "lbfgs equality multiplier", &failures);
+      }
+    }
+  }
+
+  // 11) A nonconvex problem with bounds, two linear and two nonlinear constraints, from the library defaults (including a penalty
+  //     too small to start with): minimize a^2 + 2 b^2 + 3 c^2 - 4 a  with 0 <= a <= 1.5, 0 <= b, c <= 2, b + c = 1, a b = 0.3,
+  //     a + b + c <= 2.5, c^2 <= 0.6. Its solution (found independently by a sequential quadratic programming method) is
+  //     (1.3310, 0.2254, 0.7746) with the objective -1.6508.
+  {
+    SeptimaConstraints c;
+    c.lbs = {make_vec({0.0}, cfg), make_vec({0.0}, cfg), make_vec({0.0}, cfg)};
+    c.ubs = {make_vec({1.5}, cfg), make_vec({2.0}, cfg), make_vec({2.0}, cfg)};
+    c.equalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[1] + x[2] - 1.0, x[0] * x[1] - 0.3}; };
+    c.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0] + x[1] + x[2] - 2.5, x[2].square() - 0.6}; };
+    const std::vector<Series> start = {make_vec({0.5}, cfg), make_vec({0.5}, cfg), make_vec({0.5}, cfg)};
+    const auto objective = [](const std::vector<Trace>& v) -> Trace {
+      return square(v[0]) + 2.0 * square(v[1]) + 3.0 * square(v[2]) - 4.0 * v[0];
+    };
+    for (const auto optimizer : {SeptimaOptimizer::Adam, SeptimaOptimizer::Lbfgs}) {
+      SeptimaSolveOptions opts{};
+      opts.max_iterations = 5000;
+      opts.gradient_tolerance = 1e-5;
+      opts.step_tolerance = 1e-6;
+      opts.step.optimizer = optimizer;
+      if (optimizer == SeptimaOptimizer::Adam) opts.step.adam.learning_rate = 0.02;
+      for (const double penalty : {1.0, 10.0, 100.0}) {
+        opts.step.equality_penalty = opts.step.inequality_penalty = penalty;
+        const auto fit = pluss::optim::septima(objective, start, opts, c);
+        expect(fit.exit_flag == SeptimaExitFlag::Converged, "constrained nonconvex problem converges", &failures);
+        expect(fit.constraint_violation <= 1e-5, "constrained nonconvex problem is feasible", &failures);
+        expect(std::abs(fit.objective_value + 1.6508) < 2e-3, "constrained nonconvex objective", &failures);
+        expect(std::abs(fit.params[0].item<double>() - 1.3310) < 3e-3 && std::abs(fit.params[1].item<double>() - 0.2254) < 3e-3 &&
+                   std::abs(fit.params[2].item<double>() - 0.7746) < 3e-3,
+               "constrained nonconvex solution", &failures);
+      }
+    }
+  }
+
   if (failures != 0) {
     std::cerr << "septima_rigor_suite_test failed with " << failures << " failure(s)\n";
     return 1;

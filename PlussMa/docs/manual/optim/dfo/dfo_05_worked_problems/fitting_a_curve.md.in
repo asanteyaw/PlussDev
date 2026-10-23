@@ -1,0 +1,12 @@
+# Fitting a curve
+
+[Back to Worked Problems and Checking Answers](../dfo_05_worked_problems.md)
+
+
+Fit `y = a exp(-b t) + c` to eight measurements. The objective is the sum of squared residuals, written as ordinary Series arithmetic, with bounds that keep the parameters physical.
+
+The strategy is two stages. A cheap local method (`NelderMead`) gets close. A second, different method (`OrthoMads`) restarts from that answer and polishes it. Starting the second stage from the first stage's `minimizer` costs only the polish, and the second method's different stopping rule goes further than the first.
+
+@@example Numerical/optimization/guide/dfo/341_fit_a_curve.cpp@@
+
+Both stages end `Converged`. The first is accurate to about four digits, the second to machine precision. The fit is exact because the data contain no noise; with noisy data the final sum of squares would be the noise level, and the parameters would be wrong by about as much as the data allow, whatever the solver. If the starting point were far from this basin (many local minima), replace stage one by `DifferentialEvolutionPrmm` as in Chapter 2.

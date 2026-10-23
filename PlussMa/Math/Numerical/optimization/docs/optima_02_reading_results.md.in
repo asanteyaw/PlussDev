@@ -22,7 +22,7 @@ Whatever the verdict, `result.params` always holds a point: the last iterate, or
 | `Converged` | 1 | Constraint violation and first-order optimality are within tolerance, or the iterate is a stationary feasible point. | The solution. |
 | `MaxIterations` | 0 | The iteration budget was spent first. | The last iterate; `best_feasible` may be better. |
 | `Stopped` | -1 | Your progress hook returned `true`. | The point at which you stopped. |
-| `NoFeasiblePoint` | -2 | The interior method could not find a strictly feasible region to start from. | The start, nudged inward. |
+| `NoFeasiblePoint` | -2 | The interior method could not find a point strictly inside the bounds and linear rows to start from. | The start, nudged inward. |
 | `ObjectiveTargetReached` | -3 | A feasible point at or below `objective_limit` was found. | That point. |
 | `NonFiniteEvaluation` | -4 | The objective, gradient, a constraint or a Jacobian was not a finite number. | The point at which the non-finite value appeared. |
 | `InvalidProblem` | -5 | A callback broke its contract (wrong result shape, a thrown error). | The start. |
@@ -55,7 +55,7 @@ Five flags mean the solver could not deliver. Each is triggered here by a specif
 
 @@example Numerical/optimization/guide/optima/23_exit_failures.cpp@@
 
-The impossible inequality `x0^2 + x1^2 + 1 <= 0` produces two different verdicts depending on the method. The interior method, which needs a strictly feasible region to start from, returns `NoFeasiblePoint`. Sequential QP tries to recover and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method: the equality residual can no longer be reduced (the gradient of its squared norm vanishes), so no step can restore feasibility, and the violation stays at `1`. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.
+Impossible constraints produce different verdicts depending on their kind and the method. The interior method keeps bounds and linear rows strictly satisfied, so linear rows that contradict a bound (`x0 + x1 <= -1` with `x >= 0`) end the run before it starts with `NoFeasiblePoint`. A nonlinear inequality that no point satisfies, `x0^2 + x1^2 + 1 <= 0`, is different: the interior method gives it a slack variable and can start, so the verdict is `ConstraintStationary` once the violation can no longer be reduced (the gradient of its square vanishes), with the violation staying at `1`. Sequential QP tries to recover from the same inequality and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method for the same reason. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.
 
 ### Program 4: the ten stall categories
 
@@ -90,9 +90,9 @@ The exit flag is coarse. The stall category says what went wrong underneath. The
 | `algorithm` | The method's label: `merit-method`, `sqp`, `working-set` or `internal-protocol`. |
 | `iterations`, `function_evaluations` | Major iterations and the number of objective evaluations. The second is far larger when line searches or recovery steps run. |
 | `constraint_violation` | The largest violation of any constraint at the returned point. |
-| `first_order_optimality` | How far the returned point is from satisfying the optimality conditions. For sequential QP and the working-set method it is the largest component of the Lagrangian gradient at the returned point, using the multiplier estimate in `result.multipliers`. |
+| `first_order_optimality` | How far the returned point is from satisfying the optimality conditions. For sequential QP and the working-set method it is the largest component of the Lagrangian gradient at the returned point, using the multiplier estimate in `result.multipliers`, measured on the scale the optimality tolerance uses: for sequential QP and the interior method it is divided by the larger of 1 and the size of the gradient at the start. A start where the gradient is enormous therefore makes a large absolute residual look small (chapter 8, Program 4). |
 | `step_size`, `line_search_fraction` | The fraction of the full step the last iteration accepted. |
-| `backend_parameter` | The method's own control parameter: the penalty weight for the QP methods and the merit method, the barrier parameter for the interior method. It stayed at `10`, its starting value, because the penalty is raised only when constraints stay violated. |
+| `backend_parameter` | The method's own control parameter: the penalty weight for the QP methods and the merit method, the barrier parameter for the interior method. Sequential QP sets its penalty weight from the size of the multipliers at each iteration, so it moves between iterations; here it ended at `3.5769`. |
 | `complementarity` | The complementarity residual; meaningful for the interior method, zero otherwise. |
 | `krylov_iterations` | Iterations spent in the iterative linear solver, when it is used. |
 | `best_feasible_available`, `returned_best_feasible` | Whether a feasible checkpoint was recorded, and whether the answer in `params` is that checkpoint. |

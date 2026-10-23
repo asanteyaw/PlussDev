@@ -105,7 +105,7 @@ See [Atlas API Reference](../atlas_api_reference.md).
 
 ## Example source map
 
-| Example | What it teaches |
+| Example | What it shows |
 | --- | --- |
 | `dataframe_initial_demo.cpp` | loading, display, `head`, `tail`, `info`, `describe`, Atlas basics |
 | `dataframe_versatile_methods_demo.cpp` | query, transform, aggregate, arithmetic, missing data, casts, rolling |

@@ -68,7 +68,7 @@ assert(last.shape() == std::pair<std::int64_t, std::int64_t>{1, 2});
 Select by case label, retaining all duplicate matches:
 
 ```cpp
-auto labeled = orders.label().set(
+auto labeled = orders.labels().set(
     Slate(pluss::make_note({"south", "coast", "coast"})));
 auto coast = labeled.case_study().label("coast");
 assert(coast.ncases() == 2);

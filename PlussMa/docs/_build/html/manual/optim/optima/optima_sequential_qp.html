@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optima Sequential QP &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Optimizer Surfaces: Functional vs OOP" href="optimizer_surfaces.html" />
+    <link rel="prev" title="Optima Algorithms" href="optima_algorithms.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from optima_sequential_qp.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="optima-sequential-qp">
+<h1>Optima Sequential QP<a class="headerlink" href="#optima-sequential-qp" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code> is the dense constrained nonlinear-programming backend for <code class="docutils literal notranslate"><span class="pre">optima(...)</span></code>.</p>
+<p>It is designed for derivative-based constrained optimization over moderate parameter counts, with gradients and Jacobians coming from <code class="docutils literal notranslate"><span class="pre">PlussQit</span></code> autodiff or analytic callbacks.</p>
+<section id="mathematical-problem">
+<h2>Mathematical Problem<a class="headerlink" href="#mathematical-problem" title="Link to this heading">¶</a></h2>
+<p>The backend targets nonlinear programs of the form</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\min_x \quad &amp; f(x) \\
+\text{s.t.} \quad &amp; c_{\mathrm{eq}}(x) = 0, \\
+&amp; c_{\mathrm{ineq}}(x) \le 0, \\
+&amp; A_{\mathrm{eq}} x = b_{\mathrm{eq}}, \\
+&amp; A_{\mathrm{ineq}} x \le b_{\mathrm{ineq}}, \\
+&amp; \ell \le x \le u.
+\end{aligned}\end{split}\]</div>
+<p>At a candidate solution, the first-order KKT conditions are expressed in terms of the Lagrangian</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{L}(x,\lambda,\nu)=
+f(x)
+ + \lambda_{\mathrm{eq}}^\top c_{\mathrm{eq}}(x)
+ + \lambda_{\mathrm{ineq}}^\top c_{\mathrm{ineq}}(x)
+ + \nu_{\mathrm{eq}}^\top (A_{\mathrm{eq}}x-b_{\mathrm{eq}})
+ + \nu_{\mathrm{ineq}}^\top (A_{\mathrm{ineq}}x-b_{\mathrm{ineq}}).\]</div>
+<p><code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code> tracks a practical KKT residual derived from the gradient of this Lagrangian together with active constraint residuals.</p>
+</section>
+<section id="solver-shape">
+<h2>Solver Shape<a class="headerlink" href="#solver-shape" title="Link to this heading">¶</a></h2>
+<p>The backend works by repeating this major loop:</p>
+<ol class="arabic simple">
+<li><p>evaluate objective and constraints</p></li>
+<li><p>linearize constraints at the current point</p></li>
+<li><p>build a local quadratic model of the Lagrangian</p></li>
+<li><p>solve a KKT-style subproblem</p></li>
+<li><p>apply line search and bound-feasible step control</p></li>
+<li><p>optionally run second-order correction</p></li>
+<li><p>optionally run restoration if the main step fails</p></li>
+<li><p>update the Hessian model and multiplier estimate</p></li>
+</ol>
+</section>
+<section id="local-quadratic-subproblem">
+<h2>Local Quadratic Subproblem<a class="headerlink" href="#local-quadratic-subproblem" title="Link to this heading">¶</a></h2>
+<p>At iteration $k$, the solver forms a quadratic model around the current point $x_k$:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\min_p \quad &amp;
+\nabla f(x_k)^\top p + \tfrac12 p^\top B_k p \\
+\text{s.t.} \quad &amp;
+c_{\mathrm{eq}}(x_k) + J_{\mathrm{eq}}(x_k) p = 0, \\
+&amp; c_{\mathrm{ineq}}(x_k) + J_{\mathrm{ineq}}(x_k) p \le 0,
+\end{aligned}\end{split}\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p>$B_k$ is the current Hessian approximation to the Lagrangian</p></li>
+<li><p>$J_{\mathrm{eq}}$ and $J_{\mathrm{ineq}}$ are Jacobians assembled from autodiff or analytic callbacks</p></li>
+</ul>
+<p>The implementation solves the corresponding KKT system using the configured linear-system policy.</p>
+</section>
+<section id="main-state">
+<h2>Main State<a class="headerlink" href="#main-state" title="Link to this heading">¶</a></h2>
+<p>The internal SQP state tracks:</p>
+<ul class="simple">
+<li><p>current parameters</p></li>
+<li><p>current evaluation</p></li>
+<li><p>iteration count</p></li>
+<li><p>function evaluation count</p></li>
+<li><p>current step size</p></li>
+<li><p>current penalty parameter</p></li>
+<li><p>current merit value</p></li>
+<li><p>KKT residual</p></li>
+<li><p>convergence flag</p></li>
+<li><p>message</p></li>
+<li><p>best-feasible snapshot</p></li>
+<li><p>Hessian approximation</p></li>
+<li><p>multiplier estimate</p></li>
+<li><p>variable scaling</p></li>
+<li><p>normalization statistics</p></li>
+<li><p>Krylov iteration count</p></li>
+</ul>
+</section>
+<section id="option-surface">
+<h2>Option Surface<a class="headerlink" href="#option-surface" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SequentialQPOptions</span></code> exposes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code></p></td>
+<td><p>Major-iteration budget</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_line_search_iterations</span></code></p></td>
+<td><p>Backtracking budget per major step</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_second_order_corrections</span></code></p></td>
+<td><p>Second-order correction attempts</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_restoration_iterations</span></code></p></td>
+<td><p>Restoration-phase major iterations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_restoration_line_search_iterations</span></code></p></td>
+<td><p>Backtracking budget inside restoration</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">initial_step_size</span></code></p></td>
+<td><p>Starting trial step fraction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backtracking</span></code></p></td>
+<td><p>Multiplicative line-search shrink</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">armijo</span></code></p></td>
+<td><p>Sufficient decrease coefficient</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">initial_penalty</span></code></p></td>
+<td><p>Starting merit penalty</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">constraint_tolerance</span></code></p></td>
+<td><p>Feasibility tolerance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">optimality_tolerance</span></code></p></td>
+<td><p>First-order stop threshold</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">step_tolerance</span></code></p></td>
+<td><p>Small-step stop threshold</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">value_progress_tolerance</span></code></p></td>
+<td><p>Small-objective-change stop threshold</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">active_set_tolerance</span></code></p></td>
+<td><p>Constraint activity threshold</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regularization</span></code></p></td>
+<td><p>KKT diagonal regularization</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bfgs_curvature_tolerance</span></code></p></td>
+<td><p>BFGS skip threshold</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">second_order_correction_tolerance</span></code></p></td>
+<td><p>SOC activation threshold</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fraction_to_boundary</span></code></p></td>
+<td><p>Bound-feasible step fraction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pivot_threshold</span></code></p></td>
+<td><p>Pivoted-direct linear solve threshold</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_krylov_iterations</span></code></p></td>
+<td><p>Iterative solve budget</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iterative_dimension_threshold</span></code></p></td>
+<td><p>Size threshold for iterative routing</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">krylov_tolerance</span></code></p></td>
+<td><p>Relative Krylov stop</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">krylov_absolute_tolerance</span></code></p></td>
+<td><p>Absolute Krylov stop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">objective_limit</span></code></p></td>
+<td><p>Early exit target</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">project_bounds</span></code></p></td>
+<td><p>Bound projection toggle</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">enable_restoration</span></code></p></td>
+<td><p>Restoration fallback toggle</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">system_structure</span></code></p></td>
+<td><p>Dense or sparse hint</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">linear_system_solver</span></code></p></td>
+<td><p>Linear solve policy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hessian_approximation</span></code></p></td>
+<td><p>Hessian model policy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">problem_scaling</span></code></p></td>
+<td><p>Scaling and normalization policy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">progress_hook</span></code></p></td>
+<td><p>Iteration callback</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="hessian-handling">
+<h2>Hessian Handling<a class="headerlink" href="#hessian-handling" title="Link to this heading">¶</a></h2>
+<p>Current SQP Hessian policies:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Bfgs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Identity</span></code></p></li>
+</ul>
+<p>The Hessian model is applied to the Lagrangian approximation inside the QP step.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">Bfgs</span></code> is active, the update is based on the standard secant pair</p>
+<div class="math notranslate nohighlight">
+\[s_k = x_{k+1} - x_k,\qquad
+y_k = \nabla \phi_{k+1} - \nabla \phi_k,\]</div>
+<p>where $\phi$ is the merit-gradient model used by the solver. The update is skipped when curvature is too small, controlled by <code class="docutils literal notranslate"><span class="pre">bfgs_curvature_tolerance</span></code>.</p>
+</section>
+<section id="linear-system-policy">
+<h2>Linear-System Policy<a class="headerlink" href="#linear-system-policy" title="Link to this heading">¶</a></h2>
+<p>The backend supports a policy-driven solve path:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Auto</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Cholesky</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PivotedDirect</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Inverse</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PseudoInverse</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ConjugateGradient</span></code></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Auto</span></code> routes based on dimension and structure hints. Small dense systems usually stay on direct solves. Larger or structured problems can route to Krylov iterations when configured.</p>
+</section>
+<section id="step-acceptance">
+<h2>Step Acceptance<a class="headerlink" href="#step-acceptance" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code> uses a merit-based acceptance policy with additional constrained safeguards:</p>
+<ul class="simple">
+<li><p>Armijo decrease on the merit model</p></li>
+<li><p>stricter handling when the iterate is still infeasible</p></li>
+<li><p>second-order correction when linearized feasibility is too optimistic</p></li>
+<li><p>boundary-limited capping</p></li>
+<li><p>restoration fallback when the main step cannot improve the merit or feasibility model</p></li>
+</ul>
+<p>The main merit model is an exact-penalty style scalarization:</p>
+<div class="math notranslate nohighlight">
+\[\Phi(x;\rho) = f(x) + \rho \, \|v(x)\|_1,\]</div>
+<p>where $v(x)$ denotes the stacked constraint residual used by the implementation. The penalty parameter $\rho$ is adapted when feasibility reduction is lagging.</p>
+</section>
+<section id="second-order-correction">
+<h2>Second-Order Correction<a class="headerlink" href="#second-order-correction" title="Link to this heading">¶</a></h2>
+<p>After a first QP step $p_k$ is found, the solver can attempt a second-order correction when nonlinear residuals are not captured well by the first linearization. In practice this means re-solving with a corrected residual target instead of accepting a step that only looks feasible in the local linear model.</p>
+</section>
+<section id="restoration">
+<h2>Restoration<a class="headerlink" href="#restoration" title="Link to this heading">¶</a></h2>
+<p>When the main SQP step fails repeatedly, the backend can switch to a restoration phase that prioritizes violation reduction. A successful restoration step resets the local Hessian model before returning to the main loop.</p>
+<p>The restoration target is conceptually</p>
+<div class="math notranslate nohighlight">
+\[\min_x \; \|v(x)\|,\]</div>
+<p>subject to the same bound handling logic, so that the solver can recover a usable feasible or near-feasible point before resuming the main SQP loop.</p>
+</section>
+<section id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Link to this heading">¶</a></h2>
+<p>The top-level <code class="docutils literal notranslate"><span class="pre">optima(...)</span></code> call returns a state object and a structured <code class="docutils literal notranslate"><span class="pre">OptimaOutput</span></code> payload. For <code class="docutils literal notranslate"><span class="pre">SequentialQP</span></code>, the most important output fields are:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Output field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iterations</span></code></p></td>
+<td><p>Major SQP iterations</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">function_evaluations</span></code></p></td>
+<td><p>Objective/constraint evaluation count</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">constraint_violation</span></code></p></td>
+<td><p>Maximum final constraint violation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">first_order_optimality</span></code></p></td>
+<td><p>Final KKT-style stationarity measure</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">step_size</span></code></p></td>
+<td><p>Final accepted step fraction</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">line_search_fraction</span></code></p></td>
+<td><p>Same accepted line-search fraction reported explicitly</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backend_parameter</span></code></p></td>
+<td><p>Current penalty parameter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">krylov_iterations</span></code></p></td>
+<td><p>Krylov work if iterative linear solves were used</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">best_feasible_available</span></code></p></td>
+<td><p>Whether a feasible checkpoint was found</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">returned_best_feasible</span></code></p></td>
+<td><p>Whether the solver returned that checkpoint instead of the final iterate</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiplier_max_norm</span></code></p></td>
+<td><p>Largest multiplier magnitude in the reported multiplier structure</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">active_multiplier_count</span></code></p></td>
+<td><p>Number of active multipliers</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">detail_message</span></code></p></td>
+<td><p>Expanded exit detail</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stall_category</span></code></p></td>
+<td><p>Structured stop reason</p></td>
+</tr>
+</tbody>
+</table>
+<p>The returned multiplier structure contains:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">linear_equalities</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nonlinear_equalities</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">linear_inequalities</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nonlinear_inequalities</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lower_bounds</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">upper_bounds</span></code></p></li>
+</ul>
+</section>
+<section id="example-trace">
+<h2>Example Trace<a class="headerlink" href="#example-trace" title="Link to this heading">¶</a></h2>
+<p>A typical progress line from an instrumented SQP run looks like:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>iter=12 evals=50 objective=1.125000 viol=0.000000 stationarity=0.000000 backend=10.000000 step=1.000000 stall=none
+</pre></div>
+</div>
+<p>Interpretation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: current objective</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">viol</span></code>: current max constraint violation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stat</span></code>: KKT-style first-order measure</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span></code>: accepted step fraction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">penalty</span></code>: current merit penalty parameter</p></li>
+</ul>
+</section>
+<section id="reading-the-iteration-trace">
+<h2>Reading the Iteration Trace<a class="headerlink" href="#reading-the-iteration-trace" title="Link to this heading">¶</a></h2>
+<p>A useful progress hook for SQP usually prints:</p>
+<ul class="simple">
+<li><p>iteration index</p></li>
+<li><p>objective value</p></li>
+<li><p>max constraint violation</p></li>
+<li><p>KKT residual or stationarity</p></li>
+<li><p>merit or penalty parameter</p></li>
+<li><p>accepted step size</p></li>
+<li><p>Krylov iterations</p></li>
+<li><p>stall category</p></li>
+</ul>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">options</span><span class="p">.</span><span class="n">algorithm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OptimaAlgorithm</span><span class="o">::</span><span class="n">SequentialQP</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">sequential_qp</span><span class="p">.</span><span class="n">progress_hook</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">OptimaProgressSnapshot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">iteration</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; f=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">evaluation</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; viol=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">evaluation</span><span class="p">.</span><span class="n">max_constraint_violation</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; stat=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">stationarity</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; step=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">step_size</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; penalty=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">backend_parameter</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/optim/optima/optima_sequential_qp.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

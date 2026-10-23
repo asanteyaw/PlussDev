@@ -1,0 +1,8 @@
+# The rank of a cointegrated system
+
+[Back to Vector Autoregressions and Cointegration](../ts_04_vector_models.md)
+
+
+@@example Stats/time_series/guide/1217_johansen_rank.cpp@@
+
+Three series, of which two are tied together (`y = x + stationary noise`) and one is unrelated. The hypothesis of no relation (`rank ≤ 0`) is rejected overwhelmingly by both statistics, while `rank ≤ 1` is not, so exactly one relation is found. The test sequence stops at the first non-rejection: a later rejection is ignored.

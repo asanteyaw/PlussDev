@@ -1,0 +1,19 @@
+# Reading the result
+
+[Back to First Problems](../septima_01_first_problems.md)
+
+
+The problem is a bounded fit, `0.5 ((a - 2)^2 + (b - 1)^2)` with `a <= 1.5`, so the bound is active at the answer. The program prints each field of the result.
+
+@@example Numerical/optimization/guide/septima/104_reading_results.cpp@@
+
+In the order you will use them:
+
+- `converged` and `exit_flag` say whether the run met its tests. `message` says why it stopped.
+- `params` is the answer, one `Series` per block, in the order you gave them.
+- `objective_value` is the objective at the answer.
+- `gradient_inf_norm` is the largest component of the gradient of the **objective alone**. Here it is 0.5, not zero: at a constrained optimum the objective still pulls toward the bound.
+- `stationarity` is the largest component of the gradient of the constrained problem, with the components that an active bound blocks removed. It is the number the solver compares with `gradient_tolerance`. Here it is 0, which is why the run converged although `gradient_inf_norm` is 0.5. Without constraints it equals `gradient_inf_norm`.
+- `step_inf_norm` is the size of the last step; `constraint_violation` is the worst violation of a bound, an equality or an inequality.
+- `iteration` and `function_evaluations` are the cost. Without a line search they are equal.
+- `state` (not printed) holds the optimizer's memory and the constraint multipliers (chapter 2).

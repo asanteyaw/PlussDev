@@ -1,0 +1,8 @@
+# Tolerance and honest failure
+
+[Back to Data and Functions](../integration_01_data_and_functions.md)
+
+
+@@example Numerical/integration/guide/604_tolerance_and_failure.cpp@@
+
+The integral of `sqrt(x)` has an infinite slope at 0, which slows every rule. Under the default settings Simpson, Gauss–Legendre and `Auto` end with `converged` false, yet their values are accurate to 1e-9: the estimate sits just above the 1e-10 tolerance. Read `converged` together with `error_estimate`: a loose tolerance (1e-6) converges cheaply, a larger refinement allowance converges at great cost, and a fixed node count (`adaptive` off) gives no estimate at all (`inf`) but, here, still 2.5e-6 accuracy. `Auto` tries Gauss–Legendre, then Simpson, then the trapezoid rule, so on a failing integrand it spends the effort of all three.

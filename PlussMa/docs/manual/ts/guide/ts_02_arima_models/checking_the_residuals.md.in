@@ -1,0 +1,8 @@
+# Checking the residuals
+
+[Back to ARIMA Models](../ts_02_arima_models.md)
+
+
+@@example Stats/time_series/guide/1208_residual_checks.cpp@@
+
+The mean-only model leaves the autocorrelation in the residuals (lag-1 autocorrelation 0.65, Ljung–Box p ≈ 10⁻⁴⁷). The AR(1) residuals are uncorrelated (lag-1 autocorrelation −0.02, p = 0.25 on 9 degrees of freedom). Always pass `model_df` equal to the number of ARMA coefficients; without it the test is too lenient.

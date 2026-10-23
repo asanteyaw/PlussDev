@@ -262,6 +262,20 @@ plusstils_core_seed_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build
 .PHONY : plusstils_core_seed_tests/fast
 
+# Convenience name for target.
+PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/rule
+.PHONY : PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/rule
+
+# Convenience name for target.
+plusstils_scalar_cast_compat_tests: PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/rule
+.PHONY : plusstils_scalar_cast_compat_tests
+
+# fast build rule for target.
+plusstils_scalar_cast_compat_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/build.make PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/build
+.PHONY : plusstils_scalar_cast_compat_tests/fast
+
 examples/tils/core_env_reference.o: examples/tils/core_env_reference.cpp.o
 .PHONY : examples/tils/core_env_reference.o
 
@@ -382,6 +396,30 @@ test/core_seed_tests.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/build.make PlussTils/CMakeFiles/plusstils_core_seed_tests.dir/test/core_seed_tests.cpp.s
 .PHONY : test/core_seed_tests.cpp.s
 
+test/scalar_cast_compat_tests.o: test/scalar_cast_compat_tests.cpp.o
+.PHONY : test/scalar_cast_compat_tests.o
+
+# target to build an object file
+test/scalar_cast_compat_tests.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/build.make PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/test/scalar_cast_compat_tests.cpp.o
+.PHONY : test/scalar_cast_compat_tests.cpp.o
+
+test/scalar_cast_compat_tests.i: test/scalar_cast_compat_tests.cpp.i
+.PHONY : test/scalar_cast_compat_tests.i
+
+# target to preprocess a source file
+test/scalar_cast_compat_tests.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/build.make PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/test/scalar_cast_compat_tests.cpp.i
+.PHONY : test/scalar_cast_compat_tests.cpp.i
+
+test/scalar_cast_compat_tests.s: test/scalar_cast_compat_tests.cpp.s
+.PHONY : test/scalar_cast_compat_tests.s
+
+# target to generate assembly for a file
+test/scalar_cast_compat_tests.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/build.make PlussTils/CMakeFiles/plusstils_scalar_cast_compat_tests.dir/test/scalar_cast_compat_tests.cpp.s
+.PHONY : test/scalar_cast_compat_tests.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -402,6 +440,7 @@ help:
 	@echo "... plusstils_core_env_tests"
 	@echo "... plusstils_core_seed_reference"
 	@echo "... plusstils_core_seed_tests"
+	@echo "... plusstils_scalar_cast_compat_tests"
 	@echo "... examples/tils/core_env_reference.o"
 	@echo "... examples/tils/core_env_reference.i"
 	@echo "... examples/tils/core_env_reference.s"
@@ -417,6 +456,9 @@ help:
 	@echo "... test/core_seed_tests.o"
 	@echo "... test/core_seed_tests.i"
 	@echo "... test/core_seed_tests.s"
+	@echo "... test/scalar_cast_compat_tests.o"
+	@echo "... test/scalar_cast_compat_tests.i"
+	@echo "... test/scalar_cast_compat_tests.s"
 .PHONY : help
 
 

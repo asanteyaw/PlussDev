@@ -1,0 +1,10 @@
+# Reading the result
+
+[Back to First Programs](../linprog_01_first_programs.md)
+
+
+A small program with an equality row, an inequality row and bounds: minimize `2 x0 + 3 x1 + x2` subject to `x0 + x1 + x2 = 10`, `x0 - x1 <= 2` and `0 <= x <= 6`. The program prints every field of the result.
+
+@@example Numerical/optimization/guide/lp/203_reading_result.cpp@@
+
+The optimum is `x = (3, 1, 6)` with an objective of 15 (the cheap variable `x2` is at its upper bound of 6). `dual_objective` equals the objective, which is the certificate that the answer is optimal: a feasible point with a matching dual value cannot be improved. `dual_eq` and `dual_ub` are the prices of the rows (chapter 2). `status` is a number held in a `Series`; the status codes are in the next program.

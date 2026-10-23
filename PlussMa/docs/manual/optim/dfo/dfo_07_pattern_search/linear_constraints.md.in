@@ -1,0 +1,10 @@
+# Linear constraints
+
+[Back to The Pattern Search Minimiser](../dfo_07_pattern_search.md)
+
+
+Bounds and the two linear forms are enforced on every trial point exactly. No penalty is involved, so the returned point satisfies them to rounding.
+
+@@example Numerical/optimization/guide/dfo/365_pattern_search_linear_constraints.cpp@@
+
+The start is a vertex of the feasible region, where two inequalities and the equality meet. Moving off it means going along an edge of the feasible cone, which the method builds from the active constraints.

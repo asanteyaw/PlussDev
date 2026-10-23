@@ -95,7 +95,7 @@ auto whole_frame = orders.tail(100);  // orders only has 6 cases
 - For the top of a frame instead of the bottom, use [`head(n, render)`](head.md),
   which has an identical signature and clamping behavior.
 - Case labels are preserved verbatim from the source frame — if you need a fresh
-  `0`-based index on the result, combine this with [`label().set(...)`](label.md) or
+  `0`-based index on the result, combine this with [`label().set(...)`](labels.md) or
   a reset step rather than expecting `tail()` to renumber for you.
 - `tail()` never triggers a copy of the underlying column storage beyond what is
   needed to build the smaller result frame.

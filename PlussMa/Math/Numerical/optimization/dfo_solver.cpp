@@ -331,6 +331,11 @@ MadsBlackboxAdvancedConfig make_mads_config(
     cfg.poll_scheme = MadsPollScheme::LtMadsRandom2N;
   }
   apply_bounds_if_defined(problem, &cfg.lower_bounds, &cfg.upper_bounds);
+  // Constraints that the caller supplied must be respected: the engine's own default is to ignore them, which is only
+  // meaningful for a black box that handles feasibility itself.
+  if ((problem.constraints || problem.constraints_values) && cfg.constraint_handling == ConstraintHandling::Ignore) {
+    cfg.constraint_handling = ConstraintHandling::ProgressiveBarrier;
+  }
   return cfg;
 }
 
@@ -434,12 +439,27 @@ PSConfig make_ps_config(
 DfoResult run_nelder_mead(
     const DfoProblem& problem,
     const DfoOptions& options) {
-  const auto objective = make_scalar_objective(problem, DfoSolverKind::NelderMead);
+  if (problem.constraints || problem.constraints_values) {
+    ::pluss::throw_error("DFO::solve(NelderMead): nonlinear constraints are not supported; use PatternSearch or a MADS solver");
+  }
+  const auto raw_objective = make_scalar_objective(problem, DfoSolverKind::NelderMead);
+  // Bounds are enforced by projection: the simplex moves freely and every point is clamped into the box before the
+  // objective sees it, so the objective is never evaluated outside the bounds and the reported minimizer is inside.
+  const bool bounded = problem.lower_bounds.defined() || problem.upper_bounds.defined();
+  const auto project = [&problem](const Series& x) {
+    Series y = x;
+    if (problem.lower_bounds.defined()) y = y.maximum(problem.lower_bounds.to(y.scalar_type()));
+    if (problem.upper_bounds.defined()) y = y.minimum(problem.upper_bounds.to(y.scalar_type()));
+    return y;
+  };
+  const std::function<Series(const Series&)> objective =
+      bounded ? std::function<Series(const Series&)>([&raw_objective, project](const Series& x) { return raw_objective(project(x)); })
+              : raw_objective;
   const NelderMeadConfig cfg = make_nelder_config(options);
-  const NelderMeadOutcome out = nelder_mead_minimizer(objective, problem.initial, cfg);
+  const NelderMeadOutcome out = nelder_mead_minimizer(objective, bounded ? project(problem.initial) : problem.initial, cfg);
 
   DfoResult result;
-  result.minimizer = out.minimizer;
+  result.minimizer = bounded ? project(out.minimizer) : out.minimizer;
   result.objective_vector = pluss::make_series(out.minimum);
   result.minimum = out.minimum;
   result.status = from_status(out.status);
@@ -577,7 +597,11 @@ DfoResult run_mads(
   result.diagnostics.iterations = out.diagnostics.iterations;
   result.diagnostics.evaluations = out.diagnostics.evaluations;
   result.diagnostics.total_evaluations = out.diagnostics.total_evaluations;
+  result.diagnostics.cache_hits = out.diagnostics.cache_hits;
+  result.diagnostics.mesh_size = out.diagnostics.mesh_size;
   result.diagnostics.last_phase = out.diagnostics.last_phase;
+  result.pareto_points = out.pareto_points;
+  result.pareto_objectives = out.pareto_objectives;
 
   if (result.objective_vector.defined() && result.objective_vector.numel() == 1) {
     result.minimum = scalar_as_f64(result.objective_vector, "DFO::solve");

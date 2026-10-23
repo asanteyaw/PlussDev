@@ -1,0 +1,66 @@
+# Distributions 2: Maximum Likelihood
+
+Fitting a distribution to data means choosing its parameters to make the observed values as probable as possible: the maximum likelihood estimate. Besides the estimate, a fit needs a measure of its uncertainty. After this chapter you can fit seventeen families, read the log-likelihood, standard errors, covariance and confidence intervals of a fit, and know which parameters a family treats as known.
+
+Every program is complete and its output is the output of that program.
+
+## The fit object
+
+`dist.MLE(x)` returns a fit object of the family (`NormalFit`, `GammaFit`, …) whose fields are the estimated parameters. The estimate is the exact maximiser of the log-likelihood: closed-form for the normal, exponential, Poisson, Bernoulli, binomial, geometric, lognormal, uniform, Rayleigh, Laplace and inverse Gaussian families; by solving the likelihood equations to full precision (Newton's method for the gamma and beta, a bracketed root search for the negative binomial); by maximising the likelihood numerically for the normal inverse Gaussian, the generalised hyperbolic family and mixtures of normals (Chapter 3). `x` is a `Series` of observations (one dimension, finite values inside the support of the family).
+
+| Method | Result |
+|---|---|
+| `model()` | the distribution object with the fitted parameters |
+| `loglik(x)` | the total log-likelihood (a one-element Series) |
+| `loglik_per_obs(x)` | the log-density of each observation |
+| `nll(x)` | the negative log-likelihood |
+| `score(x)` | the gradient of the log-likelihood with respect to the parameters; zero (to rounding) at an interior maximum |
+| `observed_inf(x)` | the observed information: minus the Hessian of the log-likelihood at the estimate |
+| `fisher_inf(x)` | the information matrix (the observed one for the families fitted numerically) |
+| `vcov(x)` | the estimated covariance of the estimates: the inverse of the information |
+| `stderr(x)` | the standard errors: the square roots of the diagonal of `vcov` |
+| `confint(x, level)` | Wald intervals `estimate ± z · stderr` (default level 0.95): a matrix with one row per parameter and columns lower, upper |
+
+For a family with `k` parameters the information and covariance are `k × k` matrices and `stderr` has `k` entries. The Hessian is the full matrix: the correlation between the parameters is accounted for, not only the diagonal, so the standard error of each parameter is the one that holds with the other parameters estimated too. The covariance is that of the *free* parameters: a parameter the family holds fixed has zero standard error, a zero row and column in `vcov`, and an interval of zero width.
+
+## Which parameters are estimated
+
+| Family | Estimated | Held fixed (taken from the object `MLE` is called on) |
+|---|---|---|
+| `Normal` | mean, stddev | |
+| `Exponential` | rate | |
+| `Poisson` | lambda | |
+| `Bernoulli` | p | |
+| `Binomial` | p | count |
+| `Geometric` | p | |
+| `Lognormal` | mean_log, stddev_log | |
+| `Uniform` | low, high (the sample minimum and maximum) | |
+| `Rayleigh` | sigma | |
+| `Laplace` | location (the median), scale | |
+| `InverseGaussian` | theta (the sample mean), chi | |
+| `Gamma` | shape, scale | location |
+| `Beta` | alpha, beta | low, high |
+| `NegativeBinomial` | r, p | |
+| `Nig` | alpha, beta, location, scale | |
+| `Gh` | lambda, alpha, beta, location, scale | |
+| `GaussianMixture` | weights, means, stddevs | the number of components |
+
+Two families need a remark. The uniform's estimates are the extremes of the sample, whose distribution is not normal: its standard errors (the range divided by `n`) are an approximation and its Wald intervals only a rough guide. The Laplace log-likelihood has a kink at the location, so its information is not computed numerically: it is the closed form `n / scale²` for both parameters.
+
+For the negative binomial, counts whose variance does not exceed their mean have no finite maximum (the likelihood increases towards the Poisson limit as `r` grows): the fit then returns `r = 10⁸`, the largest value it searches.
+
+## Programs
+
+- [The closed-form families](dist_02_maximum_likelihood/the_closed_form_families.md)
+- [Numerical estimates, correlation and fixed parameters](dist_02_maximum_likelihood/numerical_estimates_correlation_and_fixed_parame.md)
+
+## Checklist
+
+1. Check that `x` lies inside the support of the family; a value outside is an error, not a silent zero.
+2. Read the log-likelihood to compare families fitted to the same data (the larger, the better; correct for the number of parameters with Akaike's criterion `2k − 2 loglik`).
+3. Report intervals from `confint`, and use `vcov` rather than `stderr` when you need the correlation of the estimates.
+4. Remember which parameters are fixed: set them on the object you call `MLE` on.
+5. Treat the uniform's and the boundary cases' intervals as approximate.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
