@@ -32,8 +32,8 @@ Example 1. Measure city name lengths.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("Kumasi")});
 auto out = slot.nt().length();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

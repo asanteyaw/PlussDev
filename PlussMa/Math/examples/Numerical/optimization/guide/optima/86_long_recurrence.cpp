@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -33,12 +33,15 @@ std::vector<double> simulate(int n) {
   return r;
 }
 
+// The same text runs on a Series and on a forward-mode number; a Series takes its logarithm as a method.
+inline pluss::Series log(const pluss::Series& x) { return x.log(); }
+
 template <class Number>
 Number negative_log_likelihood(const std::vector<double>& r, const Number& omega, const Number& alpha, const Number& beta) {
   Number variance = omega / (1.0 - alpha - beta);
   Number total = variance * 0.0;
   for (double x : r) {
-    total = total + 0.5 * (optim::log(variance) + (x * x) / variance);
+    total = total + 0.5 * (log(variance) + (x * x) / variance);
     variance = omega + alpha * (x * x) + beta * variance;
   }
   return total / static_cast<double>(r.size());
@@ -50,10 +53,10 @@ int main() {
   const auto start = params3(0.1, 0.05, 0.8);
 
   optim::ConstrainedProblem traced;
-  traced.objective.autodiff = [&](const optim::ParameterPack<optim::Trace>& p) -> optim::Trace {
-    return negative_log_likelihood<optim::Trace>(returns, p.at("omega"), p.at("alpha"), p.at("beta"));
+  traced.objective.autodiff = [&](const optim::ParameterPack<pluss::Series>& p) -> pluss::Series {
+    return negative_log_likelihood<pluss::Series>(returns, p.at("omega"), p.at("alpha"), p.at("beta"));
   };
-  traced.nonlinear.inequality = [](const optim::ParameterPack<optim::Trace>& p) -> optim::Trace { return p.at("alpha") + p.at("beta") - 0.999; };
+  traced.nonlinear.inequality = [](const optim::ParameterPack<pluss::Series>& p) -> pluss::Series { return p.at("alpha") + p.at("beta") - 0.999; };
   traced.bounds.lower = lower;
   traced.bounds.upper = upper;
 
@@ -70,14 +73,14 @@ int main() {
     results[i] = optim::optima(*problems[i], start);
   }
 
-  const char* labels[2] = {"reverse mode (Trace)", "forward mode (Fwd<3>)"};
+  const char* labels[2] = {"reverse mode (pluss::Series)", "forward mode (Fwd<3>)"};
   std::cout << std::left << std::setw(24) << "mode" << std::setw(8) << "exit" << std::setw(12) << "iterations" << std::setw(12) << "objective"
             << "omega, alpha, beta\n";
   for (int i = 0; i < 2; ++i) {
     const auto& p = results[i].params;
     std::cout << std::left << std::setw(24) << labels[i] << std::setw(8) << static_cast<int>(results[i].exit_flag) << std::setw(12)
               << results[i].iteration << std::fixed << std::setprecision(6) << std::setw(12) << results[i].evaluation.value.item<double>()
-              << std::setprecision(4) << p.at("omega").item<double>() << ", " << p.at("alpha").item<double>() << ", " << p.at("beta").item<double>() << "\n";
+              << std::setprecision(4) << as_f64(p.at("omega")) << ", " << as_f64(p.at("alpha")) << ", " << as_f64(p.at("beta")) << "\n";
   }
   return 0;
 }

@@ -155,7 +155,7 @@ inline pluss::Timeline from_epoch(const pluss::Series& values,
   CODEM_CHECK(values.defined(), "pluss::timeline::from_epoch: undefined Series");
   CODEM_CHECK(values.scalar_type() == pluss::ScalarType::Int64,
               "pluss::timeline::from_epoch: Series must have int64 dtype");
-  const auto flat = values.to_vec<std::int64_t>();
+  const auto flat = values.host<std::int64_t>().array().data;
   const std::vector<std::int64_t> shape(values.sizes().begin(), values.sizes().end());
   return from_epoch(flat, shape, tz_name);
 }

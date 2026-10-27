@@ -24,20 +24,20 @@ TEST_CASE("isreal classifies each lane and preserves shape", "[series][isreal]")
   const auto real = pluss::make_series({{1.0, -2.0}, {0.0, 4.0}}).isreal();
   REQUIRE(real.scalar_type() == pluss::ScalarType::Bool);
   REQUIRE(real.sizes() == std::vector<std::int64_t>{2, 2});
-  REQUIRE(real.to_vec<bool>() == std::vector<bool>{true, true, true, true});
+  REQUIRE(real.host<bool>() == std::vector<bool>{true, true, true, true});
 
   const auto complex = pluss::make_series(
       std::vector<Complex>{{1.0, 0.0}, {2.0, -0.0}, {3.0, 4.0}, {0.0, -2.0}}, {2, 2});
-  REQUIRE(complex.isreal().to_vec<bool>() ==
+  REQUIRE(complex.isreal().host<bool>() ==
           std::vector<bool>{true, true, false, false});
 }
 
 TEST_CASE("item extracts exactly one lane into native or tagged scalars", "[series][item]") {
   REQUIRE(pluss::make_series(7).item<std::int64_t>() == 7);
-  REQUIRE(pluss::make_series({3.5}).item<double>() == Approx(3.5));
+  REQUIRE(pluss::make_series({3.5}).host<double>().front() == Approx(3.5));
   REQUIRE(pluss::make_series(true).item<bool>());
   REQUIRE(pluss::make_series(7).item().dtype() == pluss::ScalarType::Int64);
-  REQUIRE(pluss::make_series(std::vector<Complex>{{2.0, -3.0}}, {}).item<Complex>() ==
+  REQUIRE(pluss::make_series(std::vector<Complex>{{2.0, -3.0}}, {}).host<Complex>().front() ==
           Complex{2.0, -3.0});
   REQUIRE_THROWS(pluss::make_series({1, 2}).item<std::int64_t>());
   REQUIRE_THROWS(pluss::make_series(std::vector<Complex>{{1.0, 2.0}}, {}).item());
@@ -50,9 +50,9 @@ TEST_CASE("layer_norm enforces trailing shape and differentiates all affine inpu
   auto bias = pluss::make_series({0.0, 1.0, -1.0});
   const auto y = x.layer_norm({3}, weight, bias);
   REQUIRE(y.sizes() == x.sizes());
-  REQUIRE(y.to_vec<double>()[0] == Approx(-1.2247356859).margin(1e-9));
-  REQUIRE(y.to_vec<double>()[1] == Approx(1.0).margin(1e-12));
-  REQUIRE(y.to_vec<double>()[2] == Approx(-0.3876302003).margin(1e-9));
+  REQUIRE(y.host<double>()[0] == Approx(-1.2247356859).margin(1e-9));
+  REQUIRE(y.host<double>()[1] == Approx(1.0).margin(1e-12));
+  REQUIRE(y.host<double>()[2] == Approx(-0.3876302003).margin(1e-9));
 
   x.tracks_slope_(true);
   weight.tracks_slope_(true);
@@ -61,7 +61,7 @@ TEST_CASE("layer_norm enforces trailing shape and differentiates all affine inpu
   REQUIRE(x.has_sensitivity());
   REQUIRE(weight.has_sensitivity());
   REQUIRE(bias.has_sensitivity());
-  REQUIRE(bias.sensitivity().to_vec<double>() == std::vector<double>{2.0, 2.0, 2.0});
+  REQUIRE(bias.sensitivity().host<double>() == std::vector<double>{2.0, 2.0, 2.0});
 
   REQUIRE_THROWS(x.layer_norm({2}, pluss::make_series({1.0, 1.0}),
                               pluss::make_series({0.0, 0.0})));
@@ -81,12 +81,12 @@ TEST_CASE("mish and selu preserve shape, promote integers, and carry reverse rul
   auto mish_x = pluss::make_series({-1.0, 0.0, 1.0});
   mish_x.tracks_slope_(true);
   mish_x.mish().sum().reverse();
-  REQUIRE(mish_x.sensitivity().to_vec<double>()[1] == Approx(0.6).margin(1e-12));
+  REQUIRE(mish_x.sensitivity().host<double>()[1] == Approx(0.6).margin(1e-12));
 
   auto selu_x = pluss::make_series({-1.0, 0.0, 1.0});
   selu_x.tracks_slope_(true);
   selu_x.selu().sum().reverse();
-  REQUIRE(selu_x.sensitivity().to_vec<double>()[2] == Approx(1.0507009873554805));
+  REQUIRE(selu_x.sensitivity().host<double>()[2] == Approx(1.0507009873554805));
 
   REQUIRE_THROWS(pluss::make_series(std::vector<Complex>{{1.0, 1.0}}, {1}).mish());
   REQUIRE_THROWS(pluss::make_series(std::vector<Complex>{{1.0, 1.0}}, {1}).selu());
@@ -95,12 +95,12 @@ TEST_CASE("mish and selu preserve shape, promote integers, and carry reverse rul
 TEST_CASE("rrelu separates deterministic evaluation from sampled training",
           "[series][rrelu]") {
   const auto x = pluss::make_series({-2.0, -1.0, 0.0, 2.0});
-  const auto positive_slopes = x.rrelu(0.2, 0.4, false).to_vec<double>();
+  const auto positive_slopes = x.rrelu(0.2, 0.4, false).host<double>();
   REQUIRE(positive_slopes[0] == Approx(-0.6));
   REQUIRE(positive_slopes[1] == Approx(-0.3));
   REQUIRE(positive_slopes[2] == Approx(0.0));
   REQUIRE(positive_slopes[3] == Approx(2.0));
-  const auto negative_slopes = x.rrelu(-0.4, -0.2, false).to_vec<double>();
+  const auto negative_slopes = x.rrelu(-0.4, -0.2, false).host<double>();
   REQUIRE(negative_slopes[0] == Approx(0.6));
   REQUIRE(negative_slopes[1] == Approx(0.3));
   REQUIRE(negative_slopes[2] == Approx(0.0));
@@ -111,8 +111,8 @@ TEST_CASE("rrelu separates deterministic evaluation from sampled training",
   tracked.tracks_slope_(true);
   const auto sampled = tracked.rrelu(0.2, 0.4, true);
   sampled.sum().reverse();
-  const auto values = sampled.to_vec<double>();
-  const auto gradients = tracked.sensitivity().to_vec<double>();
+  const auto values = sampled.host<double>();
+  const auto gradients = tracked.sensitivity().host<double>();
   REQUIRE(gradients[0] == Approx(values[0] / -2.0));
   REQUIRE(gradients[1] == Approx(values[1] / -1.0));
   REQUIRE(gradients[2] >= 0.2);

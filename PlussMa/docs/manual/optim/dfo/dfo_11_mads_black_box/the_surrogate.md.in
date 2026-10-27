@@ -1,8 +1,0 @@
-# The surrogate
-
-[Back to The Black-Box MADS Minimisers](../dfo_11_mads_black_box.md)
-
-
-@@example Numerical/optimization/guide/dfo/403_mads_surrogate.cpp@@
-
-The model never replaces an evaluation, so the answer is as reliable as without it; it only reorders each poll. On this smooth function it saves a tenth to a fifth of the evaluations, more in higher dimension, where polls are longer. The saving is bounded by construction: ordering can only shorten the part of a poll that comes after the first improving point, and an unsuccessful poll must still evaluate every candidate, so no model can remove those evaluations. On a rough function the ordering helps less. It is worth trying when each evaluation is expensive and the function is reasonably smooth.

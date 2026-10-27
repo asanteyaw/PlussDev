@@ -9,3 +9,19 @@ add_test(NAME eng_structure_frame_test COMMAND eng_structure_frame_test)
 add_executable(eng_structure_spectral_test spectral_test.cpp)
 target_link_libraries(eng_structure_spectral_test PRIVATE pluss plussqit_codem)
 add_test(NAME eng_structure_spectral_test COMMAND eng_structure_spectral_test)
+
+add_executable(eng_structure_motion_test motion_test.cpp)
+target_link_libraries(eng_structure_motion_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_structure_motion_test COMMAND eng_structure_motion_test)
+
+add_executable(eng_structure_harmonic_test harmonic_test.cpp)
+target_link_libraries(eng_structure_harmonic_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_structure_harmonic_test COMMAND eng_structure_harmonic_test)
+
+add_executable(eng_structure_nonlinear_test nonlinear_test.cpp)
+target_link_libraries(eng_structure_nonlinear_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_structure_nonlinear_test COMMAND eng_structure_nonlinear_test)
+
+add_executable(eng_structure_nonlinear_motion_test nonlinear_motion_test.cpp)
+target_link_libraries(eng_structure_nonlinear_motion_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_structure_nonlinear_motion_test COMMAND eng_structure_nonlinear_motion_test)

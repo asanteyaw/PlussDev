@@ -8,8 +8,8 @@ int main() {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 400;
   const auto x = pluss::series::randn({n, 2}, cfg, 20260324ULL);
-  const auto x_cpu = x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().to_vec<double>();
-  const auto noise = pluss::series::randn({n}, cfg, 20260325ULL).to_vec<double>();
+  const auto x_cpu = x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().host<double>();
+  const auto noise = pluss::series::randn({n}, cfg, 20260325ULL).host<double>();
 
   std::vector<double> yv(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {

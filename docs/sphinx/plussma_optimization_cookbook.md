@@ -2,8 +2,8 @@
 
 This cookbook is task-first and covers the full PlussMa optimization surface:
 
-- constrained smooth optimization (`pluss::optim`)
-- functional Adam/Septima loops (`pluss::optim`)
+- constrained smooth optimization (`pluss::subsp::math::optim`)
+- functional Adam/Septima loops (`pluss::subsp::math::optim`)
 - derivative-free global/local/blackbox optimization (`pluss::subsp::math::optimization`)
 
 ## Recipe 1: Minimal Unconstrained `optima` (Autodiff Objective)
@@ -36,7 +36,7 @@ Fastest way to solve smooth unconstrained problems with one vector parameter.
 #include <pluss/ma.h>
 #include <iostream>
 
-namespace pmo = pluss::optim;
+namespace pmo = pluss::subsp::math::optim;
 
 int main() {
   const pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
@@ -132,7 +132,7 @@ Best pattern for complex constrained NLP where you need explicit problem constru
 
 ```cpp
 using namespace pluss;
-namespace pmo = pluss::optim;
+namespace pmo = pluss::subsp::math::optim;
 
 auto pb = pmo::problem();
 pb.objective([](const pmo::ParameterPack<pmo::Trace>& p) -> pmo::Trace {
@@ -172,7 +172,7 @@ For AD-only behavior, write the objective as a pure function of traced params.
 
 ```cpp
 using namespace pluss;
-namespace pmo = pluss::optim;
+namespace pmo = pluss::subsp::math::optim;
 
 const Series scaler = /* user scaler */;
 const Series returns = /* 1D returns */;
@@ -433,7 +433,7 @@ for (int i = 0; i < 60; ++i) {
 
 ### API Signature
 
-- `septima(...) -> SeptimaResult` (one-shot solver API in `pluss::optim`)
+- `septima(...) -> SeptimaResult` (one-shot solver API in `pluss::subsp::math::optim`)
 
 ### Notes
 
@@ -556,7 +556,7 @@ opt_hook.progress_hook = [](const pmo::SeptimaProgressSnapshot& s) {
 
 ### PlussMa Septima vs PlussAI Minimax
 
-- Use `pluss::optim::septima(...)` when you want one-shot solve semantics and a `SeptimaResult` output.
+- Use `pluss::subsp::math::optim::septima(...)` when you want one-shot solve semantics and a `SeptimaResult` output.
 - Use `pluss::nn::optim::Minimax` when you are in a model training loop and want `optimizer.step()` control per iteration.
 - They share primal-dual ideas, but their integration model is different: solver call (PlussMa) vs optimizer object (PlussAI).
 

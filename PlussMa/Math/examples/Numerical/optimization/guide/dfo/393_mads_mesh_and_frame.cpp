@@ -6,12 +6,14 @@
 // earlier, so the mesh_tolerance rows switch it off with check_every = 0). `opportunistic` stops a poll at the first improvement;
 // off, the whole poll is evaluated and the best point taken. Same 4-variable quadratic for every row; its minimum value is 1.
 #include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
+#include <utility>
+#include <vector>
 
 namespace dfo = pluss::subsp::math::optimization;
+using namespace pluss::tils;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
@@ -20,40 +22,38 @@ pluss::Series rosenbrock(const pluss::Series& x) {
   const auto a = x.select(0, 0), b = x.select(0, 1);
   return (b - a * a).square() * 100.0 + (a * -1.0 + 1.0).square();
 }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
-void run(const char* label, dfo::MadsBlackboxConfig c) {
-  auto f = [](const pluss::Series& x) {
-    const auto d = x - vec({1.0, -1.0, 2.0, 0.5});
-    const auto s = d.select(0, 0) + d.select(0, 1) + d.select(0, 2) + d.select(0, 3);
-    return d.square().sum() + s.square() * 0.8 + 1.0;
-  };
-  c.max_iterations = 4000;
-  c.max_evaluations = 40000;
-  const auto o = dfo::orthomads_minimizer(f, vec({3.0, 2.0, -1.0, 1.0}), c);
-  std::cout << std::left << std::setw(32) << label << std::setw(26) << name(o.status) << std::scientific << std::setprecision(2) << std::setw(11)
-            << o.minimum << std::defaultfloat << "evals " << o.diagnostics.evaluations << "\n";
-}
-
 int main() {
+  std::vector<std::pair<const char*, dfo::MadsBlackboxConfig>> cases;
   dfo::MadsBlackboxConfig base;
-  run("defaults", base);
+  cases.emplace_back("defaults", base);
   auto big = base; big.initial_frame_size = 8.0; big.initial_mesh_size = 8.0;
-  run("initial frame and mesh 8", big);
+  cases.emplace_back("initial frame and mesh 8", big);
   auto tiny = base; tiny.initial_frame_size = 0.01; tiny.initial_mesh_size = 0.01;
-  run("initial frame and mesh 0.01", tiny);
+  cases.emplace_back("initial frame and mesh 0.01", tiny);
   auto gentle = base; gentle.frame_refine_factor = 0.8; gentle.mesh_refine_factor = 0.64;
-  run("gentle refinement (0.8, 0.64)", gentle);
+  cases.emplace_back("gentle refinement (0.8, 0.64)", gentle);
   auto aggressive = base; aggressive.frame_refine_factor = 0.25; aggressive.mesh_refine_factor = 0.0625;
-  run("aggressive refinement", aggressive);
+  cases.emplace_back("aggressive refinement", aggressive);
   auto tight = base; tight.check_every = 0; tight.mesh_tolerance = 1e-12;
-  run("mesh_tolerance 1e-12, no window", tight);
+  cases.emplace_back("mesh_tolerance 1e-12, no window", tight);
   auto mid = base; mid.check_every = 0; mid.mesh_tolerance = 1e-8;
-  run("mesh_tolerance 1e-8, no window", mid);
+  cases.emplace_back("mesh_tolerance 1e-8, no window", mid);
   auto loose = base; loose.check_every = 0; loose.mesh_tolerance = 1e-3;
-  run("mesh_tolerance 1e-3, no window", loose);
+  cases.emplace_back("mesh_tolerance 1e-3, no window", loose);
   auto full = base; full.opportunistic = false;
-  run("opportunistic off", full);
+  cases.emplace_back("opportunistic off", full);
+
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2));
+  for (auto [label, c] : cases) {
+    auto f = [](const pluss::Series& x) {
+      const auto d = x - vec({1.0, -1.0, 2.0, 0.5});
+      const auto s = d.select(0, 0) + d.select(0, 1) + d.select(0, 2) + d.select(0, 3);
+      return d.square().sum() + s.square() * 0.8 + 1.0;
+    };
+    c.max_iterations = 4000;
+    c.max_evaluations = 40000;
+    const auto o = dfo::orthomads_minimizer(f, vec({3.0, 2.0, -1.0, 1.0}), c);
+    out.writeln(label, dfo::to_string(o.status), o.minimum, "evals", o.diagnostics.evaluations);
+  }
 }

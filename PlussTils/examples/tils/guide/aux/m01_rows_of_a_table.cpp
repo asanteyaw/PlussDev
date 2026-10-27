@@ -13,7 +13,7 @@ int main() {
   const auto totals = pluss::tils::map_axis(
       [](const pluss::Series& row) {
         double sum = 0.0;
-        for (double v : row.to_vec<double>()) sum += v;
+        for (double v : row.host<double>()) sum += v;
         return sum;
       },
       sales, 1);

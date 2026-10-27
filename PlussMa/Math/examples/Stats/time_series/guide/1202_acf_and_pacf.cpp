@@ -41,7 +41,7 @@ std::vector<double> running_sum(const std::vector<double>& e) {
 }
 void print_row(const char* label, const Series& s, int precision = 4) {
   std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
+  for (double v : s.host<double>()) std::cout << " " << std::setw(8) << v;
   std::cout << "\n";
 }
 int main() {

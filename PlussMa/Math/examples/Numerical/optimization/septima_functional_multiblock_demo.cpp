@@ -9,7 +9,6 @@ int main() {
   using pluss::Config;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::subsp::math::diff::Trace;
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -19,7 +18,7 @@ int main() {
   const Series w_target = pluss::make_series(std::vector<double>{2.0, 1.0}, {2}, cfg);
   const Series b_target = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
 
-  pluss::optim::SeptimaSolveOptions options{};
+  pluss::subsp::math::optim::SeptimaSolveOptions options{};
   options.max_iterations = 200;
   options.gradient_tolerance = 1e-8;
   options.constraint_tolerance = 1e-8;
@@ -31,7 +30,7 @@ int main() {
   options.step.project_bounds = true;
   options.step.enable_constraint_autodiff = true;
 
-  pluss::optim::SeptimaConstraints constraints{};
+  pluss::subsp::math::optim::SeptimaConstraints constraints{};
   constraints.equalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum() + p[1] - 2.0};
   };
@@ -43,7 +42,7 @@ int main() {
       pluss::series::undefined(),
   };
 
-  options.progress_hook = [&](const pluss::optim::SeptimaProgressSnapshot& s) {
+  options.progress_hook = [&](const pluss::subsp::math::optim::SeptimaProgressSnapshot& s) {
     if (s.iteration % 50 == 0 || s.iteration == 1) {
       std::cout << "iter=" << s.iteration
                 << " obj=" << s.objective
@@ -54,12 +53,10 @@ int main() {
     return true;
   };
 
-  const auto fit = pluss::optim::septima(
-      [&](const std::vector<Trace>& p) -> Trace {
-        return (pluss::subsp::math::diff::sum(
-                    pluss::subsp::math::diff::square(p[0] - pluss::subsp::math::diff::fixed(w_target))) +
-                pluss::subsp::math::diff::sum(
-                    pluss::subsp::math::diff::square(p[1] - pluss::subsp::math::diff::fixed(b_target)))) *
+  const auto fit = pluss::subsp::math::optim::septima(
+      [&](const std::vector<Series>& p) -> Series {
+        return (((p[0] - w_target).square()).sum() +
+                ((p[1] - b_target).square()).sum()) *
                0.5;
       },
       std::vector<Series>{w, b},
@@ -67,7 +64,7 @@ int main() {
       constraints);
 
   std::cout << "final w=[" << fit.params[0].select(0, 0).item<double>() << ", "
-            << fit.params[0].select(0, 1).item<double>() << "] b=" << fit.params[1].item<double>() << '\n';
+            << fit.params[0].select(0, 1).item<double>() << "] b=" << as_f64(fit.params[1]) << '\n';
 
   return 0;
 }

@@ -95,8 +95,8 @@ the output median lands on `exp(0) = 1` and the output mean on
 pluss::rng_seed(7);
 auto x = pluss::series::empty({500000}, pluss::ScalarType::Float64);
 x.log_normal_(0.0, 0.5);
-std::cout << "output median~" << x.median().to_vec<double>()[0]
-          << "  output mean~" << x.mean().to_vec<double>()[0] << "\n";
+std::cout << "output median~" << x.median().host<double>()[0]
+          << "  output mean~" << x.mean().host<double>()[0] << "\n";
 ```
 
 ### Output

@@ -19,7 +19,7 @@ void expect(bool c, const std::string &m) {
 }
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
 double max_abs(const Series &a, const std::vector<double> &b) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch");
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -89,7 +89,7 @@ int main() {
       const auto exact = [&](double lt) { const double b = rt + lt + kd; return 0.5 * (b - std::sqrt(b * b - 4.0 * rt * lt)); };
       expect(std::abs(rl.select(0, 1).item<double>() - exact(5e-6)) < 1e-15 && std::abs(rl.select(0, 2).item<double>() - exact(1e-5)) < 1e-15, "bound complex vs the exact quadratic");
       const Series dh = lk::observed_enthalpy(vec({-10.0}), vec({0.8}), vec({11.5}));
-      expect(std::abs(dh.item<double>() - (-10.0 + 0.8 * 11.5)) < 1e-14, "buffer-linked observed enthalpy");
+      expect(std::abs(dh.host<double>().front() - (-10.0 + 0.8 * 11.5)) < 1e-14, "buffer-linked observed enthalpy");
     }
     std::cout << "linkage tests passed\n";
   } catch (const std::exception &e) {

@@ -99,7 +99,7 @@ int main() {
   std::cout << "input shape: " << features.sizes()[0] << " x " << features.sizes()[1] << " x " << features.sizes()[2] << "\n";
   std::cout << "latent shape after block 3: " << block3.sizes()[0] << " x " << block3.sizes()[1] << " x " << block3.sizes()[2] << "\n";
   std::cout << "prediction shape: " << prediction.sizes()[0] << " x " << prediction.sizes()[1] << " x " << prediction.sizes()[2] << "\n";
-  std::cout << "initial mse: " << pluss::mse(prediction, target) << "\n";
+  std::cout << "initial mse: " << pluss::losses::mse(prediction, target) << "\n";
   std::cout << "sample prediction: " << take_range(prediction, 0, 0, 1) << "\n";
   std::cout << "sample target: " << take_range(target, 0, 0, 1) << "\n";
 

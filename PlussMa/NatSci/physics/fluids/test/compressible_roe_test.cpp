@@ -166,7 +166,7 @@ void test_reference_flux_and_contact() {
   const auto expected =
       roe_reference(1.0, 0.75, 1.0, 0.6, -0.2, 0.55, policy.entropy);
   expect(std::abs(flux.mass.item<double>() - expected[0]) < 2e-13 &&
-             std::abs(flux.momentum.item<double>() - expected[1]) < 2e-13 &&
+             std::abs(flux.momentum.host<double>().front() - expected[1]) < 2e-13 &&
              std::abs(flux.energy.item<double>() - expected[2]) < 2e-13,
          "Roe flux disagrees with an independently reconstructed 1-D oracle");
 
@@ -222,9 +222,9 @@ void test_entropy_and_low_mach_policies() {
       gas::detail::roe_flux(left, right, 0, 0, gas::Model{}, low);
   constexpr double centered_momentum_flux = 1.0 + 1e-6;
   const double classic_loss =
-      centered_momentum_flux - classic_flux.momentum.item<double>();
+      centered_momentum_flux - classic_flux.momentum.host<double>().front();
   const double low_loss =
-      centered_momentum_flux - low_flux.momentum.item<double>();
+      centered_momentum_flux - low_flux.momentum.host<double>().front();
   expect(classic_loss > 0.0 && std::abs(low_loss / classic_loss - 0.05) < 2e-11,
          "Rieper policy did not scale the low-Mach normal-velocity "
          "dissipation: classic=" +

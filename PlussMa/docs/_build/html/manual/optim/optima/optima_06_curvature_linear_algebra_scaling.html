@@ -13,13 +13,13 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="How the model scales with the problem" href="optima_06_curvature_linear_algebra_scaling/how_the_model_scales_with_the_problem.html" />
-    <link rel="prev" title="What “interior” buys" href="optima_05_working_set_and_interior/what_interior_buys.html" />
+    <link rel="next" title="Curvature models" href="optima_06_curvature_linear_algebra_scaling/curvature_models.html" />
+    <link rel="prev" title="The interior-point method" href="optima_05_working_set_and_interior/the_interior_point_method.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -72,22 +72,8 @@
 <section id="curvature">
 <h2>Curvature<a class="headerlink" href="#curvature" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/how_the_model_scales_with_the_problem.html"><span class="std std-doc">How the model scales with the problem</span></a></p></li>
-<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/the_memory_of_the_limited_memory_model.html"><span class="std std-doc">The memory of the limited-memory model</span></a></p></li>
-<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/every_algorithm_every_model.html"><span class="std std-doc">Every algorithm, every model</span></a></p></li>
-<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/the_bfgs_safeguard.html"><span class="std std-doc">The BFGS safeguard</span></a></p></li>
-</ul>
-</section>
-<section id="linear-algebra">
-<h2>Linear algebra<a class="headerlink" href="#linear-algebra" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/the_step_s_linear_system.html"><span class="std std-doc">The step’s linear system</span></a></p></li>
-</ul>
-</section>
-<section id="scaling">
-<h2>Scaling<a class="headerlink" href="#scaling" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/units_measured.html"><span class="std std-doc">Units, measured</span></a></p></li>
+<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/curvature_models.html"><span class="std std-doc">Curvature models</span></a></p></li>
+<li><p><a class="reference internal" href="optima_06_curvature_linear_algebra_scaling/linear_algebra_and_units.html"><span class="std std-doc">The step’s linear algebra, and units</span></a></p></li>
 </ul>
 </section>
 <section id="decisions">
@@ -126,7 +112,7 @@
 <section id="pitfalls">
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Asking for an exact model without the dual callbacks: refused with exit flag <code class="docutils literal notranslate"><span class="pre">-5</span></code> (Program 3).</p></li>
+<li><p>Asking for an exact model on an objective given only as a value and a gradient: refused with exit flag <code class="docutils literal notranslate"><span class="pre">-5</span></code> (Program 3).</p></li>
 <li><p>Switching <code class="docutils literal notranslate"><span class="pre">problem_scaling</span></code> to <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">InitialPoint</span></code> on a problem whose numbers span many orders of magnitude (Program 6).</p></li>
 <li><p>Reading <code class="docutils literal notranslate"><span class="pre">Converged</span></code> as <code class="docutils literal notranslate"><span class="pre">Optimal</span></code>: the flag certifies first-order conditions at the point returned and nothing more.</p></li>
 </ul>
@@ -153,7 +139,7 @@
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
@@ -164,6 +150,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

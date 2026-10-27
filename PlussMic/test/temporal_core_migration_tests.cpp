@@ -124,7 +124,7 @@ void test_duration_slate_foundation() {
          "Duration-to-Series cast must produce a numeric Slate");
   expect(numeric.as_series().scalar_type() == pluss::codem::ScalarType::Int64,
          "Duration-to-Series cast must preserve nanoseconds as Int64");
-  expect(numeric.as_series().host<std::int64_t>().vector() == values.host(),
+  expect(numeric.as_series().host<std::int64_t>() == values.host(),
          "Duration-to-Series cast must preserve exact signed nanoseconds and NaT");
 
   const auto restored = numeric.cast().duration();
@@ -189,7 +189,7 @@ void test_duration_slate_foundation() {
                             .duration();
   expect(nullable.as_duration().host() == std::vector<std::int64_t>{12, 0, -9},
          "nulling Duration parse must retain exact values in valid lanes");
-  expect(pluss::table::detail::validity_mask(nullable)->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(nullable)->host<bool>() ==
              std::vector<bool>{true, false, true},
          "nulling Duration parse must invalidate only malformed lanes");
   expect(slate.info_string().find("Kind: Duration") != std::string::npos,
@@ -209,7 +209,7 @@ void test_duration_slate_foundation() {
          "Duration replace must compare and substitute exact nanoseconds");
   const auto nulled = replaced.replace(
       pluss::duration::nanos(-11), pluss::series::null);
-  expect(pluss::table::detail::validity_mask(nulled)->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(nulled)->host<bool>() ==
              std::vector<bool>{true, false, true},
          "Duration replace-to-null must update validity without changing payload kind");
 
@@ -236,7 +236,7 @@ void test_duration_io_boundary() {
 
   const auto filtered = frame.sql().execute(
       "SELECT elapsed FROM df WHERE elapsed < 1 ORDER BY elapsed");
-  expect(filtered.features("elapsed").as_series().host<std::int64_t>().vector() ==
+  expect(filtered.features("elapsed").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>{-3'000'000'001LL, 0},
          "SQLite binding must preserve Duration nanoseconds for predicates and ordering");
 }
@@ -342,7 +342,7 @@ void test_duration_stream_boundary() {
              aligned_values[0] == 4'500'000'000LL &&
              aligned_values[1] == -3'000'000'000LL,
          "label alignment must reorder observed Duration lanes");
-  expect(pluss::table::detail::validity_mask(aligned)->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(aligned)->host<bool>() ==
              std::vector<bool>{true, true, false},
          "label alignment must mark an absent Duration row invalid");
 }
@@ -409,17 +409,17 @@ void test_dataframe_case_study_accessor() {
          "case_study().at must normalize negative positions");
   expect(frame.case_study().slice(1, 3).ncases() == 2,
          "case_study().slice must use half-open bounds");
-  expect(frame.case_study().slice(-3, -1).features("units").as_series().to_vec<std::int64_t>() ==
+  expect(frame.case_study().slice(-3, -1).features("units").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>{7, 12},
          "case_study().slice must normalize negative bounds");
   expect(frame.case_study().slice(3, 1).ncases() == 0,
          "case_study().slice must return an empty frame for reversed bounds");
-  expect(frame.case_study().take({3, 0, 3}).features("units").as_series().to_vec<std::int64_t>() ==
+  expect(frame.case_study().take({3, 0, 3}).features("units").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>{5, 10, 5},
          "case_study().take must preserve requested order and duplicates");
   const std::vector<std::int64_t> rows{2, 0};
   expect(frame.case_study().take(pluss::RangeView<std::int64_t>(rows))
-                 .features("units").as_series().to_vec<std::int64_t>() ==
+                 .features("units").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>{12, 10},
          "case_study().take must accept a borrowed position range");
   expect(frame.case_study().take({}).shape() ==
@@ -456,7 +456,7 @@ void test_dataframe_case_study_accessor() {
          "case_study().pick must support partial structured-label matches");
   expect(structured.case_study().pick(
              DataFrame::CasePick{.key = {"East", "201"}}).features("sales")
-             .as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>{8},
+             .as_series().host<std::int64_t>() == std::vector<std::int64_t>{8},
          "case_study().pick must support full structured keys");
 
   expect_throw([&] { (void)frame.case_study().at(9); },
@@ -474,10 +474,10 @@ void test_dataframe_case_study_accessor() {
 
   const auto numbered = DataFrame({{"v", Slate(pluss::make_series({4, 9, 16, 25}))}})
       .labels().set(Slate(pluss::make_series({10, 20, 30, 40})));
-  expect(numbered.case_study().labels(20).features("v").as_series().to_vec<std::int64_t>() ==
+  expect(numbered.case_study().labels(20).features("v").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>{9},
          "case_study().labels must accept integer labels");
-  expect(numbered.case_study().span(20, 30).features("v").as_series().to_vec<std::int64_t>() ==
+  expect(numbered.case_study().span(20, 30).features("v").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>{9, 16},
          "case_study().span must accept integer label bounds");
 }

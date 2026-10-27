@@ -19,7 +19,7 @@ void expect(bool c, const std::string &m) {
 }
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
 double rel(const Series &a, const std::vector<double> &b) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch " + std::to_string(av.size()) + " vs " + std::to_string(b.size()));
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -31,7 +31,7 @@ void check(const std::string &name, const ts::Isotropic &m, const std::vector<do
   expect(rel(ts::equibiaxial_stress(m, vec(ref::lam_bi)), bi) < 1e-11, name + ": equibiaxial");
   expect(rel(ts::planar_stress_difference(m, vec(ref::lam_pl)), pl) < 1e-11, name + ": planar");
   const auto s = ts::simple_shear(m, vec(ref::gam_sh));
-  const auto a = s.shear_stress.contiguous().to_vec<double>(), b = s.normal_difference.contiguous().to_vec<double>();
+  const auto a = s.shear_stress.contiguous().host<double>(), b = s.normal_difference.contiguous().host<double>();
   for (std::size_t i = 0; i < ref::gam_sh.size(); ++i)
     expect(std::abs(a[i] - sh[2 * i]) < 1e-11 * (1 + std::abs(sh[2 * i])) && std::abs(b[i] - sh[2 * i + 1]) < 1e-11 * (1 + std::abs(sh[2 * i + 1])), name + ": simple shear");
   // consistency of the energy with W1, W2: central differences in I1 and I2
@@ -64,17 +64,17 @@ int main() {
       expect(ts::uniaxial_stress(ts::gent(1.8, 1e9), l).sub(ts::uniaxial_stress(ts::neo_hookean(1.8), l)).abs().max().item<double>() < 1e-6, "Gent(Jm -> inf) = neo-Hookean");
       // Gent stiffens and diverges as I1 - 3 -> Jm (finite extensibility)
       const auto gent = ts::gent(1.0, 2.0);
-      expect(ts::uniaxial_stress(gent, vec({2.0})).item<double>() > 5.0 * ts::uniaxial_stress(ts::neo_hookean(1.0), vec({2.0})).item<double>(), "Gent stiffening near the locking stretch");
+      expect(ts::uniaxial_stress(gent, vec({2.0})).host<double>().front() > 5.0 * ts::uniaxial_stress(ts::neo_hookean(1.0), vec({2.0})).host<double>().front(), "Gent stiffening near the locking stretch");
       // small strain: sigma ~ E eps with E = 3 mu0 for uniaxial tension, for every model
       const Series eps = vec({1e-6});
       const std::vector<ts::Isotropic> models{ts::neo_hookean(1.7), ts::mooney_rivlin(0.9, 0.35), ts::yeoh(0.8, 0.05, 0.004), ts::gent(1.2, 9.0), ts::fung(0.6, 0.8)};
       for (const auto &m : models) {
         const Series mu0 = ts::initial_shear_modulus(m, eps);
-        const double young = ts::uniaxial_stress(m, eps.add(1.0)).div(eps).item<double>();
-        expect(std::abs(young - 3.0 * mu0.item<double>()) < 1e-5 * young, "small-strain Young's modulus = 3 mu0");
+        const double young = ts::uniaxial_stress(m, eps.add(1.0)).div(eps).host<double>().front();
+        expect(std::abs(young - 3.0 * mu0.host<double>().front()) < 1e-5 * young, "small-strain Young's modulus = 3 mu0");
       }
       const Series mu = vec({0.63, 0.0012, -0.01}), al = vec({1.3, 5.0, -2.0});
-      const double young = ts::ogden_uniaxial(vec({1.0 + 1e-6}), mu, al).item<double>() / 1e-6;
+      const double young = ts::ogden_uniaxial(vec({1.0 + 1e-6}), mu, al).host<double>().front() / 1e-6;
       expect(std::abs(young - 3.0 * ts::ogden_shear_modulus(mu, al).item<double>()) < 1e-4 * young, "Ogden small-strain modulus = 3 sum mu alpha / 2");
     }
     // fibre-reinforced artery (HGO / GOH) vs the sympy F-based energy with the Macaulay bracket (last case: fibres in compression carry nothing)
@@ -85,8 +85,8 @@ int main() {
         ts::Hgo m;
         m.c10 = c[2]; m.k1 = c[3]; m.k2 = c[4]; m.kappa = c[5]; m.gamma = c[6];
         const auto s = ts::artery_stresses(m, vec({c[0]}), vec({c[1]}));
-        expect(std::abs(s.theta_minus_radial.item<double>() - c[7]) < 1e-10 * (1 + std::abs(c[7])) && std::abs(s.axial_minus_radial.item<double>() - c[8]) < 1e-10 * (1 + std::abs(c[8])),
-               "HGO artery case " + std::to_string(i) + ": " + std::to_string(s.theta_minus_radial.item<double>()) + ", " + std::to_string(s.axial_minus_radial.item<double>()) + " vs " + std::to_string(c[7]) + ", " + std::to_string(c[8]));
+        expect(std::abs(s.theta_minus_radial.host<double>().front() - c[7]) < 1e-10 * (1 + std::abs(c[7])) && std::abs(s.axial_minus_radial.host<double>().front() - c[8]) < 1e-10 * (1 + std::abs(c[8])),
+               "HGO artery case " + std::to_string(i) + ": " + std::to_string(s.theta_minus_radial.host<double>().front()) + ", " + std::to_string(s.axial_minus_radial.host<double>().front()) + " vs " + std::to_string(c[7]) + ", " + std::to_string(c[8]));
       }
       // no fibres (k1 = 0) is neo-Hookean with mu = 2 c10; stretched fibre families stiffen it
       ts::Hgo m;
@@ -94,15 +94,15 @@ int main() {
       const Series lt = vec({1.15}), lz = vec({1.10});
       const auto s0 = ts::artery_stresses(m, lt, lz);
       const double nh = 2.0 * 0.9 * (1.15 * 1.15 - std::pow(1.0 / (1.15 * 1.10), 2.0));
-      expect(std::abs(s0.theta_minus_radial.item<double>() - nh) < 1e-12, "k1 = 0 reduces to the neo-Hookean wall");
+      expect(std::abs(s0.theta_minus_radial.host<double>().front() - nh) < 1e-12, "k1 = 0 reduces to the neo-Hookean wall");
       m.k1 = 2.4;
-      expect(ts::artery_stresses(m, lt, lz).theta_minus_radial.item<double>() > s0.theta_minus_radial.item<double>(), "fibres stiffen the stretched wall");
+      expect(ts::artery_stresses(m, lt, lz).theta_minus_radial.host<double>().front() > s0.theta_minus_radial.host<double>().front(), "fibres stiffen the stretched wall");
       // isotropic limit kappa = 1/3: E = (I1 - 3)/3 independent of the fibre angle, so the response does not depend on gamma
       ts::Hgo a = m, b = m;
       a.kappa = b.kappa = 1.0 / 3.0;
       a.gamma = 0.3;
       b.gamma = 1.2;
-      expect(std::abs(ts::artery_stresses(a, lt, lz).theta_minus_radial.item<double>() - ts::artery_stresses(b, lt, lz).theta_minus_radial.item<double>()) < 1e-12, "kappa = 1/3 is isotropic (fibre angle irrelevant)");
+      expect(std::abs(ts::artery_stresses(a, lt, lz).theta_minus_radial.host<double>().front() - ts::artery_stresses(b, lt, lz).theta_minus_radial.host<double>().front()) < 1e-12, "kappa = 1/3 is isotropic (fibre angle irrelevant)");
     }
     std::cout << "tissue tests passed\n";
   } catch (const std::exception &e) {

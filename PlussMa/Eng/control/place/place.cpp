@@ -67,7 +67,7 @@ double rank_tolerance(ScalarType dtype, double requested) {
 std::int64_t common_rank(const Series &singular, std::int64_t rows,
                          std::int64_t cols, double tolerance,
                          std::string_view name) {
-  const auto values = singular.to(ScalarType::Float64).to_vec<double>();
+  const auto values = singular.to(ScalarType::Float64).host<double>();
   const std::int64_t count = singular.size(-1);
   PLUSS_CHECK(count > 0 && values.size() % static_cast<std::size_t>(count) == 0,
               "eng::control::place: invalid singular-value layout");
@@ -236,7 +236,7 @@ PlaceResult place(const Series &a, const Series &b, const Series &poles,
               "eng::control::place: (A, B) must be controllable");
 
   const auto desired =
-      poles.to(ScalarType::Complex128).to_vec<std::complex<double>>();
+      poles.to(ScalarType::Complex128).host<std::complex<double>>();
   const auto pairs = pair_poles(desired, real_system, input_rank, tolerance);
   const Series desired_series = make_poles(desired, a, work_dtype);
   const Series lambda = desired_series.diag();

@@ -2,7 +2,190 @@
 
 [Back to Vector Autoregressions and Cointegration](../ts_04_vector_models.md)
 
+Once the rank of a cointegrated system is known ([The rank of a cointegrated system](the_rank_of_a_cointegrated_system.md)), the model to fit is the **vector error-correction model** (VECM). It rewrites the VAR in levels in terms of the *changes* of the series, plus one term that carries the long-run relation:
 
-@@example Stats/time_series/guide/1218_vecm_fit.cpp@@
+> `Δy_t = c + y_{t−1} β α' + Γ₁ Δy_{t−1} + … + Γ_{p−1} Δy_{t−p+1} + e_t`.
 
-The cointegrating vector is estimated as (1, −0.979, −0.004): the first two series differ by a stationary quantity, and the third does not enter. The adjustment loadings say that the second series reacts to a positive deviation (`x − y` above its usual level) by rising (+0.486 per period), and the first series barely reacts; the long-run forecasts stay tied together.
+Read it from the right. The `Γ` terms are the short-run dynamics: how last period's *changes* affect this period's. The term `y_{t−1} β` is the **deviation from the long-run relation** at the end of last period: the columns of `β` (`k × r`) are the cointegrating vectors, so `y_{t−1} β` is stationary and measures how far the system is from equilibrium. The loadings `α` (`k × r`) say how each series *reacts* to that deviation: a series with a large negative loading pulls back when the deviation is positive, a series with a loading near zero ignores it. The product `β α'` (called `impact`) is the long-run matrix, and its rank is `r`. This is what "error correction" means: part of every deviation is corrected in the next period.
+
+`Vecm::fit_mle(y, VecmOptions)` fits it. The options are `lag_order` (the order `p` of the VAR in levels), `rank` (negative: chosen by the trace test at level `alpha`), `include_intercept` and `include_trend`. For `0 < rank < k` the estimate is Johansen's maximum-likelihood one. `beta` is normalised so that its leading `r × r` block is the identity, which makes the first `r` series the ones the relations are written for. For `rank = k` the fit is unrestricted least squares, and for `rank = 0` it is the VAR in differences. The fit holds `alpha`, `beta`, `impact`, `gamma`, `constant`, `covariance`, and offers `loglik`, `infer`, `forecast` and `simulate`.
+
+The programs reuse the three-series system of the previous page: `x` is a random walk, `y = x + u` is tied to it by a stationary AR(1) `u`, and `w` is an unrelated walk.
+
+## Fitting and reading the model
+
+The program lets the library choose the rank (`rank = −1`) and prints the long-run relation and the adjustment speeds.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series three_series(int n, std::uint64_t seed, const pluss::Config& cfg) {
+  ts::ArimaFit white;
+  white.sigma = 0.5;
+  ts::ArimaFit ar;
+  ar.ar = {0.6};
+  ar.sigma = 0.5;
+  const auto x = white.simulate(n, cfg, seed).cumsum(0).host<double>();
+  const auto u = ar.simulate(n, cfg, seed + 1).host<double>();
+  const auto w = white.simulate(n, cfg, seed + 2).cumsum(0).host<double>();
+  std::vector<double> y(3 * n);
+  for (int t = 0; t < n; ++t) { y[3 * t] = x[t]; y[3 * t + 1] = x[t] + u[t]; y[3 * t + 2] = w[t]; }
+  return pluss::make_series(y, {n, 3}).to(pluss::ScalarType::Float64);
+}
+
+int main() {
+  pluss::tils::OutputEngine out;
+  out.print_defaults(pluss::tils::PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series y = three_series(400, 20, f64);
+
+  ts::VecmOptions o;
+  o.lag_order = 1;
+  o.rank = -1;  // choose the rank by the trace test
+  const auto fit = ts::Vecm::fit_mle(y, o, f64);
+  std::cout << "rank chosen " << fit.rank << ", sample size " << fit.sample_size << "\n";
+  out.writeln("beta (long run)", (fit.beta.select(1, 0)).reshape({(fit.beta.select(1, 0)).numel()}).host<double>());
+  out.writeln("alpha (loadings)", (fit.alpha.select(1, 0)).reshape({(fit.alpha.select(1, 0)).numel()}).host<double>());
+  out.writeln("constant", (fit.constant).reshape({(fit.constant).numel()}).pull<double>());
+  std::cout << std::setprecision(2) << "log-likelihood " << fit.loglik(y) << "\n";
+}
+```
+
+The cointegrating vector `β` is estimated as `(1, −1.007, 0.092)`: close to `(1, −1, 0)`, so the first two series differ by a stationary quantity, and the third barely enters (its 0.09 is estimation error from an unrelated walk). The loadings show who does the adjusting: `α = (0.045, 0.478, −0.016)`. With this sign convention the deviation is `x − y`, and a positive deviation is corrected by `y` rising, with a loading of 0.48 per period: about half of any deviation is closed in the next period. The leading series `x` hardly responds (0.045), and the unrelated `w` has a loading near zero. That pattern, who adjusts and who leads, is often the economic content of the model.
+
+## What the long-run relation buys in forecasts
+
+The test of an error-correction model is whether it forecasts the *relation*. The program fits the model with rank 1 (the true rank) and with rank 0 (a VAR in differences, which ignores the relation), and forecasts both 1, 5, 20 and 50 steps ahead from the end of the sample. It prints the gap `y − x` in each forecast, which a cointegrated system keeps near its equilibrium.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series three_series(int n, std::uint64_t seed, const pluss::Config& cfg) {
+  ts::ArimaFit white;
+  white.sigma = 0.5;
+  ts::ArimaFit ar;
+  ar.ar = {0.6};
+  ar.sigma = 0.5;
+  const auto x = white.simulate(n, cfg, seed).cumsum(0).host<double>();
+  const auto u = ar.simulate(n, cfg, seed + 1).host<double>();
+  const auto w = white.simulate(n, cfg, seed + 2).cumsum(0).host<double>();
+  std::vector<double> y(3 * n);
+  for (int t = 0; t < n; ++t) { y[3 * t] = x[t]; y[3 * t + 1] = x[t] + u[t]; y[3 * t + 2] = w[t]; }
+  return pluss::make_series(y, {n, 3}).to(pluss::ScalarType::Float64);
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int n = 400;
+  const Series y = three_series(n, 20, f64);
+  const auto data = y.host<double>();
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << "last observation: x " << data[3 * (n - 1)] << ", y " << data[3 * (n - 1) + 1] << ", gap y - x " << data[3 * (n - 1) + 1] - data[3 * (n - 1)] << "\n\n";
+
+  std::cout << std::setw(8) << "horizon" << std::setw(26) << "gap, rank 1 (error corr.)" << std::setw(26) << "gap, rank 0 (differences)" << "\n";
+  ts::VecmOptions r1, r0;
+  r1.lag_order = 1; r1.rank = 1;
+  r0.lag_order = 1; r0.rank = 0;
+  const auto f1 = ts::Vecm::fit_mle(y, r1, f64).forecast(50, y, f64).host<double>();
+  const auto f0 = ts::Vecm::fit_mle(y, r0, f64).forecast(50, y, f64).host<double>();
+  for (int h : {1, 5, 20, 50})
+    std::cout << std::setw(8) << h << std::setw(26) << f1[3 * (h - 1) + 1] - f1[3 * (h - 1)] << std::setw(26) << f0[3 * (h - 1) + 1] - f0[3 * (h - 1)] << "\n";
+}
+```
+
+The rank-0 forecast has no force bringing the series together: the gap stays near the last observed value (−0.53) and even drifts away (−0.74 at fifty steps), because the model sees no reason for the series to return to one another and extrapolates the current deviation. The error-correction forecast starts from the same gap but pulls it towards its equilibrium over the next few steps (−0.35, −0.15, then −0.12 and −0.12) and holds it there. Over long horizons this is the essential difference, and it is why forecasts of cointegrated series from a differenced model are unreliable.
+
+## Does the right rank forecast better?
+
+The program makes the comparison quantitative. It fits on the first 400 observations of a 500-observation system with three models (rank 0, the true rank 1, and rank 3, which is a VAR in levels) and then forecasts the series `y` 1 and 10 steps ahead from each of the last 80 target dates, using the data up to the origin and the coefficients fitted on the training sample. It reports the root mean squared error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+std::vector<double> three_series_flat(int n, std::uint64_t seed, const pluss::Config& cfg) {
+  ts::ArimaFit white;
+  white.sigma = 0.5;
+  ts::ArimaFit ar;
+  ar.ar = {0.6};
+  ar.sigma = 0.5;
+  const auto x = white.simulate(n, cfg, seed).cumsum(0).host<double>();
+  const auto u = ar.simulate(n, cfg, seed + 1).host<double>();
+  const auto w = white.simulate(n, cfg, seed + 2).cumsum(0).host<double>();
+  std::vector<double> y(3 * n);
+  for (int t = 0; t < n; ++t) { y[3 * t] = x[t]; y[3 * t + 1] = x[t] + u[t]; y[3 * t + 2] = w[t]; }
+  return y;
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int n = 500, train = 400, horizon = 10;
+  const auto all = three_series_flat(n, 20, f64);
+  auto rows = [&](int count) {
+    return pluss::make_series(std::vector<double>(all.begin(), all.begin() + 3 * count), {count, 3}).to(pluss::ScalarType::Float64);
+  };
+
+  const int ranks[] = {0, 1, 3};
+  const char* names[] = {"rank 0 (differences)", "rank 1 (true)", "rank 3 (levels VAR)"};
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << std::left << std::setw(24) << "model" << std::right << std::setw(14) << "RMSE, h = 1" << std::setw(14) << "RMSE, h = 10" << "\n";
+  for (int m = 0; m < 3; ++m) {
+    ts::VecmOptions o;
+    o.lag_order = 1;
+    o.rank = ranks[m];
+    const auto fit = ts::Vecm::fit_mle(rows(train), o, f64);
+    double se1 = 0.0, se10 = 0.0;
+    int count1 = 0, count10 = 0;
+    for (int origin = n - 80; origin <= n - 1; ++origin) {  // one step ahead of the data up to `origin`
+      const auto f = fit.forecast(1, rows(origin), f64).host<double>();
+      const double e = all[3 * origin + 1] - f[1];
+      se1 += e * e;
+      ++count1;
+    }
+    for (int origin = n - 80 - horizon + 1; origin <= n - horizon; ++origin) {  // ten steps ahead
+      const auto f = fit.forecast(horizon, rows(origin), f64).host<double>();
+      const double e = all[3 * (origin + horizon - 1) + 1] - f[3 * (horizon - 1) + 1];
+      se10 += e * e;
+      ++count10;
+    }
+    std::cout << std::left << std::setw(24) << names[m] << std::right << std::setw(14) << std::sqrt(se1 / count1) << std::setw(14) << std::sqrt(se10 / count10) << "\n";
+  }
+}
+```
+
+The ranking at the long horizon is the point. At ten steps the true rank has the lowest error (2.155), the levels VAR is next (2.216) and the differenced model is the worst (2.358, 9% above the true rank). At one step the three are within 3% of each other (0.791, 0.808, 0.810), and the differenced model is nominally best, which is what you would expect: a one-step forecast mostly follows the last observation, and the long-run relation has not had time to act. A correctly specified error-correction model matters most at the horizons where the relation has had time to work; the gains here are modest because the series are noisy relative to the pull-back, and a stronger relation gives a larger gain.
+
+## Decisions and pitfalls
+
+- **Rank first, then fit.** Use [the Johansen test](the_rank_of_a_cointegrated_system.md) to choose the rank, or leave `rank` negative and let the library choose by the trace test.
+- **Read `β` and `α` together.** `β` is the relation, `α` the speed of adjustment, and the normalisation (leading block identity) fixes the scale of `β`; only the product `β α'` is invariant to it.
+- **The constant has two roles.** In a model with drift, an intercept enters both the relation and the trend of the levels; choose `include_intercept` and `include_trend` to match the data, as for the test.
+- **Forecasts are of levels.** `forecast(h, y)` returns the levels of the series, which is what you usually want.
+- **Do not force a relation.** If the test does not find one, fit the VAR in differences (`rank = 0`) rather than an error-correction model with an invented relation.
+
+That completes the vector-model chapter. [Chapter 5](../ts_05_state_space_models.md) turns to state-space models, which describe a series by an unobserved state that evolves in time.

@@ -581,11 +581,11 @@ void prep::prep_refresh_encoder_attrs_(OneHotEncoder& wrapper) {
   if (!wrapper.learned() || wrapper.state_.size() < 5) return;
 
   const auto key_sizes =
-      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).host<std::int64_t>().array().data;
   const auto widths =
-      wrapper.state_[4].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[4].numel()}).to_vec<std::int64_t>();
+      wrapper.state_[4].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[4].numel()}).host<std::int64_t>().array().data;
   const auto flat_keys =
-      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).host<double>().array().data;
 
   const std::size_t n_features = std::min(key_sizes.size(), widths.size());
   wrapper.categories_.reserve(n_features);
@@ -647,13 +647,13 @@ void prep::prep_refresh_encoder_attrs_(FrequencyEncoder& wrapper) {
   if (!wrapper.learned() || wrapper.state_.size() < 5) return;
 
   const auto key_sizes =
-      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).host<std::int64_t>().array().data;
   const auto freq_sizes =
-      wrapper.state_[3].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[3].numel()}).to_vec<std::int64_t>();
+      wrapper.state_[3].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[3].numel()}).host<std::int64_t>().array().data;
   const auto flat_keys =
-      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).host<double>().array().data;
   const auto flat_freqs =
-      wrapper.state_[4].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[4].numel()}).to_vec<double>();
+      wrapper.state_[4].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[4].numel()}).host<double>().array().data;
 
   const std::size_t n_features = std::min(key_sizes.size(), freq_sizes.size());
   wrapper.categories_.reserve(n_features);
@@ -712,9 +712,9 @@ void prep::prep_refresh_encoder_attrs_(OrdinalEncoder& wrapper) {
   if (!wrapper.learned() || wrapper.state_.size() < 3) return;
 
   const auto key_sizes =
-      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).host<std::int64_t>().array().data;
   const auto flat_keys =
-      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).host<double>().array().data;
 
   const std::size_t n_features = key_sizes.size();
   wrapper.categories_.reserve(n_features);
@@ -759,9 +759,9 @@ void prep::prep_refresh_encoder_attrs_(LabelEncoder& wrapper) {
   if (!wrapper.learned() || wrapper.state_.size() < 3) return;
 
   const auto key_sizes =
-      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).to_vec<std::int64_t>();
+      wrapper.state_[1].to(pluss::pCPU, ScalarType::Int64).reshape({wrapper.state_[1].numel()}).host<std::int64_t>().array().data;
   const auto flat_keys =
-      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).to_vec<double>();
+      wrapper.state_[2].to(pluss::pCPU, ScalarType::Float64).reshape({wrapper.state_[2].numel()}).host<double>().array().data;
 
   const std::size_t n_features = key_sizes.size();
   wrapper.categories_.reserve(n_features);

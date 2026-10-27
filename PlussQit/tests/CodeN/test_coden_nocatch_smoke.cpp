@@ -887,19 +887,19 @@ void test_aux_transmit_translate_and_queue_basics() {
   expect_true(qn_lower.as<pluss::Note>().at(0) == "aa", "Type.invoke dispatches Note methods");
 
   pluss::Type qs = pluss::make_series({-1.0, 2.0, -3.0});
-  expect_true(qs.as_series().to_vec<double>()[1] == 2.0, "Type.as_series() exposes Series surface");
+  expect_true(qs.as_series().host<double>()[1] == 2.0, "Type.as_series() exposes Series surface");
   pluss::Type qs_abs = qs.invoke("abs");
-  auto abs_vals = qs_abs.as<pluss::Series>().to_vec<double>();
+  auto abs_vals = qs_abs.as<pluss::Series>().host<double>();
   expect_true(abs_vals.size() == 3 && abs_vals[0] == 1.0 && abs_vals[2] == 3.0,
               "Type.invoke dispatches Series methods");
 
   pluss::Type qsum = qs + pluss::Type(pluss::make_series({1.0, 1.0, 1.0}));
-  auto sum_vals = qsum.as<pluss::Series>().to_vec<double>();
+  auto sum_vals = qsum.as<pluss::Series>().host<double>();
   expect_true(sum_vals.size() == 3 && sum_vals[0] == 0.0 && sum_vals[1] == 3.0 && sum_vals[2] == -2.0,
               "Type binary + delegates to Series");
 
   pluss::Type qcmp = qn == pluss::Type(pluss::make_note({{"aa", "zzz"}, {"c", "DDDD"}}));
-  auto cmp_vals = qcmp.as<pluss::Series>().to_vec<bool>();
+  auto cmp_vals = qcmp.as<pluss::Series>().host<bool>();
   expect_true(cmp_vals.size() == 4 && cmp_vals[0] && !cmp_vals[1] && cmp_vals[2] && !cmp_vals[3],
               "Type Note comparison delegates safely");
 
@@ -907,7 +907,7 @@ void test_aux_transmit_translate_and_queue_basics() {
       pluss::Type(pluss::make_series({true, false, true})),
       pluss::Type(pluss::make_series({10.0, 20.0, 30.0})),
       pluss::Type(pluss::make_series({1.0, 2.0, 3.0})));
-  auto where_vals = qwhere.as<pluss::Series>().to_vec<double>();
+  auto where_vals = qwhere.as<pluss::Series>().host<double>();
   expect_true(where_vals.size() == 3 && where_vals[0] == 10.0 && where_vals[1] == 2.0 && where_vals[2] == 30.0,
               "Type::where delegates ternary selection for Series");
 }

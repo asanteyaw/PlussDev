@@ -32,7 +32,7 @@ int main() {
     }
   }
 
-  const auto p = params.to_vec<float>();
+  const auto p = params.host<float>();
   std::cout << "final params explicit: [" << p[0] << ", " << p[1] << "]\n";
 
   std::cout << "[oop] autodiff/tape gradients via optimizer.step()\n";
@@ -46,7 +46,7 @@ int main() {
     }
   }
 
-  const auto t = params_tape.to_vec<float>();
+  const auto t = params_tape.host<float>();
   std::cout << "final params autodiff: [" << t[0] << ", " << t[1] << "]\n";
   return 0;
 }

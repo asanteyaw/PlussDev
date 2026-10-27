@@ -112,7 +112,7 @@ def run_source(text: str, label: str, assets: Path | None = None) -> str:
 
 def lib_stamp() -> str:
     """Changes whenever the library or any public header an example can include changes."""
-    lib = ROOT / "build-nn-optim-f64" / "libpluss.a"
+    lib = Path(os.environ.get("PLUSSDEV_BUILD", str(ROOT / "build-nn-optim-f64"))) / "libpluss.a"
     stamps = [str(lib.stat().st_mtime) if lib.exists() else "nolib"]
     for folder in (ROOT / "PlussMa" / "include", ROOT / "PlussQit" / "include", ROOT / "PlussMa" / "Math" / "Numerical"):
         newest = max((p.stat().st_mtime for p in folder.rglob("*") if p.suffix in {".h", ".cpp"}), default=0)

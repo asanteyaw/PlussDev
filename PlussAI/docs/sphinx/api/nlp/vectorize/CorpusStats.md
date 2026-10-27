@@ -146,7 +146,7 @@ int main() {
   const nlp::vectorize::CorpusStats stats = nlp::vectorize::describe(docs);
 
   const auto frequencies = stats.document_frequency.to(pluss::pCPU, pluss::ScalarType::Float64)
-                               .contiguous().template to_vec<double>();
+                               .contiguous().template host<double>();
   for (std::size_t i = 0; i < frequencies.size(); ++i) {
     std::cout << stats.vocabulary.at(static_cast<std::int64_t>(i)) << ": in " << frequencies[i] << " document(s)\n";
   }
@@ -184,9 +184,9 @@ int main() {
   const nlp::vectorize::CorpusStats stats = nlp::vectorize::describe(docs);
 
   const auto terms = stats.document_token_counts.to(pluss::pCPU, pluss::ScalarType::Float64)
-                         .contiguous().template to_vec<double>();
+                         .contiguous().template host<double>();
   const auto distinct = stats.document_unique_term_counts.to(pluss::pCPU, pluss::ScalarType::Float64)
-                            .contiguous().template to_vec<double>();
+                            .contiguous().template host<double>();
   for (std::size_t i = 0; i < terms.size(); ++i) {
     std::cout << "document " << i << ": terms = " << terms[i] << ", distinct = " << distinct[i] << "\n";
   }

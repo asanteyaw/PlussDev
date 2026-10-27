@@ -94,8 +94,8 @@ int main() {
   two_fields.fields.push_back(pluss::make_series(std::vector<double>{1, 2}, {2}, cfg));
   two_fields.fields.push_back(pluss::make_series(std::vector<double>{9, 8}, {2}, cfg));
   std::cout << "has_y: " << two_fields.has_y() << '\n';
-  std::cout << "x is the first field: " << (two_fields.x().to_vec<double>() == two_fields.at(0).to_vec<double>()) << '\n';
-  std::cout << "y is the second field: " << (two_fields.y().to_vec<double>() == two_fields.at(1).to_vec<double>()) << '\n';
+  std::cout << "x is the first field: " << (two_fields.x().host<double>() == two_fields.at(0).host<double>()) << '\n';
+  std::cout << "y is the second field: " << (two_fields.y().host<double>() == two_fields.at(1).host<double>()) << '\n';
 
   loader::DataBatch one_field{};
   one_field.fields.push_back(pluss::make_series(std::vector<double>{5}, {1}, cfg));

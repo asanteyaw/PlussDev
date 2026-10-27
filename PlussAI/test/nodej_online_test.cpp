@@ -143,7 +143,7 @@ bool run_nodej_online_checks(std::ostream* err = nullptr) {
       if (err) *err << "online classifier assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() != 2 || metrics[0] < 0.93 || metrics[1] > 0.35) {
       if (err) *err << "online classifier should reach high accuracy with low logloss; got accuracy="
                     << (metrics.empty() ? -1.0 : metrics[0]) << ", logloss="
@@ -199,7 +199,7 @@ bool run_nodej_online_checks(std::ostream* err = nullptr) {
       if (err) *err << "online regressor assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() < 3 || metrics[0] > 0.5 || metrics[2] < 0.98) {
       if (err) *err << "online regressor should learn low-MSE high-R2 fit; got mse="
                     << (metrics.empty() ? -1.0 : metrics[0]) << ", r2="
@@ -273,7 +273,7 @@ bool run_nodej_online_checks(std::ostream* err = nullptr) {
       if (err) *err << "online robust regressor assess should succeed on inliers\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() != 2 || metrics[0] > 0.35 || metrics[1] < 0.97) {
       if (err) *err << "online robust regressor should preserve inlier fit under outliers; got mae="
                     << (metrics.empty() ? -1.0 : metrics[0]) << ", r2="

@@ -13,13 +13,13 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="The four algorithms side by side" href="optima_02_reading_results/the_four_algorithms_side_by_side.html" />
-    <link rel="prev" title="An objective that returns more than one number" href="optima_01_first_problems/an_objective_that_returns_more_than_one_number.html" />
+    <link rel="next" title="Exit flags and stall categories" href="optima_02_reading_results/exit_flags_and_stall_categories.html" />
+    <link rel="prev" title="Blocks, problems as values, gradients and reading the result" href="optima_01_first_problems/blocks_values_and_reading_the_result.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -116,32 +116,9 @@
 <section id="programs">
 <h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="optima_02_reading_results/the_four_algorithms_side_by_side.html"><span class="std std-doc">The four algorithms side by side</span></a></p></li>
-</ul>
-</section>
-<section id="a-guided-tour">
-<h2>A guided tour<a class="headerlink" href="#a-guided-tour" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="optima_02_reading_results/the_flags_that_mean_a_healthy_run.html"><span class="std std-doc">The flags that mean a healthy run</span></a></p></li>
-<li><p><a class="reference internal" href="optima_02_reading_results/the_five_failure_flags.html"><span class="std std-doc">The five failure flags</span></a></p></li>
-<li><p><a class="reference internal" href="optima_02_reading_results/the_ten_stall_categories.html"><span class="std std-doc">The ten stall categories</span></a></p></li>
-<li><p><a class="reference internal" href="optima_02_reading_results/every_field_of_the_report.html"><span class="std std-doc">Every field of the report</span></a></p></li>
-</ul>
-</section>
-<section id="watching-a-run">
-<h2>Watching a run<a class="headerlink" href="#watching-a-run" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="optima_02_reading_results/printing_progress.html"><span class="std std-doc">Printing progress</span></a></p></li>
-<li><p><a class="reference internal" href="optima_02_reading_results/writing_your_own_hook.html"><span class="std std-doc">Writing your own hook</span></a></p></li>
-<li><p><a class="reference internal" href="optima_02_reading_results/which_hook_runs.html"><span class="std std-doc">Which hook runs</span></a></p></li>
-</ul>
-</section>
-<section id="best-feasible-points-and-multipliers">
-<h2>Best feasible points and multipliers<a class="headerlink" href="#best-feasible-points-and-multipliers" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="optima_02_reading_results/the_best_feasible_checkpoint.html"><span class="std std-doc">The best feasible checkpoint</span></a></p></li>
-<li><p><a class="reference internal" href="optima_02_reading_results/reading_the_multipliers.html"><span class="std std-doc">Reading the multipliers</span></a></p></li>
-<li><p><a class="reference internal" href="optima_02_reading_results/the_one_line_and_many_line_summaries.html"><span class="std std-doc">The one-line and many-line summaries</span></a></p></li>
+<li><p><a class="reference internal" href="optima_02_reading_results/exit_flags_and_stall_categories.html"><span class="std std-doc">Exit flags and stall categories</span></a></p></li>
+<li><p><a class="reference internal" href="optima_02_reading_results/the_report_summaries_and_multipliers.html"><span class="std std-doc">The report, the summaries and the multipliers</span></a></p></li>
+<li><p><a class="reference internal" href="optima_02_reading_results/watching_a_run.html"><span class="std std-doc">Watching a run</span></a></p></li>
 </ul>
 </section>
 <section id="decisions">
@@ -150,12 +127,6 @@
 <li><p><strong>What to branch on.</strong> Branch on <code class="docutils literal notranslate"><span class="pre">exit_flag</span></code>. Use <code class="docutils literal notranslate"><span class="pre">converged</span></code> as a shorthand for “the flag is <code class="docutils literal notranslate"><span class="pre">Converged</span></code>”. Treat the message as text for people.</p></li>
 <li><p><strong>What to do after a failure.</strong> If the flag is <code class="docutils literal notranslate"><span class="pre">MaxIterations</span></code> or <code class="docutils literal notranslate"><span class="pre">Stopped</span></code>, read <code class="docutils literal notranslate"><span class="pre">output.best_feasible_available</span></code>; the checkpoint may be a usable answer. If it is <code class="docutils literal notranslate"><span class="pre">NoProgress</span></code>, <code class="docutils literal notranslate"><span class="pre">NoFeasiblePoint</span></code> or <code class="docutils literal notranslate"><span class="pre">ConstraintStationary</span></code>, suspect the problem (infeasible constraints, a bad start) before the solver settings.</p></li>
 <li><p><strong>How much progress output.</strong> <code class="docutils literal notranslate"><span class="pre">reports::iter</span></code> for a watched run. A custom hook for a monitor, a stop rule, or a record. Nothing for production.</p></li>
-</ul>
-</section>
-<section id="pitfalls">
-<h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="optima_02_reading_results/using_the_answer_without_checking_the_flag.html"><span class="std std-doc">Using the answer without checking the flag</span></a></p></li>
 </ul>
 </section>
 <section id="where-next">
@@ -180,7 +151,7 @@
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
@@ -191,6 +162,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

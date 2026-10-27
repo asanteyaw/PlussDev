@@ -1,3 +1,4 @@
+#include <pluss/tils/aux/scalar_cast_compat.h>
 #include "../mads_blackbox_minimizers.h"
 
 #include <cmath>
@@ -6,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
 
 namespace {
 
@@ -40,8 +42,8 @@ BlackboxEvaluation two_objective_tradeoff(const Series& x) {
   const Series x0 = x.reshape({x.numel()}).select(0, 0);
   const Series f1 = x0.square();
   const Series f2 = x0.sub(2.0).square();
-  const double f1v = f1.to(pCPU, ScalarType::Float64).item<double>();
-  const double f2v = f2.to(pCPU, ScalarType::Float64).item<double>();
+  const double f1v = as_f64(f1.to(pCPU, ScalarType::Float64));
+  const double f2v = as_f64(f2.to(pCPU, ScalarType::Float64));
   out.objectives = pluss::make_series({f1v, f2v}, Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
   return out;
 }
@@ -95,7 +97,7 @@ int main() {
 
     const auto out = orthomads_blackbox_minimizer(constrained_shifted, x0, c);
     const Series x_best = out.minimizer.to(pCPU, ScalarType::Float64);
-    expect(x_best.item<double>() <= 1e-6, "extreme barrier solution should satisfy x<=0", &failures);
+    expect(as_f64(x_best) <= 1e-6, "extreme barrier solution should satisfy x<=0", &failures);
     expect(std::isfinite(out.scalarized_minimum), "extreme barrier should return finite best value", &failures);
   }
 
@@ -189,7 +191,7 @@ int main() {
     auto objective = [](double a, double b) { return (a - 2.0) * (a - 2.0) + (b - 1.0) * (b - 1.0); };
     auto flaky = [&](const Series& x) {
       BlackboxEvaluation e;
-      const auto v = x.to_vec<double>();
+      const auto v = x.host<double>();
       double h = std::sin(12345.678 * v[0] + 9876.543 * v[1] + 0.5) * 43758.5453;
       h -= std::floor(h);
       if (h < 0.8) {
@@ -203,7 +205,7 @@ int main() {
     dc.base.max_evaluations = 3000;
     dc.rescue_trials = 12;
     const auto out = discomads_blackbox_minimizer(flaky, pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, c64), dc);
-    const auto m = out.minimizer.to_vec<double>();
+    const auto m = out.minimizer.host<double>();
     expect(std::abs(out.scalarized_minimum - objective(m[0], m[1])) < 1e-9,
            "Disco reports the true objective at the returned minimiser", &failures);
     MadsBlackboxAdvancedConfig plain;

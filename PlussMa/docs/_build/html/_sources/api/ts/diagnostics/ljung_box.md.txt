@@ -56,7 +56,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n) {
@@ -98,7 +98,7 @@ int main() {
   show("statistic", test.stat);
   show("dof", test.dof);
   std::cout << std::scientific << std::setprecision(2);
-  for (double p : test.pvalue.to_vec<double>()) std::cout << "p-value " << p << "\n";
+  for (double p : test.pvalue.host<double>()) std::cout << "p-value " << p << "\n";
 }
 ```
 
@@ -131,7 +131,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n) {
@@ -167,7 +167,7 @@ Series walk(int n) {
 int main() {
   const Series y = pluss::make_series(noise(200), {200}, f64);
   const auto test = ts::ljung_box(y);
-  std::cout << std::fixed << std::setprecision(4) << "statistic " << test.stat.to_vec<double>()[0] << ", p-value " << test.pvalue.to_vec<double>()[0] << "\n";
+  std::cout << std::fixed << std::setprecision(4) << "statistic " << test.stat.host<double>()[0] << ", p-value " << test.pvalue.host<double>()[0] << "\n";
 }
 ```
 
@@ -195,7 +195,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n) {

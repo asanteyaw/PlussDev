@@ -31,8 +31,8 @@ Config f64_cpu() {
 }
 
 double max_abs_diff(const Series& a, const Series& b) {
-  const auto av = a.to(pluss::pCPU, ScalarType::Float64).reshape({a.numel()}).to_vec<double>();
-  const auto bv = b.to(pluss::pCPU, ScalarType::Float64).reshape({b.numel()}).to_vec<double>();
+  const auto av = a.to(pluss::pCPU, ScalarType::Float64).reshape({a.numel()}).host<double>();
+  const auto bv = b.to(pluss::pCPU, ScalarType::Float64).reshape({b.numel()}).host<double>();
   double m = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i) {
     m = std::max(m, std::abs(av[i] - bv[i]));
@@ -234,9 +234,9 @@ TEST_CASE("ts var: granger_test detects directional lag-causality", "[ts][var][g
   gopt.alpha = 0.05;
   const auto res = fit.granger_test(y, gopt, cfg);
 
-  const auto cause = res.cause.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-  const auto effect = res.effect.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-  const auto pvals = res.pvalue.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto cause = res.cause.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  const auto effect = res.effect.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  const auto pvals = res.pvalue.to(pluss::pCPU, ScalarType::Float64).host<double>();
   REQUIRE(cause.size() == effect.size());
   REQUIRE(effect.size() == pvals.size());
 
@@ -253,4 +253,31 @@ TEST_CASE("ts var: granger_test detects directional lag-causality", "[ts][var][g
 
   REQUIRE(p_1_to_0 < 1e-6);
   REQUIRE(p_0_to_1 > 1e-3);
+}
+
+TEST_CASE("ts var: a hand-built fit needs no trend vector when include_trend is false", "[ts][var][simulate]") {
+  const auto cfg = f64_cpu();
+  VarFit truth;
+  truth.lag_order = 1;
+  truth.include_trend = false;
+  truth.constant = pluss::make_series({0.0, 0.0}, cfg);  // `trend` is deliberately left undefined
+  truth.ar = pluss::make_series({0.5, 0.1, 0.2, 0.6}, {1, 2, 2}).to(ScalarType::Float64);
+  truth.covariance = pluss::make_series({0.08, 0.04, 0.04, 0.10}, {2, 2}).to(ScalarType::Float64);
+
+  const Series y = truth.simulate(500, cfg, 3);
+  REQUIRE(y.sizes()[0] == 500);
+  REQUIRE(y.sizes()[1] == 2);
+
+  // The same fit evaluates, forecasts and yields structural diagnostics without a trend.
+  REQUIRE(std::isfinite(truth.loglik(y)));
+  REQUIRE(truth.forecast(3, y, cfg).sizes()[0] == 3);
+  IrfOptions io;
+  io.horizon = 4;
+  REQUIRE(truth.irf(io, cfg).sizes()[0] == 4);
+
+  // Refitting recovers the generating coefficients to sampling error.
+  const auto fit = Var::fit_mle(y, VarOptions{}, cfg);
+  const auto ar = fit.ar.reshape({4}).host<double>();
+  REQUIRE(ar[0] == Approx(0.5).margin(0.15));
+  REQUIRE(ar[3] == Approx(0.6).margin(0.15));
 }

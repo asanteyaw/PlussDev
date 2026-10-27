@@ -30,11 +30,7 @@ BlackboxAdvancedOutcome ltmads_blackbox_minimizer(blackbox, initial, MadsBlackbo
 
 ## Programs
 
-- [A direct call](dfo_11_mads_black_box/a_direct_call.md)
-- [Weighted sum or Chebyshev](dfo_11_mads_black_box/weighted_sum_or_chebyshev.md)
-- [The surrogate](dfo_11_mads_black_box/the_surrogate.md)
-- [What counts as an evaluation](dfo_11_mads_black_box/what_counts_as_an_evaluation.md)
-- [The Pareto archive](dfo_11_mads_black_box/the_pareto_archive.md)
+- [The black-box MADS minimisers](dfo_11_mads_black_box/the_black_box_minimisers.md)
 
 ## Checklist
 
@@ -50,10 +46,6 @@ BlackboxAdvancedOutcome ltmads_blackbox_minimizer(blackbox, initial, MadsBlackbo
 :maxdepth: 2
 :hidden:
 
-dfo_11_mads_black_box/a_direct_call
-dfo_11_mads_black_box/weighted_sum_or_chebyshev
-dfo_11_mads_black_box/the_surrogate
-dfo_11_mads_black_box/what_counts_as_an_evaluation
-dfo_11_mads_black_box/the_pareto_archive
+dfo_11_mads_black_box/the_black_box_minimisers
 ```
 <!-- apiref:toctree:end -->

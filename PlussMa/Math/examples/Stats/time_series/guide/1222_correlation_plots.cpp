@@ -42,8 +42,8 @@ int main() {
   options.max_lag = 8;
   const auto a = ts::plot::acf_payload(y, options);
   const auto p = ts::plot::pacf_payload(y, options);
-  const auto lags = a.lags.to_vec<std::int64_t>();
-  const auto av = a.values.to_vec<double>(), pv = p.values.to_vec<double>();
+  const auto lags = a.lags.host<std::int64_t>();
+  const auto av = a.values.host<double>(), pv = p.values.host<double>();
   std::cout << std::fixed << std::setprecision(3) << "95% band for white noise: +/- " << a.conf_high << "\n";
   std::cout << std::setw(5) << "lag" << std::setw(10) << "acf" << std::setw(10) << "pacf" << "\n";
   for (std::size_t i = 0; i < lags.size(); ++i) std::cout << std::setw(5) << lags[i] << std::setw(10) << av[i] << std::setw(10) << pv[i] << "\n";

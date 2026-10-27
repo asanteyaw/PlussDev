@@ -19,15 +19,9 @@ Three facts to hold on to. The default algorithm is `SequentialQP`. Each algorit
 
 ## A guided tour
 
-- [The same problem, four algorithms](optima_03_choosing_an_algorithm/the_same_problem_four_algorithms.md)
-- [What happens to the constraints on the way](optima_03_choosing_an_algorithm/what_happens_to_the_constraints_on_the_way.md)
-- [Where you start decides where you end](optima_03_choosing_an_algorithm/where_you_start_decides_where_you_end.md)
-- [When the objective is not a number](optima_03_choosing_an_algorithm/when_the_objective_is_not_a_number.md)
-- [The curvature model](optima_03_choosing_an_algorithm/the_curvature_model.md)
-- [Badly scaled problems](optima_03_choosing_an_algorithm/badly_scaled_problems.md)
-- [The options that decide the outcome](optima_03_choosing_an_algorithm/the_options_that_decide_the_outcome.md)
-- [Growing the problem](optima_03_choosing_an_algorithm/growing_the_problem.md)
-- [The ready-made option sets](optima_03_choosing_an_algorithm/the_ready_made_option_sets.md)
+- [Four algorithms on one problem](optima_03_choosing_an_algorithm/four_algorithms_on_one_problem.md)
+- [Curvature, scaling and size](optima_03_choosing_an_algorithm/curvature_scaling_and_size.md)
+- [Options and presets](optima_03_choosing_an_algorithm/options_and_presets.md)
 
 ## Decisions
 
@@ -43,7 +37,6 @@ Three facts to hold on to. The default algorithm is `SequentialQP`. Each algorit
 
 ## Pitfalls
 
-- [Setting an option on the wrong struct](optima_03_choosing_an_algorithm/setting_an_option_on_the_wrong_struct.md)
 
 ### Treating `Converged` as `Optimal`
 

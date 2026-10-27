@@ -41,27 +41,27 @@ TEST_CASE("fractional scalar promotes integer tensors instead of truncating", "[
   const Series i = pluss::series::arange(0, 4, 1, ScalarType::Int64); // 0 1 2 3
   const Series sum = i.add(0.5);
   REQUIRE(sum.scalar_type() == ScalarType::Float32);
-  const auto sv = sum.to(ScalarType::Float64).to_vec<double>();
+  const auto sv = sum.to(ScalarType::Float64).host<double>();
   REQUIRE(sv == std::vector<double>{0.5, 1.5, 2.5, 3.5});
 
   const Series prod = i.mul(1.5);
   REQUIRE(prod.scalar_type() == ScalarType::Float32);
-  REQUIRE(prod.to(ScalarType::Float64).to_vec<double>() == std::vector<double>{0.0, 1.5, 3.0, 4.5});
+  REQUIRE(prod.to(ScalarType::Float64).host<double>() == std::vector<double>{0.0, 1.5, 3.0, 4.5});
 
   const Series diff = i.sub(0.25);
-  REQUIRE(diff.to(ScalarType::Float64).to_vec<double>() == std::vector<double>{-0.25, 0.75, 1.75, 2.75});
+  REQUIRE(diff.to(ScalarType::Float64).host<double>() == std::vector<double>{-0.25, 0.75, 1.75, 2.75});
 
   // comparisons see the real constant, not its truncation
-  const auto gt = i.gt(0.5).to(ScalarType::Int64).to_vec<std::int64_t>();
+  const auto gt = i.gt(0.5).to(ScalarType::Int64).host<std::int64_t>();
   REQUIRE(gt == std::vector<std::int64_t>{0, 1, 1, 1});
-  const auto lt = i.lt(2.5).to(ScalarType::Int64).to_vec<std::int64_t>();
+  const auto lt = i.lt(2.5).to(ScalarType::Int64).host<std::int64_t>();
   REQUIRE(lt == std::vector<std::int64_t>{1, 1, 1, 0});
-  const auto eq = i.eq(0.5).to(ScalarType::Int64).to_vec<std::int64_t>();
+  const auto eq = i.eq(0.5).to(ScalarType::Int64).host<std::int64_t>();
   REQUIRE(eq == std::vector<std::int64_t>{0, 0, 0, 0}); // used to match 0 == trunc(0.5)
 
   // an integral value keeps the integer dtype (a C++ double cannot be told from a Python int)
   REQUIRE(i.add(2.0).scalar_type() == ScalarType::Int64);
-  REQUIRE(i.add(2.0).to_vec<std::int64_t>() == std::vector<std::int64_t>{2, 3, 4, 5});
+  REQUIRE(i.add(2.0).host<std::int64_t>() == std::vector<std::int64_t>{2, 3, 4, 5});
   // floating tensors are untouched
   REQUIRE(pluss::series::arange(0, 2, 1, ScalarType::Float32).add(0.5).scalar_type() == ScalarType::Float32);
   REQUIRE(pluss::series::arange(0, 2, 1, ScalarType::Float64).add(0.5).scalar_type() == ScalarType::Float64);

@@ -157,17 +157,17 @@ TEST_CASE("CUDA bridge enables scatter/gather fallback when strict native is off
   const auto scatter_cpu = self_cpu.scatter(1, idx_cpu, src_cpu);
   const auto scatter_cuda = self_cuda.scatter(1, idx_cuda, src_cuda);
   REQUIRE(scatter_cuda.platform() == pluss::pCUDA);
-  require_close_(scatter_cuda.to(pluss::pCPU).to_vec<float>(), scatter_cpu.to_vec<float>());
+  require_close_(scatter_cuda.to(pluss::pCPU).host<float>(), scatter_cpu.host<float>());
 
   const auto scatter_add_cpu = self_cpu.scatter_add(1, idx_cpu, src_cpu);
   const auto scatter_add_cuda = self_cuda.scatter_add(1, idx_cuda, src_cuda);
   REQUIRE(scatter_add_cuda.platform() == pluss::pCUDA);
-  require_close_(scatter_add_cuda.to(pluss::pCPU).to_vec<float>(), scatter_add_cpu.to_vec<float>());
+  require_close_(scatter_add_cuda.to(pluss::pCPU).host<float>(), scatter_add_cpu.host<float>());
 
   const auto gather_cpu = input_cpu.gather(1, idx_cpu);
   const auto gather_cuda = input_cuda.gather(1, idx_cuda);
   REQUIRE(gather_cuda.platform() == pluss::pCUDA);
-  require_close_(gather_cuda.to(pluss::pCPU).to_vec<float>(), gather_cpu.to_vec<float>());
+  require_close_(gather_cuda.to(pluss::pCPU).host<float>(), gather_cpu.host<float>());
 }
 
 TEST_CASE("CUDA strict native scatter/gather executes supported native route", "[cuda][bridge][policy][scatter]") {
@@ -189,5 +189,5 @@ TEST_CASE("CUDA strict native scatter/gather executes supported native route", "
   const auto src_cuda = src_cpu.to(pluss::pCUDA);
   const auto got = self_cuda.scatter(1, idx_cuda, src_cuda);
   REQUIRE(got.platform() == pluss::pCUDA);
-  require_close_(got.to(pluss::pCPU).to_vec<float>(), self_cpu.scatter(1, idx_cpu, src_cpu).to_vec<float>());
+  require_close_(got.to(pluss::pCPU).host<float>(), self_cpu.scatter(1, idx_cpu, src_cpu).host<float>());
 }

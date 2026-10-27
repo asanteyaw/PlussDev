@@ -6,12 +6,12 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  const auto r = optim::optima([](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); },
+  const auto r = optim::optima([](const pluss::Series& x) { return (x - 3.0).square().sum(); },
                                vec({0.0, 0.0}), {}, optim::constraints().ubs(vec({2.0, 2.5})));
 
   std::cout << "-- compact_summary --\n";

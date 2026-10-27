@@ -87,8 +87,8 @@ int main() {
     return 1;
   }
 
-  const auto before = pred_before_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
-  const auto after = pred_after_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+  const auto before = pred_before_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
+  const auto after = pred_after_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
   bool same = before.size() == after.size();
   for (std::size_t i = 0; same && i < before.size(); ++i) {
     same = std::abs(before[i] - after[i]) < 1e-9;

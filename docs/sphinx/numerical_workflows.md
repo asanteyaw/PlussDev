@@ -47,14 +47,15 @@ auto noise = pluss::series::randn({1000});
 auto x = pluss::make_series({1.0, 2.0, 3.0});
 
 double mean = x.mean().item<double>();
-std::vector<double> values = x.to_vec<double>();
+std::vector<double> values = x.host<double>();
 
 auto meta = x.attr();
 std::cout << meta << '\n';
 ```
 
-Use `item<T>()` only for scalar `Series` values. Use `to_vec<T>()` or host
-extraction helpers for vectors and matrices.
+Use `item<T>()` only for a rank-zero `Series`, and `pull<T>()` only for a
+rank-one `Series`. Use `host<T>()` when generic code must preserve and inspect
+arbitrary rank; its array representation retains shape and stride metadata.
 
 ## Elementwise math
 

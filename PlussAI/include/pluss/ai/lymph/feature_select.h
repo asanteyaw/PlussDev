@@ -91,7 +91,7 @@ namespace detail {
                                               const Series& prediction) {
   if (objective.is_custom()) return objective.fn(truth, prediction);
   return task == TaskKind::Classification
-             ? metrics::classification::report(truth, prediction, {*objective.builtin}).values.item<double>()
+             ? metrics::classification::report(truth, prediction, {*objective.builtin}).values.host<double>().front()
              : metrics::regression::report(truth, prediction, {*objective.builtin}).values.item<double>();
 }
 
@@ -294,7 +294,7 @@ struct RFEReport {
         trained, sub_batch, objective, PermutationOptions{.repeats = options.importance_repeats, .random = options.random});
     const auto values = importance.importances_mean.to(pluss::pCPU, ScalarType::Float64)
                              .reshape({importance.importances_mean.numel()})
-                             .to_vec<double>();
+                             .host<double>();
 
     // Ascending by importance: the front of `order` is least important, in
     // local (sub_batch) column order.

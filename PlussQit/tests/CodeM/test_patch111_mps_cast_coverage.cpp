@@ -59,25 +59,25 @@ TEST_CASE("MPS explicit to(dtype) covers float16/int32 chains", "[mps][cast][dty
 
   const auto f16_mps = base_mps.to(pluss::ScalarType::Float16);
   REQUIRE(f16_mps.platform() == pluss::pMPS);
-  const auto f16_back = f16_mps.to(pluss::ScalarType::Float32).to(pluss::pCPU).contiguous().to_vec<float>();
-  const auto f16_ref = base_cpu.to(pluss::ScalarType::Float16).to(pluss::ScalarType::Float32).contiguous().to_vec<float>();
+  const auto f16_back = f16_mps.to(pluss::ScalarType::Float32).to(pluss::pCPU).contiguous().host<float>().array().data;
+  const auto f16_ref = base_cpu.to(pluss::ScalarType::Float16).to(pluss::ScalarType::Float32).contiguous().host<float>().array().data;
   require_close_(f16_back, f16_ref, 2e-3f);
 
   const auto i32_mps = base_mps.to(pluss::ScalarType::Int32);
   REQUIRE(i32_mps.platform() == pluss::pMPS);
-  const auto i32_back = i32_mps.to(pluss::ScalarType::Float32).to(pluss::pCPU).contiguous().to_vec<float>();
-  const auto i32_ref = base_cpu.to(pluss::ScalarType::Int32).to(pluss::ScalarType::Float32).contiguous().to_vec<float>();
+  const auto i32_back = i32_mps.to(pluss::ScalarType::Float32).to(pluss::pCPU).contiguous().host<float>().array().data;
+  const auto i32_ref = base_cpu.to(pluss::ScalarType::Int32).to(pluss::ScalarType::Float32).contiguous().host<float>().array().data;
   require_close_(i32_back, i32_ref, 1e-6f);
 
   const auto i64_roundtrip = i32_mps.to(pluss::ScalarType::Int64).to(pluss::ScalarType::Int32);
   REQUIRE(i64_roundtrip.platform() == pluss::pMPS);
-  REQUIRE(i64_roundtrip.to(pluss::pCPU).to_vec<std::int32_t>() == i32_mps.to(pluss::pCPU).to_vec<std::int32_t>());
+  REQUIRE(i64_roundtrip.to(pluss::pCPU).host<std::int32_t>() == i32_mps.to(pluss::pCPU).host<std::int32_t>());
 
   const auto bool_mps = i32_mps.to(pluss::ScalarType::Bool);
   REQUIRE(bool_mps.platform() == pluss::pMPS);
   const auto bool_i32_mps = bool_mps.to(pluss::ScalarType::Int32);
   REQUIRE(bool_i32_mps.platform() == pluss::pMPS);
-  REQUIRE(bool_i32_mps.to(pluss::pCPU).to_vec<std::int32_t>() == bool_mps.to(pluss::pCPU).to(pluss::ScalarType::Int32).to_vec<std::int32_t>());
+  REQUIRE(bool_i32_mps.to(pluss::pCPU).host<std::int32_t>() == bool_mps.to(pluss::pCPU).to(pluss::ScalarType::Int32).host<std::int32_t>());
 }
 
 TEST_CASE("MPS to(dtype) remains available when CPU fallback policy is strict", "[mps][cast][dtype][policy]") {
@@ -97,6 +97,6 @@ TEST_CASE("MPS to(dtype) remains available when CPU fallback policy is strict", 
   const auto f16_mps = base_mps.to(pluss::ScalarType::Float16);
   const auto i64_mps = f16_mps.to(pluss::ScalarType::Int64);
   REQUIRE(i64_mps.platform() == pluss::pMPS);
-  REQUIRE(i64_mps.to(pluss::pCPU).to_vec<std::int64_t>() ==
-          base_cpu.to(pluss::ScalarType::Float16).to(pluss::ScalarType::Int64).to_vec<std::int64_t>());
+  REQUIRE(i64_mps.to(pluss::pCPU).host<std::int64_t>() ==
+          base_cpu.to(pluss::ScalarType::Float16).to(pluss::ScalarType::Int64).host<std::int64_t>());
 }

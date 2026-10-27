@@ -38,15 +38,10 @@ using pluss::ScalarType;
 using pluss::Series;
 using Complex = std::complex<double>;
 
-using pluss::optim::l_sr1_trust_region;
-using pluss::optim::Lsr1ExitFlag;
-using pluss::optim::Lsr1ObjectiveFn;
-using pluss::optim::Lsr1Result;
-using pluss::optim::Lsr1SolveOptions;
-using pluss::optim::Trace;
-using pluss::optim::fixed;
-using pluss::optim::square;
-using pluss::optim::sum;
+using pluss::subsp::math::optim::l_sr1_trust_region;
+using pluss::subsp::math::optim::Lsr1ExitFlag;
+using pluss::subsp::math::optim::Lsr1Result;
+using pluss::subsp::math::optim::Lsr1SolveOptions;
 
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {
@@ -64,11 +59,15 @@ Series complex_series(const std::vector<Complex>& values, const std::vector<std:
 }
 
 std::vector<double> to_vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64)
+      .reshape({x.numel()})
+      .pull<double>();
 }
 
 std::vector<Complex> to_vec_c128(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Complex128).reshape({x.numel()}).to_vec<Complex>();
+  return x.to(pluss::pCPU, ScalarType::Complex128)
+      .reshape({x.numel()})
+      .pull<Complex>();
 }
 
 void expect_vec_near(const std::vector<double>& lhs, const std::vector<double>& rhs, double atol,
@@ -108,18 +107,18 @@ void expect_vec_c_near(const std::vector<Complex>& lhs, const std::vector<Comple
 // pairs accumulate, rather than degenerating to isotropic steepest
 // descent) with an exact closed-form minimizer at `target` regardless of
 // the weights, as long as they're positive.
-Trace weighted_quadratic(const Trace& x, const Series& target, const Series& weights) {
-  const Trace diff = x - fixed(target);
-  return sum(fixed(weights) * square(diff));
+Series weighted_quadratic(const Series& x, const Series& target, const Series& weights) {
+  const Series diff = x - target;
+  return (weights * diff.square()).sum();
 }
 
-// Complex counterpart: sum(w_i * |x_i - target_i|^2), real-valued for a
+// Complex counterpart: (w_i * |x_i - target_i|^2).sum(), real-valued for a
 // complex x (square() on a complex Trace would stay complex-valued, z^2
 // not |z|^2 -- same distinction established throughout this session's
 // complex-support work).
-Trace weighted_quadratic_complex(const Trace& x, const Series& target, const Series& weights) {
-  const Trace diff = x - fixed(target);
-  return sum(fixed(weights) * pluss::subsp::math::diff::pow(pluss::subsp::math::diff::abs(diff), 2.0));
+Series weighted_quadratic_complex(const Series& x, const Series& target, const Series& weights) {
+  const Series diff = x - target;
+  return (weights * diff.abs().pow(2.0)).sum();
 }
 
 Lsr1SolveOptions make_opts() {
@@ -146,7 +145,7 @@ int main() {
     const Series start = real_series({2.0, 2.0, -2.0}, {3});
     const auto opts = make_opts();
 
-    Lsr1ObjectiveFn objective = [&](const Trace& x) -> Trace {
+    std::function<Series(const Series&)> objective = [&](const Series& x) -> Series {
       return weighted_quadratic(x, target, weights);
     };
     const auto result = l_sr1_trust_region(objective, start, opts);
@@ -167,7 +166,7 @@ int main() {
     const std::vector<Series> start{real_series({2.0, 2.0}, {2}), real_series({-2.0}, {1})};
     const auto opts = make_opts();
 
-    std::function<Trace(const std::vector<Trace>&)> objective = [&](const std::vector<Trace>& xs) -> Trace {
+    std::function<Series(const std::vector<Series>&)> objective = [&](const std::vector<Series>& xs) -> Series {
       return weighted_quadratic(xs[0], target0, weights0) + weighted_quadratic(xs[1], target1, weights1);
     };
     const auto [params, result] = l_sr1_trust_region(objective, start, opts);
@@ -185,7 +184,7 @@ int main() {
     const Series start = complex_series({{2.5, -1.5}, {-0.5, 3.0}}, {2});
     const auto opts = make_opts();
 
-    Lsr1ObjectiveFn objective = [&](const Trace& x) -> Trace {
+    std::function<Series(const Series&)> objective = [&](const Series& x) -> Series {
       return weighted_quadratic_complex(x, target, weights);
     };
 
@@ -218,7 +217,7 @@ int main() {
                                     complex_series({{-0.5, 3.0}, {1.0, 1.0}}, {2})};
     const auto opts = make_opts();
 
-    std::function<Trace(const std::vector<Trace>&)> objective = [&](const std::vector<Trace>& xs) -> Trace {
+    std::function<Series(const std::vector<Series>&)> objective = [&](const std::vector<Series>& xs) -> Series {
       return weighted_quadratic_complex(xs[0], target0, weights0) +
              weighted_quadratic_complex(xs[1], target1, weights1);
     };
@@ -248,7 +247,7 @@ int main() {
     const Series target = complex_series({{0.25, 0.75}, {-1.0, 1.5}}, {2});
     const Series weights = real_series({1.0, 3.0}, {2});
     const auto opts = make_opts();
-    Lsr1ObjectiveFn objective = [&](const Trace& x) -> Trace {
+    std::function<Series(const Series&)> objective = [&](const Series& x) -> Series {
       return weighted_quadratic_complex(x, target, weights);
     };
     const auto run_once = [&]() {
@@ -273,9 +272,9 @@ int main() {
     for (std::int64_t i = 0; i < n; ++i) start.push_back(i % 2 == 0 ? -1.2 : 1.0);
     const Series head = pluss::make_series(first, {n - 1}).to(ScalarType::Int64);
     const Series tail = pluss::make_series(second, {n - 1}).to(ScalarType::Int64);
-    auto chain = [&](const Trace& x) -> Trace {
-      const Trace a = pluss::subsp::math::diff::index_select(x, 0, head), b = pluss::subsp::math::diff::index_select(x, 0, tail);
-      return pluss::optim::sum(100.0 * pluss::optim::square(b - pluss::optim::square(a)) + pluss::optim::square(1.0 - a));
+    auto chain = [&](const Series& x) -> Series {
+      const Series a = x.index_select(0, head), b = x.index_select(0, tail);
+      return (100.0 * (b - a.square()).square() + (1.0 - a).square()).sum();
     };
     auto run = [&](std::int64_t memory) {
       Lsr1SolveOptions o;

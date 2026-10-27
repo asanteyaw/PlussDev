@@ -9,7 +9,7 @@ namespace {
 
 template <class T>
 std::vector<T> values_of(const pluss::Series& values) {
-  return values.to_vec<T>();
+  return values.host<T>().array().data;
 }
 
 } // namespace

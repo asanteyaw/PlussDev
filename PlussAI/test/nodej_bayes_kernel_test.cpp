@@ -78,7 +78,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "bayes classifier infer_scores should succeed\n";
       return false;
     }
-    const auto score_vec = score_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto score_vec = score_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (!(score_vec.front() < 0.0 && score_vec.back() > 0.0)) {
       if (err) *err << "bayes classifier scores should separate classes by sign\n";
       return false;
@@ -89,8 +89,8 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "bayes classifier infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i])) {
         if (err) *err << "bayes classifier should fit this separable training set\n";
@@ -105,7 +105,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "bayes classifier assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() != 2 || metrics[0] < 0.99 || metrics[1] > 0.1) {
       if (err) *err << "bayes classifier metrics should show strong fit and low log-loss\n";
       return false;
@@ -156,7 +156,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "kernel one-class transformer map should succeed\n";
       return false;
     }
-    const auto labels = map_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+    const auto labels = map_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({3}).host<double>();
     if (labels.size() != 3 || !std::isfinite(labels[0]) || !std::isfinite(labels[1]) || !std::isfinite(labels[2])) {
       if (err) *err << "kernel one-class transformer should tag far sample as outlier\n";
       return false;
@@ -186,7 +186,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "reloaded kernel one-class transformer map should succeed\n";
       return false;
     }
-    const auto reload_labels = reload_map_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+    const auto reload_labels = reload_map_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({3}).host<double>();
     for (std::size_t i = 0; i < labels.size(); ++i) {
       if (!approx(reload_labels[i], labels[i])) {
         if (err) *err << "reloaded one-class transformer should reproduce labels\n";
@@ -239,8 +239,8 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "kernel classifier infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i])) {
         if (err) *err << "kernel classifier should model this XOR pattern\n";
@@ -253,7 +253,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "kernel classifier assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.empty() || metrics[0] < 0.99) {
       if (err) *err << "kernel classifier default metric should indicate high accuracy\n";
       return false;
@@ -302,8 +302,8 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "kernel regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i], 5e-2)) {
         if (err) *err << "kernel regressor should approximate training signal closely\n";
@@ -316,7 +316,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "kernel regressor assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() < 3 || metrics[0] > 1e-2 || metrics[2] < 0.98) {
       if (err) *err << "kernel regressor metrics should show low error and high R2\n";
       return false;
@@ -379,7 +379,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "multinomial bayes classifier assess should succeed\n";
       return false;
     }
-    const auto multi_metrics = multi_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto multi_metrics = multi_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (multi_metrics.size() != 2 || multi_metrics[0] < 0.5 || multi_metrics[1] > 1.0) {
       if (err) *err << "multinomial bayes classifier metrics should be finite and reasonable\n";
       return false;
@@ -442,7 +442,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "complement bayes classifier infer should succeed\n";
       return false;
     }
-    const auto complement_pred = complement_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto complement_pred = complement_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (complement_pred.size() != 2 || complement_pred[0] > 0.5 || complement_pred[1] < 0.5) {
       if (err) *err << "complement bayes classifier should separate count complements\n";
       return false;
@@ -463,7 +463,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       if (err) *err << "reloaded complement bayes classifier infer should succeed\n";
       return false;
     }
-    const auto complement_reload_pred = complement_reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto complement_reload_pred = complement_reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (complement_reload_pred.size() != complement_pred.size()) {
       if (err) *err << "reloaded complement bayes classifier prediction size mismatch\n";
       return false;
@@ -525,7 +525,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
         .gamma = 1.0,
         .nu = 0.5,
     }).learn(batch);
-    const auto nu_pred = nu_model.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto nu_pred = nu_model.infer(features).to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (nu_pred.size() != 4 || nu_pred.front() > 0.5 || nu_pred.back() < 0.5) {
       if (err) *err << "lymph nu_svm_classifier factory should train and infer through NodeJ\n";
       return false;
@@ -540,7 +540,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
         .x = pluss::make_series(std::vector<double>{-1.0, -1.0, -0.9, -0.8, 1.0, 1.0, 7.0, 7.0}, {4, 2}, f64()),
         .layout = ObservationLayout::Rows,
     });
-    const auto oc_labels = oc.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const auto oc_labels = oc.to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
     if (oc_labels.size() != 4 || oc_labels.back() >= 0.0) {
       if (err) *err << "lymph one_class_svm factory should expose kernel one-class mapping\n";
       return false;
@@ -549,7 +549,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     auto bernoulli = pluss::ai::lymph::models::bayes::bernoulli_nb_classifier(BayesFamilyOptions{
         .smoothing = 1e-6,
     }).learn(batch);
-    const auto bernoulli_pred = bernoulli.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto bernoulli_pred = bernoulli.infer(features).to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (bernoulli_pred.size() != 4 || bernoulli_pred.front() > 0.5 || bernoulli_pred.back() < 0.5) {
       if (err) *err << "lymph bernoulli_nb_classifier factory should train and infer through NodeJ\n";
       return false;
@@ -567,7 +567,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     const auto multinomial_pred = multinomial.infer(FeatureBatch{
         .x = pluss::make_series(std::vector<double>{4.0, 0.0, 0.0, 4.0}, {2, 2}, f64()),
         .layout = ObservationLayout::Rows,
-    }).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    }).to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (multinomial_pred.size() != 2 || multinomial_pred[0] > 0.5 || multinomial_pred[1] < 0.5) {
       if (err) *err << "lymph multinomial_nb_classifier factory should train and infer through NodeJ\n";
       return false;
@@ -585,7 +585,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     const auto complement_pred = complement.infer(FeatureBatch{
         .x = pluss::make_series(std::vector<double>{5.0, 0.0, 0.0, 5.0}, {2, 2}, f64()),
         .layout = ObservationLayout::Rows,
-    }).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    }).to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (complement_pred.size() != 2 || complement_pred[0] > 0.5 || complement_pred[1] < 0.5) {
       if (err) *err << "lymph complement_nb_classifier factory should train and infer through NodeJ\n";
       return false;
@@ -609,8 +609,8 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
         .epsilon = 0.0,
         .nu = 0.6,
     }).learn(regression_batch);
-    const auto nu_reg_pred = nu_reg.infer(regression_features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    if (nu_reg_pred.size() != 5 || std::abs(nu_reg_pred.front() - yr.to(pluss::pCPU, ScalarType::Float64).to_vec<double>().front()) > 0.1) {
+    const auto nu_reg_pred = nu_reg.infer(regression_features).to(pluss::pCPU, ScalarType::Float64).host<double>();
+    if (nu_reg_pred.size() != 5 || std::abs(nu_reg_pred.front() - yr.to(pluss::pCPU, ScalarType::Float64).host<double>().front()) > 0.1) {
       if (err) *err << "lymph nu_svm_regressor factory should train and infer through NodeJ\n";
       return false;
     }
@@ -618,7 +618,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     auto bernoulli_reg = pluss::ai::lymph::models::bayes::bernoulli_nb_regressor(BayesFamilyOptions{
         .smoothing = 1e-6,
     }).learn(batch, TrainOptions{.max_iterations = 100, .tolerance = 1e-5});
-    const auto bernoulli_reg_pred = bernoulli_reg.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto bernoulli_reg_pred = bernoulli_reg.infer(features).to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (bernoulli_reg_pred.size() != 4) {
       if (err) *err << "lymph bernoulli_nb_regressor prediction size mismatch\n";
       return false;
@@ -643,7 +643,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     const auto multinomial_reg_pred = multinomial_reg.infer(FeatureBatch{
         .x = pluss::make_series(std::vector<double>{4.0, 0.0, 0.0, 4.0}, {2, 2}, f64()),
         .layout = ObservationLayout::Rows,
-    }).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    }).to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (multinomial_reg_pred.size() != 2 || !(multinomial_reg_pred[0] < multinomial_reg_pred[1])) {
       if (err) *err << "lymph multinomial_nb_regressor factory should preserve count-driven ordering\n";
       return false;

@@ -13,19 +13,16 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::optim::ConstrainedProblem;
-using pluss::optim::OptimaAlgorithm;
-using pluss::optim::OptimaExitFlag;
-using pluss::optim::OptimaHessianApproximation;
-using pluss::optim::OptimaLinearSystemSolver;
-using pluss::optim::OptimaLinearSystemStructure;
-using pluss::optim::OptimaOptions;
-using pluss::optim::OptimaProblemScaling;
-using pluss::optim::ParameterPack;
-using pluss::optim::Trace;
-using pluss::optim::optima;
-using pluss::optim::trace;
-using pluss::optim::square;
+using pluss::subsp::math::optim::ConstrainedProblem;
+using pluss::subsp::math::optim::OptimaAlgorithm;
+using pluss::subsp::math::optim::OptimaExitFlag;
+using pluss::subsp::math::optim::OptimaHessianApproximation;
+using pluss::subsp::math::optim::OptimaLinearSystemSolver;
+using pluss::subsp::math::optim::OptimaLinearSystemStructure;
+using pluss::subsp::math::optim::OptimaOptions;
+using pluss::subsp::math::optim::OptimaProblemScaling;
+using pluss::subsp::math::optim::ParameterPack;
+using pluss::subsp::math::optim::optima;
 
 struct Garch11Params {
   Series omega{pluss::series::undefined()};
@@ -48,10 +45,6 @@ struct Checkpoint {
 };
 
 Series scalar(double v, const pluss::Config& cfg) { return pluss::make_series(v, cfg); }
-
-double as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
-}
 
 pluss::Config scalar_config_like(const Series& x) {
   return pluss::Config{}.with_dtype(x.scalar_type()).with_platform(x.platform());
@@ -79,7 +72,7 @@ Garch11Params decode_params(const Series& unconstrained) {
 }
 
 Garch11Params decode_params(const ParameterPack<Series>& params) {
-  return decode_params(pluss::optim::flatten_values(params));
+  return decode_params(pluss::subsp::math::optim::flatten_values(params));
 }
 
 Series encode_guess(const Series& omega_guess, const Series& alpha_guess, const Series& beta_guess) {
@@ -133,23 +126,23 @@ Series garch11_negloglik(const Series& returns, const Garch11Params& p) {
 
 RunStats run_garch_optima(const Series& returns, const Series& x0, const OptimaOptions& options) {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [returns](const ParameterPack<Trace>& p) -> Trace {
-    const Trace omega = exp(p.at("log_omega"));
-    const Trace s1 = sigmoid(p.at("logit_alpha"));
-    const Trace s2 = sigmoid(p.at("logit_beta"));
-    const Trace alpha = 0.999 * s1;
-    const Trace beta = 0.999 * (1.0 - s1) * s2;
+  problem.objective.autodiff = [returns](const ParameterPack<Series>& p) -> Series {
+    const Series omega = p.at("log_omega").exp();
+    const Series s1 = p.at("logit_alpha").sigmoid();
+    const Series s2 = p.at("logit_beta").sigmoid();
+    const Series alpha = 0.999 * s1;
+    const Series beta = 0.999 * (1.0 - s1) * s2;
 
-    Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-    Trace nll = trace(pluss::make_series(0.0).to(ScalarType::Float64), false);
+    Series variance = omega / (1.0 - alpha - beta).clamp(1e-8, 1e8);
+    Series nll = (pluss::make_series(0.0).to(ScalarType::Float64));
     for (std::int64_t t = 0; t < returns.numel(); ++t) {
       if (t > 0) {
-        const Trace prev = trace(returns.select(0, t - 1), false);
+        const Series prev = returns.select(0, t - 1);
         variance = omega + alpha * prev * prev + beta * variance;
       }
-      const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-      const Trace r = trace(returns.select(0, t), false);
-      nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+      const Series var_clamped = variance.clamp(1e-12, 1e12);
+      const Series r = returns.select(0, t);
+      nll = nll + 0.5 * (var_clamped.log() + (r * r) / var_clamped);
     }
     return nll;
   };
@@ -200,12 +193,12 @@ ConstrainedProblem make_structured_problem(std::int64_t n,
                                            const std::vector<double>& target,
                                            double difference_cap) {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target, n](const ParameterPack<Trace>& p) -> Trace {
-    Trace value = trace(pluss::make_series(0.0).to(ScalarType::Float64), false);
+  problem.objective.autodiff = [target, n](const ParameterPack<Series>& p) -> Series {
+    Series value = (pluss::make_series(0.0).to(ScalarType::Float64));
     for (std::int64_t i = 0; i < n; ++i) {
-      const Trace xi = p.at(var_name(i));
-      value = value + square(xi - target[static_cast<std::size_t>(i)]);
-      if (i > 0) value = value + 0.15 * square(xi - p.at(var_name(i - 1)));
+      const Series xi = p.at(var_name(i));
+      value = value + (xi - target[static_cast<std::size_t>(i)]).square();
+      if (i > 0) value = value + 0.15 * (xi - p.at(var_name(i - 1))).square();
     }
     return value;
   };

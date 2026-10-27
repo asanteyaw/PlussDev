@@ -42,17 +42,14 @@ using pluss::ScalarType;
 using pluss::Series;
 using Complex = std::complex<double>;
 
-using pluss::optim::septima;
-using pluss::optim::SeptimaConstraints;
-using pluss::optim::SeptimaExitFlag;
-using pluss::optim::SeptimaLbfgsLineSearch;
-using pluss::optim::SeptimaOptimizer;
-using pluss::optim::SeptimaOptions;
-using pluss::optim::SeptimaResult;
-using pluss::optim::SeptimaSolveOptions;
-using pluss::optim::Trace;
-using pluss::optim::fixed;
-using pluss::optim::sum;
+using pluss::subsp::math::optim::septima;
+using pluss::subsp::math::optim::SeptimaConstraints;
+using pluss::subsp::math::optim::SeptimaExitFlag;
+using pluss::subsp::math::optim::SeptimaLbfgsLineSearch;
+using pluss::subsp::math::optim::SeptimaOptimizer;
+using pluss::subsp::math::optim::SeptimaOptions;
+using pluss::subsp::math::optim::SeptimaResult;
+using pluss::subsp::math::optim::SeptimaSolveOptions;
 
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {
@@ -66,7 +63,7 @@ Series complex_series(const std::vector<Complex>& values, const std::vector<std:
 }
 
 std::vector<Complex> to_vec_c128(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Complex128).reshape({x.numel()}).to_vec<Complex>();
+  return x.to(pluss::pCPU, ScalarType::Complex128).reshape({x.numel()}).host<Complex>();
 }
 
 void expect_vec_c_near(const std::vector<Complex>& lhs,
@@ -88,23 +85,23 @@ void expect_vec_c_near(const std::vector<Complex>& lhs,
   }
 }
 
-// sum(|x - target|^2) * 0.5 -- a real-valued loss of a complex variable
+// (|x - target|^2).sum() * 0.5 -- a real-valued loss of a complex variable
 // with a known closed-form minimizer (x == target exactly), separable and
 // strictly convex, so LBFGS should converge tightly from a modest start.
-Trace quadratic_loss(const Trace& x, const Series& target) {
-  const Trace diff = x - fixed(target);
-  return sum(pluss::subsp::math::diff::pow(pluss::subsp::math::diff::abs(diff), 2.0)) * 0.5;
+Series quadratic_loss(const Series& x, const Series& target) {
+  const Series diff = x - target;
+  return (diff.abs().pow(2.0)).sum() * 0.5;
 }
 
-// sum(|x|^2) -- a real-valued dummy objective for the constraint-guard
+// (|x|^2).sum() -- a real-valued dummy objective for the constraint-guard
 // tests below, where only whether septima() throws (and when) matters, not
 // the trajectory. `square(x)` would stay complex-valued for a complex x
 // (z^2, not |z|^2) and break the "must not throw" cases for the wrong
 // reason (a real-scalar-extraction failure unrelated to the constraint
 // guard under test), so this uses the same real-valued abs()^2 as
 // quadratic_loss above.
-Trace real_quadratic(const Trace& x) {
-  return sum(pluss::subsp::math::diff::pow(pluss::subsp::math::diff::abs(x), 2.0));
+Series real_quadratic(const Series& x) {
+  return (x.abs().pow(2.0)).sum();
 }
 
 SeptimaSolveOptions lbfgs_opts(SeptimaLbfgsLineSearch line_search) {
@@ -138,7 +135,7 @@ int main() {
     bool threw = false;
     SeptimaResult fit;
     try {
-      fit = septima([&target](const Trace& x) -> Trace { return quadratic_loss(x, target); }, start, opts);
+      fit = septima([&target](const Series& x) -> Series { return quadratic_loss(x, target); }, start, opts);
     } catch (const std::exception& e) {
       threw = true;
       std::cerr << "[FAIL] plain LBFGS complex solve threw: " << e.what() << '\n';
@@ -163,7 +160,7 @@ int main() {
     bool threw = false;
     SeptimaResult fit;
     try {
-      fit = septima([&target](const Trace& x) -> Trace { return quadratic_loss(x, target); }, start, opts);
+      fit = septima([&target](const Series& x) -> Series { return quadratic_loss(x, target); }, start, opts);
     } catch (const std::exception& e) {
       threw = true;
       std::cerr << "[FAIL] strong-Wolfe LBFGS complex solve threw: " << e.what() << '\n';
@@ -188,7 +185,7 @@ int main() {
     const auto opts = lbfgs_opts(SeptimaLbfgsLineSearch::None);
     const auto run_once = [&]() {
       Series start = complex_series(kStart, {2});
-      return septima([&target](const Trace& x) -> Trace { return quadratic_loss(x, target); }, start, opts);
+      return septima([&target](const Series& x) -> Series { return quadratic_loss(x, target); }, start, opts);
     };
     const auto a = run_once();
     const auto b = run_once();
@@ -208,7 +205,7 @@ int main() {
     auto opts = lbfgs_opts(SeptimaLbfgsLineSearch::None);
     bool threw = false;
     try {
-      (void)septima([](const Trace& x) -> Trace { return real_quadratic(x); }, start, opts, constraints);
+      (void)septima([](const Series& x) -> Series { return real_quadratic(x); }, start, opts, constraints);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -228,7 +225,7 @@ int main() {
     opts.step.enable_constraint_autodiff = false;
     bool threw = false;
     try {
-      (void)septima([](const Trace& x) -> Trace { return real_quadratic(x); }, start, opts, constraints);
+      (void)septima([](const Series& x) -> Series { return real_quadratic(x); }, start, opts, constraints);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -248,7 +245,7 @@ int main() {
     opts.step.enable_constraint_autodiff = true;
     bool threw = false;
     try {
-      (void)septima([](const Trace& x) -> Trace { return real_quadratic(x); }, start, opts, constraints);
+      (void)septima([](const Series& x) -> Series { return real_quadratic(x); }, start, opts, constraints);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -271,7 +268,7 @@ int main() {
     opts.max_iterations = 3; // just needs to not throw at construction/step time
     bool threw = false;
     try {
-      (void)septima([](const Trace& x) -> Trace { return real_quadratic(x); }, start, opts, constraints);
+      (void)septima([](const Series& x) -> Series { return real_quadratic(x); }, start, opts, constraints);
     } catch (const std::exception& e) {
       threw = true;
       std::cerr << "[FAIL] unexpected throw: " << e.what() << '\n';

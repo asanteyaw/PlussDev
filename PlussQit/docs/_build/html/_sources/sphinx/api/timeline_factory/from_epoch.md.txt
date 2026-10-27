@@ -156,7 +156,7 @@ must be shared instead.
 
 ## Round Trips And Failures
 
-`from_epoch(t.epoch_nanos().to_vec<std::int64_t>(), t.sizes())` preserves every
+`from_epoch(t.epoch_nanos().host<std::int64_t>(), t.sizes())` preserves every
 tick and shape, but the new timezone defaults to UTC unless supplied. Unknown
 timezone names, negative extents, rank above three, ragged nested input, and
 shape/cardinality mismatch throw before a usable result is returned.

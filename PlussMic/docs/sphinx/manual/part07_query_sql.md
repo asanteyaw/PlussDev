@@ -62,7 +62,7 @@ The first line chooses rows. The second line chooses columns.
 Use a boolean mask when the condition is easier to express in C++ than in the text predicate language. A mask must have one boolean value for each case in the frame. `true` keeps the row. `false` removes it.
 
 ```cpp
-auto values = df.features("age").as_series().to_vec<std::int64_t>();
+auto values = df.features("age").as_series().host<std::int64_t>();
 auto mask = pluss::Series::zeros(
     {static_cast<std::int64_t>(values.size())},
     pluss::codem::ScalarType::Bool);

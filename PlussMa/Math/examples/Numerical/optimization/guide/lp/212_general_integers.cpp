@@ -20,7 +20,7 @@ int main() {
   const auto run = [](const char* label, milp::Problem p) {
     const auto relaxed = lp::solve(p.lp);
     const auto r = milp::solve(p);
-    const auto x = r.x.to_vec<double>();
+    const auto x = r.x.host<double>();
     std::cout << std::left << std::setw(32) << label << "relaxation " << std::setw(9) << -relaxed.objective.item<double>() << "integer optimum " << std::setw(9)
               << -r.objective.item<double>() << "nodes " << std::setw(4) << r.nodes << "x =";
     for (const double v : x) std::cout << " " << v;

@@ -2,7 +2,165 @@
 
 [Back to Volatility Models](../ts_03_volatility_models.md)
 
+A volatility model makes a specific promise: after dividing each return by the model's own estimate of its standard deviation, what remains is free of clustering. The *standardised residuals* `z_t = (y_t − mean) / √h_t`, with `h_t` the fitted conditional variance from `infer(y)`, should look like independent draws with unit variance. If they do not, the variance model has missed something, and the forecasts and risk numbers built on it are wrong in a systematic way. This page applies three checks of increasing sharpness: the clustering tests applied to `z`, a sign-bias check for asymmetry, and a risk backtest that compares what the model said with what happened.
 
-@@example Stats/time_series/guide/1213_checking_a_fit.cpp@@
+## Has the clustering been absorbed?
 
-The raw returns show strong ARCH effects (p ≈ 10⁻¹⁴ for the ARCH-LM test and 10⁻²² for the Ljung–Box test on squares). After dividing by the fitted conditional standard deviation both tests are silent (p = 0.82 and 0.92): the model has absorbed the clustering. If the standardised residuals still show effects, add lags (`arch_order`, `garch_order`), or try an asymmetric model.
+The raw returns should fail the tests of [Chapter 1](../ts_01_describing_a_series/volatility_clustering.md) (that is why a model was fitted) and the standardised residuals should pass. Two tests are applied to both: the ARCH-LM test and the Ljung–Box test on the *squares*, whose degrees of freedom are reduced by the number of variance coefficients (`model_df = 2` for a GARCH(1,1)). The program also reports the excess kurtosis. Returns with volatility clustering have fat tails even when the shocks are Gaussian, because the variance changes; the standardised residuals should be close to Gaussian, whose excess kurtosis is zero.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <utility>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  ts::Garch11Fit truth;
+  truth.mean = 0.0;
+  truth.omega = 0.05;
+  truth.alpha = 0.15;
+  truth.beta = 0.75;
+  const Series y = truth.simulate(1500, f64, /*seed=*/8);
+
+  const auto fit = ts::Garch11::fit_mle(y, {}, f64);
+  const Series z = (y - fit.mean) / fit.infer(y, f64).sqrt();  // standardised residuals
+
+  ts::ArchLmOptions al;
+  al.lags = 5;
+  al.demean = false;
+  ts::LjungBoxOptions lb;
+  lb.lags = {10};
+  lb.model_df = 2;
+
+  const std::vector<std::pair<const char*, Series>> cases = {{"raw returns", y}, {"standardised residuals", z}};
+  for (const auto& [label, x] : cases)
+    out.writeln(label, "ARCH-LM p", ts::arch_lm(x, al).pvalue, "Ljung-Box(squares) p", ts::ljung_box(x * x, lb).pvalue.host<double>()[0], "excess kurtosis", x.stat.kurtosis().item<double>());
+}
+```
+
+The raw returns fail both tests decisively (p-values of zero to four digits) and have positive excess kurtosis (0.73). After standardising, the ARCH-LM test (p = 0.90) and the Ljung–Box test on the squares (p = 0.52) are silent: the model has absorbed the clustering. The excess kurtosis falls to 0.36, closer to the Gaussian value of zero. It is modest in both cases here because the simulated process is only mildly heavy-tailed; for real returns the raw value is often several times larger, and the part of it that survives standardising is evidence of non-Gaussian shocks rather than of changing variance. If a standardised-residual test still rejects, add lags (`arch_order`, `garch_order`) or try an asymmetric model, as in the next check.
+
+## Is there an asymmetry left?
+
+The clustering tests on `z²` can pass while a more specific pattern remains: if bad news raises volatility more than good news, the *sign* of yesterday's standardised shock predicts today's squared one. A simple sign-bias check is the correlation between `z_t²` and the indicator that `z_{t−1}` was negative, compared with the white-noise band `±1.96/√n`. The program applies it to the standardised residuals of a symmetric GARCH and of a GJR fitted to a series that has leverage.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+#include <utility>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+
+  ts::GjrFit truth;
+  truth.mean = 0.0;
+  truth.omega = 0.05;
+  truth.arch = {0.05};
+  truth.asym = {0.20};
+  truth.garch = {0.75};
+  const Series y = truth.simulate(2000, f64, /*seed=*/4);
+
+  const auto g = ts::Garch11::fit_mle(y, {}, f64);
+  const auto j = ts::Gjr::fit_mle(y, {}, f64);
+  const std::vector<std::pair<const char*, Series>> standardised = {{"GARCH", (y - g.mean) / g.infer(y, f64).sqrt()}, {"GJR", (y - j.mean) / j.infer(y, f64).sqrt()}};
+
+  // Does a negative shock yesterday raise the squared standardised shock today?
+  for (const auto& [label, z] : standardised) {
+    const Series previous = ts::lag(z, 1);
+    const Series keep = previous == previous;  // drop the first observation, which has no predecessor
+    const Series sq = (z * z).masked_select(keep);
+    const Series negative = (previous < 0.0).to(pluss::ScalarType::Float64).masked_select(keep);
+    const double corr = (((sq - sq.mean()) * (negative - negative.mean())).mean() / (sq.std(false) * negative.std(false))).item<double>();
+    out.writeln(label, "corr(z^2, 1[previous z < 0]) =", corr, "  band +-", 1.96 / std::sqrt(static_cast<double>(sq.numel())));
+  }
+}
+```
+
+For the symmetric GARCH the correlation is 0.053, just outside the ±0.044 band: squared standardised shocks are systematically larger after a negative shock, which is the structure the model cannot represent. For the GJR it is −0.002, indistinguishable from zero. The effect is small in size, a few hundredths of correlation, but with 2000 observations it is detectable, and it points directly at the missing ingredient. This kind of targeted check is how you decide *which* extension a failing model needs, rather than adding lags blindly.
+
+## Does it describe risk?
+
+A volatility model is usually fitted to say something about risk. The last check asks directly whether its numbers are calibrated: if the model's `√h_t` is right, a Gaussian 95% band `±1.96 √h_t` around the mean should contain about 95% of the returns, and a one-sided 1% threshold `−2.326 √h_t` should be breached on about 1% of days. A constant-variance band with the same average width is the natural competitor. The program counts both, and also asks *when* the breaches occur: the share that falls on days when the fitted variance is below its median, which should be about one half for a good model.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::Garch11Fit truth;
+  truth.mean = 0.0;
+  truth.omega = 0.05;
+  truth.alpha = 0.15;
+  truth.beta = 0.75;
+  const Series y = truth.simulate(3000, f64, /*seed=*/12);
+  const auto fit = ts::Garch11::fit_mle(y, {}, f64);
+  const auto h = fit.infer(y, f64).host<double>();
+  const auto r = y.host<double>();
+
+  const double sd_const = std::sqrt(fit.unconditional_var());
+  std::vector<double> sorted = h;
+  std::sort(sorted.begin(), sorted.end());
+  const double median_h = sorted[sorted.size() / 2];
+  int in_garch = 0, in_const = 0, tail_garch = 0, tail_const = 0, calm_garch = 0, calm_const = 0;
+  for (std::size_t t = 0; t < r.size(); ++t) {
+    const double e = r[t] - fit.mean;
+    in_garch += std::fabs(e) <= 1.96 * std::sqrt(h[t]);
+    in_const += std::fabs(e) <= 1.96 * sd_const;
+    const bool hit_garch = e < -2.326 * std::sqrt(h[t]), hit_const = e < -2.326 * sd_const;
+    tail_garch += hit_garch;
+    tail_const += hit_const;
+    calm_garch += hit_garch && h[t] <= median_h;
+    calm_const += hit_const && h[t] <= median_h;
+  }
+  const double n = static_cast<double>(r.size());
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << std::left << std::setw(24) << "" << std::right << std::setw(14) << "inside 95%" << std::setw(14) << "below 1%" << std::setw(24) << "breaches on calm days" << "\n";
+  std::cout << std::left << std::setw(24) << "GARCH(1,1) band" << std::right << std::setw(14) << in_garch / n << std::setw(14) << tail_garch / n << std::setw(24)
+            << (tail_garch ? static_cast<double>(calm_garch) / tail_garch : 0.0) << "\n";
+  std::cout << std::left << std::setw(24) << "constant-variance band" << std::right << std::setw(14) << in_const / n << std::setw(14) << tail_const / n << std::setw(24)
+            << (tail_const ? static_cast<double>(calm_const) / tail_const : 0.0) << "\n";
+  std::cout << std::left << std::setw(24) << "nominal / expected" << std::right << std::setw(14) << 0.95 << std::setw(14) << 0.01 << std::setw(24) << 0.5 << "\n";
+}
+```
+
+Look at the columns in turn. On the average count both bands look fine: about 95% of returns fall inside (95.5% and 95.2%), because a constant band set at the right overall width is correct *on average* by construction. The 1% threshold already separates them (0.97% breaches for GARCH, 1.27% for the constant band, against 1% expected), and the last column shows why it matters: only 13% of the constant band's breaches fall on calm days, so 87% of its failures happen when volatility is high, exactly when a breach costs most, while the GARCH band's breaches are spread nearly evenly (45% on calm days, against 50% expected). A good variance model is one whose errors do not depend on the state of the market. Both counts are in-sample, so a true test uses data held back from the fit; the point is the method, and the same counts on a hold-out sample are the standard back-test.
+
+## Decisions and pitfalls
+
+- **Test the standardised residuals, not the raw returns.** The raw series is expected to fail; `z` is the object that must pass.
+- **Remember `model_df`.** Count the variance coefficients (two for GARCH(1,1)) when you test the squares.
+- **Targeted checks beat blind extensions.** A sign-bias check points to GJR/EGARCH; a significant ARCH-LM at a long lag points to more `arch_order` or `garch_order`.
+- **A passing test is not a guarantee of calibration.** Back-test the risk numbers on held-out data before relying on them.
+- **Fat tails can remain.** Standardised residuals that are still heavy-tailed mean Gaussian intervals understate extreme moves, even when the clustering is gone.
+
+Where next: [Several series with a constant correlation](several_series_with_a_constant_correlation.md) fits volatility models to several series at once.

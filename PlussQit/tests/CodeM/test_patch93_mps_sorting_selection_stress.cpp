@@ -9,7 +9,8 @@
 
 namespace {
 
-void require_close_vec(const std::vector<float>& got, const std::vector<float>& want, float atol = 1e-4f) {
+template <class Got, class Want>
+void require_close_vec(const Got& got, const Want& want, float atol = 1e-4f) {
   REQUIRE(got.size() == want.size());
   for (std::size_t i = 0; i < got.size(); ++i) {
     REQUIRE(std::fabs(got[i] - want[i]) <= atol);
@@ -35,7 +36,7 @@ TEST_CASE("MPS sort/topk/argsort/kthvalue edge parity", "[mps][sort][topk][argso
   const auto sort_cpu = x_cpu.sort(/*dim=*/-1, /*descending=*/true, /*stable=*/false);
   const auto sort_mps = x_mps.sort(/*dim=*/-1, /*descending=*/true, /*stable=*/false);
   REQUIRE(sort_mps.platform() == pluss::pMPS);
-  require_close_vec(sort_mps.to(pluss::pCPU).to_vec<float>(), sort_cpu.to_vec<float>());
+  require_close_vec(sort_mps.to(pluss::pCPU).host<float>(), sort_cpu.host<float>());
 
   const auto topk0_cpu = x_cpu.topk(/*k=*/0, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
   const auto topk0_mps = x_mps.topk(/*k=*/0, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
@@ -45,17 +46,17 @@ TEST_CASE("MPS sort/topk/argsort/kthvalue edge parity", "[mps][sort][topk][argso
 
   const auto topk_all_cpu = x_cpu.topk(/*k=*/5, /*dim=*/1, /*largest=*/false, /*sorted=*/true);
   const auto topk_all_mps = x_mps.topk(/*k=*/5, /*dim=*/1, /*largest=*/false, /*sorted=*/true);
-  require_close_vec(topk_all_mps.to(pluss::pCPU).to_vec<float>(), topk_all_cpu.to_vec<float>());
+  require_close_vec(topk_all_mps.to(pluss::pCPU).host<float>(), topk_all_cpu.host<float>());
 
   const auto kth_cpu = x_cpu.kthvalue(/*k=*/2, /*dim=*/-1, /*keepdim=*/true);
   const auto kth_mps = x_mps.kthvalue(/*k=*/2, /*dim=*/-1, /*keepdim=*/true);
   REQUIRE(kth_mps.platform() == pluss::pMPS);
-  require_close_vec(kth_mps.to(pluss::pCPU).to_vec<float>(), kth_cpu.to_vec<float>());
+  require_close_vec(kth_mps.to(pluss::pCPU).host<float>(), kth_cpu.host<float>());
 
   const auto argsort_cpu = x_cpu.argsort(/*dim=*/1, /*descending=*/false, /*stable=*/false);
   const auto argsort_mps = x_mps.argsort(/*dim=*/1, /*descending=*/false, /*stable=*/false);
   REQUIRE(argsort_mps.platform() == pluss::pMPS);
-  REQUIRE(argsort_mps.to(pluss::pCPU).to_vec<std::int64_t>() == argsort_cpu.to_vec<std::int64_t>());
+  REQUIRE(argsort_mps.to(pluss::pCPU).host<std::int64_t>() == argsort_cpu.host<std::int64_t>().array().data);
 
   const auto half_cpu = x_cpu.to(pluss::ScalarType::Float16);
   const auto half_mps = half_cpu.to(pluss::pMPS);
@@ -63,7 +64,7 @@ TEST_CASE("MPS sort/topk/argsort/kthvalue edge parity", "[mps][sort][topk][argso
       half_mps.topk(/*k=*/3, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).to(pluss::ScalarType::Float32);
   const auto half_topk_ref =
       half_cpu.to(pluss::ScalarType::Float32).topk(/*k=*/3, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
-  require_close_vec(half_topk_mps.to_vec<float>(), half_topk_ref.to_vec<float>());
+  require_close_vec(half_topk_mps.host<float>(), half_topk_ref.host<float>());
 }
 
 TEST_CASE("MPS selection stress parity random matrix sweep", "[mps][stress][topk][argsort][kthvalue]") {
@@ -95,15 +96,15 @@ TEST_CASE("MPS selection stress parity random matrix sweep", "[mps][stress][topk
 
     const auto topk_cpu = x_cpu.topk(k, dim, largest, sorted);
     const auto topk_mps = x_mps.topk(k, dim, largest, sorted).to(pluss::pCPU);
-    require_close_vec(topk_mps.to_vec<float>(), topk_cpu.to_vec<float>());
+    require_close_vec(topk_mps.host<float>(), topk_cpu.host<float>());
 
     const auto argsort_cpu = x_cpu.argsort(dim, largest, /*stable=*/false);
     const auto argsort_mps = x_mps.argsort(dim, largest, /*stable=*/false).to(pluss::pCPU);
-    REQUIRE(argsort_mps.to_vec<std::int64_t>() == argsort_cpu.to_vec<std::int64_t>());
+    REQUIRE(argsort_mps.host<std::int64_t>() == argsort_cpu.host<std::int64_t>().array().data);
 
     const std::int64_t kth_k = std::max<std::int64_t>(1, std::min<std::int64_t>(dim_size, (k == 0 ? 1 : k)));
     const auto kth_cpu = x_cpu.kthvalue(kth_k, dim, keepdim);
     const auto kth_mps = x_mps.kthvalue(kth_k, dim, keepdim).to(pluss::pCPU);
-    require_close_vec(kth_mps.to_vec<float>(), kth_cpu.to_vec<float>());
+    require_close_vec(kth_mps.host<float>(), kth_cpu.host<float>());
   }
 }

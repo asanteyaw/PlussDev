@@ -37,8 +37,8 @@ auto out = slot.filter([](const pluss::scribble::Slot::Value& value) {
   return std::holds_alternative<pluss::Series>(value);
 });
 std::cout << "size=" << out.size() << " vals="
-          << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << ","
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << ","
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

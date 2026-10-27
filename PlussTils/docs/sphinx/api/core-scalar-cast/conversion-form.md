@@ -45,7 +45,7 @@ int main() {
 
   std::cout << "integer column is int64: " << (ints.dtype().scalar == pluss::ScalarType::Int64) << '\n';
   std::cout << "values:";
-  for (auto v : ints.to_vec<std::int64_t>()) std::cout << ' ' << v;
+  for (auto v : ints.host<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   return 0;
 }
@@ -80,7 +80,7 @@ int main() {
 
   std::cout << "mask dtype is bool: " << (mask.dtype().scalar == pluss::ScalarType::Bool) << '\n';
   std::cout << "mask values:";
-  for (bool b : mask.to_vec<bool>()) std::cout << ' ' << b;
+  for (bool b : mask.host<bool>()) std::cout << ' ' << b;
   std::cout << '\n';
   return 0;
 }
@@ -111,7 +111,7 @@ int main() {
   const auto wide = pluss::make_series(std::vector<double>{1.5, 2.5}, {2}, cfg);
   const auto narrow = pluss::tils::as_f32(wide, cfg);
   std::cout << "dtype: " << narrow.dtype() << '\n';
-  for (float v : narrow.to_vec<float>()) std::cout << ' ' << v;
+  for (float v : narrow.host<float>()) std::cout << ' ' << v;
   std::cout << '\n';
   return 0;
 }

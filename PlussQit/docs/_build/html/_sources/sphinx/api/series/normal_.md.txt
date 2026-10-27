@@ -134,8 +134,8 @@ requested ones.
 pluss::rng_seed(2024);
 auto x = pluss::series::empty({200000}, pluss::ScalarType::Float64);
 x.normal_(3.0, 2.0);
-std::cout << "mean~" << x.mean().to_vec<double>()[0]
-          << "  stddev~" << x.std().to_vec<double>()[0] << "\n";
+std::cout << "mean~" << x.mean().host<double>()[0]
+          << "  stddev~" << x.std().host<double>()[0] << "\n";
 ```
 
 ### Output

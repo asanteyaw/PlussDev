@@ -227,7 +227,7 @@ Series unit_uniform_(pluss::msharp::RangeView::Int sizes, Config cfg, std::uint6
     case RngMethod::Sobol:
     case RngMethod::Halton:
     case RngMethod::Torus:
-      return pluss::rng::uniform(sizes, g_sample_rng_method, out_cfg, seed)
+      return pluss::subsp::stats::rng::uniform(sizes, g_sample_rng_method, out_cfg, seed)
           .clamp_min(kEps)
           .clamp_max(1.0 - kEps);
     default:
@@ -302,12 +302,12 @@ std::vector<double> param_values_for_numel_(const Series& param,
   PLUSS_CHECK(param.defined(), std::string("subsp::stats::distr::") + op + ": " + param_name + " must be defined");
   const Series flat = param.to(ScalarType::Float64).reshape({param.numel()});
   if (flat.numel() == 1) {
-    return std::vector<double>(static_cast<std::size_t>(count), flat.item<double>());
+    return std::vector<double>(static_cast<std::size_t>(count), flat.host<double>().front());
   }
   PLUSS_CHECK(flat.numel() == count,
               std::string("subsp::stats::distr::") + op + ": " + param_name +
                   " must be scalar or match x.numel()");
-  return flat.to_vec<double>();
+  return flat.host<double>();
 }
 
 std::vector<double> scalar_series_params_to_values_(pluss::msharp::RangeView::Series params, const char* op) {
@@ -693,7 +693,7 @@ Series normal_sample_(double mean,
     return pluss::series::normal(mean, stddev, sizes, cfg, seed);
   }
 
-  return pluss::rng::standard_normal(sizes, g_sample_rng_method, float64_cfg_on_(cfg), seed)
+  return pluss::subsp::stats::rng::standard_normal(sizes, g_sample_rng_method, float64_cfg_on_(cfg), seed)
       .mul(stddev)
       .add(mean)
       .to(cfg.platform, cfg.dtype);
@@ -1587,7 +1587,7 @@ Series beta_cdf_series_(const Series& x,
   PLUSS_CHECK(hi.gt(lo).all().item<bool>(), "subsp::stats::distr::beta cdf: expected high > low");
   PLUSS_CHECK(al.gt(0.0).all().item<bool>(), "subsp::stats::distr::beta cdf: alpha must be > 0");
   PLUSS_CHECK(be.gt(0.0).all().item<bool>(), "subsp::stats::distr::beta cdf: beta must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto lo_vals = param_values_for_numel_(lo, xx.numel(), "beta cdf", "low");
   const auto hi_vals = param_values_for_numel_(hi, xx.numel(), "beta cdf", "high");
   const auto al_vals = param_values_for_numel_(al, xx.numel(), "beta cdf", "alpha");
@@ -1613,7 +1613,7 @@ Series rayleigh_pdf_series_(const Series& x, const Series& sigma) {
   const Series sg = param_for_x_(sigma, xx, "rayleigh pdf", "sigma");
   PLUSS_CHECK(sg.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::rayleigh pdf: sigma must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto s_vals = param_values_for_numel_(sg, xx.numel(), "rayleigh pdf", "sigma");
   std::vector<double> out(x_vals.size(), 0.0);
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -1632,7 +1632,7 @@ Series rayleigh_logpdf_series_(const Series& x, const Series& sigma) {
   const Series sg = param_for_x_(sigma, xx, "rayleigh logpdf", "sigma");
   PLUSS_CHECK(sg.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::rayleigh logpdf: sigma must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto s_vals = param_values_for_numel_(sg, xx.numel(), "rayleigh logpdf", "sigma");
   std::vector<double> out(x_vals.size(), -std::numeric_limits<double>::infinity());
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -1652,7 +1652,7 @@ Series rayleigh_cdf_series_(const Series& x, const Series& sigma) {
   const Series sg = param_for_x_(sigma, xx, "rayleigh cdf", "sigma");
   PLUSS_CHECK(sg.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::rayleigh cdf: sigma must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto s_vals = param_values_for_numel_(sg, xx.numel(), "rayleigh cdf", "sigma");
   std::vector<double> out(x_vals.size(), 0.0);
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -1674,7 +1674,7 @@ Series weibull_pdf_series_(const Series& x, const Series& shape, const Series& s
               "subsp::stats::distr::weibull pdf: shape must be > 0");
   PLUSS_CHECK(sc.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::weibull pdf: scale must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto sh_vals = param_values_for_numel_(sh, xx.numel(), "weibull pdf", "shape");
   const auto sc_vals = param_values_for_numel_(sc, xx.numel(), "weibull pdf", "scale");
   std::vector<double> out(x_vals.size(), 0.0);
@@ -1698,7 +1698,7 @@ Series weibull_logpdf_series_(const Series& x, const Series& shape, const Series
               "subsp::stats::distr::weibull logpdf: shape must be > 0");
   PLUSS_CHECK(sc.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::weibull logpdf: scale must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto sh_vals = param_values_for_numel_(sh, xx.numel(), "weibull logpdf", "shape");
   const auto sc_vals = param_values_for_numel_(sc, xx.numel(), "weibull logpdf", "scale");
   std::vector<double> out(x_vals.size(), -std::numeric_limits<double>::infinity());
@@ -1724,7 +1724,7 @@ Series weibull_cdf_series_(const Series& x, const Series& shape, const Series& s
               "subsp::stats::distr::weibull cdf: shape must be > 0");
   PLUSS_CHECK(sc.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::weibull cdf: scale must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto sh_vals = param_values_for_numel_(sh, xx.numel(), "weibull cdf", "shape");
   const auto sc_vals = param_values_for_numel_(sc, xx.numel(), "weibull cdf", "scale");
   std::vector<double> out(x_vals.size(), 0.0);
@@ -1751,7 +1751,7 @@ Series weibull3_pdf_series_(const Series& x,
               "subsp::stats::distr::weibull pdf: shape must be > 0");
   PLUSS_CHECK(sc.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::weibull pdf: scale must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto th_vals = param_values_for_numel_(th, xx.numel(), "weibull pdf", "theta");
   const auto sh_vals = param_values_for_numel_(sh, xx.numel(), "weibull pdf", "shape");
   const auto sc_vals = param_values_for_numel_(sc, xx.numel(), "weibull pdf", "scale");
@@ -1781,7 +1781,7 @@ Series weibull3_logpdf_series_(const Series& x,
               "subsp::stats::distr::weibull logpdf: shape must be > 0");
   PLUSS_CHECK(sc.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::weibull logpdf: scale must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto th_vals = param_values_for_numel_(th, xx.numel(), "weibull logpdf", "theta");
   const auto sh_vals = param_values_for_numel_(sh, xx.numel(), "weibull logpdf", "shape");
   const auto sc_vals = param_values_for_numel_(sc, xx.numel(), "weibull logpdf", "scale");
@@ -1813,7 +1813,7 @@ Series weibull3_cdf_series_(const Series& x,
               "subsp::stats::distr::weibull cdf: shape must be > 0");
   PLUSS_CHECK(sc.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::weibull cdf: scale must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto th_vals = param_values_for_numel_(th, xx.numel(), "weibull cdf", "theta");
   const auto sh_vals = param_values_for_numel_(sh, xx.numel(), "weibull cdf", "shape");
   const auto sc_vals = param_values_for_numel_(sc, xx.numel(), "weibull cdf", "scale");
@@ -1883,7 +1883,7 @@ Series student_t_cdf_series_(const Series& x,
               "subsp::stats::distr::t cdf: expected degrees_of_freedom > 0");
   PLUSS_CHECK(eta.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::t cdf: expected scale > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto nu_vals = param_values_for_numel_(nu, xx.numel(), "t cdf", "degrees_of_freedom");
   const auto chi_vals = param_values_for_numel_(chi, xx.numel(), "t cdf", "location");
   const auto eta_vals = param_values_for_numel_(eta, xx.numel(), "t cdf", "scale");
@@ -1905,7 +1905,7 @@ Series inverse_gaussian_pdf_series_(const Series& x, const Series& theta, const 
               "subsp::stats::distr::ig pdf: theta must be > 0");
   PLUSS_CHECK(ch.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::ig pdf: chi must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto th_vals = param_values_for_numel_(th, xx.numel(), "ig pdf", "theta");
   const auto ch_vals = param_values_for_numel_(ch, xx.numel(), "ig pdf", "chi");
   std::vector<double> out(x_vals.size(), 0.0);
@@ -1923,7 +1923,7 @@ Series inverse_gaussian_logpdf_series_(const Series& x, const Series& theta, con
               "subsp::stats::distr::ig logpdf: theta must be > 0");
   PLUSS_CHECK(ch.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::ig logpdf: chi must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto th_vals = param_values_for_numel_(th, xx.numel(), "ig logpdf", "theta");
   const auto ch_vals = param_values_for_numel_(ch, xx.numel(), "ig logpdf", "chi");
   std::vector<double> out(x_vals.size(), -std::numeric_limits<double>::infinity());
@@ -1942,7 +1942,7 @@ Series inverse_gaussian_cdf_series_(const Series& x, const Series& theta, const 
               "subsp::stats::distr::ig cdf: theta must be > 0");
   PLUSS_CHECK(ch.gt(0.0).all().item<bool>(),
               "subsp::stats::distr::ig cdf: chi must be > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto th_vals = param_values_for_numel_(th, xx.numel(), "ig cdf", "theta");
   const auto ch_vals = param_values_for_numel_(ch, xx.numel(), "ig cdf", "chi");
   std::vector<double> out(x_vals.size(), 0.0);
@@ -2074,7 +2074,7 @@ Series hypergeom_cdf_series_(const Series& x,
   const Series nn = param_for_x_(population_size, xx, "hypergeom cdf", "population_size");
   const Series mm = param_for_x_(success_count, xx, "hypergeom cdf", "success_count");
   const Series dd = param_for_x_(draws, xx, "hypergeom cdf", "draws");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto n_vals = param_values_for_numel_(nn, xx.numel(), "hypergeom cdf", "population_size");
   const auto m_vals = param_values_for_numel_(mm, xx.numel(), "hypergeom cdf", "success_count");
   const auto d_vals = param_values_for_numel_(dd, xx.numel(), "hypergeom cdf", "draws");
@@ -2143,7 +2143,7 @@ Series negbin_pdf_series_(const Series& x, const Series& r, const Series& p) {
   PLUSS_CHECK(rr.gt(0.0).all().item<bool>(), "subsp::stats::distr::negbinom pdf: expected r > 0");
   PLUSS_CHECK(pp.gt(0.0).logical_and(pp.lt(1.0)).all().item<bool>(),
               "subsp::stats::distr::negbinom pdf: expected 0 < p < 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto r_vals = param_values_for_numel_(rr, xx.numel(), "negbinom pdf", "r");
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "negbinom pdf", "p");
   std::vector<double> out(x_vals.size(), 0.0);
@@ -2166,7 +2166,7 @@ Series negbin_logpdf_series_(const Series& x, const Series& r, const Series& p) 
   PLUSS_CHECK(rr.gt(0.0).all().item<bool>(), "subsp::stats::distr::negbinom logpdf: expected r > 0");
   PLUSS_CHECK(pp.gt(0.0).logical_and(pp.lt(1.0)).all().item<bool>(),
               "subsp::stats::distr::negbinom logpdf: expected 0 < p < 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto r_vals = param_values_for_numel_(rr, xx.numel(), "negbinom logpdf", "r");
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "negbinom logpdf", "p");
   std::vector<double> out(x_vals.size(), -std::numeric_limits<double>::infinity());
@@ -2189,7 +2189,7 @@ Series negbin_cdf_series_(const Series& x, const Series& r, const Series& p) {
   PLUSS_CHECK(rr.gt(0.0).all().item<bool>(), "subsp::stats::distr::negbinom cdf: expected r > 0");
   PLUSS_CHECK(pp.gt(0.0).logical_and(pp.lt(1.0)).all().item<bool>(),
               "subsp::stats::distr::negbinom cdf: expected 0 < p < 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto r_vals = param_values_for_numel_(rr, xx.numel(), "negbinom cdf", "r");
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "negbinom cdf", "p");
   std::vector<double> out(x_vals.size(), 0.0);
@@ -2224,7 +2224,7 @@ Series gh_pdf_series_(const Series& x,
   const Series del = param_for_x_(delta, xx, "gh pdf", "delta");
   PLUSS_CHECK(del.gt(0.0).all().item<bool>(), "subsp::stats::distr::gh pdf: expected delta > 0");
   PLUSS_CHECK(al.gt(be.abs()).all().item<bool>(), "subsp::stats::distr::gh pdf: expected alpha > |beta|");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto l_vals = param_values_for_numel_(lam, xx.numel(), "gh pdf", "lambda");
   const auto a_vals = param_values_for_numel_(al, xx.numel(), "gh pdf", "alpha");
   const auto b_vals = param_values_for_numel_(be, xx.numel(), "gh pdf", "beta");
@@ -2252,7 +2252,7 @@ Series gh_logpdf_series_(const Series& x,
   const Series del = param_for_x_(delta, xx, "gh logpdf", "delta");
   PLUSS_CHECK(del.gt(0.0).all().item<bool>(), "subsp::stats::distr::gh logpdf: expected delta > 0");
   PLUSS_CHECK(al.gt(be.abs()).all().item<bool>(), "subsp::stats::distr::gh logpdf: expected alpha > |beta|");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto l_vals = param_values_for_numel_(lam, xx.numel(), "gh logpdf", "lambda");
   const auto a_vals = param_values_for_numel_(al, xx.numel(), "gh logpdf", "alpha");
   const auto b_vals = param_values_for_numel_(be, xx.numel(), "gh logpdf", "beta");
@@ -2279,7 +2279,7 @@ Series gh_cdf_series_(const Series& x,
   const Series del = param_for_x_(delta, xx, "gh cdf", "delta");
   PLUSS_CHECK(del.gt(0.0).all().item<bool>(), "subsp::stats::distr::gh cdf: expected delta > 0");
   PLUSS_CHECK(al.gt(be.abs()).all().item<bool>(), "subsp::stats::distr::gh cdf: expected alpha > |beta|");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto l_vals = param_values_for_numel_(lam, xx.numel(), "gh cdf", "lambda");
   const auto a_vals = param_values_for_numel_(al, xx.numel(), "gh cdf", "alpha");
   const auto b_vals = param_values_for_numel_(be, xx.numel(), "gh cdf", "beta");
@@ -2332,7 +2332,7 @@ Series bernoulli_pdf_series_(const Series& x, const Series& p) {
   const Series pp = param_for_x_(p, xx, "bernoulli pdf", "p");
   PLUSS_CHECK(pp.ge(0.0).logical_and(pp.le(1.0)).all().item<bool>(),
               "subsp::stats::distr::bernoulli pdf: expected 0 <= p <= 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "bernoulli pdf", "p");
   std::vector<double> out(x_vals.size(), 0.0);
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -2352,7 +2352,7 @@ Series bernoulli_logpdf_series_(const Series& x, const Series& p) {
   const Series pp = param_for_x_(p, xx, "bernoulli logpdf", "p");
   PLUSS_CHECK(pp.ge(0.0).logical_and(pp.le(1.0)).all().item<bool>(),
               "subsp::stats::distr::bernoulli logpdf: expected 0 <= p <= 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "bernoulli logpdf", "p");
   std::vector<double> out(x_vals.size(), -std::numeric_limits<double>::infinity());
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -2371,7 +2371,7 @@ Series bernoulli_cdf_series_(const Series& x, const Series& p) {
   const Series pp = param_for_x_(p, xx, "bernoulli cdf", "p");
   PLUSS_CHECK(pp.ge(0.0).logical_and(pp.le(1.0)).all().item<bool>(),
               "subsp::stats::distr::bernoulli cdf: expected 0 <= p <= 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "bernoulli cdf", "p");
   std::vector<double> out(x_vals.size(), 0.0);
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -2390,7 +2390,7 @@ Series poisson_pdf_series_(const Series& x, const Series& lambda) {
   const Series xx = as_f64_(x, "poisson pdf");
   const Series lam = param_for_x_(lambda, xx, "poisson pdf", "lambda");
   PLUSS_CHECK(lam.gt(0.0).all().item<bool>(), "subsp::stats::distr::poisson pdf: expected lambda > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto lambda_vals = param_values_for_numel_(lam, xx.numel(), "poisson pdf", "lambda");
   std::vector<double> out(x_vals.size(), 0.0);
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -2408,7 +2408,7 @@ Series poisson_logpdf_series_(const Series& x, const Series& lambda) {
   const Series xx = as_f64_(x, "poisson logpdf");
   const Series lam = param_for_x_(lambda, xx, "poisson logpdf", "lambda");
   PLUSS_CHECK(lam.gt(0.0).all().item<bool>(), "subsp::stats::distr::poisson logpdf: expected lambda > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto lambda_vals = param_values_for_numel_(lam, xx.numel(), "poisson logpdf", "lambda");
   std::vector<double> out(x_vals.size(), -std::numeric_limits<double>::infinity());
   for (std::size_t i = 0; i < x_vals.size(); ++i) {
@@ -2426,7 +2426,7 @@ Series poisson_cdf_series_(const Series& x, const Series& lambda) {
   const Series xx = as_f64_(x, "poisson cdf");
   const Series lam = param_for_x_(lambda, xx, "poisson cdf", "lambda");
   PLUSS_CHECK(lam.gt(0.0).all().item<bool>(), "subsp::stats::distr::poisson cdf: expected lambda > 0");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto lambda_vals = param_values_for_numel_(lam, xx.numel(), "poisson cdf", "lambda");
 
   std::vector<double> out(x_vals.size(), 0.0);
@@ -2458,7 +2458,7 @@ Series binom_pdf_series_(const Series& x, const Series& n, const Series& p) {
               "subsp::stats::distr::binomial pdf: count must be > 0");
   PLUSS_CHECK(pp.gt(0.0).logical_and(pp.lt(1.0)).all().item<bool>(),
               "subsp::stats::distr::binomial pdf: expected 0 < p < 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto n_vals = param_values_for_numel_(nn, xx.numel(), "binomial pdf", "count");
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "binomial pdf", "p");
   std::vector<double> out(x_vals.size(), 0.0);
@@ -2484,7 +2484,7 @@ Series binom_logpdf_series_(const Series& x, const Series& n, const Series& p) {
               "subsp::stats::distr::binomial logpdf: count must be > 0");
   PLUSS_CHECK(pp.gt(0.0).logical_and(pp.lt(1.0)).all().item<bool>(),
               "subsp::stats::distr::binomial logpdf: expected 0 < p < 1");
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto n_vals = param_values_for_numel_(nn, xx.numel(), "binomial logpdf", "count");
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "binomial logpdf", "p");
   std::vector<double> out(x_vals.size(), -std::numeric_limits<double>::infinity());
@@ -2511,7 +2511,7 @@ Series binom_cdf_series_(const Series& x, const Series& n, const Series& p) {
   PLUSS_CHECK(pp.gt(0.0).logical_and(pp.lt(1.0)).all().item<bool>(),
               "subsp::stats::distr::binomial cdf: expected 0 < p < 1");
 
-  const auto x_vals = xx.reshape({xx.numel()}).to_vec<double>();
+  const auto x_vals = xx.reshape({xx.numel()}).host<double>();
   const auto n_vals = param_values_for_numel_(nn, xx.numel(), "binomial cdf", "count");
   const auto p_vals = param_values_for_numel_(pp, xx.numel(), "binomial cdf", "p");
 
@@ -2954,7 +2954,7 @@ double sample_gig_scalar_(double lambda, double chi, double psi, std::mt19937_64
   const double r = (6.0 * m + 2.0 * h * m - b * m * m + b) / (4.0 * m * m);
   const double s = (1.0 + h - b * m) / (2.0 * m * m);
   const double p = (3.0 * s - r * r) / 3.0;
-  const double q = (2.0 * r * r * r) / 27.0 - (r * s) / 27.0 - b / (4.0 * m * m);
+  const double q = (2.0 * r * r * r) / 27.0 - (r * s) / 3.0 - b / (4.0 * m * m);
   const double eta = std::sqrt(-(p * p * p) / 27.0);
   const double acos_arg = std::clamp(-q / (2.0 * eta), -1.0, 1.0);
   const double root = 2.0 * std::exp(std::log(eta) / 3.0);
@@ -3136,7 +3136,8 @@ Series anglit_pdf_(const Series& x, double t, double s) {
   PLUSS_CHECK(s > 0.0, "subsp::stats::distr::anglit pdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return 0.0;
-    return std::sin((std::numbers::pi_v<double> * 0.5) * (y - t) / s + std::numbers::pi_v<double> * 0.5) / s;
+    // the derivative of the distribution function sin^2(pi/4 u + pi/4), u = (y - t)/s, so it integrates to one
+    return (std::numbers::pi_v<double> * 0.25) * std::sin((std::numbers::pi_v<double> * 0.5) * (y - t) / s + std::numbers::pi_v<double> * 0.5) / s;
   });
 }
 
@@ -3144,7 +3145,7 @@ Series anglit_logpdf_(const Series& x, double t, double s) {
   PLUSS_CHECK(s > 0.0, "subsp::stats::distr::anglit logpdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return -std::numeric_limits<double>::infinity();
-    return std::log(std::sin((std::numbers::pi_v<double> * 0.5) * (y - t) / s + std::numbers::pi_v<double> * 0.5)) - std::log(s);
+    return std::log(std::numbers::pi_v<double> * 0.25) + std::log(std::sin((std::numbers::pi_v<double> * 0.5) * (y - t) / s + std::numbers::pi_v<double> * 0.5)) - std::log(s);
   });
 }
 
@@ -4036,7 +4037,7 @@ Series yule_cdf_(const Series& x, double p) {
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<std::int64_t>(std::floor(y));
     if (k < 1) return 0.0;
-    return 1.0 - (static_cast<double>(k) + 1.0) * beta_scalar_(static_cast<double>(k) + 1.0, p);
+    return 1.0 - static_cast<double>(k) * beta_scalar_(static_cast<double>(k), p);
   });
 }
 
@@ -4424,7 +4425,7 @@ Series mixture_normal(const Series& weights,
   const std::int64_t total = numel_from_sizes_(sizes);
   const Config sample_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform).with_pinned(cfg.pinned);
   const Series selector_u = (use_sobol
-          ? pluss::rng::uniform({total, 1}, RngMethod::Sobol, sample_cfg, seed)
+          ? pluss::subsp::stats::rng::uniform({total, 1}, RngMethod::Sobol, sample_cfg, seed)
           : pluss::series::rand({total, 1}, sample_cfg, seed))
                                 .clamp_min(kEps)
                                 .clamp_max(1.0 - kEps);
@@ -4433,7 +4434,7 @@ Series mixture_normal(const Series& weights,
   const Series cdf_lo = cdf.sub(weights_2d);
   const Series selector_mask = selector_u.ge(cdf_lo).logical_and(selector_u.lt(cdf)).to(ScalarType::Float64);
 
-  const Series base = pluss::rng::standard_normal(
+  const Series base = pluss::subsp::stats::rng::standard_normal(
       {total, k},
       use_sobol ? RngMethod::Sobol : RngMethod::Pseudo,
       Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform),

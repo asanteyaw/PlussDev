@@ -26,7 +26,7 @@ bool approx(double a, double b, double tol = 1e-8) {
 }
 
 std::vector<double> as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 LabeledBatch make_xor_batch() {
@@ -303,7 +303,7 @@ bool run_nodej_metrics_checks(std::ostream* err = nullptr) {
       if (err) *err << "cross_assess should succeed for parity check\n";
       return false;
     }
-    const double mean_from_assess = cv_or.value().mean_metrics.reshape({1}).item<double>();
+    const double mean_from_assess = cv_or.value().mean_metrics.reshape({1}).host<double>().front();
     if (!approx(mean_or.value(), mean_from_assess, 1e-10)) {
       if (err) *err << "cross_score should equal cross_assess mean metric for same setup\n";
       return false;

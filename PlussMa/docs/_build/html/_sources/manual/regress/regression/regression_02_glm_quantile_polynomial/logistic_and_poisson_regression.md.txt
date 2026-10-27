@@ -44,14 +44,14 @@ int main() {
   o.response_name = "passed";
   o.predictor_names = {"hours"};
   const auto fit = reg::glm_fit(vec(passed), column(hours), o);
-  const auto b = fit.coefficients.to_vec<double>();
+  const auto b = fit.coefficients.host<double>();
   std::cout << "\nlogistic regression of pass on hours\n";
   std::cout << "intercept " << b[0] << ", slope " << b[1] << " (odds multiply by " << std::exp(b[1]) << " per hour)\n";
   std::cout << "deviance " << fit.deviance << " against null deviance " << fit.null_deviance << ", pseudo R-squared " << fit.pseudo_rsquared << ", iterations " << fit.iterations << "\n";
-  const auto prob = reg::glm_predict(fit, column({1.0, 2.5, 4.0})).to_vec<double>();
-  const auto lin = reg::glm_predict(fit, column({1.0, 2.5, 4.0}), reg::GLMPredictionType::Linear).to_vec<double>();
+  const auto prob = reg::glm_predict(fit, column({1.0, 2.5, 4.0})).host<double>();
+  const auto lin = reg::glm_predict(fit, column({1.0, 2.5, 4.0}), reg::GLMPredictionType::Linear).host<double>();
   // the maximum-likelihood conditions of logistic regression: the residuals y - p are orthogonal to the design columns
-  const auto fitted = fit.fitted_values.to_vec<double>();
+  const auto fitted = fit.fitted_values.host<double>();
   double s0 = 0.0, s1 = 0.0;
   for (std::size_t i = 0; i < passed.size(); ++i) { s0 += passed[i] - fitted[i]; s1 += hours[i] * (passed[i] - fitted[i]); }
   std::cout << std::scientific << std::setprecision(1) << "score equations (should be 0): sum(y - p) = " << s0 << ", sum(x (y - p)) = " << s1 << std::fixed << std::setprecision(5) << "\n";

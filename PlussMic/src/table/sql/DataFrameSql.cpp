@@ -617,7 +617,7 @@ std::string series_scalar_text(const pluss::Series& s, std::int64_t row) {
 
 bool row_is_valid(const Slate& slate, std::int64_t row) {
   if (detail::has_validity_mask(slate) &&
-      !detail::validity_mask(slate)->to_vec<bool>()[static_cast<std::size_t>(row)]) {
+      !detail::validity_mask(slate)->host<bool>()[static_cast<std::size_t>(row)]) {
     return false;
   }
   return slate.kind() != SlateKind::Duration ||

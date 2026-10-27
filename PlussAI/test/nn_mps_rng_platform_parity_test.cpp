@@ -20,7 +20,7 @@ using pluss::Series;
 namespace {
 
 std::vector<double> vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 }  // namespace

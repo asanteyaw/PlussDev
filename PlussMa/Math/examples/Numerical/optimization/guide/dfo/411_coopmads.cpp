@@ -15,10 +15,6 @@ namespace dfo = pluss::subsp::math::optimization;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series filled(std::int64_t n, double v) { return pluss::make_series(std::vector<double>(n, v), {n}).to(f64); }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   const std::int64_t n = 24;
   auto blackbox = [](const pluss::Series& x) {
@@ -32,7 +28,7 @@ int main() {
     c.max_evaluations = 12000;
     c.max_iterations = 5000;
     const auto o = dfo::mads_blackbox_minimizer(blackbox, filled(n, -1.0), c);
-    std::cout << std::left << std::setw(30) << "plain MADS" << std::setw(26) << name(o.status) << std::scientific << std::setprecision(2) << std::setw(12)
+    std::cout << std::left << std::setw(30) << "plain MADS" << std::setw(26) << dfo::to_string(o.status) << std::scientific << std::setprecision(2) << std::setw(12)
               << o.scalarized_minimum << std::defaultfloat << o.diagnostics.evaluations << "\n";
   }
   for (std::int64_t block : {3, 6, 12}) {
@@ -41,7 +37,7 @@ int main() {
     c.base.max_iterations = 5000;
     c.subproblem_size = block;
     const auto o = dfo::coopmads_blackbox_minimizer(blackbox, filled(n, -1.0), c);
-    std::cout << std::left << std::setw(30) << ("coop, block size " + std::to_string(block)) << std::setw(26) << name(o.status) << std::scientific
+    std::cout << std::left << std::setw(30) << ("coop, block size " + std::to_string(block)) << std::setw(26) << dfo::to_string(o.status) << std::scientific
               << std::setprecision(2) << std::setw(12) << o.scalarized_minimum << std::defaultfloat << o.diagnostics.evaluations << "\n";
   }
 }

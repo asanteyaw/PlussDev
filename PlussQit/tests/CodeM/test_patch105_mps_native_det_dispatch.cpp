@@ -37,13 +37,13 @@ TEST_CASE("MPS native det family avoids bridge counters", "[mps][linearalg][nati
 
   linearalg_reset_dispatch_counters();
 
-  const auto det_ref = det(a_cpu).to(pluss::ScalarType::Float32).to_vec<float>();
-  const auto logdet_ref = logdet(a_cpu).to(pluss::ScalarType::Float32).to_vec<float>();
-  const auto slogdet_ref = slogdet(a_cpu).to(pluss::ScalarType::Float32).to_vec<float>();
+  const auto det_ref = det(a_cpu).to(pluss::ScalarType::Float32).host<float>();
+  const auto logdet_ref = logdet(a_cpu).to(pluss::ScalarType::Float32).host<float>();
+  const auto slogdet_ref = slogdet(a_cpu).to(pluss::ScalarType::Float32).host<float>();
 
-  const auto det_got = det(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>();
-  const auto logdet_got = logdet(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>();
-  const auto slogdet_got = slogdet(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>();
+  const auto det_got = det(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>();
+  const auto logdet_got = logdet(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>();
+  const auto slogdet_got = slogdet(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>();
 
   require_close_vec_(det_got, det_ref, 3e-3f);
   require_close_vec_(logdet_got, logdet_ref, 3e-3f);
@@ -66,7 +66,7 @@ TEST_CASE("MPS native det family avoids bridge counters", "[mps][linearalg][nati
   linearalg_reset_dispatch_counters();
   const float det_s = det(singular_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).item<float>();
   const float logdet_s = logdet(singular_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).item<float>();
-  const auto slogdet_s = slogdet(singular_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>();
+  const auto slogdet_s = slogdet(singular_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>();
 
   REQUIRE(std::fabs(det_s) <= 1e-6f);
   REQUIRE(std::isinf(logdet_s));

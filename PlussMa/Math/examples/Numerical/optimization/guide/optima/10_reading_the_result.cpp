@@ -8,7 +8,7 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
@@ -17,8 +17,8 @@ int main() {
     return pluss::make_series(v, {rows, cols}).to(f64);
   };
 
-  const auto target = optim::trace(vec({2.0, 1.0}), false);
-  auto objective = [&](const optim::Trace& x) { return optim::sum(optim::square(x - target)); };
+  const auto target = vec({2.0, 1.0});
+  auto objective = [&](const pluss::Series& x) { return (x - target).square().sum(); };
   const auto constraints = optim::constraints()
                                .ln_ineq(mat({1, 1}, 1, 2), vec({2.0}))
                                .lbs(vec({0.0, 0.0}))
@@ -26,7 +26,7 @@ int main() {
   const auto r = optim::optima(objective, vec({0.0, 0.0}), {}, constraints);
 
   std::cout << std::fixed << std::setprecision(4) << std::boolalpha;
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
   std::cout << "answer           x = [" << x[0] << ", " << x[1] << "]\n";
   std::cout << "objective value    = " << r.evaluation.value.item<double>() << "\n";
   std::cout << "feasible           = " << r.evaluation.feasible << "\n";
@@ -40,7 +40,7 @@ int main() {
 
   const auto& m = r.multipliers;
   auto count = [](const pluss::Series& s) { return s.defined() ? s.numel() : 0; };
-  std::cout << "linear inequality multiplier = " << m.linear_inequalities.to_vec<double>()[0] << "\n";
+  std::cout << "linear inequality multiplier = " << m.linear_inequalities.host<double>()[0] << "\n";
   std::cout << "multiplier counts: linear eq " << count(m.linear_equalities) << ", nonlinear eq "
             << count(m.nonlinear_equalities) << ", linear ineq " << count(m.linear_inequalities)
             << ", nonlinear ineq " << count(m.nonlinear_inequalities) << ", lower bounds "

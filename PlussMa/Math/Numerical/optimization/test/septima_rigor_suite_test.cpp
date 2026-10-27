@@ -8,24 +8,20 @@
 #include <string>
 #include <vector>
 
+
 namespace {
 
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::pCPU;
-using pluss::optim::SeptimaConstraints;
-using pluss::optim::SeptimaExitFlag;
-using pluss::optim::SeptimaLbfgsLineSearch;
-using pluss::optim::SeptimaOptimizer;
-using pluss::optim::SeptimaResult;
-using pluss::optim::SeptimaSolveOptions;
-using pluss::optim::ParameterPack;
-using pluss::optim::Trace;
-using pluss::optim::log;
-using pluss::optim::square;
-using pluss::optim::sum;
-using pluss::optim::trace;
+using pluss::subsp::math::optim::SeptimaConstraints;
+using pluss::subsp::math::optim::SeptimaExitFlag;
+using pluss::subsp::math::optim::SeptimaLbfgsLineSearch;
+using pluss::subsp::math::optim::SeptimaOptimizer;
+using pluss::subsp::math::optim::SeptimaResult;
+using pluss::subsp::math::optim::SeptimaSolveOptions;
+using pluss::subsp::math::optim::ParameterPack;
 
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {
@@ -44,7 +40,7 @@ double as_f64_scalar(const Series& x) {
 }
 
 std::vector<double> to_vec_f64(const Series& x) {
-  return x.to(pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 void expect_vec_near(const std::vector<double>& lhs,
@@ -89,14 +85,8 @@ SeptimaConstraints make_simple_constraints(const Config& cfg) {
   c.equalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum() - 1.0};
   };
-  c.equalities_trace = [](const std::vector<Trace>& p) {
-    return std::vector<Trace>{sum(p[0]) - 1.0};
-  };
   c.inequalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].square().sum() - 1.0};
-  };
-  c.inequalities_trace = [](const std::vector<Trace>& p) {
-    return std::vector<Trace>{sum(square(p[0])) - 1.0};
   };
   c.lbs = {make_vec({0.0, 0.0}, cfg)};
   c.ubs = {make_vec({1.0, 1.0}, cfg)};
@@ -119,16 +109,16 @@ int main() {
     opts.max_iterations = 120;
 
     ParameterPack<Series> initial({{"w", w0}, {"b", b0}});
-    const auto via_pack = pluss::optim::septima(
-        [wt, bt](const ParameterPack<Trace>& p) -> Trace {
-          return (sum(square(p.at("w") - trace(wt, false))) + sum(square(p.at("b") - trace(bt, false)))) * 0.5;
+    const auto via_pack = pluss::subsp::math::optim::septima(
+        [wt, bt](const ParameterPack<Series>& p) -> Series {
+          return (((p.at("w") - wt).square()).sum() + ((p.at("b") - bt).square()).sum()) * 0.5;
         },
         initial,
         opts);
 
-    const auto via_vector = pluss::optim::septima(
-        [wt, bt](const std::vector<Trace>& p) -> Trace {
-          return (sum(square(p[0] - trace(wt, false))) + sum(square(p[1] - trace(bt, false)))) * 0.5;
+    const auto via_vector = pluss::subsp::math::optim::septima(
+        [wt, bt](const std::vector<Series>& p) -> Series {
+          return (((p[0] - wt).square()).sum() + ((p[1] - bt).square()).sum()) * 0.5;
         },
         std::vector<Series>{w0, b0},
         opts);
@@ -151,13 +141,13 @@ int main() {
   {
     const Series init = make_vec({0.95, 0.05}, cfg);
     const Series target = make_vec({0.3, 0.7}, cfg);
-    const auto objective = [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; };
+    const auto objective = [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; };
     const SeptimaConstraints constraints = make_simple_constraints(cfg);
 
     SeptimaSolveOptions adam = make_base_options();
     adam.max_iterations = 220;
     adam.step.optimizer = SeptimaOptimizer::Adam;
-    const SeptimaResult adam_fit = pluss::optim::septima(objective, init, adam, constraints);
+    const SeptimaResult adam_fit = pluss::subsp::math::optim::septima(objective, init, adam, constraints);
     expect(adam_fit.constraint_violation <= 5e-4, "ADAM constrained run should satisfy constraints", &failures);
     expect(std::isfinite(adam_fit.objective_value), "ADAM constrained objective should be finite", &failures);
 
@@ -166,7 +156,7 @@ int main() {
     lbfgs.step.optimizer = SeptimaOptimizer::Lbfgs;
     lbfgs.step.lbfgs.learning_rate = 0.25;
     lbfgs.step.lbfgs.history_size = 10;
-    const SeptimaResult lbfgs_fit = pluss::optim::septima(objective, init, lbfgs, constraints);
+    const SeptimaResult lbfgs_fit = pluss::subsp::math::optim::septima(objective, init, lbfgs, constraints);
     expect(lbfgs_fit.constraint_violation <= 5e-4, "LBFGS constrained run should satisfy constraints", &failures);
     expect(std::isfinite(lbfgs_fit.objective_value), "LBFGS constrained objective should be finite", &failures);
   }
@@ -185,13 +175,13 @@ int main() {
     bool connected = true;
     try {
       const auto [value, grads] = pluss::subsp::math::diff::value_and_grad(
-          [](const std::vector<Trace>& xs) -> Trace {
-            const Series x = xs[0].value();
+          [](const std::vector<Series>& xs) -> Series {
+            const Series x = xs[0];
             Series staged = pluss::series::empty_like(x);
             staged.select(1, 0).copy_(x.select(1, 0).mul(2.0));
             staged.select(1, 1).copy_(x.select(1, 1).square());
             staged.select(1, 2).copy_(x.select(1, 2).add(1.0));
-            return Trace(staged.sum());
+            return staged.sum();
           },
           std::vector<Series>{init},
           policy);
@@ -228,7 +218,7 @@ int main() {
       return std::vector<Series>{p[0].select(1, 0).square() + p[0].select(1, 1).square() - 4.0};
     };
 
-    const auto fit = pluss::optim::septima(
+    const auto fit = pluss::subsp::math::optim::septima(
         [target](const Series& x) -> Series {
           Series staged = pluss::series::zeros_like(x);
           for (std::int64_t t = 0; t < x.size(1); ++t) {
@@ -251,10 +241,10 @@ int main() {
     const Series target = make_vec({1.0, -2.0}, cfg);
     SeptimaSolveOptions opts = make_base_options();
     opts.max_iterations = 80;
-    opts.progress_hook = [](const pluss::optim::SeptimaProgressSnapshot& s) { return s.iteration < 7; };
+    opts.progress_hook = [](const pluss::subsp::math::optim::SeptimaProgressSnapshot& s) { return s.iteration < 7; };
 
-    const auto fit = pluss::optim::septima(
-        [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+    const auto fit = pluss::subsp::math::optim::septima(
+        [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; },
         init,
         opts);
     expect(fit.exit_flag == SeptimaExitFlag::Stopped, "progress hook should stop septima", &failures);
@@ -268,9 +258,9 @@ int main() {
     opts.max_iterations = 10;
     opts.stop_on_nonfinite_objective = true;
 
-    const auto fit = pluss::optim::septima(
-        [](const Trace& x) -> Trace {
-          return sum(log(x - 2.0));
+    const auto fit = pluss::subsp::math::optim::septima(
+        [](const Series& x) -> Series {
+          return (x - 2.0).log().sum();
         },
         init,
         opts);
@@ -291,9 +281,9 @@ int main() {
     opts.step.adam.learning_rate = 1e-18;
     opts.step.optimizer = SeptimaOptimizer::Adam;
 
-    const auto fit = pluss::optim::septima(
-        [](const Trace& x) -> Trace {
-          return sum(square(x));
+    const auto fit = pluss::subsp::math::optim::septima(
+        [](const Series& x) -> Series {
+          return x.square().sum();
         },
         init,
         opts);
@@ -311,8 +301,8 @@ int main() {
     opts.step.lbfgs.history_size = 8;
 
     const auto run_once = [&]() {
-      return pluss::optim::septima(
-          [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+      return pluss::subsp::math::optim::septima(
+          [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; },
           init,
           opts);
     };
@@ -337,8 +327,8 @@ int main() {
     opts.step.lbfgs.max_line_search_iterations = 12;
     opts.step.lbfgs.line_search = SeptimaLbfgsLineSearch::StrongWolfe;
 
-    const auto fit = pluss::optim::septima(
-        [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+    const auto fit = pluss::subsp::math::optim::septima(
+        [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; },
         init,
         opts);
     expect(fit.function_evaluations > fit.iteration,
@@ -366,9 +356,9 @@ int main() {
     c.lbs = {make_vec({0.0, 0.0}, cfg)};
     c.ubs = {make_vec({1.0, 1.0}, cfg)};
 
-    const auto fit = pluss::optim::septima(
-        [target](const Trace& x) -> Trace {
-          return sum(square(x - trace(target, false))) * 0.5;
+    const auto fit = pluss::subsp::math::optim::septima(
+        [target](const Series& x) -> Series {
+          return ((x - target).square()).sum() * 0.5;
         },
         init,
         opts,
@@ -402,9 +392,9 @@ int main() {
     c.lbs = {make_vec({0.0, 0.0}, cfg)};
     c.ubs = {make_vec({1.0, 1.0}, cfg)};
 
-    const auto fit = pluss::optim::septima(
-        [target](const Trace& x) -> Trace {
-          return sum(square(x - trace(target, false))) * 0.5;
+    const auto fit = pluss::subsp::math::optim::septima(
+        [target](const Series& x) -> Series {
+          return ((x - target).square()).sum() * 0.5;
         },
         init,
         opts,
@@ -424,8 +414,8 @@ int main() {
     try {
       SeptimaSolveOptions bad = make_base_options();
       bad.step.dual_learning_rate = -1.0;
-      (void)pluss::optim::septima(
-          [](const Trace& x) -> Trace { return sum(square(x)); },
+      (void)pluss::subsp::math::optim::septima(
+          [](const Series& x) -> Series { return x.square().sum(); },
           make_vec({1.0}, cfg),
           bad);
     } catch (const std::exception&) {
@@ -437,8 +427,8 @@ int main() {
     try {
       SeptimaSolveOptions bad = make_base_options();
       bad.max_iterations = 0;
-      (void)pluss::optim::septima(
-          [](const Trace& x) -> Trace { return sum(square(x)); },
+      (void)pluss::subsp::math::optim::septima(
+          [](const Series& x) -> Series { return x.square().sum(); },
           make_vec({1.0}, cfg),
           bad);
     } catch (const std::exception&) {
@@ -459,14 +449,14 @@ int main() {
       SeptimaConstraints boxed;
       boxed.lbs = {make_vec({0.0, 0.0}, cfg)};
       boxed.ubs = {make_vec({1.5, 1.5}, cfg)};
-      const auto objective = [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; };
-      const auto fit = pluss::optim::septima(objective, make_vec({0.0, 0.0}, cfg), opts, boxed);
+      const auto objective = [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; };
+      const auto fit = pluss::subsp::math::optim::septima(objective, make_vec({0.0, 0.0}, cfg), opts, boxed);
       expect(fit.exit_flag == SeptimaExitFlag::Converged, "an active bound must not prevent convergence", &failures);
       expect_vec_near(to_vec_f64(fit.params[0]), {1.5, 1.0}, 1e-6, "boxed septima solution", &failures);
       expect(fit.gradient_inf_norm > 0.4, "the objective gradient is nonzero at a bound-constrained optimum", &failures);
       expect(fit.stationarity <= opts.gradient_tolerance, "projected stationarity vanishes at the optimum", &failures);
 
-      const auto free_fit = pluss::optim::septima(objective, make_vec({0.0, 0.0}, cfg), opts);
+      const auto free_fit = pluss::subsp::math::optim::septima(objective, make_vec({0.0, 0.0}, cfg), opts);
       expect(free_fit.exit_flag == SeptimaExitFlag::Converged, "unconstrained septima converges", &failures);
       expect(std::abs(free_fit.stationarity - free_fit.gradient_inf_norm) <= 1e-12,
              "without constraints stationarity equals the objective gradient", &failures);
@@ -486,8 +476,8 @@ int main() {
     opts.step.inequality_penalty = 10.0;  // the multiplier step is the library default (the penalty)
     SeptimaConstraints disc;
     disc.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].square().sum() - 1.0}; };
-    const auto fit = pluss::optim::septima(
-        [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; },
+    const auto fit = pluss::subsp::math::optim::septima(
+        [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; },
         make_vec({-2.0, 1.5}, cfg), opts, disc);
     expect_vec_near(to_vec_f64(fit.params[0]), {2.0 / std::sqrt(5.0), 1.0 / std::sqrt(5.0)}, 2e-3,
                     "inequality solution from a far-outside start", &failures);
@@ -499,7 +489,7 @@ int main() {
   //     stall (the multiplier update never ran once the step was zero) or be driven far from the answer.
   {
     const Series target = make_vec({2.0, 1.0}, cfg);
-    const auto objective = [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; };
+    const auto objective = [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; };
     for (const auto line_search : {SeptimaLbfgsLineSearch::None, SeptimaLbfgsLineSearch::StrongWolfe}) {
       for (const auto& start : {std::vector<double>{0.0, 0.0}, std::vector<double>{-2.0, 1.5}}) {
         SeptimaSolveOptions opts{};
@@ -510,14 +500,14 @@ int main() {
         opts.step.lbfgs.line_search = line_search;
         SeptimaConstraints disc;
         disc.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].square().sum() - 1.0}; };
-        const auto fit = pluss::optim::septima(objective, make_vec(start, cfg), opts, disc);
+        const auto fit = pluss::subsp::math::optim::septima(objective, make_vec(start, cfg), opts, disc);
         expect_vec_near(to_vec_f64(fit.params[0]), {2.0 / std::sqrt(5.0), 1.0 / std::sqrt(5.0)}, 2e-3, "lbfgs inequality solution", &failures);
         expect(fit.constraint_violation < 1e-3, "lbfgs inequality violation", &failures);
         expect(std::abs(fit.state.lambda_inequalities[0].item<double>() - (std::sqrt(5.0) - 1.0) / 2.0) < 5e-3, "lbfgs inequality multiplier", &failures);
 
         SeptimaConstraints sum_to_two;
         sum_to_two.equalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].sum() - 2.0}; };
-        const auto eq_fit = pluss::optim::septima(objective, make_vec(start, cfg), opts, sum_to_two);
+        const auto eq_fit = pluss::subsp::math::optim::septima(objective, make_vec(start, cfg), opts, sum_to_two);
         expect_vec_near(to_vec_f64(eq_fit.params[0]), {1.5, 0.5}, 1e-3, "lbfgs equality solution", &failures);
         expect(std::abs(eq_fit.state.lambda_equalities[0].item<double>() - 0.5) < 5e-3, "lbfgs equality multiplier", &failures);
       }
@@ -535,8 +525,8 @@ int main() {
     c.equalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[1] + x[2] - 1.0, x[0] * x[1] - 0.3}; };
     c.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0] + x[1] + x[2] - 2.5, x[2].square() - 0.6}; };
     const std::vector<Series> start = {make_vec({0.5}, cfg), make_vec({0.5}, cfg), make_vec({0.5}, cfg)};
-    const auto objective = [](const std::vector<Trace>& v) -> Trace {
-      return square(v[0]) + 2.0 * square(v[1]) + 3.0 * square(v[2]) - 4.0 * v[0];
+    const auto objective = [](const std::vector<Series>& v) -> Series {
+      return (v[0]).square() + 2.0 * (v[1]).square() + 3.0 * (v[2]).square() - 4.0 * v[0];
     };
     for (const auto optimizer : {SeptimaOptimizer::Adam, SeptimaOptimizer::Lbfgs}) {
       SeptimaSolveOptions opts{};
@@ -547,12 +537,12 @@ int main() {
       if (optimizer == SeptimaOptimizer::Adam) opts.step.adam.learning_rate = 0.02;
       for (const double penalty : {1.0, 10.0, 100.0}) {
         opts.step.equality_penalty = opts.step.inequality_penalty = penalty;
-        const auto fit = pluss::optim::septima(objective, start, opts, c);
+        const auto fit = pluss::subsp::math::optim::septima(objective, start, opts, c);
         expect(fit.exit_flag == SeptimaExitFlag::Converged, "constrained nonconvex problem converges", &failures);
         expect(fit.constraint_violation <= 1e-5, "constrained nonconvex problem is feasible", &failures);
         expect(std::abs(fit.objective_value + 1.6508) < 2e-3, "constrained nonconvex objective", &failures);
-        expect(std::abs(fit.params[0].item<double>() - 1.3310) < 3e-3 && std::abs(fit.params[1].item<double>() - 0.2254) < 3e-3 &&
-                   std::abs(fit.params[2].item<double>() - 0.7746) < 3e-3,
+        expect(std::abs(as_f64(fit.params[0]) - 1.3310) < 3e-3 && std::abs(as_f64(fit.params[1]) - 0.2254) < 3e-3 &&
+                   std::abs(as_f64(fit.params[2]) - 0.7746) < 3e-3,
                "constrained nonconvex solution", &failures);
       }
     }

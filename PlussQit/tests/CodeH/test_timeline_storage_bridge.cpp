@@ -13,15 +13,15 @@ TEST_CASE("Timeline epoch projections floor negative instants", "[timeline-stora
   const auto t = pluss::timeline::from_epoch(
       {{-1LL, 0LL}, {1'999'999'999LL, pluss::Timeline::kNaT}});
 
-  REQUIRE(t.epoch_nanos().to_vec<std::int64_t>() ==
+  REQUIRE(t.epoch_nanos().host<std::int64_t>() ==
           std::vector<std::int64_t>{-1, 0, 1'999'999'999LL, pluss::Timeline::kNaT});
-  REQUIRE(t.epoch_micros().to_vec<std::int64_t>() ==
+  REQUIRE(t.epoch_micros().host<std::int64_t>() ==
           std::vector<std::int64_t>{-1, 0, 1'999'999LL, pluss::Timeline::kNaT});
-  REQUIRE(t.epoch_millis().to_vec<std::int64_t>() ==
+  REQUIRE(t.epoch_millis().host<std::int64_t>() ==
           std::vector<std::int64_t>{-1, 0, 1'999LL, pluss::Timeline::kNaT});
-  REQUIRE(t.epoch_seconds().to_vec<std::int64_t>() ==
+  REQUIRE(t.epoch_seconds().host<std::int64_t>() ==
           std::vector<std::int64_t>{-1, 0, 1, pluss::Timeline::kNaT});
-  REQUIRE(t.epoch_days().to_vec<std::int64_t>() ==
+  REQUIRE(t.epoch_days().host<std::int64_t>() ==
           std::vector<std::int64_t>{-1, 0, 0, pluss::Timeline::kNaT});
   REQUIRE(t.epoch_seconds().sizes().vec() == std::vector<std::int64_t>{2, 2});
 }
@@ -55,7 +55,7 @@ TEST_CASE("Timeline component constructors broadcast scalars and reject invalid 
   const auto day = pluss::make_series({29LL, pluss::Timeline::kNaT});
   const auto dates = pluss::Timeline::from_ymd(year, month, day, "UTC");
   REQUIRE(dates.sizes().vec() == std::vector<std::int64_t>{2});
-  REQUIRE(dates.year().to_vec<std::int32_t>() ==
+  REQUIRE(dates.year().host<std::int32_t>() ==
           std::vector<std::int32_t>{2024, -1});
 
   const auto hour = pluss::make_series({6LL, 7LL});
@@ -63,9 +63,9 @@ TEST_CASE("Timeline component constructors broadcast scalars and reject invalid 
   const auto second = pluss::make_series(45LL);
   const auto times = pluss::Timeline::from_ymdhms(
       year, month, pluss::make_series({29LL, 1LL}), hour, minute, second, "UTC");
-  REQUIRE(times.hour().to_vec<std::int32_t>() ==
+  REQUIRE(times.hour().host<std::int32_t>() ==
           std::vector<std::int32_t>{6, 7});
-  REQUIRE(times.minute().to_vec<std::int32_t>() ==
+  REQUIRE(times.minute().host<std::int32_t>() ==
           std::vector<std::int32_t>{30, 30});
 
   REQUIRE_THROWS(pluss::Timeline::from_ymd(
@@ -95,7 +95,7 @@ TEST_CASE("Timeline buffer bridge honors strides and owns through its deleter",
     REQUIRE(t.unique().ticks() ==
             std::vector<std::int64_t>{0, 2'000'000'000LL});
     const auto query = pluss::timeline::from_epoch({2'000'000'000LL});
-    REQUIRE(t.searchsorted_left(query).to_vec<std::int64_t>() ==
+    REQUIRE(t.searchsorted_left(query).host<std::int64_t>() ==
             std::vector<std::int64_t>{1});
 
     std::vector<std::int64_t> copied;
@@ -139,16 +139,16 @@ TEST_CASE("Timeline operators preserve temporal types and elementwise comparison
           (base + pluss::duration::minutes(30)).ticks());
 
   const auto boundary = pluss::timeline::make("2024-01-01T01:00:00Z");
-  REQUIRE((base < boundary).to_vec<bool>() == std::vector<bool>{true, false});
-  REQUIRE((base >= boundary).to_vec<bool>() == std::vector<bool>{false, true});
+  REQUIRE((base < boundary).host<bool>() == std::vector<bool>{true, false});
+  REQUIRE((base >= boundary).host<bool>() == std::vector<bool>{false, true});
 
   const auto with_nat = pluss::timeline::make({"", "2024-01-01T00:00:00Z"});
-  REQUIRE((with_nat == with_nat).to_vec<bool>() == std::vector<bool>{false, true});
-  REQUIRE((with_nat != with_nat).to_vec<bool>() == std::vector<bool>{true, false});
-  REQUIRE((with_nat < with_nat).to_vec<bool>() == std::vector<bool>{false, false});
-  REQUIRE((with_nat <= with_nat).to_vec<bool>() == std::vector<bool>{false, true});
-  REQUIRE((with_nat > with_nat).to_vec<bool>() == std::vector<bool>{false, false});
-  REQUIRE((with_nat >= with_nat).to_vec<bool>() == std::vector<bool>{false, true});
+  REQUIRE((with_nat == with_nat).host<bool>() == std::vector<bool>{false, true});
+  REQUIRE((with_nat != with_nat).host<bool>() == std::vector<bool>{true, false});
+  REQUIRE((with_nat < with_nat).host<bool>() == std::vector<bool>{false, false});
+  REQUIRE((with_nat <= with_nat).host<bool>() == std::vector<bool>{false, true});
+  REQUIRE((with_nat > with_nat).host<bool>() == std::vector<bool>{false, false});
+  REQUIRE((with_nat >= with_nat).host<bool>() == std::vector<bool>{false, true});
 
   const std::vector<std::string> row_time_values{
       "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"};

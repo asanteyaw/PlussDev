@@ -19,9 +19,6 @@ using pluss::subsp::math::optim::PenaltyMethodOptions;
 using pluss::subsp::math::optim::evaluate_problem;
 using pluss::subsp::math::optim::flatten_values;
 using pluss::subsp::math::optim::solve_penalty_method;
-using pluss::subsp::math::optim::trace;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::square;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64);
@@ -31,12 +28,12 @@ ConstrainedProblem make_problem() {
   const Series target = make_vec2(1.0, 2.0);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -55,8 +52,8 @@ TEST_CASE("phase1 constrained evaluation reports objective and violations", "[op
   const auto eval = evaluate_problem(problem, params);
   REQUIRE(eval.message == "ok");
   REQUIRE(eval.value.item<double>() == Approx(1.0));
-  REQUIRE(eval.gradient.at("x").to_vec<double>()[0] == Approx(0.0));
-  REQUIRE(eval.gradient.at("x").to_vec<double>()[1] == Approx(-2.0));
+  REQUIRE(eval.gradient.at("x").host<double>()[0] == Approx(0.0));
+  REQUIRE(eval.gradient.at("x").host<double>()[1] == Approx(-2.0));
   REQUIRE(eval.max_constraint_violation == Approx(0.5));
   REQUIRE_FALSE(eval.feasible);
 
@@ -78,7 +75,7 @@ TEST_CASE("phase1 penalty solver moves toward a feasible constrained point", "[o
   options.optimality_tolerance = 5e-3;
 
   const auto result = solve_penalty_method(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.function_evaluations >= 1);
   REQUIRE(result.evaluation.max_constraint_violation <= 5e-2);

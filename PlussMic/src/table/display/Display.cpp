@@ -202,7 +202,7 @@ bool is_numeric_slate(const Slate& t) {
 }
 
 bool series_all_zero_i64(const pluss::Series& s) {
-  const auto values = s.to_vec<std::int64_t>();
+  const auto values = s.host<std::int64_t>();
   return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
 }
 
@@ -253,7 +253,7 @@ std::int64_t non_null_count(const Slate& t) {
   if (t.kind() == SlateKind::Duration) {
     const auto values = t.as_duration().host();
     const auto valid = detail::has_validity_mask(t)
-                           ? detail::validity_mask(t)->to_vec<bool>()
+                           ? detail::validity_mask(t)->host<bool>()
                            : std::vector<bool>(values.size(), true);
     std::int64_t count = 0;
     for (std::size_t i = 0; i < values.size(); ++i) {
@@ -264,7 +264,7 @@ std::int64_t non_null_count(const Slate& t) {
   if (!detail::has_validity_mask(t)) {
     return t.size();
   }
-  const auto valid = detail::validity_mask(t)->to_vec<bool>();
+  const auto valid = detail::validity_mask(t)->host<bool>();
   return static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
 }
 
@@ -1738,7 +1738,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
       escape_html_(last_case));
   const auto null_case_rows = frame.nfeatures() == 0
                                   ? std::int64_t{0}
-                                  : frame.isnull().any(Axis::Case).sum().as_series().item<std::int64_t>();
+                                  : frame.isnull().any(Axis::Case).sum().as_series().host<std::int64_t>().front();
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Null Case Rows</div><div class=\"value\">{}</div></div>",
       null_case_rows);
@@ -1947,7 +1947,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   summary.min_widths = {5, 8};
   const auto null_case_rows = frame.nfeatures() == 0
                                   ? std::int64_t{0}
-                                  : frame.isnull().any(Axis::Case).sum().as_series().item<std::int64_t>();
+                                  : frame.isnull().any(Axis::Case).sum().as_series().host<std::int64_t>().front();
   summary.rows = {
       {"Class", "pluss::table::DataFrame"},
       {"Cases", fmt::format("{}", frame.ncases())},

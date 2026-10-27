@@ -33,9 +33,7 @@ Rows are *ranged*: `row_lo <= row <= row_hi`. A `<=` row has `row_lo = -kInf`; a
 
 ## Programs
 
-- [A transportation model](linprog_04_large_sparse_models/a_transportation_model.md)
-- [A model from an MPS file](linprog_04_large_sparse_models/a_model_from_an_mps_file.md)
-- [What presolve removes](linprog_04_large_sparse_models/what_presolve_removes.md)
+- [Large sparse models](linprog_04_large_sparse_models/large_sparse_models.md)
 
 ## Dense or sparse?
 
@@ -65,8 +63,6 @@ A dense `Problem` can be solved by the sparse solver with `lp::solve_sparse(prob
 :maxdepth: 2
 :hidden:
 
-linprog_04_large_sparse_models/a_transportation_model
-linprog_04_large_sparse_models/a_model_from_an_mps_file
-linprog_04_large_sparse_models/what_presolve_removes
+linprog_04_large_sparse_models/large_sparse_models
 ```
 <!-- apiref:toctree:end -->

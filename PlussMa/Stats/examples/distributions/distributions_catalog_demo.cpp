@@ -40,7 +40,7 @@ std::span<const double> params_span(const std::vector<double>& params) {
 }
 
 std::string preview(const Series& x, std::size_t limit = 4) {
-  const auto values = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  const auto values = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
   std::ostringstream out;
   out << "[";
   const std::size_t count = std::min(limit, values.size());

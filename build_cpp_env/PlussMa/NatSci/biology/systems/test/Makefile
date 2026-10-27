@@ -207,6 +207,20 @@ binding_test/fast:
 .PHONY : binding_test/fast
 
 # Convenience name for target.
+PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/rule
+
+# Convenience name for target.
+enzyme_fitting_test: PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/rule
+.PHONY : enzyme_fitting_test
+
+# fast build rule for target.
+enzyme_fitting_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/build.make PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/build
+.PHONY : enzyme_fitting_test/fast
+
+# Convenience name for target.
 PlussMa/NatSci/biology/systems/test/CMakeFiles/enzymes_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/systems/test/CMakeFiles/enzymes_test.dir/rule
 .PHONY : PlussMa/NatSci/biology/systems/test/CMakeFiles/enzymes_test.dir/rule
@@ -271,6 +285,30 @@ binding_test.s: binding_test.cpp.s
 binding_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/systems/test/CMakeFiles/binding_test.dir/build.make PlussMa/NatSci/biology/systems/test/CMakeFiles/binding_test.dir/binding_test.cpp.s
 .PHONY : binding_test.cpp.s
+
+enzyme_fitting_test.o: enzyme_fitting_test.cpp.o
+.PHONY : enzyme_fitting_test.o
+
+# target to build an object file
+enzyme_fitting_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/build.make PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/enzyme_fitting_test.cpp.o
+.PHONY : enzyme_fitting_test.cpp.o
+
+enzyme_fitting_test.i: enzyme_fitting_test.cpp.i
+.PHONY : enzyme_fitting_test.i
+
+# target to preprocess a source file
+enzyme_fitting_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/build.make PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/enzyme_fitting_test.cpp.i
+.PHONY : enzyme_fitting_test.cpp.i
+
+enzyme_fitting_test.s: enzyme_fitting_test.cpp.s
+.PHONY : enzyme_fitting_test.s
+
+# target to generate assembly for a file
+enzyme_fitting_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/build.make PlussMa/NatSci/biology/systems/test/CMakeFiles/enzyme_fitting_test.dir/enzyme_fitting_test.cpp.s
+.PHONY : enzyme_fitting_test.cpp.s
 
 enzymes_test.o: enzymes_test.cpp.o
 .PHONY : enzymes_test.o
@@ -360,12 +398,16 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... binding_test"
+	@echo "... enzyme_fitting_test"
 	@echo "... enzymes_test"
 	@echo "... stability_models_test"
 	@echo "... systems_test"
 	@echo "... binding_test.o"
 	@echo "... binding_test.i"
 	@echo "... binding_test.s"
+	@echo "... enzyme_fitting_test.o"
+	@echo "... enzyme_fitting_test.i"
+	@echo "... enzyme_fitting_test.s"
 	@echo "... enzymes_test.o"
 	@echo "... enzymes_test.i"
 	@echo "... enzymes_test.s"

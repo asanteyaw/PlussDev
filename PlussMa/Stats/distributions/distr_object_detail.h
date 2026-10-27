@@ -94,7 +94,7 @@ inline Series scalar_f64(double value) {
 template <class Fn>
 Series map_f64_like(const Series& x, Fn&& fn) {
   const Series cpu = x.to(ScalarType::Float64);
-  const auto in = cpu.to_vec<double>();
+  const auto in = cpu.host<double>();
   std::vector<double> out(in.size());
   std::transform(in.begin(), in.end(), out.begin(), std::forward<Fn>(fn));
   return pluss::codem::make_series(out, x.sizes(), Config{}.with_dtype(ScalarType::Float64)).to(x.platform(), ScalarType::Float64);

@@ -66,15 +66,15 @@ auto axel = pluss::scribble::Axel({r0});
 
 auto regexCount = axel.fields({"txt"}).nt().count(".");
 auto txt1 = regexCount.registry(0).fields("txt");
-std::cout << "regex: " << std::get<pluss::Series>(txt1.at(0)).to_vec<std::int64_t>()[0]
-          << " " << std::get<pluss::Series>(txt1.at(1)).to_vec<std::int64_t>()[0] << "\n";
+std::cout << "regex: " << std::get<pluss::Series>(txt1.at(0)).host<std::int64_t>()[0]
+          << " " << std::get<pluss::Series>(txt1.at(1)).host<std::int64_t>()[0] << "\n";
 
 pluss::table::TextOptions literal;
 literal.regex = false;
 auto literalCount = axel.fields({"txt"}).nt().count(".", literal);
 auto txt2 = literalCount.registry(0).fields("txt");
-std::cout << "literal: " << std::get<pluss::Series>(txt2.at(0)).to_vec<std::int64_t>()[0]
-          << " " << std::get<pluss::Series>(txt2.at(1)).to_vec<std::int64_t>()[0];
+std::cout << "literal: " << std::get<pluss::Series>(txt2.at(0)).host<std::int64_t>()[0]
+          << " " << std::get<pluss::Series>(txt2.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

@@ -20,7 +20,7 @@ Config f64() {
 }
 
 std::vector<double> vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).host<double>().array().data;
 }
 
 bool approx(double a, double b, double tol = 1e-9) {

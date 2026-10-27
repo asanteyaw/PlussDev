@@ -123,7 +123,7 @@ bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
 
 bool slate_value_is_missing_for_io(const pluss::table::Slate& t, std::int64_t row) {
   if (pluss::table::detail::has_validity_mask(t)) {
-    const auto valid = pluss::table::detail::validity_mask(t)->to_vec<bool>();
+    const auto valid = pluss::table::detail::validity_mask(t)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return true;
     }
@@ -139,7 +139,7 @@ bool slate_value_is_missing_for_io(const pluss::table::Slate& t, std::int64_t ro
 }
 
 bool series_all_zero_i64_for_io(const pluss::Series& s) {
-  const auto values = s.to_vec<std::int64_t>();
+  const auto values = s.host<std::int64_t>();
   return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
 }
 

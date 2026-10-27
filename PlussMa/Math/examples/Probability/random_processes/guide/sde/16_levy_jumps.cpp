@@ -52,6 +52,6 @@ int main() {
   const auto raw = x.calc.diff.ito([](const pluss::Series& s) { return s.mul(s); }, mu, sigma, jumps);
   std::cout << "g = x^2, raw jumps:    drift " << raw.drift.item<double>() << " (continuous part only), "
             << raw.jump_sizes.size(0) << " jump sizes of g(x + z) - g(x), e.g. for z = " << z[0] << ": "
-            << raw.jump_sizes.to_vec<double>()[0] << " = 2 x z + z^2 = " << 2 * 0.5 * z[0] + z[0] * z[0] << "\n";
+            << raw.jump_sizes.host<double>()[0] << " = 2 x z + z^2 = " << 2 * 0.5 * z[0] + z[0] * z[0] << "\n";
   return 0;
 }

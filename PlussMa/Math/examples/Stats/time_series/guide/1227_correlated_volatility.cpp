@@ -43,7 +43,7 @@ int main() {
   std::cout << std::fixed << std::setprecision(3);
   for (std::size_t j = 0; j < fit.marginals.size(); ++j)
     std::cout << "series " << j << ": omega " << fit.marginals[j].omega << "  alpha " << fit.marginals[j].arch[0] << "  beta " << fit.marginals[j].garch[0] << "\n";
-  const auto corr = fit.corr.to_vec<double>();
+  const auto corr = fit.corr.host<double>();
   std::cout << "estimated correlation " << corr[1] << "   (true 0.600)\n";
   std::cout << "joint log-likelihood " << std::setprecision(2) << fit.loglik(Y) << "\n";
 
@@ -53,7 +53,7 @@ int main() {
   std::cout << "log-likelihood with the correlation set to zero " << independent.loglik(Y) << "\n\n";
 
   std::cout << std::setprecision(3) << "forecast of the variances and of the covariance implied by the correlation\n";
-  const auto f = fit.forecast(5, Y).to_vec<double>();
+  const auto f = fit.forecast(5, Y).host<double>();
   for (int h = 0; h < 5; ++h) {
     const double v1 = f[static_cast<std::size_t>(2 * h)], v2 = f[static_cast<std::size_t>(2 * h + 1)];
     std::cout << "  step " << h + 1 << "   var0 " << v1 << "   var1 " << v2 << "   cov " << corr[1] * std::sqrt(v1 * v2) << "\n";

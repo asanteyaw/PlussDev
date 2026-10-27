@@ -251,7 +251,7 @@ TEST_CASE("volatility fits match independent reference optima", "[ts][vol][refer
   REQUIRE(e.loglik(y) == Approx(-1047.8754).margin(5e-3));
   // Exact expected variances (checked against a two-million-draw simulation from the last state): one step is deterministic, later steps
   // include the log-normal convexity of the unknown shocks.
-  const auto f = e.forecast(3, y).to_vec<double>();
+  const auto f = e.forecast(3, y).host<double>();
   REQUIRE(f[0] == Approx(0.395693).epsilon(1e-3));
   REQUIRE(f[1] == Approx(0.406003).epsilon(1e-3));
   REQUIRE(f[2] == Approx(0.414136).epsilon(1e-3));

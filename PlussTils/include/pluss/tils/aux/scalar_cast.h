@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <span>
 #include <type_traits>
+#include <vector>
 
 namespace pluss::tils {
 
@@ -133,7 +134,8 @@ T to_scalar(const Series& x) {
                 "pluss::tils::to_scalar<T>: T must be an arithmetic or CodeM complex scalar type");
   PLUSS_CHECK(x.defined(), "pluss::tils::to_scalar<T>: expected defined Series");
   PLUSS_CHECK(x.numel() == 1, "pluss::tils::to_scalar<T>: expected scalar Series (numel==1)");
-  return x.item<T>();
+  // item<T>() needs a rank-zero Series; a one-element Series of any rank is accepted here.
+  return x.dim() == 0 ? x.item<T>() : x.reshape(std::vector<std::int64_t>{}).item<T>();
 }
 
 inline double as_f64(const Series& x) { return to_scalar<double>(x); }

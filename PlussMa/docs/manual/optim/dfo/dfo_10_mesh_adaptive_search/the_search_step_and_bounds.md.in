@@ -1,8 +1,0 @@
-# The search step and bounds
-
-[Back to Mesh Adaptive Direct Search](../dfo_10_mesh_adaptive_search.md)
-
-
-@@example Numerical/optimization/guide/dfo/394_mads_search_and_bounds.cpp@@
-
-Without a search step the method creeps from its start into the nearest local minimum (value 0.995) on every seed. The search step tries points across the frame, so it sometimes lands in a better basin: with 8 points one seed in three finds the global minimum, with 32 two in three. The price is evaluations, roughly three times as many for 8 points and ten times for 32. Use it when a local minimum is not good enough and the budget allows. With bounds, every trial point stays inside the box.

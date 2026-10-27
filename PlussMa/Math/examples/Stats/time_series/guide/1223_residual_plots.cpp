@@ -49,7 +49,7 @@ int main() {
     const auto a = ts::plot::acf_payload(resid, options);
     int outside = 0;
     double largest = 0.0;
-    for (double v : a.values.to_vec<double>()) {
+    for (double v : a.values.host<double>()) {
       if (std::abs(v) > a.conf_high) ++outside;
       largest = std::max(largest, std::abs(v));
     }

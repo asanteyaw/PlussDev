@@ -44,7 +44,7 @@ auto axel = pluss::scribble::Axel({
 });
 auto out = axel.head(2);
 std::cout << "depth=" << out.depth() << " last_id="
-          << std::get<pluss::Series>(out.registry(out.depth() - 1).fields("ids").at(0)).to_vec<std::int64_t>()[0];
+          << std::get<pluss::Series>(out.registry(out.depth() - 1).fields("ids").at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output

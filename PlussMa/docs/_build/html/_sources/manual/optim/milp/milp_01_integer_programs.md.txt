@@ -38,9 +38,7 @@ The method is **branch and bound**. Solve the linear program with the integralit
 
 ## Programs
 
-- [Choosing projects under a budget](milp_01_integer_programs/choosing_projects_under_a_budget.md)
-- [Integers that are not 0 or 1, and when the relaxation is enough](milp_01_integer_programs/integers_that_are_not_0_or_1_and_when_the_relaxa.md)
-- [How a search ends](milp_01_integer_programs/how_a_search_ends.md)
+- [Choosing whole things](milp_01_integer_programs/choosing_whole_things.md)
 
 ## What to remember
 
@@ -55,8 +53,6 @@ The method is **branch and bound**. Solve the linear program with the integralit
 :maxdepth: 2
 :hidden:
 
-milp_01_integer_programs/choosing_projects_under_a_budget
-milp_01_integer_programs/integers_that_are_not_0_or_1_and_when_the_relaxa
-milp_01_integer_programs/how_a_search_ends
+milp_01_integer_programs/choosing_whole_things
 ```
 <!-- apiref:toctree:end -->

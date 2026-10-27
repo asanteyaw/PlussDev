@@ -29,7 +29,7 @@ int main() {
   c.linear_eq_rhs = vec({0.5});
   auto f = [](const pluss::Series& x) { return (x - 2.0).square().sum(); };
   const auto o = dfo::pattern_search_minimizer(f, vec({0.5, 0.0, 0.5}), c);
-  const auto x = o.minimizer.to_vec<double>();
+  const auto x = o.minimizer.host<double>();
   std::cout << std::fixed << std::setprecision(4) << "minimizer : " << x[0] << ", " << x[1] << ", " << x[2] << "  (expected 1.2500, 0.7500, 1.0000)\n";
   std::cout << "minimum   : " << o.minimum << "  (expected 3.1250)\n";
   std::cout << "x0 - x1   : " << x[0] - x[1] << "  (must be 0.5)\n";

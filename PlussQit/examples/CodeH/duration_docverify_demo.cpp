@@ -199,7 +199,7 @@ int main() {
   const auto source_nanos = ordering.host();
   std::vector<std::int64_t> gathered;
   gathered.reserve(source_nanos.size());
-  for (const auto index : order.to_vec<std::int64_t>()) {
+  for (const auto index : order.host<std::int64_t>()) {
     gathered.push_back(source_nanos[static_cast<std::size_t>(index)]);
   }
   show_duration("argsort_applied", pluss::duration::nanos(gathered));

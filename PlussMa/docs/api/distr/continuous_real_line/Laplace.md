@@ -1,0 +1,252 @@
+<!-- generated from Laplace.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Laplace`
+
+The Laplace (double-exponential) distribution: a symmetric peak with exponentially decaying tails, the distribution of the error whose best estimate is the median.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Laplace, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Laplace, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Laplace, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Laplace, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Laplace, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The Laplace distribution has a sharp peak at its centre and tails that decay exponentially in the absolute distance from it: two exponential distributions placed back to back. It is the error model under which the *median*, not the mean, is the maximum-likelihood estimate of the centre, and it is a standard heavier-tailed alternative to the normal for noisy data. Its variance is `2 × scale²`.
+
+The kind-based functions take `{location, scale}`. The object `distr::Laplace{location, scale}` also offers `MLE`, whose estimate of the location is the sample median.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `location` | any real | the centre: the median and the mode |
+| `scale` | > 0 | the mean absolute deviation from the centre; the variance is `2 scale²` |
+
+Support: all real numbers.
+
+The object form of this family, with the same functions as methods, is on its own page: [`distr::Laplace`](../object_based/Laplace.md).
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape.
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`scale` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Laplace on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({-5.0, -1.0, 0.0, 1.0, 2.0, 6.0}, f64);
+  const std::vector<double> params = {1.0, 1.5};
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Laplace, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Laplace, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Laplace, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -5.00000 -1.00000 0.00000 1.00000 2.00000 6.00000
+pdf: 0.00611 0.08787 0.17114 0.33333 0.17114 0.01189
+cdf: 0.00916 0.13180 0.25671 0.50000 0.74329 0.98216
+logpdf: -5.09861 -2.43195 -1.76528 -1.09861 -1.76528 -4.43195
+```
+
+The density is largest on this grid at x = 1, where it is 0.33333; the distribution function runs from 0.00916 at x = -5 to 0.98216 at x = 6, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.33333) = -1.09862 at x = 1.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {1.0, 1.5};
+
+  // The three ways to the probability that the variable lies in [-1, 4]:
+  const auto grid = pluss::series::linspace(-1.0, 4.0, 3001, f64);
+  const double area = as_f64(distr::pdf(dst::Laplace, grid, params).antidiff(grid).trapezoid());
+
+  const auto edges = pluss::make_series({-1.0, 4.0}, f64);
+  const auto c = distr::cdf(dst::Laplace, edges, params).pull<double>();
+
+  const auto draws = distr::sample(dst::Laplace, params, {200000}, f64, 7ULL);
+  const double fraction = as_f64(((draws >= -1.0).to(pluss::ScalarType::Float64) * (draws <= 4.0).to(pluss::ScalarType::Float64)).mean());
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(4) - cdf(-1): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+integral of the density: 0.80053
+cdf(4) - cdf(-1): 0.80053
+fraction of 200000 draws in range: 0.79931
+```
+
+The integral of the density (0.80053) and the difference of the distribution function (0.80053) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.79931) differs from it by 0.00122, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 8.94e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({-3.0, -1.0, 1.0, 3.0, 5.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "scale 0.5:";
+  for (double v : distr::pdf(dst::Laplace, x, {1.0, 0.5}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "scale 1  :";
+  for (double v : distr::pdf(dst::Laplace, x, {1.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "scale 2  :";
+  for (double v : distr::pdf(dst::Laplace, x, {1.0, 2.0}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -3.0000 -1.0000 1.0000 3.0000 5.0000
+scale 0.5: 0.0003 0.0183 1.0000 0.0183 0.0003
+scale 1  : 0.0092 0.0677 0.5000 0.0677 0.0092
+scale 2  : 0.0338 0.0920 0.2500 0.0920 0.0338
+```
+
+Read down the rows: `scale 0.5` peaks on this grid at x = 1 (value 1); `scale 1` peaks on this grid at x = 1 (value 0.5); `scale 2` peaks on this grid at x = 1 (value 0.25). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 checks the distribution function against its closed form: `1/2 exp((x - location)/scale)` below the centre and `1 - 1/2 exp(-(x - location)/scale)` above it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(6);
+  const auto x = pluss::make_series({-4.0, -1.0, 1.0, 2.5, 6.0}, f64);
+  const std::vector<double> params = {1.0, 1.5};
+
+  const auto formula = ((x - 1.0) / 1.5).exp() * 0.5 * (x < 1.0).to(pluss::ScalarType::Float64) + (1.0 - (-(x - 1.0) / 1.5).exp() * 0.5) * (x >= 1.0).to(pluss::ScalarType::Float64);
+  const auto library = distr::cdf(dst::Laplace, x, params);
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "formula:";
+  for (double v : formula.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "distr::cdf:";
+  for (double v : library.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << std::scientific << std::setprecision(2) << "largest difference: " << as_f64((formula - library).abs().max()) << '\n';
+}
+```
+
+Output
+
+```text
+x: -4.000000 -1.000000 1.000000 2.500000 6.000000
+formula: 0.017837 0.131799 0.500000 0.816060 0.982163
+distr::cdf: 0.017837 0.131799 0.500000 0.816060 0.982163
+largest difference: 0.00e+00
+```
+
+The formula and `distr::cdf` agree to 0 over the grid, so the library implements exactly the closed form quoted above; the same expression is the quickest way to check a parameterisation before relying on it.
+
+## See Also
+
+- [`Normal`](../continuous_real_line/Normal.md)
+- [`Logistic`](../continuous_real_line/Logistic.md)
+- [`Cauchy`](../continuous_real_line/Cauchy.md)
+- [`Exponential`](../continuous_positive/Exponential.md)
+- [`distr::Laplace`](../object_based/Laplace.md) -- the object form

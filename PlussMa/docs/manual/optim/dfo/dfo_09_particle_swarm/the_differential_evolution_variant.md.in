@@ -1,8 +1,0 @@
-# The differential-evolution variant
-
-[Back to The Particle Swarm Minimisers](../dfo_09_particle_swarm.md)
-
-
-@@example Numerical/optimization/guide/dfo/383_particle_swarm_dv.cpp@@
-
-At 3 variables the classic swarm finds the global minimum exactly on every seed and the variant ends within 0.4 of it. At 6 variables, with the same 40000 evaluations, the classic swarm reaches essentially zero on two seeds and about 1 on the third, while the variant stops between 12 and 18. The variant moves each particle only when the move improves it and has no memory of a particle's own best position, so it behaves like differential evolution (Chapter 8, where plain DE also stops near 15 on this problem) rather than like a swarm. The classic swarm is the better first choice on rugged functions; try the variant as a second opinion.

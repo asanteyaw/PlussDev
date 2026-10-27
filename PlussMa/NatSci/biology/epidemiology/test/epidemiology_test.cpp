@@ -79,7 +79,7 @@ void test_sir_final_size() {
   expect(close(at(end, 0), at(fs, 0), 1e-9), "final size vs ODE");
   const auto path = dyn::trajectory(rate, vec({0.999, 0.001, 0.0}), 0.0, 120.0, 960, 6);
   const double peak = path.states.select(-1, 1).max().item<double>();
-  expect(std::abs(peak - epi::peak_infective(vec({3.0}), vec({0.999}), vec({0.001})).item<double>()) < 1e-4, "peak infective vs ODE");
+  expect(std::abs(peak - epi::peak_infective(vec({3.0}), vec({0.999}), vec({0.001})).host<double>().front()) < 1e-4, "peak infective vs ODE");
   // population conserved
   expect(std::abs(end.sum().item<double>() - 1.0) < 1e-12, "SIR conserves N");
   // threshold: sigma*s0 <= 1 -> infection only decays (rate negative from start)
@@ -89,7 +89,7 @@ void test_sir_final_size() {
 void test_seir_endemic() {
   const double beta = 1.5, sigma = 0.5, gamma = 0.4, mu = 0.1;
   const double r0 = 1.5 * 0.5 / ((0.5 + 0.1) * (0.4 + 0.1));
-  expect(close(epi::seir_r0(vec({beta}), vec({sigma}), vec({gamma}), vec({mu})).item<double>(), r0, 1e-14), "SEIR R0 formula");
+  expect(close(epi::seir_r0(vec({beta}), vec({sigma}), vec({gamma}), vec({mu})).host<double>().front(), r0, 1e-14), "SEIR R0 formula");
   // numerical next-generation R0 of the same model agrees with the closed form
   epi::Split sp;
   sp.infected = 2;
@@ -137,7 +137,7 @@ void test_stochastic_sir() {
   const double count = major.to(F64).sum().item<double>();
   expect(count > 0.9 * B, "almost all runs are major outbreaks (extinction prob (1/R0)^I0)");
   const double mean_attack = recovered.mul(major.to(F64)).sum().item<double>() / count / N;
-  const double fs = epi::final_susceptible(vec({2.0}), vec({0.99}), vec({0.01})).item<double>();
+  const double fs = epi::final_susceptible(vec({2.0}), vec({0.99}), vec({0.01})).host<double>().front();
   expect(std::abs(mean_attack - (1.0 - fs)) < 0.015, "stochastic attack rate matches deterministic final size");
 }
 

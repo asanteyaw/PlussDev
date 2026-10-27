@@ -181,8 +181,8 @@ void test_nonleaf_transform_input() {
   policy.keep_graph = true;
   policy.track_higher_order = true;
   const auto [value, gradient] = pluss::subsp::math::diff::value_and_grad(
-      [](const pluss::subsp::math::diff::Trace &x) {
-        return pluss::subsp::math::diff::Trace(x.value().square().sum());
+      [](const pluss::Series&x) {
+        return x.square().sum();
       },
       nonleaf, policy);
   expect(close(value.item<double>(), 36.0),

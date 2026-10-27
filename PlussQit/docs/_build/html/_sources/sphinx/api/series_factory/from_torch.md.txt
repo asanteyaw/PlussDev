@@ -108,7 +108,7 @@ values.tracks_slope_(true);
 auto loss = values.square().sum();
 loss.reverse();
 
-auto sensitivity = values.sensitivity().to_vec<double>();
+auto sensitivity = values.sensitivity().host<double>();
 std::cout << sensitivity[0] << ", "
           << sensitivity[1] << ", "
           << sensitivity[2] << "\n";

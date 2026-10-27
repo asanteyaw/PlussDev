@@ -18,8 +18,7 @@ The result holds these as `dual_eq` (one value per equality row, the change of t
 
 ## Programs
 
-- [Prices, checked by re-solving](linprog_02_prices_and_certificates/prices_checked_by_re_solving.md)
-- [Certificates you can check](linprog_02_prices_and_certificates/certificates_you_can_check.md)
+- [Prices and certificates](linprog_02_prices_and_certificates/prices_and_certificates.md)
 
 ## What to remember
 
@@ -33,7 +32,6 @@ The result holds these as `dual_eq` (one value per equality row, the change of t
 :maxdepth: 2
 :hidden:
 
-linprog_02_prices_and_certificates/prices_checked_by_re_solving
-linprog_02_prices_and_certificates/certificates_you_can_check
+linprog_02_prices_and_certificates/prices_and_certificates
 ```
 <!-- apiref:toctree:end -->

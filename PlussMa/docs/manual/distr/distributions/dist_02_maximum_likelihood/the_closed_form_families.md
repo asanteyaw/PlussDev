@@ -4,69 +4,216 @@
 
 [Back to Maximum Likelihood](../dist_02_maximum_likelihood.md)
 
+Fitting a distribution to data means choosing its parameters to make the observed values as probable as possible: the **maximum likelihood estimate**. For the normal, exponential, Poisson, Bernoulli, binomial, geometric, lognormal, uniform, Rayleigh, Laplace and inverse Gaussian families the maximiser has a closed form, so the fit is exact and instantaneous. (The gamma, beta, negative binomial and the heavy-tailed families have no closed form and are fitted numerically; they are the subject of [the next page](numerical_estimates_correlation_and_fixed_parame.md) and of Chapter 3.)
+
+A fit is only half an answer. The other half is how *uncertain* it is, and the fit object supplies that too. `dist.MLE(x)` returns a fit whose fields are the estimated parameters (`NormalFit` has `mean` and `stddev`, `ExponentialFit` has `rate`, and so on) and whose methods report:
+
+| Method | Result |
+|---|---|
+| `model()` | the distribution object with the fitted parameters |
+| `loglik(x)`, `loglik_per_obs(x)`, `nll(x)` | total and per-observation log-likelihood, and its negative |
+| `score(x)` | the gradient of the log-likelihood; zero at an interior maximum |
+| `observed_inf(x)`, `fisher_inf(x)` | the observed information (minus the Hessian) and the information matrix |
+| `vcov(x)`, `stderr(x)` | the estimated covariance of the estimates, and its square-rooted diagonal |
+| `confint(x, level)` | Wald intervals `estimate ± z · stderr` (default level 0.95): a matrix with one row per parameter and columns lower, upper |
+
+The Hessian is the full matrix, so each standard error is the one that holds with the *other* parameters estimated too. The programs use `namespace distr = pluss::subsp::stats::distr;` and fit samples drawn from known distributions, so the truth is always at hand.
+
+## A fit and its uncertainty
+
+The first program fits a normal distribution to 500 draws from `N(1.5, 2²)`, and prints the estimates, the standard errors from the Hessian next to the exact formulas (`σ/√n` for the mean, `σ/√(2n)` for the standard deviation), the interval, the score and the covariance.
 
 ```cpp
 #include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
 
-#include <cmath>
-#include <iomanip>
-#include <iostream>
 #include <vector>
 
 namespace distr = pluss::subsp::stats::distr;
-using pluss::Series;
+namespace dst = distr::dst;
+using namespace pluss::tils;
 
-void row(const char* label, const Series& s) {
-  std::cout << std::left << std::setw(14) << label << std::right;
-  for (double v : s.reshape({s.numel()}).to_vec<double>()) std::cout << std::setw(11) << v;
-  std::cout << "\n";
-}
 int main() {
-  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
   const double n = 500.0;
-  std::cout << std::fixed << std::setprecision(4);
 
-  const Series xn = distr::Normal{1.5, 2.0}.sample({500}, cfg, 20261022ULL);
-  const auto nf = distr::Normal{}.MLE(xn);
-  std::cout << "Normal sample (true mean 1.5, sd 2.0)\n";
-  std::cout << "  estimates     mean " << nf.mean << "   stddev " << nf.stddev << "\n";
-  row("  stderr", nf.stderr(xn));
-  std::cout << "  exact         " << std::setw(11) << nf.stddev / std::sqrt(n) << std::setw(11) << nf.stddev / std::sqrt(2 * n) << "\n";
-  row("  95% interval", nf.confint(xn));
-  row("  score", nf.score(xn));
-  row("  vcov", nf.vcov(xn));
-  std::cout << "  log-likelihood " << nf.loglik(xn).item<double>() << "   per observation " << nf.loglik(xn).item<double>() / n << "\n\n";
-
-  const Series xe = distr::Exponential{0.7}.sample({500}, cfg, 3ULL);
-  const auto ef = distr::Exponential{}.MLE(xe);
-  std::cout << "Exponential sample (true rate 0.7)\n  rate " << ef.rate << "   stderr " << ef.stderr(xe).item<double>() << "   exact " << ef.rate / std::sqrt(n) << "\n";
-  row("  95% interval", ef.confint(xe));
-
-  const Series xp = distr::Poisson{3.2}.sample({500}, cfg, 4ULL);
-  const auto pf = distr::Poisson{}.MLE(xp);
-  std::cout << "\nPoisson sample (true lambda 3.2)\n  lambda " << pf.lambda << "   stderr " << pf.stderr(xp).item<double>() << "   exact " << std::sqrt(pf.lambda / n) << "\n";
-  row("  95% interval", pf.confint(xp));
+  const auto x = distr::Normal{1.5, 2.0}.sample({500}, f64, 20261022ULL);
+  const auto fit = distr::Normal{}.MLE(x);
+  out.writeln("estimates        mean", fit.mean, "  stddev", fit.stddev, "  (true 1.5 and 2.0)");
+  out.writeln("stderr           ", fit.stderr(x).host<double>());
+  out.writeln("exact formula    ", std::vector<double>{fit.stddev / std::sqrt(n), fit.stddev / std::sqrt(2 * n)});
+  out.writeln("95% interval     ", fit.confint(x).host<double>());
+  out.writeln("score            ", fit.score(x).host<double>());
+  out.writeln("vcov             ", fit.vcov(x).host<double>());
+  out.writeln("log-likelihood   ", fit.loglik(x).item<double>(), "  per observation", fit.loglik(x).item<double>() / n);
 }
 ```
 
 Output
 
 ```text
-Normal sample (true mean 1.5, sd 2.0)
-  estimates     mean 1.4956   stddev 1.9274
-  stderr           0.0862     0.0610
-  exact              0.0862     0.0610
-  95% interval     1.3266     1.6645     1.8080     2.0469
-  score            0.0000    -0.0000
-  vcov             0.0074    -0.0000    -0.0000     0.0037
-  log-likelihood -1037.5579   per observation -2.0751
-
-Exponential sample (true rate 0.7)
-  rate 0.6825   stderr 0.0305   exact 0.0305
-  95% interval     0.6227     0.7423
-
-Poisson sample (true lambda 3.2)
-  lambda 3.2540   stderr 0.0807   exact 0.0807
-  95% interval     3.0959     3.4121
+estimates        mean 1.4956   stddev 1.9274   (true 1.5 and 2.0)
+stderr            [0.0862, 0.0610]
+exact formula     [0.0862, 0.0610]
+95% interval      [1.3266, 1.6645, 1.8080, 2.0469]
+score             [0.0000, -0.0000]
+vcov              [0.0074, -0.0000, -0.0000, 0.0037]
+log-likelihood    -1037.5579   per observation -2.0751
 ```
-The estimates are close to the true values (a mean of 1.4956 for a true 1.5, a standard deviation of 1.9274 for a true 2.0), and the standard errors computed from the Hessian agree with the exact formulas to all printed digits (`σ/√n = 0.0862` for the mean, `σ/√(2n) = 0.0610` for the standard deviation). The score is zero at the estimate; the covariance of the normal is diagonal (mean and variance are uncorrelated). Each 95% interval is the estimate ± 1.96 standard errors and contains the true value here.
+
+The estimates are close to the truth (1.4956 and 1.9274 for 1.5 and 2.0) and the standard errors computed from the Hessian agree with the exact formulas to every printed digit: the numerical machinery reproduces the textbook result. The score is zero (to rounding) at the estimate, which is the definition of a maximum, and a quick way to check any fit. The covariance is diagonal: the mean and the variance of a normal are uncorrelated. The two intervals are `estimate ± 1.96 standard errors`, and the `confint` rows are the mean (first) and the standard deviation (second): each contains the true value here, which a 95% interval does about 19 times in 20.
+
+## Do the intervals cover?
+
+"95%" is a claim about *repetition*: in 95 of 100 samples the interval should contain the truth. This can be tested because the truth is known. The program draws 300 samples of size 50 from each of four distributions, fits each by maximum likelihood, and counts how often the interval contains the true parameter.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const int reps = 300, n = 50;
+  int normal_mean = 0, normal_sd = 0, expo = 0, poisson = 0;
+  for (int r = 0; r < reps; ++r) {
+    const auto xn = distr::Normal{1.5, 2.0}.sample({n}, f64, 1000 + r);
+    const auto cn = distr::Normal{}.MLE(xn).confint(xn).host<double>();  // rows: mean, stddev; columns: lower, upper
+    normal_mean += cn[0] <= 1.5 && 1.5 <= cn[1];
+    normal_sd += cn[2] <= 2.0 && 2.0 <= cn[3];
+
+    const auto xe = distr::Exponential{0.7}.sample({n}, f64, 2000 + r);
+    const auto ce = distr::Exponential{}.MLE(xe).confint(xe).host<double>();
+    expo += ce[0] <= 0.7 && 0.7 <= ce[1];
+
+    const auto xp = distr::Poisson{3.2}.sample({n}, f64, 3000 + r);
+    const auto cp = distr::Poisson{}.MLE(xp).confint(xp).host<double>();
+    poisson += cp[0] <= 3.2 && 3.2 <= cp[1];
+  }
+  out.writeln("coverage of nominal 95% Wald intervals,", reps, "samples of", n, "observations");
+  out.writeln("  Normal mean          ", static_cast<double>(normal_mean) / reps);
+  out.writeln("  Normal standard dev. ", static_cast<double>(normal_sd) / reps);
+  out.writeln("  Exponential rate     ", static_cast<double>(expo) / reps);
+  out.writeln("  Poisson lambda       ", static_cast<double>(poisson) / reps);
+}
+```
+
+Output
+
+```text
+coverage of nominal 95% Wald intervals, 300 samples of 50 observations
+  Normal mean           0.953
+  Normal standard dev.  0.907
+  Exponential rate      0.937
+  Poisson lambda        0.937
+```
+
+The normal mean (0.953), the exponential rate and the Poisson mean (both 0.937) are within the Monte Carlo noise of the nominal 0.95 (the standard error of each fraction is about 0.013 with 300 samples). The normal standard deviation is lower, 0.907: with only 50 observations the sampling distribution of a scale estimate is skewed, and a symmetric Wald interval is a little too narrow. This is the honest meaning of a Wald interval: right in large samples, approximate in small ones, and worst for scale and rate parameters whose estimates are skewed. For small samples treat a 95% interval for a standard deviation as about 90%.
+
+## Uncertainty falls like one over root n
+
+The standard error of an estimate shrinks as the sample grows, at the rate `1/√n`. This is the same law as for a sample mean, and it is the practical answer to "how much data do I need?". The program fits an exponential distribution (true rate 0.7) at sample sizes from 25 to 1600 and prints the estimate, its standard error, the product `stderr × √n` (which should be constant, and equal to the rate) and the width of the 95% interval.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("     n    rate  stderr  stderr x sqrt(n)  interval width");
+  for (int n : {25, 100, 400, 1600}) {
+    const auto x = distr::Exponential{0.7}.sample({n}, f64, 99ULL);
+    const auto fit = distr::Exponential{}.MLE(x);
+    const double se = fit.stderr(x).item<double>();
+    const auto ci = fit.confint(x).host<double>();
+    out.writeln(n, "  ", fit.rate, "  ", se, "  ", se * std::sqrt(static_cast<double>(n)), "  ", ci[1] - ci[0]);
+  }
+}
+```
+
+Output
+
+```text
+     n    rate  stderr  stderr x sqrt(n)  interval width
+25    0.5814    0.1163    0.5814    0.4558
+100    0.7469    0.0747    0.7469    0.2928
+400    0.7049    0.0352    0.7049    0.1382
+1600    0.6900    0.0172    0.6900    0.0676
+```
+
+The product `stderr × √n` equals the estimated rate at every size (0.58, 0.75, 0.70 and 0.69, the estimates themselves) because for an exponential the standard error is `rate/√n`, so the standard error falls in proportion to `1/√n`: four times the data halves the uncertainty and the interval narrows accordingly (0.456, 0.293, 0.138, 0.068). The estimates wander around the true 0.7 by about their standard errors (0.12 off at 25 observations, 0.017 at 1600). Plan sample sizes with this rule. The standard error of an exponential rate is `1/√n` of the rate itself, so to know it to within 10% (at 95% confidence) you need about 400 observations, and to within 1%, about 38 000.
+
+## Which family describes the data?
+
+Often the question is not the parameters but the family. The log-likelihood compares families fitted to the *same* data: the larger the better, with Akaike's criterion `2k − 2 loglik` charging each family for its parameters. The program draws 600 values from a gamma distribution (shape 2, scale 1.5) and fits five candidates that have maximum-likelihood fits.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto x = distr::Gamma{2.0, 1.5, 0.0}.sample({600}, f64, 8ULL);
+
+  const double ll_normal = distr::Normal{}.MLE(x).loglik(x).item<double>();
+  const double ll_exponential = distr::Exponential{}.MLE(x).loglik(x).item<double>();
+  const double ll_lognormal = distr::Lognormal{}.MLE(x).loglik(x).item<double>();
+  const double ll_inverse_gaussian = distr::InverseGaussian{}.MLE(x).loglik(x).item<double>();
+  const double ll_gamma = distr::Gamma{1.0, 1.0, 0.0}.MLE(x).loglik(x).item<double>();
+
+  out.writeln("candidate          loglik   k      AIC");
+  out.writeln("Normal           ", ll_normal, 2, 4 - 2 * ll_normal);
+  out.writeln("Exponential      ", ll_exponential, 1, 2 - 2 * ll_exponential);
+  out.writeln("Lognormal        ", ll_lognormal, 2, 4 - 2 * ll_lognormal);
+  out.writeln("InverseGaussian  ", ll_inverse_gaussian, 2, 4 - 2 * ll_inverse_gaussian);
+  out.writeln("Gamma            ", ll_gamma, 2, 4 - 2 * ll_gamma);
+}
+```
+
+Output
+
+```text
+candidate          loglik   k      AIC
+Normal            -1290.89 2 2585.77
+Exponential       -1254.45 1 2510.90
+Lognormal         -1195.01 2 2394.03
+InverseGaussian   -1239.49 2 2482.98
+Gamma             -1173.60 2 2351.21
+```
+
+The gamma, the true family, has the highest log-likelihood and the lowest criterion (2351). The lognormal is next (2394, 43 points worse), then the inverse Gaussian (2483), the exponential (2511) and the normal (2586). With 600 observations the gamma is clearly separated from every competitor; a difference of 10 points of AIC is already decisive, and 43 is not close. The normal and exponential, which cannot represent a skewed positive variable with a mode away from zero, are far behind. The practical rule is to compare families that could plausibly describe the mechanism, not every family, and to prefer the simpler when the criterion cannot decide.
+
+## Decisions and pitfalls
+
+- **Read the standard error with the estimate.** An estimate without its uncertainty cannot be compared with anything.
+- **Wald intervals are approximate.** They are right in large samples and a little narrow in small ones, especially for scale and rate parameters; the uniform's and boundary cases' intervals are only a guide.
+- **Check the score.** A score that is not near zero at the reported estimate means the fit did not reach a maximum.
+- **Compare families by likelihood on the same data.** Use Akaike's criterion to charge for parameters; do not compare log-likelihoods of different data.
+- **Check the support first.** The data must lie inside the support of the family (a negative value cannot be fitted by a lognormal); a value outside is an error, not a silent zero.
+
+Where next: [Numerical estimates, correlation and fixed parameters](numerical_estimates_correlation_and_fixed_parame.md) covers the families whose maximum has to be searched for.

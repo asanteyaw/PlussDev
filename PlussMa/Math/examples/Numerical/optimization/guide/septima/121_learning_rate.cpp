@@ -8,15 +8,15 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
 
 int main() {
-  std::function<optim::Trace(const Pack&)> rosenbrock = [](const Pack& p) {
-    return 100.0 * optim::square(p.at("y") - optim::square(p.at("x"))) + optim::square(1.0 - p.at("x"));
+  std::function<pluss::Series(const Pack&)> rosenbrock = [](const Pack& p) {
+    return 100.0 * (p.at("y") - p.at("x").square()).square() + (1.0 - p.at("x")).square();
   };
   const auto start = optim::pack_scalars({{"x", scalar(-1.2)}, {"y", scalar(1.0)}});
 
@@ -29,7 +29,7 @@ int main() {
     const auto r = optim::septima(rosenbrock, start, options);
     std::cout << std::left << std::setw(15) << std::defaultfloat << rate << std::setw(15) << (r.converged ? "Converged" : "MaxIterations")
               << std::setw(8) << r.iteration << std::scientific << std::setprecision(1) << std::setw(12) << r.objective_value << std::fixed
-              << std::setprecision(4) << r.params[0].item<double>() << "\n";
+              << std::setprecision(4) << as_f64(r.params[0]) << "\n";
   }
   return 0;
 }

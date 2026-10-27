@@ -63,9 +63,9 @@ int main() {
   mapper.learn(wf.infer(std::vector<std::string>{"cat sat", "dog sat"}));
 
   const auto matrix = mapper.count_sparse(wf.infer(std::vector<std::string>{"cat sat sat"})).value();
-  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto cols = matrix.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto cols = matrix.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "rows = " << matrix.rows << ", cols = " << matrix.cols << ", nonzeros = " << values.size() << "\n";
   for (std::size_t i = 0; i < values.size(); ++i) {
     std::cout << "  (" << rows[i] << ", " << mapper.vocabulary()[static_cast<std::size_t>(cols[i])] << ") = " << values[i] << "\n";
@@ -103,7 +103,7 @@ int main() {
   mapper.learn(docs);
 
   const auto dense = mapper.count_dense(docs).value();
-  const auto dense_values = dense.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto dense_values = dense.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::int64_t dense_nonzero = 0;
   for (const double value : dense_values) {
     if (value != 0.0) ++dense_nonzero;
@@ -144,7 +144,7 @@ int main() {
   mapper.learn(wf.infer(std::vector<std::string>{"cat sat"}));
 
   const auto matrix = mapper.count_sparse(wf.infer(std::vector<std::string>{"zebra", "cat"})).value();
-  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "rows = " << matrix.rows << ", triplets = " << matrix.values.numel() << "\n";
   for (const double row : rows) std::cout << "triplet in row " << row << "\n";
   return 0;

@@ -143,7 +143,7 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
   if (flat.isnan().any().item<bool>()) {
     return StatusOr<std::vector<double>>(Status::invalid_argument("labels must not contain NaN."));
   }
-  std::vector<double> values = flat.to_vec<double>();
+  std::vector<double> values = flat.host<double>();
   return StatusOr<std::vector<double>>(std::move(values));
 }
 
@@ -155,7 +155,7 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
   if (flat.isnan().any().item<bool>()) {
     return StatusOr<std::vector<double>>(Status::invalid_argument("groups must not contain NaN."));
   }
-  std::vector<double> values = flat.to_vec<double>();
+  std::vector<double> values = flat.host<double>();
   return StatusOr<std::vector<double>>(std::move(values));
 }
 

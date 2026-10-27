@@ -4,6 +4,95 @@
 
 [Back to Direct Forecasting and Model Comparison](../ts_06_direct_forecasting.md)
 
+The models of the earlier chapters forecast several steps ahead *recursively*: they predict one step, treat the prediction as if it were data, and predict the next. That works when the one-step model is right, and it compounds any error in it. A **direct** forecaster takes another route: for each horizon `h` it fits a separate regression that predicts `y_{t+h}` straight from information available at time `t`, namely lagged values of `y` and of any predictors. Each horizon gets its own coefficients, so a mistake in the one-step relationship does not propagate, and the forecaster needs no model of how its predictors themselves evolve. It also lets you use regressors whose *future* values are known (a calendar, a planned price, a weather forecast), which a pure time-series model cannot use.
+
+`DirectForecaster::fit(x, y, options)` takes the predictors `x` (an `n × p` matrix, or an undefined `Series` for none) and the response `y` (length `n`). The options live in `DirectForecasterOptions`:
+
+| Option | Meaning | Default |
+|---|---|---|
+| `lag.horizon` | the horizons `h` to forecast, one model each | {1} |
+| `lag.response_lags` | lags of `y` used as features | {1} |
+| `lag.predictor_lags` | for each non-leading predictor, its lags | lag 1 of each |
+| `lag.leading_predictors` | indices of predictors whose future values are known | {} |
+| `lag.leading_predictor_lags` | their lags; lag 0 is the value at the forecast time `t + h` | lag 0 |
+| `learner` | `OLS` or `Ridge` | OLS |
+| `ridge_lambda` | the ridge penalty (the intercept is not penalised) | 1e-6 |
+| `fit_intercept` | add a constant | true |
+
+For horizon `h`, each training row pairs `y_t` with features computed at the origin `t − h`. Only rows in which every feature exists are used; the first rows of `predict` and `prepared_predictors` are `NaN`, never zero. The fitted object gives `forecast(x, y)` (one forecast per horizon from the last observation), `predict(x, y)` (fitted values), `loss(x, y, kind)` and, for each horizon `i`, `step(i).beta` (the intercept first, then the features: non-leading predictor lags, response lags, leading predictor lags).
+
+The programs use a simulated response driven by its own past and by an exogenous series: `y_t = 0.5 y_{t−1} + 1.0 x_t + 0.3 x_{t−1} + noise`, with `x` an AR(1).
+
+## Different regressions for different horizons
+
+The first program fits a direct forecaster for the horizons 1, 2 and 3 using two lags of `y` and two lags of `x`, prints the coefficients of each horizon's regression, the in-sample error, and the forecast from the last observation.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+struct Data { Series x, y; };
+
+Data make_data(int n, std::uint64_t seed, const pluss::Config& cfg) {
+  ts::ArimaFit white;
+  white.sigma = 1.0;
+  const auto u = white.simulate(n, cfg, seed).host<double>();
+  const auto e = white.simulate(n, cfg, seed + 1).host<double>();
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    const double xt = 0.8 * xp + 0.6 * u[t];
+    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[t];
+    x[t] = xt;
+    y[t] = yt;
+    xp = xt;
+    yp = yt;
+  }
+  return {pluss::make_series(x, {n, 1}).to(pluss::ScalarType::Float64), pluss::make_series(y, {n}).to(pluss::ScalarType::Float64)};
+}
+
+int main() {
+  pluss::tils::OutputEngine out;
+  out.print_defaults(pluss::tils::PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto data = make_data(300, 10, f64);
+
+  ts::DirectForecasterOptions options;
+  options.lag.horizon = {1, 2, 3};
+  options.lag.response_lags = {1, 2};
+  options.lag.predictor_lags = {{1, 2}};  // lags 1 and 2 of the single predictor
+  const auto model = ts::DirectForecaster::fit(data.x, data.y, options, f64);
+
+  out.writeln("coefficients: intercept, x lag 1, x lag 2, y lag 1, y lag 2");
+  for (std::int64_t i = 0; i < model.num_steps(); ++i) out.writeln("  horizon " + std::to_string(model.step(i).horizon), model.step(i).beta.host<double>());
+  out.writeln("in-sample MSE", model.loss(data.x, data.y, ts::RegressionLoss::MSE, f64).host<double>());
+  out.writeln("forecast y(n+1..n+3)", model.forecast(data.x, data.y, f64).host<double>());
+}
+```
+
+Output
+
+```text
+coefficients: intercept, x lag 1, x lag 2, y lag 1, y lag 2
+  horizon 1 [-0.0008, 1.1348, -0.0171, 0.3829, 0.0901]
+  horizon 2 [0.0248, 1.3573, 0.0717, 0.1001, 0.1073]
+  horizon 3 [0.0636, 1.1293, 0.1275, 0.1599, -0.0346]
+in-sample MSE [0.4729, 1.3937, 2.2287]
+forecast y(n+1..n+3) [0.1772, 0.1266, 0.0833]
+```
+
+Each horizon is a different regression, so each has its own coefficients: the loading on the first lag of `x` is 1.13, 1.36 and 1.13 across the three horizons, and the loadings on the lags of `y` are small and not monotone (0.38, 0.10, 0.16 on the first lag), because here `x` carries most of the signal and `y`'s own past adds little. The in-sample error rises steadily with the horizon (0.47, 1.39, 2.23): the further ahead, the less the present tells. Nothing here required a model for `x`: the forecaster uses only what is known at the origin.
+
+## Direct or recursive?
+
+When the one-step model is right, iterating it is efficient; when it is not, errors compound and a direct model can win. The program makes the comparison on a process that a one-step AR(1) misrepresents (an ARMA(1,1) with a large moving-average coefficient). It fits both approaches on the first 400 observations and measures the root mean squared error of forecasts at horizons 1, 3 and 6 from each of 100 later origins.
 
 ```cpp
 #include <pluss/ma.h>
@@ -16,78 +105,198 @@
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-// A reproducible pseudo-random sequence in (-0.5, 0.5): e_t = frac(sin(12.9898 (t + offset) + 78.233) * 43758.5453) - 0.5, t = 1, 2, ...
-std::vector<double> noise(int n, int offset = 0) {
-  std::vector<double> e(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    e[static_cast<std::size_t>(i)] = u - 0.5;
-  }
-  return e;
-}
-// Response y driven by its own past and by an exogenous series x that is known in advance:  y_t = 0.5 y_{t-1} + 1.0 x_t + 0.3 x_{t-1} + 0.3 e_t,  x_t = 0.8 x_{t-1} + u_t.
-struct Data {
-  Series x, y;
-};
-Data make_data(int n) {
-  const auto e = noise(n, 0), u = noise(n, 7000);
-  std::vector<double> x(static_cast<std::size_t>(n)), y(static_cast<std::size_t>(n));
-  double xp = 0.0, yp = 0.0;
-  for (int t = 0; t < n; ++t) {
-    const double xt = 0.8 * xp + 2.0 * u[static_cast<std::size_t>(t)];
-    const double yt = 0.5 * yp + 1.0 * xt + 0.3 * xp + 0.3 * e[static_cast<std::size_t>(t)];
-    x[static_cast<std::size_t>(t)] = xt;
-    y[static_cast<std::size_t>(t)] = yt;
-    xp = xt;
-    yp = yt;
-  }
-  return {pluss::make_series(x, {n, 1}).to(f64), pluss::make_series(y, {n}).to(f64)};
-}
-void row(const char* label, const std::vector<double>& v) {
-  std::cout << label;
-  for (double a : v) std::cout << std::setw(9) << a;
-  std::cout << "\n";
-}
 int main() {
-  const auto data = make_data(300);
-  std::cout << std::fixed << std::setprecision(4);
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.ar = {0.9};
+  truth.ma = {-0.7};
+  const int n = 500, train = 400;
+  const auto all = truth.simulate(n, f64, /*seed=*/3).host<double>();
+  auto prefix = [&](int rows) { return pluss::make_series(std::vector<double>(all.begin(), all.begin() + rows), f64); };
+
+  ts::ArimaOptions ao;
+  ao.ar_order = 1;  // a one-step model that misses the moving-average term
+  const auto recursive = ts::Arima::fit_mle(prefix(train), ao, f64);
 
   ts::DirectForecasterOptions options;
-  options.lag.horizon = {1, 2, 3};
-  options.lag.response_lags = {1, 2};
-  options.lag.predictor_lags = {{1, 2}};  // lags 1 and 2 of the single predictor
-  const auto model = ts::DirectForecaster::fit(data.x, data.y, options);
+  options.lag.horizon = {1, 3, 6};
+  options.lag.response_lags = {1, 2, 3};
+  const auto direct = ts::DirectForecaster::fit(Series{}, prefix(train), options, f64);
 
-  std::cout << "coefficients: intercept, x lag 1, x lag 2, y lag 1, y lag 2\n";
-  for (std::int64_t i = 0; i < model.num_steps(); ++i) row(("  horizon " + std::to_string(model.step(i).horizon) + ":").c_str(), model.step(i).beta.to_vec<double>());
-  row("in-sample mse by horizon  ", model.loss(data.x, data.y).to_vec<double>());
-  row("forecast of y(n+1..n+3)   ", model.forecast(data.x, data.y).to_vec<double>());
-
-  // The same with the predictor treated as leading: its current value (lag 0) is known in advance, so the forecast needs its future values.
-  ts::DirectForecasterOptions lead;
-  lead.lag.horizon = {1, 2, 3};
-  lead.lag.response_lags = {1};
-  lead.lag.leading_predictors = {0};
-  lead.lag.leading_predictor_lags = {{0, 1}};
-  const auto known_future = ts::DirectForecaster::fit(data.x, data.y, lead);
-  row("in-sample mse, x known ahead", known_future.loss(data.x, data.y).to_vec<double>());
-  const Series future = pluss::make_series(std::vector<double>{0.5, 0.2, -0.4}, {3, 1}).to(f64);
-  row("forecast given the next three x", known_future.forecast(data.x, data.y, future).to_vec<double>());
+  const int horizons[] = {1, 3, 6};
+  double se_rec[3] = {0, 0, 0}, se_dir[3] = {0, 0, 0};
+  int count = 0;
+  for (int origin = train; origin + 6 <= n; ++origin) {
+    const auto y = prefix(origin);
+    const auto fr = recursive.forecast(6, y, f64).host<double>();
+    const auto fd = direct.forecast(Series{}, y, f64).host<double>();
+    for (int k = 0; k < 3; ++k) {
+      const double actual = all[origin + horizons[k] - 1];
+      se_rec[k] += (actual - fr[horizons[k] - 1]) * (actual - fr[horizons[k] - 1]);
+      se_dir[k] += (actual - fd[k]) * (actual - fd[k]);
+    }
+    ++count;
+  }
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << std::setw(10) << "horizon" << std::setw(24) << "iterated AR(1) RMSE" << std::setw(18) << "direct RMSE" << "\n";
+  for (int k = 0; k < 3; ++k) std::cout << std::setw(10) << horizons[k] << std::setw(24) << std::sqrt(se_rec[k] / count) << std::setw(18) << std::sqrt(se_dir[k] / count) << "\n";
 }
 ```
 
 Output
 
 ```text
-coefficients: intercept, x lag 1, x lag 2, y lag 1, y lag 2
-  horizon 1:  -0.0375   1.3136  -0.0441   0.3412   0.0828
-  horizon 2:  -0.1097   1.5844   0.0906   0.0938   0.0203
-  horizon 3:  -0.1804   2.0210   0.2619  -0.4782   0.2008
-in-sample mse by horizon     0.2997   1.1248   1.9809
-forecast of y(n+1..n+3)      0.1748   0.1451   0.0814
-in-sample mse, x known ahead   0.0070   0.0116   0.0490
-forecast given the next three x   0.4695   0.5768  -0.2074
+   horizon     iterated AR(1) RMSE       direct RMSE
+         1                  1.1408            1.0105
+         3                  1.2493            1.0586
+         6                  1.2623            1.1927
 ```
-The series is built from its own past and from an exogenous driver. The coefficients differ by horizon because each horizon is a different regression, and the in-sample error grows with the horizon (0.30, 1.12, 1.98): the further ahead, the less the present tells. When the driver is known in advance (a *leading* predictor), the error falls to 0.007, 0.012 and 0.049, close to the variance of the noise of the generating process (0.0075) at one step, and the forecast takes the three known future values of the driver as input. The first rows of the fitted values are NaN and are excluded from the loss.
+
+The direct forecaster has the lower error at every horizon here (1.01 against 1.14 at one step, 1.06 against 1.25 at three steps, 1.19 against 1.26 at six), with the largest gap at the middle horizon. The iterated AR(1) carries the misspecification of its one-step model forward, while each direct regression is fitted to the horizon it is used for. The advantage is not guaranteed: for a correctly specified model the recursive forecast is at least as good, and the direct one pays for estimating more coefficients. Treat the choice as empirical and test it with the folds of [Partitions](partitions.md).
+
+## Predictors with known futures
+
+Some predictors are known in advance: a holiday calendar, a price that has been announced, a temperature forecast. Declaring such a predictor **leading** lets the model use its value at the *target* date (lag 0 is the value at `t + h`) instead of only its past, which can improve forecasts a great deal. To forecast, the future values must then be supplied through `forecast(x, y, x_future)`, with at least as many rows as the largest horizon. The program compares, out of sample, a model that sees only the *past* of `x` with one that treats `x` as leading and is handed its true future.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit white;
+  const int n = 500, train = 350;
+  const auto u = white.simulate(n, f64, 20).host<double>();
+  const auto e = white.simulate(n, f64, 21).host<double>();
+  std::vector<double> x(n), y(n);
+  double xp = 0.0, yp = 0.0;
+  for (int t = 0; t < n; ++t) {
+    x[t] = 0.8 * xp + 0.6 * u[t];
+    y[t] = 0.5 * yp + 1.0 * x[t] + 0.3 * xp + 0.3 * e[t];
+    xp = x[t];
+    yp = y[t];
+  }
+  auto cols = [&](int rows) { return pluss::make_series(std::vector<double>(x.begin(), x.begin() + rows), {rows, 1}).to(pluss::ScalarType::Float64); };
+  auto resp = [&](int rows) { return pluss::make_series(std::vector<double>(y.begin(), y.begin() + rows), f64); };
+
+  ts::DirectForecasterOptions past;
+  past.lag.horizon = {1, 2, 3};
+  past.lag.response_lags = {1};
+  past.lag.predictor_lags = {{1}};
+  ts::DirectForecasterOptions lead;
+  lead.lag.horizon = {1, 2, 3};
+  lead.lag.response_lags = {1};
+  lead.lag.leading_predictors = {0};
+  lead.lag.leading_predictor_lags = {{0, 1}};  // the value at the target date and one before
+  const auto m_past = ts::DirectForecaster::fit(cols(train), resp(train), past, f64);
+  const auto m_lead = ts::DirectForecaster::fit(cols(train), resp(train), lead, f64);
+
+  double se_past[3] = {0, 0, 0}, se_lead[3] = {0, 0, 0};
+  int count = 0;
+  for (int origin = train; origin + 3 <= n; ++origin) {
+    const auto fp = m_past.forecast(cols(origin), resp(origin), f64).host<double>();
+    const Series future = pluss::make_series(std::vector<double>(x.begin() + origin, x.begin() + origin + 3), {3, 1}).to(pluss::ScalarType::Float64);
+    const auto fl = m_lead.forecast(cols(origin), resp(origin), future, f64).host<double>();
+    for (int k = 0; k < 3; ++k) {
+      const double actual = y[origin + k];
+      se_past[k] += (actual - fp[k]) * (actual - fp[k]);
+      se_lead[k] += (actual - fl[k]) * (actual - fl[k]);
+    }
+    ++count;
+  }
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << std::setw(10) << "horizon" << std::setw(24) << "past of x only, RMSE" << std::setw(28) << "x known ahead, RMSE" << "\n";
+  for (int k = 0; k < 3; ++k) std::cout << std::setw(10) << k + 1 << std::setw(24) << std::sqrt(se_past[k] / count) << std::setw(28) << std::sqrt(se_lead[k] / count) << "\n";
+}
+```
+
+Output
+
+```text
+   horizon    past of x only, RMSE         x known ahead, RMSE
+         1                  0.7039                      0.3068
+         2                  1.2743                      0.3315
+         3                  1.6741                      0.3892
+```
+
+Knowing the future of the driver cuts the error dramatically at every horizon (from 0.70, 1.27 and 1.67 to 0.31, 0.33 and 0.39), to something close to the noise level of the generating process (0.3), because the response is, to a good approximation, a function of the *current* value of `x`. The model that sees only the past of `x` gets worse as the horizon grows; the leading model hardly does. The caveat is the whole point of the word *leading*: use it only for a predictor whose future values you will really have when you forecast. If you feed in a *forecast* of `x` instead, the error of that forecast enters yours.
+
+## Many features, few observations: ridge
+
+A direct forecaster with many lags has many coefficients per horizon. With a short training sample, ordinary least squares then fits the noise, and its out-of-sample forecasts suffer. The ridge learner adds a penalty `ridge_lambda` on the size of the coefficients (not on the intercept), which trades a little bias for a large reduction in variance. The program uses twelve lags of the response and only 50 training observations of a simple AR(1), and compares the out-of-sample error of OLS with ridge at three penalties.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.ar = {0.6};
+  const int train = 50, test = 100, reps = 30;
+
+  struct Setting { const char* name; ts::DirectLearnerKind kind; double lambda; };
+  const Setting settings[] = {{"OLS", ts::DirectLearnerKind::OLS, 0.0},
+                              {"ridge, lambda 1", ts::DirectLearnerKind::Ridge, 1.0},
+                              {"ridge, lambda 5", ts::DirectLearnerKind::Ridge, 5.0},
+                              {"ridge, lambda 20", ts::DirectLearnerKind::Ridge, 20.0}};
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << std::left << std::setw(20) << "learner" << std::right << std::setw(18) << "one-step RMSE" << "\n";
+  for (const auto& st : settings) {
+    double se = 0.0;
+    int count = 0;
+    for (int r = 0; r < reps; ++r) {
+      const auto all = truth.simulate(train + test, f64, /*seed=*/700 + r).host<double>();
+      auto prefix = [&](int rows) { return pluss::make_series(std::vector<double>(all.begin(), all.begin() + rows), f64); };
+      ts::DirectForecasterOptions o;
+      o.lag.horizon = {1};
+      o.lag.response_lags = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+      o.learner = st.kind;
+      o.ridge_lambda = st.lambda;
+      const auto model = ts::DirectForecaster::fit(Series{}, prefix(train), o, f64);
+      for (int origin = train; origin < train + test; ++origin) {
+        const double f = model.forecast(Series{}, prefix(origin), f64).host<double>()[0];
+        se += (all[origin] - f) * (all[origin] - f);
+        ++count;
+      }
+    }
+    std::cout << std::left << std::setw(20) << st.name << std::right << std::setw(18) << std::sqrt(se / count) << "\n";
+  }
+}
+```
+
+Output
+
+```text
+learner                  one-step RMSE
+OLS                             1.2280
+ridge, lambda 1                 1.2140
+ridge, lambda 5                 1.1932
+ridge, lambda 20                1.1843
+```
+
+OLS with twelve lags and 50 observations estimates thirteen coefficients from about 38 usable rows, and its error (1.228) is well above the noise floor of 1.0, the standard deviation of the shocks. Ridge shrinks the useless coefficients and the error falls as the penalty grows over this range: 1.214, 1.193 and 1.184 at penalties of 1, 5 and 20, a gain of about 4% over OLS. The best penalty on this grid is the largest one, which says the grid has not yet reached the optimum; a much larger penalty would eventually bias the one coefficient that matters and make things worse. The right penalty is a tuning choice, and the place to make it is a cross-validation over a partition.
+
+## Decisions and pitfalls
+
+- **Choose the horizons you need.** `lag.horizon` is a list; each entry is a separate regression, so asking for twenty horizons fits twenty models.
+- **Give each model only what it can see.** Features are computed at the origin `t − h`; a lag shorter than the horizon would use information from the future of the origin and is not offered.
+- **Leading means known.** Declare a predictor leading only if its future values are known at forecast time, and pass them in `x_future`.
+- **Use ridge when features are many or the sample is small.** With a dozen lags and a short series OLS fits noise; `learner = Ridge` with a suitable `ridge_lambda` stabilises it.
+- **Evaluate out of sample.** The in-sample error of a direct model always flatters it; use a partition ([Partitions](partitions.md)) and compare against alternatives ([Comparing models out of sample](comparing_models_out_of_sample.md)).
+
+Where next: [Comparing models out of sample](comparing_models_out_of_sample.md) gives the tools to decide whether one forecaster is really better than another.

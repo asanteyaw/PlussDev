@@ -78,7 +78,7 @@ int main() {
   const auto floats = pluss::make_series(std::vector<double>{3.9, 1.1}, {2}, cfg);
   const auto converted = pluss::tils::as_dtype(floats, pluss::ScalarType::Int64, cfg);
   std::cout << "converted dtype: " << converted.dtype() << '\n';
-  for (auto v : converted.to_vec<std::int64_t>()) std::cout << ' ' << v;
+  for (auto v : converted.host<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   return 0;
 }

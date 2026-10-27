@@ -1,0 +1,249 @@
+<!-- generated from Quadratic.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Quadratic`
+
+The quadratic (parabolic, Epanechnikov) distribution: an inverted parabola as a density on a symmetric interval.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Quadratic, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Quadratic, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Quadratic, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Quadratic, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Quadratic, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The quadratic distribution has the density `(3/(4 s))(1 - ((x - t)/s)²)` on `[t - s, t + s]`: an inverted parabola, highest at the centre and zero at the ends. It is the Epanechnikov kernel of density estimation, which minimises the asymptotic mean squared error among kernels of its kind, and it is a bounded, symmetric alternative to the normal.
+
+The kind-based functions take `{}` (centre 0, half-width 1) or `{t, s}`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `t` | any real | the centre |
+| `s` | > 0 | the half-width of the support |
+
+Support: the interval `[t - s, t + s]`.
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above (a shorter list selects the defaults: `{}` gives centre 0 and half-width 1). A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape. 
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`s` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Quadratic on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({-1.0, -0.6, -0.2, 0.0, 0.5, 0.9}, f64);
+  const std::vector<double> params = {};
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Quadratic, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Quadratic, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Quadratic, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -1.00000 -0.60000 -0.20000 0.00000 0.50000 0.90000
+pdf: 0.00000 0.48000 0.72000 0.75000 0.56250 0.14250
+cdf: 0.00000 0.10400 0.35200 0.50000 0.84375 0.99275
+logpdf: -inf -0.73397 -0.32850 -0.28768 -0.57536 -1.94841
+```
+
+The density is largest on this grid at x = 0, where it is 0.75; the distribution function runs from 0 at x = -1 to 0.99275 at x = 0.9, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.75) = -0.28768 at x = 0; where the density is zero (outside the support) the logarithm is `-inf`.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {};
+
+  // The three ways to the probability that the variable lies in [-0.8, 0.8]:
+  const auto grid = pluss::series::linspace(-0.8, 0.8, 3001, f64);
+  const double area = distr::pdf(dst::Quadratic, grid, params).antidiff(grid).trapezoid().item<double>();
+
+  const auto edges = pluss::make_series({-0.8, 0.8}, f64);
+  const auto c = distr::cdf(dst::Quadratic, edges, params).host<double>();
+
+  const auto draws = distr::sample(dst::Quadratic, params, {200000}, f64, 7ULL);
+  const double fraction = ((draws >= -0.8).to(pluss::ScalarType::Float64) * (draws <= 0.8).to(pluss::ScalarType::Float64)).mean().item<double>();
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(0.8) - cdf(-0.8): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+integral of the density: 0.94400
+cdf(0.8) - cdf(-0.8): 0.94400
+fraction of 200000 draws in range: 0.94349
+```
+
+The integral of the density (0.944) and the difference of the distribution function (0.944) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.94349) differs from it by 5.10e-04, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 5.14e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "s 0.5:";
+  for (double v : distr::pdf(dst::Quadratic, x, {0.0, 0.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "s 1  :";
+  for (double v : distr::pdf(dst::Quadratic, x, {0.0, 1.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "s 2  :";
+  for (double v : distr::pdf(dst::Quadratic, x, {0.0, 2.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -2.0000 -1.0000 -0.5000 0.0000 0.5000 1.0000 2.0000
+s 0.5: 0.0000 0.0000 0.0000 1.5000 0.0000 0.0000 0.0000
+s 1  : 0.0000 0.0000 0.5625 0.7500 0.5625 0.0000 0.0000
+s 2  : 0.0000 0.2812 0.3516 0.3750 0.3516 0.2812 0.0000
+```
+
+Read down the rows: `s 0.5` peaks on this grid at x = 0 (value 1.5); `s 1` peaks on this grid at x = 0 (value 0.75); `s 2` peaks on this grid at x = 0 (value 0.375). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 checks the distribution function against its closed form, `(2 + 3x - x^3)/4` on `[-1, 1]`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(6);
+  const auto x = pluss::make_series({-1.0, -0.6, -0.2, 0.0, 0.5, 0.9}, f64);
+  const std::vector<double> params = {};
+
+  const auto formula = (x * 3.0 - x.pow(3.0) + 2.0) * 0.25;
+  const auto library = distr::cdf(dst::Quadratic, x, params);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "formula:";
+  for (double v : formula.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "distr::cdf:";
+  for (double v : library.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << std::scientific << std::setprecision(2) << "largest difference: " << (formula - library).abs().max().item<double>() << '\n';
+}
+```
+
+Output
+
+```text
+x: -1.000000 -0.600000 -0.200000 0.000000 0.500000 0.900000
+formula: 0.000000 0.104000 0.352000 0.500000 0.843750 0.992750
+distr::cdf: 0.000000 0.104000 0.352000 0.500000 0.843750 0.992750
+largest difference: 2.78e-17
+```
+
+The formula and `distr::cdf` agree to 2.78e-17 over the grid, so the library implements exactly the closed form quoted above; the same expression is the quickest way to check a parameterisation before relying on it.
+
+## See Also
+
+- [`Triangular`](../continuous_bounded/Triangular.md)
+- [`Semicircle`](../continuous_bounded/Semicircle.md)
+- [`Cosine`](../continuous_bounded/Cosine.md)
+- [`Uniform`](../continuous_bounded/Uniform.md)

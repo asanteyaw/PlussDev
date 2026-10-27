@@ -25,7 +25,7 @@ int main() {
   std::cout << "input\n";
   df.head(8);
 
-  const auto ages = df.features("age").as_series().to_vec<std::int64_t>();
+  const auto ages = df.features("age").as_series().host<std::int64_t>();
   auto mask = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
   auto* keep = reinterpret_cast<bool*>(mask.raw_data());
   for (std::size_t i = 0; i < ages.size(); ++i) {
@@ -52,7 +52,7 @@ int main() {
   auto flagged = df.assign({{
       "is_senior",
       [](const pluss::table::DataFrame& frame) {
-        const auto values = frame.features("age").as_series().to_vec<std::int64_t>();
+        const auto values = frame.features("age").as_series().host<std::int64_t>();
         auto out = pluss::Series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(out.raw_data());
         for (std::size_t i = 0; i < values.size(); ++i) {

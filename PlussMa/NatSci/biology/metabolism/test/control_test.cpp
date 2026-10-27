@@ -25,7 +25,7 @@ Series cols(const std::vector<Series> &c) { // stack along a new last axis
 }
 Series mat(const std::vector<double> &v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(F64); }
 double max_diff(const Series &a, const std::vector<double> &b) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch");
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -52,7 +52,7 @@ int main() {
     // conservation laws found from N alone
     const Series gamma = mc::conservation_laws(n);
     expect(gamma.size(0) == 1 && gamma.size(1) == 4, "one conservation law (ATP + ADP)");
-    const auto g = gamma.contiguous().to_vec<double>();
+    const auto g = gamma.contiguous().host<double>();
     expect(std::abs(g[0]) < 1e-12 && std::abs(g[1]) < 1e-12 && std::abs(std::abs(g[2]) - std::sqrt(0.5)) < 1e-12 && std::abs(g[2] - g[3]) < 1e-12, "Gamma is (0,0,1,1)/sqrt2");
     expect(gamma.matmul(n).abs().max().item<double>() < 1e-12, "Gamma N = 0");
     // steady state with the total T = 5 closed by Gamma x = T/sqrt2... use the unnormalised law instead for the reference total

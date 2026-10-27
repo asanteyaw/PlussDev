@@ -36,7 +36,7 @@ TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
       std::numeric_limits<double>::quiet_NaN(),
       ScalarType::Float64);
   auto choose_nan = pluss::make_series({false, true});
-  auto selected = finite.where(choose_nan, nan_values).to_vec<double>();
+  auto selected = finite.where(choose_nan, nan_values).host<double>();
   REQUIRE(selected[0] == 1.0);
   REQUIRE(std::isnan(selected[1]));
 }

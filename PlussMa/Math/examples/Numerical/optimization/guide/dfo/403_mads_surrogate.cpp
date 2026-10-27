@@ -16,10 +16,6 @@ namespace dfo = pluss::subsp::math::optimization;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series filled(std::int64_t n, double v) { return pluss::make_series(std::vector<double>(n, v), {n}).to(f64); }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   std::cout << std::left << std::setw(6) << "dim" << std::setw(20) << "surrogate_mode" << std::setw(14) << "status" << std::setw(8) << "evals" << "orderings\n";
   for (std::int64_t dim : {4, 8, 12}) {
@@ -38,7 +34,7 @@ int main() {
       };
       const auto o = dfo::mads_blackbox_minimizer(blackbox, filled(dim, -1.0), c);
       std::cout << std::left << std::setw(6) << dim << std::setw(20) << (mode == dfo::SurrogateMode::Off ? "Off" : "CandidateOrdering")
-                << std::setw(14) << name(o.status) << std::setw(8) << o.diagnostics.evaluations << o.diagnostics.surrogate_orderings << "\n";
+                << std::setw(14) << dfo::to_string(o.status) << std::setw(8) << o.diagnostics.evaluations << o.diagnostics.surrogate_orderings << "\n";
     }
   }
 }

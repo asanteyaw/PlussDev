@@ -41,7 +41,7 @@ std::vector<double> running_sum(const std::vector<double>& e) {
 }
 void print_row(const char* label, const Series& s, int precision = 4) {
   std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
+  for (double v : s.host<double>()) std::cout << " " << std::setw(8) << v;
   std::cout << "\n";
 }
 int main() {
@@ -66,7 +66,7 @@ int main() {
   const auto fit2 = ts::Sarima::fit_mle(y, plain);
   std::cout << "non-seasonal AR(2)             : loglik = " << fit2.loglik(y) << "  (the seasonal model is better by " << fit.loglik(y) - fit2.loglik(y) << " with the same number of coefficients)\n\n";
 
-  const auto fc = fit.forecast(12, y).to_vec<double>();
+  const auto fc = fit.forecast(12, y).host<double>();
   std::cout << "next 12 forecasts:";
   for (double v : fc) std::cout << " " << v;
   std::cout << "\n";

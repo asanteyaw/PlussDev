@@ -21,7 +21,7 @@ void expect(bool condition, const std::string &message) {
 void expect_close(const pluss::Series &actual,
                   const std::vector<double> &expected,
                   double tolerance = 2e-8) {
-  const auto values = actual.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(pluss::ScalarType::Float64).host<double>().array().data;
   expect(values.size() == expected.size(), "state-estimation size mismatch");
   for (std::size_t index = 0; index < values.size(); ++index) {
     const double scale =
@@ -140,9 +140,9 @@ int main() {
       state::smooth(pluss::series::make({0.4, -0.2, 0.7, 0.1}).reshape({4, 1}),
                     dynamic_model, exact);
   expect_close(smooth.smoothed_mean.select(-2, 3),
-               smooth.filter.filtered_mean.select(-2, 3).to_vec<double>());
+               smooth.filter.filtered_mean.select(-2, 3).host<double>().array().data);
   expect_close(smooth.smoothed_cov.select(-3, 3),
-               smooth.filter.filtered_cov.select(-3, 3).to_vec<double>());
+               smooth.filter.filtered_cov.select(-3, 3).host<double>().array().data);
   expect(smooth.smoothed_cov.le(smooth.filter.filtered_cov.add(1e-8))
              .all()
              .item<bool>(),

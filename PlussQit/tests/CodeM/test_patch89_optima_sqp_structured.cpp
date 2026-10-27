@@ -21,13 +21,9 @@ using pluss::subsp::math::optim::OptimaLinearSystemStructure;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::SequentialQPOptions;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::init_sequential_qp_state;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::solve_sequential_qp;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec(std::initializer_list<double> xs) {
   return make_series(std::vector<double>(xs), {static_cast<std::int64_t>(xs.size())})
@@ -79,11 +75,11 @@ TEST_CASE("sequential qp can use Krylov routing for sparse-structured KKT solves
   const Series target = make_vec({1.0, 2.0});
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    return sum(square(p.at("x") - trace(target, false)));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    return ((p.at("x") - target).square()).sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) -> Series {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec({0.0, 0.0})},
@@ -102,7 +98,7 @@ TEST_CASE("sequential qp can use Krylov routing for sparse-structured KKT solves
   options.optimality_tolerance = 1e-5;
 
   const auto result = solve_sequential_qp(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
   REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(5e-2));
@@ -117,10 +113,10 @@ TEST_CASE("sequential qp honours every linear-system solver choice for its subpr
           "[optim][sqp][linear-policy]") {
   const Series target = make_vec({1.0, 2.0});
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    return sum(square(p.at("x") - trace(target, false)));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    return ((p.at("x") - target).square()).sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace { return sum(p.at("x")) - 1.5; };
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) -> Series { return p.at("x").sum() - 1.5; };
   problem.bounds.lower = ParameterPack<Series>({{"x", make_vec({0.0, 0.0})}});
   const ParameterPack<Series> initial({{"x", make_vec({1.0, 1.0})}});
 
@@ -133,7 +129,7 @@ TEST_CASE("sequential qp honours every linear-system solver choice for its subpr
     options.constraint_tolerance = 1e-6;
     options.optimality_tolerance = 1e-5;
     const auto result = solve_sequential_qp(problem, initial, options);
-    const auto x = result.params.at("x").to_vec<double>();
+    const auto x = result.params.at("x").host<double>();
     REQUIRE(result.converged);
     REQUIRE(x[0] == Approx(0.25).margin(1e-4));
     REQUIRE(x[1] == Approx(1.25).margin(1e-4));

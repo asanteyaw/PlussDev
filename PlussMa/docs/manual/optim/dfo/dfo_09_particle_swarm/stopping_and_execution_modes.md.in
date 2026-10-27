@@ -1,8 +1,0 @@
-# Stopping and execution modes
-
-[Back to The Particle Swarm Minimisers](../dfo_09_particle_swarm.md)
-
-
-@@example Numerical/optimization/guide/dfo/384_particle_swarm_stopping.cpp@@
-
-With the test off the run uses its whole generation budget. With `check_every` 10 it stops once the best value has stopped improving and the swarm has collapsed, here after 60 generations on a unimodal function, with the answer already below 1e-28. For rugged functions leave the test off and rely on a budget, or the swarm may collapse on a local minimum and stop there. The sequential mode updates particles one at a time and follows a different random path; both give valid results. A generation limit reports `ReachedIterationBudget`, an evaluation limit `ReachedEvaluationBudget`.

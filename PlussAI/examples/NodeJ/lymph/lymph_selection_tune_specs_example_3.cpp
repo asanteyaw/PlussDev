@@ -59,9 +59,9 @@ int main() {
   const pluss::Series objective = lymph::selection::objective_series(result);
   const pluss::Series rank = lymph::selection::objective_rank_series(result);
   std::cout << "objective per trial =";
-  for (const double v : objective.to_vec<double>()) std::cout << " " << v;
+  for (const double v : objective.host<double>()) std::cout << " " << v;
   std::cout << "\nrank per trial     =";
-  for (const double v : rank.to_vec<double>()) std::cout << " " << v;
+  for (const double v : rank.host<double>()) std::cout << " " << v;
   std::cout << "\nencoded_param_table numel = "
             << lymph::selection::encoded_param_table(result).numel() << "\n";
 

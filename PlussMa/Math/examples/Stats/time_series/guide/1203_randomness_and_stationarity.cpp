@@ -43,7 +43,7 @@ std::vector<double> running_sum(const std::vector<double>& e) {
 }
 void print_row(const char* label, const Series& s, int precision = 4) {
   std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
+  for (double v : s.host<double>()) std::cout << " " << std::setw(8) << v;
   std::cout << "\n";
 }
 int main() {
@@ -54,13 +54,13 @@ int main() {
   ts::LjungBoxOptions lb;
   lb.lags = {5, 10};
   const auto q = ts::ljung_box(stationary, lb);
-  const auto stat = q.stat.to_vec<double>(), p = q.pvalue.to_vec<double>();
+  const auto stat = q.stat.host<double>(), p = q.pvalue.host<double>();
   std::cout << "Ljung-Box on the AR(1): Q(5) = " << stat[0] << " (p = " << std::scientific << std::setprecision(2) << p[0] << std::fixed << std::setprecision(4) << "), Q(10) = " << stat[1] << " (p = "
             << std::scientific << std::setprecision(2) << p[1] << ")\n";
   lb.lags = {10};
   lb.model_df = 1;
   const auto q1 = ts::ljung_box(stationary, lb);
-  std::cout << std::fixed << std::setprecision(4) << "  with one fitted parameter: " << q1.dof.to_vec<double>()[0] << " degrees of freedom\n\n";
+  std::cout << std::fixed << std::setprecision(4) << "  with one fitted parameter: " << q1.dof.host<double>()[0] << " degrees of freedom\n\n";
 
   std::cout << std::left << std::setw(26) << "ADF (2 lags)" << std::setw(12) << "statistic" << std::setw(12) << "p-value" << std::setw(12) << "5% critical" << "decision\n";
   for (auto model : {ts::AdfModel::AR, ts::AdfModel::ARD, ts::AdfModel::TS}) {

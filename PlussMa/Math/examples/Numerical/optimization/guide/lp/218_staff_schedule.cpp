@@ -42,7 +42,7 @@ int main() {
   std::cout << "dense branch and bound: " << dense.objective.item<double>() << " employees, " << dense.nodes << " nodes\n";
   std::cout << "sparse branch and cut:  " << sparse.objective << " employees, " << sparse.nodes << " nodes\n\n";
 
-  const auto starts = dense.x.to_vec<double>();
+  const auto starts = dense.x.host<double>();
   std::cout << std::left << std::setw(6) << "day" << std::setw(8) << "starts" << std::setw(10) << "working" << "needed\n";
   bool covered = true;
   for (int d = 0; d < days; ++d) {

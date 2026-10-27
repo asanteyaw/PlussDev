@@ -110,8 +110,8 @@ bool run_nodej_multiclass_checks(std::ostream* err = nullptr) {
       if (err) *err << "multiclass linear infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = tri.y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = tri.y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     std::size_t correct = 0;
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (approx(pred[i], truth[i])) ++correct;
@@ -129,7 +129,7 @@ bool run_nodej_multiclass_checks(std::ostream* err = nullptr) {
       if (err) *err << "multiclass linear assess should support multiclass metrics\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() != 6 || metrics[0] < 0.9 || metrics[1] < 0.9 || metrics[5] > 0.4) {
       if (err) *err << "multiclass metrics should indicate high fit quality\n";
       return false;
@@ -142,7 +142,7 @@ bool run_nodej_multiclass_checks(std::ostream* err = nullptr) {
       if (err) *err << "multiclass RocAuc should be available\n";
       return false;
     }
-    const auto roc = roc_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto roc = roc_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (roc.size() != 1 || roc[0] < 0.9 || roc[0] > 1.0) {
       if (err) *err << "multiclass RocAuc should be finite and high on separable data\n";
       return false;
@@ -175,8 +175,8 @@ bool run_nodej_multiclass_checks(std::ostream* err = nullptr) {
       if (err) *err << "multiclass tree infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = tri.y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = tri.y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i])) {
         if (err) *err << "multiclass tree should fit this training set\n";

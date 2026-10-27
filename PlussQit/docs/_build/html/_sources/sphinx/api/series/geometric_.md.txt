@@ -84,7 +84,7 @@ is `1`.
 pluss::rng_seed(7);
 auto x = pluss::series::empty({200000}, pluss::ScalarType::Float64);
 x.geometric_(0.25);
-auto v = x.to_vec<double>();
+auto v = x.host<double>();
 double lo = 1e300, sum = 0;
 for (double e : v) { lo = std::min(lo, e); sum += e; }
 std::cout << "min=" << lo << "  mean~" << sum / v.size() << "  (1 / 0.25 = 4)\n";

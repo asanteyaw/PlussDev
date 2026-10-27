@@ -37,8 +37,8 @@ Example 1. A code pattern that matches one value fully and not the other.
 auto slot = pluss::scribble::Slot({pluss::make_note("AB-123"), pluss::make_note("99XY")});
 auto out = slot.nt().fullmatch("[A-Z]{2}-[0-9]{3}");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<bool>()[0];
 ```
 
 ### Output

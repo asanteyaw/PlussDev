@@ -128,12 +128,12 @@ TEST_CASE("CUDA bridge enables elementwise fallback when strict native is off", 
   const auto x_cuda = x_cpu.to(pluss::pCUDA);
   const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
-  require_close_(x_cuda.add(y_cuda).to(pluss::pCPU).to_vec<float>(), x_cpu.add(y_cpu).to_vec<float>());
-  require_close_(x_cuda.mul(y_cuda).to(pluss::pCPU).to_vec<float>(), x_cpu.mul(y_cpu).to_vec<float>());
-  require_close_(x_cuda.neg().to(pluss::pCPU).to_vec<float>(), x_cpu.neg().to_vec<float>());
-  require_close_(x_cuda.abs().to(pluss::pCPU).to_vec<float>(), x_cpu.abs().to_vec<float>());
-  require_equal_u8_(x_cuda.gt(y_cuda).to(pluss::pCPU).to_vec<std::uint8_t>(),
-                    x_cpu.gt(y_cpu).to_vec<std::uint8_t>());
+  require_close_(x_cuda.add(y_cuda).to(pluss::pCPU).host<float>(), x_cpu.add(y_cpu).host<float>());
+  require_close_(x_cuda.mul(y_cuda).to(pluss::pCPU).host<float>(), x_cpu.mul(y_cpu).host<float>());
+  require_close_(x_cuda.neg().to(pluss::pCPU).host<float>(), x_cpu.neg().host<float>());
+  require_close_(x_cuda.abs().to(pluss::pCPU).host<float>(), x_cpu.abs().host<float>());
+  require_equal_u8_(x_cuda.gt(y_cuda).to(pluss::pCPU).host<std::uint8_t>(),
+                    x_cpu.gt(y_cpu).host<std::uint8_t>());
 }
 
 TEST_CASE("CUDA strict native elementwise executes supported native route", "[cuda][bridge][policy][elementwise]") {
@@ -194,20 +194,20 @@ TEST_CASE("CUDA strict native elementwise executes supported native route", "[cu
 
   const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar allow_materialize("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", "0");
-  require_close_(sub.to(pluss::pCPU).to_vec<float>(), x_cpu.sub(y_cpu).to_vec<float>());
-  require_close_(div.to(pluss::pCPU).to_vec<float>(), x_cpu.div(y_cpu).to_vec<float>());
-  require_close_(expm1.to(pluss::pCPU).to_vec<float>(), x_cpu.expm1().to_vec<float>());
-  require_close_(sqrt.to(pluss::pCPU).to_vec<float>(), z_cpu.sqrt().to_vec<float>());
-  require_close_(exp.to(pluss::pCPU).to_vec<float>(), z_cpu.exp().to_vec<float>());
-  require_close_(log.to(pluss::pCPU).to_vec<float>(), z_cpu.log().to_vec<float>());
-  require_close_(sin.to(pluss::pCPU).to_vec<float>(), z_cpu.sin().to_vec<float>());
-  require_close_(cos.to(pluss::pCPU).to_vec<float>(), z_cpu.cos().to_vec<float>());
-  require_close_(tanh.to(pluss::pCPU).to_vec<float>(), z_cpu.tanh().to_vec<float>());
-  require_close_(floor.to(pluss::pCPU).to_vec<float>(), frac_cpu.floor().to_vec<float>());
-  require_close_(ceil.to(pluss::pCPU).to_vec<float>(), frac_cpu.ceil().to_vec<float>());
-  require_close_(round.to(pluss::pCPU).to_vec<float>(), frac_cpu.round().to_vec<float>());
-  require_close_(trunc.to(pluss::pCPU).to_vec<float>(), frac_cpu.trunc().to_vec<float>());
-  require_close_(reciprocal.to(pluss::pCPU).to_vec<float>(), z_cpu.reciprocal().to_vec<float>());
-  require_equal_u8_(eq.to(pluss::pCPU).to_vec<std::uint8_t>(),
-                    x_cpu.eq(y_cpu).to_vec<std::uint8_t>());
+  require_close_(sub.to(pluss::pCPU).host<float>(), x_cpu.sub(y_cpu).host<float>());
+  require_close_(div.to(pluss::pCPU).host<float>(), x_cpu.div(y_cpu).host<float>());
+  require_close_(expm1.to(pluss::pCPU).host<float>(), x_cpu.expm1().host<float>());
+  require_close_(sqrt.to(pluss::pCPU).host<float>(), z_cpu.sqrt().host<float>());
+  require_close_(exp.to(pluss::pCPU).host<float>(), z_cpu.exp().host<float>());
+  require_close_(log.to(pluss::pCPU).host<float>(), z_cpu.log().host<float>());
+  require_close_(sin.to(pluss::pCPU).host<float>(), z_cpu.sin().host<float>());
+  require_close_(cos.to(pluss::pCPU).host<float>(), z_cpu.cos().host<float>());
+  require_close_(tanh.to(pluss::pCPU).host<float>(), z_cpu.tanh().host<float>());
+  require_close_(floor.to(pluss::pCPU).host<float>(), frac_cpu.floor().host<float>());
+  require_close_(ceil.to(pluss::pCPU).host<float>(), frac_cpu.ceil().host<float>());
+  require_close_(round.to(pluss::pCPU).host<float>(), frac_cpu.round().host<float>());
+  require_close_(trunc.to(pluss::pCPU).host<float>(), frac_cpu.trunc().host<float>());
+  require_close_(reciprocal.to(pluss::pCPU).host<float>(), z_cpu.reciprocal().host<float>());
+  require_equal_u8_(eq.to(pluss::pCPU).host<std::uint8_t>(),
+                    x_cpu.eq(y_cpu).host<std::uint8_t>());
 }

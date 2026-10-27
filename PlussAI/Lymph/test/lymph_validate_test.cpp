@@ -94,8 +94,8 @@ bool run_validate_checks(std::ostream* err) {
   const Series custom_scores = plan.scores(
       staged_logistic(), frame, data_options,
       selection::make_scorer("fold_accuracy", accuracy_fn), quick_train);
-  const auto cs = custom_scores.to(pluss::pCPU, ScalarType::Float64).reshape({custom_scores.numel()}).to_vec<double>();
-  const auto bs = scores.to(pluss::pCPU, ScalarType::Float64).reshape({scores.numel()}).to_vec<double>();
+  const auto cs = custom_scores.to(pluss::pCPU, ScalarType::Float64).reshape({custom_scores.numel()}).host<double>();
+  const auto bs = scores.to(pluss::pCPU, ScalarType::Float64).reshape({scores.numel()}).host<double>();
   if (cs.size() != 2 || std::abs(cs[0] - bs[0]) > 1e-9 || std::abs(cs[1] - bs[1]) > 1e-9) {
     if (err) *err << "validate::Plan::scores with a custom Scorer should match the built-in accuracy per fold\n";
     return false;
@@ -189,13 +189,13 @@ bool run_validate_checks(std::ostream* err) {
   // block starts at the 7th chronological row.
   if (ordered_splits.size() != 2
       || ordered_splits.back().test_set.ncases() != 2
-      || ordered_splits.back().test_set.features("x1").as_series().to_vec<double>().front() != 7.0) {
+      || ordered_splits.back().test_set.features("x1").as_series().host<double>().front() != 7.0) {
     if (err) *err << "validate::time(...).splits(frame,time_feature) should sort by the time feature and expose ordered temporal folds\n";
     return false;
   }
   const prep::TimeSeriesSplit tail_holdout = time_plan.last(frame, "timestamp");
   if (tail_holdout.test_set.ncases() != 2
-      || tail_holdout.test_set.features("x1").as_series().to_vec<double>().front() != 7.0) {
+      || tail_holdout.test_set.features("x1").as_series().host<double>().front() != 7.0) {
     if (err) *err << "validate::time(...).last(frame,time_feature) should return the last chronological holdout block\n";
     return false;
   }

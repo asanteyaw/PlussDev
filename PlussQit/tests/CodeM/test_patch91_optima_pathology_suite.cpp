@@ -7,6 +7,7 @@
 #include <limits>
 #include <vector>
 
+
 namespace {
 using Catch::Approx;
 
@@ -19,11 +20,7 @@ using pluss::subsp::math::optim::OptimaExitFlag;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::OptimaStallCategory;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series scalar(double x) {
   return make_series(x).to(ScalarType::Float64).reshape({1});
@@ -31,10 +28,6 @@ Series scalar(double x) {
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64);
-}
-
-double as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
 }
 
 ConstrainedProblem make_nonfinite_region_problem() {
@@ -56,8 +49,8 @@ ConstrainedProblem make_nonfinite_region_problem() {
 
 ConstrainedProblem make_boundary_limited_problem() {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
-    return square(p.at("x") + 1.0);
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) {
+    return (p.at("x") + 1.0).square();
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", scalar(0.0)},
@@ -67,8 +60,8 @@ ConstrainedProblem make_boundary_limited_problem() {
 
 ConstrainedProblem make_simple_quadratic_problem() {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
-    return square(p.at("x") - 1.0);
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) {
+    return (p.at("x") - 1.0).square();
   };
   return problem;
 }
@@ -88,7 +81,7 @@ ConstrainedProblem make_recovery_failure_problem() {
         make_series((x - 0.25) * (x - 0.25)).to(ScalarType::Float64),
         ParameterPack<Series>({{"x", scalar(2.0 * (x - 0.25))}})};
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
     return p.at("x") - 0.2;
   };
   return problem;
@@ -101,10 +94,10 @@ ConstrainedProblem make_recovery_failure_problem() {
 // the state the feasibility phase exists to classify.
 ConstrainedProblem make_feasibility_phase_problem() {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
-    return square(p.at("x") * 0.0);
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) {
+    return (p.at("x") * 0.0).square();
   };
-  problem.nonlinear.equality = [](const ParameterPack<Trace>& p) {
+  problem.nonlinear.equality = [](const ParameterPack<Series>& p) {
     return p.at("x") - 0.1;
   };
   problem.bounds.lower = ParameterPack<Series>({
@@ -116,12 +109,12 @@ ConstrainedProblem make_feasibility_phase_problem() {
 ConstrainedProblem make_complementarity_probe_problem() {
   ConstrainedProblem problem;
   const Series target = make_vec2(1.0, 2.0);
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -150,7 +143,7 @@ TEST_CASE("optima classifies live boundary-limited SQP exits", "[optim][optima][
 
   // The minimizer sits exactly on the bound; the solver now recognises it instead of stalling there.
   REQUIRE(result.exit_flag == OptimaExitFlag::Converged);
-  REQUIRE(result.params.at("x").item<double>() == Approx(0.0).margin(1e-8));
+  REQUIRE(as_f64(result.params.at("x")) == Approx(0.0).margin(1e-8));
 }
 
 TEST_CASE("optima classifies live SQP search-direction collapse exits", "[optim][optima][pathology][collapse]") {

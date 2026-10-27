@@ -197,9 +197,9 @@ Slate indexed_numeric_window_(
     // one inevitable bounds pass and return to the source platform.
     const auto cpu_values =
         values.to(pluss::codem::Platform::CPU)
-            .to(pluss::codem::ScalarType::Float64).to_vec<double>();
+            .to(pluss::codem::ScalarType::Float64).host<double>();
     const auto cpu_valid =
-        valid.to(pluss::codem::Platform::CPU).to_vec<bool>();
+        valid.to(pluss::codem::Platform::CPU).host<bool>();
     std::vector<double> extrema(static_cast<std::size_t>(n), 0.0);
     std::vector<bool> extrema_valid(static_cast<std::size_t>(n), false);
     for (std::int64_t row = 0; row < n; ++row) {
@@ -717,14 +717,14 @@ Slate Slate::mode(bool drop_nulls) const {
           kind() == SlateKind::Timeline ||
           kind() == SlateKind::Duration,
       "Slate::mode: unsupported payload");
-  const auto validity = notnull().as_series().to_vec<bool>();
+  const auto validity = notnull().as_series().host<bool>();
   std::int64_t null_count = 0;
   std::vector<bool> output_valid;
   if (kind() == SlateKind::Series) {
     require_numeric_slate_(*this, "Slate::mode");
     const auto values =
         as_series().to(pluss::codem::Platform::CPU)
-            .to(pluss::codem::ScalarType::Float64).to_vec<double>();
+            .to(pluss::codem::ScalarType::Float64).host<double>();
     std::map<double, std::int64_t> counts;
     for (std::size_t i = 0; i < values.size(); ++i) {
       validity[i] ? ++counts[values[i]] : ++null_count;
@@ -836,8 +836,8 @@ Slate Slate::rank(
   require_numeric_slate_(*this, "Slate::rank");
   const auto n = size();
   auto values = as_series().to(pluss::codem::Platform::CPU)
-                    .to(pluss::codem::ScalarType::Float64).to_vec<double>();
-  auto valid = notnull().as_series().to_vec<bool>();
+                    .to(pluss::codem::ScalarType::Float64).host<double>();
+  auto valid = notnull().as_series().host<bool>();
   std::vector<std::int64_t> order;
   order.reserve(static_cast<std::size_t>(n));
   for (std::int64_t i = 0; i < n; ++i) {
@@ -1396,7 +1396,7 @@ Slate Slate::timed(
              axis.as_series().scalar_type() ==
                  pluss::codem::ScalarType::Int64) {
     ticks = axis.as_series().to(
-        pluss::codem::Platform::CPU).to_vec<std::int64_t>();
+        pluss::codem::Platform::CPU).host<std::int64_t>();
   } else {
     PLUSS_FAIL(
         "Slate::timed: axis must be Timeline or Int64 "

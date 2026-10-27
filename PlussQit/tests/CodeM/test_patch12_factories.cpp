@@ -46,23 +46,23 @@ TEST_CASE("rng_seed drives deterministic zero-seed factory stream", "[factory][r
 
   const auto a0 = rand({8}, ScalarType::Float32);
   const auto a1 = rand({8}, ScalarType::Float32);
-  REQUIRE(a0.to_vec<float>() != a1.to_vec<float>());
+  REQUIRE(a0.host<float>() != a1.host<float>());
 
   pluss::tils::rng_seed(424242u);
   const auto b0 = rand({8}, ScalarType::Float32);
   const auto b1 = rand({8}, ScalarType::Float32);
-  REQUIRE(b0.to_vec<float>() == a0.to_vec<float>());
-  REQUIRE(b1.to_vec<float>() == a1.to_vec<float>());
+  REQUIRE(b0.host<float>() == a0.host<float>());
+  REQUIRE(b1.host<float>() == a1.host<float>());
 
   pluss::tils::rng_seed(999u);
   const auto c0 = randn({8}, ScalarType::Float32);
   pluss::tils::rng_seed(999u);
   const auto c1 = randn({8}, ScalarType::Float32);
-  REQUIRE(c0.to_vec<float>() == c1.to_vec<float>());
+  REQUIRE(c0.host<float>() == c1.host<float>());
 
   const auto explicit_seed_a = rand({8}, ScalarType::Float32, 7u);
   const auto explicit_seed_b = rand({8}, ScalarType::Float32, 7u);
-  REQUIRE(explicit_seed_a.to_vec<float>() == explicit_seed_b.to_vec<float>());
+  REQUIRE(explicit_seed_a.host<float>() == explicit_seed_b.host<float>());
 }
 
 TEST_CASE("poisson factory is deterministic and dtype-aware", "[factory][poisson]") {
@@ -71,14 +71,14 @@ TEST_CASE("poisson factory is deterministic and dtype-aware", "[factory][poisson
   REQUIRE(a.sizes()[0] == 2);
   REQUIRE(a.sizes()[1] == 4);
   REQUIRE(a.scalar_type() == ScalarType::Int64);
-  REQUIRE(a.to_vec<std::int64_t>() == b.to_vec<std::int64_t>());
-  for (const auto v : a.to_vec<std::int64_t>()) {
+  REQUIRE(a.host<std::int64_t>() == b.host<std::int64_t>());
+  for (const auto v : a.host<std::int64_t>()) {
     REQUIRE(v >= 0);
   }
 
   const auto f = poisson({3}, 0.0, ScalarType::Float32, 99u);
   REQUIRE(f.scalar_type() == ScalarType::Float32);
-  for (const auto v : f.to_vec<float>()) {
+  for (const auto v : f.host<float>()) {
     REQUIRE(v == 0.0f);
   }
 }

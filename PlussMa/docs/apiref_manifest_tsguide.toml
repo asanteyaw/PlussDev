@@ -59,7 +59,7 @@ maxdepth = 2
 children = ["ts_07_plots/autocorrelation_and_partial_autocorrelation", "ts_07_plots/plots_of_the_residuals"]
 
 [[family]]
-path = "ts/guide"
+path = "ts/guide/landing"
 page = "manual/ts/guide.md"
 title = "guide"
 maxdepth = 2

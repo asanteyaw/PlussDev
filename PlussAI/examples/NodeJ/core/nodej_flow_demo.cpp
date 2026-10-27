@@ -24,7 +24,7 @@ bool require_ok(const StatusOr<T>& out, const std::string& label) {
 }
 
 void print_metric_values(const std::string& label, const Series& x) {
-  const auto v = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  const auto v = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
   std::cout << label << ":";
   for (double value : v) std::cout << " " << value;
   std::cout << "\n";

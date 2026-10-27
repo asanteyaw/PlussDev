@@ -91,9 +91,9 @@ bool run_ice_outline_classification_checks(std::ostream* err = nullptr) {
   // tolerance, not exact equality: different batch sizes can take
   // different BLAS summation-order paths for the same matmul).
   const auto chunked_predictions = model.infer(data.x, /*chunk_size=*/97);
-  const auto flat_a = predictions.to(pluss::pCPU, ScalarType::Float64).reshape({predictions.numel()}).to_vec<double>();
+  const auto flat_a = predictions.to(pluss::pCPU, ScalarType::Float64).reshape({predictions.numel()}).host<double>();
   const auto flat_b =
-      chunked_predictions.to(pluss::pCPU, ScalarType::Float64).reshape({chunked_predictions.numel()}).to_vec<double>();
+      chunked_predictions.to(pluss::pCPU, ScalarType::Float64).reshape({chunked_predictions.numel()}).host<double>();
   if (flat_a.size() != flat_b.size()) {
     if (err) *err << "ice Outline chunked infer() should return the same number of rows as unchunked infer()\n";
     return false;

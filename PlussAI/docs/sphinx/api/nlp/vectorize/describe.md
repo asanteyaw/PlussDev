@@ -77,7 +77,7 @@ int main() {
   std::cout << "documents = " << stats.doc_count << ", tokens = " << stats.token_count
             << ", distinct terms = " << stats.unique_term_count << "\n";
   const auto frequencies = stats.document_frequency.to(pluss::pCPU, pluss::ScalarType::Float64)
-                               .contiguous().template to_vec<double>();
+                               .contiguous().template host<double>();
   std::int64_t singletons = 0;
   for (const double frequency : frequencies) {
     if (frequency == 1.0) ++singletons;
@@ -148,7 +148,7 @@ int main() {
   const nlp::vectorize::CorpusStats stats = nlp::vectorize::describe(docs);
 
   const auto frequencies = stats.document_frequency.to(pluss::pCPU, pluss::ScalarType::Float64)
-                               .contiguous().template to_vec<double>();
+                               .contiguous().template host<double>();
   for (const std::int64_t threshold : {1, 2, 3}) {
     std::int64_t kept = 0;
     for (const double frequency : frequencies) {

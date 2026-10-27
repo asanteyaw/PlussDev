@@ -18,7 +18,7 @@ void expect(bool c, const std::string &m) {
     throw std::runtime_error(m);
 }
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
-std::vector<double> vals(const Series &s) { return s.contiguous().to_vec<double>(); }
+std::vector<double> vals(const Series &s) { return s.contiguous().host<double>(); }
 } // namespace
 
 int main() {
@@ -46,10 +46,10 @@ int main() {
       expect(c.point.sub(r.reciprocal().neg().add(1.0)).abs().max().item<double>() < 1e-12 && c.multiplier.sub(r.neg().add(2.0)).abs().max().item<double>() < 1e-12, "logistic fixed point and multiplier 2 - r");
       const mp::Map g = [](const Series &x) { return mp::ricker(x, 1.8, 2.0); }, dg = [](const Series &x) { return mp::ricker_derivative(x, 1.8, 2.0); };
       const auto rc = mp::periodic_point(g, dg, vec({1.6}), 1);
-      expect(std::abs(rc.point.item<double>() - 2.0) < 1e-12 && std::abs(rc.multiplier.item<double>() - (1.0 - 1.8)) < 1e-12, "Ricker fixed point K with multiplier 1 - r");
+      expect(std::abs(rc.point.host<double>().front() - 2.0) < 1e-12 && std::abs(rc.multiplier.host<double>().front() - (1.0 - 1.8)) < 1e-12, "Ricker fixed point K with multiplier 1 - r");
       const mp::Map b = [](const Series &x) { return mp::beverton_holt(x, 3.0, 5.0); }, db = [](const Series &x) { return mp::beverton_holt_derivative(x, 3.0, 5.0); };
       const auto bc = mp::periodic_point(b, db, vec({4.0}), 1);
-      expect(std::abs(bc.point.item<double>() - 5.0) < 1e-12 && std::abs(bc.multiplier.item<double>() - 1.0 / 3.0) < 1e-12, "Beverton-Holt fixed point K with multiplier 1/R0");
+      expect(std::abs(bc.point.host<double>().front() - 5.0) < 1e-12 && std::abs(bc.multiplier.host<double>().front() - 1.0 / 3.0) < 1e-12, "Beverton-Holt fixed point K with multiplier 1/R0");
     }
     // exact 2-cycle of the logistic map: x = [(r + 1) +- sqrt((r + 1)(r - 3))] / (2 r), Lyapunov exponent (1/2) ln|f'(x1) f'(x2)| = (1/2) ln|4 + 2 r - r^2|
     {
@@ -58,17 +58,17 @@ int main() {
       const auto c = mp::periodic_point(f, df, vec({0.80}), 2);
       expect(c.converged, "2-cycle converged");
       const double x1 = ((r + 1.0) + std::sqrt((r + 1.0) * (r - 3.0))) / (2.0 * r), x2 = ((r + 1.0) - std::sqrt((r + 1.0) * (r - 3.0))) / (2.0 * r);
-      const double xp = c.point.item<double>();
-      expect((std::abs(xp - x1) < 1e-12 || std::abs(xp - x2) < 1e-12) && std::abs(c.multiplier.item<double>() - (4.0 + 2.0 * r - r * r)) < 1e-11, "2-cycle point and multiplier 4 + 2r - r^2");
-      const double lam = mp::lyapunov(f, df, vec({0.3}), 1000, 4000).item<double>();
+      const double xp = c.point.host<double>().front();
+      expect((std::abs(xp - x1) < 1e-12 || std::abs(xp - x2) < 1e-12) && std::abs(c.multiplier.host<double>().front() - (4.0 + 2.0 * r - r * r)) < 1e-11, "2-cycle point and multiplier 4 + 2r - r^2");
+      const double lam = mp::lyapunov(f, df, vec({0.3}), 1000, 4000).host<double>().front();
       expect(std::abs(lam - 0.5 * std::log(std::abs(4.0 + 2.0 * r - r * r))) < 1e-9, "Lyapunov exponent of the 2-cycle");
       const Series orbit = mp::attractor(f, vec({0.3}), 1000, 40);
-      expect(std::abs(mp::detect_period(orbit, 16, 1e-9).item<double>() - 2.0) < 1e-12, "detected period 2");
+      expect(std::abs(mp::detect_period(orbit, 16, 1e-9).host<double>().front() - 2.0) < 1e-12, "detected period 2");
     }
     // r = 4: exponent ln 2, chaotic (no period)
     {
       const mp::Map f = [](const Series &x) { return mp::logistic(x, 3.999999999); }, df = [](const Series &x) { return mp::logistic_derivative(x, 3.999999999); };
-      const double lam = mp::lyapunov(f, df, vec({0.3123}), 500, 200000).item<double>();
+      const double lam = mp::lyapunov(f, df, vec({0.3123}), 500, 200000).host<double>().front();
       expect(std::abs(lam - std::log(2.0)) < 3e-3, "logistic r = 4 exponent ln 2: " + std::to_string(lam));
     }
     // sweeps against the numpy long-run exponents (all lanes at once)
@@ -95,7 +95,7 @@ int main() {
           guess = got[n - 1] + (got[n - 1] - got[n - 2]) / 4.669;
         else if (n == 1)
           guess = 3.2;
-        const double r = mp::superstable_parameter(map, 0.5, 1 << n, vec({guess})).item<double>();
+        const double r = mp::superstable_parameter(map, 0.5, 1 << n, vec({guess})).host<double>().front();
         got.push_back(r);
         expect(std::abs(r - ref::superstable[n]) < 1e-11, "superstable parameter R_" + std::to_string(n) + ": " + std::to_string(r));
       }
@@ -106,7 +106,7 @@ int main() {
       const double r2 = got[2];
       const mp::Map f = [&](const Series &x) { return mp::logistic(x, r2); }, df = [&](const Series &x) { return mp::logistic_derivative(x, r2); };
       const auto c = mp::periodic_point(f, df, vec({0.5}), 4);
-      expect(std::abs(c.multiplier.item<double>()) < 1e-6, "superstable cycle has multiplier 0");
+      expect(std::abs(c.multiplier.host<double>().front()) < 1e-6, "superstable cycle has multiplier 0");
     }
     std::cout << "maps tests passed\n";
   } catch (const std::exception &e) {

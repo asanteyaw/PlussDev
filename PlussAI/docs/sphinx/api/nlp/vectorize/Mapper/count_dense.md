@@ -33,7 +33,7 @@ so the result has as many rows as there are documents, including empty ones.
 
 A classic `StatusOr<FeatureBatch>`. On success the batch holds a `Series` with shape
 `{documents, vocabulary size}`, read through `sample_count()` and `feature_count()`. Read the values
-with `x.to(...)` and `to_vec`.
+with `x.to(...)` and `host<T>()`.
 
 ## Errors
 
@@ -67,7 +67,7 @@ int main() {
   mapper.learn(docs);
 
   const auto batch = mapper.count_dense(docs).value();
-  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   const std::int64_t cols = batch.feature_count();
   for (std::int64_t row = 0; row < batch.sample_count(); ++row) {
     std::cout << "document " << row << ":";
@@ -108,7 +108,7 @@ int main() {
 
   const auto unseen = wf.infer(std::vector<std::string>{"zebra cat"});
   const auto batch = mapper.count_dense(unseen).value();
-  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "vocabulary:";
   for (const std::string& term : mapper.vocabulary()) std::cout << " " << term;
   std::cout << "\n";

@@ -25,7 +25,7 @@ void require_close_vec(const Series& got,
                        const std::vector<double>& expected,
                        const ParityTolerance tol,
                        const std::string& label) {
-  const auto gv = got.to_vec<double>();
+  const auto gv = got.host<double>();
   REQUIRE(gv.size() == expected.size());
   for (std::size_t i = 0; i < gv.size(); ++i) {
     const double scale = std::abs(expected[i]);
@@ -103,7 +103,7 @@ TEST_CASE("cpu autodiff parity harness matches reference reduction gradients", "
   const Series loss = x.square().mean().add(x.exp().add(1.0).log().sum());
   loss.reverse();
 
-  const auto xv = x.to_vec<double>();
+  const auto xv = x.host<double>();
   std::vector<double> expected;
   expected.reserve(xv.size());
   for (const double v : xv) {

@@ -150,27 +150,27 @@ TEST_CASE("CUDA bridge enables reduction fallback when strict native is off", "[
       pluss::make_series(std::vector<float>{1.f, -2.f, 3.f, 4.f, 0.f, -1.f}, {2, 3});
   const auto x_cuda = x_cpu.to(pluss::pCUDA);
 
-  require_close_(x_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
-  require_close_(x_cuda.prod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.prod(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
-  require_close_(x_cuda.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.mean(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
-  require_close_(x_cuda.amax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.amax(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
-  require_close_(x_cuda.amin(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.amin(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(x_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.sum(/*dim=*/1, /*keepdim=*/false).host<float>());
+  require_close_(x_cuda.prod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.prod(/*dim=*/1, /*keepdim=*/false).host<float>());
+  require_close_(x_cuda.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.mean(/*dim=*/1, /*keepdim=*/false).host<float>());
+  require_close_(x_cuda.amax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.amax(/*dim=*/1, /*keepdim=*/false).host<float>());
+  require_close_(x_cuda.amin(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.amin(/*dim=*/1, /*keepdim=*/false).host<float>());
 
   const auto mask_cpu = x_cpu.gt(0.0);
   const auto mask_cuda = mask_cpu.to(pluss::pCUDA);
-  require_equal_u8_(mask_cuda.all(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::uint8_t>(),
-                    mask_cpu.all(/*dim=*/1, /*keepdim=*/false).to_vec<std::uint8_t>());
-  require_equal_u8_(mask_cuda.any(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::uint8_t>(),
-                    mask_cpu.any(/*dim=*/1, /*keepdim=*/false).to_vec<std::uint8_t>());
-  require_equal_i64_(x_cuda.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-                     x_cpu.argmax(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>());
-  require_equal_i64_(x_cuda.argmin(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-                     x_cpu.argmin(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>());
+  require_equal_u8_(mask_cuda.all(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::uint8_t>(),
+                    mask_cpu.all(/*dim=*/1, /*keepdim=*/false).host<std::uint8_t>());
+  require_equal_u8_(mask_cuda.any(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::uint8_t>(),
+                    mask_cpu.any(/*dim=*/1, /*keepdim=*/false).host<std::uint8_t>());
+  require_equal_i64_(x_cuda.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int64_t>(),
+                     x_cpu.argmax(/*dim=*/1, /*keepdim=*/false).host<std::int64_t>());
+  require_equal_i64_(x_cuda.argmin(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int64_t>(),
+                     x_cpu.argmin(/*dim=*/1, /*keepdim=*/false).host<std::int64_t>());
 }
 
 TEST_CASE("CUDA strict native reduction executes supported native route", "[cuda][bridge][policy][reduction]") {
@@ -187,12 +187,12 @@ TEST_CASE("CUDA strict native reduction executes supported native route", "[cuda
   const auto x_cpu =
       pluss::make_series(std::vector<float>{2.f, -1.f, 5.f, 3.f, 7.f, 0.f}, {2, 3});
   const auto x_cuda = x_cpu.to(pluss::pCUDA);
-  require_close_(x_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
-  require_close_(x_cuda.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.mean(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
-  require_close_(x_cuda.amax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.amax(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
-  require_equal_i64_(x_cuda.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-                     x_cpu.argmax(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>());
+  require_close_(x_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.sum(/*dim=*/1, /*keepdim=*/false).host<float>());
+  require_close_(x_cuda.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.mean(/*dim=*/1, /*keepdim=*/false).host<float>());
+  require_close_(x_cuda.amax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+                 x_cpu.amax(/*dim=*/1, /*keepdim=*/false).host<float>());
+  require_equal_i64_(x_cuda.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int64_t>(),
+                     x_cpu.argmax(/*dim=*/1, /*keepdim=*/false).host<std::int64_t>());
 }

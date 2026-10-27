@@ -1,0 +1,43 @@
+# Design problems
+
+[Back to Optima 8: Worked Problems](../optima_08_worked_problems.md)
+
+Design problems have a natural objective (use the least material, make the most profit) and a list of physical or business limits, which is exactly the shape `optima` is built for. Each program here follows the same checklist: state the problem, solve it, check the flag and the violation, check the answer by something the solver did not use, and read the multipliers as prices.
+
+Three problems are covered. A can that holds a given volume with the least metal has a closed form that the solver must reproduce, which makes it a test of the whole method. The same can with catalogue limits that make it impossible shows what a failed solve looks like and how to tell it from a success. A production plant with every kind of constraint (shared resources, an exact-split rule, a pollution cap, bounds) is the realistic case, where the multipliers say what each limit is worth.
+
+## Program 2: A design with a closed-form answer
+
+The least metal for a cylindrical can that holds 1000 cubic centimetres. The unknowns are the radius `r` and the height `h`, named blocks. The surface area is the objective, and the volume requirement `pi r^2 h >= 1000` is a curved inequality, written `1000 - pi r^2 h <= 0`.
+
+@@example Numerical/optimization/guide/optima/92_can_design.cpp@@
+
+The answer is a radius of 5.4193 and a height of 10.8385, found in 9 iterations. For this problem calculus gives the answer in closed form: the height is twice the radius and `r = (V / 2 pi)^(1/3)`. The solver agrees with it to the four printed digits, the volume constraint is met with equality, and the multiplier, 0.3691, equals the closed-form value `2 (2 pi)^(1/3) V^(-1/3)`: it is the area saved per cubic centimetre of capacity given up. Problems with a known answer are worth keeping as tests of your own formulation: if your model of a larger problem reduces to one like this, solve that case first.
+
+## Program 3: A design that cannot be built
+
+The same can, now with a catalogue limit: the radius may not exceed 2 and the height may not exceed 20. The largest can the limits allow holds `pi * 2^2 * 20 = 251` cubic centimetres, far short of 1000. No point meets every requirement.
+
+@@example Numerical/optimization/guide/optima/93_infeasible_design.cpp@@
+
+The first solve does not return an answer, and it says so in three ways: exit flag `-6`, a maximum violation of 749 (the 1000 required minus the 251 reached), and the message that restoration, the phase that tries to reduce the violation alone, could not reduce it. The point it returns, radius 2 and height 20, is the best the bounds permit and is not a solution. This is the case chapter 2 warned about: the returned parameters look like an answer. Only the flag and the violation tell you otherwise.
+
+The second solve relaxes the height limit to 400 and succeeds, and it shows something worth noticing. The unrestricted can of Program 2 had a radius of 5.42, but the radius limit of 2 is still in force, so the radius sits at its bound and the height rises to 79.5775 to supply the volume. Relaxing one limit does not remove the others; the answer moves to wherever the remaining limits put it.
+
+## Program 5: A plant with every kind of constraint
+
+A plant makes five products. Profit from each has diminishing returns, so the objective, the negative of a weighted sum of square roots, is convex. Two shared resources limit production (linear inequalities: machine hours and labour hours), products 1 to 3 must together make exactly 30 units (a linear equality), a pollution measure is capped (a nonlinear inequality), and each quantity has a capacity (bounds). After the solve the program prints the checks of the routine.
+
+@@example Numerical/optimization/guide/optima/95_production_plan.cpp@@
+
+The solve converges with the quantities 15.71, 6.68, 7.61, 18.07 and 10.50, a violation of 1.1e-12 and an optimality measure of 3.4e-06, so steps 4 and 5 pass. The multipliers, step 6, tell the story of the plan. Both resource limits bind and have positive multipliers: machine hours 0.2624 and labour hours 0.2123, the extra profit measure from one more hour of each. The pollution cap has a multiplier of zero: the plant is well inside it, and loosening it would change nothing. You can confirm all three without the multipliers: the machine hours used are `2(15.7105) + 6.6804 + 3(7.6091) + 18.0691 + 2(10.5011) = 100`, the labour hours are 90, and the pollution measure, the sum of squares divided by 100, is 7.86 against a cap of 12. Products 1 to 3 sum to 30.0000. The multipliers say which limits are worth relaxing, and here they point at the two resources, not the cap.
+
+## Decisions and pitfalls
+
+- **Check against a closed form when you have one.** Agreement with calculus to the printed digits is the strongest check of a model.
+- **An infeasible design is reported, not hidden.** The solve returns a flag, a violation and a message; the point it returns is the best the bounds permit and is not a solution.
+- **Relaxing one limit does not remove the others.** Raising the height limit left the radius limit in force, and the answer moved to wherever the remaining limits allowed.
+- **Multipliers are the prices of the limits.** In the plant, the resource multipliers are the extra profit from one more hour; a limit with multiplier zero is not binding and costs nothing.
+- **Pass the whole checklist.** Flag, violation, optimality, a check the solver did not use, and the multipliers: a result that skips any of these is not yet an answer.
+
+Where next: [Fitting and portfolio problems](fitting_and_portfolio_problems.md) apply the same checklist to estimation and finance.

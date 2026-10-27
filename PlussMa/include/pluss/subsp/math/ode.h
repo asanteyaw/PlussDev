@@ -7,13 +7,13 @@
 // describes: dy/dt is the FLOW/flux of the state y through time), the
 // forward/adjoint solver pair, matching the Latin-adjective family this
 // program's numerical modules already use (Septima/Optima/Minimax under
-// pluss::optim; Integra/Quadra/Aleatoria/Analytica under pluss::integ).
+// pluss::subsp::math::optim; Integra/Quadra/Aleatoria/Analytica under pluss::subsp::math::integ).
 //
-// Why this is its OWN module, not folded into pluss::integ: solving an
+// Why this is its OWN module, not folded into pluss::subsp::math::integ: solving an
 // initial-value problem (integrating a differential equation forward in
 // time) is a genuinely different mathematical object from integrating a
 // fixed function over a domain, even though both use the word
-// "integration" colloquially. Everywhere else in pluss::integ,
+// "integration" colloquially. Everywhere else in pluss::subsp::math::integ,
 // differentiability is free (composed entirely from already-
 // differentiable Series primitives, no custom backward pass needed
 // anywhere). An ODE solve is the one place that stops being true: naively
@@ -30,7 +30,7 @@
 // compute that one step's local vector-Jacobian product via an ordinary
 // `.reverse()` call on a freshly-tracked leaf -- exactly the same
 // "compose from already-differentiable primitives, inherit the property"
-// philosophy used throughout pluss::integ, just applied per-step instead
+// philosophy used throughout pluss::subsp::math::integ, just applied per-step instead
 // of once over the whole computation.
 //
 // Scope/tradeoffs, stated plainly:

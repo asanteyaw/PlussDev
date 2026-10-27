@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
@@ -26,7 +26,7 @@ auto hs71_constraints() {
   return optim::constraints()
       .nl_ineq([](const Pack& p) { return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d"); })
       .nl_eq([](const Pack& p) {
-        return optim::square(p.at("a")) + optim::square(p.at("b")) + optim::square(p.at("c")) + optim::square(p.at("d")) - 40.0;
+        return p.at("a").square() + p.at("b").square() + p.at("c").square() + p.at("d").square() - 40.0;
       })
       .lbs(four(1, 1, 1, 1))
       .ubs(four(5, 5, 5, 5));

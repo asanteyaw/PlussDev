@@ -23,7 +23,7 @@ int main() {
   const Series temperature = vec({90.0, 78.0, 66.0, 52.0, 38.0});
   std::cout << std::fixed << std::setprecision(2);
   std::cout << "at 3.5 min : " << interp::linear(minutes, temperature, pluss::make_series(3.5).to(f64)).item<double>() << "\n";
-  const auto several = interp::linear(minutes, temperature, vec({0.0, 1.0, 5.0, 7.5, 20.0})).to_vec<double>();
+  const auto several = interp::linear(minutes, temperature, vec({0.0, 1.0, 5.0, 7.5, 20.0})).host<double>();
   std::cout << "at 0, 1, 5, 7.5, 20 min :";
   for (double v : several) std::cout << " " << v;
   std::cout << "\n";

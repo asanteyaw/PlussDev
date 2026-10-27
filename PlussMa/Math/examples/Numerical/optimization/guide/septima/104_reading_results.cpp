@@ -6,16 +6,16 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
-using Pack = optim::ParameterPack<Trace>;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
 
 int main() {
-  std::function<Trace(const Pack&)> objective = [](const Pack& p) {
-    return 0.5 * (optim::square(p.at("a") - 2.0) + optim::square(p.at("b") - 1.0));
+  std::function<pluss::Series(const Pack&)> objective = [](const Pack& p) {
+    return 0.5 * ((p.at("a") - 2.0).square() + (p.at("b") - 1.0).square());
   };
   optim::SeptimaConstraints constraints;
   constraints.ubs = {scalar(1.5), scalar(100.0)};  // one bound per block, in block order
@@ -29,7 +29,7 @@ int main() {
   std::cout << "exit_flag               " << static_cast<int>(r.exit_flag) << "  (1 = Converged)\n";
   std::cout << "message                 " << r.message << "\n";
   std::cout << std::fixed << std::setprecision(4);
-  std::cout << "params                  a = " << r.params[0].item<double>() << ", b = " << r.params[1].item<double>() << "\n";
+  std::cout << "params                  a = " << as_f64(r.params[0]) << ", b = " << as_f64(r.params[1]) << "\n";
   std::cout << "objective_value         " << r.objective_value << "\n";
   std::cout << std::scientific << std::setprecision(2);
   std::cout << "gradient_inf_norm       " << r.gradient_inf_norm << "  (the objective's gradient alone)\n";

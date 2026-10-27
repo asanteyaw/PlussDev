@@ -31,7 +31,7 @@ Example 1. Sum three values.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.sum();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output

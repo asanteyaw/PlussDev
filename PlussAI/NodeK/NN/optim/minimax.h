@@ -69,14 +69,10 @@ struct MinimaxOptions {
 
 struct MinimaxConstraints {
   using ResidualFn = std::function<std::vector<Series>(const std::vector<Series>&)>;
-  using TraceResidualFn =
-      std::function<std::vector<pluss::subsp::math::diff::Trace>(const std::vector<pluss::subsp::math::diff::Trace>&)>;
 
   // Equality residuals c(x) = 0 and inequality residuals h(x) <= 0.
   ResidualFn equalities{};
   ResidualFn inequalities{};
-  TraceResidualFn equalities_trace{};
-  TraceResidualFn inequalities_trace{};
 
   // Optional per-parameter bounds. Empty means "no bounds".
   // If provided, size must match parameter count.
@@ -460,25 +456,6 @@ private:
   void validate_constraints_() const {
     validate_bounds_vector_(constraints_.lower_bounds, "lower_bounds");
     validate_bounds_vector_(constraints_.upper_bounds, "upper_bounds");
-
-    if (!constraints_.equalities && constraints_.equalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: equalities_trace requires equalities callback");
-    }
-    if (!constraints_.inequalities && constraints_.inequalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: inequalities_trace requires inequalities callback");
-    }
-
-    if (!constraint_options_().enable_constraint_autodiff) return;
-    if (constraints_.equalities && !constraints_.equalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: equalities callback requires equalities_trace for autodiff constraints");
-    }
-    if (constraints_.inequalities && !constraints_.inequalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: inequalities callback requires inequalities_trace for autodiff constraints");
-    }
   }
 
   void initialize_state_() {
@@ -567,6 +544,19 @@ private:
     }
   }
 
+  // Residuals as tape values: the plain Series callback is called on the slope-tracking values, so a
+  // constraint written once over Series is differentiated as is.
+  static std::vector<pluss::subsp::math::diff::Trace> traced_residuals_(
+      const MinimaxConstraints::ResidualFn& series_fn,
+      const std::vector<pluss::subsp::math::diff::Trace>& vars) {
+    std::vector<Series> values;
+    values.reserve(vars.size());
+    for (const auto& v : vars) values.push_back(v.value());
+    std::vector<pluss::subsp::math::diff::Trace> out;
+    for (const auto& r : series_fn(values)) out.emplace_back(r);
+    return out;
+  }
+
   static pluss::subsp::math::diff::Trace scalar_zero_trace_(
       const std::vector<pluss::subsp::math::diff::Trace>& vars) {
     using pluss::subsp::math::diff::sum;
@@ -584,8 +574,8 @@ private:
 
     Trace total = scalar_zero_trace_(vars);
 
-    if (constraints_.equalities_trace) {
-      const auto residuals = constraints_.equalities_trace(vars);
+    if (constraints_.equalities) {
+      const auto residuals = traced_residuals_(constraints_.equalities, vars);
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         const Trace c = residuals[i];
         const Trace lambda(eq_multipliers_[i], false);
@@ -596,8 +586,8 @@ private:
       }
     }
 
-    if (constraints_.inequalities_trace) {
-      const auto residuals = constraints_.inequalities_trace(vars);
+    if (constraints_.inequalities) {
+      const auto residuals = traced_residuals_(constraints_.inequalities, vars);
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         const Trace h = relu(residuals[i]);
         const Trace mu(ineq_multipliers_[i], false);

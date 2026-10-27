@@ -12,7 +12,7 @@ void heading(const char *label) { std::cout << "=== " << label << " ===\n"; }
 
 void values(const char *label, const pluss::Series &value) {
   std::cout << label << "=[";
-  const auto lanes = value.to_vec<double>();
+  const auto lanes = value.host<double>();
   for (std::size_t index = 0; index < lanes.size(); ++index) {
     if (index)
       std::cout << ", ";

@@ -45,7 +45,7 @@ TEST_CASE("MPS take parity and stress", "[mps][take][stress]") {
     const auto idx_mps = idx_cpu.to(pluss::pMPS);
     const auto got = x_mps.take(idx_mps).to(pluss::pCPU);
 
-    require_close_vec_(got.to_vec<float>(), ref.to_vec<float>());
+    require_close_vec_(got.host<float>(), ref.host<float>());
   }
 }
 
@@ -89,8 +89,8 @@ TEST_CASE("MPS put parity and stress", "[mps][put][stress]") {
     auto out_accum = base_cpu.to(pluss::pMPS);
     out_accum.put_(idx_mps, src_mps, /*accumulate=*/true);
 
-    require_close_vec_(out_plain.to(pluss::pCPU).to_vec<float>(), ref_plain.to_vec<float>());
-    require_close_vec_(out_accum.to(pluss::pCPU).to_vec<float>(), ref_accum.to_vec<float>());
+    require_close_vec_(out_plain.to(pluss::pCPU).host<float>(), ref_plain.host<float>());
+    require_close_vec_(out_accum.to(pluss::pCPU).host<float>(), ref_accum.host<float>());
   }
 }
 
@@ -125,7 +125,7 @@ TEST_CASE("MPS put duplicate-index semantics match CPU for accumulate modes", "[
     auto out_accum = base_cpu.to(pluss::pMPS);
     out_accum.put_(idx_mps, src_mps, /*accumulate=*/true);
 
-    require_close_vec_(out_plain.to(pluss::pCPU).to_vec<float>(), ref_plain.to_vec<float>());
-    require_close_vec_(out_accum.to(pluss::pCPU).to_vec<float>(), ref_accum.to_vec<float>());
+    require_close_vec_(out_plain.to(pluss::pCPU).host<float>(), ref_plain.host<float>());
+    require_close_vec_(out_accum.to(pluss::pCPU).host<float>(), ref_accum.host<float>());
   }
 }

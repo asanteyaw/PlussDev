@@ -21,7 +21,7 @@ void expect(bool condition, const std::string &message) {
 void expect_close(const pluss::Series &actual,
                   const std::vector<double> &expected,
                   double tolerance = 1e-12) {
-  const auto values = actual.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(pluss::ScalarType::Float64).host<double>().array().data;
   expect(values.size() == expected.size(), "LTI result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =

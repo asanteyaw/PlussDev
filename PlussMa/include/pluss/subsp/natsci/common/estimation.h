@@ -155,7 +155,7 @@ inline double student_t_quantile(double q, double nu) {
   const Series lo = pluss::make_series(std::vector<double>{-1e3}, {1}).to(pluss::ScalarType::Float64), hi = pluss::make_series(std::vector<double>{1e3}, {1}).to(pluss::ScalarType::Float64);
   roots::Options opt;
   opt.max_iterations = 200;
-  return roots::bisect(cdf, lo, hi, opt).root.item<double>();
+  return roots::bisect(cdf, lo, hi, opt).root.host<double>().front();
 }
 // chi-square quantile (integer degrees of freedom) by bisection on the CDF
 inline double chi2_quantile(double q, std::int64_t dof) {
@@ -164,7 +164,7 @@ inline double chi2_quantile(double q, std::int64_t dof) {
   const Series lo = pluss::make_series(std::vector<double>{1e-12}, {1}).to(pluss::ScalarType::Float64), hi = pluss::make_series(std::vector<double>{1e3}, {1}).to(pluss::ScalarType::Float64);
   roots::Options opt;
   opt.max_iterations = 200;
-  return roots::bisect(cdf, lo, hi, opt).root.item<double>();
+  return roots::bisect(cdf, lo, hi, opt).root.host<double>().front();
 }
 
 // ---- intervals ---------------------------------------------------------------------------------------------------------------
@@ -236,8 +236,8 @@ inline Profile profile_likelihood(const ModelFn &model, const Series &y, const S
 // between grid points; dof = 1 for pointwise, p for simultaneous intervals. Returns {lower, upper} (NaN when the profile does not reach the threshold)
 inline std::pair<double, double> profile_interval(const Profile &profile, double sse_min, double sigma2, double alpha, std::int64_t dof) {
   const double threshold = chi2_quantile(1.0 - alpha, dof);
-  const auto v = profile.values.to_vec<double>();
-  const auto s = profile.sse.to_vec<double>();
+  const auto v = profile.values.host<double>();
+  const auto s = profile.sse.host<double>();
   double lo = std::numeric_limits<double>::quiet_NaN(), hi = lo;
   const auto crossing = [&](std::size_t a, std::size_t b) {
     const double fa = (s[a] - sse_min) / sigma2 - threshold, fb = (s[b] - sse_min) / sigma2 - threshold;

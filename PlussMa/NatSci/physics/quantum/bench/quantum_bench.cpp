@@ -120,7 +120,7 @@ int main() {
       [&] { path_batch = quantum::schrod(diagonal_h, initial, times).value(); },
       7);
   pluss::Series path_pages = pluss::series::undefined();
-  const std::vector<double> host_times = times.to_vec<double>();
+  const std::vector<double> host_times = times.host<double>();
   const double path_page_ms = median_ms(
       [&] {
         std::vector<pluss::Series> parts;

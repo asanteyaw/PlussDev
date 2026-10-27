@@ -1,8 +1,0 @@
-# Where the population starts
-
-[Back to The Differential Evolution Minimisers](../dfo_08_differential_evolution.md)
-
-
-@@example Numerical/optimization/guide/dfo/376_differential_evolution_initial_radius.cpp@@
-
-On this problem the starting region has no consistent effect, because the population of 200 spreads quickly either way. It matters more for the swarm (next chapter), and it is the only setting that defines the starting region when there are no bounds, so choose it there to cover where you expect the answer.

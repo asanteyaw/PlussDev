@@ -301,7 +301,7 @@ int main() {
 
   const Series y_test_series = test_y.as_series().to(pCPU, ScalarType::Float64).reshape({test_y.size()});
   const auto squared_errors =
-      final_pred.to(pCPU, ScalarType::Float64).reshape({final_pred.numel()}).sub(y_test_series).square().to_vec<double>();
+      final_pred.to(pCPU, ScalarType::Float64).reshape({final_pred.numel()}).sub(y_test_series).square().host<double>();
   const std::size_t n = squared_errors.size();
   double mean_sq = 0.0;
   for (double v : squared_errors) mean_sq += v;

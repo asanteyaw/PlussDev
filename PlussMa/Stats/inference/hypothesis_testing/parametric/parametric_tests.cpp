@@ -1,6 +1,7 @@
 #include "pluss/subsp/stats/inference/hypothesis_testing.h"
 
 #include "CodeM/core/Errors.h"
+#include "pluss/tils/aux/scalar_cast.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/stats/distr.h"
 #include "pluss/subsp/stats/tails.h"
@@ -32,7 +33,7 @@ double clamp01_(double p) {
 }
 
 double scalar_(const Series& x) {
-  return x.to(ScalarType::Float64).reshape({1}).item<double>();
+  return pluss::tils::to_scalar<double>(x.to(ScalarType::Float64));
 }
 
 Series ci_series_(double lo, double hi, Config cfg) {
@@ -91,7 +92,7 @@ SampleStats stats_(const Series& x, const char* op, bool require_two = true) {
 
 double normal_cdf_(double z, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{z}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::Normal{}.cdf(q).item<double>());
+  return clamp01_(pluss::tils::to_scalar<double>(pluss::subsp::stats::distr::Normal{}.cdf(q)));
 }
 
 double normal_quantile_(double p, Config cfg) {
@@ -116,7 +117,7 @@ double normal_quantile_(double p, Config cfg) {
 
 double t_cdf_(double x, double dof, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q).item<double>());
+  return clamp01_(pluss::tils::to_scalar<double>(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q)));
 }
 
 double t_quantile_(double p, double dof, Config cfg) {
@@ -141,7 +142,7 @@ double t_quantile_(double p, double dof, Config cfg) {
 
 double chisq_cdf_(double x, double dof, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::ChiSquare{static_cast<std::int64_t>(std::llround(dof))}.cdf(q).item<double>());
+  return clamp01_(pluss::tils::to_scalar<double>(pluss::subsp::stats::distr::ChiSquare{static_cast<std::int64_t>(std::llround(dof))}.cdf(q)));
 }
 
 double chisq_quantile_(double p, double dof, Config cfg) {
@@ -169,7 +170,7 @@ double chisq_quantile_(double p, double dof, Config cfg) {
 
 double f_cdf_(double x, double dof1, double dof2, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::FDistribution{dof1, dof2}.cdf(q).item<double>());
+  return clamp01_(pluss::tils::to_scalar<double>(pluss::subsp::stats::distr::FDistribution{dof1, dof2}.cdf(q)));
 }
 
 double f_quantile_(double p, double dof1, double dof2, Config cfg) {

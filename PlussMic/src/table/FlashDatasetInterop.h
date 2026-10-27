@@ -28,7 +28,7 @@ using FlashTableColumns = ::pluss::pl::flash::TableColumns;
 namespace detail {
 
 [[nodiscard]] inline bool series_mask_has_missing_(const pluss::Series& mask) {
-  const auto flags = mask.to(Platform::CPU).to_vec<bool>();
+  const auto flags = mask.to(Platform::CPU).host<bool>();
   return std::any_of(flags.begin(), flags.end(), [](bool v) { return !v; });
 }
 
@@ -68,7 +68,7 @@ namespace detail {
 
   std::vector<bool> flags(static_cast<std::size_t>(target_size), false);
   if (mask.has_value()) {
-    const auto host = mask->to(Platform::CPU).to_vec<bool>();
+    const auto host = mask->to(Platform::CPU).host<bool>();
     PLUSS_CHECK(static_cast<std::int64_t>(host.size()) == current_size,
                 "flash::Dataset::frame: validity mask length mismatch");
     std::copy(host.begin(), host.end(), flags.begin());
@@ -133,7 +133,7 @@ namespace detail {
               "flash::Dataset::frame: temporal feature is ragged; use FramePolicy::PadNull to rectangularize");
   PLUSS_CHECK(current_size < target_size,
               "flash::Dataset::frame: temporal feature is longer than the selected rectangular size");
-  auto ticks = values.epoch_nanos().to(Platform::CPU).to_vec<std::int64_t>();
+  auto ticks = values.epoch_nanos().to(Platform::CPU).pull<std::int64_t>();
   ticks.resize(static_cast<std::size_t>(target_size), pluss::Timeline::kNaT);
   const std::array<std::int64_t, 1> shape{target_size};
   auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(ticks, shape);
@@ -1792,7 +1792,7 @@ inline Trace& heatmap(
   auto matrix = ::pluss::table::detail::matrix_heatmap_payload_(
       frame, "flash::heatmap(DataFrame)");
   const auto label_views = ::pluss::pl::flash::detail::label_views(matrix.x_labels);
-  pane.x_ticks(matrix.x.to_vec<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
+  pane.x_ticks(matrix.x.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
       .y_label("case");
   return heatmap(pane, matrix.x, matrix.y, matrix.z, options);
@@ -1824,7 +1824,7 @@ inline Trace& clustermap(
   auto matrix = ::pluss::table::detail::matrix_heatmap_payload_(
       frame, "flash::clustermap(DataFrame)");
   const auto label_views = ::pluss::pl::flash::detail::label_views(matrix.x_labels);
-  pane.x_ticks(matrix.x.to_vec<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
+  pane.x_ticks(matrix.x.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
       .y_label("case");
   return clustermap(pane, matrix.x, matrix.y, matrix.z, options);

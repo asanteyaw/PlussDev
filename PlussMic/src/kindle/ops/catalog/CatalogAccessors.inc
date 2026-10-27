@@ -129,7 +129,7 @@ pluss::Series catalog_slate_to_plot_numeric_series(const pluss::table::Slate& t)
 }
 
 std::vector<double> catalog_stream_to_plot_numeric_values(const Stream& stream) {
-  return catalog_slate_to_plot_numeric_series(stream.to_slate()).to_vec<double>();
+  return catalog_slate_to_plot_numeric_series(stream.to_slate()).host<double>();
 }
 
 bool catalog_series_all_zero_i64(const pluss::Series& s) {

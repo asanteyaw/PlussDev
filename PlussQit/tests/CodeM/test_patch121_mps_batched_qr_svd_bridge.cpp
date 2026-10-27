@@ -66,8 +66,8 @@ std::vector<float> qr_reconstruct_(const pluss::Series& q, const pluss::Series& 
   const auto r_cpu = r.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous();
   const auto q_sizes = q_cpu.sizes();
   const auto r_sizes = r_cpu.sizes();
-  const auto qv = q_cpu.to_vec<float>();
-  const auto rv = r_cpu.to_vec<float>();
+  const auto qv = q_cpu.host<float>().array().data;
+  const auto rv = r_cpu.host<float>().array().data;
   return matmul_row_major_(qv, q_sizes[0], q_sizes[1], rv, r_sizes[1]);
 }
 
@@ -82,9 +82,9 @@ std::vector<float> svd_reconstruct_reduced_(const pluss::Series& u, const pluss:
   const std::int64_t k = us[1];
   const std::int64_t n = vhs[1];
 
-  auto uv = u_cpu.to_vec<float>();
-  const auto sv = s_cpu.to_vec<float>();
-  const auto vhv = vh_cpu.to_vec<float>();
+  auto uv = u_cpu.host<float>().array().data;
+  const auto sv = s_cpu.host<float>().array().data;
+  const auto vhv = vh_cpu.host<float>().array().data;
 
   for (std::int64_t i = 0; i < m; ++i) {
     for (std::int64_t j = 0; j < k; ++j) {
@@ -127,7 +127,7 @@ void run_case_(
   for (std::int64_t b = 0; b < batch; ++b) {
     CAPTURE(b, m, n);
     const auto recon = qr_reconstruct_(q_cpu.select(0, b), r_cpu.select(0, b));
-    const auto ref = a_cpu.select(0, b).to(pluss::ScalarType::Float32).to_vec<float>();
+    const auto ref = a_cpu.select(0, b).to(pluss::ScalarType::Float32).host<float>().array().data;
     require_close_vec_(recon, ref, qr_atol);
   }
 
@@ -155,7 +155,7 @@ void run_case_(
   for (std::int64_t b = 0; b < batch; ++b) {
     CAPTURE(b, m, n);
     const auto recon = svd_reconstruct_reduced_(u_cpu.select(0, b), s_cpu.select(0, b), vh_cpu.select(0, b));
-    const auto ref = a_cpu.select(0, b).to(pluss::ScalarType::Float32).to_vec<float>();
+    const auto ref = a_cpu.select(0, b).to(pluss::ScalarType::Float32).host<float>().array().data;
     require_close_vec_(recon, ref, svd_atol);
   }
 

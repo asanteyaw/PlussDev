@@ -43,6 +43,7 @@ option(PLUSSMA_STATS_ENABLE_TIME_SERIES "Build PlussMa Stats::time_series" ON)
 # Engineering modules
 option(PLUSSMA_ENG_ENABLE_CONTROL "Build PlussMa Eng::control" ON)
 option(PLUSSMA_ENG_ENABLE_CIRCUIT "Build PlussMa Eng::circuit" ON)
+option(PLUSSMA_ENG_ENABLE_FLUID "Build PlussMa Eng::fluid" ON)
 option(PLUSSMA_ENG_ENABLE_LTI "Build PlussMa Eng::lti" ON)
 option(PLUSSMA_ENG_ENABLE_POWER "Build PlussMa Eng::power" ON)
 option(PLUSSMA_ENG_ENABLE_SIGNAL "Build PlussMa Eng::signal" ON)

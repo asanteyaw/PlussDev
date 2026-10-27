@@ -1,0 +1,124 @@
+<!-- generated from ttest_paired.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `ttest_paired`
+
+Paired-sample t-test: is the mean difference of matched pairs zero?
+
+## Signature
+
+```cpp
+TTestResult ttest_paired(const pluss::Series& x, const pluss::Series& y, const TestOptions& options = {}, pluss::Config cfg = {});
+```
+
+## What It Does
+
+`ttest_paired` forms the differences `x − y` pair by pair and applies the one-sample t-test to them with a null mean of zero. The variation between the units cancels, which is why it is far more sensitive than a two-sample test when the readings are matched. The result is a `TTestResult` whose `mean` is the mean difference and whose interval is for that mean difference.
+
+## Parameters
+
+`x`
+: The first reading of each unit.
+
+`y`
+: The second reading, same length as `x` and in the same order.
+
+`options` (`TestOptions`)
+: `alpha` (default 0.05), `tail` (`Tail::Both`, `Tail::Right` or `Tail::Left`) and `method` (`PValueMethod::Auto`, `Exact`, `Approximate`; used only by the tests that have both forms).
+
+`cfg`
+: the dtype and platform used for the computation; the default is evaluated in double precision on the CPU.
+
+## Returns
+
+A `TTestResult`. Its fields:
+
+| Field | Meaning |
+|---|---|
+| `stat` | the test statistic |
+| `pvalue` | the probability, if the null hypothesis is true, of a statistic at least as extreme as the observed one |
+| `critical` | the critical value of the statistic at level `alpha` |
+| `reject` | true when `pvalue < alpha` |
+| `dof` | degrees of freedom, `n − 1` for `n` pairs |
+| `mean` | the mean of `x − y` |
+| `null_mean` | zero |
+| `stderr` | the standard error of the mean difference |
+| `ci` | the confidence interval for the mean difference |
+| `effective_n` | the number of pairs used |
+
+## Errors
+
+- `x` and `y` have different lengths.
+- Fewer than two finite pairs.
+- All differences equal (zero variance).
+- `alpha` outside (0, 1).
+
+## Practical Examples
+
+### Example 1
+
+The same eight cups weighed on two scales: the paired test finds the systematic difference.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+
+int main() {
+  std::cout << std::fixed << std::setprecision(4);
+  const auto first = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
+  const auto second = pluss::make_series(std::vector<double>{5.3, 5.0, 6.3, 6.1, 6.1, 5.8, 5.4, 6.4}, {8}, as_f64());
+
+  const auto r = hyp::ttest_paired(first, second);
+  std::cout << "mean difference " << r.mean << ", t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << "\n";
+  const auto ci = r.ci.pull<double>();
+  std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
+}
+```
+
+Output
+
+```text
+mean difference -0.1875, t -5.3513 on 7.0000 df, p 0.0011
+95% interval [-0.2704, -0.1046]
+```
+
+### Example 2
+
+Ignoring the pairing hides the effect.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+
+int main() {
+  std::cout << std::fixed << std::setprecision(4);
+  const auto first = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
+  const auto second = pluss::make_series(std::vector<double>{5.3, 5.0, 6.3, 6.1, 6.1, 5.8, 5.4, 6.4}, {8}, as_f64());
+
+  const auto paired = hyp::ttest_paired(first, second);
+  const auto unpaired = hyp::ttest2(first, second);
+  std::cout << "paired   p " << paired.pvalue << "\n";
+  std::cout << "unpaired p " << unpaired.pvalue << "\n";
+}
+```
+
+Output
+
+```text
+paired   p 0.0011
+unpaired p 0.4650
+```
+
+## See Also
+
+- [`ttest`](ttest.md)
+- [`ttest2`](ttest2.md)
+- [`signrank`](signrank.md)
+- [`signtest`](signtest.md)

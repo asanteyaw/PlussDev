@@ -71,7 +71,7 @@ TEST_CASE("torch-style amp/fused inplace ops mutate real state", "[invoke][inpla
     invoke_inplace("_amp_foreach_non_finite_check_and_unscale_", g, {found_inf, inv_scale});
     const auto found = found_inf.to(pluss::ScalarType::Float64).item<double>();
     REQUIRE(found == 1.0);
-    const auto gv = g.to(pluss::ScalarType::Float64).to_vec<double>();
+    const auto gv = g.to(pluss::ScalarType::Float64).host<double>();
     REQUIRE(std::abs(gv[0] - 0.5) < 1e-12);
     REQUIRE(std::abs(gv[1] + 1.0) < 1e-12);
     REQUIRE(!std::isfinite(gv[2]));
@@ -97,14 +97,14 @@ TEST_CASE("torch-style amp/fused inplace ops mutate real state", "[invoke][inpla
     pluss::Series g = pluss::make_series(std::vector<double>{0.1, 0.2}).to(pluss::ScalarType::Float32);
     pluss::Series m = pluss::series::zeros({2}, pluss::config({{"dtype", "float32"}}));
     invoke_inplace("_fused_sgd_", p, {g, m, 0.0, 0.9, 0.1, 0.0, false, false, true});
-    auto pv = p.to(pluss::ScalarType::Float64).to_vec<double>();
-    auto mv = m.to(pluss::ScalarType::Float64).to_vec<double>();
+    auto pv = p.to(pluss::ScalarType::Float64).host<double>();
+    auto mv = m.to(pluss::ScalarType::Float64).host<double>();
     REQUIRE(std::abs(pv[0] - 0.99) < 1e-6);
     REQUIRE(std::abs(pv[1] - 1.98) < 1e-6);
     REQUIRE(std::abs(mv[0] - 0.1) < 1e-6);
     REQUIRE(std::abs(mv[1] - 0.2) < 1e-6);
     invoke_inplace("_fused_sgd_", p, {g, m, 0.0, 0.9, 0.1, 0.0, false, false, false});
-    pv = p.to(pluss::ScalarType::Float64).to_vec<double>();
+    pv = p.to(pluss::ScalarType::Float64).host<double>();
     REQUIRE(std::abs(pv[0] - 0.971) < 1e-6);
     REQUIRE(std::abs(pv[1] - 1.942) < 1e-6);
   }
@@ -115,7 +115,7 @@ TEST_CASE("torch-style amp/fused inplace ops mutate real state", "[invoke][inpla
     pluss::Series state_sum = pluss::series::zeros({2}, pluss::config({{"dtype", "float32"}}));
     pluss::Series step = pluss::series::full({}, 1.0, pluss::config({{"dtype", "float32"}}));
     invoke_inplace("_fused_adagrad_", p, {g, state_sum, step, 0.1, 0.0, 0.0, 1e-10, false});
-    const auto pv = p.to(pluss::ScalarType::Float64).to_vec<double>();
+    const auto pv = p.to(pluss::ScalarType::Float64).host<double>();
     REQUIRE(std::abs(pv[0] - 0.9) < 1e-6);
     REQUIRE(std::abs(pv[1] - 1.9) < 1e-6);
   }
@@ -128,7 +128,7 @@ TEST_CASE("torch-style amp/fused inplace ops mutate real state", "[invoke][inpla
     pluss::Series max_exp_avg_sq = pluss::series::zeros({2}, pluss::config({{"dtype", "float32"}}));
     pluss::Series step = pluss::series::full({}, 1.0, pluss::config({{"dtype", "float32"}}));
     invoke_inplace("_fused_adam_", p, {g, exp_avg, exp_avg_sq, max_exp_avg_sq, step, 0.1, 0.9, 0.999, 0.0, 1e-8, false, false});
-    const auto pv = p.to(pluss::ScalarType::Float64).to_vec<double>();
+    const auto pv = p.to(pluss::ScalarType::Float64).host<double>();
     REQUIRE(std::abs(pv[0] - 0.9) < 2e-5);
     REQUIRE(std::abs(pv[1] - 1.9) < 2e-5);
     invoke_inplace("_fused_adamw_", p, {g, exp_avg, exp_avg_sq, max_exp_avg_sq, step, 0.1, 0.9, 0.999, 0.01, 1e-8, false, false});

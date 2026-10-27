@@ -135,7 +135,7 @@ int main() {
   nlp::runtime::Indexer indexer{};
   indexer.learn(docs);
   const nlp::runtime::SequenceBatch batch = indexer.batch(docs).value();
-  const auto lengths = batch.lengths.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template to_vec<std::int64_t>();
+  const auto lengths = batch.lengths.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template host<std::int64_t>();
   std::cout << "padded length = " << batch.max_length << "\n";
   for (std::size_t row = 0; row < lengths.size(); ++row) {
     std::cout << "sequence " << row << " has " << lengths[row] << " real element(s)\n";

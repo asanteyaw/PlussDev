@@ -105,7 +105,7 @@ if (ticks.has_value()) {
 }
 std::cout << "\n";
 const auto& d = std::get<ColumnsData>(t.payload());
-std::cout << "countplot(Note) counts: " << d.y.to(pluss::ScalarType::Float64).to_vec<double>().size() << " bars\n";
+std::cout << "countplot(Note) counts: " << d.y.to(pluss::ScalarType::Float64).host<double>().size() << " bars\n";
 fig.show();
 ```
 

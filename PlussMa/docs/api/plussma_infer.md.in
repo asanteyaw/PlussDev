@@ -1,0 +1,32 @@
+# Inference API Reference
+
+The hypothesis tests of PlussMa live in `pluss::subsp::stats::inference::hypothesis`. Every test is a free function that takes the data as `Series`, an options struct, and an optional `Config`, and returns a result struct that extends `TestDecision`.
+
+## The Result
+
+| Field | Meaning |
+|---|---|
+| `stat` | the test statistic |
+| `pvalue` | the probability, if the null hypothesis is true, of a statistic at least as extreme as the observed one |
+| `critical` | the critical value of the statistic at level `alpha` |
+| `reject` | true when `pvalue < alpha` |
+
+Each test adds its own fields (degrees of freedom, means, standard errors, an interval, the number of observations used). Missing and non-finite values are dropped, and the `effective_n` fields say how many observations remained.
+
+## The Options
+
+`TestOptions` has `alpha` (default 0.05), `tail` (`Tail::Both`, `Tail::Right` or `Tail::Left`) and `method` (`PValueMethod::Auto`, `Exact` or `Approximate`, for the tests that have an exact and an approximate p-value). `ttest2` takes `TTest2Options` (`alpha`, `tail`, `equal_variance`), `anova_1w` takes `Anova1WOptions` and `chisq_gof` takes `ChiGofOptions`. The examples use `namespace hyp = pluss::subsp::stats::inference::hypothesis;`.
+
+## The Functions
+
+| Group | Functions | What they cover |
+|---|---|---|
+| [Means and variances](infer/means_and_variances.md) | 7 | Tests of means (one sample, paired, two samples), of a mean with known spread, and of variances. |
+| [Ranks and signs](infer/ranks_and_signs.md) | 3 | Tests that use ranks or signs: the rank-sum, signed-rank and sign tests. |
+| [Distributions](infer/distributions.md) | 3 | Tests of a whole distribution: Kolmogorov–Smirnov (one and two samples) and Jarque–Bera. |
+| [Groups and tables](infer/groups_and_tables.md) | 3 | Analysis of variance for several groups, and chi-squared tests for counts and tables. |
+
+For the tests of time series (unit roots, stationarity, ARCH effects, forecast comparison) see the time-series reference.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

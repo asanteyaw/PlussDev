@@ -20,7 +20,7 @@ subject to  lower <= x <= upper              (bounds)
 Four ideas carry the rest of the chapter.
 
 - **The unknown is a pack of named blocks.** A problem with one vector of unknowns has a single block called `x`. A problem with several quantities of different shapes uses one block per quantity, such as `slope` and `intercept`. Blocks keep their names and shapes in the answer, so you read results back by name.
-- **Derivatives are exact and automatic.** You write `f`, `g` and `h` with the `Trace` type, a number that remembers how it was computed. The solver then has exact gradients and Jacobians without you deriving them. If you already have a gradient, you can hand it over instead (program 9).
+- **Derivatives are exact and automatic.** You write `f`, `g` and `h` with ordinary `Series` operations, and the library records how each value was computed. The solver then has exact gradients and Jacobians without you deriving them. If you already have a gradient, you can hand it over instead (program 9).
 - **Inequalities are written "at most zero".** A nonlinear inequality returns `g(x)`, and the constraint holds when `g(x) <= 0`. To require `x0 + x1 <= 1.5`, return `x0 + x1 - 1.5`. Linear inequalities use the matrix form `Aineq x <= bineq`.
 - **Answers satisfy tolerances, not equalities.** The solver stops when constraints are met to within `1e-6` and the optimality measure is below `1e-6`. A coordinate that should be exactly `0` may come back as `1e-7`. Program 2 shows this.
 
@@ -30,8 +30,8 @@ Four ideas carry the rest of the chapter.
 
 | Objective | Start | Use when |
 |---|---|---|
-| `Trace` function of one vector `Trace` | one `Series` | one vector of unknowns (programs 1 to 5) |
-| `Trace` function of a pack | `ParameterPack<Series>` | several named blocks (programs 6, 7, 11) |
+| function of one `Series` | one `Series` | one vector of unknowns (programs 1 to 5) |
+| function of a pack of `Series` | `ParameterPack<Series>` | several named blocks (programs 6, 7, 11) |
 | a `ConstrainedProblem` | one `Series` | the problem is built once and reused (program 8) |
 | a `ConstrainedProblem` | `ParameterPack<Series>` | the problem is reused and has named blocks (program 8) |
 | value-and-gradient function of one `Series` | one `Series` | you have an analytic gradient (program 9) |
@@ -43,11 +43,15 @@ The four overloads that take a function (the first, second, fifth and sixth rows
 
 ### Program 1: the smallest call
 
-Start with no constraints at all. The objective is the squared distance to a target point, so the answer is the target. This shows the whole shape of a call: an objective written with `Trace`, a starting `Series`, and a result you read by block name.
+Start with no constraints at all. The objective is the squared distance to a target point, so the answer is the target. This shows the whole shape of a call: an objective written with ordinary `Series` operations, a starting `Series`, and a result you read by block name.
 
 @@example Numerical/optimization/guide/optima/01_minimal.cpp@@
 
 The solver reaches the target `(1, 2)` to within its tolerance, reports `converged: true`, and exits with flag `1`, which is the code for `Converged`. The answer is accurate to the stopping tolerance, not guaranteed to the last digit, so always judge a result against the tolerance rather than against an exact printed value.
+
+The same call with the objective written on `Trace`, the type the derivative tools in `pluss::subsp::math::diff` work with, reaches the identical answer. Its operations are the `diff::` functions (`diff::square`, `diff::sum`, ...), and `diff::trace(value, false)` marks a value as a fixed constant. Plain `Series` is the natural way to write an objective; the `Trace` form is accepted wherever a `Series` objective is, so existing code keeps working.
+
+@@example Numerical/optimization/guide/optima/01a_trace_form.cpp@@
 
 ### Program 2: bounds
 
@@ -124,7 +128,7 @@ The returned object answers six questions: where, how good, how feasible, how mu
 ## Decisions
 
 - **One vector or named blocks?** Use one vector when the unknowns are interchangeable coordinates, such as portfolio weights. Use named blocks when they mean different things or have different shapes, such as a matrix and an offset. Once you use blocks, build bounds as packs with the same names.
-- **Automatic or analytic gradient?** Start with `Trace`. Move to an analytic gradient only when you have a reason to, and audit it before trusting it.
+- **Automatic or analytic gradient?** Start with plain `Series` code. Move to an analytic gradient only when you have a reason to, and audit it before trusting it.
 - **Inline objective or a `ConstrainedProblem`?** Inline for one-off solves. A `ConstrainedProblem` when the problem is reused, stored, or passed around.
 - **Struct or builder?** The builder is shorter and chooses the right objective slot for the callable you give it. Fill the struct when you need slots the builder does not cover.
 

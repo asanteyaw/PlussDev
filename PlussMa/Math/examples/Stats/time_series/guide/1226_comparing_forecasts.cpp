@@ -60,16 +60,16 @@ int main() {
   std::cout << "mean squared error per fold      fold 1    fold 2    fold 3    fold 4\n";
   for (const auto* item : {&cv_a, &cv_b}) {
     const auto& cv = *item;
-    const auto per_fold = cv.cvloss(item == &cv_a ? Series{} : data.x, data.y, ts::CVLossMode::Individual).to_vec<double>();
+    const auto per_fold = cv.cvloss(item == &cv_a ? Series{} : data.x, data.y, ts::CVLossMode::Individual).host<double>();
     std::cout << (item == &cv_a ? "  A: y lags only            " : "  B: y lags and x lags      ");
     for (double v : per_fold) std::cout << std::setw(10) << v;
     std::cout << "\n";
   }
 
   // Errors on the rows that every test set covers once.
-  const auto pa = cv_a.cvpredict(Series{}, data.y).reshape({400}).to_vec<double>();
-  const auto pb = cv_b.cvpredict(data.x, data.y).reshape({400}).to_vec<double>();
-  const auto y = data.y.to_vec<double>();
+  const auto pa = cv_a.cvpredict(Series{}, data.y).reshape({400}).host<double>();
+  const auto pb = cv_b.cvpredict(data.x, data.y).reshape({400}).host<double>();
+  const auto y = data.y.host<double>();
   std::vector<double> ea, eb;
   for (std::size_t t = 0; t < y.size(); ++t)
     if (std::isfinite(pa[t]) && std::isfinite(pb[t])) {

@@ -1,8 +1,0 @@
-# Stopping
-
-[Back to Mesh Adaptive Direct Search](../dfo_10_mesh_adaptive_search.md)
-
-
-@@example Numerical/optimization/guide/dfo/395_mads_stopping.cpp@@
-
-By default both the improvement-window test and the frame test must hold, so the window test can only delay a stop, never cause one early. Switching it off (`check_every` 0) lets the frame alone end the run: here it stops after 8822 evaluations instead of 19280, at a value of 2e-11 instead of 9e-23. So the window test is what buys the last digits of accuracy on a function whose minimum value is 0, at roughly twice the cost. A looser relative tolerance sits between the two, and budgets end the run with their own status.

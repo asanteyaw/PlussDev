@@ -14,7 +14,7 @@ int main() {
 
   const auto averages = pluss::tils::map_axis(
       [](const pluss::Series& slice, std::size_t position) {
-        const auto values = slice.to_vec<double>();
+        const auto values = slice.host<double>();
         const double mean = (values[0] + values[1]) / 2.0;
         std::ostringstream line;
         line << "sensor " << position + 1 << " average " << mean;

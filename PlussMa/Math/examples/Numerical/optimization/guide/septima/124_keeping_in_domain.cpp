@@ -9,14 +9,14 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
 int main() {
-  auto objective = [](const Trace& x) -> Trace { return optim::sum(x * -1.0) - 0.2 * optim::sum(optim::log(1.0 - x)); };
+  auto objective = [](const pluss::Series& x) -> pluss::Series { return (x * -1.0).sum() - 0.2 * (1.0 - x).log().sum(); };
 
   std::cout << std::left << std::setw(42) << "setup" << std::setw(22) << "exit" << std::setw(8) << "iters" << "x\n";
   const auto run = [&](const char* label, std::int64_t recovery_attempts, bool bounded) {
@@ -32,7 +32,7 @@ int main() {
     const char* exit = r.exit_flag == optim::SeptimaExitFlag::Converged ? "Converged"
                        : r.exit_flag == optim::SeptimaExitFlag::NonFiniteEvaluation ? "NonFiniteEvaluation" : "MaxIterations";
     std::cout << std::left << std::setw(42) << label << std::setw(22) << exit << std::setw(8) << r.iteration << std::fixed << std::setprecision(4)
-              << r.params[0].item<double>() << "\n";
+              << as_f64(r.params[0]) << "\n";
   };
   run("learning rate 1.5, no recovery", 0, false);
   run("learning rate 1.5, 6 recovery attempts", 6, false);

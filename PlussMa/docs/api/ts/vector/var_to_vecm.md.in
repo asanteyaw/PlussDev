@@ -45,7 +45,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -80,7 +80,7 @@ int main() {
   const auto fit = ts::Var::fit_mle(y, options);
   const auto [short_run, impact] = ts::var_to_vecm(fit.ar);
   const Series back = ts::vecm_to_var(short_run, impact);
-  std::cout << std::fixed << std::setprecision(4) << "impact row 0: " << impact.select(0, 0).to_vec<double>()[0] << " " << impact.select(0, 0).to_vec<double>()[1] << "\n";
+  std::cout << std::fixed << std::setprecision(4) << "impact row 0: " << impact.select(0, 0).host<double>()[0] << " " << impact.select(0, 0).host<double>()[1] << "\n";
   std::cout << "largest difference after the round trip: " << std::scientific << std::setprecision(1) << (back - fit.ar).abs().max().item<double>() << "\n";
 }
 ```

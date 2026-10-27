@@ -147,12 +147,12 @@ void test_factories() {
   std::cout << "[RUN] factories:to_mps_roundtrip\n";
   auto s1_mps = s1.to(pluss::Platform::MPS);
   expect_true(s1_mps.platform() == pluss::Platform::MPS, "to(MPS) marks MPS backend");
-  expect_eq(s1_mps.to_vec<double>(), s1.to_vec<double>(), "to(MPS) preserves values");
+  expect_eq(s1_mps.host<double>(), s1.host<double>(), "to(MPS) preserves values");
 
   std::cout << "[RUN] factories:create_on_mps\n";
   auto z_mps = pluss::series::zeros({2, 2}, pluss::cfg::platform(pluss::Platform::MPS));
   expect_true(z_mps.platform() == pluss::Platform::MPS, "factory config platform creates MPS series");
-  expect_eq(z_mps.to_vec<float>(), std::vector<float>{0.0f, 0.0f, 0.0f, 0.0f}, "factory-created MPS zeros values");
+  expect_eq(z_mps.host<float>(), std::vector<float>{0.0f, 0.0f, 0.0f, 0.0f}, "factory-created MPS zeros values");
 
   auto s1_mps_f32 = s1_mps.to(pluss::ScalarType::Float32);
   expect_true(s1_mps_f32.platform() == pluss::Platform::MPS, "dtype cast preserves MPS platform");
@@ -164,7 +164,7 @@ void test_factories() {
 
   auto s1_mps_back = s1_mps.to(pluss::Platform::CPU);
   expect_true(s1_mps_back.platform() == pluss::Platform::CPU, "MPS to CPU transfer works");
-  expect_eq(s1_mps_back.to_vec<double>(), s1.to_vec<double>(), "MPS to CPU roundtrip preserves values");
+  expect_eq(s1_mps_back.host<double>(), s1.host<double>(), "MPS to CPU roundtrip preserves values");
 
   auto s1_mps_add = s1_mps.add(2.0);
   expect_true(s1_mps_add.platform() == pluss::Platform::MPS, "ops on MPS stay on MPS");
@@ -176,7 +176,7 @@ void test_factories() {
   auto s1_mps_via_to = s1.to(pluss::Platform::MPS);
   expect_true(s1_mps_via_to.platform() == pluss::Platform::MPS,
               "to(target) moves Series to target backend");
-  expect_eq(s1_mps_via_to.to_vec<double>(), s1_mps.to_vec<double>(),
+  expect_eq(s1_mps_via_to.host<double>(), s1_mps.host<double>(),
             "two to(target) calls produce equivalent values");
 
   expect_throws(
@@ -216,8 +216,8 @@ void test_factories() {
   auto span = std::span<const std::int64_t>(sizes.data(), sizes.size());
   auto r0 = pluss::series::rand(span, pluss::ScalarType::Float32, 42);
   auto r1 = pluss::series::rand(span, pluss::ScalarType::Float32, 42);
-  std::cout << "[RUN] factories:to_vec\n";
-  expect_true(r0.to_vec<float>() == r1.to_vec<float>(), "rand seed reproducibility");
+  std::cout << "[RUN] factories:host\n";
+  expect_true(r0.host<float>() == r1.host<float>(), "rand seed reproducibility");
 
   std::cout << "[RUN] factories:size_mismatch_throws\n";
   expect_throws(
@@ -361,22 +361,22 @@ void test_aux_let_transmit() {
   std::cout << "[RUN] aux:transmit_series\n";
   auto s = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3});
   auto ss = pluss::tils::transmit([](const pluss::Series& t) { return t.mul(t); }, s);
-  expect_eq(ss.to_vec<double>(), std::vector<double>{1.0, 4.0, 9.0}, "transmit single-object apply");
+  expect_eq(ss.host<double>(), std::vector<double>{1.0, 4.0, 9.0}, "transmit single-object apply");
 }
 
 void test_arithmetic_and_reduce() {
   auto a = pluss::Series::full({2,2}, 2.0, pluss::ScalarType::Float32);
   auto c = a.add(3.0);
-  expect_eq(c.to_vec<float>(), {5.0f, 5.0f, 5.0f, 5.0f}, "add scalar");
+  expect_eq(c.host<float>(), {5.0f, 5.0f, 5.0f, 5.0f}, "add scalar");
 
   auto d = c.mul(2.0);
-  expect_eq(d.to_vec<float>(), {10.0f, 10.0f, 10.0f, 10.0f}, "mul scalar");
+  expect_eq(d.host<float>(), {10.0f, 10.0f, 10.0f, 10.0f}, "mul scalar");
 
   auto e = d.sub(4.0).div(3.0);
-  expect_eq(e.to_vec<float>(), {2.0f, 2.0f, 2.0f, 2.0f}, "sub/div scalar chain");
+  expect_eq(e.host<float>(), {2.0f, 2.0f, 2.0f, 2.0f}, "sub/div scalar chain");
 
   auto m = d.mean();
-  expect_eq(m.to_vec<float>(), {10.0f}, "mean scalar value");
+  expect_eq(m.host<float>(), {10.0f}, "mean scalar value");
 }
 
 void test_indexing_ops() {
@@ -387,21 +387,21 @@ void test_indexing_ops() {
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
 
   auto g = src.gather(1, idx);
-  expect_eq(g.to_vec<std::int64_t>(), {20, 10, 30, 40}, "gather basic");
+  expect_eq(g.host<std::int64_t>(), {20, 10, 30, 40}, "gather basic");
 
   auto dst = pluss::make_series(std::vector<std::int64_t>{0, 0, 0, 0}, {2, 2});
   auto sc = dst.scatter(1, idx, src);
-  expect_eq(sc.to_vec<std::int64_t>(), {20, 10, 30, 40}, "scatter basic");
+  expect_eq(sc.host<std::int64_t>(), {20, 10, 30, 40}, "scatter basic");
 
   auto idx_neg = pluss::make_series(
       std::vector<std::int64_t>{-1, 0, 0, -1},
       {2, 2},
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
   auto g_neg = src.gather(1, idx_neg);
-  expect_eq(g_neg.to_vec<std::int64_t>(), {20, 10, 30, 40}, "gather negative index");
+  expect_eq(g_neg.host<std::int64_t>(), {20, 10, 30, 40}, "gather negative index");
 
   auto sc_neg = dst.scatter(1, idx_neg, src);
-  expect_eq(sc_neg.to_vec<std::int64_t>(), {20, 10, 30, 40}, "scatter negative index");
+  expect_eq(sc_neg.host<std::int64_t>(), {20, 10, 30, 40}, "scatter negative index");
 
   auto idx_bad = pluss::make_series(
       std::vector<std::int64_t>{2, 0, 0, 1},
@@ -422,12 +422,11 @@ void test_unary_math_and_activations() {
   expect_true(s.scalar_type() == pluss::ScalarType::Float32, "sigmoid dtype");
 
   auto r = x.relu();
-  expect_eq(r.to_vec<float>(), {0.0f, 0.0f, 0.0f, 1.0f}, "relu values");
+  expect_eq(r.host<float>(), {0.0f, 0.0f, 0.0f, 1.0f}, "relu values");
 }
 
 void test_autodiff_transforms() {
   using pluss::subsp::math::diff::DualTrace;
-  using pluss::subsp::math::diff::Trace;
   using pluss::subsp::math::diff::jvp;
   using pluss::subsp::math::diff::linearize;
   using pluss::subsp::math::diff::value_and_grad;
@@ -441,39 +440,32 @@ void test_autodiff_transforms() {
   expect_close(scalar.sensitivity().item<double>(), 2.5, 1e-12, "reverse scalar sensitivity");
 
   const auto vector_objective = [](const auto& x) {
-    using pluss::subsp::math::diff::sin;
-    using pluss::subsp::math::diff::square;
-    return sin(x) + square(x);
+    return x.sin() + x.square();
   };
 
   std::cout << "[RUN] autodiff:value_and_grad\n";
   const auto x = pluss::make_series(std::vector<double>{0.3, -0.2, 0.5}, {3});
   auto [value, g] = value_and_grad(
-      [&](const Trace& z) -> Trace {
-        using pluss::subsp::math::diff::exp;
-        using pluss::subsp::math::diff::log;
-        using pluss::subsp::math::diff::mean;
-        using pluss::subsp::math::diff::square;
-        using pluss::subsp::math::diff::sum;
-        return mean(square(z)) + sum(log(exp(z) + 1.0));
+      [&](const Series& z) -> Series {
+        return z.square().mean() + ((z.exp() + 1.0).log()).sum();
       },
       x);
   expect_true(value.numel() == 1, "value_and_grad scalar output");
-  const auto gv = g.to_vec<double>();
-  const auto xv = x.to_vec<double>();
+  const auto gv = g.host<double>();
+  const auto xv = x.host<double>();
   for (std::size_t i = 0; i < xv.size(); ++i) {
-    const double expected = (2.0 * xv[i] / static_cast<double>(xv.size())) + 1.0 / (1.0 + std::exp(-xv[i]));
+    const double expected = (2.0 * xv[i] / static_cast<double>(xv.size())) + 1.0 / (1.0 + std::exp((-xv[i])));
     expect_close(gv[i], expected, 1e-9, "value_and_grad analytic component");
   }
 
   std::cout << "[RUN] autodiff:vjp\n";
   const auto cotangent = pluss::make_series(std::vector<double>{1.0, -0.5, 0.25}, {3});
   auto [vjp_value, pullback] = vjp(
-      [&](const Trace& z) -> Trace { return vector_objective(z); },
+      [&](const Series& z) -> Series { return vector_objective(z); },
       x);
   expect_true(vjp_value.numel() == 3, "vjp primal shape");
-  const auto pulled = pullback(cotangent).to_vec<double>();
-  const auto cv = cotangent.to_vec<double>();
+  const auto pulled = pullback(cotangent).host<double>();
+  const auto cv = cotangent.host<double>();
   for (std::size_t i = 0; i < xv.size(); ++i) {
     const double expected = (std::cos(xv[i]) + 2.0 * xv[i]) * cv[i];
     expect_close(pulled[i], expected, 1e-12, "vjp analytic pullback");
@@ -486,8 +478,8 @@ void test_autodiff_transforms() {
       x,
       tangent);
   expect_true(jvp_value.numel() == 3, "jvp primal shape");
-  const auto tv = tangent.to_vec<double>();
-  const auto dv = directional.to_vec<double>();
+  const auto tv = tangent.host<double>();
+  const auto dv = directional.host<double>();
   for (std::size_t i = 0; i < xv.size(); ++i) {
     const double expected = (std::cos(xv[i]) + 2.0 * xv[i]) * tv[i];
     expect_close(dv[i], expected, 1e-12, "jvp analytic pushforward");
@@ -499,8 +491,8 @@ void test_autodiff_transforms() {
       x);
   expect_true(lin_value.numel() == 3, "linearize primal shape");
   const auto tangent_b = pluss::make_series(std::vector<double>{-0.3, 0.2, 0.15}, {3});
-  const auto pb = pushforward(tangent_b).to_vec<double>();
-  const auto tb = tangent_b.to_vec<double>();
+  const auto pb = pushforward(tangent_b).host<double>();
+  const auto tb = tangent_b.host<double>();
   for (std::size_t i = 0; i < xv.size(); ++i) {
     const double expected = (std::cos(xv[i]) + 2.0 * xv[i]) * tb[i];
     expect_close(pb[i], expected, 1e-12, "linearize reusable pushforward");
@@ -568,7 +560,7 @@ void test_dispatch_extensions() {
   std::cout << "[RUN] dispatch_extensions:repeat\n";
   auto x = pluss::make_series(std::vector<std::int64_t>{1, 2, 3}, {3});
   auto xr = x.repeat({2});
-  expect_eq(xr.to_vec<std::int64_t>(), {1, 2, 3, 1, 2, 3}, "repeat intlist");
+  expect_eq(xr.host<std::int64_t>(), {1, 2, 3, 1, 2, 3}, "repeat intlist");
 
   std::cout << "[RUN] dispatch_extensions:repeat_like\n";
   auto like_rep = pluss::series::rand({2, 6}, pluss::ScalarType::Float32, 7);
@@ -577,7 +569,7 @@ void test_dispatch_extensions() {
               "repeat_like target shape");
   expect_true(x_like.scalar_type() == pluss::ScalarType::Int64,
               "repeat_like keeps source dtype for mixed int/float inputs");
-  expect_eq(x_like.to_vec<std::int64_t>(), {1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3}, "repeat_like values");
+  expect_eq(x_like.host<std::int64_t>(), {1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3}, "repeat_like values");
 
   std::cout << "[RUN] dispatch_extensions:expand_like\n";
   auto one = pluss::make_series(std::vector<std::int64_t>{9}, {1, 1});
@@ -586,7 +578,7 @@ void test_dispatch_extensions() {
               "expand_like target shape");
   expect_true(one_like.scalar_type() == pluss::ScalarType::Int64,
               "expand_like keeps source dtype for mixed int/float inputs");
-  expect_eq(one_like.to_vec<std::int64_t>(), {9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9}, "expand_like values");
+  expect_eq(one_like.host<std::int64_t>(), {9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9}, "expand_like values");
 
   std::cout << "[RUN] dispatch_extensions:repeat_like_incompatible\n";
   auto bad_like = pluss::series::rand({2, 5}, pluss::ScalarType::Float32, 8);
@@ -594,25 +586,25 @@ void test_dispatch_extensions() {
 
   std::cout << "[RUN] dispatch_extensions:repeat_interleave\n";
   auto xi = x.repeat_interleave(2);
-  expect_eq(xi.to_vec<std::int64_t>(), {1, 1, 2, 2, 3, 3}, "repeat_interleave flat");
+  expect_eq(xi.host<std::int64_t>(), {1, 1, 2, 2, 3, 3}, "repeat_interleave flat");
 
   std::cout << "[RUN] dispatch_extensions:roll_flat\n";
   auto xr1 = x.roll(1);
-  expect_eq(xr1.to_vec<std::int64_t>(), {3, 1, 2}, "roll flat");
+  expect_eq(xr1.host<std::int64_t>(), {3, 1, 2}, "roll flat");
 
   std::cout << "[RUN] dispatch_extensions:roll_dim\n";
   auto m = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4}, {2, 2});
   auto mr = m.roll(1, 1);
-  expect_eq(mr.to_vec<std::int64_t>(), {2, 1, 4, 3}, "roll dim");
+  expect_eq(mr.host<std::int64_t>(), {2, 1, 4, 3}, "roll dim");
 
   std::cout << "[RUN] dispatch_extensions:masked_fill\n";
   auto mask = pluss::Series::ones({2, 2}, pluss::ScalarType::Bool);
   auto mf = m.masked_fill(mask, 9.0);
-  expect_eq(mf.to_vec<std::int64_t>(), {9, 9, 9, 9}, "masked_fill scalar");
+  expect_eq(mf.host<std::int64_t>(), {9, 9, 9, 9}, "masked_fill scalar");
 
   auto m2 = m.clone();
   m2.masked_fill_(mask, 7.0);
-  expect_eq(m2.to_vec<std::int64_t>(), {7, 7, 7, 7}, "masked_fill_ scalar");
+  expect_eq(m2.host<std::int64_t>(), {7, 7, 7, 7}, "masked_fill_ scalar");
 
   std::cout << "[RUN] dispatch_extensions:scatter_reduce\n";
   auto base = pluss::make_series(std::vector<std::int64_t>{0, 0, 0, 0}, {4});
@@ -622,18 +614,18 @@ void test_dispatch_extensions() {
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
   auto src = pluss::make_series(std::vector<std::int64_t>{3, 4, 5}, {3});
   auto sr = base.scatter_reduce(0, idx, src, "sum", true);
-  expect_eq(sr.to_vec<std::int64_t>(), {0, 7, 5, 0}, "scatter_reduce sum");
+  expect_eq(sr.host<std::int64_t>(), {0, 7, 5, 0}, "scatter_reduce sum");
 
   std::cout << "[RUN] dispatch_extensions:index_add_\n";
   auto t = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40}, {4});
   t.index_add_(
       0, idx.select(0, 0).unsqueeze(0), src.select(0, 0).unsqueeze(0));
-  expect_eq(t.to_vec<std::int64_t>(), {10, 23, 30, 40}, "index_add_ 1d dim0");
+  expect_eq(t.host<std::int64_t>(), {10, 23, 30, 40}, "index_add_ 1d dim0");
 
   std::cout << "[RUN] dispatch_extensions:sum_to_size\n";
   auto s2 = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3});
   auto s2r = s2.sum_to_size({2, 1});
-  expect_eq(s2r.to_vec<std::int64_t>(), {6, 15}, "sum_to_size reduce");
+  expect_eq(s2r.host<std::int64_t>(), {6, 15}, "sum_to_size reduce");
 
   std::cout << "[RUN] dispatch_extensions:unflatten_unfold\n";
   auto u = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6});
@@ -645,23 +637,23 @@ void test_dispatch_extensions() {
   std::cout << "[RUN] dispatch_extensions:inplace_new_routes\n";
   auto inx = pluss::make_series(std::vector<double>{0.25, 0.75}, {2});
   inx.logit_(1e-6);
-  auto inv = inx.to_vec<double>();
+  auto inv = inx.host<double>();
   expect_true(inv[0] < 0.0 && inv[1] > 0.0, "logit_ sign behavior");
 
   auto nx = pluss::make_series(std::vector<double>{1.0, 2.0}, {2});
   nx.nextafter_(pluss::make_series(3.0));
-  auto nxv = nx.to_vec<double>();
+  auto nxv = nx.host<double>();
   expect_true(nxv[0] > 1.0 && nxv[1] > 2.0, "nextafter_ toward scalar");
 
   auto bx = pluss::make_series(std::vector<std::int64_t>{1, 2, 3}, {3});
   bx.bitwise_left_shift_(pluss::make_series(1LL));
-  expect_eq(bx.to_vec<std::int64_t>(), {2, 4, 6}, "bitwise_left_shift_ scalar");
+  expect_eq(bx.host<std::int64_t>(), {2, 4, 6}, "bitwise_left_shift_ scalar");
   bx.bitwise_right_shift_(pluss::make_series(1LL));
-  expect_eq(bx.to_vec<std::int64_t>(), {1, 2, 3}, "bitwise_right_shift_ scalar");
+  expect_eq(bx.host<std::int64_t>(), {1, 2, 3}, "bitwise_right_shift_ scalar");
 
   auto rx = pluss::Series::zeros({64}, pluss::ScalarType::Int64);
   rx.random_(3, 9);
-  auto rv = rx.to_vec<std::int64_t>();
+  auto rv = rx.host<std::int64_t>();
   bool in_range = true;
   for (auto v : rv) {
     if (v < 3 || v >= 9) {
@@ -675,40 +667,40 @@ void test_dispatch_extensions() {
   std::cout << "[RUN] dispatch_extensions:new_math_routes:heaviside\n";
   auto hx = pluss::make_series(std::vector<double>{-1.0, 0.0, 2.0}, {3});
   auto hv = hx.heaviside(0.25);
-  expect_eq(hv.to_vec<double>(), {0.0, 0.25, 1.0}, "heaviside scalar");
+  expect_eq(hv.host<double>(), {0.0, 0.25, 1.0}, "heaviside scalar");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:sinc\n";
   auto sx = pluss::make_series(std::vector<double>{0.0, 1.0}, {2});
   auto sv = sx.sinc();
-  auto svv = sv.to_vec<double>();
+  auto svv = sv.host<double>();
   expect_close(svv[0], 1.0, 1e-12, "sinc(0)");
   expect_true(std::abs(svv[1]) < 1e-9, "sinc(1) near zero");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:gcd_lcm\n";
   auto gx = pluss::make_series(std::vector<std::int64_t>{12, 18}, {2});
   auto gv = gx.gcd(pluss::make_series(std::int64_t{6}));
-  expect_eq(gv.to_vec<std::int64_t>(), {6, 6}, "gcd scalar");
+  expect_eq(gv.host<std::int64_t>(), {6, 6}, "gcd scalar");
   auto lv = gx.lcm(pluss::make_series(std::vector<std::int64_t>{6, 8}, {2}));
-  expect_eq(lv.to_vec<std::int64_t>(), {12, 72}, "lcm tensor");
+  expect_eq(lv.host<std::int64_t>(), {12, 72}, "lcm tensor");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:hardshrink\n";
   auto hs = pluss::make_series(std::vector<double>{-0.2, 0.7}, {2}).hardshrink(0.5);
-  expect_eq(hs.to_vec<double>(), {0.0, 0.7}, "hardshrink scalar lambda");
+  expect_eq(hs.host<double>(), {0.0, 0.7}, "hardshrink scalar lambda");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:cross\n";
   auto c1 = pluss::make_series(std::vector<double>{1.0, 0.0, 0.0}, {3});
   auto c2 = pluss::make_series(std::vector<double>{0.0, 1.0, 0.0}, {3});
   auto cv = c1.cross(c2);
-  expect_eq(cv.to_vec<double>(), {0.0, 0.0, 1.0}, "cross 3-vector");
+  expect_eq(cv.host<double>(), {0.0, 0.0, 1.0}, "cross 3-vector");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:aminmax\n";
   auto am = pluss::make_series(std::vector<double>{3.0, -1.0, 2.0}, {3}).aminmax();
-  expect_eq(am.first.to_vec<double>(), {-1.0}, "aminmax minimum");
-  expect_eq(am.second.to_vec<double>(), {3.0}, "aminmax maximum");
+  expect_eq(am.first.host<double>(), {-1.0}, "aminmax minimum");
+  expect_eq(am.second.host<double>(), {3.0}, "aminmax maximum");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:logcumsumexp\n";
   auto lce = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0}, {3}).logcumsumexp();
-  auto lcev = lce.to_vec<double>();
+  auto lcev = lce.host<double>();
   expect_true(lcev[2] > lcev[1] && lcev[1] > lcev[0], "logcumsumexp increasing");
 }
 
@@ -718,14 +710,14 @@ void test_matlab_hybrid_ops() {
   auto xdct = x.dct();
   auto xidct = xdct.idct();
   expect_true(xidct.numel() == 4, "idct output shape");
-  auto xrt = xidct.to_vec<double>();
+  auto xrt = xidct.host<double>();
   expect_close(xrt[0], 1.0, 1e-6, "dct/idct roundtrip[0]");
   expect_close(xrt[1], 2.0, 1e-6, "dct/idct roundtrip[1]");
   expect_close(xrt[2], 3.0, 1e-6, "dct/idct roundtrip[2]");
   expect_close(xrt[3], 4.0, 1e-6, "dct/idct roundtrip[3]");
   auto xdst = x.dst();
   auto xidst = xdst.idst();
-  auto xri = xidst.to_vec<double>();
+  auto xri = xidst.host<double>();
   expect_close(xri[0], 1.0, 1e-6, "dst/idst roundtrip[0]");
   expect_close(xri[1], 2.0, 1e-6, "dst/idst roundtrip[1]");
   expect_close(xri[2], 3.0, 1e-6, "dst/idst roundtrip[2]");
@@ -747,7 +739,7 @@ void test_matlab_hybrid_ops() {
   auto b = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 2.0}, {2, 2});
   auto cd = a.stat(b).cdist();
   expect_true(cd.numel() == 4, "cdist shape");
-  auto cdv = cd.to_vec<double>();
+  auto cdv = cd.host<double>();
   expect_close(cdv[0], 1.0, 1e-6, "cdist[0,0]");
   expect_close(cdv[1], std::sqrt(8.0), 1e-6, "cdist[0,1]");
   expect_close(cdv[2], 1.0, 1e-6, "cdist[1,0]");
@@ -769,12 +761,12 @@ void test_matlab_hybrid_ops() {
   std::cout << "[RUN] matlab_hybrid:erfcinv\n";
   auto ec = pluss::make_series(std::vector<double>{0.5}, {1}).erfcinv();
   expect_true(ec.numel() == 1, "erfcinv shape");
-  auto ecv = ec.to_vec<double>();
+  auto ecv = ec.host<double>();
   expect_true(std::isfinite(ecv[0]), "erfcinv finite");
 
   std::cout << "[RUN] matlab_hybrid:zeta\n";
   auto z = pluss::make_series(std::vector<double>{2.0}, {1}).zeta(1.0);
-  expect_close(z.to_vec<double>()[0], 1.6449, 0.1, "zeta(2) approx");
+  expect_close(z.host<double>()[0], 1.6449, 0.1, "zeta(2) approx");
 
   std::cout << "[RUN] matlab_hybrid:unwrap\n";
   auto ph = pluss::make_series(std::vector<double>{0.0, 3.5, 7.0}, {3});

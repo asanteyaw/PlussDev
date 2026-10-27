@@ -25,14 +25,14 @@ int main() {
   ys[9] = 60.0;  // an outlier in the last observation
   std::cout << std::fixed << std::setprecision(4);
   const auto ols_fit = reg::ols_fit(vec(ys), column(xs));
-  const auto ols = ols_fit.coefficients.to_vec<double>();
+  const auto ols = ols_fit.coefficients.host<double>();
   reg::QuantileOptions median;
   median.tau = 0.5;
   const auto q = reg::quantile_fit(vec(ys), column(xs), median);
-  const auto qb = q.coefficients.to_vec<double>();
+  const auto qb = q.coefficients.host<double>();
   std::cout << "with an outlier   OLS: intercept " << ols[0] << ", slope " << ols[1] << "\n";
   std::cout << "                  median: intercept " << qb[0] << ", slope " << qb[1] << "   (true 1, 2), converged " << q.converged << ", iterations " << q.iterations << "\n";
-  const auto se_ols = ols_fit.std_errors.to_vec<double>(), se_q = q.std_errors.to_vec<double>();
+  const auto se_ols = ols_fit.std_errors.host<double>(), se_q = q.std_errors.host<double>();
   std::cout << "slope std error   OLS " << se_ols[1] << ", median " << se_q[1] << "   (the robust covariance uses a bandwidth that the outlier does not inflate)\n";
 
   // heteroscedastic data: y = 1 + 2 x + x * e, with e cycling through fixed values in [-1, 1]
@@ -46,7 +46,7 @@ int main() {
   for (double tau : {0.1, 0.5, 0.9}) {
     reg::QuantileOptions o;
     o.tau = tau;
-    const auto b = reg::quantile_fit(vec(hy), column(hx), o).coefficients.to_vec<double>();
+    const auto b = reg::quantile_fit(vec(hy), column(hx), o).coefficients.host<double>();
     std::cout << "tau " << std::setprecision(1) << tau << std::setprecision(4) << ": intercept " << b[0] << ", slope " << b[1] << "\n";
   }
 }

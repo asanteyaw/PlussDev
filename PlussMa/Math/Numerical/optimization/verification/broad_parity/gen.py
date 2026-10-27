@@ -84,7 +84,7 @@ def gen_cpp(path):
 #include <pluss/ma.h>
 #include <string>
 #include <vector>
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 using Pack = optim::ParameterPack<optim::Trace>;
 using Series = pluss::Series;
 static const auto f64 = pluss::ScalarType::Float64;

@@ -18,6 +18,18 @@ enum class PopulationSolverStatus {
   ReachedEvaluationBudget,
 };
 
+inline std::string to_string(PopulationSolverStatus status) {
+  switch (status) {
+    case PopulationSolverStatus::Converged:
+      return "Converged";
+    case PopulationSolverStatus::ReachedIterationBudget:
+      return "ReachedIterationBudget";
+    case PopulationSolverStatus::ReachedEvaluationBudget:
+      return "ReachedEvaluationBudget";
+  }
+  return "Unknown";
+}
+
 enum class PopulationSolverDisplay {
   None,
   Iter,

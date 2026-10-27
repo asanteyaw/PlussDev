@@ -17,7 +17,7 @@ namespace pluss::subsp::math::lp {
 // Dense [rows, n] Series -> sparse triplets appended to the model (rows are numbered from `row0`).
 inline void append_dense_rows_(const Series &a, std::int32_t n, std::int32_t row0, std::vector<std::int32_t> &r, std::vector<std::int32_t> &c,
                                std::vector<double> &v) {
-  const auto data = a.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  const auto data = a.to(pluss::ScalarType::Float64).contiguous().host<double>();
   const auto rows = static_cast<std::int32_t>(data.size() / static_cast<std::size_t>(n));
   for (std::int32_t i = 0; i < rows; ++i)
     for (std::int32_t j = 0; j < n; ++j) {
@@ -30,7 +30,7 @@ inline void append_dense_rows_(const Series &a, std::int32_t n, std::int32_t row
     }
 }
 
-[[nodiscard]] inline std::vector<double> dense_vec_(const Series &s) { return s.to(pluss::ScalarType::Float64).contiguous().to_vec<double>(); }
+[[nodiscard]] inline std::vector<double> dense_vec_(const Series &s) { return linprog::detail::flat_host_(s); }
 
 // Single-lane conversion: c must be [n]; rows are a_ub x <= b_ub then a_eq x == b_eq. Missing bounds mean -inf / +inf, exactly as in
 // linprog::solve (a variable with no `lower` is free), so one Problem has one meaning in both solvers.

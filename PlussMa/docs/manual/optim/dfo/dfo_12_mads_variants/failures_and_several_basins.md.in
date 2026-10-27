@@ -1,0 +1,50 @@
+# Variants for failing evaluations and several basins
+
+[Back to Derivative-Free Optimization 12: The MADS Variants](../dfo_12_mads_variants.md)
+
+The other two variants address different problems. **Disco MADS** is for a black box that *fails often*. A failed evaluation (`evaluation_ok` false, or a non-finite objective) remains a failure for the search, but Disco also tries a few points *near* the failed one and remembers the best valid one, which can replace the search's final answer if it is better. The rescue runs only once a given share of the evaluations has failed, so on a function that rarely fails it costs about what plain MADS costs.
+
+**Variable-neighbourhood MADS** is for a function with several basins. Each later stage starts from the best point so far plus a random perturbation of growing size, runs MADS, and keeps the better outcome, so later stages reach further. The budget is divided among the stages, which is the trade-off: more stages explore more but each run is shorter.
+
+## Program 3: Disco MADS
+
+| `DiscoMadsConfig` | Meaning | Default |
+|---|---|---|
+| `base` | the engine settings | |
+| `rescue_trials` | nearby points tried after a failed evaluation | 8 |
+| `rescue_failure_rate` | the rescue only runs once this share of the evaluations has failed (after 20 calls); 0 rescues every failure | 0.5 |
+| `rescue_radius` | distance of the first nearby point | 0.25 |
+| `rescue_radius_decay` | factor applied to the radius for each later trial | 0.75 |
+| `rng_seed` | | 5489 |
+
+A failed evaluation (`evaluation_ok` false, or a non-finite objective) remains a failure for the search. Disco also evaluates the nearby points and remembers the best valid one, which can replace the search's final answer if it is better. The reported minimum is always the true value at the returned point.
+
+@@example Numerical/optimization/guide/dfo/413_discomads.cpp@@
+
+When 30% of the evaluations fail, the failure rate is below `rescue_failure_rate`, the rescue stays off, and Disco costs about what plain MADS costs (a few more calls while the failure rate is still being estimated). When 80% fail, plain MADS stops far from the minimum (about 5), and the rescue finds better points (about 3.4 with 3 trials, 2.9 with 12) at three to ten times the calls. Neither reaches the minimum, because most of the space is simply not observable. The rescue is for high failure rates; at low ones it switches itself off.
+
+## Program 4: Variable-neighbourhood MADS
+
+| `VnsMadsConfig` | Meaning | Default |
+|---|---|---|
+| `base` | the engine settings | |
+| `neighborhoods` | number of stages (the first is plain MADS) | 5 |
+| `initial_kick_scale` | scale of the first random perturbation | 0.2 |
+| `kick_growth` | factor applied to the scale at each later stage | 1.7 |
+| `rng_seed` | | 5489 |
+
+Each later stage starts from the best point so far plus a random perturbation, runs MADS, and keeps the better outcome. The perturbations grow, so later stages reach further.
+
+@@example Numerical/optimization/guide/dfo/414_vnsmads.cpp@@
+
+A single stage (plain MADS) settles in the nearest local minimum, value 0.995, on all three seeds. More stages find the global minimum on more seeds: with 12 stages, two of three. The budget is divided among stages, so more stages mean shorter runs each; on a harder problem the balance matters. Compare with the search step of Chapter 10 and the population methods of Chapters 8 and 9, which also address several basins.
+
+## Decisions and pitfalls
+
+- **Disco's rescue stays off until failures are common.** At a 30% failure rate (below `rescue_failure_rate`) it behaves like plain MADS; at 80% plain MADS stops far from the minimum (about 5) and the rescue finds it.
+- **The reported minimum is always the true value at the returned point.** A rescued point replaces the answer only if it is better and valid.
+- **More stages find the global basin on more seeds.** One stage (plain MADS) settled in the nearest local minimum on every seed; 12 stages found the global one on two of three.
+- **Stages divide the budget.** On a harder problem the balance between many short runs and a few long ones matters; compare on your own problem.
+- **Run several seeds either way.** Both variants are random; report the spread.
+
+Where next: That completes the derivative-free chapters; [linear programming](../../linprog.md) is next.

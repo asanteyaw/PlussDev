@@ -47,7 +47,7 @@ int main() {
       lp::Options ipm; // polish on by default
       expect(ipm.polish && ipm.method == lp::Method::InteriorPoint, "defaults: interior point with polish");
       const auto polished = mt::flux_variability(net, obj, 1.0, ipm);
-      const auto a = exact.minimum.to_vec<double>(), b = polished.minimum.to_vec<double>(), a2 = exact.maximum.to_vec<double>(), b2 = polished.maximum.to_vec<double>();
+      const auto a = exact.minimum.host<double>(), b = polished.minimum.host<double>(), a2 = exact.maximum.host<double>(), b2 = polished.maximum.host<double>();
       double worst = 0.0;
       for (int j = 0; j < r; ++j)
         worst = std::max({worst, std::abs(a[static_cast<std::size_t>(j)] - b[static_cast<std::size_t>(j)]), std::abs(a2[static_cast<std::size_t>(j)] - b2[static_cast<std::size_t>(j)])});
@@ -59,6 +59,34 @@ int main() {
       try { (void)mt::flux_variability(net, obj, 1.0, raw); } catch (const std::exception &) { threw = true; }
       if (trial == 0)
         expect(threw, "without polish the pinned-floor LPs do not all reach optimality");
+    }
+    // degenerate 100 x 320 LP: the dense simplex used to need ~25,000 pivots (Bland fallback) and hit the default iteration cap; random entering-column
+    // choice after a degenerate run solves it in ~1,500
+    {
+      std::mt19937 g2(5);
+      std::uniform_real_distribution<double> U2(0, 1);
+      const int m = 100, r = 2 * m + 20;
+      std::vector<double> S(static_cast<std::size_t>(m * r), 0.0), v0(static_cast<std::size_t>(r));
+      for (auto &x : v0) x = 0.5 + U2(g2);
+      for (int i = 0; i < m; ++i) {
+        double acc = 0;
+        for (int j = 0; j < r - 1; ++j)
+          if (U2(g2) < 0.12) { const double sg = U2(g2) < 0.5 ? -1 : 1; S[static_cast<std::size_t>(i * r + j)] = sg; acc += sg * v0[static_cast<std::size_t>(j)]; }
+        S[static_cast<std::size_t>(i * r + r - 1)] = -acc / v0[static_cast<std::size_t>(r - 1)];
+      }
+      lp::Problem p;
+      std::vector<double> c(static_cast<std::size_t>(r), 0.0);
+      for (int j = 0; j < 5; ++j) c[static_cast<std::size_t>(j)] = -1.0;
+      p.c = mk(c, {r});
+      p.a_eq = mk(S, {m, r});
+      p.b_eq = mk(std::vector<double>(static_cast<std::size_t>(m), 0.0), {m});
+      p.lower = mk(std::vector<double>(static_cast<std::size_t>(r), 0.0), {r});
+      p.upper = mk(std::vector<double>(static_cast<std::size_t>(r), 10.0), {r});
+      lp::Options so;
+      so.method = lp::Method::Simplex;
+      const auto res = lp::solve(p, so);
+      expect(res.status.item<double>() == 0.0 && std::abs(res.objective.item<double>() + 50.0) < 1e-8, "dense simplex solves the degenerate LP within the default iteration cap");
+      expect(res.iterations < 5000, "pivot count stays modest: " + std::to_string(res.iterations));
     }
     // infeasible / unbounded verdicts of the interior point are untouched by polishing
     {

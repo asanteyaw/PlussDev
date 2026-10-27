@@ -34,7 +34,7 @@ std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
   const auto slate = labels.to_slate();
   PLUSS_CHECK(slate.kind() == pluss::table::SlateKind::Series,
               "Archive::loc(int64): depth labels must be numeric Series");
-  const auto values = slate.as_series().to_vec<std::int64_t>();
+  const auto values = slate.as_series().host<std::int64_t>();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (values[static_cast<std::size_t>(i)] == key) {
       return i;

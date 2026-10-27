@@ -23,7 +23,7 @@ int main() {
     std::vector<double> flat;
     for (std::size_t i = 0; i < x1.size(); ++i) { flat.push_back(x1[i]); flat.push_back(x2[i]); }
     const auto fit = reg::ols_fit(vec(y), table(flat, 10, 2));
-    const auto se = fit.std_errors.to_vec<double>();
+    const auto se = fit.std_errors.host<double>();
     std::cout << std::left << std::setw(30) << label << std::setw(8) << fit.rank << std::scientific << std::setprecision(1) << std::setw(14) << fit.condition_number << std::fixed
               << std::setprecision(3) << "slope-1 std error " << se[1] << "   warnings " << fit.warnings.size() << "\n";
     for (const auto& w : fit.warnings) std::cout << "    warning: " << w << "\n";

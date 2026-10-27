@@ -41,7 +41,7 @@ Series as_vector_(const Series& x, const char* name) {
 }
 
 double scalar_(const Series& x) {
-  return x.to(ScalarType::Float64).reshape({1}).item<double>();
+  return x.to(ScalarType::Float64).reshape({1}).host<double>().front();
 }
 
 double clamp01_(double p) {
@@ -75,7 +75,7 @@ double interp_piecewise_(const std::array<double, N>& xs, const std::array<doubl
 double chisq_cdf_(double value, std::int64_t dof, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   const Series q = pluss::make_series(std::vector<double>{value}, {1}, out_cfg);
-  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).host<double>().front());
 }
 
 double chisq_survival_(double value, std::int64_t dof, Config /*cfg*/) {
@@ -254,7 +254,7 @@ double normal_quantile_(double p, Config cfg) {
 
 double t_cdf_(double x, double dof, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q).host<double>().front());
 }
 
 double t_quantile_(double p, double dof, Config cfg) {

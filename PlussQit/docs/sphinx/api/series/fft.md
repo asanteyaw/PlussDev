@@ -185,7 +185,7 @@ conjugate of entry 1, and entry 3 (the Nyquist entry) is real.
 
 ```cpp
 auto x = pluss::make_series({1.0, 0.0, -1.0, 0.0, 2.0, 5.0});
-auto spectrum = x.fft().to_vec<std::complex<double>>();
+auto spectrum = x.fft().host<std::complex<double>>();
 std::cout << std::boolalpha;
 std::cout << "entry 5 is the conjugate of entry 1: " << (spectrum[5] == std::conj(spectrum[1])) << "\n";
 std::cout << "entry 3 has zero imaginary part:     " << (spectrum[3].imag() == 0.0) << "\n";

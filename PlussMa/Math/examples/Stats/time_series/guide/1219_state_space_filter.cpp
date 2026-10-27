@@ -53,7 +53,7 @@ int main() {
   const auto fit = ts::Ssm::filter(y, local_linear_trend(0.2, 0.05, 0.3));
   std::cout << "filtered level and slope, and one-step forecast error\n";
   for (int t : {0, 1, 2, 10, 30, 59}) {
-    const auto x = fit.filtered_states.select(0, t).to_vec<double>();
+    const auto x = fit.filtered_states.select(0, t).host<double>();
     std::cout << "  t = " << std::setw(2) << t << "   level " << std::setw(7) << x[0] << "   slope " << std::setw(6) << x[1] << "   error " << std::setw(7)
               << fit.forecast_obs_error.select(0, t).item<double>() << "\n";
   }

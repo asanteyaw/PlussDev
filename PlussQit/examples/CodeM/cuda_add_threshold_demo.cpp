@@ -36,7 +36,7 @@ int main() {
     const pluss::Series a = pluss::series::full({1}, a_val, cfg);
     const pluss::Series b = pluss::series::full({1, m}, b_val, cfg);
     const pluss::Series c = (a + b).to(pluss::pCPU, pluss::ScalarType::Float64);
-    const std::vector<double> host = c.to_vec<double>();
+    const std::vector<double> host = c.host<double>();
 
     std::int64_t first_wrong = -1;
     std::int64_t wrong_count = 0;

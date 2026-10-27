@@ -1,0 +1,40 @@
+<!-- generated from discrete.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# distr discrete
+
+Families for counts and other integer-valued variables. Each page documents one family: the parameters, the support, how to evaluate the density and the distribution function, how to draw samples, and, for the families that have one, the object form and the maximum-likelihood fit.
+
+## The Surface
+
+| Family | What it is |
+|---|---|
+| [`Bernoulli`](discrete/Bernoulli.md) | The Bernoulli distribution: a single trial with two outcomes, success with probability p and failure otherwise. |
+| [`Bessel`](discrete/Bessel.md) | The Bessel distribution: a discrete distribution whose masses are proportional to the terms of a modified Bessel function series. |
+| [`Binomial`](discrete/Binomial.md) | The binomial distribution: the number of successes in a fixed number of independent trials with the same success probability. |
+| [`Geometric`](discrete/Geometric.md) | The geometric distribution: the number of independent trials needed to obtain the first success. |
+| [`Hypergeometric`](discrete/Hypergeometric.md) | The hypergeometric distribution: the number of successes in a sample drawn without replacement from a finite population. |
+| [`NegativeBinomial`](discrete/NegativeBinomial.md) | The negative binomial distribution: the number of failures before the r-th success, and the standard model of over-dispersed counts. |
+| [`Poisson`](discrete/Poisson.md) | The Poisson distribution: the number of events in a fixed interval when events occur independently at a constant average rate. |
+| [`Rademacher`](discrete/Rademacher.md) | The Rademacher distribution: the values +1 and -1, each with probability one half. |
+| [`Skellam`](discrete/Skellam.md) | The Skellam distribution: the difference of two independent Poisson counts, a distribution on the integers that can be negative. |
+| [`Yule`](discrete/Yule.md) | The Yule–Simon distribution: a discrete power-law distribution with a heavy tail, the model of preferential attachment. |
+| [`Zeta`](discrete/Zeta.md) | The zeta (Zipf) distribution: a discrete power-law distribution on the positive integers. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+discrete/Bernoulli
+discrete/Bessel
+discrete/Binomial
+discrete/Geometric
+discrete/Hypergeometric
+discrete/NegativeBinomial
+discrete/Poisson
+discrete/Rademacher
+discrete/Skellam
+discrete/Yule
+discrete/Zeta
+```
+<!-- apiref:toctree:end -->

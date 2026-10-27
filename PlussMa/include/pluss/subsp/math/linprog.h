@@ -44,6 +44,22 @@ namespace pluss::subsp::math::linprog {
 enum class Method : int { InteriorPoint = 0, Simplex = 1 };
 
 enum class Status : int { Optimal = 0, PrimalInfeasible = 1, Unbounded = 2, IterationLimit = 3, NearOptimal = 4 };
+
+inline const char* to_string(Status value) {
+  switch (value) {
+    case Status::Optimal:
+      return "Optimal";
+    case Status::PrimalInfeasible:
+      return "PrimalInfeasible";
+    case Status::Unbounded:
+      return "Unbounded";
+    case Status::IterationLimit:
+      return "IterationLimit";
+    case Status::NearOptimal:
+      return "NearOptimal";
+  }
+  return "Unknown";
+}
 inline bool success(Status st) { return st == Status::Optimal || st == Status::NearOptimal; }
 
 struct Options final {
@@ -93,6 +109,13 @@ struct Result final {
 };
 
 namespace detail {
+
+// Flat row-major copy of a Series of any rank (host<T>() keeps the rank; a std::vector destination needs rank one).
+inline std::vector<double> flat_host_(const Series &s) {
+  const Series c = s.to(pluss::ScalarType::Float64).contiguous();
+  return c.reshape({c.numel()}).pull<double>();
+}
+
 inline Series cat_cols(const Series &a, const Series &b) { return a.unite(std::vector<Series>{b}, 1); }
 inline Series cat_rows(const Series &a, const Series &b) { return a.unite(std::vector<Series>{b}, 0); }
 inline Series lane_cat(const Series &a, const Series &b) { return a.unite(std::vector<Series>{b}, -1); }
@@ -150,7 +173,7 @@ inline Standard standardize(const Problem &p) {
   const Series upper = p.upper ? canonical(lanes(p.upper->to(dt), n), false) : zero_n.add(inf);
   auto pattern = [&](const Series &v) { // lane-uniform finite pattern as a host vector
     const Series f = v.isfinite().to(dt);
-    const auto mx = f.amax(0, false).to_vec<double>(), mn = f.amin(0, false).to_vec<double>();
+    const auto mx = f.amax(0, false).host<double>(), mn = f.amin(0, false).host<double>();
     std::vector<bool> out;
     for (std::int64_t j = 0; j < n; ++j) {
       if (mx[static_cast<std::size_t>(j)] != mn[static_cast<std::size_t>(j)])
@@ -270,7 +293,7 @@ inline Result solve_impl(const Problem &p, const Options &opt) {
     std::int64_t count{0};
   } pairs;
   if (m >= 128 && nn > 0) {
-    const auto a_host = a.to_vec<double>();
+    const auto a_host = a.host<double>();
     std::int64_t nnz = 0;
     for (double v : a_host)
       nnz += v != 0.0 ? 1 : 0;
@@ -605,7 +628,7 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
     Series rhs_s = pluss::make_series(rhs, {m}).to(dt).to(cfg.platform);
     if (any)
       rhs_s = rhs_s.sub(full.matmul(pluss::make_series(nonbasic_contrib, {N}).to(dt).to(cfg.platform)));
-    const auto xb = binv.matmul(rhs_s.unsqueeze(-1)).squeeze(-1).to_vec<double>();
+    const auto xb = binv.matmul(rhs_s.unsqueeze(-1)).squeeze(-1).host<double>();
     for (std::int64_t i = 0; i < m; ++i)
       xB[static_cast<std::size_t>(i)] = xb[static_cast<std::size_t>(i)];
     since_refactor = 0;
@@ -688,8 +711,8 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
       for (std::int64_t i = 0; i < m; ++i)
         cB[static_cast<std::size_t>(i)] = cost[static_cast<std::size_t>(basis[static_cast<std::size_t>(i)])];
       const Series pi_w = pluss::make_series(cB, {m}).to(dt).to(cfg.platform).matmul(binv);
-      const auto d = pluss::make_series(std::vector<double>(cost.begin(), cost.begin() + nn), {nn}).to(dt).to(cfg.platform).sub(pi_w.matmul(a)).to_vec<double>();
-      const auto row = binv.select(0, r_row).matmul(a).to_vec<double>(); // tableau row r over structural columns
+      const auto d = pluss::make_series(std::vector<double>(cost.begin(), cost.begin() + nn), {nn}).to(dt).to(cfg.platform).sub(pi_w.matmul(a)).host<double>();
+      const auto row = binv.select(0, r_row).matmul(a).host<double>(); // tableau row r over structural columns
       std::int64_t q = -1;
       double best_ratio = inf, best_pivot = 0.0;
       for (std::int64_t j = 0; j < nn; ++j) {
@@ -713,7 +736,7 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
         return false; // no entering candidate: let the cold start (phase I) classify infeasibility and build the certificate
       const std::int64_t leave_col = basis[static_cast<std::size_t>(r_row)];
       const double target = dir == 1 ? 0.0 : ub[static_cast<std::size_t>(leave_col)];
-      const auto alpha = binv.matmul(full.select(1, q).unsqueeze(-1)).squeeze(-1).to_vec<double>();
+      const auto alpha = binv.matmul(full.select(1, q).unsqueeze(-1)).squeeze(-1).host<double>();
       const double step = (xB[static_cast<std::size_t>(r_row)] - target) / alpha[static_cast<std::size_t>(r_row)];
       for (std::int64_t i = 0; i < m; ++i)
         xB[static_cast<std::size_t>(i)] -= alpha[static_cast<std::size_t>(i)] * step;
@@ -742,6 +765,7 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
     }
   }
   Series pi_s = pluss::series::undefined();
+  std::uint64_t rng_state = 0x9E3779B97F4A7C15ULL; // deterministic stream for the anti-stalling pricing
   for (std::int64_t it = 0; it < max_it; ++it) {
     out.iterations = static_cast<int>(it);
     if (since_refactor >= kRefactor)
@@ -751,21 +775,39 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
       cB[static_cast<std::size_t>(i)] = cost[static_cast<std::size_t>(basis[static_cast<std::size_t>(i)])];
     pi_s = pluss::make_series(cB, {m}).to(dt).to(cfg.platform).matmul(binv); // y = c_B^T B^{-1}  [m]
     const auto reduced = pluss::make_series(std::vector<double>(cost.begin(), cost.begin() + nn), {nn}).to(dt).to(cfg.platform)
-                             .sub(pi_s.matmul(a)).to_vec<double>(); // d_j for structural columns
+                             .sub(pi_s.matmul(a)).host<double>(); // d_j for structural columns
     // ---- pricing
     std::int64_t q = -1;
     double best = tol;
-    const bool bland = degenerate_run > 30;
+    // Dantzig pricing; after a run of degenerate pivots (stalling at a degenerate vertex) the entering column is drawn at random among the
+    // improving candidates -- unlike Bland's first-index rule, which cannot cycle but crawls (25k pivots on a degenerate 100 x 320 LP), a random
+    // choice leaves the degenerate vertex quickly with probability one. The ratio-test tie-break stays deterministic (largest pivot).
+    const bool stalled = degenerate_run > 30;
+    std::int64_t candidates = 0;
+    if (stalled) {
+      for (std::int64_t j = 0; j < nn; ++j) {
+        if (where[static_cast<std::size_t>(j)] >= 0 || ub[static_cast<std::size_t>(j)] <= 0.0)
+          continue;
+        const double dj = reduced[static_cast<std::size_t>(j)];
+        if ((at_upper[static_cast<std::size_t>(j)] ? dj : -dj) > tol)
+          ++candidates;
+      }
+      rng_state = rng_state * 6364136223846793005ULL + 1442695040888963407ULL;
+    }
+    std::int64_t pick = stalled && candidates > 0 ? static_cast<std::int64_t>((rng_state >> 33) % static_cast<std::uint64_t>(candidates)) : -1;
     for (std::int64_t j = 0; j < nn; ++j) {
       if (where[static_cast<std::size_t>(j)] >= 0 || ub[static_cast<std::size_t>(j)] <= 0.0)
         continue; // basic or fixed at zero
       const double dj = reduced[static_cast<std::size_t>(j)];
       const double gain = at_upper[static_cast<std::size_t>(j)] ? dj : -dj; // improvement rate if moved off its bound
-      if (gain > best) {
-        best = bland ? tol : gain;
-        q = j;
-        if (bland)
+      if (stalled) {
+        if (gain > tol && pick-- == 0) {
+          q = j;
           break;
+        }
+      } else if (gain > best) {
+        best = gain;
+        q = j;
       }
     }
     if (q < 0) { // optimal for this phase
@@ -777,7 +819,7 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
         const auto bs_scale = [&]() { double sc = 1.0; for (double v : b) sc = std::max(sc, std::abs(v)); return sc; }();
         if (w > 1e-8 * bs_scale) {
           out.status = Status::PrimalInfeasible;
-          out.farkas = pi_s.to_vec<double>();
+          out.farkas = pi_s.host<double>();
           return out;
         }
         phase = 2;
@@ -797,7 +839,7 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
         if (col >= nn)
           col = -(col - nn + 1);
       out.at_upper.assign(at_upper.begin(), at_upper.begin() + nn);
-      out.y = pi_s.to_vec<double>();
+      out.y = pi_s.host<double>();
       out.v.assign(static_cast<std::size_t>(nn), 0.0);
       for (std::int64_t j = 0; j < nn; ++j)
         if (std::isfinite(ub[static_cast<std::size_t>(j)]))
@@ -806,7 +848,7 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
     }
     // ---- direction and ratio test
     const double sigma = at_upper[static_cast<std::size_t>(q)] ? -1.0 : 1.0; // +1: increase z_q, -1: decrease
-    const auto alpha = binv.matmul(full.select(1, q).unsqueeze(-1)).squeeze(-1).to_vec<double>(); // B^{-1} a_q
+    const auto alpha = binv.matmul(full.select(1, q).unsqueeze(-1)).squeeze(-1).host<double>(); // B^{-1} a_q
     // x_B changes by -sigma * t * alpha
     double tmax = inf;
     for (int pass = 0; pass < 2; ++pass) {
@@ -832,7 +874,7 @@ inline SimplexLane simplex_lane(const Series &a, const std::vector<double> &b, c
           tmax = std::min(tmax, std::max(0.0, limit));
         } else if (std::max(0.0, limit) <= tmax + 1e-12) {
           const double piv = std::abs(ai);
-          if (bland ? (leave < 0 || col < basis[static_cast<std::size_t>(leave)]) : piv > leave_pivot) {
+          if (piv > leave_pivot) {
             leave = i;
             leave_pivot = piv;
             leave_bound_is_upper = upper_hit;
@@ -892,7 +934,7 @@ inline Result solve_simplex(const Problem &p, const Options &opt) {
   const Standard S = standardize(p);
   const std::int64_t B = S.batch, nn = S.nn, m = S.m, n = S.n;
   const double inf = std::numeric_limits<double>::infinity();
-  const auto b_all = S.b.to_vec<double>(), c_all = S.c_std.to_vec<double>(), u_all = S.ubar.to_vec<double>(), um_h = S.um.to_vec<double>();
+  const auto b_all = S.b.host<double>(), c_all = S.c_std.host<double>(), u_all = S.ubar.host<double>(), um_h = S.um.host<double>();
   std::vector<double> x_std(static_cast<std::size_t>(B * nn), 0.0), y_all(static_cast<std::size_t>(B * m), 0.0), v_all(static_cast<std::size_t>(B * nn), 0.0);
   std::vector<double> farkas(static_cast<std::size_t>(B * m), 0.0), ray_std(static_cast<std::size_t>(B * nn), 0.0), status(static_cast<std::size_t>(B), 3.0);
   int iters = 0;
@@ -956,7 +998,7 @@ inline Result solve_simplex(const Problem &p, const Options &opt) {
 
 // Re-solve the lanes the interior point could not certify (IterationLimit / NearOptimal) with the exact simplex and merge them back.
 inline Result polish_with_simplex(const Problem &p, Result r, const Options &opt) {
-  const auto st = r.status.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  const auto st = r.status.to(pluss::ScalarType::Float64).contiguous().host<double>();
   std::vector<std::int64_t> bad;
   for (std::size_t i = 0; i < st.size(); ++i)
     if (st[i] == static_cast<double>(Status::IterationLimit) || st[i] == static_cast<double>(Status::NearOptimal))
@@ -975,7 +1017,7 @@ inline Result polish_with_simplex(const Problem &p, Result r, const Options &opt
   Options so = opt;
   so.method = Method::Simplex;
   so.polish = false;
-  auto rows_of = [&](const Series &v, std::int64_t width) { return v.defined() ? v.reshape({B, width}).to(pluss::ScalarType::Float64).contiguous().to_vec<double>() : std::vector<double>{}; };
+  auto rows_of = [&](const Series &v, std::int64_t width) { return v.defined() ? detail::flat_host_(v.reshape({B, width})) : std::vector<double>{}; };
   const std::int64_t me = p.a_eq ? p.a_eq->size(0) : 0, mu = p.a_ub ? p.a_ub->size(0) : 0;
   std::vector<double> x = rows_of(r.x, n), obj = rows_of(r.objective, 1), dobj = rows_of(r.dual_objective, 1), stat = rows_of(r.status, 1);
   std::vector<double> deq = rows_of(r.dual_eq, std::max<std::int64_t>(me, 1)), dub = rows_of(r.dual_ub, std::max<std::int64_t>(mu, 1)), ray = rows_of(r.ray, n);
@@ -991,13 +1033,13 @@ inline Result polish_with_simplex(const Problem &p, Result r, const Options &opt
     q.lower = lane_of(p.lower, n, lane);
     q.upper = lane_of(p.upper, n, lane);
     const Result s = solve_simplex(q, so);
-    const double code = s.status.to(pluss::ScalarType::Float64).contiguous().to_vec<double>()[0];
+    const double code = s.status.to(pluss::ScalarType::Float64).contiguous().host<double>()[0];
     if (code == static_cast<double>(Status::IterationLimit))
       continue; // the simplex could not decide either: keep the interior-point answer and its status
     auto put = [&](std::vector<double> &dst, const Series &src, std::int64_t width) {
       if (!src.defined() || dst.empty())
         return;
-      const auto v = src.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+      const auto v = src.to(pluss::ScalarType::Float64).contiguous().host<double>();
       for (std::int64_t k = 0; k < width && static_cast<std::size_t>(k) < v.size(); ++k)
         dst[static_cast<std::size_t>(lane * width + k)] = v[static_cast<std::size_t>(k)];
     };

@@ -83,13 +83,13 @@ TEST_CASE("Timeline span handles sign broadcasting strides absence and empty sha
   const auto scalar = pluss::timeline::date("2024-01-01");
   const auto vector = pluss::timeline::make(
       {"2024-01-02T00:00:00Z", "2024-01-03T12:00:00Z"});
-  REQUIRE(scalar.span(vector).to_vec<std::int64_t>() ==
+  REQUIRE(scalar.span(vector).host<std::int64_t>().array().data ==
           std::vector<std::int64_t>{1, 2});
-  REQUIRE(vector.span(scalar).to_vec<std::int64_t>() ==
+  REQUIRE(vector.span(scalar).host<std::int64_t>().array().data ==
           std::vector<std::int64_t>{-1, -2});
   auto absolute = pluss::TimelineSpanOptions{};
   absolute.signed_result = false;
-  REQUIRE(vector.span(scalar, absolute).to_vec<std::int64_t>() ==
+  REQUIRE(vector.span(scalar, absolute).host<std::int64_t>().array().data ==
           std::vector<std::int64_t>{1, 2});
 
   const std::vector<std::string> column_values{
@@ -100,7 +100,7 @@ TEST_CASE("Timeline span handles sign broadcasting strides absence and empty sha
   const auto row = pluss::timeline::make(row_values, {1, 2});
   const auto matrix = column.span(row);
   REQUIRE(matrix.sizes().vec() == std::vector<std::int64_t>{2, 2});
-  REQUIRE(matrix.to_vec<std::int64_t>() ==
+  REQUIRE(matrix.host<std::int64_t>().array().data ==
           std::vector<std::int64_t>{2, 4, 1, 3});
 
   std::array<std::int64_t, 4> backing{
@@ -110,12 +110,12 @@ TEST_CASE("Timeline span handles sign broadcasting strides absence and empty sha
   const std::array<std::int64_t, 1> strides{2};
   const auto strided = pluss::Timeline::from_buffer(
       backing.data(), shape, strides, {}, "UTC");
-  REQUIRE(scalar.span(strided).to_vec<std::int64_t>() ==
+  REQUIRE(scalar.span(strided).host<std::int64_t>().array().data ==
           std::vector<std::int64_t>{0, 1});
 
   const auto absent = pluss::timeline::make({"2024-01-01", ""});
   REQUIRE(absent.span(pluss::timeline::date("2024-01-03"))
-              .to_vec<std::int64_t>() ==
+              .host<std::int64_t>().array().data ==
           std::vector<std::int64_t>{2, pluss::Timeline::kNaT});
   const auto empty = pluss::timeline::epoch({0, 2}).span(
       pluss::timeline::from_epoch(0LL));
@@ -136,7 +136,7 @@ TEST_CASE("Timeline span applies business calendars and closure",
   REQUIRE(friday.span(monday, business).item<std::int64_t>() == 0);
   business.closed = pluss::TimelineSpanClosed::Right;
   business.calendar.holidays =
-      pluss::timeline::date("2024-07-08").epoch_days().to_vec<std::int64_t>();
+      pluss::timeline::date("2024-07-08").epoch_days().host<std::int64_t>().array().data;
   REQUIRE(friday.span(monday, business).item<std::int64_t>() == 0);
   business.calendar = pluss::BusinessCalendar::monfri();
   business.calendar.weekmask = 0b1000000;

@@ -305,7 +305,7 @@ The fitted parameters. `StandardScaler` is the one scaler in this subfamily with
 a **named** summary — `mean` and `scale` directly, rather than the opaque
 `state` vector the others expose. `operator<<` on the summary prints the raw
 `Series` representation; for a readable view, pull the values out with
-`to_vec<double>()` alongside `feature_names`.
+`host<double>()` alongside `feature_names`.
 
 #### Example
 
@@ -334,8 +334,8 @@ int main() {
   scaler.features({"amount", "ratio"}).learn(train);
   const lymph::prep::StandardScalerSummary s = scaler.summary();
 
-  const auto mean  = s.mean.to(pluss::pCPU, ScalarType::Float64).reshape({s.mean.numel()}).to_vec<double>();
-  const auto scale = s.scale.to(pluss::pCPU, ScalarType::Float64).reshape({s.scale.numel()}).to_vec<double>();
+  const auto mean  = s.mean.to(pluss::pCPU, ScalarType::Float64).reshape({s.mean.numel()}).pull<double>();
+  const auto scale = s.scale.to(pluss::pCPU, ScalarType::Float64).reshape({s.scale.numel()}).pull<double>();
   for (std::size_t i = 0; i < s.feature_names.size(); ++i) {
     std::cout << s.feature_names[i] << ": mean=" << mean[i] << " scale=" << scale[i] << "\n";
   }

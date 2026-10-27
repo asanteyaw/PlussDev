@@ -45,10 +45,7 @@ The facade's `DfoOptions::nelder_mead` holds the same `NelderMeadConfig`, so eve
 
 ## Programs
 
-- [A direct call](dfo_06_nelder_mead/a_direct_call.md)
-- [The settings, one at a time](dfo_06_nelder_mead/the_settings_one_at_a_time.md)
-- [Forbidden regions](dfo_06_nelder_mead/forbidden_regions.md)
-- [Shapes and dtypes](dfo_06_nelder_mead/shapes_and_dtypes.md)
+- [Nelder–Mead in practice](dfo_06_nelder_mead/nelder_mead_in_practice.md)
 
 ## Checklist
 
@@ -63,9 +60,6 @@ The facade's `DfoOptions::nelder_mead` holds the same `NelderMeadConfig`, so eve
 :maxdepth: 2
 :hidden:
 
-dfo_06_nelder_mead/a_direct_call
-dfo_06_nelder_mead/the_settings_one_at_a_time
-dfo_06_nelder_mead/forbidden_regions
-dfo_06_nelder_mead/shapes_and_dtypes
+dfo_06_nelder_mead/nelder_mead_in_practice
 ```
 <!-- apiref:toctree:end -->

@@ -66,14 +66,14 @@ int main() {
   auto values = pluss::Series::empty({64}, pluss::ScalarType::Float64);
   values.exponential_(2.0);
   bool exponential_nonnegative = true;
-  for (double value : values.to_vec<double>()) exponential_nonnegative &= value >= 0.0;
+  for (double value : values.host<double>()) exponential_nonnegative &= value >= 0.0;
   values.geometric_(0.25);
   bool geometric_positive_integer = true;
-  for (double value : values.to_vec<double>())
+  for (double value : values.host<double>())
     geometric_positive_integer &= value >= 1.0 && value == std::floor(value);
   values.log_normal_(0.0, 0.5);
   bool log_normal_positive = true;
-  for (double value : values.to_vec<double>()) log_normal_positive &= value > 0.0;
+  for (double value : values.host<double>()) log_normal_positive &= value > 0.0;
   values.cauchy_(2.0, 0.5);
   std::cout << "exponential >= 0: " << exponential_nonnegative << '\n';
   std::cout << "geometric positive integers: " << geometric_positive_integer << '\n';

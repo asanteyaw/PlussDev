@@ -1,0 +1,201 @@
+<!-- generated from Planck.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Planck`
+
+The Planck distribution: a density proportional to `x^a/(exp(b x) - 1)`, the shape of black-body radiation.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Planck, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Planck, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Planck, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Planck, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Planck, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The Planck distribution has a density proportional to `x^a / (exp(b x) - 1)` on the positive axis. For `a = 3` and `b` proportional to the inverse temperature it is the spectrum of black-body radiation (Planck's law), and more generally it is the distribution of a bosonic energy. The density rises as `x^(a - 1)` near zero and decays exponentially in the tail.
+
+The kind-based functions take `{a, b}`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `a` | > 0 | the power of `x` in the numerator |
+| `b` | > 0 | the rate of the exponential decay: larger values concentrate the distribution near zero |
+
+Support: `x > 0`.
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape. 
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`a` and `b` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Planck on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.2, 0.5, 1.0, 2.0, 4.0, 8.0}, f64);
+  const std::vector<double> params = {2.0, 1.0};
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Planck, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Planck, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Planck, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.20000 0.50000 1.00000 2.00000 4.00000 8.00000
+pdf: 0.07515 0.16030 0.24208 0.26042 0.12417 0.00893
+cdf: 0.00778 0.04387 0.14722 0.41020 0.80047 0.98856
+logpdf: -2.58829 -1.83072 -1.41851 -1.34547 -2.08611 -4.71796
+```
+
+The density is largest on this grid at x = 2, where it is 0.26042; the distribution function runs from 0.00778 at x = 0.2 to 0.98856 at x = 8, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.26042) = -1.34546 at x = 2.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {2.0, 1.0};
+
+  // The three ways to the probability that the variable lies in [0.3, 6]:
+  const auto grid = pluss::series::linspace(0.3, 6.0, 3001, f64);
+  const double area = distr::pdf(dst::Planck, grid, params).antidiff(grid).trapezoid().item<double>();
+
+  const auto edges = pluss::make_series({0.3, 6.0}, f64);
+  const auto c = distr::cdf(dst::Planck, edges, params).host<double>();
+
+  const auto draws = distr::sample(dst::Planck, params, {200000}, f64, 7ULL);
+  const double fraction = ((draws >= 0.3).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean().item<double>();
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(6) - cdf(0.3): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+integral of the density: 0.93148
+cdf(6) - cdf(0.3): 0.93148
+fraction of 200000 draws in range: 0.93162
+```
+
+The integral of the density (0.93148) and the difference of the distribution function (0.93148) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.93162) differs from it by 1.40e-04, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 5.65e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({0.2, 0.5, 1.0, 2.0, 4.0, 8.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "b 0.5:";
+  for (double v : distr::pdf(dst::Planck, x, {2.0, 0.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "b 1  :";
+  for (double v : distr::pdf(dst::Planck, x, {2.0, 1.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "b 2  :";
+  for (double v : distr::pdf(dst::Planck, x, {2.0, 2.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.2000 0.5000 1.0000 2.0000 4.0000 8.0000
+b 0.5: 0.0198 0.0458 0.0801 0.1210 0.1302 0.0621
+b 1  : 0.0751 0.1603 0.2421 0.2604 0.1242 0.0089
+b 2  : 0.2706 0.4842 0.5208 0.2483 0.0179 0.0000
+```
+
+Read down the rows: `b 0.5` peaks on this grid at x = 4 (value 0.1302); `b 1` peaks on this grid at x = 2 (value 0.2604); `b 2` peaks on this grid at x = 1 (value 0.5208). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+## See Also
+
+- [`Gamma`](../continuous_positive/Gamma.md)
+- [`Weibull`](../continuous_positive/Weibull.md)
+- [`Exponential`](../continuous_positive/Exponential.md)

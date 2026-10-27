@@ -227,7 +227,7 @@ std::vector<std::pair<std::string, double>> predict_token_labels(const TokenClas
   const Series logits =
       encoded.reshape({length, state.width}).matmul(state.cls_weight).add(state.cls_bias); // [length, classes]
   const auto flat =
-      logits.to(pluss::pCPU, ScalarType::Float64).reshape({length * num_classes}).to_vec<double>();
+      logits.to(pluss::pCPU, ScalarType::Float64).reshape({length * num_classes}).host<double>();
 
   std::vector<std::pair<std::string, double>> out{};
   const auto token_count = std::min<std::int64_t>(length, static_cast<std::int64_t>(doc.tokens.size()));
@@ -293,9 +293,9 @@ std::vector<std::string> dump_token_classifier_state_lines(const char* prefix, c
   }
 
   const auto cls_weight_flat =
-      state.cls_weight.to(pluss::pCPU, ScalarType::Float64).reshape({state.cls_weight.numel()}).to_vec<double>();
+      state.cls_weight.to(pluss::pCPU, ScalarType::Float64).reshape({state.cls_weight.numel()}).host<double>();
   const auto cls_bias_flat =
-      state.cls_bias.to(pluss::pCPU, ScalarType::Float64).reshape({state.cls_bias.numel()}).to_vec<double>();
+      state.cls_bias.to(pluss::pCPU, ScalarType::Float64).reshape({state.cls_bias.numel()}).host<double>();
   lines.push_back(p + "_cls_weight=" + join_doubles_line(cls_weight_flat));
   lines.push_back(p + "_cls_bias=" + join_doubles_line(cls_bias_flat));
 
@@ -304,7 +304,7 @@ std::vector<std::string> dump_token_classifier_state_lines(const char* prefix, c
   for (std::size_t i = 0; i < params.size(); ++i) {
     const auto shape_view = params[i]->sizes();
     const std::vector<double> shape_as_double(shape_view.begin(), shape_view.end());
-    const auto flat = params[i]->to(pluss::pCPU, ScalarType::Float64).reshape({params[i]->numel()}).to_vec<double>();
+    const auto flat = params[i]->to(pluss::pCPU, ScalarType::Float64).reshape({params[i]->numel()}).host<double>();
     lines.push_back(p + "_encoder_param_" + std::to_string(i) + "_shape=" + join_doubles_line(shape_as_double));
     lines.push_back(p + "_encoder_param_" + std::to_string(i) + "=" + join_doubles_line(flat));
   }

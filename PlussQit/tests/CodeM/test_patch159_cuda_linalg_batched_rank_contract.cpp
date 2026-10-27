@@ -90,7 +90,7 @@ TEST_CASE("CUDA batched linalg handles multi-leading det shape", "[cuda][linalg]
 
   const auto det_cuda = pluss::subsp::linearalg::det(a_cpu.to(pluss::pCUDA)).to(pluss::pCPU);
   require_shape_(det_cuda, {2, 3});
-  require_close_(det_cuda.to_vec<double>(), det_cpu.to_vec<double>());
+  require_close_(det_cuda.host<double>(), det_cpu.host<double>());
 }
 
 TEST_CASE("CUDA bridge batched triangular_solve keeps full leading batch shape", "[cuda][bridge][linalg][batched]") {
@@ -131,7 +131,7 @@ TEST_CASE("CUDA bridge batched triangular_solve keeps full leading batch shape",
       /*unitriangular=*/false).to(pluss::pCPU);
 
   require_shape_(x_cuda, {2, 3, 2, 1});
-  require_close_(x_cuda.to_vec<double>(), x_cpu.to_vec<double>());
+  require_close_(x_cuda.host<double>(), x_cpu.host<double>());
 }
 
 TEST_CASE("CUDA strict linalg batched QR keeps full leading batch shape", "[cuda][bridge][policy][linalg][batched]") {
@@ -169,5 +169,5 @@ TEST_CASE("CUDA strict linalg batched QR keeps full leading batch shape", "[cuda
   const auto r_cuda = pluss::subsp::linearalg::qr_r(a_cpu.to(pluss::pCUDA), /*reduced=*/true).to(pluss::pCPU);
   const auto recon_cuda = q_cuda.matmul(r_cuda);
   const auto recon_cpu = a_cpu;
-  require_close_(recon_cuda.to_vec<double>(), recon_cpu.to_vec<double>(), 5e-6);
+  require_close_(recon_cuda.host<double>(), recon_cpu.host<double>(), 5e-6);
 }

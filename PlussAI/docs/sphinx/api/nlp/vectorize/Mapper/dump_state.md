@@ -130,8 +130,8 @@ int main() {
 
   const auto a = original.count_dense(docs).value();
   const auto b = restored.count_dense(docs).value();
-  const auto av = a.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto bv = b.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto av = a.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto bv = b.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "same shape = " << (a.feature_count() == b.feature_count()) << "\n";
   std::cout << "same counts = " << (av == bv) << "\n";
   return 0;

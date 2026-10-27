@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 using Block = optim::ParameterPack<pluss::Series>::Block;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -32,10 +32,10 @@ struct Chain {
     for (int i = 0; i < n; ++i) b.push_back({name(i), scalar(i % 2 == 0 ? -1.2 : 1.0).reshape({1})});
     return optim::ParameterPack<pluss::Series>(b);
   }
-  optim::Trace objective(const Pack& p) const {
-    optim::Trace total = p.at(name(0)) * 0.0;
+  pluss::Series objective(const Pack& p) const {
+    pluss::Series total = p.at(name(0)) * 0.0;
     for (int i = 0; i + 1 < n; ++i)
-      total = total + 100.0 * optim::square(p.at(name(i + 1)) - optim::square(p.at(name(i)))) + optim::square(1.0 - p.at(name(i)));
+      total = total + 100.0 * (p.at(name(i + 1)) - p.at(name(i)).square()).square() + (1.0 - p.at(name(i))).square();
     return total;
   }
   auto box() const { return optim::constraints().lbs(filled(-3.0)).ubs(filled(3.0)); }

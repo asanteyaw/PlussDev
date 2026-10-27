@@ -48,9 +48,9 @@ int main() {
 
   auto& p2 = studio.pane3("ax.scatter3D");
   p2.place(0, 1).grid(pl::GridStyle::Major).caption("scatter3D -> cloud3");
-  const auto host_x = x.to_vec<double>();
-  const auto host_y = y.to_vec<double>();
-  const auto host_z = z.to_vec<double>();
+  const auto host_x = x.host<double>();
+  const auto host_y = y.host<double>();
+  const auto host_z = z.host<double>();
   std::vector<double> sx;
   std::vector<double> sy;
   std::vector<double> sz;
@@ -97,9 +97,9 @@ int main() {
   const auto vx = pluss::series::linspace(-1.3, 1.3, 22, pluss::ScalarType::Float64);
   const auto vy = pluss::series::linspace(-1.3, 1.3, 22, pluss::ScalarType::Float64);
   const auto vz = pluss::series::linspace(-1.2, 1.2, 22, pluss::ScalarType::Float64);
-  const auto hx = vx.to_vec<double>();
-  const auto hy = vy.to_vec<double>();
-  const auto hz = vz.to_vec<double>();
+  const auto hx = vx.host<double>();
+  const auto hy = vy.host<double>();
+  const auto hz = vz.host<double>();
   std::vector<double> field;
   field.reserve(hx.size() * hy.size() * hz.size());
   for (std::size_t i = 0; i < hx.size(); ++i) {

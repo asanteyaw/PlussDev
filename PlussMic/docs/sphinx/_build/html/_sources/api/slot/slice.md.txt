@@ -38,8 +38,8 @@ Example 1. A plain forward slice.
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.slice(1, 3);
 std::cout << "size=" << out.size() << " vals="
-          << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << ","
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << ","
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -54,7 +54,7 @@ Example 2. Negative indices count from the end.
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.slice(-2, -1);
 std::cout << "size=" << out.size() << " val="
-          << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output

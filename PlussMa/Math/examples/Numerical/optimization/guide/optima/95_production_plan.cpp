@@ -11,16 +11,16 @@
 #include <iostream>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(v, {r, c}).to(f64); }
 
 int main() {
   const std::vector<double> value = {9, 7, 8, 6, 5};
-  auto negative_profit = [&](const optim::Trace& q) {
-    return -1.0 * optim::sum(optim::trace(vec(value), false) * optim::pow(q + 1.0, 0.5));  // diminishing returns
+  auto negative_profit = [&](const pluss::Series& q) {
+    return -1.0 * (vec(value) * (q + 1.0).pow(0.5)).sum();  // diminishing returns
   };
   const auto plant =
       optim::constraints()
@@ -31,10 +31,10 @@ int main() {
                        2, 5),
                    vec({100, 90}))
           .ln_eq(mat({1, 1, 1, 0, 0}, 1, 5), vec({30}))  // products 1-3 together make exactly 30 units
-          .nl_ineq([](const Pack& p) { return optim::sum(optim::square(p.at("x"))) / 100.0 - 12.0; });  // pollution cap
+          .nl_ineq([](const Pack& p) { return p.at("x").square().sum() / 100.0 - 12.0; });  // pollution cap
 
   const auto r = optim::optima(negative_profit, vec({5, 5, 5, 5, 5}), {}, plant);
-  const auto q = r.params.at("x").to_vec<double>();
+  const auto q = r.params.at("x").host<double>();
 
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "quantities:";
@@ -45,8 +45,8 @@ int main() {
   std::cout << "  exit flag " << static_cast<int>(r.exit_flag) << " (1 means converged)\n";
   std::cout << std::scientific << std::setprecision(1) << "  max constraint violation " << r.evaluation.max_constraint_violation << "\n";
   std::cout << "  first-order optimality " << r.output.first_order_optimality << "\n" << std::fixed << std::setprecision(4);
-  const auto machine = r.multipliers.linear_inequalities.to_vec<double>();
-  const auto pollution = r.multipliers.nonlinear_inequalities.to_vec<double>();
+  const auto machine = r.multipliers.linear_inequalities.host<double>();
+  const auto pollution = r.multipliers.nonlinear_inequalities.host<double>();
   std::cout << "  multipliers: machine hours " << machine[0] << ", labour hours " << machine[1] << ", pollution cap " << pollution[0]
             << "\n  a multiplier of zero means that limit does not bind\n";
   return 0;

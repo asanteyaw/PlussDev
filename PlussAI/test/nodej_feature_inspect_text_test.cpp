@@ -88,7 +88,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
       if (err) *err << "variance_prune should succeed\n";
       return false;
     }
-    const auto keep = prune_or.value().selected_feature_indices.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+    const auto keep = prune_or.value().selected_feature_indices.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
     if (keep.size() < 2) {
       if (err) *err << "variance_prune should keep informative features\n";
       return false;
@@ -99,7 +99,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
       if (err) *err << "f_score_rank should succeed\n";
       return false;
     }
-    const auto top2 = rank_or.value().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+    const auto top2 = rank_or.value().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
     if (top2.size() != 2) {
       if (err) *err << "f_score_rank should return requested top_k entries\n";
       return false;
@@ -409,7 +409,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
       if (err) *err << "SparseLinearRegressor assess should succeed\n";
       return false;
     }
-    const auto reg_metrics = reg_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto reg_metrics = reg_metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (reg_metrics.size() != 2 || reg_metrics[0] > 0.2 || reg_metrics[1] < 0.7) {
       if (err) *err << "SparseLinearRegressor should fit training signal reasonably\n";
       return false;
@@ -571,7 +571,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
       if (err) *err << "permutation_impact(Accuracy) should succeed on the signal/noise fixture\n";
       return false;
     }
-    const auto acc_mean = acc_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto acc_mean = acc_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (acc_mean.size() != 2 || !(acc_mean[0] > acc_mean[1])) {
       if (err) *err << "permutation_impact(Accuracy) should rank the informative feature above the noise feature\n";
       return false;
@@ -588,7 +588,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
       if (err) *err << "permutation_impact(LogLoss) should succeed on the signal/noise fixture\n";
       return false;
     }
-    const auto loss_mean = loss_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto loss_mean = loss_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (loss_mean.size() != 2 || !(loss_mean[0] > 0.0) || !(loss_mean[0] > loss_mean[1])) {
       if (err) *err << "permutation_impact(LogLoss) should show a positive, dominant cost for the informative feature\n";
       return false;
@@ -603,7 +603,7 @@ bool run_nodej_feature_inspect_text_checks(std::ostream* err = nullptr) {
       if (err) *err << "permutation_impact(Accuracy) repeat call should succeed\n";
       return false;
     }
-    const auto acc_mean_again = acc_again_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto acc_mean_again = acc_again_or.value().mean_drop.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < acc_mean.size(); ++i) {
       if (std::abs(acc_mean[i] - acc_mean_again[i]) > 1e-12) {
         if (err) *err << "permutation_impact with a deterministic seed should be reproducible across calls\n";

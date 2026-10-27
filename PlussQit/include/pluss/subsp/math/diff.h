@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <concepts>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -1783,6 +1784,33 @@ DerivativeAuditReport curvature_audit_report(
     const std::vector<Series>& params,
     const DerivativeAuditOptions& opt = {});
 
+namespace detail {
+
+// A derivative transform accepts a callback written over Trace or over plain Series: a Series callback is
+// called with the (slope-tracking) values themselves and its result is wrapped back into a Trace.
+template <class Fn>
+Trace call_traced_(Fn&& fn, const std::vector<Trace>& vars) {
+  if constexpr (std::invocable<Fn&, const std::vector<Trace>&>) {
+    return fn(vars);
+  } else {
+    std::vector<Series> values;
+    values.reserve(vars.size());
+    for (const auto& v : vars) values.push_back(v.value());
+    return Trace(fn(values));
+  }
+}
+
+template <class Fn>
+Trace call_traced_(Fn&& fn, const Trace& var) {
+  if constexpr (std::invocable<Fn&, const Trace&>) {
+    return fn(var);
+  } else {
+    return Trace(fn(var.value()));
+  }
+}
+
+}  // namespace detail
+
 template <class Fn>
 DerivativeAuditReport gradient_audit_report(
     Fn&& fn,
@@ -1808,7 +1836,7 @@ std::pair<Series, std::vector<Series>> value_and_grad(
   }
   detail::SensitivityRetentionScope retain_inputs(params);
 
-  Trace loss = std::forward<Fn>(fn)(vars);
+  Trace loss = detail::call_traced_(std::forward<Fn>(fn), vars);
   if (!loss.defined()) {
     ::pluss::throw_error("subsp::math::diff::value_and_grad: objective returned undefined Trace");
   }
@@ -1851,7 +1879,10 @@ std::pair<Series, std::vector<Series>> value_and_grad(
     }
     grads.push_back(v.sensitivity());
   }
-  return {loss.value(), grads};
+  // A one-element value is returned as a rank-zero Series whatever shape the callback gave it.
+  Series value = loss.value();
+  if (value.numel() == 1 && value.dim() != 0) value = value.reshape(std::vector<std::int64_t>{});
+  return {value, grads};
 }
 
 template <class Fn>
@@ -1919,18 +1950,32 @@ std::pair<Series, Series> jvp(Fn&& fn,
     ::pluss::throw_error("subsp::math::diff::jvp: params/tangents size mismatch");
   }
 
-  std::vector<DualTrace> vars;
-  vars.reserve(params.size());
-  for (std::size_t i = 0; i < params.size(); ++i) {
-    vars.emplace_back(params[i], tangents[i]);
-  }
+  using FnType = std::decay_t<Fn>;
+  if constexpr (!std::is_invocable_v<FnType&, const std::vector<DualTrace>&>) {
+    // A callback over plain Series: J t from the reverse-mode Jacobian, one pullback per output element.
+    auto [value, jacobians] = jacrev(std::forward<Fn>(fn), params);
+    Series directional = pluss::series::undefined();
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      const Series t = tangents[i].reshape({tangents[i].numel(), 1});
+      const Series part = jacobians[i].matmul(t).reshape({jacobians[i].size(0)});
+      directional = directional.defined() ? directional.add(part) : part;
+    }
+    if (!directional.defined()) directional = detail::zeros_like_(value).reshape({value.numel()});
+    return {value, directional.reshape(std::vector<std::int64_t>(value.sizes().begin(), value.sizes().end()))};
+  } else {
+    std::vector<DualTrace> vars;
+    vars.reserve(params.size());
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      vars.emplace_back(params[i], tangents[i]);
+    }
 
-  DualTrace output = std::forward<Fn>(fn)(vars);
-  if (!output.defined()) {
-    ::pluss::throw_error("subsp::math::diff::jvp: objective returned undefined DualTrace");
-  }
+    DualTrace output = std::forward<Fn>(fn)(vars);
+    if (!output.defined()) {
+      ::pluss::throw_error("subsp::math::diff::jvp: objective returned undefined DualTrace");
+    }
 
-  return {output.value(), output.tangent()};
+    return {output.value(), output.tangent()};
+  }
 }
 
 template <class Fn>
@@ -1966,33 +2011,52 @@ template <class Fn>
 auto linearize(Fn&& fn, const std::vector<Series>& params) {
   using FnType = std::decay_t<Fn>;
 
-  std::vector<DualTrace> base_vars;
-  base_vars.reserve(params.size());
-  for (const auto& p : params) {
-    detail::require_defined_(p, "linearize");
-    base_vars.emplace_back(p, detail::zeros_like_(p));
+  if constexpr (!std::is_invocable_v<FnType&, const std::vector<DualTrace>&>) {
+    // Plain-Series callback: the Jacobian is built once by reverse mode and the pushforward is J t.
+    auto [value, jacobians] = jacrev(std::forward<Fn>(fn), params);
+    const std::vector<std::int64_t> value_shape(value.sizes().begin(), value.sizes().end());
+    auto pushforward = [jacobians = std::move(jacobians), value_shape](const std::vector<Series>& tangents) -> Series {
+      Series directional = pluss::series::undefined();
+      for (std::size_t i = 0; i < jacobians.size(); ++i) {
+        const Series t = tangents[i].reshape({tangents[i].numel(), 1});
+        const Series part = jacobians[i].matmul(t).reshape({jacobians[i].size(0)});
+        directional = directional.defined() ? directional.add(part) : part;
+      }
+      return directional.reshape(value_shape);
+    };
+    return std::pair{value, std::move(pushforward)};
+  } else {
+    std::vector<DualTrace> base_vars;
+    base_vars.reserve(params.size());
+    for (const auto& p : params) {
+      detail::require_defined_(p, "linearize");
+      base_vars.emplace_back(p, detail::zeros_like_(p));
+    }
+
+    FnType fn_copy(std::forward<Fn>(fn));
+    DualTrace output = fn_copy(base_vars);
+    if (!output.defined()) {
+      ::pluss::throw_error("subsp::math::diff::linearize: objective returned undefined DualTrace");
+    }
+
+    auto pushforward = [fn = std::move(fn_copy), params](const std::vector<Series>& tangents) -> Series {
+      return jvp(
+          [&](const std::vector<DualTrace>& xs) -> DualTrace {
+            return fn(xs);
+          },
+          params,
+          tangents).second;
+    };
+
+    return std::pair{output.value(), std::move(pushforward)};
   }
-
-  FnType fn_copy(std::forward<Fn>(fn));
-  DualTrace output = fn_copy(base_vars);
-  if (!output.defined()) {
-    ::pluss::throw_error("subsp::math::diff::linearize: objective returned undefined DualTrace");
-  }
-
-  auto pushforward = [fn = std::move(fn_copy), params](const std::vector<Series>& tangents) -> Series {
-    return jvp(
-        [&](const std::vector<DualTrace>& xs) -> DualTrace {
-          return fn(xs);
-        },
-        params,
-        tangents).second;
-  };
-
-  return std::pair{output.value(), std::move(pushforward)};
 }
 
 template <class Fn>
 std::pair<Series, std::vector<Series>> jacfwd(Fn&& fn, const std::vector<Series>& params) {
+  if constexpr (!std::is_invocable_v<std::decay_t<Fn>&, const std::vector<DualTrace>&>) {
+    return jacrev(std::forward<Fn>(fn), params);
+  }
   auto [value, pushforward] = linearize(std::forward<Fn>(fn), params);
   const std::int64_t output_numel = value.numel();
 
@@ -2033,7 +2097,7 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
     detail::ensure_tracks_slope_(vars.back().value());
   }
 
-  Trace output = std::forward<Fn>(fn)(vars);
+  Trace output = detail::call_traced_(std::forward<Fn>(fn), vars);
   if (!output.defined()) {
     ::pluss::throw_error("subsp::math::diff::vjp: objective returned undefined Trace");
   }
@@ -2133,7 +2197,7 @@ std::pair<Series, Series> value_and_grad(Fn&& fn,
   std::vector<Series> params{param};
   auto [value, grads] = value_and_grad(
       [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(xs.front());
+        return detail::call_traced_(std::forward<Fn>(fn), xs.front());
       },
       params,
       policy);
@@ -2153,7 +2217,7 @@ std::pair<Series, Series> value_and_grad(Fn&& fn,
   std::vector<Series> params{param};
   auto [value, grads] = value_and_grad(
       [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(xs.front());
+        return detail::call_traced_(std::forward<Fn>(fn), xs.front());
       },
       params,
       cotangent,
@@ -2175,7 +2239,7 @@ std::pair<Series, Series> jacrev(Fn&& fn,
                                  const DerivativePolicy& policy = {}) {
   auto [value, jacobians] = jacrev(
       [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(xs.front());
+        return detail::call_traced_(std::forward<Fn>(fn), xs.front());
       },
       std::vector<Series>{param},
       policy);
@@ -2184,22 +2248,40 @@ std::pair<Series, Series> jacrev(Fn&& fn,
 
 template <class Fn>
 std::pair<Series, Series> jvp(Fn&& fn, const Series& param, const Series& tangent) {
-  return jvp(
-      [&](const std::vector<DualTrace>& xs) -> DualTrace {
-        return std::forward<Fn>(fn)(xs.front());
-      },
-      std::vector<Series>{param},
-      std::vector<Series>{tangent});
+  if constexpr (std::is_invocable_v<std::decay_t<Fn>&, const DualTrace&>) {
+    return jvp(
+        [&](const std::vector<DualTrace>& xs) -> DualTrace {
+          return std::forward<Fn>(fn)(xs.front());
+        },
+        std::vector<Series>{param},
+        std::vector<Series>{tangent});
+  } else {
+    return jvp(
+        [&](const std::vector<Trace>& xs) -> Trace {
+          return detail::call_traced_(std::forward<Fn>(fn), xs.front());
+        },
+        std::vector<Series>{param},
+        std::vector<Series>{tangent});
+  }
 }
 
 template <class Fn>
 std::pair<Series, Series> jacfwd(Fn&& fn, const Series& param) {
-  auto [value, jacobians] = jacfwd(
-      [&](const std::vector<DualTrace>& xs) -> DualTrace {
-        return std::forward<Fn>(fn)(xs.front());
-      },
-      std::vector<Series>{param});
-  return {value, jacobians.front()};
+  if constexpr (std::is_invocable_v<std::decay_t<Fn>&, const DualTrace&>) {
+    auto [value, jacobians] = jacfwd(
+        [&](const std::vector<DualTrace>& xs) -> DualTrace {
+          return std::forward<Fn>(fn)(xs.front());
+        },
+        std::vector<Series>{param});
+    return {value, jacobians.front()};
+  } else {
+    auto [value, jacobians] = jacrev(
+        [&](const std::vector<Trace>& xs) -> Trace {
+          return detail::call_traced_(std::forward<Fn>(fn), xs.front());
+        },
+        std::vector<Series>{param});
+    return {value, jacobians.front()};
+  }
 }
 
 template <class Fn>
@@ -2447,9 +2529,66 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
     }
     return {value, hv};
   } else {
-    if (opt.mode == HvpOptions::Mode::ExactOnly) {
-      ::pluss::throw_error(
-          "subsp::math::diff::hvp: exact-only mode requires a DualTrace-callable objective");
+    if (opt.mode != HvpOptions::Mode::FiniteDifferenceOnly) {
+      // Exact Hessian-vector product by reverse over reverse: differentiate g(x) . v, where g = grad f is itself
+      // recorded on the tape.
+      std::vector<Series> leaves;
+      std::vector<Trace> vars;
+      leaves.reserve(params.size());
+      vars.reserve(params.size());
+      for (const auto& p : params) {
+        Series leaf = p.detach();
+        detail::set_tracks_slope_(leaf, true);
+        leaves.push_back(leaf);
+        vars.emplace_back(leaf);
+      }
+      Trace output = detail::call_traced_(fn, vars);
+      if (!output.defined()) {
+        ::pluss::throw_error("subsp::math::diff::hvp: objective returned undefined output");
+      }
+      if (output.value().numel() != 1) {
+        ::pluss::throw_error("subsp::math::diff::hvp: objective must be scalar-valued");
+      }
+      Series value = output.value();
+      if (value.dim() != 0) value = value.reshape(std::vector<std::int64_t>{});
+
+      std::vector<Series> hv;
+      hv.reserve(params.size());
+      if (detail::has_reverse_path_(output.value())) {
+        output.value().reverse(/*keep_graph=*/true, /*accumulate_sensitivity=*/false, /*track_higher_order=*/true);
+      }
+      Series directional = pluss::series::undefined();
+      for (std::size_t i = 0; i < leaves.size(); ++i) {
+        if (!leaves[i].has_sensitivity()) continue;
+        const Series part = leaves[i].sensitivity().mul(tangents[i].detach()).sum();
+        directional = directional.defined() ? directional.add(part) : part;
+      }
+      for (const auto& leaf : leaves) pluss::codem::series_tape::clear_sensitivity(leaf);
+      if (directional.defined() && detail::has_reverse_path_(directional)) {
+        directional.reverse(policy.keep_graph, /*accumulate_sensitivity=*/false, policy.track_higher_order);
+      }
+      bool disconnected_warned = false;
+      for (std::size_t i = 0; i < leaves.size(); ++i) {
+        if (directional.defined() && leaves[i].has_sensitivity()) {
+          hv.push_back(leaves[i].sensitivity());
+          continue;
+        }
+        if (policy.strict_dependency) {
+          ::pluss::throw_error(
+              "subsp::math::diff::hvp: objective is disconnected from input index " + std::to_string(i));
+        }
+        if (policy.warn_on_disconnected && !disconnected_warned) {
+          PLUSS_WARN(
+              "subsp::math::diff::hvp: objective disconnected from one or more inputs; "
+              "materializing disconnected Hessian-vector sensitivities according to policy "
+              "(set strict_dependency=true to fail loud).");
+          disconnected_warned = true;
+        }
+        hv.push_back(policy.disconnected_sensitivity == DisconnectedSensitivity::Undefined
+                         ? pluss::series::undefined()
+                         : detail::zeros_like_(leaves[i]));
+      }
+      return {value, hv};
     }
     const auto [value, _] = value_and_grad(std::forward<Fn>(fn), params, policy);
     if (value.numel() != 1) {
@@ -2794,11 +2933,21 @@ bool curvature_audit(Fn&& fn,
 
 template <class Fn>
 std::pair<Series, std::function<Series(const Series&)>> linearize(Fn&& fn, const Series& param) {
-  auto [value, pushforward] = linearize(
-      [&](const std::vector<DualTrace>& xs) -> DualTrace {
-        return std::forward<Fn>(fn)(xs.front());
-      },
-      std::vector<Series>{param});
+  auto [value, pushforward] = [&] {
+    if constexpr (std::is_invocable_v<std::decay_t<Fn>&, const DualTrace&>) {
+      return linearize(
+          [&](const std::vector<DualTrace>& xs) -> DualTrace {
+            return std::forward<Fn>(fn)(xs.front());
+          },
+          std::vector<Series>{param});
+    } else {
+      return linearize(
+          [&](const std::vector<Trace>& xs) -> Trace {
+            return detail::call_traced_(std::forward<Fn>(fn), xs.front());
+          },
+          std::vector<Series>{param});
+    }
+  }();
 
   auto single_pushforward = [pushforward = std::move(pushforward)](const Series& tangent) -> Series {
     return pushforward(std::vector<Series>{tangent});
@@ -2827,7 +2976,7 @@ std::pair<Series, Series> hvp(Fn&& fn,
   } else {
     auto [value, hv] = hvp(
         [&](const std::vector<Trace>& xs) -> Trace {
-          return std::forward<Fn>(fn)(xs.front());
+          return detail::call_traced_(std::forward<Fn>(fn), xs.front());
         },
         std::vector<Series>{param},
         std::vector<Series>{tangent},
@@ -2932,7 +3081,7 @@ std::pair<Series, Series> hessian(Fn&& fn,
   } else {
     out = hessian(
         [&](const std::vector<Trace>& xs) -> Trace {
-          return fn_copy(xs.front());
+          return detail::call_traced_(fn_copy, xs.front());
         },
         std::vector<Series>{param},
         opt);
@@ -2981,7 +3130,7 @@ std::pair<Series, std::vector<Series>> hvp_lanes(
   } else {
     auto [value, lane_hv] = hvp_lanes(
         [&](const std::vector<Trace>& xs) -> Trace {
-          return std::forward<Fn>(fn)(xs.front());
+          return detail::call_traced_(std::forward<Fn>(fn), xs.front());
         },
         std::vector<Series>{param},
         lanes,
@@ -3243,7 +3392,7 @@ std::pair<Series, std::function<Series(const Series&)>> vjp(
   std::vector<Series> params{param};
   auto [value, pullback] = vjp(
       [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(xs.front());
+        return detail::call_traced_(std::forward<Fn>(fn), xs.front());
       },
       params,
       policy);
@@ -3272,7 +3421,7 @@ std::pair<Series, std::vector<Series>> vjp_lanes(
   std::vector<Series> params{param};
   auto [value, lanes] = vjp_lanes(
       [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(xs.front());
+        return detail::call_traced_(std::forward<Fn>(fn), xs.front());
       },
       params,
       cotangent_lanes,

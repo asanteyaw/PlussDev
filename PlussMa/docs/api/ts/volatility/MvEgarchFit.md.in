@@ -109,7 +109,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 Series pair(int n) {
@@ -136,8 +136,8 @@ int main() {
   auto independent = fit;
   independent.corr = pluss::series::eye(2, 2).to(pluss::ScalarType::Float64);
   std::cout << std::fixed << std::setprecision(2) << "log-likelihood " << fit.loglik(y) << ", with the correlation set to zero " << independent.loglik(y) << "\n";
-  const auto f = fit.forecast(3, y).to_vec<double>();
-  const double rho = fit.corr.to_vec<double>()[1];
+  const auto f = fit.forecast(3, y).host<double>();
+  const double rho = fit.corr.host<double>()[1];
   for (int h = 0; h < 3; ++h) {
     std::cout << std::setprecision(3) << "step " << h + 1 << "  var0 " << f[2 * h] << "  var1 " << f[2 * h + 1] << "  cov " << rho * std::sqrt(f[2 * h] * f[2 * h + 1]) << "\n";
   }

@@ -14,10 +14,6 @@ namespace dfo = pluss::subsp::math::optimization;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series filled(std::int64_t n, double v) { return pluss::make_series(std::vector<double>(n, v), {n}).to(f64); }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   dfo::MadsBlackboxAdvancedConfig c;
   c.constraint_handling = dfo::ConstraintHandling::ExtremeBarrier;
@@ -30,11 +26,11 @@ int main() {
     return e;
   };
   const auto o = dfo::mads_blackbox_minimizer(blackbox, vec({-0.5, 0.5}), c);
-  const auto f = o.objective_vector.to_vec<double>();
+  const auto f = o.objective_vector.host<double>();
   std::cout << std::fixed << std::setprecision(4) << "minimizer          : " << o.minimizer.select(0, 0).item<double>() << ", " << o.minimizer.select(0, 1).item<double>() << "\n";
   std::cout << "objectives         : " << f[0] << ", " << f[1] << "\n";
   std::cout << "scalarized minimum : " << o.scalarized_minimum << "  (equal weights)\n";
-  std::cout << "status             : " << name(o.status) << "\n";
+  std::cout << "status             : " << dfo::to_string(o.status) << "\n";
   const auto& d = o.diagnostics;
   std::cout << "evaluations        : " << d.evaluations << " (total " << d.total_evaluations << ", cache hits " << d.cache_hits << ")\n";
   std::cout << "objective / constraint dimension: " << d.objective_dimension << " / " << d.constraint_dimension << "\n";

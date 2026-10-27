@@ -37,13 +37,8 @@ PSOutcome pattern_search_minimizer(objective, initial, PSConfig config = {});
 
 ## Programs
 
-- [A direct call](dfo_07_pattern_search/a_direct_call.md)
-- [The poll](dfo_07_pattern_search/the_poll.md)
-- [The search step](dfo_07_pattern_search/the_search_step.md)
-- [The mesh](dfo_07_pattern_search/the_mesh.md)
-- [Linear constraints](dfo_07_pattern_search/linear_constraints.md)
-- [Nonlinear constraints and their policies](dfo_07_pattern_search/nonlinear_constraints_and_their_policies.md)
-- [Budgets and the cache](dfo_07_pattern_search/budgets_and_the_cache.md)
+- [The poll, the search step and the mesh](dfo_07_pattern_search/poll_search_and_mesh.md)
+- [Constraints, budgets and the cache](dfo_07_pattern_search/constraints_budgets_and_the_cache.md)
 
 ## Checklist
 

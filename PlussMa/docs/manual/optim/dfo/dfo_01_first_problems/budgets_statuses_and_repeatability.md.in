@@ -1,0 +1,39 @@
+# Budgets, the five statuses and repeatability
+
+[Back to Derivative-Free Optimization 1: First Problems](../dfo_01_first_problems.md)
+
+Every derivative-free solve ends in one of five states, and reading the state correctly is most of using these methods well. `Converged` means the method's own stopping test was met. `ReachedEvaluationBudget` and `ReachedIterationBudget` mean the method was still improving when the budget ran out: the point is the best seen, usable, but not settled, and the remedy is to raise the budget and continue from the returned `minimizer`. `ReachedTimeBudget` means a time limit set in the method's own configuration ended the run, and `InfeasibleStationary` means that with constraints no feasible point was found.
+
+Budgets are checked *between* steps, so a method can overshoot a budget by the evaluations of its last step. Methods that use random numbers read them from `rng_seed`: the same seed gives the same everything, a different seed a different path. On a function with many local minima a different seed ends in a different minimum, so running several seeds and keeping the best is a legitimate strategy.
+
+## Program 4: Budgets and the five statuses
+
+Every solve ends in one state. The budgets are checked between steps, so a method can overshoot a budget by the evaluations of its last step (60 allowed, 61 used below).
+
+@@example Numerical/optimization/guide/dfo/304_budgets_and_status.cpp@@
+
+How to read the endings:
+
+- `Converged`: the method's stopping test was met.
+- `ReachedEvaluationBudget` / `ReachedIterationBudget`: it was still improving when the budget ran out. The point is the best seen, usable, but not settled. Raise the budget and run again, starting from the returned `minimizer`.
+- `ReachedTimeBudget`: a time limit set in the method's own configuration ended the run.
+- `InfeasibleStationary`: with constraints, no feasible point was found (Chapter 3).
+
+A looser `relative_improvement_tolerance` stops earlier with a coarser answer; the last row shows the trade.
+
+## Program 5: Seeds and repeatability
+
+Methods that use random numbers read them from `rng_seed`. Same seed, same everything; different seed, different path.
+
+@@example Numerical/optimization/guide/dfo/305_seeds.cpp@@
+
+Rows 1 and 3 are identical, and so are rows 4 and 5. The Rastrigin function used here has many local minima, so different seeds end in different ones; with a fixed budget, running several seeds and keeping the best is a legitimate strategy for such problems.
+
+## Decisions and pitfalls
+
+- **A budget status is not a failure.** A population method that ends on `ReachedEvaluationBudget` with a value of 1e-12 has done well; it simply has no cheap stopping test.
+- **Continue from the returned `minimizer`.** To go further after a budget status, start a new run at the returned point with a larger budget.
+- **Set the seed for reproducibility, and vary it for robustness.** The same seed repeats a run exactly; several seeds explore several minima.
+- **A looser `relative_improvement_tolerance` stops earlier with a coarser answer.** It is the knob that trades accuracy for evaluations.
+
+Where next: [Chapter 2](../dfo_02_the_solvers.md) compares the seven methods.

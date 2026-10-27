@@ -127,14 +127,14 @@ TEST_CASE("CUDA bridge enables masking fallback when strict native is off", "[cu
   const auto src_cuda = src_cpu.to(pluss::pCUDA);
 
   require_close_(
-      x_cuda.masked_select(m_cuda).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.masked_select(m_cpu).to_vec<float>());
+      x_cuda.masked_select(m_cuda).to(pluss::pCPU).host<float>(),
+      x_cpu.masked_select(m_cpu).host<float>());
   require_close_(
-      x_cuda.masked_fill(m_cuda, -5.0).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.masked_fill(m_cpu, -5.0).to_vec<float>());
+      x_cuda.masked_fill(m_cuda, -5.0).to(pluss::pCPU).host<float>(),
+      x_cpu.masked_fill(m_cpu, -5.0).host<float>());
   require_close_(
-      x_cuda.masked_scatter(m_cuda, src_cuda).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.masked_scatter(m_cpu, src_cpu).to_vec<float>());
+      x_cuda.masked_scatter(m_cuda, src_cuda).to(pluss::pCPU).host<float>(),
+      x_cpu.masked_scatter(m_cpu, src_cpu).host<float>());
 }
 
 TEST_CASE("CUDA strict native masking executes supported route", "[cuda][bridge][policy][masking]") {
@@ -157,13 +157,13 @@ TEST_CASE("CUDA strict native masking executes supported route", "[cuda][bridge]
   const auto src_cuda = src_cpu.to(pluss::pCUDA);
 
   require_close_(
-      x_cuda.masked_select(m_cuda).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.masked_select(m_cpu).to_vec<float>());
+      x_cuda.masked_select(m_cuda).to(pluss::pCPU).host<float>(),
+      x_cpu.masked_select(m_cpu).host<float>());
   require_close_(
-      x_cuda.masked_fill(m_cuda, 4.0).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.masked_fill(m_cpu, 4.0).to_vec<float>());
+      x_cuda.masked_fill(m_cuda, 4.0).to(pluss::pCPU).host<float>(),
+      x_cpu.masked_fill(m_cpu, 4.0).host<float>());
   require_close_(
-      x_cuda.masked_scatter(m_cuda, src_cuda).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.masked_scatter(m_cpu, src_cpu).to_vec<float>());
+      x_cuda.masked_scatter(m_cuda, src_cuda).to(pluss::pCPU).host<float>(),
+      x_cpu.masked_scatter(m_cpu, src_cpu).host<float>());
 }
 

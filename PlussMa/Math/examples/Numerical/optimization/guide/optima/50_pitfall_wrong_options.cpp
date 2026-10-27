@@ -10,15 +10,15 @@
 #include <iostream>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto start = optim::pack_scalars({{"a", pluss::make_series(0.0).to(f64)}, {"b", pluss::make_series(0.0).to(f64)}});
   auto objective = [](const Pack& p) {
-    return optim::square(p.at("a") - 3.0) + optim::square(p.at("b") - 3.0);
+    return (p.at("a") - 3.0).square() + (p.at("b") - 3.0).square();
   };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::square(p.at("a")) + optim::square(p.at("b")) - 2.0; });
+      [](const Pack& p) { return p.at("a").square() + p.at("b").square() - 2.0; });
 
   optim::OptimaOptions wrong;
   wrong.algorithm = optim::OptimaAlgorithm::InternalProtocol;

@@ -31,9 +31,9 @@ int main() {
   o.max_iterations = 200;
   o.relative_tolerance = 1e-10;
   const auto r = krylov::cg(laplacian, b, {-1}, o);
-  const auto mid = r.solution.select(-1, n / 2).to_vec<double>();
-  const auto conv = r.converged.to_vec<bool>();
-  const auto rel = r.relative_residual.to_vec<double>();
+  const auto mid = r.solution.select(-1, n / 2).host<double>();
+  const auto conv = r.converged.host<bool>();
+  const auto rel = r.relative_residual.host<double>();
   std::cout << "iterations: " << r.iterations << " (all lanes together)\n";
   std::cout << std::left << std::setw(8) << "lane" << std::setw(12) << "converged" << std::setw(20) << "relative residual" << "x at the midpoint\n";
   for (int i = 0; i < 4; ++i)

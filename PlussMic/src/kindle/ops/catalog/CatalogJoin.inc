@@ -22,7 +22,7 @@ std::int64_t shift_of(const RaggedLayout& layout, const std::string& key) { retu
 
 std::vector<bool> join_validity_of(const Stream& stream) {
   if (!detail::has_validity_mask(stream)) return {};
-  return detail::validity_mask(stream)->to_vec<bool>();
+  return detail::validity_mask(stream)->host<bool>();
 }
 
 inline std::int64_t canonical_double_code(double v) {

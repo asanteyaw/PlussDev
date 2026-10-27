@@ -25,9 +25,6 @@ using pluss::subsp::math::optim::init_sequential_qp_state;
 using pluss::subsp::math::optim::internal_protocol_step;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::sequential_qp_step;
-using pluss::subsp::math::optim::trace;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::square;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64);
@@ -36,7 +33,7 @@ Series make_vec2(double x0, double x1) {
 ConstrainedProblem make_nan_recovery_problem() {
   ConstrainedProblem problem;
   problem.objective.analytic = [](const ParameterPack<Series>& p) {
-    const auto x = p.at("x").to_vec<double>();
+    const auto x = p.at("x").host<double>();
     const double x0 = x[0];
     const double x1 = x[1];
     if (!(x0 > 0.0)) {
@@ -54,8 +51,8 @@ ConstrainedProblem make_nan_recovery_problem() {
             {"x", make_vec2(2.0 * (x0 - 0.25), 2.0 * (x1 - 1.25))},
         })};
   };
-  problem.nonlinear.inequality = [](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   return problem;
 }
@@ -77,7 +74,7 @@ TEST_CASE("optima sqp recovers from non-finite trial evaluations by shrinking th
   options.sequential_qp.optimality_tolerance = 1e-5;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
   CAPTURE(static_cast<int>(result.exit_flag), result.message,
           result.evaluation.value.item<double>(), x[0], x[1]);
 
@@ -106,7 +103,7 @@ TEST_CASE("optima interior point recovers from non-finite trial evaluations by s
   options.internal_protocol.optimality_tolerance = 1e-5;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE((result.exit_flag == OptimaExitFlag::Converged ||
            result.exit_flag == OptimaExitFlag::MaxIterations));

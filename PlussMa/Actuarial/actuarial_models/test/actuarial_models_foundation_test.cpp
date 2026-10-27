@@ -14,7 +14,7 @@ using pluss::Series;
 using namespace pluss::subsp::actuarial::actuarial_models;
 
 std::vector<double> as_f64_vec(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 double as_f64_scalar(const Series& x) {

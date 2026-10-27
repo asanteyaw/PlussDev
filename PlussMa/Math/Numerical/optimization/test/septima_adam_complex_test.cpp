@@ -1,4 +1,4 @@
-// Complex-parameter support for pluss::optim::adam_step_inplace (the Adam
+// Complex-parameter support for pluss::subsp::math::optim::adam_step_inplace (the Adam
 // half of Septima's SeptimaOptions::Optimizer::Adam branch), mirroring the
 // fix + verification already done for PlussAI/NodeK's Adam/AdamW/RMSprop/
 // NAdam/Adagrad and Minimax (see project_plussai_optim_float64_support
@@ -45,16 +45,14 @@ using pluss::ScalarType;
 using pluss::Series;
 using Complex = std::complex<double>;
 
-using pluss::optim::AdamOptions;
-using pluss::optim::AdamState;
-using pluss::optim::adam_state_like;
-using pluss::optim::adam_step_inplace;
-using pluss::optim::septima;
-using pluss::optim::SeptimaOptions;
-using pluss::optim::SeptimaSolveOptions;
-using pluss::optim::SeptimaExitFlag;
-using pluss::optim::Trace;
-using pluss::optim::sum;
+using pluss::subsp::math::optim::AdamOptions;
+using pluss::subsp::math::optim::AdamState;
+using pluss::subsp::math::optim::adam_state_like;
+using pluss::subsp::math::optim::adam_step_inplace;
+using pluss::subsp::math::optim::septima;
+using pluss::subsp::math::optim::SeptimaOptions;
+using pluss::subsp::math::optim::SeptimaSolveOptions;
+using pluss::subsp::math::optim::SeptimaExitFlag;
 
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {
@@ -72,11 +70,11 @@ Series real_series(const std::vector<double>& values, const std::vector<std::int
 }
 
 std::vector<double> to_vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 std::vector<Complex> to_vec_c128(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Complex128).reshape({x.numel()}).to_vec<Complex>();
+  return x.to(pluss::pCPU, ScalarType::Complex128).reshape({x.numel()}).host<Complex>();
 }
 
 void expect_vec_near(const std::vector<double>& lhs,
@@ -235,7 +233,7 @@ int main() {
   // Adam step before this fix, since it runs unconditionally on every
   // attempt of the NaN-recovery loop) must not throw across a real,
   // multi-iteration solve -- not just when directly unit-tested. Minimizes
-  // sum(|x|^2) (a real-valued loss of a complex variable, well-posed and
+  // (|x|^2).sum() (a real-valued loss of a complex variable, well-posed and
   // already-verified complex-autodiff territory) from a nonzero starting
   // point; the parameter must move toward the origin.
   {
@@ -252,8 +250,8 @@ int main() {
     double final_norm = 0.0;
     try {
       const auto fit = septima(
-          [](const Trace& x) -> Trace {
-            return sum(pluss::subsp::math::diff::pow(pluss::subsp::math::diff::abs(x), 2.0));
+          [](const Series& x) -> Series {
+            return (x.abs().pow(2.0)).sum();
           },
           x0,
           solve_opts);
@@ -271,7 +269,7 @@ int main() {
       expect(exit_flag != SeptimaExitFlag::NonFiniteEvaluation,
              "septima() must not report NonFiniteEvaluation for a well-posed complex solve", &failures);
       expect(final_norm < initial_norm,
-             "septima() must make progress minimizing sum(|x|^2) from a complex start", &failures);
+             "septima() must make progress minimizing (|x|^2).sum() from a complex start", &failures);
     }
   }
 

@@ -4,6 +4,17 @@
 
 [Back to Volatility Models](../ts_03_volatility_models.md)
 
+Volatility rarely moves alone. Two stocks, two exchange rates or two commodity prices have variances that each follow their own pattern, and their returns are correlated: they tend to move together. Risk questions about the pair (the variance of a portfolio, the hedge ratio between two positions) need both the individual variances and the correlation. The multivariate models in `pluss::subsp::stats::ts` take the simplest useful structure, the **constant conditional correlation** model:
+
+> each series `j` has its own conditional variance `h_{j,t}` from a univariate model (GARCH, GJR or EGARCH), and the standardised residuals of the series are correlated with a *constant* matrix `R`, so that the conditional covariance of series `i` and `j` is `R_{ij} √(h_{i,t} h_{j,t})`.
+
+It is estimated in two steps, which is also why it scales to many series: fit each marginal model on its own, then estimate `R` as the correlation matrix of the standardised residuals. `MvGarch`, `MvGjr` and `MvEgarch` take a matrix `Y` with one row per time point and one column per series; the options hold the marginal model's options (`MvGarchOptions::marginal`) plus `corr_shrinkage` and `corr_jitter`, which keep the estimated correlation matrix positive definite. The fit holds `marginals` (one univariate fit per series), `mean` and `corr`.
+
+The three programs use the same simulated pair: two GARCH(1,1) series with different parameters whose shocks have correlation 0.6.
+
+## Fitting the pair
+
+The program builds the data with a short recursion for the two variances (series 0: `ω = 0.05`, `α = 0.15`, `β = 0.75`; series 1: `ω = 0.10`, `α = 0.10`, `β = 0.80`), fits `MvGarch`, and prints each marginal's estimates, the estimated correlation, and the joint log-likelihood next to the same model with the correlation set to zero.
 
 ```cpp
 #include <pluss/ma.h>
@@ -16,50 +27,105 @@
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-std::vector<double> shocks(int n, int offset) {
-  std::vector<double> z(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + offset + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    z[static_cast<std::size_t>(i)] = (u - 0.5) * std::sqrt(12.0);
-  }
-  return z;
-}
-int main() {
-  const int n = 1500;
-  const auto z1 = shocks(n, 0), w = shocks(n, 40000);
+Series simulate_pair(int n, const pluss::Config& cfg) {
+  ts::ArimaFit white;
+  white.sigma = 1.0;
+  const auto z1 = white.simulate(n, cfg, /*seed=*/1).host<double>();
+  const auto w = white.simulate(n, cfg, /*seed=*/2).host<double>();
   std::vector<double> y(static_cast<std::size_t>(2 * n));
   double h1 = 0.4, h2 = 0.4, p1 = 0.0, p2 = 0.0;
   for (int t = 0; t < n; ++t) {
     h1 = 0.05 + 0.15 * p1 * p1 + 0.75 * h1;
     h2 = 0.10 + 0.10 * p2 * p2 + 0.80 * h2;
-    const double e1 = z1[static_cast<std::size_t>(t)], e2 = 0.6 * e1 + 0.8 * w[static_cast<std::size_t>(t)];
+    const double e1 = z1[t], e2 = 0.6 * e1 + 0.8 * w[t];
     p1 = std::sqrt(h1) * e1;
     p2 = std::sqrt(h2) * e2;
-    y[static_cast<std::size_t>(2 * t)] = p1;
-    y[static_cast<std::size_t>(2 * t + 1)] = p2;
+    y[2 * t] = p1;
+    y[2 * t + 1] = p2;
   }
-  const Series Y = pluss::make_series(y, {n, 2}).to(f64);
+  return pluss::make_series(y, {n, 2}).to(pluss::ScalarType::Float64);
+}
 
-  const auto fit = ts::MvGarch::fit_mle(Y);
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series Y = simulate_pair(1500, f64);
+
+  const auto fit = ts::MvGarch::fit_mle(Y, {}, f64);
   std::cout << std::fixed << std::setprecision(3);
+  const double truth[2][3] = {{0.05, 0.15, 0.75}, {0.10, 0.10, 0.80}};
   for (std::size_t j = 0; j < fit.marginals.size(); ++j)
-    std::cout << "series " << j << ": omega " << fit.marginals[j].omega << "  alpha " << fit.marginals[j].arch[0] << "  beta " << fit.marginals[j].garch[0] << "\n";
-  const auto corr = fit.corr.to_vec<double>();
+    std::cout << "series " << j << ": omega " << fit.marginals[j].omega << " (" << truth[j][0] << ")  alpha " << fit.marginals[j].arch[0] << " (" << truth[j][1] << ")  beta "
+              << fit.marginals[j].garch[0] << " (" << truth[j][2] << ")\n";
+  const auto corr = fit.corr.host<double>();
   std::cout << "estimated correlation " << corr[1] << "   (true 0.600)\n";
-  std::cout << "joint log-likelihood " << std::setprecision(2) << fit.loglik(Y) << "\n";
+  std::cout << std::setprecision(2) << "joint log-likelihood " << fit.loglik(Y) << "\n";
 
-  // Without the correlation (an identity matrix) the same marginals fit worse.
   auto independent = fit;
-  independent.corr = pluss::series::eye(2, 2).to(f64);
-  std::cout << "log-likelihood with the correlation set to zero " << independent.loglik(Y) << "\n\n";
+  independent.corr = pluss::series::eye(2, 2).to(pluss::ScalarType::Float64);
+  std::cout << "log-likelihood with the correlation set to zero " << independent.loglik(Y) << "\n";
+}
+```
 
-  std::cout << std::setprecision(3) << "forecast of the variances and of the covariance implied by the correlation\n";
-  const auto f = fit.forecast(5, Y).to_vec<double>();
+Output
+
+```text
+series 0: omega 0.060 (0.050)  alpha 0.119 (0.150)  beta 0.752 (0.750)
+series 1: omega 0.139 (0.100)  alpha 0.121 (0.100)  beta 0.729 (0.800)
+estimated correlation 0.574   (true 0.600)
+joint log-likelihood -3257.03
+log-likelihood with the correlation set to zero -3556.66
+```
+
+Each marginal is estimated within sampling error of its generating values (`α` of series 0 is 0.119 against 0.15, `β` of series 1 is 0.729 against 0.80: the usual spread on `ω`, `α` and `β` ; see [Fitting a GARCH(1, 1)](fitting_a_garch_1_1.md)), and the correlation is estimated at 0.57 against 0.6. The joint log-likelihood (−3257) is far higher than that of the same marginals with zero correlation (−3557); that gap is the evidence that the series move together and that modelling them separately throws information away. Note that setting `independent.corr` by hand evaluates the *same fitted marginals* under a different correlation; this is a way to ask "how much would we lose by ignoring the dependence?" without refitting.
+
+## What the correlation is for
+
+The practical product of the model is the forecast covariance matrix: `forecast(h, Y)` returns the variance of each series at each horizon, and the covariance between them is `R_{ij} √(v_i v_j)`. The program uses them to compute the variance of an equal-weight portfolio of the two series over the next five steps, and compares it with the number you would get by ignoring the correlation.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series simulate_pair(int n, const pluss::Config& cfg) {
+  ts::ArimaFit white;
+  white.sigma = 1.0;
+  const auto z1 = white.simulate(n, cfg, /*seed=*/1).host<double>();
+  const auto w = white.simulate(n, cfg, /*seed=*/2).host<double>();
+  std::vector<double> y(static_cast<std::size_t>(2 * n));
+  double h1 = 0.4, h2 = 0.4, p1 = 0.0, p2 = 0.0;
+  for (int t = 0; t < n; ++t) {
+    h1 = 0.05 + 0.15 * p1 * p1 + 0.75 * h1;
+    h2 = 0.10 + 0.10 * p2 * p2 + 0.80 * h2;
+    const double e1 = z1[t], e2 = 0.6 * e1 + 0.8 * w[t];
+    p1 = std::sqrt(h1) * e1;
+    p2 = std::sqrt(h2) * e2;
+    y[2 * t] = p1;
+    y[2 * t + 1] = p2;
+  }
+  return pluss::make_series(y, {n, 2}).to(pluss::ScalarType::Float64);
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series Y = simulate_pair(1500, f64);
+  const auto fit = ts::MvGarch::fit_mle(Y, {}, f64);
+  const double rho = fit.corr.host<double>()[1];
+  const auto f = fit.forecast(5, Y, f64).host<double>();  // row h: variance of series 0, then of series 1
+
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << std::setw(6) << "step" << std::setw(10) << "var0" << std::setw(10) << "var1" << std::setw(10) << "cov" << std::setw(18) << "portfolio var" << std::setw(20) << "ignoring corr" << "\n";
   for (int h = 0; h < 5; ++h) {
-    const double v1 = f[static_cast<std::size_t>(2 * h)], v2 = f[static_cast<std::size_t>(2 * h + 1)];
-    std::cout << "  step " << h + 1 << "   var0 " << v1 << "   var1 " << v2 << "   cov " << corr[1] * std::sqrt(v1 * v2) << "\n";
+    const double v0 = f[2 * h], v1 = f[2 * h + 1], cov = rho * std::sqrt(v0 * v1);
+    const double with = 0.25 * v0 + 0.25 * v1 + 2.0 * 0.25 * cov;  // weights 0.5 and 0.5
+    const double without = 0.25 * v0 + 0.25 * v1;
+    std::cout << std::setw(6) << h + 1 << std::setw(10) << v0 << std::setw(10) << v1 << std::setw(10) << cov << std::setw(18) << with << std::setw(20) << without << "\n";
   }
 }
 ```
@@ -67,17 +133,85 @@ int main() {
 Output
 
 ```text
-series 0: omega 0.072  alpha 0.138  beta 0.712
-series 1: omega 0.107  alpha 0.093  beta 0.804
-estimated correlation 0.612   (true 0.600)
-joint log-likelihood -3338.32
-log-likelihood with the correlation set to zero -3690.42
-
-forecast of the variances and of the covariance implied by the correlation
-  step 1   var0 0.530   var1 0.676   cov 0.366
-  step 2   var0 0.522   var1 0.714   cov 0.374
-  step 3   var0 0.516   var1 0.747   cov 0.380
-  step 4   var0 0.510   var1 0.777   cov 0.385
-  step 5   var0 0.505   var1 0.804   cov 0.390
+  step      var0      var1       cov     portfolio var       ignoring corr
+     1     0.313     0.612     0.251             0.357               0.231
+     2     0.332     0.660     0.269             0.382               0.248
+     3     0.349     0.700     0.284             0.404               0.262
+     4     0.364     0.734     0.297             0.423               0.274
+     5     0.376     0.764     0.308             0.439               0.285
 ```
-Each series has its own GARCH(1,1) (the estimates are close to the generating 0.05/0.15/0.75 and 0.10/0.10/0.80) and the estimated correlation, 0.612, is close to the true 0.6. The joint model is far better than the same marginals with zero correlation (log-likelihood −3338 against −3690). The forecasts are of the two variances; the covariance implied by the constant correlation is `corr × sqrt(var0 × var1)`, which rises with the variances. The correlation is a constant, estimated from the standardised residuals after the marginals are fitted (`MvGarchOptions::corr_shrinkage` shrinks it towards the identity, by default 10⁻⁶, and `corr_jitter` keeps it positive definite); a series whose correlation drifts needs a dynamic correlation model, which is not provided.
+
+The covariance column moves with the variances: when both variances are high the covariance rises with them, since the correlation is held fixed. Ignoring the correlation drops the term `2 w_0 w_1 cov` and understates the portfolio variance by about a third (0.231 against 0.357 at step 1). For a pair with a *negative* correlation the same mistake would overstate risk, so the sign of the error depends on the correlation, but the size of the mistake is the thing to remember: portfolio risk is not the sum of the individual risks.
+
+## Choosing the marginal family
+
+The marginal model need not be GARCH: `MvGjr` and `MvEgarch` give each series an asymmetric variance equation. The decision is the same as for a single series ([Asymmetric responses](asymmetric_responses.md)), made series by series: compare likelihoods. The program fits `MvGarch` and `MvGjr` to the same data and compares them; since the generating process is symmetric, the extra parameters should not earn their cost.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series simulate_pair(int n, const pluss::Config& cfg) {
+  ts::ArimaFit white;
+  white.sigma = 1.0;
+  const auto z1 = white.simulate(n, cfg, /*seed=*/1).host<double>();
+  const auto w = white.simulate(n, cfg, /*seed=*/2).host<double>();
+  std::vector<double> y(static_cast<std::size_t>(2 * n));
+  double h1 = 0.4, h2 = 0.4, p1 = 0.0, p2 = 0.0;
+  for (int t = 0; t < n; ++t) {
+    h1 = 0.05 + 0.15 * p1 * p1 + 0.75 * h1;
+    h2 = 0.10 + 0.10 * p2 * p2 + 0.80 * h2;
+    const double e1 = z1[t], e2 = 0.6 * e1 + 0.8 * w[t];
+    p1 = std::sqrt(h1) * e1;
+    p2 = std::sqrt(h2) * e2;
+    y[2 * t] = p1;
+    y[2 * t + 1] = p2;
+  }
+  return pluss::make_series(y, {n, 2}).to(pluss::ScalarType::Float64);
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series Y = simulate_pair(1500, f64);
+  const auto g = ts::MvGarch::fit_mle(Y, {}, f64);
+  const auto j = ts::MvGjr::fit_mle(Y, {}, f64);
+
+  const double n = 1500.0;
+  const int k_garch = 2 * 4 + 1, k_gjr = 2 * 5 + 1;  // parameters per series (with the mean) plus the correlation
+  std::cout << std::fixed << std::setprecision(2);
+  std::cout << std::left << std::setw(10) << "model" << std::right << std::setw(12) << "loglik" << std::setw(10) << "AIC" << std::setw(10) << "BIC" << "\n";
+  std::cout << std::left << std::setw(10) << "MvGarch" << std::right << std::setw(12) << g.loglik(Y) << std::setw(10) << -2 * g.loglik(Y) + 2 * k_garch << std::setw(10)
+            << -2 * g.loglik(Y) + k_garch * std::log(n) << "\n";
+  std::cout << std::left << std::setw(10) << "MvGjr" << std::right << std::setw(12) << j.loglik(Y) << std::setw(10) << -2 * j.loglik(Y) + 2 * k_gjr << std::setw(10)
+            << -2 * j.loglik(Y) + k_gjr * std::log(n) << "\n";
+  std::cout << "leverage coefficients of MvGjr: " << std::setprecision(3) << j.marginals[0].asym[0] << ", " << j.marginals[1].asym[0] << "\n";
+}
+```
+
+Output
+
+```text
+model           loglik       AIC       BIC
+MvGarch       -3257.03   6532.05   6579.87
+MvGjr         -3257.03   6536.05   6594.50
+leverage coefficients of MvGjr: 0.000, 0.000
+```
+
+The asymmetric model's likelihood is no better, and its leverage coefficients are at or near zero, so the symmetric model wins on both criteria (the Gjr fit is exactly the symmetric one, with the same likelihood and a larger penalty); with real data the comparison would be made the same way for each series.
+
+## Decisions and pitfalls
+
+- **The correlation is constant.** A pair whose dependence changes over time (it typically rises in crises) is described badly by one matrix; a dynamic-correlation model is not provided, so check the stability of the estimated correlation over sub-samples.
+- **Two-step estimation is fast but not fully efficient.** Each marginal is estimated without using the other series; with many series this is the practical choice.
+- **Mind the shrinkage.** `corr_shrinkage` pulls the correlation slightly towards the identity and `corr_jitter` guards positive definiteness; the defaults (10⁻⁶, 10⁻⁹) are negligible and only matter for nearly collinear series.
+- **Forecasts are of variances.** Build covariances from the correlation as shown; the library does not return a covariance forecast.
+- **Check each marginal.** Run [the checks](checking_the_fit.md) on each series' standardised residuals before trusting the joint model.
+
+Where next: [Chapter 4](../ts_04_vector_models.md) models the *means* of several series jointly, with vector autoregressions.

@@ -8,8 +8,8 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
@@ -31,15 +31,15 @@ int main() {
   }
   const auto A = pluss::make_series(a, {rows, columns}).to(f64);
   const auto target = pluss::make_series(t, {rows}).to(f64);
-  const auto objective = [&](const Trace& w) -> Trace {
-    const Trace mix = optim::matmul(optim::fixed(A), pluss::subsp::math::diff::reshape(w, {columns, 1}));
-    return optim::sum(optim::square(mix - optim::fixed(target.reshape({rows, 1}))));
+  const auto objective = [&](const pluss::Series& w) -> pluss::Series {
+    const pluss::Series mix = A.matmul(w.reshape({columns, 1}));
+    return (mix - target.reshape({rows, 1})).square().sum();
   };
   const auto start = pluss::make_series(std::vector<double>(columns, 0.2), {columns}).to(f64);
 
   std::cout << std::left << std::setw(18) << "solver" << std::setw(8) << "evals" << std::setw(12) << "objective" << std::setw(10) << "sum(w)" << "weights\n";
   const auto row = [&](const char* label, std::int64_t evals, double value, const Series& w) {
-    const auto v = w.to_vec<double>();
+    const auto v = w.host<double>();
     double sum = 0.0;
     for (double x : v) sum += x;
     std::cout << std::left << std::setw(18) << label << std::setw(8) << evals << std::fixed << std::setprecision(5) << std::setw(12) << value << std::setw(10) << sum;

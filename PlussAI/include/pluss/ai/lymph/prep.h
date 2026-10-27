@@ -135,10 +135,10 @@ struct TimeSeriesSplit {
   const IndexSplit indices = make_holdout_indices(frame, options);
   const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
                                                    .reshape({indices.train_indices.numel()})
-                                                   .to_vec<std::int64_t>();
+                                                   .host<std::int64_t>();
   const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
                                                  .reshape({indices.test_indices.numel()})
-                                                 .to_vec<std::int64_t>();
+                                                 .host<std::int64_t>();
   return HoldoutSplit{
       .train_set = frame.take(train_idx),
       .test_set = frame.take(test_idx),
@@ -169,10 +169,10 @@ struct TimeSeriesSplit {
   for (const IndexSplit& indices : plan.folds) {
     const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
                                                     .reshape({indices.train_indices.numel()})
-                                                    .to_vec<std::int64_t>();
+                                                    .host<std::int64_t>();
     const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
                                                    .reshape({indices.test_indices.numel()})
-                                                   .to_vec<std::int64_t>();
+                                                   .host<std::int64_t>();
     out.push_back(TimeSeriesSplit{
         .train_set = frame.take(train_idx),
         .test_set = frame.take(test_idx),

@@ -43,7 +43,7 @@ auto archive = pluss::kindle::Archive({c0, c1}, pluss::kindle::Stream(pluss::mak
 auto total = archive.aggregate_over_catalogs([](const std::vector<pluss::kindle::Catalog>& cats) {
   double sum = 0.0;
   for (const auto& c : cats) {
-    auto s = c.get("sales").value().sum().as_series().to_vec<double>();
+    auto s = c.get("sales").value().sum().as_series().host<double>();
     sum += s[0];
   }
   return pluss::kindle::Catalog({

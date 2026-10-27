@@ -17,7 +17,7 @@ TEST_CASE("mixed 1D bool mask + integer advanced indices", "[indexing]") {
   auto y = x.index({mask, idx});
   REQUIRE(y.dim() == 1);
   REQUIRE(y.sizes()[0] == 2);
-  REQUIRE(y.to_vec<float>() == std::vector<float>{3.0f, 9.0f});
+  REQUIRE(y.host<float>() == std::vector<float>{3.0f, 9.0f});
 }
 
 TEST_CASE("index_put_ mixed bool/int uses torch-like path", "[indexing]") {
@@ -35,8 +35,8 @@ TEST_CASE("index_put_ mixed bool/int uses torch-like path", "[indexing]") {
   auto y = x.index({mask, idx});
   REQUIRE(y.dim() == 1);
   REQUIRE(y.sizes()[0] == 2);
-  REQUIRE(y.to_vec<float>() == std::vector<float>{5.0f, 5.0f});
-  REQUIRE(x.pos(0, 1).to_vec<float>() == std::vector<float>{5.0f});
-  REQUIRE(x.pos(2, 2).to_vec<float>() == std::vector<float>{5.0f});
-  REQUIRE(x.sum().to_vec<float>() == std::vector<float>{10.0f});  // nothing else touched
+  REQUIRE(y.host<float>() == std::vector<float>{5.0f, 5.0f});
+  REQUIRE(x.pos(0, 1).host<float>() == std::vector<float>{5.0f});
+  REQUIRE(x.pos(2, 2).host<float>() == std::vector<float>{5.0f});
+  REQUIRE(x.sum().host<float>() == std::vector<float>{10.0f});  // nothing else touched
 }

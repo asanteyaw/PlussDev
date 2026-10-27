@@ -46,43 +46,43 @@ TEST_CASE("MPS linalg bridge deterministic parity", "[mps][linearalg][bridge]") 
 
   const auto det_ref = pluss::subsp::linearalg::det(a_cpu).to(pluss::ScalarType::Float32);
   const auto det_got = pluss::subsp::linearalg::det(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(det_got.to_vec<float>(), det_ref.to_vec<float>(), 1e-4f);
+  require_close_vec_(det_got.host<float>().array().data, det_ref.host<float>().array().data, 1e-4f);
 
   const auto logdet_ref = pluss::subsp::linearalg::logdet(a_cpu).to(pluss::ScalarType::Float32);
   const auto logdet_got = pluss::subsp::linearalg::logdet(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(logdet_got.to_vec<float>(), logdet_ref.to_vec<float>(), 1e-4f);
+  require_close_vec_(logdet_got.host<float>().array().data, logdet_ref.host<float>().array().data, 1e-4f);
 
   const auto slogdet_ref = pluss::subsp::linearalg::slogdet(a_cpu).to(pluss::ScalarType::Float32);
   const auto slogdet_got = pluss::subsp::linearalg::slogdet(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(slogdet_got.to_vec<float>(), slogdet_ref.to_vec<float>(), 1e-4f);
+  require_close_vec_(slogdet_got.host<float>().array().data, slogdet_ref.host<float>().array().data, 1e-4f);
 
   const auto inv_ref = pluss::subsp::linearalg::inverse(a_cpu).to(pluss::ScalarType::Float32);
   const auto inv_got = pluss::subsp::linearalg::inverse(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(inv_got.to_vec<float>(), inv_ref.to_vec<float>(), 2e-3f);
+  require_close_vec_(inv_got.host<float>().array().data, inv_ref.host<float>().array().data, 2e-3f);
 
   const auto chol_ref = pluss::subsp::linearalg::cholesky(a_cpu, false).to(pluss::ScalarType::Float32);
   const auto chol_mps = pluss::subsp::linearalg::cholesky(a_mps, false);
   const auto chol_got = chol_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(chol_got.to_vec<float>(), chol_ref.to_vec<float>(), 2e-3f);
+  require_close_vec_(chol_got.host<float>().array().data, chol_ref.host<float>().array().data, 2e-3f);
 
   const auto tri_ref = pluss::subsp::linearalg::triangular_solve(chol_ref, b_cpu, false, false).to(pluss::ScalarType::Float32);
   const auto tri_got =
       pluss::subsp::linearalg::triangular_solve(chol_mps, b_mps, false, false).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(tri_got.to_vec<float>(), tri_ref.to_vec<float>(), 2e-3f);
+  require_close_vec_(tri_got.host<float>().array().data, tri_ref.host<float>().array().data, 2e-3f);
 
   const auto chol_solve_ref = pluss::subsp::linearalg::cholesky_solve(chol_ref, b_cpu, false).to(pluss::ScalarType::Float32);
   const auto chol_solve_got =
       pluss::subsp::linearalg::cholesky_solve(chol_mps, b_mps, false).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(chol_solve_got.to_vec<float>(), chol_solve_ref.to_vec<float>(), 2e-3f);
+  require_close_vec_(chol_solve_got.host<float>().array().data, chol_solve_ref.host<float>().array().data, 2e-3f);
 
   const auto chol_inv_ref = pluss::subsp::linearalg::cholesky_inverse(chol_ref, false).to(pluss::ScalarType::Float32);
   const auto chol_inv_got =
       pluss::subsp::linearalg::cholesky_inverse(chol_mps, false).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(chol_inv_got.to_vec<float>(), chol_inv_ref.to_vec<float>(), 2e-3f);
+  require_close_vec_(chol_inv_got.host<float>().array().data, chol_inv_ref.host<float>().array().data, 2e-3f);
 
   const auto lu_ref = pluss::subsp::linearalg::lu_solve(a_cpu, b_cpu).to(pluss::ScalarType::Float32);
   const auto lu_got = pluss::subsp::linearalg::lu_solve(a_mps, b_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(lu_got.to_vec<float>(), lu_ref.to_vec<float>(), 2e-3f);
+  require_close_vec_(lu_got.host<float>().array().data, lu_ref.host<float>().array().data, 2e-3f);
 
   const auto tall_cpu = pluss::make_series(
       std::vector<float>{
@@ -94,7 +94,7 @@ TEST_CASE("MPS linalg bridge deterministic parity", "[mps][linearalg][bridge]") 
   const auto pinv_ref = pluss::subsp::linearalg::pinverse(tall_cpu, 1e-8).to(pluss::ScalarType::Float32);
   const auto pinv_got =
       pluss::subsp::linearalg::pinverse(tall_cpu.to(pluss::pMPS), 1e-8).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-  require_close_vec_(pinv_got.to_vec<float>(), pinv_ref.to_vec<float>(), 3e-3f);
+  require_close_vec_(pinv_got.host<float>().array().data, pinv_ref.host<float>().array().data, 3e-3f);
 }
 
 TEST_CASE("MPS linalg bridge stress and stability", "[mps][linearalg][bridge][stress]") {
@@ -150,7 +150,7 @@ TEST_CASE("MPS linalg bridge stress and stability", "[mps][linearalg][bridge][st
 
     const auto inv_ref = pluss::subsp::linearalg::inverse(a_cpu).to(pluss::ScalarType::Float32);
     const auto inv_got = pluss::subsp::linearalg::inverse(a_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32);
-    require_close_vec_(inv_got.to_vec<float>(), inv_ref.to_vec<float>(), 4e-3f);
+    require_close_vec_(inv_got.host<float>().array().data, inv_ref.host<float>().array().data, 4e-3f);
 
     const auto sol_ref =
         pluss::subsp::linearalg::cholesky_solve(pluss::subsp::linearalg::cholesky(a_cpu), b_cpu).to(pluss::ScalarType::Float32);
@@ -158,7 +158,7 @@ TEST_CASE("MPS linalg bridge stress and stability", "[mps][linearalg][bridge][st
         pluss::subsp::linearalg::cholesky_solve(pluss::subsp::linearalg::cholesky(a_mps), b_mps)
             .to(pluss::pCPU)
             .to(pluss::ScalarType::Float32);
-    require_close_vec_(sol_got.to_vec<float>(), sol_ref.to_vec<float>(), 4e-3f);
+    require_close_vec_(sol_got.host<float>().array().data, sol_ref.host<float>().array().data, 4e-3f);
   }
 
   const auto stable_cpu = pluss::make_series(
@@ -168,11 +168,11 @@ TEST_CASE("MPS linalg bridge stress and stability", "[mps][linearalg][bridge][st
           0.0f, 1.0f, 3.0f},
       {3, 3});
   const auto stable_mps = stable_cpu.to(pluss::pMPS);
-  const auto inv_ref = pluss::subsp::linearalg::inverse(stable_cpu).to(pluss::ScalarType::Float32).to_vec<float>();
+  const auto inv_ref = pluss::subsp::linearalg::inverse(stable_cpu).to(pluss::ScalarType::Float32).host<float>().array().data;
 
   for (std::int64_t rep = 0; rep < 240; ++rep) {
     const auto got =
-        pluss::subsp::linearalg::inverse(stable_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>();
+        pluss::subsp::linearalg::inverse(stable_mps).to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>().array().data;
     require_close_vec_(got, inv_ref, 2e-3f);
   }
 }

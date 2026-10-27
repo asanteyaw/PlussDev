@@ -8,15 +8,15 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  using Pack = optim::ParameterPack<optim::Trace>;
-  const auto target = optim::trace(vec({1.0, 2.0}), false);
-  auto objective = [target](const Pack& p) { return optim::sum(optim::square(p.at("x") - target)); };
-  auto budget = [](const Pack& p) { return optim::sum(p.at("x")) - 1.5; };  // x0 + x1 <= 1.5
+  using Pack = optim::ParameterPack<pluss::Series>;
+  const auto target = vec({1.0, 2.0});
+  auto objective = [target](const Pack& p) { return (p.at("x") - target).square().sum(); };
+  auto budget = [](const Pack& p) { return p.at("x").sum() - 1.5; };  // x0 + x1 <= 1.5
 
   // Route 1: fill the struct.
   optim::ConstrainedProblem by_hand;
@@ -30,8 +30,8 @@ int main() {
   const auto a = optim::optima(by_hand, start);                           // start as a plain vector
   const auto b = optim::optima(built, optim::pack_series(start));        // start as a named-block pack
 
-  const auto xa = a.params.at("x").to_vec<double>();
-  const auto xb = b.params.at("x").to_vec<double>();
+  const auto xa = a.params.at("x").host<double>();
+  const auto xb = b.params.at("x").host<double>();
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "struct:  x = [" << xa[0] << ", " << xa[1] << "]\n";
   std::cout << "builder: x = [" << xb[0] << ", " << xb[1] << "]\n";

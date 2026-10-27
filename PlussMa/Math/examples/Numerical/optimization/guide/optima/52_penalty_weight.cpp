@@ -12,19 +12,19 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
 optim::ParameterPack<pluss::Series> start_point() { return optim::pack_scalars({{"x", scalar(-1.9)}, {"y", scalar(2.0)}}); }
 // Rosenbrock's curved valley, restricted to the disc x^2 + y^2 <= 1.5 and to the hyperbola x y = 0.4.
 auto objective = [](const Pack& p) {
-  return 100.0 * optim::square(p.at("y") - optim::square(p.at("x"))) + optim::square(1.0 - p.at("x"));
+  return 100.0 * (p.at("y") - p.at("x").square()).square() + (1.0 - p.at("x")).square();
 };
 auto constraints() {
   return optim::constraints()
-      .nl_ineq([](const Pack& p) { return optim::square(p.at("x")) + optim::square(p.at("y")) - 1.5; })
+      .nl_ineq([](const Pack& p) { return p.at("x").square() + p.at("y").square() - 1.5; })
       .nl_eq([](const Pack& p) { return p.at("x") * p.at("y") - 0.4; });
 }
 

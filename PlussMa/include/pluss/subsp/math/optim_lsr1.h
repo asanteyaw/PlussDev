@@ -32,6 +32,7 @@
 #include <functional>
 #include <limits>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace pluss::subsp::math::optim {
@@ -88,6 +89,24 @@ enum class Lsr1ExitFlag : std::int32_t {
   InvalidProblem = -4,
 };
 
+inline std::string_view lsr1_exit_flag_name(Lsr1ExitFlag value) {
+  switch (value) {
+    case Lsr1ExitFlag::Converged:
+      return "Converged";
+    case Lsr1ExitFlag::MaxIterations:
+      return "MaxIterations";
+    case Lsr1ExitFlag::Stopped:
+      return "Stopped";
+    case Lsr1ExitFlag::NoProgress:
+      return "NoProgress";
+    case Lsr1ExitFlag::NonFiniteEvaluation:
+      return "NonFiniteEvaluation";
+    case Lsr1ExitFlag::InvalidProblem:
+      return "InvalidProblem";
+  }
+  return "Unknown";
+}
+
 struct Lsr1ProgressSnapshot {
   std::int64_t iteration{0};
   std::int64_t function_evaluations{0};
@@ -121,9 +140,9 @@ struct Lsr1Result {
   std::string message{};
 };
 
-using Lsr1ObjectiveFn = std::function<Trace(const Trace&)>;
-
 namespace detail {
+
+using Lsr1ObjectiveFn = std::function<detail::Trace(const detail::Trace&)>;
 
 namespace ll = pluss::subsp::math::linalg;
 
@@ -190,7 +209,7 @@ inline void lsr1_validate_solve_options_(const Lsr1SolveOptions& o) {
 // ---------------------------------------------------------------------
 
 inline std::vector<double> lsr1_to_vec_(const Series& flat) {
-  return flat.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  return flat.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>();
 }
 
 // history (k flat Series, each length n) -> row-major n x k matrix.
@@ -275,7 +294,7 @@ inline bool lsr1_lambda_hat_(const std::vector<double>& S, const std::vector<dou
   // order of 1e17 from a matrix whose true eigenvalues were all O(1-1e3)). Reject explicitly
   // via the diagonal spread of the Cholesky factor, a standard cheap condition-number proxy.
   {
-    const auto diag = chol_upper.to_vec<double>();
+    const auto diag = chol_upper.host<double>();
     double min_abs = std::numeric_limits<double>::infinity();
     double max_abs = 0.0;
     for (std::int64_t i = 0; i < k; ++i) {
@@ -295,7 +314,7 @@ inline bool lsr1_lambda_hat_(const std::vector<double>& S, const std::vector<dou
   Series y_t = y.transpose(0, 1).contiguous();
   Series a_prime = ll::triangular_solve(y_t, c_t, /*upper=*/false, /*unitriangular=*/false);
   const auto eig = ll::eigh(a_prime);
-  const auto values = eig.eigenvalues.to_vec<double>();
+  const auto values = eig.eigenvalues.host<double>();
   if (values.empty() || !std::isfinite(values.front())) return false;
   *lambda_hat_out = values.front();
   return true;
@@ -337,7 +356,7 @@ inline Lsr1Compact lsr1_build_compact_(const std::vector<double>& S, const std::
 
   // Degeneracy guard: if any diagonal of R is ~0, Psi's columns are (numerically) linearly
   // dependent and R is not invertible -- the caller drops the oldest pair and retries.
-  const auto r_vec = qr.R.to_vec<double>();
+  const auto r_vec = qr.R.host<double>();
   double max_abs_diag = 0.0;
   for (std::int64_t i = 0; i < k; ++i) max_abs_diag = std::max(max_abs_diag, std::abs(r_vec[static_cast<std::size_t>(i * k + i)]));
   const double diag_floor = std::max(1e-300, max_abs_diag * 1e-10);
@@ -371,7 +390,7 @@ inline Lsr1Compact lsr1_build_compact_(const std::vector<double>& S, const std::
   out.Q = qr.Q;
   out.R = qr.R;
   out.U = eig.eigenvectors;
-  out.lambda_hat = eig.eigenvalues.to_vec<double>();
+  out.lambda_hat = eig.eigenvalues.host<double>();
   return out;
 }
 
@@ -382,7 +401,7 @@ inline std::vector<double> lsr1_apply_b_(const Lsr1Compact& compact, const std::
   for (std::size_t i = 0; i < v.size(); ++i) out[i] = compact.gamma * v[i];
   if (compact.k <= 0) return out;
   const auto k = compact.k;
-  const auto q = compact.Q.to_vec<double>();  // n x k
+  const auto q = compact.Q.host<double>();  // n x k
   std::vector<double> qtv(static_cast<std::size_t>(k), 0.0);
   for (std::int64_t j = 0; j < k; ++j) {
     double s = 0.0;
@@ -390,7 +409,7 @@ inline std::vector<double> lsr1_apply_b_(const Lsr1Compact& compact, const std::
     qtv[static_cast<std::size_t>(j)] = s;
   }
   // (R M R^T) qtv, using the eigendecomposition A = U diag(lambda_hat) U^T:
-  const auto u = compact.U.to_vec<double>();
+  const auto u = compact.U.host<double>();
   std::vector<double> ut_qtv(static_cast<std::size_t>(k), 0.0);
   for (std::int64_t j = 0; j < k; ++j) {
     double s = 0.0;
@@ -459,14 +478,14 @@ inline Lsr1Subproblem lsr1_solve_subproblem_(const Lsr1Compact& compact, const s
   for (std::int64_t i = 0; i < k; ++i) lambda[static_cast<std::size_t>(i)] = lambda_hat[static_cast<std::size_t>(i)] + gamma;
 
   // g_parallel = U^T (Q^T g)  (page 6: Psi*R^{-1} = Q since Psi = Q*R, so g_par = (Psi R^{-1} U)^T g = U^T Q^T g)
-  const auto q = compact.Q.to_vec<double>();
+  const auto q = compact.Q.host<double>();
   std::vector<double> qtg(static_cast<std::size_t>(k), 0.0);
   for (std::int64_t j = 0; j < k; ++j) {
     double s = 0.0;
     for (std::int64_t i = 0; i < n; ++i) s += q[static_cast<std::size_t>(i * k + j)] * g[static_cast<std::size_t>(i)];
     qtg[static_cast<std::size_t>(j)] = s;
   }
-  const auto u = compact.U.to_vec<double>();
+  const auto u = compact.U.host<double>();
   std::vector<double> g_par(static_cast<std::size_t>(k), 0.0);
   for (std::int64_t j = 0; j < k; ++j) {
     double s = 0.0;
@@ -1032,8 +1051,9 @@ inline Lsr1Result l_sr1_trust_region_core_(
 // reason: viewing a complex n-vector optimization as a real 2n-vector one is the standard
 // treatment, with no Hermitian/conjugate-inner-product question anywhere, since no complex linear
 // algebra is performed at all past this boundary.
-inline std::pair<std::vector<Series>, Lsr1Result> l_sr1_trust_region(
-    const std::function<Trace(const std::vector<Trace>&)>& objective, const std::vector<Series>& params0,
+namespace detail {
+inline std::pair<std::vector<Series>, Lsr1Result> l_sr1_multi_trace_(
+    const std::function<detail::Trace(const std::vector<detail::Trace>&)>& objective, const std::vector<Series>& params0,
     const Lsr1SolveOptions& solve_options = {}) {
   if (params0.empty()) {
     ::pluss::throw_error("optim::l_sr1_trust_region: expected non-empty params");
@@ -1046,7 +1066,7 @@ inline std::pair<std::vector<Series>, Lsr1Result> l_sr1_trust_region(
   std::function<std::pair<Series, Series>(const Series&)> evaluate = [&](const Series& flat_point) {
     std::vector<Series> pieces = detail::septima_unflatten_values_(flat_point, block_layout);
     auto [value, grads] = value_and_grad(
-        [&](const std::vector<Trace>& xs) -> Trace { return objective(xs); }, pieces, policy);
+        [&](const std::vector<detail::Trace>& xs) -> detail::Trace { return objective(xs); }, pieces, policy);
     Series flat_grad = detail::septima_flatten_values_(grads).to(flat_point.platform());
     return std::pair<Series, Series>{value, flat_grad};
   };
@@ -1055,17 +1075,19 @@ inline std::pair<std::vector<Series>, Lsr1Result> l_sr1_trust_region(
   std::vector<Series> params = detail::septima_unflatten_values_(result.params, block_layout);
   return {params, result};
 }
+}  // namespace detail
 
-// Public entry point: single flat parameter vector, Trace(Trace) objective. Delegates to the
+// Internal entry point: single flat parameter vector, tape-form objective. Delegates to the
 // multi-block overload above with a single block, rather than duplicating its (now
 // complex-aware) flatten/unflatten wiring a second time -- for a real (non-complex) x0 this is
 // exactly equivalent to calling value_and_grad directly (view_as_real_/view_as_complex_ are
 // no-ops on real input, and septima_flatten_values_'s single-block path skips the .unite() step
 // entirely), so real-dtype behavior is unchanged.
-inline Lsr1Result l_sr1_trust_region(const Lsr1ObjectiveFn& objective, const Series& x0,
-                                     const Lsr1SolveOptions& solve_options = {}) {
-  auto [params, result] = l_sr1_trust_region(
-      [&](const std::vector<Trace>& xs) -> Trace { return objective(xs.front()); },
+namespace detail {
+inline Lsr1Result l_sr1_single_trace_(const Lsr1ObjectiveFn& objective, const Series& x0,
+                                      const Lsr1SolveOptions& solve_options = {}) {
+  auto [params, result] = l_sr1_multi_trace_(
+      [&](const std::vector<detail::Trace>& xs) -> detail::Trace { return objective(xs.front()); },
       std::vector<Series>{x0},
       solve_options);
   // The multi-block overload's own result.params is intentionally the raw FLAT (real,
@@ -1075,6 +1097,29 @@ inline Lsr1Result l_sr1_trust_region(const Lsr1ObjectiveFn& objective, const Ser
   // is exactly `params.front()`.
   result.params = params.front();
   return result;
+}
+}  // namespace detail
+
+// The same two entry points for objectives written over plain Series: the callback receives the
+// parameters as (slope-tracking) Series and returns a Series holding one number.
+inline std::pair<std::vector<Series>, Lsr1Result> l_sr1_trust_region(
+    const std::function<Series(const std::vector<Series>&)>& objective, const std::vector<Series>& params0,
+    const Lsr1SolveOptions& solve_options = {}) {
+  return detail::l_sr1_multi_trace_(
+      std::function<detail::Trace(const std::vector<detail::Trace>&)>([&](const std::vector<detail::Trace>& xs) -> detail::Trace {
+        std::vector<Series> values;
+        values.reserve(xs.size());
+        for (const auto& x : xs) values.push_back(x.value());
+        return detail::Trace(objective(values));
+      }),
+      params0,
+      solve_options);
+}
+
+inline Lsr1Result l_sr1_trust_region(const std::function<Series(const Series&)>& objective, const Series& x0,
+                                     const Lsr1SolveOptions& solve_options = {}) {
+  return detail::l_sr1_single_trace_(
+      detail::Lsr1ObjectiveFn([&](const detail::Trace& x) -> detail::Trace { return detail::Trace(objective(x.value())); }), x0, solve_options);
 }
 
 }  // namespace pluss::subsp::math::optim

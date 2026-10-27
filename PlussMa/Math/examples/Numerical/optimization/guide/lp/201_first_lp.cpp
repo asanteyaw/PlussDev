@@ -28,7 +28,7 @@ int main() {
     lp::Options options;
     options.method = method;
     const auto r = lp::solve(problem, options);
-    const auto x = r.x.to_vec<double>();
+    const auto x = r.x.host<double>();
     std::ostringstream point;
     point << std::fixed << std::setprecision(3) << x[0] << ", " << x[1];
     std::cout << std::left << std::setw(16) << (method == lp::Method::InteriorPoint ? "interior point" : "simplex") << std::setw(12)

@@ -33,7 +33,7 @@ int main() {
   problem.integer = vec(std::vector<double>(static_cast<std::size_t>(n), 1.0));  // every variable is an integer
 
   const auto r = milp::solve(problem);
-  const auto x = r.x.to_vec<double>();
+  const auto x = r.x.host<double>();
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "status " << (r.status == milp::Status::Optimal ? "Optimal" : "other") << ", payoff " << -r.objective.item<double>() << ", " << r.nodes << " nodes\nchosen:";
   double spent = 0.0;

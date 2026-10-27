@@ -35,7 +35,7 @@ TEST_CASE("pluss::save/load roundtrip for Series", "[io][series]") {
 
   REQUIRE(loaded.defined());
   REQUIRE(loaded.scalar_type() == pluss::ScalarType::Float32);
-  REQUIRE(loaded.to_vec<float>() == s.to_vec<float>());
+  REQUIRE(loaded.host<float>() == s.host<float>());
 
   remove_if_exists(path);
 }
@@ -108,8 +108,8 @@ TEST_CASE("pluss::save/load roundtrip for STL containers and StackArray<Series>"
   const auto loaded_batch = pluss::load<std::vector<pluss::Series>>(vec_path.string());
 
   REQUIRE(loaded_batch.size() == batch.size());
-  REQUIRE(loaded_batch[0].to_vec<std::int64_t>() == batch[0].to_vec<std::int64_t>());
-  REQUIRE(loaded_batch[1].to_vec<float>() == batch[1].to_vec<float>());
+  REQUIRE(loaded_batch[0].host<std::int64_t>() == batch[0].host<std::int64_t>());
+  REQUIRE(loaded_batch[1].host<float>() == batch[1].host<float>());
 
   const pluss::StackArray<pluss::Series> stack{
       pluss::series::zeros({3}, pluss::ScalarType::Float32),
@@ -119,8 +119,8 @@ TEST_CASE("pluss::save/load roundtrip for STL containers and StackArray<Series>"
   const auto loaded_stack = pluss::load<pluss::StackArray<pluss::Series>>(stack_path.string());
 
   REQUIRE(loaded_stack.size() == stack.size());
-  REQUIRE(loaded_stack[0].to_vec<float>() == stack[0].to_vec<float>());
-  REQUIRE(loaded_stack[1].to_vec<float>() == stack[1].to_vec<float>());
+  REQUIRE(loaded_stack[0].host<float>() == stack[0].host<float>());
+  REQUIRE(loaded_stack[1].host<float>() == stack[1].host<float>());
 
   remove_if_exists(vec_path);
   remove_if_exists(stack_path);

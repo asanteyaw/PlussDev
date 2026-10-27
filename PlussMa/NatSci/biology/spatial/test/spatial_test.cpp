@@ -42,7 +42,7 @@ int main() {
           if (variant == 2) { u[static_cast<std::size_t>(i)] = std::sin(pi * x) + 1.0 + x; exact[static_cast<std::size_t>(i)] = -pi * pi * std::sin(pi * x); }          // Dirichlet u(0) = 1, u(1) = 2
         }
         const Series l = sp::laplacian(vec(u), g);
-        const auto lv = l.to_vec<double>();
+        const auto lv = l.host<double>();
         double worst = 0.0;
         for (std::size_t i = 2; i + 2 < lv.size(); ++i) // away from the boundary cells (their truncation error has one factor of h more weight)
           worst = std::max(worst, std::abs(lv[i] - exact[i]));
@@ -67,7 +67,7 @@ int main() {
       const Series u0 = vec(u).unsqueeze(0); // one species
       const Series out = sp::integrate(u0, vec({d}), g, nullptr, 0.0, t, 2000);
       const double h = g.axes[0].spacing(), lam = d * 4.0 / (h * h) * std::pow(std::sin(mode * pi / (2.0 * static_cast<double>(n))), 2.0);
-      const auto ov = out.contiguous().to_vec<double>();
+      const auto ov = out.contiguous().host<double>();
       double worst = 0.0;
       for (std::size_t i = 0; i < ov.size(); ++i)
         worst = std::max(worst, std::abs(ov[i] - u[i] * std::exp(-lam * t)));
@@ -82,20 +82,20 @@ int main() {
         const tu::Jacobian2 j{vec({ref::tu_J[4 * i]}), vec({ref::tu_J[4 * i + 1]}), vec({ref::tu_J[4 * i + 2]}), vec({ref::tu_J[4 * i + 3]})};
         const Series da = vec({ref::tu_da[i]}), db = vec({ref::tu_db[i]});
         for (std::size_t q = 0; q < 4; ++q) {
-          const double got = tu::growth_rate(j, da, db, vec({ref::tu_k2_samples[q]})).item<double>();
+          const double got = tu::growth_rate(j, da, db, vec({ref::tu_k2_samples[q]})).host<double>().front();
           expect(std::abs(got - ref::tu_growth_samples[4 * i + q]) < 1e-9 * (1.0 + std::abs(got)), "growth rate vs numpy eigvals, case " + std::to_string(i));
         }
         const auto c = tu::turing_conditions(j, da, db);
-        const bool stable0 = c.stable_without_diffusion.item<bool>(), turing = c.turing_unstable.item<bool>();
+        const bool stable0 = c.stable_without_diffusion.host<bool>().front(), turing = c.turing_unstable.host<bool>().front();
         const double margin = ref::tu_maxgrowth[i];
         expect(stable0 == (ref::tu_stable0[i] > 0.5) || std::abs(ref::tu_growth_samples[4 * i]) < 1e-9, "stability without diffusion, case " + std::to_string(i));
         if (std::abs(margin) > 1e-6 && ref::tu_stable0[i] > 0.5) {
           expect(turing == (ref::tu_turing[i] > 0.5), "Turing instability flag, case " + std::to_string(i));
           if (turing) {
             ++turing_cases;
-            expect(rel(c.k2_lower.item<double>(), ref::tu_edges[2 * i]) < 3e-3 && rel(c.k2_upper.item<double>(), ref::tu_edges[2 * i + 1]) < 3e-3, "unstable band edges vs sign changes of numpy growth, case " + std::to_string(i));
-            const double kc2 = c.k2_critical.item<double>();
-            expect(kc2 > c.k2_lower.item<double>() && kc2 < c.k2_upper.item<double>(), "k_c^2 lies inside the unstable band");
+            expect(rel(c.k2_lower.host<double>().front(), ref::tu_edges[2 * i]) < 3e-3 && rel(c.k2_upper.host<double>().front(), ref::tu_edges[2 * i + 1]) < 3e-3, "unstable band edges vs sign changes of numpy growth, case " + std::to_string(i));
+            const double kc2 = c.k2_critical.host<double>().front();
+            expect(kc2 > c.k2_lower.host<double>().front() && kc2 < c.k2_upper.host<double>().front(), "k_c^2 lies inside the unstable band");
           }
         }
         ++checked;
@@ -108,8 +108,8 @@ int main() {
         const Series state = vec({u, v});
         expect(f(state).abs().max().item<double>() < 1e-12, name + ": steady state");
         const Series jn = dyn::jacobian(f, state, 1e-6); // [2, 2]: row = output
-        expect(std::abs(jn.select(0, 0).select(0, 0).item<double>() - j.fu.item<double>()) < 1e-6 && std::abs(jn.select(0, 0).select(0, 1).item<double>() - j.fv.item<double>()) < 1e-6 &&
-                   std::abs(jn.select(0, 1).select(0, 0).item<double>() - j.gu.item<double>()) < 1e-6 && std::abs(jn.select(0, 1).select(0, 1).item<double>() - j.gv.item<double>()) < 1e-6,
+        expect(std::abs(jn.select(0, 0).select(0, 0).host<double>().front() - j.fu.host<double>().front()) < 1e-6 && std::abs(jn.select(0, 0).select(0, 1).host<double>().front() - j.fv.host<double>().front()) < 1e-6 &&
+                   std::abs(jn.select(0, 1).select(0, 0).host<double>().front() - j.gu.host<double>().front()) < 1e-6 && std::abs(jn.select(0, 1).select(0, 1).host<double>().front() - j.gv.host<double>().front()) < 1e-6,
                name + ": analytic Jacobian vs central differences");
       };
       const tu::Brusselator br{1.5, 3.0};
@@ -139,12 +139,12 @@ int main() {
       const double h = g.axes[0].spacing();
       const auto j = br.jacobian(vec({0.0}));
       const auto cond = tu::turing_conditions(j, vec({du}), vec({dv}));
-      expect(cond.turing_unstable.item<bool>(), "Brusselator a=1, b=1.9, D=(1,8) is Turing unstable");
+      expect(cond.turing_unstable.host<bool>().front(), "Brusselator a=1, b=1.9, D=(1,8) is Turing unstable");
       int best_m = 1;
       double best = -1e9;
       for (int m = 1; m <= 12; ++m) {
         const double kd2 = 4.0 / (h * h) * std::pow(std::sin(m * pi / (2.0 * static_cast<double>(n))), 2.0);
-        const double gr = tu::growth_rate(j, vec({du}), vec({dv}), vec({kd2})).item<double>();
+        const double gr = tu::growth_rate(j, vec({du}), vec({dv}), vec({kd2})).host<double>().front();
         if (gr > best) { best = gr; best_m = m; }
       }
       expect(best > 0.0, "some mode on the grid is unstable");
@@ -162,7 +162,7 @@ int main() {
       const Series s5 = sp::integrate(state0, vec({du, dv}), g, f, 0.0, 5.0, 1250);
       const Series s10 = sp::integrate(s5, vec({du, dv}), g, f, 5.0, 10.0, 1250);
       const auto amp = [&](const Series &s) { // projection of u - u* onto the mode
-        const auto v = s.contiguous().to_vec<double>();
+        const auto v = s.contiguous().host<double>();
         double num = 0.0, den = 0.0;
         for (std::int64_t i = 0; i < n; ++i) { num += (v[static_cast<std::size_t>(i)] - st.first) * mode[static_cast<std::size_t>(i)]; den += mode[static_cast<std::size_t>(i)] * mode[static_cast<std::size_t>(i)]; }
         return num / den;
@@ -178,7 +178,7 @@ int main() {
       g.axes[0].lower_value = 1.0;
       const sp::Reaction f = [&](const Series &u) { return u.mul(-k); };
       const Series out = sp::integrate(vec(std::vector<double>(100, 0.0)).unsqueeze(0), vec({d}), g, f, 0.0, 20.0, 14000);
-      const auto ov = out.contiguous().to_vec<double>();
+      const auto ov = out.contiguous().host<double>();
       double worst = 0.0;
       for (std::size_t i = 0; i < ov.size(); ++i) {
         const double x = (static_cast<double>(i) + 0.5) * g.axes[0].spacing();
@@ -197,7 +197,7 @@ int main() {
         u0[static_cast<std::size_t>(i)] = (static_cast<double>(i) + 0.5) * h < 10.0 ? 1.0 : 0.0;
       const sp::Reaction f = [&](const Series &u) { return u.mul(u.mul(-1.0).add(1.0)).mul(r); };
       const auto front = [&](const Series &s) {
-        const auto v = s.contiguous().to_vec<double>();
+        const auto v = s.contiguous().host<double>();
         for (std::size_t i = 1; i < v.size(); ++i)
           if (v[i] < 0.5 && v[i - 1] >= 0.5)
             return (static_cast<double>(i) - 0.5 + (v[i - 1] - 0.5) / (v[i - 1] - v[i])) * h;
@@ -231,7 +231,7 @@ int main() {
       for (std::size_t q = 0; q < 3; ++q) {
         const double t0 = pr::times[q], t1 = pr::times[q + 1];
         state = sp::integrate(state, diff, g, f, t0, t1, static_cast<std::int64_t>((t1 - t0) / 3e-4) + 1);
-        const auto sv = state.contiguous().to_vec<double>();
+        const auto sv = state.contiguous().host<double>();
         for (std::size_t p = 0; p < pr::probes.size(); ++p) {
           const double pos = std::clamp(pr::probes[p] / h - 0.5, 0.0, static_cast<double>(n - 1) - 1e-9);
           const std::size_t i0 = static_cast<std::size_t>(pos);

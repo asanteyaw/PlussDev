@@ -17,6 +17,18 @@ enum class BlackboxSolverStatus {
   ReachedEvaluationBudget,
 };
 
+inline std::string to_string(BlackboxSolverStatus status) {
+  switch (status) {
+    case BlackboxSolverStatus::Converged:
+      return "Converged";
+    case BlackboxSolverStatus::ReachedIterationBudget:
+      return "ReachedIterationBudget";
+    case BlackboxSolverStatus::ReachedEvaluationBudget:
+      return "ReachedEvaluationBudget";
+  }
+  return "Unknown";
+}
+
 enum class BlackboxSolverDisplay {
   None,
   Iter,

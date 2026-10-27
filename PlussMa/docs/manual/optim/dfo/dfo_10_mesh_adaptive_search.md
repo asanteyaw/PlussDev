@@ -45,11 +45,7 @@ BlackboxSolverOutcome ltmads_minimizer(objective, initial, MadsBlackboxConfig co
 
 ## Programs
 
-- [A direct call](dfo_10_mesh_adaptive_search/a_direct_call.md)
-- [The two poll schemes](dfo_10_mesh_adaptive_search/the_two_poll_schemes.md)
-- [The mesh and the frame](dfo_10_mesh_adaptive_search/the_mesh_and_the_frame.md)
-- [The search step and bounds](dfo_10_mesh_adaptive_search/the_search_step_and_bounds.md)
-- [Stopping](dfo_10_mesh_adaptive_search/stopping.md)
+- [Mesh adaptive direct search in practice](dfo_10_mesh_adaptive_search/mads_in_practice.md)
 
 ## Checklist
 
@@ -65,10 +61,6 @@ BlackboxSolverOutcome ltmads_minimizer(objective, initial, MadsBlackboxConfig co
 :maxdepth: 2
 :hidden:
 
-dfo_10_mesh_adaptive_search/a_direct_call
-dfo_10_mesh_adaptive_search/the_two_poll_schemes
-dfo_10_mesh_adaptive_search/the_mesh_and_the_frame
-dfo_10_mesh_adaptive_search/the_search_step_and_bounds
-dfo_10_mesh_adaptive_search/stopping
+dfo_10_mesh_adaptive_search/mads_in_practice
 ```
 <!-- apiref:toctree:end -->

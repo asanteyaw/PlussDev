@@ -24,7 +24,7 @@ void expect(bool condition, const std::string &message) {
 void expect_close(const pluss::Series &actual,
                   const std::vector<double> &expected,
                   double tolerance = 2e-8) {
-  const auto values = actual.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(pluss::ScalarType::Float64).host<double>();
   expect(values.size() == expected.size(), "real result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =
@@ -38,7 +38,7 @@ void expect_complex_close(const pluss::Series &actual,
                           const std::vector<Complex> &expected,
                           double tolerance = 2e-8) {
   const auto values =
-      actual.to(pluss::ScalarType::Complex128).to_vec<Complex>();
+      actual.to(pluss::ScalarType::Complex128).host<Complex>();
   expect(values.size() == expected.size(), "complex result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =

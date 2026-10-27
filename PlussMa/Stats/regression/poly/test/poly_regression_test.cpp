@@ -63,14 +63,14 @@ int main() {
       opt.predictor_names = {"u"};
 
       const auto fit = reg::poly_fit(y, x, opt, cfg);
-      const auto coef = fit.ols.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto coef = fit.ols.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
       expect(fit.ols.k_params == 3, "poly linear-quadratic parameter count");
       expect(approx(coef[0], 1.0, 1e-7), "poly intercept");
       expect(approx(coef[1], 2.0, 1e-7), "poly linear coeff");
       expect(approx(coef[2], 0.5, 1e-7), "poly quadratic coeff");
 
       const Series pred = reg::poly_predict(fit, mat({1.5, -2.0}, 2, 1, cfg), cfg);
-      const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).host<double>();
       expect(approx(pv[0], 1.0 + 2.0 * 1.5 + 0.5 * 1.5 * 1.5, 1e-7), "poly predict value 1");
       expect(approx(pv[1], 1.0 + 2.0 * -2.0 + 0.5 * 4.0, 1e-7), "poly predict value 2");
       expect(reg::poly_summary(fit).find("Polynomial Regression") != std::string::npos, "poly summary title");
@@ -95,7 +95,7 @@ int main() {
       opt.predictor_names = {"a", "b"};
 
       const auto fit = reg::poly_fit(y, x, opt, cfg);
-      const auto coef = fit.ols.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto coef = fit.ols.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
       const auto& names = fit.ols.coefficient_names;
       const std::int64_t idx = find_coef(names, "a*b");
       expect(idx >= 0, "poly cross term present");
@@ -104,7 +104,7 @@ int main() {
           fit,
           mat({1.2, -0.7, 1.2, -0.7}, 2, 2, cfg),
           cfg);
-      const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).host<double>();
       expect(approx(pv[0], 1.0 + 1.2 - 0.7 + 0.75 * 1.2 * -0.7, 1e-6), "poly cross predict");
     }
 

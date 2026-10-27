@@ -43,7 +43,7 @@ void expect_throw(Fn&& fn, const std::string& message) {
 }
 
 std::vector<double> to_f64(const Slate& t) {
-  return t.as_series().to(pluss::pCPU, ScalarType::Float64).reshape({t.as_series().numel()}).to_vec<double>();
+  return t.as_series().to(pluss::pCPU, ScalarType::Float64).reshape({t.as_series().numel()}).host<double>();
 }
 
 void test_dataframe_ts_one_feature_and_set() {
@@ -108,7 +108,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
   auto daily_count = counted.features({"Adj Close"})
                          .ts({.axis = counted.features("date")})
                          .resample("D", pluss::subsp::stats::ts::ResampleOp::Count);
-  const auto counts = daily_count.features("Adj Close").as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto counts = daily_count.features("Adj Close").as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
   expect(counts.size() == 2 && counts[0] == 1 && counts[1] == 2,
          "count resample should exclude missing values inside each bin");
 
@@ -327,7 +327,7 @@ void test_dataframe_ts_resample_reindex_blocks() {
              std::array<std::int64_t, 1>{3}.data(),
              1))));
   const auto frame_ts_gt = lhs_frame.features({"x"}).ts().gt(rhs_frame);
-  expect(frame_ts_gt.features("x").as_series().to_vec<bool>() ==
+  expect(frame_ts_gt.features("x").as_series().host<bool>() ==
              std::vector<bool>({false, true, true}),
          "features(...).ts().gt(frame) should align on temporal case labels before comparison");
 }
@@ -342,9 +342,9 @@ void test_dataframe_cast_timeline_from_yyyymmdd_ints() {
   expect(date_slate.kind() == SlateKind::Timeline, "cast(Timeline) should materialize Timeline for YYYYMMDD integers");
 
   const auto tl = date_slate.as_timeline();
-  const auto years = Slate(tl.year()).as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-  const auto months = Slate(tl.month()).as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-  const auto days = Slate(tl.day()).as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto years = Slate(tl.year()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  const auto months = Slate(tl.month()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  const auto days = Slate(tl.day()).as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
 
   expect(years.size() == 3, "timeline year vector size mismatch");
   expect(years[0] == 1990 && months[0] == 1 && days[0] == 2, "first YYYYMMDD conversion mismatch");
@@ -376,9 +376,9 @@ void test_dataframe_cast_pair_payload_targets() {
          "cast(pair target): Note -> Timeline should change payload kind");
   expect(pluss::table::detail::has_validity_mask(casted.features("amount_text")),
          "cast(pair target): unparsable Note numeric value should set a validity mask");
-  expect(!pluss::table::detail::validity_mask(casted.features("amount_text"))->to_vec<bool>(1),
+  expect(!pluss::table::detail::validity_mask(casted.features("amount_text"))->host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "cast(pair target): unparsable Note numeric value should become null");
-  expect(casted.features("event_text").tl().year().as_series().to_vec<std::int32_t>() ==
+  expect(casted.features("event_text").tl().year().as_series().host<std::int32_t>() ==
              std::vector<std::int32_t>({2024, 2024, 2024}),
          "cast(pair target): Timeline values should parse correctly");
 
@@ -472,7 +472,7 @@ void test_payload_surfaces_reject_wrong_payloads() {
          "Slate.nt() should still work for Note payloads");
   expect(df.features("date").tl().year().kind() == SlateKind::Series,
          "Slate.tl() should still work for Timeline payloads");
-  expect(df.features("date").tl().period("month").tl().day().as_series().to_vec<std::int32_t>()
+  expect(df.features("date").tl().period("month").tl().day().as_series().host<std::int32_t>()
              == std::vector<std::int32_t>({1, 1}),
          "Slate.tl().period(month) should bucket timestamps to the first day of the month");
   expect(df.features({"date"}).tl().period("D").features("date").kind() == SlateKind::Timeline,

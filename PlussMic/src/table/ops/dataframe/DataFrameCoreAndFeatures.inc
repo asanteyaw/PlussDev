@@ -2962,7 +2962,7 @@ template <class T>
 std::vector<std::string> numeric_unify_key_parts(
     const pluss::Series& values,
     const std::vector<bool>& valid) {
-  const auto host = values.to_vec<T>();
+  const auto host = values.host<T>();
   std::vector<std::string> out(host.size());
   for (std::size_t i = 0; i < host.size(); ++i) {
     if (!valid[i]) {
@@ -2994,7 +2994,7 @@ std::vector<std::string> numeric_unify_key_parts(
 std::vector<std::string> unify_key_parts(const Slate& values) {
   const auto count = static_cast<std::size_t>(values.size());
   auto valid = detail::has_validity_mask(values)
-      ? detail::validity_mask(values)->to_vec<bool>()
+      ? detail::validity_mask(values)->host<bool>()
       : std::vector<bool>(count, true);
 
   switch (values.kind()) {
@@ -3047,7 +3047,7 @@ std::vector<std::string> unify_key_parts(const Slate& values) {
       return out;
     }
     case SlateKind::Timeline: {
-      const auto ticks = values.as_timeline().epoch_nanos().to_vec<std::int64_t>();
+      const auto ticks = values.as_timeline().epoch_nanos().host<std::int64_t>();
       std::vector<std::string> out(count);
       for (std::size_t i = 0; i < count; ++i) {
         if (!valid[i] || ticks[i] == pluss::Timeline::kNaT) {
@@ -3207,7 +3207,7 @@ Slate take_rows_for_unify(const Slate& source, const std::vector<std::int64_t>& 
   std::vector<bool> out_valid(rows.size(), true);
   std::optional<std::vector<bool>> src_valid = std::nullopt;
   if (detail::has_validity_mask(source)) {
-    src_valid = detail::validity_mask(source)->to_vec<bool>();
+    src_valid = detail::validity_mask(source)->host<bool>();
   }
 
   bool all_valid = !src_valid.has_value();
@@ -3287,7 +3287,7 @@ CategoryEncoding DataFrame::factor(
 
   const auto source_parts = unify_key_parts(source);
   const auto valid = source.has_validity_mask()
-      ? source.validity_mask()->to_vec<bool>()
+      ? source.validity_mask()->host<bool>()
       : std::vector<bool>(static_cast<std::size_t>(source.size()), true);
   std::vector<std::int64_t> codes(static_cast<std::size_t>(source.size()), -1);
   for (std::size_t row = 0; row < codes.size(); ++row) {
@@ -3364,7 +3364,7 @@ DataFrame DataFrame::encode(
   const auto source_parts = unify_key_parts(source);
   const auto n = source.size();
   const auto valid = source.has_validity_mask()
-      ? source.validity_mask()->to_vec<bool>()
+      ? source.validity_mask()->host<bool>()
       : std::vector<bool>(static_cast<std::size_t>(n), true);
   const bool any_invalid = std::any_of(valid.begin(), valid.end(), [](bool v) { return !v; });
 
@@ -3417,7 +3417,7 @@ Slate CategoryEncoding::decode() const {
           codes.as_series().scalar_type() == pluss::codem::ScalarType::Int64,
       "CategoryEncoding::decode: codes must be an Int64 Series Slate");
 
-  const auto raw_codes = codes.as_series().to_vec<std::int64_t>();
+  const auto raw_codes = codes.as_series().host<std::int64_t>();
   std::vector<std::int64_t> safe(raw_codes.size(), 0);
   for (std::size_t row = 0; row < raw_codes.size(); ++row) {
     if (raw_codes[row] < 0) {

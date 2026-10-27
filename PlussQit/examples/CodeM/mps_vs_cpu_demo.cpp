@@ -124,7 +124,7 @@ BenchResult run_bench(pluss::Platform p, std::int64_t n, int inner_iters, int ro
     out.last = complex_chain(x0, w1, w2, inner_iters);
     const auto tr1 = std::chrono::steady_clock::now();
     out.round_ms.push_back(std::chrono::duration<double, std::milli>(tr1 - tr0).count());
-    out.checksum += out.last.to_vec<float>(0);
+    out.checksum += out.last.host<float>().array().data.at(static_cast<std::size_t>(0));
   }
   const auto t1 = std::chrono::steady_clock::now();
   out.millis = std::chrono::duration<double, std::milli>(t1 - t0).count();

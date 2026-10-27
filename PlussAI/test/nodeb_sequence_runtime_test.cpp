@@ -67,7 +67,7 @@ bool run_nodeb_sequence_runtime_checks(std::ostream* err = nullptr) {
   const auto& batch = batch_or.value();
   if (batch.batch_size != 2 ||
       batch.max_length != 6 ||
-      batch.lengths.to_vec<std::int64_t>() != std::vector<std::int64_t>({6, 5}) ||
+      batch.lengths.host<std::int64_t>() != std::vector<std::int64_t>({6, 5}) ||
       batch.token_ids.sizes() != std::vector<std::int64_t>({2, 6}) ||
       batch.valid_mask.to(pluss::pCPU, pluss::ScalarType::Int64).sum().item<std::int64_t>() != 11 ||
       batch.key_padding_mask.to(pluss::pCPU, pluss::ScalarType::Int64).sum().item<std::int64_t>() != 1) {
@@ -199,7 +199,7 @@ bool run_nodeb_sequence_runtime_checks(std::ostream* err = nullptr) {
   }
   const auto& time_major_batch = time_major_batch_or.value();
   if (time_major_batch.token_ids.sizes() != std::vector<std::int64_t>({4, 2}) ||
-      time_major_batch.lengths.to_vec<std::int64_t>() != std::vector<std::int64_t>({4, 3})) {
+      time_major_batch.lengths.host<std::int64_t>() != std::vector<std::int64_t>({4, 3})) {
     if (err) *err << "nodeb runtime should support time-major sequence layout too\n";
     return false;
   }

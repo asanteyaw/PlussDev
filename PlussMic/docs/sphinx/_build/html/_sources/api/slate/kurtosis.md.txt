@@ -78,7 +78,7 @@ throwing.
 ```cpp
 auto small = Slate(pluss::make_series({1.0, 2.0, 3.0}));
 auto out3 = small.kurtosis();
-std::cout << out3.slate().notnull().as_series().to_vec<bool>()[0];
+std::cout << out3.slate().notnull().as_series().host<bool>()[0];
 ```
 
 ### Output

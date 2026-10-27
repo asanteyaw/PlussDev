@@ -62,7 +62,7 @@ TEST_CASE("Timeline host materialization distinguishes cardinality and rank", "[
   REQUIRE(matrix.host().array().data == matrix.ticks());
   REQUIRE(matrix.host().array().contiguous);
   REQUIRE(matrix.ticks().size() == static_cast<std::size_t>(matrix.numel()));
-  REQUIRE(matrix.epoch_nanos().to_vec<std::int64_t>() == matrix.ticks());
+  REQUIRE(matrix.epoch_nanos().host<std::int64_t>() == matrix.ticks());
 
   const auto shaped = pluss::timeline::epoch({2, 3});
   const auto ticks = shaped.ticks();

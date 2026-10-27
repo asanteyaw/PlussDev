@@ -60,7 +60,7 @@ Series as_matrix_(const Series& x, const char* op) {
 }
 
 double scalar_(const Series& x) {
-  return x.to(ScalarType::Float64).reshape({1}).item<double>();
+  return x.to(ScalarType::Float64).reshape({1}).host<double>().front();
 }
 
 double clamp01_(double p) {
@@ -74,7 +74,7 @@ void check_alpha_(double alpha, const char* op) {
 
 double norm_cdf_(double x, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, cfg);
-  return clamp01_(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(q).host<double>().front());
 }
 
 double norm_quantile_(double p, Config cfg) {
@@ -443,7 +443,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
 
   const Series coef = beta.reshape({k});
   const Series z_v = coef.div(std_err.maximum(std::sqrt(kEps)));
-  const auto zv = z_v.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto zv = z_v.to(pluss::pCPU, ScalarType::Float64).host<double>();
   std::vector<double> pv(zv.size());
   for (std::size_t i = 0; i < zv.size(); ++i) {
     pv[i] = std::min(1.0, 2.0 * pluss::subsp::stats::tails::normal_sf(std::abs(zv[i])));
@@ -569,11 +569,11 @@ std::ostream& print_glm_summary(std::ostream& os, const GLMFitResult& fit) {
      << '\n';
   os << "------------------------------------------------------------------------------\n";
 
-  const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto se = fit.std_errors.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto zval = fit.z_values.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto pval = fit.p_values.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto ci = fit.conf_int.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto se = fit.std_errors.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto zval = fit.z_values.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto pval = fit.p_values.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto ci = fit.conf_int.to(pluss::pCPU, ScalarType::Float64).host<double>();
 
   for (std::size_t i = 0; i < coef.size(); ++i) {
     const std::string name = (i < fit.coefficient_names.size()) ? fit.coefficient_names[i] : ("x" + std::to_string(i + 1));

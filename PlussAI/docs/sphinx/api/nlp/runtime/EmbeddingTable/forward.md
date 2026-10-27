@@ -90,7 +90,7 @@ int main() {
   const nlp::runtime::SequenceBatch batch = indexer.batch(wf.infer(std::vector<std::string>{"Ada reads.", "Kofi."})).value();
   nlp::runtime::EmbeddingTable table{nlp::runtime::EmbeddingOptions{.width = 4}};
   table.reset(static_cast<std::int64_t>(indexer.vocabulary().size()), indexer.pad_id());
-  const auto values = table.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = table.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   const std::size_t pad_position = static_cast<std::size_t>(1 * batch.max_length * 4 + 1 * 4);
   std::cout << "padded position = " << values[pad_position] << " " << values[pad_position + 1] << " "
             << values[pad_position + 2] << " " << values[pad_position + 3] << "\n";

@@ -10,7 +10,7 @@
 #include <limits>
 #include <vector>
 
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 using Series = pluss::Series;
 const auto f64 = pluss::ScalarType::Float64;
 
@@ -19,7 +19,7 @@ optim::ConstrainedProblem wall(double bound, double outside) {
   optim::ConstrainedProblem problem;
   problem.objective.analytic = [bound, outside](const optim::ParameterPack<Series>& p)
       -> std::pair<Series, optim::ParameterPack<Series>> {
-    const double x = p.at("x").item<double>();
+    const double x = as_f64(p.at("x"));
     if (!(x > bound)) {
       return {pluss::make_series(outside).to(f64),
               optim::ParameterPack<Series>({{"x", pluss::make_series(outside).to(f64).reshape({1})}})};
@@ -53,7 +53,7 @@ int main() {
       options.algorithm = row.algorithm;
       const auto r = optim::optima(c.problem, start(c.x0), options);
       std::cout << "  " << std::left << std::setw(17) << row.label << "flag " << std::setw(3)
-                << static_cast<int>(r.exit_flag) << "x = " << r.params.at("x").item<double>() << "\n";
+                << static_cast<int>(r.exit_flag) << "x = " << as_f64(r.params.at("x")) << "\n";
     }
   }
   return 0;

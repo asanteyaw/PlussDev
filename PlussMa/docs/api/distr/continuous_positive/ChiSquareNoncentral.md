@@ -1,0 +1,202 @@
+<!-- generated from ChiSquareNoncentral.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::ChiSquareNoncentral`
+
+The noncentral chi-squared distribution: the distribution of a sum of squared independent normal variables whose means are not zero.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::ChiSquareNoncentral, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::ChiSquareNoncentral, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::ChiSquareNoncentral, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::ChiSquareNoncentral, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::ChiSquareNoncentral, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The noncentral chi-squared distribution with `nu` degrees of freedom and noncentrality `lambda` is the distribution of the sum of `nu` squared independent unit-variance normal variables whose means have squared length `lambda`. It is the distribution of a chi-squared test statistic when the null hypothesis is false, so it is the basis of power calculations. Its mean is `nu + lambda` and its variance `2 (nu + 2 lambda)`; with `lambda = 0` it is the ordinary chi-squared distribution.
+
+The kind-based functions take `{lambda, nu}`: the noncentrality first.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `lambda` | >= 0 | the noncentrality; the sum of the squared means |
+| `nu` | > 0 | the degrees of freedom |
+
+Support: `x >= 0`.
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape. 
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`nu` must be positive and `lambda` non-negative).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the ChiSquareNoncentral on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.5, 2.0, 4.0, 6.0, 10.0, 16.0}, f64);
+  const std::vector<double> params = {2.0, 4.0};
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::ChiSquareNoncentral, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::ChiSquareNoncentral, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::ChiSquareNoncentral, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.50000 2.00000 4.00000 6.00000 10.00000 16.00000
+pdf: 0.04048 0.10763 0.11923 0.09530 0.04158 0.00779
+cdf: 0.01057 0.13048 0.36724 0.58442 0.85121 0.97575
+logpdf: -3.20694 -2.22901 -2.12669 -2.35077 -3.18022 -4.85533
+```
+
+The density is largest on this grid at x = 4, where it is 0.11923; the distribution function runs from 0.01057 at x = 0.5 to 0.97575 at x = 16, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.11923) = -2.1267 at x = 4.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {2.0, 4.0};
+
+  // The three ways to the probability that the variable lies in [1, 12]:
+  const auto grid = pluss::series::linspace(1.0, 12.0, 3001, f64);
+  const double area = distr::pdf(dst::ChiSquareNoncentral, grid, params).antidiff(grid).trapezoid().item<double>();
+
+  const auto edges = pluss::make_series({1.0, 12.0}, f64);
+  const auto c = distr::cdf(dst::ChiSquareNoncentral, edges, params).host<double>();
+
+  const auto draws = distr::sample(dst::ChiSquareNoncentral, params, {200000}, f64, 7ULL);
+  const double fraction = ((draws >= 1.0).to(pluss::ScalarType::Float64) * (draws <= 12.0).to(pluss::ScalarType::Float64)).mean().item<double>();
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(12) - cdf(1): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+integral of the density: 0.87758
+cdf(12) - cdf(1): 0.87758
+fraction of 200000 draws in range: 0.87914
+```
+
+The integral of the density (0.87758) and the difference of the distribution function (0.87758) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.87914) differs from it by 0.00156, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 7.33e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({1.0, 3.0, 6.0, 10.0, 16.0, 24.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "lambda 0.5:";
+  for (double v : distr::pdf(dst::ChiSquareNoncentral, x, {0.5, 4.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "lambda 3  :";
+  for (double v : distr::pdf(dst::ChiSquareNoncentral, x, {3.0, 4.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "lambda 10 :";
+  for (double v : distr::pdf(dst::ChiSquareNoncentral, x, {10.0, 4.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 1.0000 3.0000 6.0000 10.0000 16.0000 24.0000
+lambda 0.5: 0.1256 0.1563 0.0829 0.0232 0.0025 0.0001
+lambda 3  : 0.0482 0.0984 0.0956 0.0519 0.0126 0.0012
+lambda 10 : 0.0030 0.0156 0.0409 0.0606 0.0484 0.0169
+```
+
+Read down the rows: `lambda 0.5` peaks on this grid at x = 3 (value 0.1563); `lambda 3` peaks on this grid at x = 3 (value 0.0984); `lambda 10` peaks on this grid at x = 10 (value 0.0606). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+## See Also
+
+- [`ChiSquare`](../continuous_positive/ChiSquare.md)
+- [`FNoncentral`](../continuous_positive/FNoncentral.md)
+- [`Rice`](../continuous_positive/Rice.md)
+- [`Gamma`](../continuous_positive/Gamma.md)

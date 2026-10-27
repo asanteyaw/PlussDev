@@ -193,6 +193,20 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/rule
+
+# Convenience name for target.
+age_structured_test: PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/rule
+.PHONY : age_structured_test
+
+# fast build rule for target.
+age_structured_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/build
+.PHONY : age_structured_test/fast
+
+# Convenience name for target.
 PlussMa/NatSci/biology/population/test/CMakeFiles/birth_death_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/population/test/CMakeFiles/birth_death_test.dir/rule
 .PHONY : PlussMa/NatSci/biology/population/test/CMakeFiles/birth_death_test.dir/rule
@@ -219,6 +233,20 @@ community_test: PlussMa/NatSci/biology/population/test/CMakeFiles/community_test
 community_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/community_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/community_test.dir/build
 .PHONY : community_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/rule
+
+# Convenience name for target.
+count_pva_test: PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/rule
+.PHONY : count_pva_test
+
+# fast build rule for target.
+count_pva_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/build
+.PHONY : count_pva_test/fast
 
 # Convenience name for target.
 PlussMa/NatSci/biology/population/test/CMakeFiles/delay_test.dir/rule:
@@ -291,6 +319,20 @@ maps_test/fast:
 .PHONY : maps_test/fast
 
 # Convenience name for target.
+PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/rule
+
+# Convenience name for target.
+parasitoid_test: PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/rule
+.PHONY : parasitoid_test
+
+# fast build rule for target.
+parasitoid_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/build
+.PHONY : parasitoid_test/fast
+
+# Convenience name for target.
 PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/rule
 .PHONY : PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/rule
@@ -303,6 +345,58 @@ population_test: PlussMa/NatSci/biology/population/test/CMakeFiles/population_te
 population_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/build
 .PHONY : population_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/rule
+
+# Convenience name for target.
+stochastic_growth_test: PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/rule
+.PHONY : stochastic_growth_test
+
+# fast build rule for target.
+stochastic_growth_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/build
+.PHONY : stochastic_growth_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/rule
+.PHONY : PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/rule
+
+# Convenience name for target.
+vital_rates_test: PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/rule
+.PHONY : vital_rates_test
+
+# fast build rule for target.
+vital_rates_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/build
+.PHONY : vital_rates_test/fast
+
+age_structured_test.o: age_structured_test.cpp.o
+.PHONY : age_structured_test.o
+
+# target to build an object file
+age_structured_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/age_structured_test.cpp.o
+.PHONY : age_structured_test.cpp.o
+
+age_structured_test.i: age_structured_test.cpp.i
+.PHONY : age_structured_test.i
+
+# target to preprocess a source file
+age_structured_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/age_structured_test.cpp.i
+.PHONY : age_structured_test.cpp.i
+
+age_structured_test.s: age_structured_test.cpp.s
+.PHONY : age_structured_test.s
+
+# target to generate assembly for a file
+age_structured_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/age_structured_test.dir/age_structured_test.cpp.s
+.PHONY : age_structured_test.cpp.s
 
 birth_death_test.o: birth_death_test.cpp.o
 .PHONY : birth_death_test.o
@@ -351,6 +445,30 @@ community_test.s: community_test.cpp.s
 community_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/community_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/community_test.dir/community_test.cpp.s
 .PHONY : community_test.cpp.s
+
+count_pva_test.o: count_pva_test.cpp.o
+.PHONY : count_pva_test.o
+
+# target to build an object file
+count_pva_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/count_pva_test.cpp.o
+.PHONY : count_pva_test.cpp.o
+
+count_pva_test.i: count_pva_test.cpp.i
+.PHONY : count_pva_test.i
+
+# target to preprocess a source file
+count_pva_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/count_pva_test.cpp.i
+.PHONY : count_pva_test.cpp.i
+
+count_pva_test.s: count_pva_test.cpp.s
+.PHONY : count_pva_test.s
+
+# target to generate assembly for a file
+count_pva_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/count_pva_test.dir/count_pva_test.cpp.s
+.PHONY : count_pva_test.cpp.s
 
 delay_test.o: delay_test.cpp.o
 .PHONY : delay_test.o
@@ -472,6 +590,30 @@ maps_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/maps_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/maps_test.dir/maps_test.cpp.s
 .PHONY : maps_test.cpp.s
 
+parasitoid_test.o: parasitoid_test.cpp.o
+.PHONY : parasitoid_test.o
+
+# target to build an object file
+parasitoid_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/parasitoid_test.cpp.o
+.PHONY : parasitoid_test.cpp.o
+
+parasitoid_test.i: parasitoid_test.cpp.i
+.PHONY : parasitoid_test.i
+
+# target to preprocess a source file
+parasitoid_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/parasitoid_test.cpp.i
+.PHONY : parasitoid_test.cpp.i
+
+parasitoid_test.s: parasitoid_test.cpp.s
+.PHONY : parasitoid_test.s
+
+# target to generate assembly for a file
+parasitoid_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/parasitoid_test.dir/parasitoid_test.cpp.s
+.PHONY : parasitoid_test.cpp.s
+
 population_test.o: population_test.cpp.o
 .PHONY : population_test.o
 
@@ -496,6 +638,54 @@ population_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/population_test.dir/population_test.cpp.s
 .PHONY : population_test.cpp.s
 
+stochastic_growth_test.o: stochastic_growth_test.cpp.o
+.PHONY : stochastic_growth_test.o
+
+# target to build an object file
+stochastic_growth_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/stochastic_growth_test.cpp.o
+.PHONY : stochastic_growth_test.cpp.o
+
+stochastic_growth_test.i: stochastic_growth_test.cpp.i
+.PHONY : stochastic_growth_test.i
+
+# target to preprocess a source file
+stochastic_growth_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/stochastic_growth_test.cpp.i
+.PHONY : stochastic_growth_test.cpp.i
+
+stochastic_growth_test.s: stochastic_growth_test.cpp.s
+.PHONY : stochastic_growth_test.s
+
+# target to generate assembly for a file
+stochastic_growth_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/stochastic_growth_test.dir/stochastic_growth_test.cpp.s
+.PHONY : stochastic_growth_test.cpp.s
+
+vital_rates_test.o: vital_rates_test.cpp.o
+.PHONY : vital_rates_test.o
+
+# target to build an object file
+vital_rates_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/vital_rates_test.cpp.o
+.PHONY : vital_rates_test.cpp.o
+
+vital_rates_test.i: vital_rates_test.cpp.i
+.PHONY : vital_rates_test.i
+
+# target to preprocess a source file
+vital_rates_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/vital_rates_test.cpp.i
+.PHONY : vital_rates_test.cpp.i
+
+vital_rates_test.s: vital_rates_test.cpp.s
+.PHONY : vital_rates_test.s
+
+# target to generate assembly for a file
+vital_rates_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/build.make PlussMa/NatSci/biology/population/test/CMakeFiles/vital_rates_test.dir/vital_rates_test.cpp.s
+.PHONY : vital_rates_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -511,20 +701,31 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... age_structured_test"
 	@echo "... birth_death_test"
 	@echo "... community_test"
+	@echo "... count_pva_test"
 	@echo "... delay_test"
 	@echo "... demography_test"
 	@echo "... ecology_test"
 	@echo "... ipm_test"
 	@echo "... maps_test"
+	@echo "... parasitoid_test"
 	@echo "... population_test"
+	@echo "... stochastic_growth_test"
+	@echo "... vital_rates_test"
+	@echo "... age_structured_test.o"
+	@echo "... age_structured_test.i"
+	@echo "... age_structured_test.s"
 	@echo "... birth_death_test.o"
 	@echo "... birth_death_test.i"
 	@echo "... birth_death_test.s"
 	@echo "... community_test.o"
 	@echo "... community_test.i"
 	@echo "... community_test.s"
+	@echo "... count_pva_test.o"
+	@echo "... count_pva_test.i"
+	@echo "... count_pva_test.s"
 	@echo "... delay_test.o"
 	@echo "... delay_test.i"
 	@echo "... delay_test.s"
@@ -540,9 +741,18 @@ help:
 	@echo "... maps_test.o"
 	@echo "... maps_test.i"
 	@echo "... maps_test.s"
+	@echo "... parasitoid_test.o"
+	@echo "... parasitoid_test.i"
+	@echo "... parasitoid_test.s"
 	@echo "... population_test.o"
 	@echo "... population_test.i"
 	@echo "... population_test.s"
+	@echo "... stochastic_growth_test.o"
+	@echo "... stochastic_growth_test.i"
+	@echo "... stochastic_growth_test.s"
+	@echo "... vital_rates_test.o"
+	@echo "... vital_rates_test.i"
+	@echo "... vital_rates_test.s"
 .PHONY : help
 
 

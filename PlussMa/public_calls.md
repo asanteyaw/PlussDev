@@ -8,1370 +8,1582 @@ This file is the documentation boundary for the Natural Sciences and Engineering
 
 | Area | Canonical public spelling | Installed umbrella |
 | --- | --- | --- |
-| Natural Sciences | `pluss::natsci::*` | `<pluss/ma/natsci.h>` |
-| Engineering | `pluss::eng::*` | `<pluss/ma/eng.h>` |
+| Natural Sciences | `pluss::subsp::natsci::*` | `<pluss/ma/natsci.h>` |
+| Engineering | `pluss::subsp::eng::*` | `<pluss/ma/eng.h>` |
 | Dense QP shared by Engineering MPC | `pluss::subsp::math::qp::*` | `<pluss/subsp/math/qp.h>` |
+| Structured-grid multigrid shared by NatSci fluids | `pluss::subsp::math::multigrid::*` | `<pluss/subsp/math/multigrid.h>` |
 
 Neither area currently defines a root accessor object. If a later tranche adds one, its owning type, accessor name, accessor type, and every intended accessor method must appear in this file before documentation is written.
 
 ## NatSci
 
-### `pluss::natsci::biology`
+### `pluss::subsp::natsci::biology`
 
 Front doors (intended starting points):
 
-- `pluss::natsci::biology::biomechanics::chain`: `make`, `inverse_dynamics`, `forward_dynamics`, `mass_matrix`, `bias_forces`, `forward_kinematics`, `energy`, `simulate`
-- `pluss::natsci::biology::biomechanics::hemodynamics`: `windkessel2_impedance`, `windkessel3_impedance`, `windkessel_capacitor_step`, `poiseuille_resistance`, `womersley_number`, `womersley_flow`, `womersley_velocity`, `womersley_wall_shear`, `bessel_j01`, `moens_korteweg`, `bramwell_hill`
-- `pluss::natsci::biology::biomechanics::locomotion`: `slip_apex_map`, `lipm_state`, `lipm_capture_point`, `lipm_time_to_position`
-- `pluss::natsci::biology::biomechanics::muscle`: `active_force_length`, `passive_force_length`, `force_velocity`, `tendon_force_length`, `activation_rate`, `isometric_equilibrium`, `simulate`
-- `pluss::natsci::biology::biomechanics::tissue`: `neo_hookean`, `mooney_rivlin`, `yeoh`, `gent`, `fung`, `uniaxial_stress`, `equibiaxial_stress`, `simple_shear`, `ogden_uniaxial`, `artery_stresses`
-- `pluss::natsci::biology::biophysics::ionization`: `charge`, `isoelectric_point`, `buffer_capacity`, `protein_groups`
-- `pluss::natsci::biology::biophysics::linkage`: `ln_partition_independent`, `ln_partition_polyprotic`, `log10_apparent_constant`, `bound_complex`
-- `pluss::natsci::biology::metabolism`: `flux_balance`, `flux_variability`, `single_knockouts`, `elementary_modes`, `sample_fluxes`
-- `pluss::natsci::biology::metabolism::control`: `coefficients`, `elasticities`, `steady_state`, `response`, `conservation_laws`
-- `pluss::natsci::biology::metabolism::pathway_thermodynamics`: `max_min_driving_force`, `thermodynamic_flux_balance`
-- `pluss::natsci::biology::population::birth_death`: `generator`, `transient`, `mean_time_to_extinction`, `quasi_stationary`, `linear_extinction_probability`, `ultimate_extinction`, `quasi_extinction_cdf`, `dennis_estimate`
-- `pluss::natsci::biology::population::community`: `spectral_abscissa`, `random_community`, `invasion_growth_rate`, `chemostat_rate`, `r_star`, `selection_gradient`, `classify`, `singular_strategy`
-- `pluss::natsci::biology::population::delay`: `integrate`, `hutchinson_rate`, `nicholson_rate`, `rightmost_root`
-- `pluss::natsci::biology::population::demography`: `fundamental_matrix`, `net_reproductive_rate`, `damping_ratio`, `life_table`, `ltre_fixed`, `tuljapurkar`, `simulate_growth`, `quasi_extinction_probability`, `amplification`, `lambda_gradient`
-- `pluss::natsci::biology::population::growth`: `logistic`, `gompertz`, `exponential`, `theta_logistic_rate`
-- `pluss::natsci::biology::population::ipm`: `mesh`, `discretize`, `analyze`, `life_expectancy`, `net_reproductive_rate`, `spreading_speed`
-- `pluss::natsci::biology::population::maps`: `iterate`, `attractor`, `lyapunov`, `detect_period`, `periodic_point`, `superstable_parameter`
-- `pluss::natsci::biology::population::structured`: `leslie`, `project`, `dominant`, `sensitivity`, `elasticity`
-- `pluss::natsci::biology::spatial`: `laplacian`, `integrate`, `box`
-- `pluss::natsci::biology::spatial::turing`: `turing_conditions`, `growth_rate`, `unstable_modes`
+- `pluss::subsp::natsci::biology::biomechanics::chain`: `make`, `inverse_dynamics`, `forward_dynamics`, `mass_matrix`, `bias_forces`, `forward_kinematics`, `energy`, `simulate`
+- `pluss::subsp::natsci::biology::biomechanics::hemodynamics`: `windkessel2_impedance`, `windkessel3_impedance`, `windkessel_capacitor_step`, `poiseuille_resistance`, `womersley_number`, `womersley_flow`, `womersley_velocity`, `womersley_wall_shear`, `bessel_j01`, `moens_korteweg`, `bramwell_hill`
+- `pluss::subsp::natsci::biology::biomechanics::locomotion`: `slip_apex_map`, `lipm_state`, `lipm_capture_point`, `lipm_time_to_position`
+- `pluss::subsp::natsci::biology::biomechanics::millard`: `active_force_length`, `force_velocity`, `passive_force_length`, `tendon_force_length`, `curves`
+- `pluss::subsp::natsci::biology::biomechanics::muscle`: `active_force_length`, `passive_force_length`, `force_velocity`, `tendon_force_length`, `activation_rate`, `isometric_equilibrium`, `simulate`
+- `pluss::subsp::natsci::biology::biomechanics::musculoskeletal`: `constant_arms`, `moment_arms`, `muscle_tendon_length`, `muscle_tendon_velocity`, `joint_torques`, `equilibrium_state`, `rate`, `simulate`
+- `pluss::subsp::natsci::biology::biomechanics::tissue`: `neo_hookean`, `mooney_rivlin`, `yeoh`, `gent`, `fung`, `uniaxial_stress`, `equibiaxial_stress`, `simple_shear`, `ogden_uniaxial`, `artery_stresses`
+- `pluss::subsp::natsci::biology::biophysics::ionization`: `charge`, `isoelectric_point`, `buffer_capacity`, `protein_groups`
+- `pluss::subsp::natsci::biology::biophysics::linkage`: `ln_partition_independent`, `ln_partition_polyprotic`, `log10_apparent_constant`, `bound_complex`
+- `pluss::subsp::natsci::biology::metabolism`: `flux_balance`, `flux_variability`, `single_knockouts`, `elementary_modes`, `sample_fluxes`
+- `pluss::subsp::natsci::biology::metabolism::control`: `coefficients`, `elasticities`, `steady_state`, `response`, `conservation_laws`
+- `pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics`: `max_min_driving_force`, `thermodynamic_flux_balance`
+- `pluss::subsp::natsci::biology::population::age_structured`: `step`, `simulate`, `trajectory`, `total`, `births`, `survivorship`, `euler_lotka`
+- `pluss::subsp::natsci::biology::population::birth_death`: `generator`, `transient`, `mean_time_to_extinction`, `quasi_stationary`, `linear_extinction_probability`, `ultimate_extinction`, `quasi_extinction_cdf`, `dennis_estimate`
+- `pluss::subsp::natsci::biology::population::community`: `spectral_abscissa`, `random_community`, `invasion_growth_rate`, `chemostat_rate`, `r_star`, `selection_gradient`, `classify`, `singular_strategy`
+- `pluss::subsp::natsci::biology::population::count_pva`: `to_grid`, `loglik`, `fit`, `extinction_risk`, `ultimate_extinction_risk`
+- `pluss::subsp::natsci::biology::population::delay`: `integrate`, `hutchinson_rate`, `nicholson_rate`, `rightmost_root`
+- `pluss::subsp::natsci::biology::population::demography`: `fundamental_matrix`, `net_reproductive_rate`, `damping_ratio`, `life_table`, `ltre_fixed`, `tuljapurkar`, `simulate_growth`, `quasi_extinction_probability`, `amplification`, `lambda_gradient`
+- `pluss::subsp::natsci::biology::population::growth`: `logistic`, `gompertz`, `exponential`, `theta_logistic_rate`
+- `pluss::subsp::natsci::biology::population::ipm`: `mesh`, `discretize`, `analyze`, `life_expectancy`, `net_reproductive_rate`, `spreading_speed`
+- `pluss::subsp::natsci::biology::population::maps`: `iterate`, `attractor`, `lyapunov`, `detect_period`, `periodic_point`, `superstable_parameter`
+- `pluss::subsp::natsci::biology::population::parasitoid`: `nicholson_bailey`, `negative_binomial`, `beddington`, `nicholson_bailey_equilibrium`, `negative_binomial_equilibrium`, `jacobian`, `spectral_radius`, `ring_step`, `synchrony`
+- `pluss::subsp::natsci::biology::population::stochastic_growth`: `simulate`, `crossing_probability`, `stochastic_growth_rate`, `lognormal_mean`, `lognormal_variance`, `feller_extinction_probability`
+- `pluss::subsp::natsci::biology::population::structured`: `leslie`, `project`, `dominant`, `sensitivity`, `elasticity`
+- `pluss::subsp::natsci::biology::population::vital_rates`: `fit`, `kernel`, `analyze`, `resample`, `bootstrap_lambda`
+- `pluss::subsp::natsci::biology::spatial`: `laplacian`, `integrate`, `box`
+- `pluss::subsp::natsci::biology::spatial::turing`: `turing_conditions`, `growth_rate`, `unstable_modes`
+- `pluss::subsp::natsci::biology::systems::enzyme_fitting`: `initial_guess`, `fit_integrated`, `fit_product_inhibition`
 
 | Public enum | Values |
 | --- | --- |
-| `pluss::natsci::biology::spatial::Boundary` | `Periodic`, `Neumann`, `Dirichlet` |
+| `pluss::subsp::natsci::biology::spatial::Boundary` | `Periodic`, `Neumann`, `Dirichlet` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::natsci::biology::biomechanics::chain::Chain` | `mass`, `length`, `com`, `inertia`, `gravity` | `links()` |
-| `pluss::natsci::biology::biomechanics::chain::Energy` | `kinetic`, `potential` | `total()` |
-| `pluss::natsci::biology::biomechanics::chain::Kinematics` | `joint_x`, `joint_y`, `com_x`, `com_y` | - |
-| `pluss::natsci::biology::biomechanics::chain::Path` | `times`, `q`, `qd` | - |
-| `pluss::natsci::biology::biomechanics::hemodynamics::Complex` | `re`, `im` | `abs()`, `arg()` |
-| `pluss::natsci::biology::biomechanics::hemodynamics::J01` | `j0`, `j1` | - |
-| `pluss::natsci::biology::biomechanics::locomotion::Lipm` | `x`, `v` | - |
-| `pluss::natsci::biology::biomechanics::locomotion::SlipParams` | `mass`, `stiffness`, `rest_length`, `attack_angle`, `gravity` | - |
-| `pluss::natsci::biology::biomechanics::locomotion::SlipStep` | `apex_height`, `apex_speed`, `stance_time`, `peak_force`, `valid` | - |
-| `pluss::natsci::biology::biomechanics::muscle::Equilibrium` | `norm_tendon_force`, `norm_fiber_length`, `tendon_length`, `force`, `residual` | - |
-| `pluss::natsci::biology::biomechanics::muscle::Geometry` | `tendon_length`, `fiber_length`, `norm_fiber_length`, `cos_pennation` | - |
-| `pluss::natsci::biology::biomechanics::muscle::Params` | `max_isometric_force`, `optimal_fiber_length`, `tendon_slack_length`, `pennation_at_optimal`, `max_contraction_velocity`, `activation_time`, `deactivation_time`, `tendon_strain_at_one`, `passive_strain_at_one`, `fiber_damping`, `width_scale`, `activation_smoothing` | - |
-| `pluss::natsci::biology::biomechanics::muscle::Path` | `times`, `activation`, `norm_tendon_force` | - |
-| `pluss::natsci::biology::biomechanics::tissue::ArteryStress` | `theta_minus_radial`, `axial_minus_radial` | - |
-| `pluss::natsci::biology::biomechanics::tissue::Hgo` | `c10`, `k1`, `k2`, `kappa`, `gamma` | - |
-| `pluss::natsci::biology::biomechanics::tissue::Isotropic` | `energy`, `w1`, `w2` | - |
-| `pluss::natsci::biology::biomechanics::tissue::Shear` | `shear_stress`, `normal_difference` | - |
-| `pluss::natsci::biology::biophysics::ionization::Groups` | `counts`, `pka`, `sign` | - |
-| `pluss::natsci::biology::biophysics::membrane::Gating` | `alpha`, `beta` | - |
-| `pluss::natsci::biology::biophysics::membrane::HodgkinHuxley` | `g_na`, `g_k`, `g_leak`, `e_na`, `e_k`, `e_leak`, `capacitance`, `celsius` | `rate_factor()` |
-| `pluss::natsci::biology::biophysics::nucleic_acids::Duplex` | `dh_kcal`, `ds_cal`, `length`, `gc_fraction`, `self_complementary` | - |
-| `pluss::natsci::biology::biophysics::protein_folding::Thermal` | `dh_m`, `tm`, `dcp` | - |
-| `pluss::natsci::biology::epidemiology::MultistrainParams` | `beta1`, `beta2`, `b`, `gamma1`, `gamma2`, `nu` | - |
-| `pluss::natsci::biology::epidemiology::Split` | `infections`, `transfers`, `infected`, `infected_index` | - |
-| `pluss::natsci::biology::epidemiology::TreatmentParams` | `beta1`, `beta2`, `d`, `nu`, `r1`, `r2`, `q` | - |
-| `pluss::natsci::biology::epidemiology::VectorHostParams` | `beta_s`, `beta_m`, `b`, `c`, `gamma` | - |
-| `pluss::natsci::biology::genetics::Absorption` | `fixation`, `time` | - |
-| `pluss::natsci::biology::genetics::Fitness` | `aa`, `ab`, `bb` | - |
-| `pluss::natsci::biology::genetics::Run` | `frequency`, `generations`, `absorbed` | - |
-| `pluss::natsci::biology::metabolism::GeneRules` | - | `GeneRules()`, `active()`, `gene_count()`, `genes()`, `reaction_count()`, `reaction_mask()` |
-| `pluss::natsci::biology::metabolism::Knockout` | `objective`, `status`, `ratio` | - |
-| `pluss::natsci::biology::metabolism::LoopMilp` | `lp`, `integer`, `reactions`, `internal` | - |
-| `pluss::natsci::biology::metabolism::Network` | `stoichiometry`, `lower`, `upper`, `reactions`, `metabolites` | - |
-| `pluss::natsci::biology::metabolism::Sample` | `fluxes`, `chebyshev_centre`, `chebyshev_radius`, `fixed_reactions`, `truncated_bounds` | - |
-| `pluss::natsci::biology::metabolism::SamplingOptions` | `bound_cap`, `infinity_threshold`, `fixed_range_tolerance` | - |
-| `pluss::natsci::biology::metabolism::Solution` | `flux`, `objective`, `status`, `shadow_price`, `basis`, `at_upper` | - |
-| `pluss::natsci::biology::metabolism::Variability` | `minimum`, `maximum`, `optimum` | - |
-| `pluss::natsci::biology::metabolism::control::Coefficients` | `concentration`, `flux` | - |
-| `pluss::natsci::biology::metabolism::control::SteadyState` | `state`, `residual`, `iterations`, `converged` | - |
-| `pluss::natsci::biology::metabolism::pathway_thermodynamics::MdfResult` | `status`, `mdf`, `ln_concentration`, `driving_force`, `shadow_price` | - |
-| `pluss::natsci::biology::metabolism::pathway_thermodynamics::Pathway` | `stoichiometry`, `dg0`, `c_min`, `c_max`, `ratios`, `temperature` | - |
-| `pluss::natsci::biology::metabolism::pathway_thermodynamics::Ratio` | `numerator`, `denominator`, `ratio` | - |
-| `pluss::natsci::biology::metabolism::pathway_thermodynamics::TfaNetwork` | `stoichiometry`, `dg0`, `lower`, `upper`, `constrained`, `c_min`, `c_max`, `objective`, `temperature`, `epsilon`, `big_m_flux` | - |
-| `pluss::natsci::biology::metabolism::pathway_thermodynamics::TfaResult` | `status`, `objective`, `flux`, `ln_concentration`, `delta_g`, `forward` | - |
-| `pluss::natsci::biology::metabolism::thermodynamics::Microspecies` | `charge`, `n_protons`, `n_magnesium`, `ddg_over_rt` | - |
-| `pluss::natsci::biology::neuroscience::IzhikevichParams` | `a`, `b`, `c`, `d`, `threshold` | - |
-| `pluss::natsci::biology::neuroscience::SpikeOptions` | `dt`, `t_end`, `max_spikes`, `voltage_index`, `threshold` | - |
-| `pluss::natsci::biology::neuroscience::SpikeResult` | `state`, `count`, `times` | - |
-| `pluss::natsci::biology::pharmacokinetics::Macro` | `alpha`, `beta` | - |
-| `pluss::natsci::biology::population::birth_death::DiffusionEstimate` | `mu`, `sigma2`, `mu_standard_error` | - |
-| `pluss::natsci::biology::population::birth_death::QuasiStationary` | `distribution`, `decay_rate` | - |
-| `pluss::natsci::biology::population::community::SecondDerivatives` | `fyy`, `fxy` | - |
-| `pluss::natsci::biology::population::community::SingularClassification` | `convergence_stable`, `evolutionarily_stable`, `branching`, `css` | - |
-| `pluss::natsci::biology::population::delay::Path` | `times`, `states` | - |
-| `pluss::natsci::biology::population::delay::Root` | `re`, `im` | - |
-| `pluss::natsci::biology::population::demography::Amplification` | `first_step`, `maximum`, `time_of_maximum` | - |
-| `pluss::natsci::biology::population::demography::Environment` | `matrices`, `prob`, `transition` | - |
-| `pluss::natsci::biology::population::demography::Fundamental` | `n`, `variance`, `expected_lifetime`, `lifetime_variance` | - |
-| `pluss::natsci::biology::population::demography::LifeTable` | `r0`, `cohort_generation_time`, `r`, `lambda`, `stable_age`, `reproductive_value` | - |
-| `pluss::natsci::biology::population::demography::StochasticGrowth` | `per_replicate`, `mean`, `standard_error` | - |
-| `pluss::natsci::biology::population::demography::TuljapurkarApproximation` | `log_lambda_s`, `log_lambda_mean`, `tau2` | - |
-| `pluss::natsci::biology::population::ecology::YieldEquilibria` | `stable`, `unstable`, `exists` | - |
-| `pluss::natsci::biology::population::ipm::Analysis` | `lambda`, `w`, `v`, `sensitivity`, `elasticity`, `converged` | - |
-| `pluss::natsci::biology::population::ipm::Mesh` | `nodes`, `h`, `lower`, `upper` | - |
-| `pluss::natsci::biology::population::maps::Cycle` | `point`, `multiplier`, `converged` | - |
-| `pluss::natsci::biology::population::structured::Eigen` | `lambda`, `right`, `left`, `iterations`, `converged` | - |
-| `pluss::natsci::biology::spatial::Axis` | `cells`, `length`, `lower`, `upper`, `lower_value`, `upper_value` | `spacing()` |
-| `pluss::natsci::biology::spatial::Grid` | `axes` | `dim()` |
-| `pluss::natsci::biology::spatial::turing::Brusselator` | `a`, `b` | `jacobian()`, `reaction()`, `steady_state()` |
-| `pluss::natsci::biology::spatial::turing::Conditions` | `stable_without_diffusion`, `turing_unstable`, `k2_critical`, `k2_lower`, `k2_upper` | - |
-| `pluss::natsci::biology::spatial::turing::GrayScott` | `feed`, `kill` | `jacobian_at()`, `nontrivial_steady_state()`, `reaction()` |
-| `pluss::natsci::biology::spatial::turing::Jacobian2` | `fu`, `fv`, `gu`, `gv` | - |
-| `pluss::natsci::biology::spatial::turing::Schnakenberg` | `a`, `b` | `jacobian()`, `reaction()`, `steady_state()` |
-| `pluss::natsci::biology::systems::binding::Competitive` | `occupancy`, `free_receptor`, `free_ligand` | - |
-| `pluss::natsci::biology::systems::enzymes::Mechanism` | `states`, `steps` | - |
-| `pluss::natsci::biology::systems::enzymes::MwcCharacteristics` | `leakiness`, `maximum`, `dynamic_range`, `ec50`, `hill` | - |
-| `pluss::natsci::biology::systems::enzymes::Step` | `from`, `to`, `k`, `species`, `product_sign` | - |
+| `pluss::subsp::natsci::biology::biomechanics::chain::Chain` | `mass`, `length`, `com`, `inertia`, `gravity` | `links()` |
+| `pluss::subsp::natsci::biology::biomechanics::chain::Energy` | `kinetic`, `potential` | `total()` |
+| `pluss::subsp::natsci::biology::biomechanics::chain::Kinematics` | `joint_x`, `joint_y`, `com_x`, `com_y` | - |
+| `pluss::subsp::natsci::biology::biomechanics::chain::Path` | `times`, `q`, `qd` | - |
+| `pluss::subsp::natsci::biology::biomechanics::hemodynamics::Complex` | `re`, `im` | `abs()`, `arg()` |
+| `pluss::subsp::natsci::biology::biomechanics::hemodynamics::J01` | `j0`, `j1` | - |
+| `pluss::subsp::natsci::biology::biomechanics::locomotion::Lipm` | `x`, `v` | - |
+| `pluss::subsp::natsci::biology::biomechanics::locomotion::SlipParams` | `mass`, `stiffness`, `rest_length`, `attack_angle`, `gravity` | - |
+| `pluss::subsp::natsci::biology::biomechanics::locomotion::SlipStep` | `apex_height`, `apex_speed`, `stance_time`, `peak_force`, `valid` | - |
+| `pluss::subsp::natsci::biology::biomechanics::millard::ActiveParams` | `min_length`, `transition_length`, `max_length`, `shallow_slope`, `minimum_value`, `curviness` | - |
+| `pluss::subsp::natsci::biology::biomechanics::millard::PassiveParams` | `strain_at_zero_force`, `strain_at_one_force`, `low_force_stiffness`, `stiffness_at_one_force`, `curviness` | - |
+| `pluss::subsp::natsci::biology::biomechanics::millard::TendonParams` | `strain_at_one_force`, `stiffness_at_one_force`, `force_at_toe_end`, `curviness` | - |
+| `pluss::subsp::natsci::biology::biomechanics::millard::VelocityParams` | `max_eccentric_multiplier`, `concentric_slope_at_vmax`, `concentric_slope_near_vmax`, `isometric_slope`, `eccentric_slope_at_vmax`, `eccentric_slope_near_vmax`, `concentric_curviness`, `eccentric_curviness` | - |
+| `pluss::subsp::natsci::biology::biomechanics::muscle::Curves` | `active`, `passive`, `force_velocity`, `force_velocity_inverse`, `force_velocity_slope`, `tendon_length_from_force`, `tendon_stiffness` | - |
+| `pluss::subsp::natsci::biology::biomechanics::muscle::Equilibrium` | `norm_tendon_force`, `norm_fiber_length`, `tendon_length`, `force`, `residual` | - |
+| `pluss::subsp::natsci::biology::biomechanics::muscle::Geometry` | `tendon_length`, `fiber_length`, `norm_fiber_length`, `cos_pennation` | - |
+| `pluss::subsp::natsci::biology::biomechanics::muscle::Params` | `max_isometric_force`, `optimal_fiber_length`, `tendon_slack_length`, `pennation_at_optimal`, `max_contraction_velocity`, `activation_time`, `deactivation_time`, `tendon_strain_at_one`, `passive_strain_at_one`, `fiber_damping`, `width_scale`, `activation_smoothing`, `curves` | - |
+| `pluss::subsp::natsci::biology::biomechanics::muscle::Path` | `times`, `activation`, `norm_tendon_force` | - |
+| `pluss::subsp::natsci::biology::biomechanics::musculoskeletal::Derivative` | `q`, `qd`, `a`, `ft` | - |
+| `pluss::subsp::natsci::biology::biomechanics::musculoskeletal::Moments` | `coefficients`, `reference_length`, `reference_angle` | `joints()`, `muscles()` |
+| `pluss::subsp::natsci::biology::biomechanics::musculoskeletal::Path` | `times`, `states` | - |
+| `pluss::subsp::natsci::biology::biomechanics::musculoskeletal::State` | `q`, `qd`, `activation`, `norm_tendon_force` | - |
+| `pluss::subsp::natsci::biology::biomechanics::tissue::ArteryStress` | `theta_minus_radial`, `axial_minus_radial` | - |
+| `pluss::subsp::natsci::biology::biomechanics::tissue::Hgo` | `c10`, `k1`, `k2`, `kappa`, `gamma` | - |
+| `pluss::subsp::natsci::biology::biomechanics::tissue::Isotropic` | `energy`, `w1`, `w2` | - |
+| `pluss::subsp::natsci::biology::biomechanics::tissue::Shear` | `shear_stress`, `normal_difference` | - |
+| `pluss::subsp::natsci::biology::biophysics::ionization::Groups` | `counts`, `pka`, `sign` | - |
+| `pluss::subsp::natsci::biology::biophysics::membrane::Gating` | `alpha`, `beta` | - |
+| `pluss::subsp::natsci::biology::biophysics::membrane::HodgkinHuxley` | `g_na`, `g_k`, `g_leak`, `e_na`, `e_k`, `e_leak`, `capacitance`, `celsius` | `rate_factor()` |
+| `pluss::subsp::natsci::biology::biophysics::nucleic_acids::Duplex` | `dh_kcal`, `ds_cal`, `length`, `gc_fraction`, `self_complementary` | - |
+| `pluss::subsp::natsci::biology::biophysics::protein_folding::Thermal` | `dh_m`, `tm`, `dcp` | - |
+| `pluss::subsp::natsci::biology::epidemiology::MultistrainParams` | `beta1`, `beta2`, `b`, `gamma1`, `gamma2`, `nu` | - |
+| `pluss::subsp::natsci::biology::epidemiology::Split` | `infections`, `transfers`, `infected`, `infected_index` | - |
+| `pluss::subsp::natsci::biology::epidemiology::TreatmentParams` | `beta1`, `beta2`, `d`, `nu`, `r1`, `r2`, `q` | - |
+| `pluss::subsp::natsci::biology::epidemiology::VectorHostParams` | `beta_s`, `beta_m`, `b`, `c`, `gamma` | - |
+| `pluss::subsp::natsci::biology::genetics::Absorption` | `fixation`, `time` | - |
+| `pluss::subsp::natsci::biology::genetics::Fitness` | `aa`, `ab`, `bb` | - |
+| `pluss::subsp::natsci::biology::genetics::Run` | `frequency`, `generations`, `absorbed` | - |
+| `pluss::subsp::natsci::biology::metabolism::GeneRules` | - | `GeneRules()`, `active()`, `gene_count()`, `genes()`, `reaction_count()`, `reaction_mask()` |
+| `pluss::subsp::natsci::biology::metabolism::Knockout` | `objective`, `status`, `ratio` | - |
+| `pluss::subsp::natsci::biology::metabolism::LoopMilp` | `lp`, `integer`, `reactions`, `internal` | - |
+| `pluss::subsp::natsci::biology::metabolism::Network` | `stoichiometry`, `lower`, `upper`, `reactions`, `metabolites` | - |
+| `pluss::subsp::natsci::biology::metabolism::Sample` | `fluxes`, `chebyshev_centre`, `chebyshev_radius`, `fixed_reactions`, `truncated_bounds` | - |
+| `pluss::subsp::natsci::biology::metabolism::SamplingOptions` | `bound_cap`, `infinity_threshold`, `fixed_range_tolerance` | - |
+| `pluss::subsp::natsci::biology::metabolism::Solution` | `flux`, `objective`, `status`, `shadow_price`, `basis`, `at_upper` | - |
+| `pluss::subsp::natsci::biology::metabolism::Variability` | `minimum`, `maximum`, `optimum` | - |
+| `pluss::subsp::natsci::biology::metabolism::control::Coefficients` | `concentration`, `flux` | - |
+| `pluss::subsp::natsci::biology::metabolism::control::SteadyState` | `state`, `residual`, `iterations`, `converged` | - |
+| `pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics::MdfResult` | `status`, `mdf`, `ln_concentration`, `driving_force`, `shadow_price` | - |
+| `pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics::Pathway` | `stoichiometry`, `dg0`, `c_min`, `c_max`, `ratios`, `temperature` | - |
+| `pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics::Ratio` | `numerator`, `denominator`, `ratio` | - |
+| `pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics::TfaNetwork` | `stoichiometry`, `dg0`, `lower`, `upper`, `constrained`, `c_min`, `c_max`, `objective`, `temperature`, `epsilon`, `big_m_flux` | - |
+| `pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics::TfaResult` | `status`, `objective`, `flux`, `ln_concentration`, `delta_g`, `forward` | - |
+| `pluss::subsp::natsci::biology::metabolism::thermodynamics::Microspecies` | `charge`, `n_protons`, `n_magnesium`, `ddg_over_rt` | - |
+| `pluss::subsp::natsci::biology::neuroscience::IzhikevichParams` | `a`, `b`, `c`, `d`, `threshold` | - |
+| `pluss::subsp::natsci::biology::neuroscience::SpikeOptions` | `dt`, `t_end`, `max_spikes`, `voltage_index`, `threshold` | - |
+| `pluss::subsp::natsci::biology::neuroscience::SpikeResult` | `state`, `count`, `times` | - |
+| `pluss::subsp::natsci::biology::pharmacokinetics::Macro` | `alpha`, `beta` | - |
+| `pluss::subsp::natsci::biology::population::age_structured::Grid` | `step`, `nodes` | `ages()`, `maximum_age()` |
+| `pluss::subsp::natsci::biology::population::age_structured::Model` | `mortality`, `fecundity`, `density_dependent` | - |
+| `pluss::subsp::natsci::biology::population::birth_death::DiffusionEstimate` | `mu`, `sigma2`, `mu_standard_error` | - |
+| `pluss::subsp::natsci::biology::population::birth_death::QuasiStationary` | `distribution`, `decay_rate` | - |
+| `pluss::subsp::natsci::biology::population::community::SecondDerivatives` | `fyy`, `fxy` | - |
+| `pluss::subsp::natsci::biology::population::community::SingularClassification` | `convergence_stable`, `evolutionarily_stable`, `branching`, `css` | - |
+| `pluss::subsp::natsci::biology::population::count_pva::Fit` | `parameters`, `loglik`, `mu_se`, `sigma2_se`, `eta2_se`, `converged`, `filtered_mean`, `filtered_var`, `dt`, `first`, `smoothed_mean`, `smoothed_sd` | - |
+| `pluss::subsp::natsci::biology::population::count_pva::Grid` | `counts`, `times` | - |
+| `pluss::subsp::natsci::biology::population::count_pva::Parameters` | `mu`, `sigma2`, `eta2` | - |
+| `pluss::subsp::natsci::biology::population::delay::Path` | `times`, `states` | - |
+| `pluss::subsp::natsci::biology::population::delay::Root` | `re`, `im` | - |
+| `pluss::subsp::natsci::biology::population::demography::Amplification` | `first_step`, `maximum`, `time_of_maximum` | - |
+| `pluss::subsp::natsci::biology::population::demography::Environment` | `matrices`, `prob`, `transition` | - |
+| `pluss::subsp::natsci::biology::population::demography::Fundamental` | `n`, `variance`, `expected_lifetime`, `lifetime_variance` | - |
+| `pluss::subsp::natsci::biology::population::demography::LifeTable` | `r0`, `cohort_generation_time`, `r`, `lambda`, `stable_age`, `reproductive_value` | - |
+| `pluss::subsp::natsci::biology::population::demography::StochasticGrowth` | `per_replicate`, `mean`, `standard_error` | - |
+| `pluss::subsp::natsci::biology::population::demography::TuljapurkarApproximation` | `log_lambda_s`, `log_lambda_mean`, `tau2` | - |
+| `pluss::subsp::natsci::biology::population::ecology::YieldEquilibria` | `stable`, `unstable`, `exists` | - |
+| `pluss::subsp::natsci::biology::population::ipm::Analysis` | `lambda`, `w`, `v`, `sensitivity`, `elasticity`, `converged` | - |
+| `pluss::subsp::natsci::biology::population::ipm::Mesh` | `nodes`, `h`, `lower`, `upper` | - |
+| `pluss::subsp::natsci::biology::population::maps::Cycle` | `point`, `multiplier`, `converged` | - |
+| `pluss::subsp::natsci::biology::population::stochastic_growth::Logistic` | `r`, `k`, `s` | `diffusion()`, `drift()`, `mean()`, `persistent()`, `rate()`, `shape()`, `variance()` |
+| `pluss::subsp::natsci::biology::population::stochastic_growth::Paths` | `x`, `block_time` | - |
+| `pluss::subsp::natsci::biology::population::structured::Eigen` | `lambda`, `right`, `left`, `iterations`, `converged` | - |
+| `pluss::subsp::natsci::biology::population::vital_rates::Bootstrap` | `lambda`, `mean`, `standard_error`, `lower`, `upper` | - |
+| `pluss::subsp::natsci::biology::population::vital_rates::Fit` | `survival`, `growth`, `fecundity`, `growth_sd`, `recruit_mean`, `recruit_sd`, `quadratic_survival` | - |
+| `pluss::subsp::natsci::biology::population::vital_rates::Kernel` | `survival_growth`, `fecundity` | `total()` |
+| `pluss::subsp::natsci::biology::population::vital_rates::Observations` | `size`, `next_size`, `survived`, `offspring`, `recruit_size` | - |
+| `pluss::subsp::natsci::biology::spatial::Axis` | `cells`, `length`, `lower`, `upper`, `lower_value`, `upper_value` | `spacing()` |
+| `pluss::subsp::natsci::biology::spatial::Grid` | `axes` | `dim()` |
+| `pluss::subsp::natsci::biology::spatial::turing::Brusselator` | `a`, `b` | `jacobian()`, `reaction()`, `steady_state()` |
+| `pluss::subsp::natsci::biology::spatial::turing::Conditions` | `stable_without_diffusion`, `turing_unstable`, `k2_critical`, `k2_lower`, `k2_upper` | - |
+| `pluss::subsp::natsci::biology::spatial::turing::GrayScott` | `feed`, `kill` | `jacobian_at()`, `nontrivial_steady_state()`, `reaction()` |
+| `pluss::subsp::natsci::biology::spatial::turing::Jacobian2` | `fu`, `fv`, `gu`, `gv` | - |
+| `pluss::subsp::natsci::biology::spatial::turing::Schnakenberg` | `a`, `b` | `jacobian()`, `reaction()`, `steady_state()` |
+| `pluss::subsp::natsci::biology::systems::binding::Competitive` | `occupancy`, `free_receptor`, `free_ligand` | - |
+| `pluss::subsp::natsci::biology::systems::enzyme_fitting::EnzymeFit` | `fit`, `intervals` | - |
+| `pluss::subsp::natsci::biology::systems::enzyme_fitting::ProgressData` | `times`, `substrate`, `initial` | - |
+| `pluss::subsp::natsci::biology::systems::enzymes::Mechanism` | `states`, `steps` | - |
+| `pluss::subsp::natsci::biology::systems::enzymes::MwcCharacteristics` | `leakiness`, `maximum`, `dynamic_range`, `ec50`, `hill` | - |
+| `pluss::subsp::natsci::biology::systems::enzymes::Step` | `from`, `to`, `k`, `species`, `product_sign` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `Series pluss::natsci::biology::biomechanics::chain::bias_forces(const Chain & c, const Series & q, const Series & qd)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Series pluss::natsci::biology::biomechanics::chain::end_point_torques(const Chain & c, const Series & q, const Series & end_force)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Energy pluss::natsci::biology::biomechanics::chain::energy(const Chain & c, const Series & q, const Series & qd)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Series pluss::natsci::biology::biomechanics::chain::forward_dynamics(const Chain & c, const Series & q, const Series & qd, const Series & tau, const Series & end_force = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Kinematics pluss::natsci::biology::biomechanics::chain::forward_kinematics(const Chain & c, const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Series pluss::natsci::biology::biomechanics::chain::inverse_dynamics(const Chain & c, const Series & q, const Series & qd, const Series & qdd, const Series & end_force = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Chain pluss::natsci::biology::biomechanics::chain::make(const Series & mass, const Series & length, const Series & com, const Series & inertia, double gravity = 9.80665)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Series pluss::natsci::biology::biomechanics::chain::mass_matrix(const Chain & c, const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `Path pluss::natsci::biology::biomechanics::chain::simulate(const Chain & c, const Torque & torque, const Series & q0, const Series & qd0, double t0, double t1, std::int64_t steps, const std::function<Series (double, const Series &)> & end_force = nullptr)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
-| `J01 pluss::natsci::biology::biomechanics::hemodynamics::bessel_j01(const Complex & z)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Series pluss::natsci::biology::biomechanics::hemodynamics::bramwell_hill(const Series & area, const Coeff & density, const Series & d_area_d_pressure)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Series pluss::natsci::biology::biomechanics::hemodynamics::moens_korteweg(const Coeff & young, const Coeff & thickness, const Coeff & density, const Series & radius)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Series pluss::natsci::biology::biomechanics::hemodynamics::poiseuille_resistance(const Coeff & viscosity, const Coeff & length, const Series & radius)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Complex pluss::natsci::biology::biomechanics::hemodynamics::windkessel2_impedance(const Series & omega, const Coeff & resistance, const Coeff & compliance)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Complex pluss::natsci::biology::biomechanics::hemodynamics::windkessel3_impedance(const Series & omega, const Coeff & characteristic, const Coeff & resistance, const Coeff & compliance)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Series pluss::natsci::biology::biomechanics::hemodynamics::windkessel3_pressure(const Series & pc, const Series & flow, const Coeff & characteristic)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Series pluss::natsci::biology::biomechanics::hemodynamics::windkessel_capacitor_step(const Series & pc, const Series & flow, double dt, const Coeff & resistance, const Coeff & compliance)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Complex pluss::natsci::biology::biomechanics::hemodynamics::womersley_flow(const Series & radius, const Series & alpha, const Series & omega, const Coeff & density, const Series & gradient)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Complex pluss::natsci::biology::biomechanics::hemodynamics::womersley_impedance(const Series & radius, const Series & alpha, const Series & omega, const Coeff & density, const Coeff & length)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Complex pluss::natsci::biology::biomechanics::hemodynamics::womersley_lambda(const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Series pluss::natsci::biology::biomechanics::hemodynamics::womersley_number(const Series & radius, const Series & omega, const Coeff & density, const Coeff & viscosity)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Complex pluss::natsci::biology::biomechanics::hemodynamics::womersley_velocity(const Series & relative_radius, const Series & alpha, const Series & omega, const Coeff & density, const Series & gradient)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Complex pluss::natsci::biology::biomechanics::hemodynamics::womersley_wall_shear(const Series & radius, const Series & alpha, const Series & omega, const Coeff & density, const Coeff & viscosity, const Series & gradient)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
-| `Series pluss::natsci::biology::biomechanics::locomotion::lipm_capture_point(const Series & x, const Series & v, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
-| `Series pluss::natsci::biology::biomechanics::locomotion::lipm_orbital_energy(const Series & x, const Series & v, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
-| `Lipm pluss::natsci::biology::biomechanics::locomotion::lipm_state(const Series & x0, const Series & v0, const Series & t, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
-| `Series pluss::natsci::biology::biomechanics::locomotion::lipm_time_constant(const Coeff & height, const Series & like, double gravity = 9.80665)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
-| `Series pluss::natsci::biology::biomechanics::locomotion::lipm_time_to_position(const Series & x0, const Series & v0, const Series & x1, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
-| `SlipStep pluss::natsci::biology::biomechanics::locomotion::slip_apex_map(const SlipParams & p, const Series & y_apex, const Series & v_x, double dt = 2e-4, std::int64_t max_steps = 20000)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::activation_rate(const Series & activation, const Series & excitation, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::active_force_length(const Series & norm_fiber_length, const Coeff & width_scale = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::fiber_force(const Series & activation, const Series & norm_fiber_length, const Series & norm_fiber_velocity, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::force_velocity(const Series & norm_fiber_velocity)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::force_velocity_inverse(const Series & fv_multiplier)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Geometry pluss::natsci::biology::biomechanics::muscle::geometry(const Series & mtu_length, const Series & norm_tendon_force, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Equilibrium pluss::natsci::biology::biomechanics::muscle::isometric_equilibrium(const Series & activation, const Series & mtu_length, const Params & p, int iterations = 80)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::passive_force_length(const Series & norm_fiber_length, const Coeff & strain_at_one = 0.6)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Path pluss::natsci::biology::biomechanics::muscle::simulate(const Params & p, const Signal & excitation, const Signal & mtu_length, const Signal & mtu_velocity, const Series & activation0, const Series & norm_tendon_force0, double t0, double t1, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::state_rate(const Series & activation, const Series & norm_tendon_force, const Series & excitation, const Series & mtu_length, const Series & mtu_velocity, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::tendon_force_length(const Series & norm_tendon_length, const Coeff & strain_at_one = 0.049)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::tendon_length_from_force(const Series & norm_tendon_force, const Coeff & strain_at_one = 0.049)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `Series pluss::natsci::biology::biomechanics::muscle::tendon_stiffness(const Series & norm_tendon_length, const Coeff & strain_at_one = 0.049)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
-| `ArteryStress pluss::natsci::biology::biomechanics::tissue::artery_stresses(const Hgo & m, const Series & lambda_theta, const Series & lambda_z)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::equibiaxial_stress(const Isotropic & m, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::first_invariant(const Series & l1, const Series & l2, const Series & l3)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Isotropic pluss::natsci::biology::biomechanics::tissue::fung(Coeff c, Coeff b)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Isotropic pluss::natsci::biology::biomechanics::tissue::gent(Coeff mu, Coeff jm)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::initial_shear_modulus(const Isotropic & m, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Isotropic pluss::natsci::biology::biomechanics::tissue::mooney_rivlin(Coeff c10, Coeff c01)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Isotropic pluss::natsci::biology::biomechanics::tissue::neo_hookean(Coeff mu)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::ogden_equibiaxial(const Series & lambda, const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::ogden_planar_difference(const Series & lambda, const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::ogden_shear_modulus(const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::ogden_uniaxial(const Series & lambda, const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::planar_stress_difference(const Isotropic & m, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::second_invariant(const Series & l1, const Series & l2, const Series & l3)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Shear pluss::natsci::biology::biomechanics::tissue::simple_shear(const Isotropic & m, const Series & gamma)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biomechanics::tissue::uniaxial_stress(const Isotropic & m, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Isotropic pluss::natsci::biology::biomechanics::tissue::yeoh(Coeff c10, Coeff c20, Coeff c30)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
-| `Series pluss::natsci::biology::biophysics::diffusion::diffusion_rate(const Series & u, const Coeff & d, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
-| `Series pluss::natsci::biology::biophysics::diffusion::fisher_kpp_exact(const Series & x, double t, double d, double r, double shift = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
-| `double pluss::natsci::biology::biophysics::diffusion::fisher_kpp_exact_speed(double d, double r)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
-| `double pluss::natsci::biology::biophysics::diffusion::fisher_kpp_min_speed(double d, double r)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
-| `Series pluss::natsci::biology::biophysics::diffusion::fisher_kpp_reaction(const Series & u, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
-| `Series pluss::natsci::biology::biophysics::diffusion::heat_kernel(const Series & r2, const Coeff & d, const Coeff & t, std::int64_t dims)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
-| `Series pluss::natsci::biology::biophysics::diffusion::reaction_diffusion_rate(const Series & u, const Coeff & d, const spatial::PeriodicGrid & grid, const Reaction & reaction)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
-| `Series pluss::natsci::biology::biophysics::ionization::buffer_capacity(const Series & counts, const Series & pka, const Series & sign, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
-| `Series pluss::natsci::biology::biophysics::ionization::charge(const Series & counts, const Series & pka, const Series & sign, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
-| `Series pluss::natsci::biology::biophysics::ionization::isoelectric_point(const Series & counts, const Series & pka, const Series & sign, double lo = -2.0, double hi = 16.0, int iterations = 60)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
-| `Groups pluss::natsci::biology::biophysics::ionization::protein_groups(const std::vector<std::string> & sequences)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::bound_complex(const Series & receptor_total, const Series & ligand_total, const Series & log10_k_app)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::ln_partition_independent(const Series & counts, const Series & pka, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::ln_partition_polyprotic(const Series & log10_beta, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::log10_apparent_constant(const Series & log10_k_ref, const Series & ln_z_product_state, const Series & ln_z_start_state)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::mean_protons_independent(const Series & counts, const Series & pka, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::mean_protons_polyprotic(const Series & log10_beta, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::observed_enthalpy(const Series & dh_intrinsic, const Series & protons_taken_up, const Series & dh_buffer_ionization)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::linkage::polyprotic_fractions(const Series & log10_beta, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
-| `Series pluss::natsci::biology::biophysics::membrane::cable_rate(const Series & v, const Coeff & lambda, const Coeff & tau, const spatial::PeriodicGrid & grid, const Series & drive = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Series pluss::natsci::biology::biophysics::membrane::ghk_voltage(const Series & permeability, const Series & outside, const Series & inside, const Series & sign, double rt_over_f)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Gating pluss::natsci::biology::biophysics::membrane::hh_h(const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Gating pluss::natsci::biology::biophysics::membrane::hh_m(const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Gating pluss::natsci::biology::biophysics::membrane::hh_n(const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Series pluss::natsci::biology::biophysics::membrane::hodgkin_huxley_axon_rate(const Series & s, double radius_cm, double axoplasm_ohm_cm, const spatial::PeriodicGrid & grid, const HodgkinHuxley & p = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Series pluss::natsci::biology::biophysics::membrane::hodgkin_huxley_rate(const Series & s, const Coeff & i_ext, const HodgkinHuxley & p = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Series pluss::natsci::biology::biophysics::membrane::hodgkin_huxley_rest(const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Series pluss::natsci::biology::biophysics::membrane::nernst(const Series & outside, const Series & inside, double valence, double rt_over_f)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Series pluss::natsci::biology::biophysics::membrane::steady_gate(const Gating & g)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
-| `Series pluss::natsci::biology::biophysics::nucleic_acids::duplex_fraction(const Series & k, const Series & ca_molar, const Series & cb_molar, _Bool self_complementary)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
-| `Duplex pluss::natsci::biology::biophysics::nucleic_acids::duplex_thermodynamics(const std::string & sequence, const Table & nn, _Bool self_complementary = false)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
-| `Series pluss::natsci::biology::biophysics::nucleic_acids::equilibrium_constant(const Duplex & duplex, const Series & temperature_k, double salt_entropy_correction = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
-| `Series pluss::natsci::biology::biophysics::nucleic_acids::melting_temperature(const Duplex & duplex, const Series & c1_nm, const Series & c2_nm, int salt_method, const Series & na, const Series & k, const Series & tris, const Series & mg, const Series & dntps)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
-| `Series pluss::natsci::biology::biophysics::nucleic_acids::salt_correction(const Series & na, const Series & k, const Series & tris, const Series & mg, const Series & dntps, int method, const Duplex & duplex)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::chevron_stability(const Coeff & kf, const Coeff & mf, const Coeff & ku, const Coeff & mu, const Series & x, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::chevron_three_state(const Series & x, const Coeff & kfi, const Coeff & mif, const Coeff & kif, const Coeff & mi, const Coeff & kiu, const Coeff & mu)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::chevron_two_state(const Series & x, const Coeff & kf, const Coeff & mf, const Coeff & ku, const Coeff & mu)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::dimer_fraction_unfolded(const Series & x, const Coeff & m, const Coeff & d50, const Coeff & pt, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::maximum_stability_temperature(const Thermal & p, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::thermal_enthalpy(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::thermal_entropy(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::thermal_fraction_unfolded(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::thermal_gibbs(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::thermal_gibbs_closed_form(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::thermal_root(const Thermal & p, const Series & lo, const Series & hi)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::three_state_populations(const Series & x, const Coeff & dg_ni, const Coeff & m_ni, const Coeff & dg_id, const Coeff & m_id, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::two_state_fraction_unfolded(const Series & x, const Coeff & m, const Coeff & d50, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::two_state_signal(const Series & x, const Coeff & alpha_n, const Coeff & beta_n, const Coeff & alpha_u, const Coeff & beta_u, const Coeff & m, const Coeff & d50, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::biophysics::protein_folding::unfolding_free_energy(const Series & x, const Coeff & m, const Coeff & d50)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
-| `Series pluss::natsci::biology::epidemiology::final_susceptible(const Series & sigma, const Series & s0, const Series & i0, std::int64_t iterations = 80)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::multistrain_rate(const Series & x, const MultistrainParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Split pluss::natsci::biology::epidemiology::multistrain_split(const MultistrainParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::next_generation(const Split & split, const Series & dfe, double step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/compartmental.h` |
-| `Series pluss::natsci::biology::epidemiology::peak_infective(const Series & sigma, const Series & s0, const Series & i0)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::reproduction_number(const Split & split, const Series & dfe, double step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/compartmental.h` |
-| `Series pluss::natsci::biology::epidemiology::seir_r0(const Series & beta, const Series & sigma, const Series & gamma, const Series & mu)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::seir_rate(const Series & x, const Coeff & beta, const Coeff & sigma, const Coeff & gamma, const Coeff & mu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::sir_rate(const Series & x, const Coeff & beta, const Coeff & gamma)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::sis_rate(const Series & x, const Coeff & beta, const Coeff & gamma)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::staged_rate(const Series & x, const Series & beta, const Series & nu, const Series & d, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Split pluss::natsci::biology::epidemiology::staged_split(const Series & beta, const Series & nu, const Series & d, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::treatment_rate(const Series & x, const TreatmentParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Split pluss::natsci::biology::epidemiology::treatment_split(const TreatmentParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Series pluss::natsci::biology::epidemiology::vector_host_rate(const Series & x, const VectorHostParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Split pluss::natsci::biology::epidemiology::vector_host_split(const VectorHostParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
-| `Absorption pluss::natsci::biology::genetics::absorption(const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/markov.h` |
-| `Fitness pluss::natsci::biology::genetics::additive(const Series & s)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Fitness pluss::natsci::biology::genetics::additive(double s)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::binomial_pmf(std::int64_t n, const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::expected_next(const Series & p, const Fitness & w, const Coeff & mu = 0.0, const Coeff & nu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::hardy_weinberg(const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::heterozygote_advantage_equilibrium(const Series & s, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::kimura_fixation(const Series & p, const Coeff & ne, const Coeff & s)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::mean_fitness(const Series & p, const Fitness & w)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::moran_fixation(double r, std::int64_t n, const Series & start)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/moran.h` |
-| `Series pluss::natsci::biology::genetics::moran_transition(std::int64_t n, double r)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/moran.h` |
-| `Series pluss::natsci::biology::genetics::mutate(const Series & p, const Coeff & mu, const Coeff & nu)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::select(const Series & p, const Fitness & w)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Run pluss::natsci::biology::genetics::simulate(const Series & p0, std::int64_t population, const Fitness & w, std::int64_t max_generations, std::uint64_t seed, const Coeff & mu = 0.0, const Coeff & nu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::step(const Series & p, std::int64_t population, const Fitness & w, const Coeff & mu, const Coeff & nu, std::uint64_t seed)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::genetics::transition_matrix(std::int64_t population, const Fitness & w, const Coeff & mu = 0.0, const Coeff & nu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
-| `Series pluss::natsci::biology::metabolism::boundary_reactions(const Network & net)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
-| `Coefficients pluss::natsci::biology::metabolism::control::coefficients(const Series & stoichiometry, const Series & elasticity, const Series & conservation = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::connectivity_defect(const Coefficients & c, const Series & elasticity, const Series & free_directions)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::conservation_laws(const Series & stoichiometry, double tolerance = 1e-10)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::elasticities(const RateFn & v, const Series & x, double rel = 1e-6, double floor = 1e-12)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::free_directions(const Series & conservation)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::parameter_derivatives(const std::function<Series (const Series &, const Series &)> & v, const Series & x, const Series & p, double rel = 1e-6, double floor = 1e-12)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::response(const Series & control_coefficients, const Series & dv_dp)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::scale_concentration(const Series & cs, const Series & x, const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::scale_elasticities(const Series & e, const Series & x, const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::scale_flux(const Series & cj, const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `SteadyState pluss::natsci::biology::metabolism::control::steady_state(const RateFn & v, const Series & stoichiometry, const Series & x0, const Series & conservation, const Series & totals, double tolerance = 1e-12, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::control::summation_defect(const Series & scaled_flux, const Series & scaled_concentration)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
-| `Series pluss::natsci::biology::metabolism::elementary_modes(const Network & net, double tolerance = 1e-9, std::size_t max_modes = 2'000'000)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/modes.h` |
-| `linprog::Options pluss::natsci::biology::metabolism::exact_options()` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
-| `Solution pluss::natsci::biology::metabolism::flux_balance(const Network & net, const Series & objective, const linprog::Options & opt = exact_options(), const Solution * warm = nullptr)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
-| `Variability pluss::natsci::biology::metabolism::flux_variability(const Network & net, const Series & objective, double fraction = 1.0, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
-| `Knockout pluss::natsci::biology::metabolism::gene_knockouts(const Network & net, const GeneRules & rules, const Series & objective, const Series & knocked, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/genes.h` |
-| `Knockout pluss::natsci::biology::metabolism::knockouts(const Network & net, const Series & objective, const Series & mask, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
-| `LoopMilp pluss::natsci::biology::metabolism::loop_law_problem(const Network & net, const std::optional<Series> & flux_min = std::nullopt, const std::optional<Series> & flux_max = std::nullopt)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
-| `Variability pluss::natsci::biology::metabolism::loopless_flux_variability(const Network & net, const Series & objective, double fraction = 1.0, const linprog::Options & opt_in = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
-| `std::pair<double, double> pluss::natsci::biology::metabolism::loopless_range_exact(const Network & net, const Series & objective, std::int64_t reaction, double fraction = 1.0, math::milp::Options mopt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
-| `Series pluss::natsci::biology::metabolism::loopless_solution(const Network & net, const Series & objective, const Series & fluxes, const linprog::Options & opt_in = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
-| `MdfResult pluss::natsci::biology::metabolism::pathway_thermodynamics::max_min_driving_force(const Pathway & p)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/pathway_thermodynamics.h` |
-| `TfaResult pluss::natsci::biology::metabolism::pathway_thermodynamics::thermodynamic_flux_balance(const TfaNetwork & net, const lp::MipOptions & opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/pathway_thermodynamics.h` |
-| `Sample pluss::natsci::biology::metabolism::sample_fluxes(const Network & net, std::int64_t chains, std::int64_t samples, std::int64_t thinning = 10, std::uint64_t seed = 0, const SamplingOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/modes.h` |
-| `Knockout pluss::natsci::biology::metabolism::single_gene_knockouts(const Network & net, const GeneRules & rules, const Series & objective, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/genes.h` |
-| `Knockout pluss::natsci::biology::metabolism::single_knockouts(const Network & net, const Series & objective, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
-| `Solution pluss::natsci::biology::metabolism::sweep_flux(const Network & net, const Series & objective, std::int64_t index, const Series & values, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::apparent_equilibrium_constant(const Series & dgr_transformed, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::debye_huckel_factor(const Series & ionic_strength, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::debye_huckel_ln_gamma(const Series & charge, const Series & ionic_strength, double alpha, double b = 1.6)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `double pluss::natsci::biology::metabolism::thermodynamics::magnesium_formation_gibbs(double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::microspecies_legendre_transform(double charge, double n_protons, double n_magnesium, const Series & ph, double p_mg, const Series & ionic_strength, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::proton_binding_polynomial(const Series & ph, const Series & pka)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::reaction_gibbs(const Series & dgf_transformed, const Series & nu)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::reaction_gibbs_at(const Series & dgr_transformed, const Series & ln_q, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::transformed_formation_gibbs(const Series & dgf_fully_protonated, double n_hydrogens, const Series & pka, const Series & ph, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::transformed_formation_gibbs_fixed(const Series & dgf, double n_hydrogens, const Series & ph, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::metabolism::thermodynamics::transformed_group_gibbs(const std::vector<Microspecies> & species, const Series & ph, double p_mg, const Series & ionic_strength, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
-| `Series pluss::natsci::biology::neuroscience::fitzhugh_nagumo_hopf_currents(double a, double b, double epsilon, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `Series pluss::natsci::biology::neuroscience::fitzhugh_nagumo_rate(const Series & s, const Coeff & current, const Coeff & a = 0.7, const Coeff & b = 0.8, const Coeff & epsilon = 0.08)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `Series pluss::natsci::biology::neuroscience::izhikevich_rate(const Series & s, const Coeff & current, const IzhikevichParams & p = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `Series pluss::natsci::biology::neuroscience::lif_interspike_interval(const Coeff & tau, const Coeff & e_leak, const Coeff & resistance, const Coeff & current, const Coeff & v_threshold, const Coeff & v_reset, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `Series pluss::natsci::biology::neuroscience::lif_rate(const Series & v, const Coeff & tau, const Coeff & e_leak, const Coeff & resistance, const Coeff & current)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `SpikeResult pluss::natsci::biology::neuroscience::simulate_izhikevich(const Series & state0, const Coeff & current, const IzhikevichParams & p = {}, SpikeOptions opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `SpikeResult pluss::natsci::biology::neuroscience::simulate_lif(const Series & v0, const Coeff & tau, const Coeff & e_leak, const Coeff & resistance, const Coeff & current, double v_threshold, double v_reset, SpikeOptions opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `SpikeResult pluss::natsci::biology::neuroscience::simulate_spiking(const dynamics::RateFn & rate, const ResetFn & reset, Series state, const SpikeOptions & opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::auc_infinity(const Series & k, const Series & x0)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::bateman(const Series & t, const dynamics::Coeff & dose, const dynamics::Coeff & ka, const dynamics::Coeff & ke)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::half_life(const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::infusion_response(const Series & k, const Series & x0, const Series & u, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::propagator(const Series & k, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::rate_matrix(const Series & transfer, const Series & elimination)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::response(const Series & k, const Series & x0, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Series pluss::natsci::biology::pharmacokinetics::steady_state_trough(const Series & k, const Series & dose, double tau)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `Macro pluss::natsci::biology::pharmacokinetics::two_compartment_macro(const Series & k10, const Series & k12, const Series & k21)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
-| `DiffusionEstimate pluss::natsci::biology::population::birth_death::dennis_estimate(const Series & counts, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::extinction_by_generation(const Series & p, std::int64_t generations)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::generator(const Series & birth, const Series & death)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::linear_extinction_probability(const Series & n0, double birth, double death, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::linear_mean(const Series & n0, double birth, double death, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `double pluss::natsci::biology::population::birth_death::linear_ultimate_extinction(double n0, double birth, double death)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::mean_time_to_extinction(const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::offspring_mean(const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::offspring_pgf(const Series & p, const Series & s)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::quasi_extinction_cdf(const Series & mu, const Series & sigma2, const Series & x_d, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `QuasiStationary pluss::natsci::biology::population::birth_death::quasi_stationary(const Series & q, std::int64_t iterations = 400)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::transient(const Series & q, const Series & p0, double t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::ultimate_extinction(const Series & p, std::int64_t max_iterations = 100000, double tolerance = 1e-15)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::birth_death::ultimate_quasi_extinction(const Series & mu, const Series & sigma2, const Series & x_d)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
-| `Series pluss::natsci::biology::population::community::chemostat_rate(const Series & state, double dilution, double supply, const Series & mu_max, const Series & half, const Series & mortality, const Series & yield)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `SingularClassification pluss::natsci::biology::population::community::classify(const Fitness & f, const Series & x_star, double h = 1e-3)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::invasion_growth_rate(const Series & r, const Series & a, const Series & resident)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::logistic_competition_fitness(const Series & mutant, const Series & resident, const std::function<Series (const Series &)> & carrying, const std::function<Series (const Series &, const Series &)> & kernel)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::monod(const Series & resource, const Series & mu_max, const Series & half)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `double pluss::natsci::biology::population::community::predicted_abscissa(std::int64_t species, double sigma, double connectance, double tau, double d)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::r_star(const Series & mu_max, const Series & half, const Series & mortality)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::random_community(std::int64_t species, std::int64_t lanes, double sigma, double connectance, double tau, double d, std::uint64_t seed = 0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::resident_equilibrium(const Series & r, const Series & a, const Series & resident)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `SecondDerivatives pluss::natsci::biology::population::community::second_derivatives(const Fitness & f, const Series & x, double h = 1e-3)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::selection_gradient(const Fitness & f, const Series & x, double h = 1e-5)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::single_species_density(double dilution, double supply, const Series & rstar, const Series & mortality, const Series & yield)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::singular_strategy(const Fitness & f, const Series & x0, double tolerance = 1e-10, std::int64_t max_iterations = 100, double h = 1e-4)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `Series pluss::natsci::biology::population::community::spectral_abscissa(const Series & a, int squarings = 40)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
-| `double pluss::natsci::biology::population::delay::hutchinson_critical_delay(double r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
-| `Series pluss::natsci::biology::population::delay::hutchinson_rate(const Series & n, const Series & n_delayed, const Coeff & r, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
-| `Path pluss::natsci::biology::population::delay::integrate(const DelayRate & f, const History & history, double tau, double t_end, std::int64_t steps_per_delay)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
-| `double pluss::natsci::biology::population::delay::nicholson_equilibrium(double death, double production, double scale)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
-| `Series pluss::natsci::biology::population::delay::nicholson_rate(const Series & n, const Series & n_delayed, const Coeff & death, const Coeff & production, const Coeff & scale)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
-| `Root pluss::natsci::biology::population::delay::rightmost_root(const Series & a, const Series & b, const Series & tau)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
-| `Amplification pluss::natsci::biology::population::demography::amplification(const Series & matrix, std::int64_t horizon)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::damping_ratio(const Series & matrix)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::first_row_fertility_mask(std::int64_t k, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Fundamental pluss::natsci::biology::population::demography::fundamental_matrix(const Series & transitions)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::generation_time(const Series & matrix, const Series & fertility_mask)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::lambda_gradient(const std::function<Series (const Series &)> & matrix_fn, const Series & theta, double relative_step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `LifeTable pluss::natsci::biology::population::demography::life_table(const Series & l, const Series & m, const Series & ages = pluss::series::undefined(), std::int64_t newton_steps = 60, const Series & weights = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::ltre_fixed(const Series & treatment, const Series & reference)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::net_reproductive_rate(const Series & matrix, const Series & fertility_mask)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::quasi_extinction_probability(const Series & paths, double threshold)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `StochasticGrowth pluss::natsci::biology::population::demography::simulate_growth(const Environment & env, std::int64_t steps, std::int64_t replicates, std::uint64_t seed = 0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::simulate_paths(const Environment & env, const Series & n0, std::int64_t steps, std::int64_t replicates, std::uint64_t seed = 0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `Series pluss::natsci::biology::population::demography::spectral_radius(const Series & b, int squarings = 40)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `TuljapurkarApproximation pluss::natsci::biology::population::demography::tuljapurkar(const Series & matrices, const Series & prob, _Bool popbio_covariance = false)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
-| `YieldEquilibria pluss::natsci::biology::population::ecology::constant_yield_equilibria(const Coeff & r, const Coeff & k, const Coeff & h, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::constant_yield_rate(const Series & n, const Coeff & r, const Coeff & k, const Coeff & h)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::effort_equilibrium(const Coeff & r, const Coeff & k, const Coeff & catchability, const Coeff & effort, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::effort_harvest_rate(const Series & n, const Coeff & r, const Coeff & k, const Coeff & catchability, const Coeff & effort)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::effort_yield(const Coeff & r, const Coeff & k, const Coeff & catchability, const Coeff & effort, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::levins_equilibrium(const Coeff & colonisation, const Coeff & extinction, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::levins_rate(const Series & p, const Coeff & colonisation, const Coeff & extinction, _Bool rescue = false)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::maximum_sustainable_yield(const Coeff & r, const Coeff & k, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::metapopulation_capacity(const Series & connectivity)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::migration_rate(const Series & n, const Series & rates)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::ecology::patch_occupancy_rate(const Series & p, const Series & connectivity, const Coeff & extinction)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
-| `Series pluss::natsci::biology::population::growth::allee_birth_death_rate(const Series & n, const Coeff & b0, const Coeff & b1, const Coeff & d, const Coeff & c)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::exponential(const Series & n0, const Coeff & r, const Coeff & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::exponential_rate(const Series & n, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::gompertz(const Series & n0, const Coeff & r, const Coeff & k, const Coeff & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::gompertz_rate(const Series & n, const Coeff & r, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::logistic(const Series & n0, const Coeff & r, const Coeff & k, const Coeff & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::logistic_rate(const Series & n, const Coeff & r, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::strong_allee_rate(const Series & n, const Coeff & r, const Coeff & threshold, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::growth::theta_logistic_rate(const Series & n, const Coeff & r, const Coeff & k, const Coeff & theta)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
-| `Series pluss::natsci::biology::population::interaction::competitive_rate(const Series & n, const Series & r, const Series & k, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::glv_equilibrium(const Series & r, const Series & a)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::glv_jacobian_at(const Series & n_star, const Series & a)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::glv_rate(const Series & n, const Series & r, const Series & a)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::holling1(const Series & prey, const Coeff & attack)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::holling2(const Series & prey, const Coeff & attack, const Coeff & handling)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::holling3(const Series & prey, const Coeff & attack, const Coeff & handling, const Coeff & exponent = 2.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::is_feasible(const Series & equilibrium)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::predator_prey_equilibrium(const Coeff & alpha, const Coeff & beta, const Coeff & gamma, const Coeff & delta, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::predator_prey_invariant(const Series & s, const Coeff & alpha, const Coeff & beta, const Coeff & gamma, const Coeff & delta)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::predator_prey_rate(const Series & s, const Coeff & alpha, const Coeff & beta, const Coeff & gamma, const Coeff & delta)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Series pluss::natsci::biology::population::interaction::rosenzweig_macarthur_rate(const Series & s, const Coeff & r, const Coeff & k, const Coeff & attack, const Coeff & handling, const Coeff & efficiency, const Coeff & mortality)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
-| `Analysis pluss::natsci::biology::population::ipm::analyze(const Series & a, double h)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::ipm::discretize(const Kernel & k, const Mesh & m)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::ipm::gaussian_density(const Series & x, const Series & mean, const Series & sd)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::ipm::life_expectancy(const Series & survival_growth)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::ipm::mean_size(const Series & density, const Mesh & m)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Mesh pluss::natsci::biology::population::ipm::mesh(double lower, double upper, std::int64_t n, const Config & cfg = Config{}.with_dtype(pluss::ScalarType::Float64))` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::ipm::net_reproductive_rate(const Series & survival_growth, const Series & fecundity)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::ipm::spreading_speed(const Series & ln_r0, const std::function<Series (const Series &)> & mgf, double s_max, int iterations = 200)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::ipm::variance_size(const Series & density, const Mesh & m)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
-| `Series pluss::natsci::biology::population::maps::attractor(const Map & f, const Series & x0, std::int64_t burn, std::int64_t keep)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::beverton_holt(const Series & x, const Coeff & r0, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::beverton_holt_derivative(const Series & x, const Coeff & r0, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::detect_period(const Series & orbit, std::int64_t max_period, double tol)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::hassell(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::hassell_derivative(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::iterate(const Map & f, const Series & x0, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::logistic(const Series & x, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::logistic_derivative(const Series & x, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::lyapunov(const Map & f, const Map & df, const Series & x0, std::int64_t burn, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::maynard_smith_slatkin(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::maynard_smith_slatkin_derivative(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Cycle pluss::natsci::biology::population::maps::periodic_point(const Map & f, const Map & df, const Series & guess, std::int64_t period, double tolerance = 1e-13, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::ricker(const Series & x, const Coeff & r, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::ricker_derivative(const Series & x, const Coeff & r, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::maps::superstable_parameter(const std::function<Series (const Series &, const Series &)> & map, double critical_point, std::int64_t period, const Series & r_guess, double tolerance = 1e-14, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
-| `Series pluss::natsci::biology::population::selection::mean_fitness(const Series & x, const Series & payoff)` | `PlussMa/include/pluss/subsp/natsci/biology/population/selection.h` |
-| `Series pluss::natsci::biology::population::selection::normalize(const Series & x)` | `PlussMa/include/pluss/subsp/natsci/biology/population/selection.h` |
-| `Series pluss::natsci::biology::population::selection::replicator_rate(const Series & x, const Series & payoff)` | `PlussMa/include/pluss/subsp/natsci/biology/population/selection.h` |
-| `Eigen pluss::natsci::biology::population::structured::dominant(const Series & matrix, std::int64_t max_iterations = 20000, double tolerance = 1e-14)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
-| `Series pluss::natsci::biology::population::structured::elasticity(const Series & matrix, const Eigen & e)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
-| `Series pluss::natsci::biology::population::structured::generation_time(const Series & r0, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
-| `Series pluss::natsci::biology::population::structured::leslie(const Series & fertility, const Series & survival)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
-| `Series pluss::natsci::biology::population::structured::net_reproductive_rate(const Series & fertility, const Series & survival)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
-| `Series pluss::natsci::biology::population::structured::project(const Series & matrix, const Series & n, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
-| `Series pluss::natsci::biology::population::structured::sensitivity(const Eigen & e)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
-| `Grid pluss::natsci::biology::spatial::box(std::vector<std::int64_t> cells, std::vector<double> lengths, Boundary b = Boundary::Neumann)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
-| `Series pluss::natsci::biology::spatial::integrate(const Series & u0, const Series & diffusion, const Grid & g, const Reaction & f, double t0, double t1, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
-| `Series pluss::natsci::biology::spatial::laplacian(const Series & u, const Grid & g)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
-| `double pluss::natsci::biology::spatial::max_stable_dt(const Grid & g, double d_max)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
-| `Series pluss::natsci::biology::spatial::rate(const Series & u, const Series & diffusion, const Grid & g, const Reaction & f)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
-| `Series pluss::natsci::biology::spatial::turing::component(const Series & u, std::int64_t species, std::int64_t spatial_dim)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
-| `Series pluss::natsci::biology::spatial::turing::determinant(const Jacobian2 & j)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
-| `Series pluss::natsci::biology::spatial::turing::determinant_of_perturbation(const Jacobian2 & j, const Series & da, const Series & db, const Series & k2)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
-| `Series pluss::natsci::biology::spatial::turing::growth_rate(const Jacobian2 & j, const Series & da, const Series & db, const Series & k2)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
-| `Series pluss::natsci::biology::spatial::turing::stack2(const Series & a, const Series & b, std::int64_t spatial_dim)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
-| `Conditions pluss::natsci::biology::spatial::turing::turing_conditions(const Jacobian2 & j, const Series & da, const Series & db)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
-| `Series pluss::natsci::biology::spatial::turing::unstable_modes(const Series & jac, const Series & diffusion, const Series & k2)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
-| `Series pluss::natsci::biology::systems::binding::adair(const Series & receptor_total, const Series & ligand_total, const Series & ln_beta)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
-| `Competitive pluss::natsci::biology::systems::binding::competitive(const Series & receptor_total, const Series & ligand_total, const Series & kd)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
-| `Series pluss::natsci::biology::systems::binding::mwc(const Series & ligand, const Coeff & k_r, const Coeff & c, const Coeff & l0, int n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
-| `Series pluss::natsci::biology::systems::binding::receptor_ligand(const Series & receptor_total, const Series & ligand_total, const Coeff & kd)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
-| `Series pluss::natsci::biology::systems::enzymes::adair_velocity(const Series & c, const Series & beta, const Coeff & vmax)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::integrated_michaelis_menten(const Series & t, const Coeff & s0, const Coeff & vmax, const Coeff & km)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `dynamics::RateFn pluss::natsci::biology::systems::enzymes::mass_action_rates(const Coeff & k1, const Coeff & k_minus1, const Coeff & kcat)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::mixed_inhibition(const Series & s, const Series & inhibitor, const Coeff & vmax, const Coeff & km, const Coeff & ki, const Coeff & ki_prime)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::morrison(const Series & enzyme_total, const Series & inhibitor_total, const Coeff & ki_app)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::mwc_active_probability(const Series & c, int m, const Coeff & k_active, const Coeff & k_inactive, const Coeff & beta_eps)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `MwcCharacteristics pluss::natsci::biology::systems::enzymes::mwc_characteristics(int m, const Series & k_active, const Series & k_inactive, const Series & beta_eps)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::mwc_enzyme_velocity(const Series & c, int m, const Coeff & vmax, const Coeff & k_active, const Coeff & k_inactive, const Coeff & beta_eps, const Coeff & activity_ratio = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::ordered_bibi_rapid(const Series & a, const Series & b, const Coeff & vmax, const Coeff & kia, const Coeff & kb)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::pingpong_bibi(const Series & a, const Series & b, const Coeff & vmax, const Coeff & kma, const Coeff & kmb)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::random_bibi_rapid(const Series & a, const Series & b, const Coeff & vmax, const Coeff & ka, const Coeff & kb, const Coeff & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::rate_matrix(const Mechanism & m, const Series & conc)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::reversible_michaelis_menten(const Series & s, const Series & p, const Coeff & vf, const Coeff & ks, const Coeff & vr, const Coeff & kp)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::steady_state(const Mechanism & m, const Series & conc)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::substrate_inhibition(const Series & s, const Coeff & vmax, const Coeff & km, const Coeff & ksi)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `dynamics::RateFn pluss::natsci::biology::systems::enzymes::tqssa_rates(const Coeff & e_total, const Coeff & kcat, const Coeff & michaelis)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::turnover(const Mechanism & m, const Series & conc)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::enzymes::uncompetitive_inhibition(const Series & s, const Series & inhibitor, const Coeff & vmax, const Coeff & km, const Coeff & ki_prime)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
-| `Series pluss::natsci::biology::systems::gene_networks::goodwin_rate(const Series & s, const Coeff & a, const Coeff & b, const Coeff & c, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/gene_networks.h` |
-| `Series pluss::natsci::biology::systems::gene_networks::repressilator_rate(const Series & s, const Coeff & alpha, const Coeff & alpha0, const Coeff & beta, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/gene_networks.h` |
-| `Series pluss::natsci::biology::systems::gene_networks::toggle_switch_rate(const Series & s, const Coeff & a1, const Coeff & a2, const Coeff & b, const Coeff & g)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/gene_networks.h` |
-| `Series pluss::natsci::biology::systems::kinetics::competitive_inhibition(const Series & s, const Series & inhibitor, const Coeff & vmax, const Coeff & km, const Coeff & ki)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
-| `Series pluss::natsci::biology::systems::kinetics::hill_activation(const Series & l, const Coeff & vmax, const Coeff & k_half, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
-| `Series pluss::natsci::biology::systems::kinetics::hill_repression(const Series & l, const Coeff & vmax, const Coeff & k_half, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
-| `Series pluss::natsci::biology::systems::kinetics::michaelis_constant(const Series & k_minus, const Series & kcat, const Series & k_plus)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
-| `Series pluss::natsci::biology::systems::kinetics::michaelis_menten(const Series & s, const Coeff & vmax, const Coeff & km)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::chain::bias_forces(const Chain & c, const Series & q, const Series & qd)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::chain::end_point_torques(const Chain & c, const Series & q, const Series & end_force)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Energy pluss::subsp::natsci::biology::biomechanics::chain::energy(const Chain & c, const Series & q, const Series & qd)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::chain::forward_dynamics(const Chain & c, const Series & q, const Series & qd, const Series & tau, const Series & end_force = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Kinematics pluss::subsp::natsci::biology::biomechanics::chain::forward_kinematics(const Chain & c, const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::chain::inverse_dynamics(const Chain & c, const Series & q, const Series & qd, const Series & qdd, const Series & end_force = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Chain pluss::subsp::natsci::biology::biomechanics::chain::make(const Series & mass, const Series & length, const Series & com, const Series & inertia, double gravity = 9.80665)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::chain::mass_matrix(const Chain & c, const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `Path pluss::subsp::natsci::biology::biomechanics::chain::simulate(const Chain & c, const Torque & torque, const Series & q0, const Series & qd0, double t0, double t1, std::int64_t steps, const std::function<Series (double, const Series &)> & end_force = nullptr)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/chain.h` |
+| `J01 pluss::subsp::natsci::biology::biomechanics::hemodynamics::bessel_j01(const Complex & z)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::hemodynamics::bramwell_hill(const Series & area, const Coeff & density, const Series & d_area_d_pressure)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::hemodynamics::moens_korteweg(const Coeff & young, const Coeff & thickness, const Coeff & density, const Series & radius)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::hemodynamics::poiseuille_resistance(const Coeff & viscosity, const Coeff & length, const Series & radius)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Complex pluss::subsp::natsci::biology::biomechanics::hemodynamics::windkessel2_impedance(const Series & omega, const Coeff & resistance, const Coeff & compliance)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Complex pluss::subsp::natsci::biology::biomechanics::hemodynamics::windkessel3_impedance(const Series & omega, const Coeff & characteristic, const Coeff & resistance, const Coeff & compliance)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::hemodynamics::windkessel3_pressure(const Series & pc, const Series & flow, const Coeff & characteristic)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::hemodynamics::windkessel_capacitor_step(const Series & pc, const Series & flow, double dt, const Coeff & resistance, const Coeff & compliance)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Complex pluss::subsp::natsci::biology::biomechanics::hemodynamics::womersley_flow(const Series & radius, const Series & alpha, const Series & omega, const Coeff & density, const Series & gradient)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Complex pluss::subsp::natsci::biology::biomechanics::hemodynamics::womersley_impedance(const Series & radius, const Series & alpha, const Series & omega, const Coeff & density, const Coeff & length)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Complex pluss::subsp::natsci::biology::biomechanics::hemodynamics::womersley_lambda(const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::hemodynamics::womersley_number(const Series & radius, const Series & omega, const Coeff & density, const Coeff & viscosity)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Complex pluss::subsp::natsci::biology::biomechanics::hemodynamics::womersley_velocity(const Series & relative_radius, const Series & alpha, const Series & omega, const Coeff & density, const Series & gradient)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Complex pluss::subsp::natsci::biology::biomechanics::hemodynamics::womersley_wall_shear(const Series & radius, const Series & alpha, const Series & omega, const Coeff & density, const Coeff & viscosity, const Series & gradient)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/hemodynamics.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::locomotion::lipm_capture_point(const Series & x, const Series & v, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::locomotion::lipm_orbital_energy(const Series & x, const Series & v, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
+| `Lipm pluss::subsp::natsci::biology::biomechanics::locomotion::lipm_state(const Series & x0, const Series & v0, const Series & t, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::locomotion::lipm_time_constant(const Coeff & height, const Series & like, double gravity = 9.80665)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::locomotion::lipm_time_to_position(const Series & x0, const Series & v0, const Series & x1, const Series & tc)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
+| `SlipStep pluss::subsp::natsci::biology::biomechanics::locomotion::slip_apex_map(const SlipParams & p, const Series & y_apex, const Series & v_x, double dt = 2e-4, std::int64_t max_steps = 20000)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/locomotion.h` |
+| `bz::Curve pluss::subsp::natsci::biology::biomechanics::millard::active_force_length(const ActiveParams & q = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/millard.h` |
+| `std::shared_ptr<const muscle::Curves> pluss::subsp::natsci::biology::biomechanics::millard::curves(const ActiveParams & a = {}, const VelocityParams & v = {}, const PassiveParams & p = {}, const TendonParams & t = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/millard.h` |
+| `bz::Curve pluss::subsp::natsci::biology::biomechanics::millard::force_velocity(const VelocityParams & q = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/millard.h` |
+| `bz::Curve pluss::subsp::natsci::biology::biomechanics::millard::passive_force_length(const PassiveParams & q = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/millard.h` |
+| `double pluss::subsp::natsci::biology::biomechanics::millard::scale_curviness(double curviness)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/millard.h` |
+| `bz::Curve pluss::subsp::natsci::biology::biomechanics::millard::tendon_force_length(const TendonParams & q = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/millard.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::activation_rate(const Series & activation, const Series & excitation, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::active_force_length(const Series & norm_fiber_length, const Coeff & width_scale = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::fiber_force(const Series & activation, const Series & norm_fiber_length, const Series & norm_fiber_velocity, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::force_velocity(const Series & norm_fiber_velocity)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::force_velocity_inverse(const Series & fv_multiplier)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Geometry pluss::subsp::natsci::biology::biomechanics::muscle::geometry(const Series & mtu_length, const Series & norm_tendon_force, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Equilibrium pluss::subsp::natsci::biology::biomechanics::muscle::isometric_equilibrium(const Series & activation, const Series & mtu_length, const Params & p, int iterations = 80)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::passive_force_length(const Series & norm_fiber_length, const Coeff & strain_at_one = 0.6)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Path pluss::subsp::natsci::biology::biomechanics::muscle::simulate(const Params & p, const Signal & excitation, const Signal & mtu_length, const Signal & mtu_velocity, const Series & activation0, const Series & norm_tendon_force0, double t0, double t1, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::state_rate(const Series & activation, const Series & norm_tendon_force, const Series & excitation, const Series & mtu_length, const Series & mtu_velocity, const Params & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::tendon_force_length(const Series & norm_tendon_length, const Coeff & strain_at_one = 0.049)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::tendon_length_from_force(const Series & norm_tendon_force, const Coeff & strain_at_one = 0.049)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::muscle::tendon_stiffness(const Series & norm_tendon_length, const Coeff & strain_at_one = 0.049)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/muscle.h` |
+| `Moments pluss::subsp::natsci::biology::biomechanics::musculoskeletal::constant_arms(const Series & arms, const Series & reference_length, const Series & reference_angle)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `State pluss::subsp::natsci::biology::biomechanics::musculoskeletal::equilibrium_state(const Moments & m, const muscle::Params & mp, const Series & q, const Series & activation)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::musculoskeletal::joint_torques(const Moments & m, const Series & q, const Series & tendon_force)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::musculoskeletal::moment_arms(const Moments & m, const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::musculoskeletal::muscle_tendon_length(const Moments & m, const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::musculoskeletal::muscle_tendon_velocity(const Moments & m, const Series & q, const Series & qd)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `Derivative pluss::subsp::natsci::biology::biomechanics::musculoskeletal::rate(const chain::Chain & c, const Moments & m, const muscle::Params & mp, const Series & max_force, const State & s, const Series & excitation, const Series & end_force = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `Path pluss::subsp::natsci::biology::biomechanics::musculoskeletal::simulate(const chain::Chain & c, const Moments & m, const muscle::Params & mp, const Series & max_force, const Excitation & excitation, const State & s0, double t0, double t1, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h` |
+| `ArteryStress pluss::subsp::natsci::biology::biomechanics::tissue::artery_stresses(const Hgo & m, const Series & lambda_theta, const Series & lambda_z)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::equibiaxial_stress(const Isotropic & m, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::first_invariant(const Series & l1, const Series & l2, const Series & l3)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Isotropic pluss::subsp::natsci::biology::biomechanics::tissue::fung(Coeff c, Coeff b)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Isotropic pluss::subsp::natsci::biology::biomechanics::tissue::gent(Coeff mu, Coeff jm)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::initial_shear_modulus(const Isotropic & m, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Isotropic pluss::subsp::natsci::biology::biomechanics::tissue::mooney_rivlin(Coeff c10, Coeff c01)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Isotropic pluss::subsp::natsci::biology::biomechanics::tissue::neo_hookean(Coeff mu)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::ogden_equibiaxial(const Series & lambda, const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::ogden_planar_difference(const Series & lambda, const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::ogden_shear_modulus(const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::ogden_uniaxial(const Series & lambda, const Series & mu, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::planar_stress_difference(const Isotropic & m, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::second_invariant(const Series & l1, const Series & l2, const Series & l3)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Shear pluss::subsp::natsci::biology::biomechanics::tissue::simple_shear(const Isotropic & m, const Series & gamma)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biomechanics::tissue::uniaxial_stress(const Isotropic & m, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Isotropic pluss::subsp::natsci::biology::biomechanics::tissue::yeoh(Coeff c10, Coeff c20, Coeff c30)` | `PlussMa/include/pluss/subsp/natsci/biology/biomechanics/tissue.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::diffusion::diffusion_rate(const Series & u, const Coeff & d, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::diffusion::fisher_kpp_exact(const Series & x, double t, double d, double r, double shift = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
+| `double pluss::subsp::natsci::biology::biophysics::diffusion::fisher_kpp_exact_speed(double d, double r)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
+| `double pluss::subsp::natsci::biology::biophysics::diffusion::fisher_kpp_min_speed(double d, double r)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::diffusion::fisher_kpp_reaction(const Series & u, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::diffusion::heat_kernel(const Series & r2, const Coeff & d, const Coeff & t, std::int64_t dims)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::diffusion::reaction_diffusion_rate(const Series & u, const Coeff & d, const spatial::PeriodicGrid & grid, const Reaction & reaction)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/diffusion.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::ionization::buffer_capacity(const Series & counts, const Series & pka, const Series & sign, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::ionization::charge(const Series & counts, const Series & pka, const Series & sign, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::ionization::isoelectric_point(const Series & counts, const Series & pka, const Series & sign, double lo = -2.0, double hi = 16.0, int iterations = 60)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
+| `Groups pluss::subsp::natsci::biology::biophysics::ionization::protein_groups(const std::vector<std::string> & sequences)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/ionization.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::bound_complex(const Series & receptor_total, const Series & ligand_total, const Series & log10_k_app)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::ln_partition_independent(const Series & counts, const Series & pka, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::ln_partition_polyprotic(const Series & log10_beta, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::log10_apparent_constant(const Series & log10_k_ref, const Series & ln_z_product_state, const Series & ln_z_start_state)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::mean_protons_independent(const Series & counts, const Series & pka, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::mean_protons_polyprotic(const Series & log10_beta, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::observed_enthalpy(const Series & dh_intrinsic, const Series & protons_taken_up, const Series & dh_buffer_ionization)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::linkage::polyprotic_fractions(const Series & log10_beta, const Series & ph)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/linkage.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::membrane::cable_rate(const Series & v, const Coeff & lambda, const Coeff & tau, const spatial::PeriodicGrid & grid, const Series & drive = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::membrane::ghk_voltage(const Series & permeability, const Series & outside, const Series & inside, const Series & sign, double rt_over_f)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Gating pluss::subsp::natsci::biology::biophysics::membrane::hh_h(const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Gating pluss::subsp::natsci::biology::biophysics::membrane::hh_m(const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Gating pluss::subsp::natsci::biology::biophysics::membrane::hh_n(const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::membrane::hodgkin_huxley_axon_rate(const Series & s, double radius_cm, double axoplasm_ohm_cm, const spatial::PeriodicGrid & grid, const HodgkinHuxley & p = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::membrane::hodgkin_huxley_rate(const Series & s, const Coeff & i_ext, const HodgkinHuxley & p = {})` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::membrane::hodgkin_huxley_rest(const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::membrane::nernst(const Series & outside, const Series & inside, double valence, double rt_over_f)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::membrane::steady_gate(const Gating & g)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/membrane.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::nucleic_acids::duplex_fraction(const Series & k, const Series & ca_molar, const Series & cb_molar, _Bool self_complementary)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
+| `Duplex pluss::subsp::natsci::biology::biophysics::nucleic_acids::duplex_thermodynamics(const std::string & sequence, const Table & nn, _Bool self_complementary = false)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::nucleic_acids::equilibrium_constant(const Duplex & duplex, const Series & temperature_k, double salt_entropy_correction = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::nucleic_acids::melting_temperature(const Duplex & duplex, const Series & c1_nm, const Series & c2_nm, int salt_method, const Series & na, const Series & k, const Series & tris, const Series & mg, const Series & dntps)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::nucleic_acids::salt_correction(const Series & na, const Series & k, const Series & tris, const Series & mg, const Series & dntps, int method, const Duplex & duplex)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/nucleic_acids.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::chevron_stability(const Coeff & kf, const Coeff & mf, const Coeff & ku, const Coeff & mu, const Series & x, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::chevron_three_state(const Series & x, const Coeff & kfi, const Coeff & mif, const Coeff & kif, const Coeff & mi, const Coeff & kiu, const Coeff & mu)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::chevron_two_state(const Series & x, const Coeff & kf, const Coeff & mf, const Coeff & ku, const Coeff & mu)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::dimer_fraction_unfolded(const Series & x, const Coeff & m, const Coeff & d50, const Coeff & pt, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::maximum_stability_temperature(const Thermal & p, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::thermal_enthalpy(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::thermal_entropy(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::thermal_fraction_unfolded(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::thermal_gibbs(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::thermal_gibbs_closed_form(const Series & t, const Thermal & p)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::thermal_root(const Thermal & p, const Series & lo, const Series & hi)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::three_state_populations(const Series & x, const Coeff & dg_ni, const Coeff & m_ni, const Coeff & dg_id, const Coeff & m_id, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::two_state_fraction_unfolded(const Series & x, const Coeff & m, const Coeff & d50, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::two_state_signal(const Series & x, const Coeff & alpha_n, const Coeff & beta_n, const Coeff & alpha_u, const Coeff & beta_u, const Coeff & m, const Coeff & d50, double rt)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::biophysics::protein_folding::unfolding_free_energy(const Series & x, const Coeff & m, const Coeff & d50)` | `PlussMa/include/pluss/subsp/natsci/biology/biophysics/protein_folding.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::final_susceptible(const Series & sigma, const Series & s0, const Series & i0, std::int64_t iterations = 80)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::multistrain_rate(const Series & x, const MultistrainParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Split pluss::subsp::natsci::biology::epidemiology::multistrain_split(const MultistrainParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::next_generation(const Split & split, const Series & dfe, double step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/compartmental.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::peak_infective(const Series & sigma, const Series & s0, const Series & i0)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::reproduction_number(const Split & split, const Series & dfe, double step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/compartmental.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::seir_r0(const Series & beta, const Series & sigma, const Series & gamma, const Series & mu)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::seir_rate(const Series & x, const Coeff & beta, const Coeff & sigma, const Coeff & gamma, const Coeff & mu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::sir_rate(const Series & x, const Coeff & beta, const Coeff & gamma)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::sis_rate(const Series & x, const Coeff & beta, const Coeff & gamma)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::staged_rate(const Series & x, const Series & beta, const Series & nu, const Series & d, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Split pluss::subsp::natsci::biology::epidemiology::staged_split(const Series & beta, const Series & nu, const Series & d, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::treatment_rate(const Series & x, const TreatmentParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Split pluss::subsp::natsci::biology::epidemiology::treatment_split(const TreatmentParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Series pluss::subsp::natsci::biology::epidemiology::vector_host_rate(const Series & x, const VectorHostParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Split pluss::subsp::natsci::biology::epidemiology::vector_host_split(const VectorHostParams & p)` | `PlussMa/include/pluss/subsp/natsci/biology/epidemiology/models.h` |
+| `Absorption pluss::subsp::natsci::biology::genetics::absorption(const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/markov.h` |
+| `Fitness pluss::subsp::natsci::biology::genetics::additive(const Series & s)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Fitness pluss::subsp::natsci::biology::genetics::additive(double s)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::binomial_pmf(std::int64_t n, const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::expected_next(const Series & p, const Fitness & w, const Coeff & mu = 0.0, const Coeff & nu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::hardy_weinberg(const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::heterozygote_advantage_equilibrium(const Series & s, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::kimura_fixation(const Series & p, const Coeff & ne, const Coeff & s)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::mean_fitness(const Series & p, const Fitness & w)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::moran_fixation(double r, std::int64_t n, const Series & start)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/moran.h` |
+| `Series pluss::subsp::natsci::biology::genetics::moran_transition(std::int64_t n, double r)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/moran.h` |
+| `Series pluss::subsp::natsci::biology::genetics::mutate(const Series & p, const Coeff & mu, const Coeff & nu)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::select(const Series & p, const Fitness & w)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Run pluss::subsp::natsci::biology::genetics::simulate(const Series & p0, std::int64_t population, const Fitness & w, std::int64_t max_generations, std::uint64_t seed, const Coeff & mu = 0.0, const Coeff & nu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::step(const Series & p, std::int64_t population, const Fitness & w, const Coeff & mu, const Coeff & nu, std::uint64_t seed)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::genetics::transition_matrix(std::int64_t population, const Fitness & w, const Coeff & mu = 0.0, const Coeff & nu = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/genetics/wright_fisher.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::boundary_reactions(const Network & net)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
+| `Coefficients pluss::subsp::natsci::biology::metabolism::control::coefficients(const Series & stoichiometry, const Series & elasticity, const Series & conservation = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::connectivity_defect(const Coefficients & c, const Series & elasticity, const Series & free_directions)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::conservation_laws(const Series & stoichiometry, double tolerance = 1e-10)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::elasticities(const RateFn & v, const Series & x, double rel = 1e-6, double floor = 1e-12)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::free_directions(const Series & conservation)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::parameter_derivatives(const std::function<Series (const Series &, const Series &)> & v, const Series & x, const Series & p, double rel = 1e-6, double floor = 1e-12)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::response(const Series & control_coefficients, const Series & dv_dp)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::scale_concentration(const Series & cs, const Series & x, const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::scale_elasticities(const Series & e, const Series & x, const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::scale_flux(const Series & cj, const Series & v)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `SteadyState pluss::subsp::natsci::biology::metabolism::control::steady_state(const RateFn & v, const Series & stoichiometry, const Series & x0, const Series & conservation, const Series & totals, double tolerance = 1e-12, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::control::summation_defect(const Series & scaled_flux, const Series & scaled_concentration)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/control.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::elementary_modes(const Network & net, double tolerance = 1e-9, std::size_t max_modes = 2'000'000)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/modes.h` |
+| `linprog::Options pluss::subsp::natsci::biology::metabolism::exact_options()` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
+| `Solution pluss::subsp::natsci::biology::metabolism::flux_balance(const Network & net, const Series & objective, const linprog::Options & opt = exact_options(), const Solution * warm = nullptr)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
+| `Variability pluss::subsp::natsci::biology::metabolism::flux_variability(const Network & net, const Series & objective, double fraction = 1.0, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
+| `Knockout pluss::subsp::natsci::biology::metabolism::gene_knockouts(const Network & net, const GeneRules & rules, const Series & objective, const Series & knocked, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/genes.h` |
+| `Knockout pluss::subsp::natsci::biology::metabolism::knockouts(const Network & net, const Series & objective, const Series & mask, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
+| `LoopMilp pluss::subsp::natsci::biology::metabolism::loop_law_problem(const Network & net, const std::optional<Series> & flux_min = std::nullopt, const std::optional<Series> & flux_max = std::nullopt)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
+| `Variability pluss::subsp::natsci::biology::metabolism::loopless_flux_variability(const Network & net, const Series & objective, double fraction = 1.0, const linprog::Options & opt_in = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
+| `std::pair<double, double> pluss::subsp::natsci::biology::metabolism::loopless_range_exact(const Network & net, const Series & objective, std::int64_t reaction, double fraction = 1.0, math::milp::Options mopt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::loopless_solution(const Network & net, const Series & objective, const Series & fluxes, const linprog::Options & opt_in = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/loopless.h` |
+| `MdfResult pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics::max_min_driving_force(const Pathway & p)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/pathway_thermodynamics.h` |
+| `TfaResult pluss::subsp::natsci::biology::metabolism::pathway_thermodynamics::thermodynamic_flux_balance(const TfaNetwork & net, const lp::MipOptions & opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/pathway_thermodynamics.h` |
+| `Sample pluss::subsp::natsci::biology::metabolism::sample_fluxes(const Network & net, std::int64_t chains, std::int64_t samples, std::int64_t thinning = 10, std::uint64_t seed = 0, const SamplingOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/modes.h` |
+| `Knockout pluss::subsp::natsci::biology::metabolism::single_gene_knockouts(const Network & net, const GeneRules & rules, const Series & objective, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/genes.h` |
+| `Knockout pluss::subsp::natsci::biology::metabolism::single_knockouts(const Network & net, const Series & objective, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
+| `Solution pluss::subsp::natsci::biology::metabolism::sweep_flux(const Network & net, const Series & objective, std::int64_t index, const Series & values, const linprog::Options & opt = exact_options())` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/fba.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::apparent_equilibrium_constant(const Series & dgr_transformed, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::debye_huckel_factor(const Series & ionic_strength, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::debye_huckel_ln_gamma(const Series & charge, const Series & ionic_strength, double alpha, double b = 1.6)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `double pluss::subsp::natsci::biology::metabolism::thermodynamics::magnesium_formation_gibbs(double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::microspecies_legendre_transform(double charge, double n_protons, double n_magnesium, const Series & ph, double p_mg, const Series & ionic_strength, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::proton_binding_polynomial(const Series & ph, const Series & pka)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::reaction_gibbs(const Series & dgf_transformed, const Series & nu)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::reaction_gibbs_at(const Series & dgr_transformed, const Series & ln_q, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::transformed_formation_gibbs(const Series & dgf_fully_protonated, double n_hydrogens, const Series & pka, const Series & ph, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::transformed_formation_gibbs_fixed(const Series & dgf, double n_hydrogens, const Series & ph, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::metabolism::thermodynamics::transformed_group_gibbs(const std::vector<Microspecies> & species, const Series & ph, double p_mg, const Series & ionic_strength, double temperature)` | `PlussMa/include/pluss/subsp/natsci/biology/metabolism/thermodynamics.h` |
+| `Series pluss::subsp::natsci::biology::neuroscience::fitzhugh_nagumo_hopf_currents(double a, double b, double epsilon, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `Series pluss::subsp::natsci::biology::neuroscience::fitzhugh_nagumo_rate(const Series & s, const Coeff & current, const Coeff & a = 0.7, const Coeff & b = 0.8, const Coeff & epsilon = 0.08)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `Series pluss::subsp::natsci::biology::neuroscience::izhikevich_rate(const Series & s, const Coeff & current, const IzhikevichParams & p = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `Series pluss::subsp::natsci::biology::neuroscience::lif_interspike_interval(const Coeff & tau, const Coeff & e_leak, const Coeff & resistance, const Coeff & current, const Coeff & v_threshold, const Coeff & v_reset, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `Series pluss::subsp::natsci::biology::neuroscience::lif_rate(const Series & v, const Coeff & tau, const Coeff & e_leak, const Coeff & resistance, const Coeff & current)` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `SpikeResult pluss::subsp::natsci::biology::neuroscience::simulate_izhikevich(const Series & state0, const Coeff & current, const IzhikevichParams & p = {}, SpikeOptions opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `SpikeResult pluss::subsp::natsci::biology::neuroscience::simulate_lif(const Series & v0, const Coeff & tau, const Coeff & e_leak, const Coeff & resistance, const Coeff & current, double v_threshold, double v_reset, SpikeOptions opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `SpikeResult pluss::subsp::natsci::biology::neuroscience::simulate_spiking(const dynamics::RateFn & rate, const ResetFn & reset, Series state, const SpikeOptions & opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/neuroscience/neurons.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::auc_infinity(const Series & k, const Series & x0)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::bateman(const Series & t, const dynamics::Coeff & dose, const dynamics::Coeff & ka, const dynamics::Coeff & ke)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::half_life(const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::infusion_response(const Series & k, const Series & x0, const Series & u, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::propagator(const Series & k, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::rate_matrix(const Series & transfer, const Series & elimination)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::response(const Series & k, const Series & x0, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::pharmacokinetics::steady_state_trough(const Series & k, const Series & dose, double tau)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Macro pluss::subsp::natsci::biology::pharmacokinetics::two_compartment_macro(const Series & k10, const Series & k12, const Series & k21)` | `PlussMa/include/pluss/subsp/natsci/biology/pharmacokinetics/compartments.h` |
+| `Series pluss::subsp::natsci::biology::population::age_structured::births(const Series & n, const Series & beta, const Grid & grid)` | `PlussMa/include/pluss/subsp/natsci/biology/population/age_structured.h` |
+| `demography::LifeTable pluss::subsp::natsci::biology::population::age_structured::euler_lotka(const Series & mortality_at_nodes, const Series & fecundity_at_nodes, const Grid & grid)` | `PlussMa/include/pluss/subsp/natsci/biology/population/age_structured.h` |
+| `Series pluss::subsp::natsci::biology::population::age_structured::simulate(const Series & n0, const Model & model, const Grid & grid, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/age_structured.h` |
+| `Series pluss::subsp::natsci::biology::population::age_structured::step(const Series & n, const Model & model, const Grid & grid)` | `PlussMa/include/pluss/subsp/natsci/biology/population/age_structured.h` |
+| `Series pluss::subsp::natsci::biology::population::age_structured::survivorship(const Series & mortality_at_nodes, const Grid & grid)` | `PlussMa/include/pluss/subsp/natsci/biology/population/age_structured.h` |
+| `Series pluss::subsp::natsci::biology::population::age_structured::total(const Series & n, const Grid & grid)` | `PlussMa/include/pluss/subsp/natsci/biology/population/age_structured.h` |
+| `Series pluss::subsp::natsci::biology::population::age_structured::trajectory(const Series & n0, const Model & model, const Grid & grid, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/age_structured.h` |
+| `DiffusionEstimate pluss::subsp::natsci::biology::population::birth_death::dennis_estimate(const Series & counts, const Series & times)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::extinction_by_generation(const Series & p, std::int64_t generations)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::generator(const Series & birth, const Series & death)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::linear_extinction_probability(const Series & n0, double birth, double death, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::linear_mean(const Series & n0, double birth, double death, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `double pluss::subsp::natsci::biology::population::birth_death::linear_ultimate_extinction(double n0, double birth, double death)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::mean_time_to_extinction(const Series & q)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::offspring_mean(const Series & p)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::offspring_pgf(const Series & p, const Series & s)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::quasi_extinction_cdf(const Series & mu, const Series & sigma2, const Series & x_d, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `QuasiStationary pluss::subsp::natsci::biology::population::birth_death::quasi_stationary(const Series & q, std::int64_t iterations = 400)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::transient(const Series & q, const Series & p0, double t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::ultimate_extinction(const Series & p, std::int64_t max_iterations = 100000, double tolerance = 1e-15)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::birth_death::ultimate_quasi_extinction(const Series & mu, const Series & sigma2, const Series & x_d)` | `PlussMa/include/pluss/subsp/natsci/biology/population/birth_death.h` |
+| `Series pluss::subsp::natsci::biology::population::community::chemostat_rate(const Series & state, double dilution, double supply, const Series & mu_max, const Series & half, const Series & mortality, const Series & yield)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `SingularClassification pluss::subsp::natsci::biology::population::community::classify(const Fitness & f, const Series & x_star, double h = 1e-3)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::invasion_growth_rate(const Series & r, const Series & a, const Series & resident)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::logistic_competition_fitness(const Series & mutant, const Series & resident, const std::function<Series (const Series &)> & carrying, const std::function<Series (const Series &, const Series &)> & kernel)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::monod(const Series & resource, const Series & mu_max, const Series & half)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `double pluss::subsp::natsci::biology::population::community::predicted_abscissa(std::int64_t species, double sigma, double connectance, double tau, double d)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::r_star(const Series & mu_max, const Series & half, const Series & mortality)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::random_community(std::int64_t species, std::int64_t lanes, double sigma, double connectance, double tau, double d, std::uint64_t seed = 0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::resident_equilibrium(const Series & r, const Series & a, const Series & resident)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `SecondDerivatives pluss::subsp::natsci::biology::population::community::second_derivatives(const Fitness & f, const Series & x, double h = 1e-3)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::selection_gradient(const Fitness & f, const Series & x, double h = 1e-5)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::single_species_density(double dilution, double supply, const Series & rstar, const Series & mortality, const Series & yield)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::singular_strategy(const Fitness & f, const Series & x0, double tolerance = 1e-10, std::int64_t max_iterations = 100, double h = 1e-4)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::community::spectral_abscissa(const Series & a, int squarings = 40)` | `PlussMa/include/pluss/subsp/natsci/biology/population/community.h` |
+| `Series pluss::subsp::natsci::biology::population::count_pva::extinction_risk(const Fit & f, double threshold, const Series & horizons)` | `PlussMa/include/pluss/subsp/natsci/biology/population/count_pva.h` |
+| `Fit pluss::subsp::natsci::biology::population::count_pva::fit(const Series & counts, double dt = 1.0, std::int64_t restarts = 3)` | `PlussMa/include/pluss/subsp/natsci/biology/population/count_pva.h` |
+| `double pluss::subsp::natsci::biology::population::count_pva::loglik(const Series & counts, const Parameters & q, double dt = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/count_pva.h` |
+| `Grid pluss::subsp::natsci::biology::population::count_pva::to_grid(const Series & times, const Series & counts, double dt)` | `PlussMa/include/pluss/subsp/natsci/biology/population/count_pva.h` |
+| `double pluss::subsp::natsci::biology::population::count_pva::ultimate_extinction_risk(const Fit & f, double threshold)` | `PlussMa/include/pluss/subsp/natsci/biology/population/count_pva.h` |
+| `double pluss::subsp::natsci::biology::population::delay::hutchinson_critical_delay(double r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
+| `Series pluss::subsp::natsci::biology::population::delay::hutchinson_rate(const Series & n, const Series & n_delayed, const Coeff & r, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
+| `Path pluss::subsp::natsci::biology::population::delay::integrate(const DelayRate & f, const History & history, double tau, double t_end, std::int64_t steps_per_delay)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
+| `double pluss::subsp::natsci::biology::population::delay::nicholson_equilibrium(double death, double production, double scale)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
+| `Series pluss::subsp::natsci::biology::population::delay::nicholson_rate(const Series & n, const Series & n_delayed, const Coeff & death, const Coeff & production, const Coeff & scale)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
+| `Root pluss::subsp::natsci::biology::population::delay::rightmost_root(const Series & a, const Series & b, const Series & tau)` | `PlussMa/include/pluss/subsp/natsci/biology/population/delay.h` |
+| `Amplification pluss::subsp::natsci::biology::population::demography::amplification(const Series & matrix, std::int64_t horizon)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::damping_ratio(const Series & matrix)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::first_row_fertility_mask(std::int64_t k, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Fundamental pluss::subsp::natsci::biology::population::demography::fundamental_matrix(const Series & transitions)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::generation_time(const Series & matrix, const Series & fertility_mask)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::lambda_gradient(const std::function<Series (const Series &)> & matrix_fn, const Series & theta, double relative_step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `LifeTable pluss::subsp::natsci::biology::population::demography::life_table(const Series & l, const Series & m, const Series & ages = pluss::series::undefined(), std::int64_t newton_steps = 60, const Series & weights = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::ltre_fixed(const Series & treatment, const Series & reference)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::net_reproductive_rate(const Series & matrix, const Series & fertility_mask)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::quasi_extinction_probability(const Series & paths, double threshold)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `StochasticGrowth pluss::subsp::natsci::biology::population::demography::simulate_growth(const Environment & env, std::int64_t steps, std::int64_t replicates, std::uint64_t seed = 0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::simulate_paths(const Environment & env, const Series & n0, std::int64_t steps, std::int64_t replicates, std::uint64_t seed = 0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `Series pluss::subsp::natsci::biology::population::demography::spectral_radius(const Series & b, int squarings = 40)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `TuljapurkarApproximation pluss::subsp::natsci::biology::population::demography::tuljapurkar(const Series & matrices, const Series & prob, _Bool popbio_covariance = false)` | `PlussMa/include/pluss/subsp/natsci/biology/population/demography.h` |
+| `YieldEquilibria pluss::subsp::natsci::biology::population::ecology::constant_yield_equilibria(const Coeff & r, const Coeff & k, const Coeff & h, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::constant_yield_rate(const Series & n, const Coeff & r, const Coeff & k, const Coeff & h)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::effort_equilibrium(const Coeff & r, const Coeff & k, const Coeff & catchability, const Coeff & effort, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::effort_harvest_rate(const Series & n, const Coeff & r, const Coeff & k, const Coeff & catchability, const Coeff & effort)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::effort_yield(const Coeff & r, const Coeff & k, const Coeff & catchability, const Coeff & effort, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::levins_equilibrium(const Coeff & colonisation, const Coeff & extinction, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::levins_rate(const Series & p, const Coeff & colonisation, const Coeff & extinction, _Bool rescue = false)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::maximum_sustainable_yield(const Coeff & r, const Coeff & k, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::metapopulation_capacity(const Series & connectivity)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::migration_rate(const Series & n, const Series & rates)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::ecology::patch_occupancy_rate(const Series & p, const Series & connectivity, const Coeff & extinction)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ecology.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::allee_birth_death_rate(const Series & n, const Coeff & b0, const Coeff & b1, const Coeff & d, const Coeff & c)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::exponential(const Series & n0, const Coeff & r, const Coeff & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::exponential_rate(const Series & n, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::gompertz(const Series & n0, const Coeff & r, const Coeff & k, const Coeff & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::gompertz_rate(const Series & n, const Coeff & r, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::logistic(const Series & n0, const Coeff & r, const Coeff & k, const Coeff & t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::logistic_rate(const Series & n, const Coeff & r, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::strong_allee_rate(const Series & n, const Coeff & r, const Coeff & threshold, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::growth::theta_logistic_rate(const Series & n, const Coeff & r, const Coeff & k, const Coeff & theta)` | `PlussMa/include/pluss/subsp/natsci/biology/population/growth.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::competitive_rate(const Series & n, const Series & r, const Series & k, const Series & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::glv_equilibrium(const Series & r, const Series & a)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::glv_jacobian_at(const Series & n_star, const Series & a)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::glv_rate(const Series & n, const Series & r, const Series & a)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::holling1(const Series & prey, const Coeff & attack)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::holling2(const Series & prey, const Coeff & attack, const Coeff & handling)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::holling3(const Series & prey, const Coeff & attack, const Coeff & handling, const Coeff & exponent = 2.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::is_feasible(const Series & equilibrium)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::predator_prey_equilibrium(const Coeff & alpha, const Coeff & beta, const Coeff & gamma, const Coeff & delta, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::predator_prey_invariant(const Series & s, const Coeff & alpha, const Coeff & beta, const Coeff & gamma, const Coeff & delta)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::predator_prey_rate(const Series & s, const Coeff & alpha, const Coeff & beta, const Coeff & gamma, const Coeff & delta)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Series pluss::subsp::natsci::biology::population::interaction::rosenzweig_macarthur_rate(const Series & s, const Coeff & r, const Coeff & k, const Coeff & attack, const Coeff & handling, const Coeff & efficiency, const Coeff & mortality)` | `PlussMa/include/pluss/subsp/natsci/biology/population/interaction.h` |
+| `Analysis pluss::subsp::natsci::biology::population::ipm::analyze(const Series & a, double h)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::ipm::discretize(const Kernel & k, const Mesh & m)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::ipm::gaussian_density(const Series & x, const Series & mean, const Series & sd)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::ipm::life_expectancy(const Series & survival_growth)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::ipm::mean_size(const Series & density, const Mesh & m)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Mesh pluss::subsp::natsci::biology::population::ipm::mesh(double lower, double upper, std::int64_t n, const Config & cfg = Config{}.with_dtype(pluss::ScalarType::Float64))` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::ipm::net_reproductive_rate(const Series & survival_growth, const Series & fecundity)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::ipm::spreading_speed(const Series & ln_r0, const std::function<Series (const Series &)> & mgf, double s_max, int iterations = 200)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::ipm::variance_size(const Series & density, const Mesh & m)` | `PlussMa/include/pluss/subsp/natsci/biology/population/ipm.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::attractor(const Map & f, const Series & x0, std::int64_t burn, std::int64_t keep)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::beverton_holt(const Series & x, const Coeff & r0, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::beverton_holt_derivative(const Series & x, const Coeff & r0, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::detect_period(const Series & orbit, std::int64_t max_period, double tol)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::hassell(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::hassell_derivative(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::iterate(const Map & f, const Series & x0, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::logistic(const Series & x, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::logistic_derivative(const Series & x, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::lyapunov(const Map & f, const Map & df, const Series & x0, std::int64_t burn, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::maynard_smith_slatkin(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::maynard_smith_slatkin_derivative(const Series & x, const Coeff & lambda, const Coeff & a, const Coeff & b)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Cycle pluss::subsp::natsci::biology::population::maps::periodic_point(const Map & f, const Map & df, const Series & guess, std::int64_t period, double tolerance = 1e-13, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::ricker(const Series & x, const Coeff & r, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::ricker_derivative(const Series & x, const Coeff & r, const Coeff & k = 1.0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::maps::superstable_parameter(const std::function<Series (const Series &, const Series &)> & map, double critical_point, std::int64_t period, const Series & r_guess, double tolerance = 1e-14, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/biology/population/maps.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::beddington(const Series & state, const Coeff & r, const Coeff & k, const Coeff & a, const Coeff & c)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::jacobian(const std::function<Series (const Series &)> & map, const Series & state, double relative_step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::negative_binomial(const Series & state, const Coeff & lambda, const Coeff & a, const Coeff & c, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::negative_binomial_equilibrium(const Coeff & lambda, const Coeff & a, const Coeff & c, const Coeff & k, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::nicholson_bailey(const Series & state, const Coeff & lambda, const Coeff & a, const Coeff & c)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::nicholson_bailey_equilibrium(const Coeff & lambda, const Coeff & a, const Coeff & c, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::ring_step(const std::function<Series (const Series &)> & local, const Series & n, double dispersal)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::spectral_radius(const Series & a)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::parasitoid::synchrony(const Series & n)` | `PlussMa/include/pluss/subsp/natsci/biology/population/parasitoid.h` |
+| `Series pluss::subsp::natsci::biology::population::selection::mean_fitness(const Series & x, const Series & payoff)` | `PlussMa/include/pluss/subsp/natsci/biology/population/selection.h` |
+| `Series pluss::subsp::natsci::biology::population::selection::normalize(const Series & x)` | `PlussMa/include/pluss/subsp/natsci/biology/population/selection.h` |
+| `Series pluss::subsp::natsci::biology::population::selection::replicator_rate(const Series & x, const Series & payoff)` | `PlussMa/include/pluss/subsp/natsci/biology/population/selection.h` |
+| `Series pluss::subsp::natsci::biology::population::stochastic_growth::crossing_probability(const Series & x, double barrier, double s, double block_time)` | `PlussMa/include/pluss/subsp/natsci/biology/population/stochastic_growth.h` |
+| `Series pluss::subsp::natsci::biology::population::stochastic_growth::feller_extinction_probability(const Series & n0, double r, double sigma_d2, double t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/stochastic_growth.h` |
+| `Series pluss::subsp::natsci::biology::population::stochastic_growth::lognormal_mean(const Series & n0, double r, double t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/stochastic_growth.h` |
+| `Series pluss::subsp::natsci::biology::population::stochastic_growth::lognormal_variance(const Series & n0, double r, double s, double t)` | `PlussMa/include/pluss/subsp/natsci/biology/population/stochastic_growth.h` |
+| `Paths pluss::subsp::natsci::biology::population::stochastic_growth::simulate(const sde::DriftFn & drift, const sde::DiffusionFn & diffusion, const Series & x0, double t_end, std::int64_t blocks, std::int64_t steps_per_block, std::uint64_t seed = 1, sde::SdeMethod method = sde::SdeMethod::EulerMaruyama)` | `PlussMa/include/pluss/subsp/natsci/biology/population/stochastic_growth.h` |
+| `double pluss::subsp::natsci::biology::population::stochastic_growth::stochastic_growth_rate(double r, double s)` | `PlussMa/include/pluss/subsp/natsci/biology/population/stochastic_growth.h` |
+| `Eigen pluss::subsp::natsci::biology::population::structured::dominant(const Series & matrix, std::int64_t max_iterations = 20000, double tolerance = 1e-14)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
+| `Series pluss::subsp::natsci::biology::population::structured::elasticity(const Series & matrix, const Eigen & e)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
+| `Series pluss::subsp::natsci::biology::population::structured::generation_time(const Series & r0, const Series & lambda)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
+| `Series pluss::subsp::natsci::biology::population::structured::leslie(const Series & fertility, const Series & survival)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
+| `Series pluss::subsp::natsci::biology::population::structured::net_reproductive_rate(const Series & fertility, const Series & survival)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
+| `Series pluss::subsp::natsci::biology::population::structured::project(const Series & matrix, const Series & n, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
+| `Series pluss::subsp::natsci::biology::population::structured::sensitivity(const Eigen & e)` | `PlussMa/include/pluss/subsp/natsci/biology/population/structured.h` |
+| `ipm::Analysis pluss::subsp::natsci::biology::population::vital_rates::analyze(const Fit & f, const ipm::Mesh & mesh)` | `PlussMa/include/pluss/subsp/natsci/biology/population/vital_rates.h` |
+| `Bootstrap pluss::subsp::natsci::biology::population::vital_rates::bootstrap_lambda(const Observations & data, const ipm::Mesh & mesh, const Series & individual_rows, const Series & recruit_rows, _Bool quadratic_survival = false, double alpha = 0.05)` | `PlussMa/include/pluss/subsp/natsci/biology/population/vital_rates.h` |
+| `Fit pluss::subsp::natsci::biology::population::vital_rates::fit(const Observations & data, _Bool quadratic_survival = false)` | `PlussMa/include/pluss/subsp/natsci/biology/population/vital_rates.h` |
+| `Kernel pluss::subsp::natsci::biology::population::vital_rates::kernel(const Fit & f, const ipm::Mesh & mesh)` | `PlussMa/include/pluss/subsp/natsci/biology/population/vital_rates.h` |
+| `Series pluss::subsp::natsci::biology::population::vital_rates::resample(std::int64_t replicates, std::int64_t n, std::uint64_t seed = 0)` | `PlussMa/include/pluss/subsp/natsci/biology/population/vital_rates.h` |
+| `Grid pluss::subsp::natsci::biology::spatial::box(std::vector<std::int64_t> cells, std::vector<double> lengths, Boundary b = Boundary::Neumann)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
+| `Series pluss::subsp::natsci::biology::spatial::integrate(const Series & u0, const Series & diffusion, const Grid & g, const Reaction & f, double t0, double t1, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
+| `Series pluss::subsp::natsci::biology::spatial::laplacian(const Series & u, const Grid & g)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
+| `double pluss::subsp::natsci::biology::spatial::max_stable_dt(const Grid & g, double d_max)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
+| `Series pluss::subsp::natsci::biology::spatial::rate(const Series & u, const Series & diffusion, const Grid & g, const Reaction & f)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/reaction_diffusion.h` |
+| `Series pluss::subsp::natsci::biology::spatial::turing::component(const Series & u, std::int64_t species, std::int64_t spatial_dim)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
+| `Series pluss::subsp::natsci::biology::spatial::turing::determinant(const Jacobian2 & j)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
+| `Series pluss::subsp::natsci::biology::spatial::turing::determinant_of_perturbation(const Jacobian2 & j, const Series & da, const Series & db, const Series & k2)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
+| `Series pluss::subsp::natsci::biology::spatial::turing::growth_rate(const Jacobian2 & j, const Series & da, const Series & db, const Series & k2)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
+| `Series pluss::subsp::natsci::biology::spatial::turing::stack2(const Series & a, const Series & b, std::int64_t spatial_dim)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
+| `Conditions pluss::subsp::natsci::biology::spatial::turing::turing_conditions(const Jacobian2 & j, const Series & da, const Series & db)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
+| `Series pluss::subsp::natsci::biology::spatial::turing::unstable_modes(const Series & jac, const Series & diffusion, const Series & k2)` | `PlussMa/include/pluss/subsp/natsci/biology/spatial/turing.h` |
+| `Series pluss::subsp::natsci::biology::systems::binding::adair(const Series & receptor_total, const Series & ligand_total, const Series & ln_beta)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
+| `Competitive pluss::subsp::natsci::biology::systems::binding::competitive(const Series & receptor_total, const Series & ligand_total, const Series & kd)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
+| `Series pluss::subsp::natsci::biology::systems::binding::mwc(const Series & ligand, const Coeff & k_r, const Coeff & c, const Coeff & l0, int n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
+| `Series pluss::subsp::natsci::biology::systems::binding::receptor_ligand(const Series & receptor_total, const Series & ligand_total, const Coeff & kd)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/binding.h` |
+| `EnzymeFit pluss::subsp::natsci::biology::systems::enzyme_fitting::fit_integrated(const ProgressData & d, const Series & guess, const est::Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzyme_fitting.h` |
+| `EnzymeFit pluss::subsp::natsci::biology::systems::enzyme_fitting::fit_product_inhibition(const ProgressData & d, const Series & guess, std::int64_t steps_per_interval = 40, const est::Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzyme_fitting.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzyme_fitting::initial_guess(const ProgressData & d, _Bool product_inhibition = false)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzyme_fitting.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::adair_velocity(const Series & c, const Series & beta, const Coeff & vmax)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::integrated_michaelis_menten(const Series & t, const Coeff & s0, const Coeff & vmax, const Coeff & km)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `dynamics::RateFn pluss::subsp::natsci::biology::systems::enzymes::mass_action_rates(const Coeff & k1, const Coeff & k_minus1, const Coeff & kcat)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::mixed_inhibition(const Series & s, const Series & inhibitor, const Coeff & vmax, const Coeff & km, const Coeff & ki, const Coeff & ki_prime)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::morrison(const Series & enzyme_total, const Series & inhibitor_total, const Coeff & ki_app)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::mwc_active_probability(const Series & c, int m, const Coeff & k_active, const Coeff & k_inactive, const Coeff & beta_eps)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `MwcCharacteristics pluss::subsp::natsci::biology::systems::enzymes::mwc_characteristics(int m, const Series & k_active, const Series & k_inactive, const Series & beta_eps)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::mwc_enzyme_velocity(const Series & c, int m, const Coeff & vmax, const Coeff & k_active, const Coeff & k_inactive, const Coeff & beta_eps, const Coeff & activity_ratio = 0.0)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::ordered_bibi_rapid(const Series & a, const Series & b, const Coeff & vmax, const Coeff & kia, const Coeff & kb)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::pingpong_bibi(const Series & a, const Series & b, const Coeff & vmax, const Coeff & kma, const Coeff & kmb)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::random_bibi_rapid(const Series & a, const Series & b, const Coeff & vmax, const Coeff & ka, const Coeff & kb, const Coeff & alpha)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::rate_matrix(const Mechanism & m, const Series & conc)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::reversible_michaelis_menten(const Series & s, const Series & p, const Coeff & vf, const Coeff & ks, const Coeff & vr, const Coeff & kp)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::steady_state(const Mechanism & m, const Series & conc)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::substrate_inhibition(const Series & s, const Coeff & vmax, const Coeff & km, const Coeff & ksi)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `dynamics::RateFn pluss::subsp::natsci::biology::systems::enzymes::tqssa_rates(const Coeff & e_total, const Coeff & kcat, const Coeff & michaelis)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::turnover(const Mechanism & m, const Series & conc)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::enzymes::uncompetitive_inhibition(const Series & s, const Series & inhibitor, const Coeff & vmax, const Coeff & km, const Coeff & ki_prime)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/enzymes.h` |
+| `Series pluss::subsp::natsci::biology::systems::gene_networks::goodwin_rate(const Series & s, const Coeff & a, const Coeff & b, const Coeff & c, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/gene_networks.h` |
+| `Series pluss::subsp::natsci::biology::systems::gene_networks::repressilator_rate(const Series & s, const Coeff & alpha, const Coeff & alpha0, const Coeff & beta, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/gene_networks.h` |
+| `Series pluss::subsp::natsci::biology::systems::gene_networks::toggle_switch_rate(const Series & s, const Coeff & a1, const Coeff & a2, const Coeff & b, const Coeff & g)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/gene_networks.h` |
+| `Series pluss::subsp::natsci::biology::systems::kinetics::competitive_inhibition(const Series & s, const Series & inhibitor, const Coeff & vmax, const Coeff & km, const Coeff & ki)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
+| `Series pluss::subsp::natsci::biology::systems::kinetics::hill_activation(const Series & l, const Coeff & vmax, const Coeff & k_half, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
+| `Series pluss::subsp::natsci::biology::systems::kinetics::hill_repression(const Series & l, const Coeff & vmax, const Coeff & k_half, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
+| `Series pluss::subsp::natsci::biology::systems::kinetics::michaelis_constant(const Series & k_minus, const Series & kcat, const Series & k_plus)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
+| `Series pluss::subsp::natsci::biology::systems::kinetics::michaelis_menten(const Series & s, const Coeff & vmax, const Coeff & km)` | `PlussMa/include/pluss/subsp/natsci/biology/systems/kinetics.h` |
 
-### `pluss::natsci::chemistry`
+### `pluss::subsp::natsci::chemistry`
 
 Front doors (intended starting points):
 
-- `pluss::natsci::chemistry::polymers`: `molecular_weights`, `fh_binodal`, `mayo_lewis`, `wlc_force`
-- `pluss::natsci::chemistry::step_growth`: `conversion_second_order`, `sol_gel`, `reversible_rates`
+- `pluss::subsp::natsci::chemistry::crystallization`: `critical_radius`, `nucleation_barrier`, `nucleation_rate`, `jmak_fraction`, `avrami_fit`, `moment_rate`, `steady_state`, `steady_moment`, `exponential_density`, `pbe_rate`
+- `pluss::subsp::natsci::chemistry::polymers`: `molecular_weights`, `fh_binodal`, `mayo_lewis`, `wlc_force`
+- `pluss::subsp::natsci::chemistry::rate_theory`: `translational_per_volume`, `rotational_linear`, `rotational_nonlinear`, `vibrational`, `eyring_rate`, `tst_rate`, `wigner`, `eckart_transmission`, `eckart`, `eyring_fit`, `collision_rate`, `beyer_swinehart`, `rrkm`, `high_pressure_limit`, `strong_collision`, `hindered_rotor_levels`, `hindered_rotor_partition`, `master_equation`, `weak_collision`
+- `pluss::subsp::natsci::chemistry::step_growth`: `conversion_second_order`, `sol_gel`, `reversible_rates`
+- `pluss::subsp::natsci::chemistry::surface`: `langmuir`, `langmuir_competitive`, `sips`, `freundlich`, `temkin`, `bet`, `bet_fit`, `specific_surface_area`, `isosteric_heat`, `langmuir_hinshelwood_rate`, `eley_rideal_rate`
 
 | Public enum | Values |
 | --- | --- |
-| `pluss::natsci::chemistry::equilibrium::Problem` | `TP`, `HP`, `TV`, `UV` |
-| `pluss::natsci::chemistry::kinetics::Type` | `Elementary`, `ThreeBody`, `Falloff` |
+| `pluss::subsp::natsci::chemistry::equilibrium::Problem` | `TP`, `HP`, `TV`, `UV` |
+| `pluss::subsp::natsci::chemistry::kinetics::Type` | `Elementary`, `ThreeBody`, `Falloff` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::natsci::chemistry::equilibrium::Options` | `max_iterations`, `tolerance`, `initial_temperature` | - |
-| `pluss::natsci::chemistry::equilibrium::Result` | `moles`, `temperature`, `pressure`, `potentials`, `active`, `iterations`, `converged` | - |
-| `pluss::natsci::chemistry::kinetics::Mechanism` | - | `Mechanism()`, `composition()`, `elements()`, `equilibrium_constants()`, `forward_rate_constants()`, `has_molar_masses()`, `index()`, `molar_masses()`, `names()`, `net_production_rates()`, `rates_of_progress()`, `reactions()`, `species()`, `stoichiometry()`, `thermo()`, `third_body()` |
-| `pluss::natsci::chemistry::kinetics::Mechanism::Progress` | `forward`, `reverse` | - |
-| `pluss::natsci::chemistry::kinetics::ReactionSpec` | `reactants`, `products`, `a`, `b`, `ea`, `reversible`, `type`, `efficiencies`, `default_efficiency`, `a_low`, `b_low`, `ea_low`, `troe`, `troe_params` | - |
-| `pluss::natsci::chemistry::kinetics::Units` | `length_to_m`, `energy_to_j_per_mol` | `cgs_cal()`, `si()` |
-| `pluss::natsci::chemistry::polymers::FloryHugginsCritical` | `phi`, `chi` | - |
-| `pluss::natsci::chemistry::polymers::FloryHugginsPair` | `low`, `high` | - |
-| `pluss::natsci::chemistry::polymers::MolecularWeights` | `mn`, `mw`, `mz`, `dispersity` | - |
-| `pluss::natsci::chemistry::polymers::RadicalKinetics` | `kd`, `f`, `kp`, `ktc`, `ktd`, `ktm` | - |
-| `pluss::natsci::chemistry::quantum::AoIntegrals` | `overlap`, `core`, `eri`, `nuclear_energy` | - |
-| `pluss::natsci::chemistry::quantum::HfOptions` | `max_iterations`, `energy_tolerance`, `gradient_tolerance`, `damping`, `overlap_cutoff`, `diis_start`, `diis_space`, `diis_rcond`, `verify_symmetry` | - |
-| `pluss::natsci::chemistry::quantum::RhfResult` | `total_energy`, `electronic_energy`, `orbital_energy`, `coefficients`, `density`, `fock`, `density_rms`, `gradient_rms`, `energy_delta`, `converged`, `iterations`, `diis_steps` | - |
-| `pluss::natsci::chemistry::quantum::UhfGuess` | `alpha`, `beta` | - |
-| `pluss::natsci::chemistry::quantum::UhfResult` | `total_energy`, `electronic_energy`, `alpha_orbital_energy`, `beta_orbital_energy`, `alpha_coefficients`, `beta_coefficients`, `alpha_density`, `beta_density`, `alpha_fock`, `beta_fock`, `density_rms`, `gradient_rms`, `energy_delta`, `spin_squared`, `converged`, `iterations`, `diis_steps` | - |
-| `pluss::natsci::chemistry::spectroscopy::Diatomic` | `we`, `wexe`, `be`, `alphae`, `symmetry`, `electronic_degeneracy` | - |
-| `pluss::natsci::chemistry::spectroscopy::Faddeeva` | `real`, `imag` | - |
-| `pluss::natsci::chemistry::step_growth::SolGel` | `sol_fraction`, `gel_fraction`, `f_a`, `f_b` | - |
-| `pluss::natsci::chemistry::thermo::IdealGas` | - | `IdealGas()`, `concentrations()`, `density()`, `enthalpy()`, `internal_energy()`, `mean_molar_mass()`, `molar_masses()`, `names()`, `pressure()`, `properties()`, `sound_speed()`, `species()`, `t_max()`, `t_min()`, `temperature()` |
-| `pluss::natsci::chemistry::thermo::IdealGas::Properties` | `mean_molar_mass`, `internal_energy`, `enthalpy`, `cv`, `cp` | `gamma()` |
-| `pluss::natsci::chemistry::transport::GasTransport` | - | `GasTransport()`, `binary_diffusion()`, `mass_fractions()`, `mixture_conductivity()`, `mixture_diffusion()`, `mixture_diffusion_chemkin()`, `mixture_viscosity()`, `molar_masses()`, `mole_fractions()`, `names()`, `species()`, `species_properties()` |
-| `pluss::natsci::chemistry::transport::GasTransport::Species` | `viscosity`, `conductivity`, `binary_diffusion` | - |
-| `pluss::natsci::chemistry::transport::SpeciesData` | `name`, `geometry`, `well_depth_k`, `diameter_angstrom`, `dipole`, `rotational_relaxation`, `molar_mass` | - |
+| `pluss::subsp::natsci::chemistry::crystallization::AvramiFit` | `exponent`, `rate` | - |
+| `pluss::subsp::natsci::chemistry::crystallization::Msmpr` | `residence_time`, `feed_concentration`, `saturation`, `growth_constant`, `growth_order`, `nucleation_constant`, `nucleation_order`, `magma_order`, `crystal_density`, `shape_factor` | - |
+| `pluss::subsp::natsci::chemistry::crystallization::SteadyState` | `concentration`, `growth`, `nucleation`, `n0` | - |
+| `pluss::subsp::natsci::chemistry::equilibrium::Options` | `max_iterations`, `tolerance`, `initial_temperature` | - |
+| `pluss::subsp::natsci::chemistry::equilibrium::Result` | `moles`, `temperature`, `pressure`, `potentials`, `active`, `iterations`, `converged` | - |
+| `pluss::subsp::natsci::chemistry::kinetics::Mechanism` | - | `Mechanism()`, `composition()`, `elements()`, `equilibrium_constants()`, `forward_rate_constants()`, `has_molar_masses()`, `index()`, `molar_masses()`, `names()`, `net_production_rates()`, `rates_of_progress()`, `reactions()`, `species()`, `stoichiometry()`, `thermo()`, `third_body()` |
+| `pluss::subsp::natsci::chemistry::kinetics::Mechanism::Progress` | `forward`, `reverse` | - |
+| `pluss::subsp::natsci::chemistry::kinetics::ReactionSpec` | `reactants`, `products`, `a`, `b`, `ea`, `reversible`, `type`, `efficiencies`, `default_efficiency`, `a_low`, `b_low`, `ea_low`, `troe`, `troe_params` | - |
+| `pluss::subsp::natsci::chemistry::kinetics::Units` | `length_to_m`, `energy_to_j_per_mol` | `cgs_cal()`, `si()` |
+| `pluss::subsp::natsci::chemistry::polymers::FloryHugginsCritical` | `phi`, `chi` | - |
+| `pluss::subsp::natsci::chemistry::polymers::FloryHugginsPair` | `low`, `high` | - |
+| `pluss::subsp::natsci::chemistry::polymers::MolecularWeights` | `mn`, `mw`, `mz`, `dispersity` | - |
+| `pluss::subsp::natsci::chemistry::polymers::RadicalKinetics` | `kd`, `f`, `kp`, `ktc`, `ktd`, `ktm` | - |
+| `pluss::subsp::natsci::chemistry::quantum::AoIntegrals` | `overlap`, `core`, `eri`, `nuclear_energy` | - |
+| `pluss::subsp::natsci::chemistry::quantum::HfOptions` | `max_iterations`, `energy_tolerance`, `gradient_tolerance`, `damping`, `overlap_cutoff`, `diis_start`, `diis_space`, `diis_rcond`, `verify_symmetry` | - |
+| `pluss::subsp::natsci::chemistry::quantum::RhfResult` | `total_energy`, `electronic_energy`, `orbital_energy`, `coefficients`, `density`, `fock`, `density_rms`, `gradient_rms`, `energy_delta`, `converged`, `iterations`, `diis_steps` | - |
+| `pluss::subsp::natsci::chemistry::quantum::UhfGuess` | `alpha`, `beta` | - |
+| `pluss::subsp::natsci::chemistry::quantum::UhfResult` | `total_energy`, `electronic_energy`, `alpha_orbital_energy`, `beta_orbital_energy`, `alpha_coefficients`, `beta_coefficients`, `alpha_density`, `beta_density`, `alpha_fock`, `beta_fock`, `density_rms`, `gradient_rms`, `energy_delta`, `spin_squared`, `converged`, `iterations`, `diis_steps` | - |
+| `pluss::subsp::natsci::chemistry::rate_theory::EyringFit` | `enthalpy`, `entropy`, `enthalpy_error`, `entropy_error` | - |
+| `pluss::subsp::natsci::chemistry::rate_theory::MasterEquation` | `grain_energy`, `rate`, `population`, `coupling` | - |
+| `pluss::subsp::natsci::chemistry::rate_theory::Rrkm` | `energy_cm`, `rate`, `population`, `partition`, `threshold_bins` | - |
+| `pluss::subsp::natsci::chemistry::spectroscopy::Diatomic` | `we`, `wexe`, `be`, `alphae`, `symmetry`, `electronic_degeneracy` | - |
+| `pluss::subsp::natsci::chemistry::spectroscopy::Faddeeva` | `real`, `imag` | - |
+| `pluss::subsp::natsci::chemistry::step_growth::SolGel` | `sol_fraction`, `gel_fraction`, `f_a`, `f_b` | - |
+| `pluss::subsp::natsci::chemistry::surface::BetFit` | `monolayer`, `c`, `r_squared` | - |
+| `pluss::subsp::natsci::chemistry::thermo::IdealGas` | - | `IdealGas()`, `concentrations()`, `density()`, `enthalpy()`, `internal_energy()`, `mean_molar_mass()`, `molar_masses()`, `names()`, `pressure()`, `properties()`, `sound_speed()`, `species()`, `t_max()`, `t_min()`, `temperature()` |
+| `pluss::subsp::natsci::chemistry::thermo::IdealGas::Properties` | `mean_molar_mass`, `internal_energy`, `enthalpy`, `cv`, `cp` | `gamma()` |
+| `pluss::subsp::natsci::chemistry::transport::GasTransport` | - | `GasTransport()`, `binary_diffusion()`, `mass_fractions()`, `mixture_conductivity()`, `mixture_diffusion()`, `mixture_diffusion_chemkin()`, `mixture_viscosity()`, `molar_masses()`, `mole_fractions()`, `names()`, `species()`, `species_properties()` |
+| `pluss::subsp::natsci::chemistry::transport::GasTransport::Species` | `viscosity`, `conductivity`, `binary_diffusion` | - |
+| `pluss::subsp::natsci::chemistry::transport::SpeciesData` | `name`, `geometry`, `well_depth_k`, `diameter_angstrom`, `dipole`, `rotational_relaxation`, `molar_mass` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `Result pluss::natsci::chemistry::equilibrium::hp(const kinetics::Mechanism & m, const Series & pressure, const Series & enthalpy, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
-| `Result pluss::natsci::chemistry::equilibrium::solve(const thermo::Nasa7 & th, const Series & composition, Problem problem, const Series & b0, const Series & first, const Series & second, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
-| `Result pluss::natsci::chemistry::equilibrium::tp(const kinetics::Mechanism & m, const Series & temperature, const Series & pressure, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
-| `Result pluss::natsci::chemistry::equilibrium::tv(const kinetics::Mechanism & m, const Series & temperature, const Series & volume, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
-| `Result pluss::natsci::chemistry::equilibrium::uv(const kinetics::Mechanism & m, const Series & volume, const Series & internal_energy, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::rouse_diffusion(std::int64_t n_beads, const Series & zeta, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::rouse_eigenvalues(std::int64_t n_beads, pluss::ScalarType dtype = pluss::ScalarType::Float64)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::rouse_matrix(std::int64_t n_beads, pluss::ScalarType dtype = pluss::ScalarType::Float64)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::rouse_modulus(const Series & t, const Series & tau, const Coeff & chains_per_volume, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::rouse_relaxation_times(std::int64_t n_beads, const Series & zeta, const Coeff & b, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::rouse_viscosity(const Series & tau, const Coeff & chains_per_volume, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `double pluss::natsci::chemistry::polymer_dynamics::zimm_diffusion(std::int64_t n_beads, double h_star, double zeta, double kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::zimm_eigenvalues(std::int64_t n_beads, double h_star)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::zimm_hydrodynamic_matrix(std::int64_t n_beads, double h_star)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymer_dynamics::zimm_relaxation_times(std::int64_t n_beads, double h_star, double zeta, double b, double kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
-| `Series pluss::natsci::chemistry::polymers::azeotrope(const Coeff & r1, const Coeff & r2, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::carothers_degree_of_polymerization(const Series & conversion, const Coeff & r = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `FloryHugginsPair pluss::natsci::chemistry::polymers::fh_binodal(const Series & chi, const Series & n1, const Series & n2, int stages = 24, int newton_iterations = 40)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `FloryHugginsCritical pluss::natsci::chemistry::polymers::fh_critical(const Series & n1, const Series & n2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::fh_free_energy(const Series & phi, const Coeff & n1, const Coeff & n2, const Coeff & chi)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::fh_mu1_per_site(const Series & phi, const Coeff & n1, const Coeff & n2, const Coeff & chi)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::fh_mu2_per_site(const Series & phi, const Coeff & n1, const Coeff & n2, const Coeff & chi)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::fh_spinodal_chi(const Series & phi, const Coeff & n1, const Coeff & n2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `FloryHugginsPair pluss::natsci::chemistry::polymers::fh_spinodal_compositions(const Series & chi, const Series & n1, const Series & n2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::fjc_extension(const Series & force, const Coeff & kuhn_length, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::fjc_mean_square_end_to_end(const Series & n_bonds, const Coeff & bond_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::flory_number_fraction(const Series & x, const Coeff & p)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::flory_weight_fraction(const Series & x, const Coeff & p)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `dynamics::RateFn pluss::natsci::chemistry::polymers::free_radical_rates(const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::freely_rotating_mean_square_end_to_end(const Series & n_bonds, const Coeff & bond_length, const Coeff & cos_theta)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::mayo_lewis(const Series & f1, const Coeff & r1, const Coeff & r2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::meyer_lowry_conversion(const Series & f1, const Series & f10, const Coeff & r1, const Coeff & r2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `MolecularWeights pluss::natsci::chemistry::polymers::molecular_weights(const Series & x, const Series & n, const Coeff & m0 = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::poisson_number_fraction(const Series & x, const Coeff & nu)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::qssa_kinetic_chain_length(const Series & monomer, const Series & initiator, const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::qssa_polymerization_rate(const Series & monomer, const Series & initiator, const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::qssa_radical_concentration(const Series & initiator, const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `MolecularWeights pluss::natsci::chemistry::polymers::radical_molecular_weights(const Series & y, const Coeff & m0 = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::skeist_feed_fraction(const Series & f10, const Coeff & r1, const Coeff & r2, double conversion, std::int64_t steps = 400)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::wlc_extension(const Series & force, const Coeff & persistence_length, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::wlc_force(const Series & z, const Coeff & persistence_length, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::wlc_mean_square_end_to_end(const Series & contour_length, const Coeff & persistence_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `Series pluss::natsci::chemistry::polymers::wlc_radius_of_gyration_squared(const Series & contour_length, const Coeff & persistence_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
-| `RhfResult pluss::natsci::chemistry::quantum::rhf(const AoIntegrals & integrals, std::int64_t electrons, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
-| `RhfResult pluss::natsci::chemistry::quantum::rhf(const AoIntegrals & integrals, std::int64_t electrons, const Series & initial_density, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
-| `UhfResult pluss::natsci::chemistry::quantum::uhf(const AoIntegrals & integrals, std::int64_t alpha_electrons, std::int64_t beta_electrons, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
-| `UhfResult pluss::natsci::chemistry::quantum::uhf(const AoIntegrals & integrals, std::int64_t alpha_electrons, std::int64_t beta_electrons, const UhfGuess & initial_density, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
-| `Series pluss::natsci::chemistry::reactor::concentrations(const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::element_totals(const kinetics::Mechanism & m, const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `stiff::Result pluss::natsci::chemistry::reactor::integrate(const kinetics::Mechanism & m, const Series & y0, double t_end, _Bool adiabatic = true, const stiff::Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::internal_energy_density(const kinetics::Mechanism & m, const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::make_state(const Series & t, const Series & c)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::max_slope_time(const std::vector<double> & times, const Series & temperature_path)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::pressure(const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::rate(const kinetics::Mechanism & m, const Series & y, _Bool adiabatic = true)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::temperature(const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::reactor::trajectory(const kinetics::Mechanism & m, const Series & y0, const std::vector<double> & times, _Bool adiabatic = true, const stiff::Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::absorbance(const Series & absorptivity, const Series & concentration, const dynamics::Coeff & path_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::cp_over_r(const Diatomic & d, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::doppler_sigma(const Series & nu0, const Series & temperature, double molar_mass)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Faddeeva pluss::natsci::chemistry::spectroscopy::faddeeva(const Series & x, const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::gaussian(const Series & x, const Series & x0, const Series & sigma)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::lorentzian(const Series & x, const Series & x0, const Series & gamma)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `double pluss::natsci::chemistry::spectroscopy::planck()` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::transmittance(const Series & a)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::voigt(const Series & x, const Series & x0, const Series & sigma, const Series & gamma)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::spectroscopy::voigt_fwhm_approx(const Series & lorentz_fwhm, const Series & gauss_fwhm)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `double pluss::natsci::chemistry::spectroscopy::wavenumber_to_energy(double wavenumber_cm)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
-| `Series pluss::natsci::chemistry::step_growth::afb_critical_conversion(const Coeff & f, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::afb_number_average(const Series & a, const Coeff & f)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::afb_weight_average(const Series & a, const Coeff & f)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::conversion_imbalanced(const Series & t, const Coeff & k, const Coeff & ca0, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::conversion_second_order(const Series & t, const Coeff & k, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::conversion_third_order(const Series & t, const Coeff & k, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::critical_conversion(const Coeff & f, const Coeff & g, const Series & r)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::equilibrium_condensate(const Series & dp, const Series & k_eq, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::equilibrium_conversion_closed(const Series & k_eq)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::equilibrium_dp_closed(const Series & k_eq)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::step_growth::equilibrium_dp_open(const Series & k_eq, const Series & condensate, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `dynamics::RateFn pluss::natsci::chemistry::step_growth::linear_moment_rates(const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `dynamics::RateFn pluss::natsci::chemistry::step_growth::reversible_rates(const Coeff & k_forward, const Coeff & k_eq, const Coeff & c0, const Coeff & removal = 0.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `SolGel pluss::natsci::chemistry::step_growth::sol_gel(const Series & pa, const Series & r, const Coeff & f, const Coeff & g, int iterations = 80)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
-| `Series pluss::natsci::chemistry::transport::omega11(const Series & tstar)` | `PlussMa/include/pluss/subsp/natsci/chemistry/transport.h` |
-| `Series pluss::natsci::chemistry::transport::omega22(const Series & tstar)` | `PlussMa/include/pluss/subsp/natsci/chemistry/transport.h` |
+| `AvramiFit pluss::subsp::natsci::chemistry::crystallization::avrami_fit(const Series & t, const Series & x)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::critical_radius(const Series & supersaturation, const Coeff & gamma, const Coeff & molecular_volume, const Coeff & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::exponential_density(const Series & size, const Series & n0, const Series & growth, const Coeff & tau)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `double pluss::subsp::natsci::chemistry::crystallization::jmak_constant_nucleation_3d(double nucleation_rate, double growth_speed)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::jmak_fraction(const Series & t, const Coeff & k, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::moment_rate(const Series & state, const Msmpr & p)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::nucleation_barrier(const Series & supersaturation, const Coeff & gamma, const Coeff & molecular_volume, const Coeff & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::nucleation_rate(const Series & supersaturation, const Coeff & prefactor, const Coeff & gamma, const Coeff & molecular_volume, const Coeff & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::pbe_rate(const Series & state, const pbe::Grid & grid, const Msmpr & p)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Series pluss::subsp::natsci::chemistry::crystallization::steady_moment(const Series & n0, const Series & growth, const Coeff & tau, int j)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `SteadyState pluss::subsp::natsci::chemistry::crystallization::steady_state(const Series & like, const Msmpr & p)` | `PlussMa/include/pluss/subsp/natsci/chemistry/crystallization.h` |
+| `Result pluss::subsp::natsci::chemistry::equilibrium::hp(const kinetics::Mechanism & m, const Series & pressure, const Series & enthalpy, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
+| `Result pluss::subsp::natsci::chemistry::equilibrium::solve(const thermo::Nasa7 & th, const Series & composition, Problem problem, const Series & b0, const Series & first, const Series & second, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
+| `Result pluss::subsp::natsci::chemistry::equilibrium::tp(const kinetics::Mechanism & m, const Series & temperature, const Series & pressure, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
+| `Result pluss::subsp::natsci::chemistry::equilibrium::tv(const kinetics::Mechanism & m, const Series & temperature, const Series & volume, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
+| `Result pluss::subsp::natsci::chemistry::equilibrium::uv(const kinetics::Mechanism & m, const Series & volume, const Series & internal_energy, const Series & element_moles, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/equilibrium.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::rouse_diffusion(std::int64_t n_beads, const Series & zeta, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::rouse_eigenvalues(std::int64_t n_beads, pluss::ScalarType dtype = pluss::ScalarType::Float64)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::rouse_matrix(std::int64_t n_beads, pluss::ScalarType dtype = pluss::ScalarType::Float64)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::rouse_modulus(const Series & t, const Series & tau, const Coeff & chains_per_volume, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::rouse_relaxation_times(std::int64_t n_beads, const Series & zeta, const Coeff & b, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::rouse_viscosity(const Series & tau, const Coeff & chains_per_volume, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `double pluss::subsp::natsci::chemistry::polymer_dynamics::zimm_diffusion(std::int64_t n_beads, double h_star, double zeta, double kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::zimm_eigenvalues(std::int64_t n_beads, double h_star)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::zimm_hydrodynamic_matrix(std::int64_t n_beads, double h_star)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymer_dynamics::zimm_relaxation_times(std::int64_t n_beads, double h_star, double zeta, double b, double kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymer_dynamics.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::azeotrope(const Coeff & r1, const Coeff & r2, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::carothers_degree_of_polymerization(const Series & conversion, const Coeff & r = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `FloryHugginsPair pluss::subsp::natsci::chemistry::polymers::fh_binodal(const Series & chi, const Series & n1, const Series & n2, int stages = 24, int newton_iterations = 40)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `FloryHugginsCritical pluss::subsp::natsci::chemistry::polymers::fh_critical(const Series & n1, const Series & n2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::fh_free_energy(const Series & phi, const Coeff & n1, const Coeff & n2, const Coeff & chi)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::fh_mu1_per_site(const Series & phi, const Coeff & n1, const Coeff & n2, const Coeff & chi)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::fh_mu2_per_site(const Series & phi, const Coeff & n1, const Coeff & n2, const Coeff & chi)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::fh_spinodal_chi(const Series & phi, const Coeff & n1, const Coeff & n2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `FloryHugginsPair pluss::subsp::natsci::chemistry::polymers::fh_spinodal_compositions(const Series & chi, const Series & n1, const Series & n2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::fjc_extension(const Series & force, const Coeff & kuhn_length, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::fjc_mean_square_end_to_end(const Series & n_bonds, const Coeff & bond_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::flory_number_fraction(const Series & x, const Coeff & p)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::flory_weight_fraction(const Series & x, const Coeff & p)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `dynamics::RateFn pluss::subsp::natsci::chemistry::polymers::free_radical_rates(const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::freely_rotating_mean_square_end_to_end(const Series & n_bonds, const Coeff & bond_length, const Coeff & cos_theta)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::mayo_lewis(const Series & f1, const Coeff & r1, const Coeff & r2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::meyer_lowry_conversion(const Series & f1, const Series & f10, const Coeff & r1, const Coeff & r2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `MolecularWeights pluss::subsp::natsci::chemistry::polymers::molecular_weights(const Series & x, const Series & n, const Coeff & m0 = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::poisson_number_fraction(const Series & x, const Coeff & nu)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::qssa_kinetic_chain_length(const Series & monomer, const Series & initiator, const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::qssa_polymerization_rate(const Series & monomer, const Series & initiator, const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::qssa_radical_concentration(const Series & initiator, const RadicalKinetics & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `MolecularWeights pluss::subsp::natsci::chemistry::polymers::radical_molecular_weights(const Series & y, const Coeff & m0 = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::skeist_feed_fraction(const Series & f10, const Coeff & r1, const Coeff & r2, double conversion, std::int64_t steps = 400)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::wlc_extension(const Series & force, const Coeff & persistence_length, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::wlc_force(const Series & z, const Coeff & persistence_length, const Coeff & kt)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::wlc_mean_square_end_to_end(const Series & contour_length, const Coeff & persistence_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `Series pluss::subsp::natsci::chemistry::polymers::wlc_radius_of_gyration_squared(const Series & contour_length, const Coeff & persistence_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/polymers.h` |
+| `RhfResult pluss::subsp::natsci::chemistry::quantum::rhf(const AoIntegrals & integrals, std::int64_t electrons, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
+| `RhfResult pluss::subsp::natsci::chemistry::quantum::rhf(const AoIntegrals & integrals, std::int64_t electrons, const Series & initial_density, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
+| `UhfResult pluss::subsp::natsci::chemistry::quantum::uhf(const AoIntegrals & integrals, std::int64_t alpha_electrons, std::int64_t beta_electrons, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
+| `UhfResult pluss::subsp::natsci::chemistry::quantum::uhf(const AoIntegrals & integrals, std::int64_t alpha_electrons, std::int64_t beta_electrons, const UhfGuess & initial_density, const HfOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/quantum.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::beyer_swinehart(const std::vector<std::int64_t> & wavenumbers, std::int64_t bins, const Config & cfg = Config{}.with_dtype(pluss::ScalarType::Float64))` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::collision_rate(const Coeff & sigma, const Coeff & reduced_mass, const Coeff & activation_energy, const Series & temperature, const Coeff & steric = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::eckart(const Series & v1, const Series & v2, const Series & imaginary_wavenumber_cm, const Series & temperature, int points = 801, double u_max = 80.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::eckart_transmission(const Series & energy, const Series & v1, const Series & v2, const Series & imaginary_wavenumber_cm)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `EyringFit pluss::subsp::natsci::chemistry::rate_theory::eyring_fit(const Series & temperature, const Series & rate_constant)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::eyring_rate(const Series & delta_g, const Series & temperature, const Coeff & kappa = 1.0, double molecularity = 1.0, double standard_concentration = 1000.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::high_pressure_limit(const Rrkm & r)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::hindered_rotor_levels(double moment_of_inertia, double barrier, std::int64_t symmetry, std::int64_t cutoff = 60)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::hindered_rotor_partition(const Series & levels, const Series & temperature, std::int64_t symmetry = 1)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `MasterEquation pluss::subsp::natsci::chemistry::rate_theory::master_equation(const Rrkm & r, std::int64_t grain_cm, double alpha_cm, int sinkhorn_iterations = 0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::rotational_linear(const Coeff & rotational_constant_cm, const Coeff & symmetry, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::rotational_nonlinear(const Coeff & a_cm, const Coeff & b_cm, const Coeff & c_cm, const Coeff & symmetry, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Rrkm pluss::subsp::natsci::chemistry::rate_theory::rrkm(const Series & rho_reactant, const Series & rho_transition, std::int64_t threshold_cm, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::strong_collision(const Rrkm & r, const Series & omega)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::translational_per_volume(const Coeff & mass_kg, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::tst_rate(const Series & q_transition, const Series & q_reactants, const Series & e0, const Series & temperature, const Coeff & kappa = 1.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::vibrational(const Series & wavenumbers, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::weak_collision(const MasterEquation & m, const Series & omega)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::rate_theory::wigner(const Series & imaginary_wavenumber_cm, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/rate_theory.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::concentrations(const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::element_totals(const kinetics::Mechanism & m, const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `stiff::Result pluss::subsp::natsci::chemistry::reactor::integrate(const kinetics::Mechanism & m, const Series & y0, double t_end, _Bool adiabatic = true, const stiff::Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::internal_energy_density(const kinetics::Mechanism & m, const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::make_state(const Series & t, const Series & c)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::max_slope_time(const std::vector<double> & times, const Series & temperature_path)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::pressure(const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::rate(const kinetics::Mechanism & m, const Series & y, _Bool adiabatic = true)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::temperature(const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::reactor::trajectory(const kinetics::Mechanism & m, const Series & y0, const std::vector<double> & times, _Bool adiabatic = true, const stiff::Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/chemistry/reactor.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::absorbance(const Series & absorptivity, const Series & concentration, const dynamics::Coeff & path_length)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::cp_over_r(const Diatomic & d, const Series & t)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::doppler_sigma(const Series & nu0, const Series & temperature, double molar_mass)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Faddeeva pluss::subsp::natsci::chemistry::spectroscopy::faddeeva(const Series & x, const Series & y)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::gaussian(const Series & x, const Series & x0, const Series & sigma)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::lorentzian(const Series & x, const Series & x0, const Series & gamma)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `double pluss::subsp::natsci::chemistry::spectroscopy::planck()` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::transmittance(const Series & a)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::voigt(const Series & x, const Series & x0, const Series & sigma, const Series & gamma)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::spectroscopy::voigt_fwhm_approx(const Series & lorentz_fwhm, const Series & gauss_fwhm)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `double pluss::subsp::natsci::chemistry::spectroscopy::wavenumber_to_energy(double wavenumber_cm)` | `PlussMa/include/pluss/subsp/natsci/chemistry/spectroscopy.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::afb_critical_conversion(const Coeff & f, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::afb_number_average(const Series & a, const Coeff & f)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::afb_weight_average(const Series & a, const Coeff & f)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::conversion_imbalanced(const Series & t, const Coeff & k, const Coeff & ca0, const Coeff & r)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::conversion_second_order(const Series & t, const Coeff & k, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::conversion_third_order(const Series & t, const Coeff & k, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::critical_conversion(const Coeff & f, const Coeff & g, const Series & r)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::equilibrium_condensate(const Series & dp, const Series & k_eq, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::equilibrium_conversion_closed(const Series & k_eq)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::equilibrium_dp_closed(const Series & k_eq)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::step_growth::equilibrium_dp_open(const Series & k_eq, const Series & condensate, const Coeff & c0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `dynamics::RateFn pluss::subsp::natsci::chemistry::step_growth::linear_moment_rates(const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `dynamics::RateFn pluss::subsp::natsci::chemistry::step_growth::reversible_rates(const Coeff & k_forward, const Coeff & k_eq, const Coeff & c0, const Coeff & removal = 0.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `SolGel pluss::subsp::natsci::chemistry::step_growth::sol_gel(const Series & pa, const Series & r, const Coeff & f, const Coeff & g, int iterations = 80)` | `PlussMa/include/pluss/subsp/natsci/chemistry/step_growth.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::bet(const Series & x, const Coeff & c, double layers = 0.0)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `BetFit pluss::subsp::natsci::chemistry::surface::bet_fit(const Series & x, const Series & q)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::eley_rideal_rate(const Series & p_a, const Series & p_b, const Coeff & k_a, const Coeff & k_rate)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::freundlich(const Series & pressure, const Coeff & k, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::isosteric_heat(const std::function<Series (const Series &, const Series &)> & pressure, const Series & theta, const Series & temperature, double relative_step = 1e-5)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::langmuir(const Series & pressure, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::langmuir_competitive(const Series & pressures, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::langmuir_dissociative(const Series & pressure, const Coeff & k)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::langmuir_hinshelwood_rate(const Series & p_a, const Series & p_b, const Coeff & k_a, const Coeff & k_b, const Coeff & k_rate)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::langmuir_pressure(const Series & theta, const Series & temperature, const Coeff & k0, const Coeff & heat)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::sips(const Series & pressure, const Coeff & q_m, const Coeff & k, const Coeff & n)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::specific_surface_area(const Series & monolayer_mol_per_kg, double cross_section_m2)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::surface::temkin(const Series & pressure, const Coeff & a, const Coeff & b, const Coeff & temperature)` | `PlussMa/include/pluss/subsp/natsci/chemistry/surface.h` |
+| `Series pluss::subsp::natsci::chemistry::transport::omega11(const Series & tstar)` | `PlussMa/include/pluss/subsp/natsci/chemistry/transport.h` |
+| `Series pluss::subsp::natsci::chemistry::transport::omega22(const Series & tstar)` | `PlussMa/include/pluss/subsp/natsci/chemistry/transport.h` |
 
-### `pluss::natsci::common`
+### `pluss::subsp::natsci::common`
+
+Front doors (intended starting points):
+
+- `pluss::subsp::natsci::common::spatial::spectral`: `forward`, `inverse`, `symbol`, `solve`
 
 | Public enum | Values |
 | --- | --- |
-| `pluss::natsci::common::CovarianceCheck` | `Symmetric`, `PositiveSemidefinite`, `PositiveDefinite` |
-| `pluss::natsci::common::continuation::PointKind` | `Fold`, `Hopf`, `BranchPoint` |
-| `pluss::natsci::common::dynamics::Difference` | `Central`, `ForwardSecondOrder` |
-| `pluss::natsci::common::quantum::SolveMethod` | `RK4`, `RK45`, `ImplicitMidpoint`, `Krylov` |
-| `pluss::natsci::common::spatial::BoundKind` | `Value`, `Flux` |
-| `pluss::natsci::common::spatial::PoissonPc` | `None`, `Diag` |
-| `pluss::natsci::common::spatial::PoissonStencil` | `Compact`, `Wide` |
-| `pluss::natsci::common::spatial::Side` | `Low`, `High` |
+| `pluss::subsp::natsci::common::CovarianceCheck` | `Symmetric`, `PositiveSemidefinite`, `PositiveDefinite` |
+| `pluss::subsp::natsci::common::continuation::PointKind` | `Fold`, `Hopf`, `BranchPoint` |
+| `pluss::subsp::natsci::common::dynamics::Difference` | `Central`, `ForwardSecondOrder` |
+| `pluss::subsp::natsci::common::quantum::SolveMethod` | `RK4`, `RK45`, `ImplicitMidpoint`, `Krylov` |
+| `pluss::subsp::natsci::common::spatial::BoundKind` | `Value`, `Flux` |
+| `pluss::subsp::natsci::common::spatial::PoissonMethod` | `Auto`, `ConjugateGradient`, `Fft`, `Multigrid` |
+| `pluss::subsp::natsci::common::spatial::PoissonPc` | `None`, `Diag` |
+| `pluss::subsp::natsci::common::spatial::PoissonStencil` | `Compact`, `Wide` |
+| `pluss::subsp::natsci::common::spatial::Side` | `Low`, `High` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::natsci::common::AffineUnit` | - | `AffineUnit<D>()`, `name()`, `si_offset()`, `si_scale()`, `symbol()` |
-| `pluss::natsci::common::CorrelatedMeasurement` | - | `CorrelatedMeasurement<D>()`, `check()`, `covariance()`, `map()`, `values()` |
-| `pluss::natsci::common::Dimension` | - | - |
-| `pluss::natsci::common::DimensionSignature` | `powers` | `of()` |
-| `pluss::natsci::common::Drift` | `absolute`, `scaled` | - |
-| `pluss::natsci::common::Measurement` | - | `Measurement<D, Rep>()`, `lower()`, `operator*()`, `operator+()`, `operator-()`, `operator/()`, `relative_standard_uncertainty()`, `standard_uncertainty()`, `upper()`, `value()` |
-| `pluss::natsci::common::Param` | `name`, `value`, `lower`, `upper`, `symbol`, `source` | - |
-| `pluss::natsci::common::ParameterMeta` | `lower`, `upper` | - |
-| `pluss::natsci::common::ParameterSet` | - | `contains()`, `flat()`, `get()`, `layout()`, `meta()`, `repack()`, `size()` |
-| `pluss::natsci::common::PhysicalConstant` | `symbol`, `name`, `measurement`, `source`, `revision`, `doi`, `exact` | - |
-| `pluss::natsci::common::Point` | - | `from()`, `from_si()`, `in()`, `operator+()`, `operator-()`, `si_value()` |
-| `pluss::natsci::common::Quantity` | - | `from()`, `from_si()`, `in()`, `operator*()`, `operator+()`, `operator-()`, `operator/()`, `si_value()` |
-| `pluss::natsci::common::RecordMeta` | `name`, `dimension`, `symbol`, `source` | - |
-| `pluss::natsci::common::StateField` | `name`, `value`, `symbol`, `source` | - |
-| `pluss::natsci::common::StateVector` | - | `contains()`, `flat()`, `get()`, `layout()`, `meta()`, `repack()`, `size()` |
-| `pluss::natsci::common::Trajectory` | - | `Trajectory<CoordinateDimension>()`, `coordinate()`, `ordered()`, `state()`, `steps()` |
-| `pluss::natsci::common::Unit` | - | `Unit<D>()`, `name()`, `si_scale()`, `symbol()` |
-| `pluss::natsci::common::continuation::Branch` | `u`, `p`, `unstable`, `special`, `points`, `stopped` | - |
-| `pluss::natsci::common::continuation::Options` | `step`, `step_min`, `step_max`, `max_points`, `max_newton`, `tolerance`, `p_min`, `p_max`, `fd_step`, `detect`, `stability`, `u_scale` | - |
-| `pluss::natsci::common::continuation::SpecialPoint` | `kind`, `index`, `p`, `u`, `omega` | - |
-| `pluss::natsci::common::dynamics::Coeff` | - | `Coeff()`, `is_series()`, `on()`, `scalar()` |
-| `pluss::natsci::common::dynamics::Path` | `times`, `states` | - |
-| `pluss::natsci::common::estimation::Fit` | `beta`, `sse`, `residuals`, `jacobian`, `iterations`, `converged`, `observations`, `parameters` | - |
-| `pluss::natsci::common::estimation::Intervals` | `lower`, `upper`, `standard_error` | - |
-| `pluss::natsci::common::estimation::Options` | `tol_x`, `tol_fun`, `derivative_step`, `max_iterations` | - |
-| `pluss::natsci::common::estimation::Profile` | `values`, `sse`, `beta` | - |
-| `pluss::natsci::common::population_balance::AggregationOperator` | `gain_tensor`, `pair_weight`, `bins` | - |
-| `pluss::natsci::common::population_balance::BreakageOperator` | `daughters`, `mother_loss`, `bins` | - |
-| `pluss::natsci::common::population_balance::Grid` | `edges`, `centers` | `bins()`, `width()` |
-| `pluss::natsci::common::quantum::Channel` | - | `kraus()`, `spaces()` |
-| `pluss::natsci::common::quantum::Ket` | - | `batch_shape()`, `size()`, `spaces()`, `value()` |
-| `pluss::natsci::common::quantum::Op` | - | `batch_shape()`, `size()`, `spaces()`, `value()` |
-| `pluss::natsci::common::quantum::SolveOptions` | `method`, `steps_per_span`, `hbar`, `relative_tolerance`, `absolute_tolerance`, `initial_step`, `minimum_step`, `maximum_step`, `max_steps`, `linear` | - |
-| `pluss::natsci::common::quantum::SparseOp` | - | `hermitian()`, `map()`, `size()`, `spaces()` |
-| `pluss::natsci::common::quantum::Spectrum` | `values`, `vectors` | - |
-| `pluss::natsci::common::reaction::Network` | `stoichiometry`, `orders` | `reactions()`, `species()` |
-| `pluss::natsci::common::reaction::SteadyState` | `state`, `residual`, `iterations`, `converged` | - |
-| `pluss::natsci::common::sensitivity::Sensitivities` | `times`, `states`, `dydp` | - |
-| `pluss::natsci::common::solve::FitConstraints` | `equality`, `inequality` | - |
-| `pluss::natsci::common::solve::FitOptions` | `solver`, `constraints` | - |
-| `pluss::natsci::common::solve::FitResult` | `parameters`, `objective`, `solver` | - |
-| `pluss::natsci::common::solve::FlowEventResult` | `state`, `coordinate`, `event_value`, `steps`, `evaluations`, `event_evaluations`, `triggered`, `converged` | - |
-| `pluss::natsci::common::solve::FlowResult` | `state`, `steps`, `evaluations`, `converged` | - |
-| `pluss::natsci::common::solve::MarchResult` | `trajectory`, `steps` | - |
-| `pluss::natsci::common::solve::QuadResult` | `value`, `error`, `evaluations`, `refinements`, `converged`, `rule` | - |
-| `pluss::natsci::common::spatial::Bound` | - | `face()`, `flux()`, `kind()`, `value()` |
-| `pluss::natsci::common::spatial::Bounds` | - | `all_flux()`, `at()`, `dim()`, `zeroed()` |
-| `pluss::natsci::common::spatial::BoxGrid` | - | `dim()`, `shape()`, `spacing()` |
-| `pluss::natsci::common::spatial::Face` | `axis`, `side` | - |
-| `pluss::natsci::common::spatial::GhostPair` | `low`, `high` | - |
-| `pluss::natsci::common::spatial::PeriodicGrid` | - | `dim()`, `shape()`, `spacing()` |
-| `pluss::natsci::common::spatial::PoissonOptions` | `stencil`, `pc`, `solve`, `mean_tolerance`, `require_convergence` | - |
-| `pluss::natsci::common::spatial::PoissonResult` | `solution`, `residual_norm`, `relative_residual`, `converged`, `breakdown`, `iterations` | - |
-| `pluss::natsci::common::spatial::QuantityPoissonResult` | `solution`, `residual_norm`, `relative_residual`, `converged`, `breakdown`, `iterations` | - |
-| `pluss::natsci::common::speciation::Options` | `max_iterations`, `tolerance`, `max_step` | - |
-| `pluss::natsci::common::speciation::Result` | `free`, `complexes`, `residual`, `iterations` | - |
-| `pluss::natsci::common::ssa::SsaOptions` | `max_events`, `seed` | - |
-| `pluss::natsci::common::ssa::SsaResult` | `state`, `events`, `completed` | - |
-| `pluss::natsci::common::stability::Routh` | `unstable`, `first_column`, `marginal` | - |
-| `pluss::natsci::common::stiff::Options` | `rtol`, `atol`, `max_steps`, `h_initial`, `h_max`, `fd_relative_step` | - |
-| `pluss::natsci::common::stiff::Result` | `y`, `t`, `steps`, `rejected`, `rhs_evaluations`, `jacobian_evaluations`, `converged` | - |
-| `pluss::natsci::common::thermo::Nasa7` | - | `Nasa7()`, `check()`, `cp_r()`, `eval()`, `g_rt()`, `h_rt()`, `names()`, `s_r()`, `species()`, `t_max()`, `t_min()` |
-| `pluss::natsci::common::thermo::Nasa7::Properties` | `cp_r`, `h_rt`, `s_r` | `g_rt()` |
-| `pluss::natsci::common::thermo::SpeciesData` | `name`, `composition`, `molar_mass`, `t_min`, `t_mid`, `t_max`, `low`, `high` | - |
+| `pluss::subsp::natsci::common::AffineUnit` | - | `AffineUnit<D>()`, `name()`, `si_offset()`, `si_scale()`, `symbol()` |
+| `pluss::subsp::natsci::common::CorrelatedMeasurement` | - | `CorrelatedMeasurement<D>()`, `check()`, `covariance()`, `map()`, `values()` |
+| `pluss::subsp::natsci::common::Dimension` | - | - |
+| `pluss::subsp::natsci::common::DimensionSignature` | `powers` | `of()` |
+| `pluss::subsp::natsci::common::Drift` | `absolute`, `scaled` | - |
+| `pluss::subsp::natsci::common::Measurement` | - | `Measurement<D, Rep>()`, `lower()`, `operator*()`, `operator+()`, `operator-()`, `operator/()`, `relative_standard_uncertainty()`, `standard_uncertainty()`, `upper()`, `value()` |
+| `pluss::subsp::natsci::common::Param` | `name`, `value`, `lower`, `upper`, `symbol`, `source` | - |
+| `pluss::subsp::natsci::common::ParameterMeta` | `lower`, `upper` | - |
+| `pluss::subsp::natsci::common::ParameterSet` | - | `contains()`, `flat()`, `get()`, `layout()`, `meta()`, `repack()`, `size()` |
+| `pluss::subsp::natsci::common::PhysicalConstant` | `symbol`, `name`, `measurement`, `source`, `revision`, `doi`, `exact` | - |
+| `pluss::subsp::natsci::common::Point` | - | `from()`, `from_si()`, `in()`, `operator+()`, `operator-()`, `si_value()` |
+| `pluss::subsp::natsci::common::Quantity` | - | `from()`, `from_si()`, `in()`, `operator*()`, `operator+()`, `operator-()`, `operator/()`, `si_value()` |
+| `pluss::subsp::natsci::common::RecordMeta` | `name`, `dimension`, `symbol`, `source` | - |
+| `pluss::subsp::natsci::common::StateField` | `name`, `value`, `symbol`, `source` | - |
+| `pluss::subsp::natsci::common::StateVector` | - | `contains()`, `flat()`, `get()`, `layout()`, `meta()`, `repack()`, `size()` |
+| `pluss::subsp::natsci::common::Trajectory` | - | `Trajectory<CoordinateDimension>()`, `coordinate()`, `ordered()`, `state()`, `steps()` |
+| `pluss::subsp::natsci::common::Unit` | - | `Unit<D>()`, `name()`, `si_scale()`, `symbol()` |
+| `pluss::subsp::natsci::common::continuation::Branch` | `u`, `p`, `unstable`, `special`, `points`, `stopped` | - |
+| `pluss::subsp::natsci::common::continuation::Options` | `step`, `step_min`, `step_max`, `max_points`, `max_newton`, `tolerance`, `p_min`, `p_max`, `fd_step`, `detect`, `stability`, `u_scale` | - |
+| `pluss::subsp::natsci::common::continuation::SpecialPoint` | `kind`, `index`, `p`, `u`, `omega` | - |
+| `pluss::subsp::natsci::common::dynamics::Coeff` | - | `Coeff()`, `is_series()`, `on()`, `scalar()` |
+| `pluss::subsp::natsci::common::dynamics::Path` | `times`, `states` | - |
+| `pluss::subsp::natsci::common::estimation::Fit` | `beta`, `sse`, `residuals`, `jacobian`, `iterations`, `converged`, `observations`, `parameters` | - |
+| `pluss::subsp::natsci::common::estimation::Intervals` | `lower`, `upper`, `standard_error` | - |
+| `pluss::subsp::natsci::common::estimation::Options` | `tol_x`, `tol_fun`, `derivative_step`, `max_iterations` | - |
+| `pluss::subsp::natsci::common::estimation::Profile` | `values`, `sse`, `beta` | - |
+| `pluss::subsp::natsci::common::population_balance::AggregationOperator` | `gain_tensor`, `pair_weight`, `bins` | - |
+| `pluss::subsp::natsci::common::population_balance::BreakageOperator` | `daughters`, `mother_loss`, `bins` | - |
+| `pluss::subsp::natsci::common::population_balance::Grid` | `edges`, `centers` | `bins()`, `width()` |
+| `pluss::subsp::natsci::common::quantum::Channel` | - | `kraus()`, `spaces()` |
+| `pluss::subsp::natsci::common::quantum::Ket` | - | `batch_shape()`, `size()`, `spaces()`, `value()` |
+| `pluss::subsp::natsci::common::quantum::Op` | - | `batch_shape()`, `size()`, `spaces()`, `value()` |
+| `pluss::subsp::natsci::common::quantum::SolveOptions` | `method`, `steps_per_span`, `hbar`, `relative_tolerance`, `absolute_tolerance`, `initial_step`, `minimum_step`, `maximum_step`, `max_steps`, `linear` | - |
+| `pluss::subsp::natsci::common::quantum::SparseOp` | - | `hermitian()`, `map()`, `size()`, `spaces()` |
+| `pluss::subsp::natsci::common::quantum::Spectrum` | `values`, `vectors` | - |
+| `pluss::subsp::natsci::common::reaction::Network` | `stoichiometry`, `orders` | `reactions()`, `species()` |
+| `pluss::subsp::natsci::common::reaction::SteadyState` | `state`, `residual`, `iterations`, `converged` | - |
+| `pluss::subsp::natsci::common::sensitivity::Sensitivities` | `times`, `states`, `dydp` | - |
+| `pluss::subsp::natsci::common::solve::FitConstraints` | `equality`, `inequality` | - |
+| `pluss::subsp::natsci::common::solve::FitOptions` | `solver`, `constraints` | - |
+| `pluss::subsp::natsci::common::solve::FitResult` | `parameters`, `objective`, `solver` | - |
+| `pluss::subsp::natsci::common::solve::FlowEventResult` | `state`, `coordinate`, `event_value`, `steps`, `evaluations`, `event_evaluations`, `triggered`, `converged` | - |
+| `pluss::subsp::natsci::common::solve::FlowResult` | `state`, `steps`, `evaluations`, `converged` | - |
+| `pluss::subsp::natsci::common::solve::MarchResult` | `trajectory`, `steps` | - |
+| `pluss::subsp::natsci::common::solve::QuadResult` | `value`, `error`, `evaluations`, `refinements`, `converged`, `rule` | - |
+| `pluss::subsp::natsci::common::spatial::Bound` | - | `face()`, `flux()`, `kind()`, `value()` |
+| `pluss::subsp::natsci::common::spatial::Bounds` | - | `all_flux()`, `at()`, `dim()`, `zeroed()` |
+| `pluss::subsp::natsci::common::spatial::BoxGrid` | - | `dim()`, `shape()`, `spacing()` |
+| `pluss::subsp::natsci::common::spatial::Face` | `axis`, `side` | - |
+| `pluss::subsp::natsci::common::spatial::GhostPair` | `low`, `high` | - |
+| `pluss::subsp::natsci::common::spatial::PeriodicGrid` | - | `dim()`, `shape()`, `spacing()` |
+| `pluss::subsp::natsci::common::spatial::PoissonOptions` | `stencil`, `method`, `pc`, `solve`, `mean_tolerance`, `require_convergence` | - |
+| `pluss::subsp::natsci::common::spatial::PoissonResult` | `solution`, `residual_norm`, `relative_residual`, `converged`, `breakdown`, `iterations` | - |
+| `pluss::subsp::natsci::common::spatial::QuantityPoissonResult` | `solution`, `residual_norm`, `relative_residual`, `converged`, `breakdown`, `iterations` | - |
+| `pluss::subsp::natsci::common::spatial::spectral::Symbol` | `value`, `keep` | - |
+| `pluss::subsp::natsci::common::speciation::Options` | `max_iterations`, `tolerance`, `max_step` | - |
+| `pluss::subsp::natsci::common::speciation::Result` | `free`, `complexes`, `residual`, `iterations` | - |
+| `pluss::subsp::natsci::common::ssa::SsaOptions` | `max_events`, `seed` | - |
+| `pluss::subsp::natsci::common::ssa::SsaResult` | `state`, `events`, `completed` | - |
+| `pluss::subsp::natsci::common::stability::Routh` | `unstable`, `first_column`, `marginal` | - |
+| `pluss::subsp::natsci::common::stiff::Options` | `rtol`, `atol`, `max_steps`, `h_initial`, `h_max`, `fd_relative_step` | - |
+| `pluss::subsp::natsci::common::stiff::Result` | `y`, `t`, `steps`, `rejected`, `rhs_evaluations`, `jacobian_evaluations`, `converged` | - |
+| `pluss::subsp::natsci::common::thermo::Nasa7` | - | `Nasa7()`, `check()`, `cp_r()`, `eval()`, `g_rt()`, `h_rt()`, `names()`, `s_r()`, `species()`, `t_max()`, `t_min()` |
+| `pluss::subsp::natsci::common::thermo::Nasa7::Properties` | `cp_r`, `h_rt`, `s_r` | `g_rt()` |
+| `pluss::subsp::natsci::common::thermo::SpeciesData` | `name`, `composition`, `molar_mass`, `t_min`, `t_mid`, `t_max`, `low`, `high` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `std::vector<std::vector<double> > pluss::natsci::common::continuation::branch_directions(const Residual & g, const Series & u0, double p0, const std::vector<double> & t_known, double fd_step = 1e-4)` | `PlussMa/include/pluss/subsp/natsci/common/continuation.h` |
-| `Branch pluss::natsci::common::continuation::continue_branch(const Residual & g, const Series & u0, double p0, const Options & opt = {}, double direction = 1.0, const std::vector<double> & initial_tangent = = {})` | `PlussMa/include/pluss/subsp/natsci/common/continuation.h` |
-| `const char * pluss::natsci::common::continuation::to_string(PointKind k)` | `PlussMa/include/pluss/subsp/natsci/common/continuation.h` |
-| `SeriesQuantity<Dimensionless> pluss::natsci::common::diff::elasticity(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
-| `auto pluss::natsci::common::diff::grad(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
-| `auto pluss::natsci::common::diff::hessian(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::HessianOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
-| `auto pluss::natsci::common::diff::hvp(Fn && fn, const SeriesQuantity<InputDimension> & input, const SeriesQuantity<InputDimension> & direction, const math_diff::HvpOptions & options = {}, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
-| `auto pluss::natsci::common::diff::jacobian(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::JacobianOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
-| `auto pluss::natsci::common::diff::nth_diff(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::HvpOptions & options = {}, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
-| `Drift<D> pluss::natsci::common::drift(const SeriesQuantity<D> & reference, const SeriesQuantity<D> & current, ScalarQuantity<D> scale)` | `PlussMa/include/pluss/subsp/natsci/common/diagnostic.h` |
-| `Series pluss::natsci::common::dynamics::jacobian(const RateFn & f, const Series & x, double h = 1e-6, Difference scheme = Difference::Central)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
-| `Series pluss::natsci::common::dynamics::jacobian_scaled(const RateFn & f, const Series & x, const Series & step)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
-| `Series pluss::natsci::common::dynamics::simulate(const RateFn & rate, const Series & y0, double t0, double t1, std::int64_t steps = 200)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
-| `Series pluss::natsci::common::dynamics::solve(const Series & matrix, const Series & rhs)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
-| `Path pluss::natsci::common::dynamics::trajectory(const RateFn & rate, const Series & y0, double t0, double t1, std::int64_t samples, std::int64_t steps_per_sample = 50)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
-| `Series pluss::natsci::common::electrochem::butler_volmer(const Series & eta, const Coeff & exchange_current, const Coeff & alpha_anodic, const Coeff & alpha_cathodic, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::exchange_current_arrhenius(const Series & i0_ref, double activation_energy, const Series & temperature, double reference_temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::ion_potential(const Series & outside, const Series & inside, double valence, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::ionic_strength(const Series & molality, const Series & charge)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::log10_gamma_davies(const Series & ionic, double charge, double a = 0.5091)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::log10_gamma_limiting(const Series & ionic, double charge, double a = 0.5091)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::mean_activity_davies(const Series & ionic, double z_plus, double z_minus, double a = 0.5091)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::nernst(const Series & standard_potential, const Series & temperature, double electrons, const Series & reaction_quotient)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::overpotential(const Series & current, const Coeff & exchange_current, const Coeff & alpha_anodic, const Coeff & alpha_cathodic, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::polarisation_voltage(const Series & current, const Series & reversible_voltage, const Coeff & exchange_current, const Coeff & alpha, const Coeff & area_resistance, const Coeff & limiting_current, double electrons, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::standard_cell_potential(const Series & delta_g, double electrons)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `Series pluss::natsci::common::electrochem::tafel_slope(const Coeff & alpha, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
-| `double pluss::natsci::common::estimation::chi2_quantile(double q, std::int64_t dof)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
-| `Intervals pluss::natsci::common::estimation::confidence_intervals(const Fit & fit, double alpha = 0.05)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
-| `Fit pluss::natsci::common::estimation::levenberg_marquardt(const ModelFn & model, const Series & y, const Series & beta0, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
-| `std::pair<double, double> pluss::natsci::common::estimation::profile_interval(const Profile & profile, double sse_min, double sigma2, double alpha, std::int64_t dof)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
-| `Profile pluss::natsci::common::estimation::profile_likelihood(const ModelFn & model, const Series & y, const Series & start, std::int64_t index, const Series & grid, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
-| `double pluss::natsci::common::estimation::student_t_quantile(double q, double nu)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
-| `StateField<D> pluss::natsci::common::field(std::string name, SeriesQuantity<D> value, std::string symbol = = {}, std::string source = = {})` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
-| `Quantity<D, Rep> pluss::natsci::common::operator*(double scalar, const Quantity<D, Rep> & value)` | `PlussMa/include/pluss/subsp/natsci/common/quantity.h` |
-| `auto pluss::natsci::common::operator+(const Quantity<D, QuantityRepType> & shift, const Point<D, PointRepType> & point)` | `PlussMa/include/pluss/subsp/natsci/common/point.h` |
-| `_Bool pluss::natsci::common::operator==(const DimensionSignature &, const DimensionSignature &)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
-| `_Bool pluss::natsci::common::operator==(const RecordMeta &, const RecordMeta &)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
-| `Param<D> pluss::natsci::common::param(std::string name, SeriesQuantity<D> value, SeriesQuantity<D> lower, SeriesQuantity<D> upper, std::string symbol = = {}, std::string source = = {})` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
-| `Param<D> pluss::natsci::common::param(std::string name, SeriesQuantity<D> value, std::string symbol = = {}, std::string source = = {})` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
-| `ParameterSet pluss::natsci::common::params(Entries &&... entries)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
-| `Trajectory<CoordinateDimension> pluss::natsci::common::path(SeriesQuantity<CoordinateDimension> coordinate, StateVector states, _Bool require_ordered = true)` | `PlussMa/include/pluss/subsp/natsci/common/trajectory.h` |
-| `Series pluss::natsci::common::population_balance::aggregation_rhs(const Series & counts, const AggregationOperator & op, const Series & kernel)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Series pluss::natsci::common::population_balance::breakage_rhs(const Series & counts, const BreakageOperator & op, const Series & selection)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `AggregationOperator pluss::natsci::common::population_balance::build_aggregation_operator(const Grid & g, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `BreakageOperator pluss::natsci::common::population_balance::build_breakage_operator(const Grid & g, const std::function<double (double, double)> & beta, const Series & like, int quad_points = 8)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Grid pluss::natsci::common::population_balance::geometric_grid(double x0, double ratio, std::int64_t bins)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Series pluss::natsci::common::population_balance::growth_rhs(const Series & n, const Grid & g, const Series & growth_at_edges, const Coeff & nucleation_flux = 0.0)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Grid pluss::natsci::common::population_balance::integer_grid(std::int64_t bins)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Series pluss::natsci::common::population_balance::moment(const Series & n, const Grid & g, double k)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Series pluss::natsci::common::population_balance::on(const std::vector<double> & v, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Series pluss::natsci::common::population_balance::pivot_moment(const Series & counts, const Grid & g, double k)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Series pluss::natsci::common::population_balance::ssprk3(const RateFn & f, const Series & n0, double t0, double t1, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Grid pluss::natsci::common::population_balance::uniform_grid(double lo, double hi, std::int64_t bins)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
-| `Ket pluss::natsci::common::quantum::apply(const SparseOp & value, const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::apply(const Channel & map, const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::apply(const Channel & map, const Op & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Channel pluss::natsci::common::quantum::channel(std::vector<Op> kraus, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::dag(const Op & value)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::density(const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::entropy(const Op & state, double base = 2.0, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::expect(const Op & observable, const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::expect(const Op & observable, const Op & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::fidelity(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::fidelity(const Ket & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::fidelity(const Op & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Ket pluss::natsci::common::quantum::ground(const Op & value, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::inner(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::is_herm(const Op & value, double rtol = 1e-7, double atol = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Ket pluss::natsci::common::quantum::ket(Series amplitudes, std::vector<std::int64_t> spaces = = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::lindblad(const Op & hamiltonian, const Op & initial, const Series & times, const std::vector<Op> & collapse = = {}, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::lindblad(const OpFn & hamiltonian, const Op & initial, const Series & times, const CollapseFn & collapse = = {}, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::lindblad(const SparseOp & hamiltonian, const Op & initial, const Series & times, const std::vector<SparseOp> & collapse = = {}, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::norm(const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Ket pluss::natsci::common::quantum::normalize(const Ket & state, double tolerance = 0.0)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::op(Series values, std::vector<std::int64_t> spaces = = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::partial_trace(const Op & state, std::vector<std::int64_t> keep)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::prob(const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::purity(const Op & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::root_fidelity(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::root_fidelity(const Ket & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::root_fidelity(const Op & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Ket pluss::natsci::common::quantum::schrod(const Op & hamiltonian, const Ket & initial, const Series & times, double hbar = 1.0)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Ket pluss::natsci::common::quantum::schrod(const OpFn & hamiltonian, const Ket & initial, const Series & times, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Ket pluss::natsci::common::quantum::schrod(const SparseOp & hamiltonian, const Ket & initial, const Series & times, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `SparseOp pluss::natsci::common::quantum::sparse_op(std::int64_t size, Series row_index, Series column_index, Series values, std::vector<std::int64_t> spaces = = {}, _Bool hermitian = false)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Spectrum pluss::natsci::common::quantum::spectrum(const Op & value, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Ket pluss::natsci::common::quantum::tensor(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::tensor(const Op & left, const Op & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::quantum::trace(const Op & value)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Op pluss::natsci::common::quantum::unitary(const Op & hamiltonian, double time, double hbar = 1.0)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
-| `Series pluss::natsci::common::reaction::flux(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
-| `Series pluss::natsci::common::reaction::flux_jacobian(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
-| `Series pluss::natsci::common::reaction::jacobian(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
-| `Network pluss::natsci::common::reaction::make(const Series & stoichiometry, const Series & orders)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
-| `Series pluss::natsci::common::reaction::propensity(const Network & net, const Series & x, const Series & c)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
-| `Series pluss::natsci::common::reaction::rate(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
-| `SteadyState pluss::natsci::common::reaction::steady_state(const Network & net, const Series & k, const Series & x0, const Series & conservation, const Series & totals, double tolerance = 1e-12, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
-| `Unit<D> pluss::natsci::common::scaled_unit(const Unit<D> & base, double factor, std::string_view symbol, std::string_view name)` | `PlussMa/include/pluss/subsp/natsci/common/unit.h` |
-| `Series pluss::natsci::common::sensitivity::cramer_rao_std(const Series & fim)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
-| `Series pluss::natsci::common::sensitivity::fisher_information(const Series & dydp)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
-| `Series pluss::natsci::common::sensitivity::fisher_spectrum(const Series & fim)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
-| `Series pluss::natsci::common::sensitivity::normalized(const Series & dydp, const Series & y, const Series & p)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
-| `Series pluss::natsci::common::sensitivity::numerical_rank(const Series & spectrum, double rel_tol = 1e-8)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
-| `Sensitivities pluss::natsci::common::sensitivity::trajectory(const ParamRateFn & f, const Series & y0, const Series & p, double t0, double t1, std::int64_t samples, std::int64_t steps_per_sample = 50, double step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
-| `auto pluss::natsci::common::solve::fit(Fn fn, const ParameterSet & initial, const StateVector & scales, const FitOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `FlowResult pluss::natsci::common::solve::flow(Fn fn, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `FlowResult pluss::natsci::common::solve::flow(Fn fn, const StateVector & initial, const ParameterSet & parameters, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `FlowEventResult<CoordinateDimension> pluss::natsci::common::solve::flow_until(Fn fn, EventFn event, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {}, const pluss::subsp::math::ode::OdeEventOptions & event_options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `FlowEventResult<CoordinateDimension> pluss::natsci::common::solve::flow_until(Fn fn, EventFn event, const StateVector & initial, const ParameterSet & parameters, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {}, const pluss::subsp::math::ode::OdeEventOptions & event_options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `SeriesQuantity<ValueDimension> pluss::natsci::common::solve::interp(const SeriesQuantity<CoordinateDimension> & coordinate, const SeriesQuantity<ValueDimension> & values, const SeriesQuantity<CoordinateDimension> & query, pluss::subsp::math::interp::EdgeMode edge = pluss::subsp::math::interp::EdgeMode::Clamp)` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `MarchResult<CoordinateDimension> pluss::natsci::common::solve::march(StepFn step_fn, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> step, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `MarchResult<CoordinateDimension> pluss::natsci::common::solve::march_to(StepFn step_fn, WidthFn width_fn, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, std::int64_t max_steps = 100'000)` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `auto pluss::natsci::common::solve::quad(Fn fn, ScalarQuantity<CoordinateDimension> lower, ScalarQuantity<CoordinateDimension> upper, const pluss::subsp::math::integ::QuadraOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
-| `Series pluss::natsci::common::spatial::advect(const Series & velocity, const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Time> > pluss::natsci::common::spatial::advect(const SeriesQuantity<Speed> & velocity, const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::back_diff(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::back_diff(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::back_div(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::back_div(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::curl(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::curl(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::divergence(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::divergence(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Bound<DimensionProduct<FluxD, Length> > pluss::natsci::common::spatial::flux_bc(Face face, const Quantity<FluxD, Rep> & value)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `Series pluss::natsci::common::spatial::flux_div(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<Acceleration> pluss::natsci::common::spatial::flux_div(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::fwd_diff(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::fwd_diff(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::fwd_grad(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::fwd_grad(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `GhostPair<D> pluss::natsci::common::spatial::ghosts(const SeriesQuantity<D> &, const BoxGrid &, const Bounds<D> &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `GhostPair<OtherD> pluss::natsci::common::spatial::ghosts(const SeriesQuantity<OtherD> &, const BoxGrid &, const Bounds<OtherD> &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `Series pluss::natsci::common::spatial::gradient(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::gradient(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::gradient(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::laplacian(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::natsci::common::spatial::laplacian(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::natsci::common::spatial::laplacian(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Bounds<D> pluss::natsci::common::spatial::make_bounds(const BoxGrid & grid, std::initializer_list<Bound<D> > rules)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `Bounds<D> pluss::natsci::common::spatial::make_bounds(const BoxGrid & grid, std::vector<Bound<D> > rules)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `Bounds<OtherD> pluss::natsci::common::spatial::make_bounds(const BoxGrid &, std::vector<Bound<OtherD> >)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `BoxGrid pluss::natsci::common::spatial::make_box_grid(std::vector<std::int64_t>, std::vector<ScalarQuantity<Length> >)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `PeriodicGrid pluss::natsci::common::spatial::make_periodic_grid(std::vector<std::int64_t>, std::vector<ScalarQuantity<Length> >)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::partial(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::partial(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::partial(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::second_partial(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::natsci::common::spatial::second_partial(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::natsci::common::spatial::second_partial(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::skew_advect(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<Acceleration> pluss::natsci::common::spatial::skew_advect(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `PoissonResult pluss::natsci::common::spatial::solve_poisson(const Series & rhs, const BoxGrid & grid, const Bounds<SolutionD> & bounds, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
-| `PoissonResult pluss::natsci::common::spatial::solve_poisson(const Series & rhs, const PeriodicGrid & grid, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
-| `QuantityPoissonResult<D> pluss::natsci::common::spatial::solve_poisson(const SeriesQuantity<D> & rhs, const PeriodicGrid & grid, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
-| `QuantityPoissonResult<SourceD> pluss::natsci::common::spatial::solve_poisson(const SeriesQuantity<SourceD> & rhs, const BoxGrid & grid, const Bounds<DimensionProduct<SourceD, Area> > & solution_bounds, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
-| `Series pluss::natsci::common::spatial::sym_grad(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<Frequency> pluss::natsci::common::spatial::sym_grad(const SeriesQuantity<Speed> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::tensor_div(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::natsci::common::spatial::tensor_div(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Bound<D> pluss::natsci::common::spatial::value_bc(Face face, const Quantity<D, Rep> & value)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
-| `Series pluss::natsci::common::spatial::vector_advection(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<Acceleration> pluss::natsci::common::spatial::vector_advection(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::vector_flux(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionProduct<Speed, Speed> > pluss::natsci::common::spatial::vector_flux(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Series pluss::natsci::common::spatial::wide_laplacian(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::natsci::common::spatial::wide_laplacian(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
-| `Result pluss::natsci::common::speciation::solve(const Series & stoichiometry, const Series & ln_k, const Series & totals, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/common/speciation.h` |
-| `SsaResult pluss::natsci::common::ssa::gillespie(const PropensityFn & propensity, const Series & nu, const Series & x0, double t_end, const SsaOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/ssa.h` |
-| `Series pluss::natsci::common::stability::characteristic_polynomial(const Series & a)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
-| `Routh pluss::natsci::common::stability::local_stability(const dynamics::RateFn & rate, const Series & x, double relative_step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
-| `Routh pluss::natsci::common::stability::routh(const Series & coeffs, double epsilon = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
-| `Routh pluss::natsci::common::stability::unstable_modes(const Series & a, double epsilon = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
-| `StateVector pluss::natsci::common::states(Entries &&... entries)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
-| `Result pluss::natsci::common::stiff::integrate(const RateFn & f, const Series & y0, double t0, double t1, const Options & opt = {}, const JacobianFn & jac = = {}, double * step_hint = nullptr)` | `PlussMa/include/pluss/subsp/natsci/common/stiff.h` |
-| `Series pluss::natsci::common::stiff::integrate_at(const RateFn & f, const Series & y0, const std::vector<double> & times, const Options & opt = {}, const JacobianFn & jac = = {})` | `PlussMa/include/pluss/subsp/natsci/common/stiff.h` |
+| `std::vector<std::vector<double> > pluss::subsp::natsci::common::continuation::branch_directions(const Residual & g, const Series & u0, double p0, const std::vector<double> & t_known, double fd_step = 1e-4)` | `PlussMa/include/pluss/subsp/natsci/common/continuation.h` |
+| `Branch pluss::subsp::natsci::common::continuation::continue_branch(const Residual & g, const Series & u0, double p0, const Options & opt = {}, double direction = 1.0, const std::vector<double> & initial_tangent = = {})` | `PlussMa/include/pluss/subsp/natsci/common/continuation.h` |
+| `const char * pluss::subsp::natsci::common::continuation::to_string(PointKind k)` | `PlussMa/include/pluss/subsp/natsci/common/continuation.h` |
+| `SeriesQuantity<Dimensionless> pluss::subsp::natsci::common::diff::elasticity(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
+| `auto pluss::subsp::natsci::common::diff::grad(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
+| `auto pluss::subsp::natsci::common::diff::hessian(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::HessianOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
+| `auto pluss::subsp::natsci::common::diff::hvp(Fn && fn, const SeriesQuantity<InputDimension> & input, const SeriesQuantity<InputDimension> & direction, const math_diff::HvpOptions & options = {}, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
+| `auto pluss::subsp::natsci::common::diff::jacobian(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::JacobianOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
+| `auto pluss::subsp::natsci::common::diff::nth_diff(Fn && fn, const SeriesQuantity<InputDimension> & input, const math_diff::HvpOptions & options = {}, const math_diff::DerivativePolicy & policy = {})` | `PlussMa/include/pluss/subsp/natsci/common/diff.h` |
+| `Drift<D> pluss::subsp::natsci::common::drift(const SeriesQuantity<D> & reference, const SeriesQuantity<D> & current, ScalarQuantity<D> scale)` | `PlussMa/include/pluss/subsp/natsci/common/diagnostic.h` |
+| `Series pluss::subsp::natsci::common::dynamics::jacobian(const RateFn & f, const Series & x, double h = 1e-6, Difference scheme = Difference::Central)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
+| `Series pluss::subsp::natsci::common::dynamics::jacobian_scaled(const RateFn & f, const Series & x, const Series & step)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
+| `Series pluss::subsp::natsci::common::dynamics::simulate(const RateFn & rate, const Series & y0, double t0, double t1, std::int64_t steps = 200)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
+| `Series pluss::subsp::natsci::common::dynamics::solve(const Series & matrix, const Series & rhs)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
+| `Path pluss::subsp::natsci::common::dynamics::trajectory(const RateFn & rate, const Series & y0, double t0, double t1, std::int64_t samples, std::int64_t steps_per_sample = 50)` | `PlussMa/include/pluss/subsp/natsci/common/dynamics.h` |
+| `Series pluss::subsp::natsci::common::electrochem::butler_volmer(const Series & eta, const Coeff & exchange_current, const Coeff & alpha_anodic, const Coeff & alpha_cathodic, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::exchange_current_arrhenius(const Series & i0_ref, double activation_energy, const Series & temperature, double reference_temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::ion_potential(const Series & outside, const Series & inside, double valence, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::ionic_strength(const Series & molality, const Series & charge)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::log10_gamma_davies(const Series & ionic, double charge, double a = 0.5091)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::log10_gamma_limiting(const Series & ionic, double charge, double a = 0.5091)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::mean_activity_davies(const Series & ionic, double z_plus, double z_minus, double a = 0.5091)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::nernst(const Series & standard_potential, const Series & temperature, double electrons, const Series & reaction_quotient)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::overpotential(const Series & current, const Coeff & exchange_current, const Coeff & alpha_anodic, const Coeff & alpha_cathodic, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::polarisation_voltage(const Series & current, const Series & reversible_voltage, const Coeff & exchange_current, const Coeff & alpha, const Coeff & area_resistance, const Coeff & limiting_current, double electrons, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::standard_cell_potential(const Series & delta_g, double electrons)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `Series pluss::subsp::natsci::common::electrochem::tafel_slope(const Coeff & alpha, const Series & temperature)` | `PlussMa/include/pluss/subsp/natsci/common/electrochem.h` |
+| `double pluss::subsp::natsci::common::estimation::chi2_quantile(double q, std::int64_t dof)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
+| `Intervals pluss::subsp::natsci::common::estimation::confidence_intervals(const Fit & fit, double alpha = 0.05)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
+| `Fit pluss::subsp::natsci::common::estimation::levenberg_marquardt(const ModelFn & model, const Series & y, const Series & beta0, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
+| `std::pair<double, double> pluss::subsp::natsci::common::estimation::profile_interval(const Profile & profile, double sse_min, double sigma2, double alpha, std::int64_t dof)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
+| `Profile pluss::subsp::natsci::common::estimation::profile_likelihood(const ModelFn & model, const Series & y, const Series & start, std::int64_t index, const Series & grid, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
+| `double pluss::subsp::natsci::common::estimation::student_t_quantile(double q, double nu)` | `PlussMa/include/pluss/subsp/natsci/common/estimation.h` |
+| `StateField<D> pluss::subsp::natsci::common::field(std::string name, SeriesQuantity<D> value, std::string symbol = = {}, std::string source = = {})` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
+| `Quantity<D, Rep> pluss::subsp::natsci::common::operator*(double scalar, const Quantity<D, Rep> & value)` | `PlussMa/include/pluss/subsp/natsci/common/quantity.h` |
+| `auto pluss::subsp::natsci::common::operator+(const Quantity<D, QuantityRepType> & shift, const Point<D, PointRepType> & point)` | `PlussMa/include/pluss/subsp/natsci/common/point.h` |
+| `_Bool pluss::subsp::natsci::common::operator==(const DimensionSignature &, const DimensionSignature &)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
+| `_Bool pluss::subsp::natsci::common::operator==(const RecordMeta &, const RecordMeta &)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
+| `Param<D> pluss::subsp::natsci::common::param(std::string name, SeriesQuantity<D> value, SeriesQuantity<D> lower, SeriesQuantity<D> upper, std::string symbol = = {}, std::string source = = {})` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
+| `Param<D> pluss::subsp::natsci::common::param(std::string name, SeriesQuantity<D> value, std::string symbol = = {}, std::string source = = {})` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
+| `ParameterSet pluss::subsp::natsci::common::params(Entries &&... entries)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
+| `Trajectory<CoordinateDimension> pluss::subsp::natsci::common::path(SeriesQuantity<CoordinateDimension> coordinate, StateVector states, _Bool require_ordered = true)` | `PlussMa/include/pluss/subsp/natsci/common/trajectory.h` |
+| `Series pluss::subsp::natsci::common::population_balance::aggregation_rhs(const Series & counts, const AggregationOperator & op, const Series & kernel)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Series pluss::subsp::natsci::common::population_balance::breakage_rhs(const Series & counts, const BreakageOperator & op, const Series & selection)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `AggregationOperator pluss::subsp::natsci::common::population_balance::build_aggregation_operator(const Grid & g, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `BreakageOperator pluss::subsp::natsci::common::population_balance::build_breakage_operator(const Grid & g, const std::function<double (double, double)> & beta, const Series & like, int quad_points = 8)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Grid pluss::subsp::natsci::common::population_balance::geometric_grid(double x0, double ratio, std::int64_t bins)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Series pluss::subsp::natsci::common::population_balance::growth_rhs(const Series & n, const Grid & g, const Series & growth_at_edges, const Coeff & nucleation_flux = 0.0)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Grid pluss::subsp::natsci::common::population_balance::integer_grid(std::int64_t bins)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Series pluss::subsp::natsci::common::population_balance::moment(const Series & n, const Grid & g, double k)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Series pluss::subsp::natsci::common::population_balance::on(const std::vector<double> & v, const Series & like)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Series pluss::subsp::natsci::common::population_balance::pivot_moment(const Series & counts, const Grid & g, double k)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Series pluss::subsp::natsci::common::population_balance::ssprk3(const RateFn & f, const Series & n0, double t0, double t1, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Grid pluss::subsp::natsci::common::population_balance::uniform_grid(double lo, double hi, std::int64_t bins)` | `PlussMa/include/pluss/subsp/natsci/common/population_balance.h` |
+| `Ket pluss::subsp::natsci::common::quantum::apply(const SparseOp & value, const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::apply(const Channel & map, const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::apply(const Channel & map, const Op & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Channel pluss::subsp::natsci::common::quantum::channel(std::vector<Op> kraus, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::dag(const Op & value)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::density(const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::entropy(const Op & state, double base = 2.0, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::expect(const Op & observable, const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::expect(const Op & observable, const Op & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::fidelity(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::fidelity(const Ket & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::fidelity(const Op & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Ket pluss::subsp::natsci::common::quantum::ground(const Op & value, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::inner(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::is_herm(const Op & value, double rtol = 1e-7, double atol = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Ket pluss::subsp::natsci::common::quantum::ket(Series amplitudes, std::vector<std::int64_t> spaces = = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::lindblad(const Op & hamiltonian, const Op & initial, const Series & times, const std::vector<Op> & collapse = = {}, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::lindblad(const OpFn & hamiltonian, const Op & initial, const Series & times, const CollapseFn & collapse = = {}, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::lindblad(const SparseOp & hamiltonian, const Op & initial, const Series & times, const std::vector<SparseOp> & collapse = = {}, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::norm(const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Ket pluss::subsp::natsci::common::quantum::normalize(const Ket & state, double tolerance = 0.0)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::op(Series values, std::vector<std::int64_t> spaces = = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::partial_trace(const Op & state, std::vector<std::int64_t> keep)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::prob(const Ket & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::purity(const Op & state)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::root_fidelity(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::root_fidelity(const Ket & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::root_fidelity(const Op & left, const Op & right, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Ket pluss::subsp::natsci::common::quantum::schrod(const Op & hamiltonian, const Ket & initial, const Series & times, double hbar = 1.0)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Ket pluss::subsp::natsci::common::quantum::schrod(const OpFn & hamiltonian, const Ket & initial, const Series & times, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Ket pluss::subsp::natsci::common::quantum::schrod(const SparseOp & hamiltonian, const Ket & initial, const Series & times, const SolveOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `SparseOp pluss::subsp::natsci::common::quantum::sparse_op(std::int64_t size, Series row_index, Series column_index, Series values, std::vector<std::int64_t> spaces = = {}, _Bool hermitian = false)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Spectrum pluss::subsp::natsci::common::quantum::spectrum(const Op & value, double tolerance = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Ket pluss::subsp::natsci::common::quantum::tensor(const Ket & left, const Ket & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::tensor(const Op & left, const Op & right)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::quantum::trace(const Op & value)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Op pluss::subsp::natsci::common::quantum::unitary(const Op & hamiltonian, double time, double hbar = 1.0)` | `PlussMa/include/pluss/subsp/natsci/common/quantum.h` |
+| `Series pluss::subsp::natsci::common::reaction::flux(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
+| `Series pluss::subsp::natsci::common::reaction::flux_jacobian(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
+| `Series pluss::subsp::natsci::common::reaction::jacobian(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
+| `Network pluss::subsp::natsci::common::reaction::make(const Series & stoichiometry, const Series & orders)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
+| `Series pluss::subsp::natsci::common::reaction::propensity(const Network & net, const Series & x, const Series & c)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
+| `Series pluss::subsp::natsci::common::reaction::rate(const Network & net, const Series & x, const Series & k)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
+| `SteadyState pluss::subsp::natsci::common::reaction::steady_state(const Network & net, const Series & k, const Series & x0, const Series & conservation, const Series & totals, double tolerance = 1e-12, std::int64_t max_iterations = 100)` | `PlussMa/include/pluss/subsp/natsci/common/reaction.h` |
+| `Unit<D> pluss::subsp::natsci::common::scaled_unit(const Unit<D> & base, double factor, std::string_view symbol, std::string_view name)` | `PlussMa/include/pluss/subsp/natsci/common/unit.h` |
+| `Series pluss::subsp::natsci::common::sensitivity::cramer_rao_std(const Series & fim)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
+| `Series pluss::subsp::natsci::common::sensitivity::fisher_information(const Series & dydp)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
+| `Series pluss::subsp::natsci::common::sensitivity::fisher_spectrum(const Series & fim)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
+| `Series pluss::subsp::natsci::common::sensitivity::normalized(const Series & dydp, const Series & y, const Series & p)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
+| `Series pluss::subsp::natsci::common::sensitivity::numerical_rank(const Series & spectrum, double rel_tol = 1e-8)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
+| `Sensitivities pluss::subsp::natsci::common::sensitivity::trajectory(const ParamRateFn & f, const Series & y0, const Series & p, double t0, double t1, std::int64_t samples, std::int64_t steps_per_sample = 50, double step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/common/sensitivity.h` |
+| `auto pluss::subsp::natsci::common::solve::fit(Fn fn, const ParameterSet & initial, const StateVector & scales, const FitOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `FlowResult pluss::subsp::natsci::common::solve::flow(Fn fn, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `FlowResult pluss::subsp::natsci::common::solve::flow(Fn fn, const StateVector & initial, const ParameterSet & parameters, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `FlowEventResult<CoordinateDimension> pluss::subsp::natsci::common::solve::flow_until(Fn fn, EventFn event, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {}, const pluss::subsp::math::ode::OdeEventOptions & event_options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `FlowEventResult<CoordinateDimension> pluss::subsp::natsci::common::solve::flow_until(Fn fn, EventFn event, const StateVector & initial, const ParameterSet & parameters, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, const pluss::subsp::math::ode::OdeOptions & options = {}, const pluss::subsp::math::ode::OdeEventOptions & event_options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `SeriesQuantity<ValueDimension> pluss::subsp::natsci::common::solve::interp(const SeriesQuantity<CoordinateDimension> & coordinate, const SeriesQuantity<ValueDimension> & values, const SeriesQuantity<CoordinateDimension> & query, pluss::subsp::math::interp::EdgeMode edge = pluss::subsp::math::interp::EdgeMode::Clamp)` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `MarchResult<CoordinateDimension> pluss::subsp::natsci::common::solve::march(StepFn step_fn, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> step, std::int64_t steps)` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `MarchResult<CoordinateDimension> pluss::subsp::natsci::common::solve::march_to(StepFn step_fn, WidthFn width_fn, const StateVector & initial, ScalarQuantity<CoordinateDimension> start, ScalarQuantity<CoordinateDimension> stop, std::int64_t max_steps = 100'000)` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `auto pluss::subsp::natsci::common::solve::quad(Fn fn, ScalarQuantity<CoordinateDimension> lower, ScalarQuantity<CoordinateDimension> upper, const pluss::subsp::math::integ::QuadraOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/solve.h` |
+| `Series pluss::subsp::natsci::common::spatial::advect(const Series & velocity, const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Time> > pluss::subsp::natsci::common::spatial::advect(const SeriesQuantity<Speed> & velocity, const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::back_diff(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::back_diff(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::back_div(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::back_div(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::curl(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::curl(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::divergence(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::divergence(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Bound<DimensionProduct<FluxD, Length> > pluss::subsp::natsci::common::spatial::flux_bc(Face face, const Quantity<FluxD, Rep> & value)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `Series pluss::subsp::natsci::common::spatial::flux_div(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<Acceleration> pluss::subsp::natsci::common::spatial::flux_div(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::fwd_diff(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::fwd_diff(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::fwd_grad(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::fwd_grad(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `GhostPair<D> pluss::subsp::natsci::common::spatial::ghosts(const SeriesQuantity<D> &, const BoxGrid &, const Bounds<D> &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `GhostPair<OtherD> pluss::subsp::natsci::common::spatial::ghosts(const SeriesQuantity<OtherD> &, const BoxGrid &, const Bounds<OtherD> &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `Series pluss::subsp::natsci::common::spatial::gradient(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::gradient(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::gradient(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::laplacian(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::subsp::natsci::common::spatial::laplacian(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::subsp::natsci::common::spatial::laplacian(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Bounds<D> pluss::subsp::natsci::common::spatial::make_bounds(const BoxGrid & grid, std::initializer_list<Bound<D> > rules)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `Bounds<D> pluss::subsp::natsci::common::spatial::make_bounds(const BoxGrid & grid, std::vector<Bound<D> > rules)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `Bounds<OtherD> pluss::subsp::natsci::common::spatial::make_bounds(const BoxGrid &, std::vector<Bound<OtherD> >)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `BoxGrid pluss::subsp::natsci::common::spatial::make_box_grid(std::vector<std::int64_t>, std::vector<ScalarQuantity<Length> >)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `PeriodicGrid pluss::subsp::natsci::common::spatial::make_periodic_grid(std::vector<std::int64_t>, std::vector<ScalarQuantity<Length> >)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::partial(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::partial(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::partial(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::second_partial(const Series &, const PeriodicGrid &, std::int64_t)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::subsp::natsci::common::spatial::second_partial(const SeriesQuantity<D> & value, const BoxGrid & grid, const Bounds<D> & bounds, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::subsp::natsci::common::spatial::second_partial(const SeriesQuantity<D> & value, const PeriodicGrid & grid, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::skew_advect(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<Acceleration> pluss::subsp::natsci::common::spatial::skew_advect(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `PoissonResult pluss::subsp::natsci::common::spatial::solve_poisson(const Series & rhs, const BoxGrid & grid, const Bounds<SolutionD> & bounds, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
+| `PoissonResult pluss::subsp::natsci::common::spatial::solve_poisson(const Series & rhs, const PeriodicGrid & grid, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
+| `QuantityPoissonResult<D> pluss::subsp::natsci::common::spatial::solve_poisson(const SeriesQuantity<D> & rhs, const PeriodicGrid & grid, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
+| `QuantityPoissonResult<SourceD> pluss::subsp::natsci::common::spatial::solve_poisson(const SeriesQuantity<SourceD> & rhs, const BoxGrid & grid, const Bounds<DimensionProduct<SourceD, Area> > & solution_bounds, const PoissonOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/poisson.h` |
+| `Series pluss::subsp::natsci::common::spatial::spectral::forward(const Series & field, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/spectral.h` |
+| `Series pluss::subsp::natsci::common::spatial::spectral::inverse(const Series & spectrum, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/spectral.h` |
+| `Series pluss::subsp::natsci::common::spatial::spectral::solve(const Series & rhs, const PeriodicGrid & grid, _Bool wide)` | `PlussMa/include/pluss/subsp/natsci/common/spectral.h` |
+| `Symbol pluss::subsp::natsci::common::spatial::spectral::symbol(const PeriodicGrid & grid, _Bool wide, pluss::ScalarType dtype)` | `PlussMa/include/pluss/subsp/natsci/common/spectral.h` |
+| `Series pluss::subsp::natsci::common::spatial::sym_grad(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<Frequency> pluss::subsp::natsci::common::spatial::sym_grad(const SeriesQuantity<Speed> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::tensor_div(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Length> > pluss::subsp::natsci::common::spatial::tensor_div(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Bound<D> pluss::subsp::natsci::common::spatial::value_bc(Face face, const Quantity<D, Rep> & value)` | `PlussMa/include/pluss/subsp/natsci/common/boundary.h` |
+| `Series pluss::subsp::natsci::common::spatial::vector_advection(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<Acceleration> pluss::subsp::natsci::common::spatial::vector_advection(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::vector_flux(const Series & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionProduct<Speed, Speed> > pluss::subsp::natsci::common::spatial::vector_flux(const SeriesQuantity<Speed> & velocity, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Series pluss::subsp::natsci::common::spatial::wide_laplacian(const Series & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `SeriesQuantity<DimensionQuotient<D, Area> > pluss::subsp::natsci::common::spatial::wide_laplacian(const SeriesQuantity<D> & value, const PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/common/field.h` |
+| `Result pluss::subsp::natsci::common::speciation::solve(const Series & stoichiometry, const Series & ln_k, const Series & totals, const Options & opt = {})` | `PlussMa/include/pluss/subsp/natsci/common/speciation.h` |
+| `SsaResult pluss::subsp::natsci::common::ssa::gillespie(const PropensityFn & propensity, const Series & nu, const Series & x0, double t_end, const SsaOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/common/ssa.h` |
+| `Series pluss::subsp::natsci::common::stability::characteristic_polynomial(const Series & a)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
+| `Routh pluss::subsp::natsci::common::stability::local_stability(const dynamics::RateFn & rate, const Series & x, double relative_step = 1e-6)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
+| `Routh pluss::subsp::natsci::common::stability::routh(const Series & coeffs, double epsilon = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
+| `Routh pluss::subsp::natsci::common::stability::unstable_modes(const Series & a, double epsilon = 1e-9)` | `PlussMa/include/pluss/subsp/natsci/common/stability.h` |
+| `StateVector pluss::subsp::natsci::common::states(Entries &&... entries)` | `PlussMa/include/pluss/subsp/natsci/common/record.h` |
+| `Result pluss::subsp::natsci::common::stiff::integrate(const RateFn & f, const Series & y0, double t0, double t1, const Options & opt = {}, const JacobianFn & jac = = {}, double * step_hint = nullptr)` | `PlussMa/include/pluss/subsp/natsci/common/stiff.h` |
+| `Series pluss::subsp::natsci::common::stiff::integrate_at(const RateFn & f, const Series & y0, const std::vector<double> & times, const Options & opt = {}, const JacobianFn & jac = = {})` | `PlussMa/include/pluss/subsp/natsci/common/stiff.h` |
 
-### `pluss::natsci::physics`
+### `pluss::subsp::natsci::physics`
+
+Front doors (intended starting points):
+
+- `pluss::subsp::natsci::physics::fluids::les`: `eddy_viscosity`, `sgs_dissipation`, `advance`
 
 | Public enum | Values |
 | --- | --- |
-| `pluss::natsci::physics::astro::OrbitSense` | `Prograde`, `Retrograde` |
-| `pluss::natsci::physics::fluids::FlowForm` | `Advect`, `Conserve`, `Skew` |
-| `pluss::natsci::physics::fluids::FlowKind` | `NoSlip`, `FreeSlip`, `Inlet`, `Outlet` |
-| `pluss::natsci::physics::fluids::StepRule` | `Euler`, `Rk2`, `Rk3`, `Imex1` |
-| `pluss::natsci::physics::fluids::gas::BoundKind` | `Slip`, `Fixed`, `Outlet`, `Far`, `Wall`, `Inlet`, `Blend` |
-| `pluss::natsci::physics::fluids::gas::FluxScheme` | `Rusanov`, `Hllc`, `Roe` |
-| `pluss::natsci::physics::fluids::gas::InletKind` | `Total`, `Flow` |
-| `pluss::natsci::physics::fluids::gas::Recon` | `Cell`, `Minmod`, `Mc`, `VanLeer`, `Weno5` |
-| `pluss::natsci::physics::fluids::gas::RoeMach` | `Classic`, `Rieper` |
-| `pluss::natsci::physics::fluids::gas::RoeShock` | `Off`, `HFix` |
-| `pluss::natsci::physics::fluids::gas::Rule` | `Euler`, `Rk2`, `Rk3` |
-| `pluss::natsci::physics::fluids::gas::WallHeat` | `Adiabatic`, `Temperature`, `Flux` |
+| `pluss::subsp::natsci::physics::astro::OrbitSense` | `Prograde`, `Retrograde` |
+| `pluss::subsp::natsci::physics::fluids::FlowForm` | `Advect`, `Conserve`, `Skew` |
+| `pluss::subsp::natsci::physics::fluids::FlowKind` | `NoSlip`, `FreeSlip`, `Inlet`, `Outlet` |
+| `pluss::subsp::natsci::physics::fluids::StepRule` | `Euler`, `Rk2`, `Rk3`, `Imex1` |
+| `pluss::subsp::natsci::physics::fluids::gas::BoundKind` | `Slip`, `Fixed`, `Outlet`, `Far`, `Wall`, `Inlet`, `Blend` |
+| `pluss::subsp::natsci::physics::fluids::gas::FluxScheme` | `Rusanov`, `Hllc`, `Roe` |
+| `pluss::subsp::natsci::physics::fluids::gas::InletKind` | `Total`, `Flow` |
+| `pluss::subsp::natsci::physics::fluids::gas::Recon` | `Cell`, `Minmod`, `Mc`, `VanLeer`, `Weno5` |
+| `pluss::subsp::natsci::physics::fluids::gas::RoeMach` | `Classic`, `Rieper` |
+| `pluss::subsp::natsci::physics::fluids::gas::RoeShock` | `Off`, `HFix` |
+| `pluss::subsp::natsci::physics::fluids::gas::Rule` | `Euler`, `Rk2`, `Rk3` |
+| `pluss::subsp::natsci::physics::fluids::gas::WallHeat` | `Adiabatic`, `Temperature`, `Flux` |
+| `pluss::subsp::natsci::physics::fluids::les::Model` | `Smagorinsky`, `Wale`, `DynamicSmagorinsky` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::natsci::physics::astro::Elements` | - | `axis()`, `batch_shape()`, `ecc()`, `node()`, `peri()`, `phase()`, `tilt()` |
-| `pluss::natsci::physics::astro::KeplerOptions` | `max_steps`, `tolerance`, `check_every`, `strict` | - |
-| `pluss::natsci::physics::astro::KeplerResult` | `anomaly`, `residual`, `converged`, `steps` | - |
-| `pluss::natsci::physics::astro::LambertOptions` | `sense`, `max_steps`, `tolerance`, `check_every`, `strict` | - |
-| `pluss::natsci::physics::astro::LambertResult` | `depart`, `arrive`, `root`, `residual`, `converged`, `steps` | - |
-| `pluss::natsci::physics::astro::OrbitOptions` | `tolerance` | - |
-| `pluss::natsci::physics::astro::OrbitState` | - | `batch_shape()`, `position()`, `velocity()` |
-| `pluss::natsci::physics::astro::PropResult` | `elements`, `solve` | - |
-| `pluss::natsci::physics::astro::StatePropResult` | `state`, `root`, `residual`, `converged`, `steps` | - |
-| `pluss::natsci::physics::fluids::DivergenceReport` | `field`, `mean`, `rms`, `max_abs` | - |
-| `pluss::natsci::physics::fluids::FlowBound` | - | `face()`, `free_slip()`, `inlet()`, `kind()`, `no_slip()`, `outlet()`, `pressure()`, `velocity()`, `zeroed()` |
-| `pluss::natsci::physics::fluids::FlowBounds` | - | `at()`, `dim()`, `zeroed()` |
-| `pluss::natsci::physics::fluids::FlowGhosts` | `low`, `high` | - |
-| `pluss::natsci::physics::fluids::FlowPath` | `trajectory`, `steps`, `rate_evaluations`, `projections` | - |
-| `pluss::natsci::physics::fluids::FlowStats` | `vorticity`, `strain_rate`, `kinetic_density`, `dissipation`, `kinetic_mean`, `enstrophy_mean`, `dissipation_mean`, `speed_max`, `divergence` | - |
-| `pluss::natsci::physics::fluids::IncompressibleState` | - | `batch_shape()`, `pressure()`, `velocity()` |
-| `pluss::natsci::physics::fluids::ProjectionOptions` | `poisson` | - |
-| `pluss::natsci::physics::fluids::ProjectionResult` | `state`, `pressure_correction`, `before`, `after`, `residual_norm`, `relative_residual`, `converged`, `breakdown`, `iterations` | - |
-| `pluss::natsci::physics::fluids::RunOptions` | `safety`, `min_step`, `max_step`, `max_steps`, `step` | - |
-| `pluss::natsci::physics::fluids::SteadyOptions` | `max_steps`, `check_interval`, `required_checks`, `absolute_tolerance`, `relative_tolerance`, `require_convergence`, `step` | - |
-| `pluss::natsci::physics::fluids::SteadyResult` | `state`, `residual`, `converged`, `time`, `steps`, `rate_evaluations`, `projections` | - |
-| `pluss::natsci::physics::fluids::StepGuard` | `courant`, `diffusion`, `enforce` | - |
-| `pluss::natsci::physics::fluids::StepLimits` | `convection`, `diffusion`, `allowed` | - |
-| `pluss::natsci::physics::fluids::StepOptions` | `rule`, `form`, `guard`, `projection`, `implicit` | - |
-| `pluss::natsci::physics::fluids::StepResult` | `state`, `limits`, `divergence`, `rate_evaluations`, `projections`, `linear_iterations` | - |
-| `pluss::natsci::physics::fluids::gas::Access` | - | `make()`, `raw()` |
-| `pluss::natsci::physics::fluids::gas::Bound` | - | `blend()`, `face()`, `far()`, `fixed()`, `inlet()`, `kind()`, `mask()`, `outlet()`, `pressure()`, `slip()`, `state()`, `wall()`, `when_false()`, `when_true()` |
-| `pluss::natsci::physics::fluids::gas::Bounds` | - | `at()`, `dim()` |
-| `pluss::natsci::physics::fluids::gas::FlowPath` | `trajectory`, `steps`, `flux_evaluations` | - |
-| `pluss::natsci::physics::fluids::gas::InletData` | `kind`, `direction`, `total_temperature`, `total_pressure`, `density`, `speed` | - |
-| `pluss::natsci::physics::fluids::gas::Limits` | `acoustic`, `diffusion`, `allowed` | - |
-| `pluss::natsci::physics::fluids::gas::Model` | `gamma`, `rho_floor`, `p_floor`, `gas_constant` | - |
-| `pluss::natsci::physics::fluids::gas::Options` | `rule`, `recon`, `courant`, `enforce`, `diffusion`, `transport`, `flux`, `roe`, `sutherland` | - |
-| `pluss::natsci::physics::fluids::gas::Primitive` | `density`, `velocity`, `pressure` | - |
-| `pluss::natsci::physics::fluids::gas::Rate` | `density`, `momentum`, `energy` | - |
-| `pluss::natsci::physics::fluids::gas::RoePolicy` | `entropy`, `mach`, `mach_floor`, `shock` | - |
-| `pluss::natsci::physics::fluids::gas::RunOptions` | `safety`, `min_step`, `max_step`, `max_steps`, `step` | - |
-| `pluss::natsci::physics::fluids::gas::State` | - | `density()`, `energy()`, `momentum()` |
-| `pluss::natsci::physics::fluids::gas::StepResult` | `state`, `limit`, `flux_evaluations` | - |
-| `pluss::natsci::physics::fluids::gas::SutherlandLaw` | `reference_viscosity`, `reference_temperature`, `sutherland_temperature`, `prandtl`, `bulk_ratio` | - |
-| `pluss::natsci::physics::fluids::gas::Transport` | `shear`, `bulk`, `heat` | - |
-| `pluss::natsci::physics::fluids::gas::TransportField` | `shear`, `bulk`, `heat` | - |
-| `pluss::natsci::physics::fluids::gas::WallData` | `heat`, `velocity`, `temperature`, `flux` | - |
-| `pluss::natsci::physics::fluids::gas::reacting::Access` | - | `make()`, `raw()` |
-| `pluss::natsci::physics::fluids::gas::reacting::Model` | - | `Model()`, `density_floor()`, `eos()`, `mechanism()`, `pressure_floor()` |
-| `pluss::natsci::physics::fluids::gas::reacting::ReactionResult` | `state`, `steps`, `rejected`, `rhs_evaluations`, `jacobian_evaluations` | - |
-| `pluss::natsci::physics::fluids::gas::reacting::SourceRate` | `density`, `momentum`, `energy`, `partial_density` | - |
-| `pluss::natsci::physics::fluids::gas::reacting::State` | - | `density()`, `energy()`, `momentum()`, `partial_density()` |
-| `pluss::natsci::physics::fluids::gas::species::Access` | - | `make()`, `raw()` |
-| `pluss::natsci::physics::fluids::gas::species::FlowPath` | `trajectory`, `steps`, `flux_evaluations` | - |
-| `pluss::natsci::physics::fluids::gas::species::Limits` | `flow`, `diffusion`, `allowed` | - |
-| `pluss::natsci::physics::fluids::gas::species::Options` | `flow`, `transport`, `diffusion` | - |
-| `pluss::natsci::physics::fluids::gas::species::Rate` | `flow`, `partial_density` | - |
-| `pluss::natsci::physics::fluids::gas::species::RunOptions` | `safety`, `min_step`, `max_step`, `max_steps`, `step` | - |
-| `pluss::natsci::physics::fluids::gas::species::State` | - | `flow()`, `partial_density()` |
-| `pluss::natsci::physics::fluids::gas::species::StepResult` | `state`, `limit`, `flux_evaluations` | - |
-| `pluss::natsci::physics::mechanics::Bodies` | - | `axes()`, `count()`, `mass()`, `position()`, `velocity()` |
-| `pluss::natsci::physics::mechanics::HamiltonianEvaluation` | `value`, `flow` | - |
-| `pluss::natsci::physics::mechanics::LagrangeEvaluation` | `value`, `momentum`, `mass`, `flow` | - |
-| `pluss::natsci::physics::mechanics::PhaseRate` | `coordinate`, `momentum` | - |
-| `pluss::natsci::physics::mechanics::PhaseState` | - | `batch_shape()`, `coordinate()`, `dof()`, `momentum()` |
-| `pluss::natsci::physics::mechanics::TangentRate` | `coordinate`, `velocity` | - |
-| `pluss::natsci::physics::mechanics::TangentState` | - | `batch_shape()`, `coordinate()`, `dof()`, `velocity()` |
-| `pluss::natsci::physics::mechanics::VariationalOptions` | `track_higher_order`, `keep_graph` | - |
-| `pluss::natsci::physics::thermo::IdealPath` | `final_temp`, `work`, `heat`, `delta_u` | - |
-| `pluss::natsci::physics::thermo::MassProps` | `cp`, `h`, `s`, `g` | - |
-| `pluss::natsci::physics::thermo::MolarProps` | `cp`, `h`, `s`, `g` | - |
+| `pluss::subsp::natsci::physics::astro::Elements` | - | `axis()`, `batch_shape()`, `ecc()`, `node()`, `peri()`, `phase()`, `tilt()` |
+| `pluss::subsp::natsci::physics::astro::KeplerOptions` | `max_steps`, `tolerance`, `check_every`, `strict` | - |
+| `pluss::subsp::natsci::physics::astro::KeplerResult` | `anomaly`, `residual`, `converged`, `steps` | - |
+| `pluss::subsp::natsci::physics::astro::LambertOptions` | `sense`, `max_steps`, `tolerance`, `check_every`, `strict` | - |
+| `pluss::subsp::natsci::physics::astro::LambertResult` | `depart`, `arrive`, `root`, `residual`, `converged`, `steps` | - |
+| `pluss::subsp::natsci::physics::astro::OrbitOptions` | `tolerance` | - |
+| `pluss::subsp::natsci::physics::astro::OrbitState` | - | `batch_shape()`, `position()`, `velocity()` |
+| `pluss::subsp::natsci::physics::astro::PropResult` | `elements`, `solve` | - |
+| `pluss::subsp::natsci::physics::astro::StatePropResult` | `state`, `root`, `residual`, `converged`, `steps` | - |
+| `pluss::subsp::natsci::physics::fluids::DivergenceReport` | `field`, `mean`, `rms`, `max_abs` | - |
+| `pluss::subsp::natsci::physics::fluids::FlowBound` | - | `face()`, `free_slip()`, `inlet()`, `kind()`, `no_slip()`, `outlet()`, `pressure()`, `velocity()`, `zeroed()` |
+| `pluss::subsp::natsci::physics::fluids::FlowBounds` | - | `at()`, `dim()`, `zeroed()` |
+| `pluss::subsp::natsci::physics::fluids::FlowGhosts` | `low`, `high` | - |
+| `pluss::subsp::natsci::physics::fluids::FlowPath` | `trajectory`, `steps`, `rate_evaluations`, `projections` | - |
+| `pluss::subsp::natsci::physics::fluids::FlowStats` | `vorticity`, `strain_rate`, `kinetic_density`, `dissipation`, `kinetic_mean`, `enstrophy_mean`, `dissipation_mean`, `speed_max`, `divergence` | - |
+| `pluss::subsp::natsci::physics::fluids::IncompressibleState` | - | `batch_shape()`, `pressure()`, `velocity()` |
+| `pluss::subsp::natsci::physics::fluids::ProjectionOptions` | `poisson` | - |
+| `pluss::subsp::natsci::physics::fluids::ProjectionResult` | `state`, `pressure_correction`, `before`, `after`, `residual_norm`, `relative_residual`, `converged`, `breakdown`, `iterations` | - |
+| `pluss::subsp::natsci::physics::fluids::RunOptions` | `safety`, `min_step`, `max_step`, `max_steps`, `step` | - |
+| `pluss::subsp::natsci::physics::fluids::SteadyOptions` | `max_steps`, `check_interval`, `required_checks`, `absolute_tolerance`, `relative_tolerance`, `require_convergence`, `step` | - |
+| `pluss::subsp::natsci::physics::fluids::SteadyResult` | `state`, `residual`, `converged`, `time`, `steps`, `rate_evaluations`, `projections` | - |
+| `pluss::subsp::natsci::physics::fluids::StepGuard` | `courant`, `diffusion`, `enforce` | - |
+| `pluss::subsp::natsci::physics::fluids::StepLimits` | `convection`, `diffusion`, `allowed` | - |
+| `pluss::subsp::natsci::physics::fluids::StepOptions` | `rule`, `form`, `guard`, `projection`, `implicit` | - |
+| `pluss::subsp::natsci::physics::fluids::StepResult` | `state`, `limits`, `divergence`, `rate_evaluations`, `projections`, `linear_iterations` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::Access` | - | `make()`, `raw()` |
+| `pluss::subsp::natsci::physics::fluids::gas::Bound` | - | `blend()`, `face()`, `far()`, `fixed()`, `inlet()`, `kind()`, `mask()`, `outlet()`, `pressure()`, `slip()`, `state()`, `wall()`, `when_false()`, `when_true()` |
+| `pluss::subsp::natsci::physics::fluids::gas::Bounds` | - | `at()`, `dim()` |
+| `pluss::subsp::natsci::physics::fluids::gas::FlowPath` | `trajectory`, `steps`, `flux_evaluations` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::InletData` | `kind`, `direction`, `total_temperature`, `total_pressure`, `density`, `speed` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::Limits` | `acoustic`, `diffusion`, `allowed` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::Model` | `gamma`, `rho_floor`, `p_floor`, `gas_constant` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::Options` | `rule`, `recon`, `courant`, `enforce`, `diffusion`, `transport`, `flux`, `roe`, `sutherland` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::Primitive` | `density`, `velocity`, `pressure` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::Rate` | `density`, `momentum`, `energy` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::RoePolicy` | `entropy`, `mach`, `mach_floor`, `shock` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::RunOptions` | `safety`, `min_step`, `max_step`, `max_steps`, `step` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::State` | - | `density()`, `energy()`, `momentum()` |
+| `pluss::subsp::natsci::physics::fluids::gas::StepResult` | `state`, `limit`, `flux_evaluations` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::SutherlandLaw` | `reference_viscosity`, `reference_temperature`, `sutherland_temperature`, `prandtl`, `bulk_ratio` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::Transport` | `shear`, `bulk`, `heat` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::TransportField` | `shear`, `bulk`, `heat` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::WallData` | `heat`, `velocity`, `temperature`, `flux` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::reacting::Access` | - | `make()`, `raw()` |
+| `pluss::subsp::natsci::physics::fluids::gas::reacting::Model` | - | `Model()`, `density_floor()`, `eos()`, `mechanism()`, `pressure_floor()` |
+| `pluss::subsp::natsci::physics::fluids::gas::reacting::ReactionResult` | `state`, `steps`, `rejected`, `rhs_evaluations`, `jacobian_evaluations` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::reacting::SourceRate` | `density`, `momentum`, `energy`, `partial_density` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::reacting::State` | - | `density()`, `energy()`, `momentum()`, `partial_density()` |
+| `pluss::subsp::natsci::physics::fluids::gas::species::Access` | - | `make()`, `raw()` |
+| `pluss::subsp::natsci::physics::fluids::gas::species::FlowPath` | `trajectory`, `steps`, `flux_evaluations` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::species::Limits` | `flow`, `diffusion`, `allowed` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::species::Options` | `flow`, `transport`, `diffusion` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::species::Rate` | `flow`, `partial_density` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::species::RunOptions` | `safety`, `min_step`, `max_step`, `max_steps`, `step` | - |
+| `pluss::subsp::natsci::physics::fluids::gas::species::State` | - | `flow()`, `partial_density()` |
+| `pluss::subsp::natsci::physics::fluids::gas::species::StepResult` | `state`, `limit`, `flux_evaluations` | - |
+| `pluss::subsp::natsci::physics::fluids::les::Closure` | `model`, `constant`, `width`, `clip`, `local_average`, `test_ratio` | - |
+| `pluss::subsp::natsci::physics::mechanics::Bodies` | - | `axes()`, `count()`, `mass()`, `position()`, `velocity()` |
+| `pluss::subsp::natsci::physics::mechanics::HamiltonianEvaluation` | `value`, `flow` | - |
+| `pluss::subsp::natsci::physics::mechanics::LagrangeEvaluation` | `value`, `momentum`, `mass`, `flow` | - |
+| `pluss::subsp::natsci::physics::mechanics::PhaseRate` | `coordinate`, `momentum` | - |
+| `pluss::subsp::natsci::physics::mechanics::PhaseState` | - | `batch_shape()`, `coordinate()`, `dof()`, `momentum()` |
+| `pluss::subsp::natsci::physics::mechanics::TangentRate` | `coordinate`, `velocity` | - |
+| `pluss::subsp::natsci::physics::mechanics::TangentState` | - | `batch_shape()`, `coordinate()`, `dof()`, `velocity()` |
+| `pluss::subsp::natsci::physics::mechanics::VariationalOptions` | `track_higher_order`, `keep_graph` | - |
+| `pluss::subsp::natsci::physics::thermo::IdealPath` | `final_temp`, `work`, `heat`, `delta_u` | - |
+| `pluss::subsp::natsci::physics::thermo::MassProps` | `cp`, `h`, `s`, `g` | - |
+| `pluss::subsp::natsci::physics::thermo::MolarProps` | `cp`, `h`, `s`, `g` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `PropResult pluss::natsci::physics::astro::advance(const Elements & elements, const common::Quantity<common::Time, TimeRep> & elapsed, const common::Quantity<GravParam, MuRep> & mu, const KeplerOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `StatePropResult pluss::natsci::physics::astro::advance(const OrbitState & state, const common::Quantity<common::Time, TimeRep> & elapsed, const common::Quantity<GravParam, MuRep> & mu, const KeplerOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `common::SeriesQuantity<SpecAngMom> pluss::natsci::physics::astro::ang_mom(const OrbitState & state)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `common::SeriesQuantity<common::Length> pluss::natsci::physics::astro::apo(const Elements & elements)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `common::SeriesQuantity<common::Dimensionless> pluss::natsci::physics::astro::ecc_vec(const OrbitState & state, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `common::SeriesQuantity<SpecEnergy> pluss::natsci::physics::astro::energy(const OrbitState & state, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `OrbitState pluss::natsci::physics::astro::from_elem(const Elements & elements, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `LambertResult pluss::natsci::physics::astro::lambert(const common::SeriesQuantity<common::Length> & start, const common::SeriesQuantity<common::Length> & finish, const common::Quantity<common::Time, TimeRep> & flight, const common::Quantity<GravParam, MuRep> & mu, const LambertOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `LambertResult pluss::natsci::physics::astro::lambert(const common::SeriesQuantity<common::Length> & start, const common::SeriesQuantity<common::Length> & finish, const common::Quantity<common::Time, TimeRep> & flight, const common::Quantity<GravParam, MuRep> & mu, const common::SeriesQuantity<common::Dimensionless> & normal, const LambertOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `Elements pluss::natsci::physics::astro::make_elem(const common::SeriesQuantity<common::Length> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const OrbitOptions &)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `OrbitState pluss::natsci::physics::astro::make_state(const common::SeriesQuantity<common::Length> &, const common::SeriesQuantity<common::Speed> &)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `common::SeriesQuantity<common::Frequency> pluss::natsci::physics::astro::mean_rate(const Elements & elements, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `common::SeriesQuantity<common::Length> pluss::natsci::physics::astro::peri(const Elements & elements)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `common::SeriesQuantity<common::Time> pluss::natsci::physics::astro::period(const Elements & elements, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `KeplerResult pluss::natsci::physics::astro::solve_mean(const Series & ecc, const Series & mean, const KeplerOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `Elements pluss::natsci::physics::astro::to_elem(const OrbitState & state, const common::Quantity<GravParam, Rep> & mu, const OrbitOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `Series pluss::natsci::physics::astro::to_mean(const Series & ecc, const Series & phase)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `Series pluss::natsci::physics::astro::to_true(const Series & ecc, const Series & anomaly)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
-| `StepResult pluss::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `StepResult pluss::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `StepResult pluss::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `StepResult pluss::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `DivergenceReport pluss::natsci::physics::fluids::div_report(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `DivergenceReport pluss::natsci::physics::fluids::div_report(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowPath pluss::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowBounds pluss::natsci::physics::fluids::flow_bounds(const boundary_spatial::BoxGrid & grid, std::initializer_list<FlowBound> rules)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `FlowBounds pluss::natsci::physics::fluids::flow_bounds(const boundary_spatial::BoxGrid &, std::vector<FlowBound>)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `FlowStats pluss::natsci::physics::fluids::flow_stats(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowStats pluss::natsci::physics::fluids::flow_stats(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::flow_term(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::flow_term(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowBound pluss::natsci::physics::fluids::free_slip(boundary_spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `FlowBound pluss::natsci::physics::fluids::free_slip(boundary_spatial::Face face, const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::blend(Series mask, Bound when_true, Bound when_false)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bounds pluss::natsci::physics::fluids::gas::bounds(const spatial::BoxGrid & grid, std::initializer_list<Bound> rules)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bounds pluss::natsci::physics::fluids::gas::bounds(const spatial::BoxGrid &, std::vector<Bound>)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::evolve(const State & initial, const spatial::BoxGrid & grid, const BoundFn & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::evolve(const State & initial, const spatial::BoxGrid & grid, const Bounds & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::evolve(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::evolve_to(const State & initial, const spatial::BoxGrid & grid, const BoundFn & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::evolve_to(const State & initial, const spatial::BoxGrid & grid, const Bounds & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::evolve_to(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `Bound pluss::natsci::physics::fluids::gas::far(spatial::Face face, Primitive state)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::fixed(spatial::Face face, Primitive state)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `common::SeriesQuantity<HeatFlux> pluss::natsci::physics::fluids::gas::heat_flux(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const Transport & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<HeatFlux> pluss::natsci::physics::fluids::gas::heat_flux(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const TransportField & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `Bound pluss::natsci::physics::fluids::gas::inlet(spatial::Face face, common::SeriesQuantity<Density> density, common::SeriesQuantity<common::Speed> speed, Series direction)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::inlet(spatial::Face face, common::SeriesQuantity<common::Temperature> total_temperature, common::SeriesQuantity<common::Pressure> total_pressure, Series direction)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Limits pluss::natsci::physics::fluids::gas::limits(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Transport & transport = {}, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `Limits pluss::natsci::physics::fluids::gas::limits(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const SutherlandLaw & law, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `State pluss::natsci::physics::fluids::gas::make(const common::SeriesQuantity<Density> &, const common::SeriesQuantity<MomDensity> &, const common::SeriesQuantity<EnergyDensity> &, const spatial::BoxGrid &, const Model &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `State pluss::natsci::physics::fluids::gas::make(const common::SeriesQuantity<Density> &, const common::SeriesQuantity<MomDensity> &, const common::SeriesQuantity<EnergyDensity> &, const spatial::PeriodicGrid &, const Model &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `Bound pluss::natsci::physics::fluids::gas::outlet(spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::outlet(spatial::Face face, common::SeriesQuantity<common::Pressure> pressure)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::gas::pressure(const State & state, const spatial::BoxGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::gas::pressure(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `Primitive pluss::natsci::physics::fluids::gas::primitive(const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<common::Speed> & velocity, const common::SeriesQuantity<common::Pressure> & pressure)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Rate pluss::natsci::physics::fluids::gas::rate(const State & state, const spatial::BoxGrid & grid, const Bounds & rules, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Rate pluss::natsci::physics::fluids::gas::rate(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `State pluss::natsci::physics::fluids::gas::reacting::from_conserved(const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<MomDensity> & momentum, const common::SeriesQuantity<EnergyDensity> & energy, const common::SeriesQuantity<Density> & partial_density, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `Series pluss::natsci::physics::fluids::gas::reacting::mass_fractions(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::gas::reacting::pressure(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `State pluss::natsci::physics::fluids::gas::reacting::primitive(const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<common::Speed> & velocity, const common::SeriesQuantity<common::Temperature> & temperature, const Series & mass_fractions, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `ReactionResult pluss::natsci::physics::fluids::gas::reacting::react(const State & state, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> width, const Model & model, const stiff::Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `common::SeriesQuantity<common::Speed> pluss::natsci::physics::fluids::gas::reacting::sound(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `SourceRate pluss::natsci::physics::fluids::gas::reacting::source_rate(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `common::SeriesQuantity<common::Temperature> pluss::natsci::physics::fluids::gas::reacting::temperature(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `common::SeriesQuantity<common::Speed> pluss::natsci::physics::fluids::gas::reacting::velocity(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
-| `Bound pluss::natsci::physics::fluids::gas::slip(spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `common::SeriesQuantity<common::Speed> pluss::natsci::physics::fluids::gas::sound(const State & state, const spatial::BoxGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Speed> pluss::natsci::physics::fluids::gas::sound(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<DiffusiveMassFlux> pluss::natsci::physics::fluids::gas::species::diffusive_flux(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const chem_transport::GasTransport & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::species::evolve(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `FlowPath pluss::natsci::physics::fluids::gas::species::evolve_to(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `State pluss::natsci::physics::fluids::gas::species::from_density(const gas::State &, const common::SeriesQuantity<Density> &, const spatial::PeriodicGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `Limits pluss::natsci::physics::fluids::gas::species::limits(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `State pluss::natsci::physics::fluids::gas::species::make(const gas::State &, const Series &, const spatial::PeriodicGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `Series pluss::natsci::physics::fluids::gas::species::mass_fractions(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `Rate pluss::natsci::physics::fluids::gas::species::rate(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `StepResult pluss::natsci::physics::fluids::gas::species::step(const State & state, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `void pluss::natsci::physics::fluids::gas::species::validate(const Options & options)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `void pluss::natsci::physics::fluids::gas::species::validate(const RunOptions & options)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
-| `StepResult pluss::natsci::physics::fluids::gas::step(const State & state, const spatial::BoxGrid & grid, const BoundFn & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `StepResult pluss::natsci::physics::fluids::gas::step(const State & state, const spatial::BoxGrid & grid, const Bounds & rules, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `StepResult pluss::natsci::physics::fluids::gas::step(const State & state, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Time> pluss::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::BoxGrid & grid, const Model & model = {}, double courant = 0.45)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `common::SeriesQuantity<common::Time> pluss::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::BoxGrid & grid, const Model & model, const SutherlandLaw & law, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `common::SeriesQuantity<common::Time> pluss::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::BoxGrid & grid, const Model & model, const Transport & transport, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `common::SeriesQuantity<common::Time> pluss::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, double courant = 0.45)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Time> pluss::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const Transport & transport, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::gas::stress(const State & state, const spatial::PeriodicGrid & grid, const Transport & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::gas::stress(const State & state, const spatial::PeriodicGrid & grid, const TransportField & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Temperature> pluss::natsci::physics::fluids::gas::temperature(const State & state, const spatial::BoxGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Temperature> pluss::natsci::physics::fluids::gas::temperature(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `TransportField pluss::natsci::physics::fluids::gas::transport(const State & state, const spatial::BoxGrid & grid, const Model & model, const SutherlandLaw & law)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `TransportField pluss::natsci::physics::fluids::gas::transport(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const SutherlandLaw & law)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Speed> pluss::natsci::physics::fluids::gas::velocity(const State & state, const spatial::BoxGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `common::SeriesQuantity<common::Speed> pluss::natsci::physics::fluids::gas::velocity(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
-| `Bound pluss::natsci::physics::fluids::gas::wall(spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::wall(spatial::Face face, common::SeriesQuantity<common::Speed> velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::wall_heat(spatial::Face face, common::SeriesQuantity<HeatFlux> flux)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::wall_heat(spatial::Face face, common::SeriesQuantity<HeatFlux> flux, common::SeriesQuantity<common::Speed> velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::wall_temp(spatial::Face face, common::SeriesQuantity<common::Temperature> temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `Bound pluss::natsci::physics::fluids::gas::wall_temp(spatial::Face face, common::SeriesQuantity<common::Temperature> temperature, common::SeriesQuantity<common::Speed> velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
-| `FlowBound pluss::natsci::physics::fluids::inlet(boundary_spatial::Face face, const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `IncompressibleState pluss::natsci::physics::fluids::make_state(const common::SeriesQuantity<common::Speed> &, const common::SeriesQuantity<common::Pressure> &, const spatial::BoxGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `IncompressibleState pluss::natsci::physics::fluids::make_state(const common::SeriesQuantity<common::Speed> &, const common::SeriesQuantity<common::Pressure> &, const spatial::PeriodicGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowBound pluss::natsci::physics::fluids::no_slip(boundary_spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `FlowBound pluss::natsci::physics::fluids::no_slip(boundary_spatial::Face face, const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `FlowBound pluss::natsci::physics::fluids::outlet(boundary_spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `FlowBound pluss::natsci::physics::fluids::outlet(boundary_spatial::Face face, const boundary_common::Quantity<boundary_common::Pressure, Rep> & pressure)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `boundary_spatial::Bounds<boundary_common::Pressure> pluss::natsci::physics::fluids::p_bounds(const boundary_spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `ProjectionResult pluss::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `ProjectionResult pluss::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `ProjectionResult pluss::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `ProjectionResult pluss::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `SteadyResult pluss::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `SteadyResult pluss::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `SteadyResult pluss::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `SteadyResult pluss::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `StepLimits pluss::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::BoxGrid & grid, const common::ScalarQuantity<KinematicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `StepLimits pluss::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::BoxGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `StepLimits pluss::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<KinematicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `StepLimits pluss::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Frequency> pluss::natsci::physics::fluids::strain(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Frequency> pluss::natsci::physics::fluids::strain(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Pressure> pluss::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `FlowGhosts pluss::natsci::physics::fluids::vel_ghosts(const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity, const boundary_spatial::BoxGrid & grid, const FlowBounds & bounds, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
-| `common::SeriesQuantity<common::Frequency> pluss::natsci::physics::fluids::vort(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::Frequency> pluss::natsci::physics::fluids::vort(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
-| `common::SeriesQuantity<common::AngularMomentum> pluss::natsci::physics::mechanics::angular_momentum(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `common::SeriesQuantity<common::Length> pluss::natsci::physics::mechanics::center(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `common::SeriesQuantity<common::Speed> pluss::natsci::physics::mechanics::center_speed(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `common::SeriesQuantity<common::Acceleration> pluss::natsci::physics::mechanics::gravity(const Bodies & bodies, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `Bodies pluss::natsci::physics::mechanics::gravity_step(const Bodies & bodies, common::ScalarQuantity<common::Time> step, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `HamiltonianEvaluation<CoordinateDimension> pluss::natsci::physics::mechanics::hamiltonian(Fn && fn, const PhaseState<CoordinateDimension> & state, common::ScalarQuantity<common::Time> time = common::ScalarQuantity<common::Time>::from_si(0.0), const VariationalOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/hamiltonian.h` |
-| `common::SeriesQuantity<common::Energy> pluss::natsci::physics::mechanics::kinetic_energy(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `LagrangeEvaluation<CoordinateDimension> pluss::natsci::physics::mechanics::lagrange(Fn && fn, const TangentState<CoordinateDimension> & state, common::ScalarQuantity<common::Time> time = common::ScalarQuantity<common::Time>::from_si(0.0), const VariationalOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/lagrangian.h` |
-| `Bodies pluss::natsci::physics::mechanics::leapfrog(const Bodies & bodies, common::ScalarQuantity<common::Time> step, AccelerationFn && acceleration)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `Bodies pluss::natsci::physics::mechanics::make(const common::SeriesQuantity<common::Mass> &, const common::SeriesQuantity<common::Length> &, const common::SeriesQuantity<common::Speed> &)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `PhaseState<CoordinateDimension> pluss::natsci::physics::mechanics::make_phase(const common::SeriesQuantity<CoordinateDimension> & coordinate, const common::SeriesQuantity<CanonicalMomentum<CoordinateDimension> > & momentum)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
-| `PhaseState<D> pluss::natsci::physics::mechanics::make_phase(const common::SeriesQuantity<D> &, const common::SeriesQuantity<CanonicalMomentum<D> > &)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
-| `TangentState<CoordinateDimension> pluss::natsci::physics::mechanics::make_tangent(const common::SeriesQuantity<CoordinateDimension> & coordinate, const common::SeriesQuantity<CoordinateRate<CoordinateDimension> > & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
-| `TangentState<D> pluss::natsci::physics::mechanics::make_tangent(const common::SeriesQuantity<D> &, const common::SeriesQuantity<CoordinateRate<D> > &)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
-| `common::SeriesQuantity<common::Momentum> pluss::natsci::physics::mechanics::momentum(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `common::SeriesQuantity<common::Energy> pluss::natsci::physics::mechanics::potential_energy(const Bodies & bodies, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `Bodies pluss::natsci::physics::mechanics::shift_to_center(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `PhaseState<CoordinateDimension> pluss::natsci::physics::mechanics::symplectic_step(const PhaseState<CoordinateDimension> & state, common::ScalarQuantity<common::Time> step, PotentialFn && potential, KineticFn && kinetic, common::ScalarQuantity<common::Time> time = common::ScalarQuantity<common::Time>::from_si(0.0), const VariationalOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/hamiltonian.h` |
-| `common::SeriesQuantity<common::Energy> pluss::natsci::physics::mechanics::total_energy(const Bodies & bodies, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `common::SeriesQuantity<common::Energy> pluss::natsci::physics::mechanics::total_kinetic(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `common::SeriesQuantity<common::Mass> pluss::natsci::physics::mechanics::total_mass(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `common::SeriesQuantity<common::Momentum> pluss::natsci::physics::mechanics::total_momentum(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
-| `auto pluss::natsci::physics::thermo::beta(const common::TemperaturePoint<Rep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::cp(const common::Quantity<SpecificGasConstant, GasRep> & gas_constant, const common::Quantity<common::Dimensionless, RatioRep> & gamma)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::cv(const common::Quantity<SpecificGasConstant, GasRep> & gas_constant, const common::Quantity<common::Dimensionless, RatioRep> & gamma)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::delta_e(const common::Quantity<common::Energy, HeatRep> & heat, const common::Quantity<common::Energy, WorkRep> & work)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::density(const common::Quantity<common::Pressure, PressureRep> & pressure_value, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<SpecificGasConstant, GasRep> & gas_constant)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::energy(const common::Quantity<SpecificHeat, HeatRep> & cv_value, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::enthalpy(const common::Quantity<SpecificHeat, HeatRep> & cp_value, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::gas_const(const common::Quantity<MolarMass, Rep> & molar_mass)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::heat_in(const common::Quantity<common::Energy, EnergyRep> & stored_change, const common::Quantity<common::Energy, WorkRep> & work)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::heat_ratio(const common::Quantity<SpecificHeat, CpRep> & cp_value, const common::Quantity<SpecificHeat, CvRep> & cv_value)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::iso_p(const common::Quantity<common::Mass, MassRep> & mass, const common::Quantity<SpecificHeat, CpRep> & cp_value, const common::Quantity<SpecificHeat, CvRep> & cv_value, const common::TemperaturePoint<InitialRep> & initial_temp, const common::TemperaturePoint<FinalRep> & final_temp)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::iso_s(const common::Quantity<common::Mass, MassRep> & mass, const common::Quantity<SpecificHeat, HeatRep> & cv_value, const common::Quantity<common::Dimensionless, RatioRep> & gamma, const common::TemperaturePoint<TemperatureRep> & initial_temp, const common::Quantity<common::Volume, InitialVolumeRep> & initial_volume, const common::Quantity<common::Volume, FinalVolumeRep> & final_volume)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::iso_t(const common::Quantity<common::Amount, AmountRep> & amount, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<common::Volume, InitialVolumeRep> & initial_volume, const common::Quantity<common::Volume, FinalVolumeRep> & final_volume)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::iso_v(const common::Quantity<common::Mass, MassRep> & mass, const common::Quantity<SpecificHeat, HeatRep> & cv_value, const common::TemperaturePoint<InitialRep> & initial_temp, const common::TemperaturePoint<FinalRep> & final_temp)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::kappa(const common::Quantity<common::Pressure, Rep> & pressure_value)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `MassProps pluss::natsci::physics::thermo::mass_props(const Nasa7 & model, const common::TemperaturePoint<Series> & temperature, const common::Quantity<MolarMass, MassRep> & molar_mass)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo/species.h` |
-| `auto pluss::natsci::physics::thermo::moles(const common::Quantity<common::Pressure, PressureRep> & pressure_value, const common::Quantity<common::Volume, VolumeRep> & volume_value, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::pressure(const common::Quantity<MassDensity, DensityRep> & density_value, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<SpecificGasConstant, GasRep> & gas_constant)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::pressure(const common::Quantity<common::Amount, AmountRep> & amount, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<common::Volume, VolumeRep> & volume)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `MolarProps pluss::natsci::physics::thermo::props(const Nasa7 & model, const common::TemperaturePoint<Series> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo/species.h` |
-| `auto pluss::natsci::physics::thermo::pv_work(PressureFn pressure_fn, common::ScalarQuantity<common::Volume> initial_volume, common::ScalarQuantity<common::Volume> final_volume, const pluss::subsp::math::integ::QuadraOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::sound_speed(const common::Quantity<common::Dimensionless, RatioRep> & gamma, const common::Quantity<SpecificGasConstant, GasRep> & gas_constant, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::temp(const common::Quantity<common::Pressure, PressureRep> & pressure_value, const common::Quantity<common::Volume, VolumeRep> & volume_value, const common::Quantity<common::Amount, AmountRep> & amount)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::volume(const common::Quantity<common::Amount, AmountRep> & amount, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<common::Pressure, PressureRep> & pressure_value)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
-| `auto pluss::natsci::physics::thermo::work_out(const common::Quantity<common::Energy, HeatRep> & heat, const common::Quantity<common::Energy, EnergyRep> & stored_change)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `PropResult pluss::subsp::natsci::physics::astro::advance(const Elements & elements, const common::Quantity<common::Time, TimeRep> & elapsed, const common::Quantity<GravParam, MuRep> & mu, const KeplerOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `StatePropResult pluss::subsp::natsci::physics::astro::advance(const OrbitState & state, const common::Quantity<common::Time, TimeRep> & elapsed, const common::Quantity<GravParam, MuRep> & mu, const KeplerOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `common::SeriesQuantity<SpecAngMom> pluss::subsp::natsci::physics::astro::ang_mom(const OrbitState & state)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `common::SeriesQuantity<common::Length> pluss::subsp::natsci::physics::astro::apo(const Elements & elements)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `common::SeriesQuantity<common::Dimensionless> pluss::subsp::natsci::physics::astro::ecc_vec(const OrbitState & state, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `common::SeriesQuantity<SpecEnergy> pluss::subsp::natsci::physics::astro::energy(const OrbitState & state, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `OrbitState pluss::subsp::natsci::physics::astro::from_elem(const Elements & elements, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `LambertResult pluss::subsp::natsci::physics::astro::lambert(const common::SeriesQuantity<common::Length> & start, const common::SeriesQuantity<common::Length> & finish, const common::Quantity<common::Time, TimeRep> & flight, const common::Quantity<GravParam, MuRep> & mu, const LambertOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `LambertResult pluss::subsp::natsci::physics::astro::lambert(const common::SeriesQuantity<common::Length> & start, const common::SeriesQuantity<common::Length> & finish, const common::Quantity<common::Time, TimeRep> & flight, const common::Quantity<GravParam, MuRep> & mu, const common::SeriesQuantity<common::Dimensionless> & normal, const LambertOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `Elements pluss::subsp::natsci::physics::astro::make_elem(const common::SeriesQuantity<common::Length> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const common::SeriesQuantity<common::Dimensionless> &, const OrbitOptions &)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `OrbitState pluss::subsp::natsci::physics::astro::make_state(const common::SeriesQuantity<common::Length> &, const common::SeriesQuantity<common::Speed> &)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `common::SeriesQuantity<common::Frequency> pluss::subsp::natsci::physics::astro::mean_rate(const Elements & elements, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `common::SeriesQuantity<common::Length> pluss::subsp::natsci::physics::astro::peri(const Elements & elements)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `common::SeriesQuantity<common::Time> pluss::subsp::natsci::physics::astro::period(const Elements & elements, const common::Quantity<GravParam, Rep> & mu)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `KeplerResult pluss::subsp::natsci::physics::astro::solve_mean(const Series & ecc, const Series & mean, const KeplerOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `Elements pluss::subsp::natsci::physics::astro::to_elem(const OrbitState & state, const common::Quantity<GravParam, Rep> & mu, const OrbitOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `Series pluss::subsp::natsci::physics::astro::to_mean(const Series & ecc, const Series & phase)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `Series pluss::subsp::natsci::physics::astro::to_true(const Series & ecc, const Series & anomaly)` | `PlussMa/include/pluss/subsp/natsci/physics/astro.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::advance(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `DivergenceReport pluss::subsp::natsci::physics::fluids::div_report(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `DivergenceReport pluss::subsp::natsci::physics::fluids::div_report(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, std::int64_t steps, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::evolve_to(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const RunOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowBounds pluss::subsp::natsci::physics::fluids::flow_bounds(const boundary_spatial::BoxGrid & grid, std::initializer_list<FlowBound> rules)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `FlowBounds pluss::subsp::natsci::physics::fluids::flow_bounds(const boundary_spatial::BoxGrid &, std::vector<FlowBound>)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `FlowStats pluss::subsp::natsci::physics::fluids::flow_stats(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowStats pluss::subsp::natsci::physics::fluids::flow_stats(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::flow_term(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::flow_term(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowBound pluss::subsp::natsci::physics::fluids::free_slip(boundary_spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `FlowBound pluss::subsp::natsci::physics::fluids::free_slip(boundary_spatial::Face face, const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::blend(Series mask, Bound when_true, Bound when_false)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bounds pluss::subsp::natsci::physics::fluids::gas::bounds(const spatial::BoxGrid & grid, std::initializer_list<Bound> rules)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bounds pluss::subsp::natsci::physics::fluids::gas::bounds(const spatial::BoxGrid &, std::vector<Bound>)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::evolve(const State & initial, const spatial::BoxGrid & grid, const BoundFn & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::evolve(const State & initial, const spatial::BoxGrid & grid, const Bounds & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::evolve(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::evolve_to(const State & initial, const spatial::BoxGrid & grid, const BoundFn & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::evolve_to(const State & initial, const spatial::BoxGrid & grid, const Bounds & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::evolve_to(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::far(spatial::Face face, Primitive state)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::fixed(spatial::Face face, Primitive state)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `common::SeriesQuantity<HeatFlux> pluss::subsp::natsci::physics::fluids::gas::heat_flux(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const Transport & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<HeatFlux> pluss::subsp::natsci::physics::fluids::gas::heat_flux(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const TransportField & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::inlet(spatial::Face face, common::SeriesQuantity<Density> density, common::SeriesQuantity<common::Speed> speed, Series direction)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::inlet(spatial::Face face, common::SeriesQuantity<common::Temperature> total_temperature, common::SeriesQuantity<common::Pressure> total_pressure, Series direction)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Limits pluss::subsp::natsci::physics::fluids::gas::limits(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Transport & transport = {}, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `Limits pluss::subsp::natsci::physics::fluids::gas::limits(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const SutherlandLaw & law, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `State pluss::subsp::natsci::physics::fluids::gas::make(const common::SeriesQuantity<Density> &, const common::SeriesQuantity<MomDensity> &, const common::SeriesQuantity<EnergyDensity> &, const spatial::BoxGrid &, const Model &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `State pluss::subsp::natsci::physics::fluids::gas::make(const common::SeriesQuantity<Density> &, const common::SeriesQuantity<MomDensity> &, const common::SeriesQuantity<EnergyDensity> &, const spatial::PeriodicGrid &, const Model &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::outlet(spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::outlet(spatial::Face face, common::SeriesQuantity<common::Pressure> pressure)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::gas::pressure(const State & state, const spatial::BoxGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::gas::pressure(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `Primitive pluss::subsp::natsci::physics::fluids::gas::primitive(const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<common::Speed> & velocity, const common::SeriesQuantity<common::Pressure> & pressure)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Rate pluss::subsp::natsci::physics::fluids::gas::rate(const State & state, const spatial::BoxGrid & grid, const Bounds & rules, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Rate pluss::subsp::natsci::physics::fluids::gas::rate(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `State pluss::subsp::natsci::physics::fluids::gas::reacting::from_conserved(const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<MomDensity> & momentum, const common::SeriesQuantity<EnergyDensity> & energy, const common::SeriesQuantity<Density> & partial_density, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `Series pluss::subsp::natsci::physics::fluids::gas::reacting::mass_fractions(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::gas::reacting::pressure(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `State pluss::subsp::natsci::physics::fluids::gas::reacting::primitive(const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<common::Speed> & velocity, const common::SeriesQuantity<common::Temperature> & temperature, const Series & mass_fractions, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `ReactionResult pluss::subsp::natsci::physics::fluids::gas::reacting::react(const State & state, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> width, const Model & model, const stiff::Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `common::SeriesQuantity<common::Speed> pluss::subsp::natsci::physics::fluids::gas::reacting::sound(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `SourceRate pluss::subsp::natsci::physics::fluids::gas::reacting::source_rate(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `common::SeriesQuantity<common::Temperature> pluss::subsp::natsci::physics::fluids::gas::reacting::temperature(const State & state, const spatial::PeriodicGrid & grid, const Model & model)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `common::SeriesQuantity<common::Speed> pluss::subsp::natsci::physics::fluids::gas::reacting::velocity(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_reacting.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::slip(spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `common::SeriesQuantity<common::Speed> pluss::subsp::natsci::physics::fluids::gas::sound(const State & state, const spatial::BoxGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Speed> pluss::subsp::natsci::physics::fluids::gas::sound(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<DiffusiveMassFlux> pluss::subsp::natsci::physics::fluids::gas::species::diffusive_flux(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const chem_transport::GasTransport & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::species::evolve(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, std::int64_t steps, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `FlowPath pluss::subsp::natsci::physics::fluids::gas::species::evolve_to(const State & initial, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> stop, const Model & model = {}, const RunOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `State pluss::subsp::natsci::physics::fluids::gas::species::from_density(const gas::State &, const common::SeriesQuantity<Density> &, const spatial::PeriodicGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `Limits pluss::subsp::natsci::physics::fluids::gas::species::limits(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `State pluss::subsp::natsci::physics::fluids::gas::species::make(const gas::State &, const Series &, const spatial::PeriodicGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `Series pluss::subsp::natsci::physics::fluids::gas::species::mass_fractions(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `Rate pluss::subsp::natsci::physics::fluids::gas::species::rate(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::gas::species::step(const State & state, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `void pluss::subsp::natsci::physics::fluids::gas::species::validate(const Options & options)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `void pluss::subsp::natsci::physics::fluids::gas::species::validate(const RunOptions & options)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_species.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::gas::step(const State & state, const spatial::BoxGrid & grid, const BoundFn & rules, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::gas::step(const State & state, const spatial::BoxGrid & grid, const Bounds & rules, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::gas::step(const State & state, const spatial::PeriodicGrid & grid, common::ScalarQuantity<common::Time> width, const Model & model = {}, const Options & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Time> pluss::subsp::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::BoxGrid & grid, const Model & model = {}, double courant = 0.45)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `common::SeriesQuantity<common::Time> pluss::subsp::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::BoxGrid & grid, const Model & model, const SutherlandLaw & law, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `common::SeriesQuantity<common::Time> pluss::subsp::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::BoxGrid & grid, const Model & model, const Transport & transport, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `common::SeriesQuantity<common::Time> pluss::subsp::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {}, double courant = 0.45)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Time> pluss::subsp::natsci::physics::fluids::gas::step_limit(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const Transport & transport, double courant = 0.45, double diffusion = 0.5)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::gas::stress(const State & state, const spatial::PeriodicGrid & grid, const Transport & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::gas::stress(const State & state, const spatial::PeriodicGrid & grid, const TransportField & transport)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Temperature> pluss::subsp::natsci::physics::fluids::gas::temperature(const State & state, const spatial::BoxGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Temperature> pluss::subsp::natsci::physics::fluids::gas::temperature(const State & state, const spatial::PeriodicGrid & grid, const Model & model = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `TransportField pluss::subsp::natsci::physics::fluids::gas::transport(const State & state, const spatial::BoxGrid & grid, const Model & model, const SutherlandLaw & law)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `TransportField pluss::subsp::natsci::physics::fluids::gas::transport(const State & state, const spatial::PeriodicGrid & grid, const Model & model, const SutherlandLaw & law)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Speed> pluss::subsp::natsci::physics::fluids::gas::velocity(const State & state, const spatial::BoxGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `common::SeriesQuantity<common::Speed> pluss::subsp::natsci::physics::fluids::gas::velocity(const State & state, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::wall(spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::wall(spatial::Face face, common::SeriesQuantity<common::Speed> velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::wall_heat(spatial::Face face, common::SeriesQuantity<HeatFlux> flux)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::wall_heat(spatial::Face face, common::SeriesQuantity<HeatFlux> flux, common::SeriesQuantity<common::Speed> velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::wall_temp(spatial::Face face, common::SeriesQuantity<common::Temperature> temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `Bound pluss::subsp::natsci::physics::fluids::gas::wall_temp(spatial::Face face, common::SeriesQuantity<common::Temperature> temperature, common::SeriesQuantity<common::Speed> velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/compressible_boundary.h` |
+| `FlowBound pluss::subsp::natsci::physics::fluids::inlet(boundary_spatial::Face face, const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::les::advance(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, const Closure & closure, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/les.h` |
+| `StepResult pluss::subsp::natsci::physics::fluids::les::advance(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, const Closure & closure, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const StepOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/les.h` |
+| `common::SeriesQuantity<KinematicViscosity> pluss::subsp::natsci::physics::fluids::les::eddy_viscosity(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const Closure & closure = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/les.h` |
+| `common::SeriesQuantity<KinematicViscosity> pluss::subsp::natsci::physics::fluids::les::eddy_viscosity(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const Closure & closure = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/les.h` |
+| `Series pluss::subsp::natsci::physics::fluids::les::sgs_dissipation(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const Closure & closure = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/les.h` |
+| `IncompressibleState pluss::subsp::natsci::physics::fluids::make_state(const common::SeriesQuantity<common::Speed> &, const common::SeriesQuantity<common::Pressure> &, const spatial::BoxGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `IncompressibleState pluss::subsp::natsci::physics::fluids::make_state(const common::SeriesQuantity<common::Speed> &, const common::SeriesQuantity<common::Pressure> &, const spatial::PeriodicGrid &)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::fluids::mom_rate(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const common::SeriesQuantity<common::Acceleration> & body_force, FlowForm form = FlowForm::Advect)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowBound pluss::subsp::natsci::physics::fluids::no_slip(boundary_spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `FlowBound pluss::subsp::natsci::physics::fluids::no_slip(boundary_spatial::Face face, const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `FlowBound pluss::subsp::natsci::physics::fluids::outlet(boundary_spatial::Face face)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `FlowBound pluss::subsp::natsci::physics::fluids::outlet(boundary_spatial::Face face, const boundary_common::Quantity<boundary_common::Pressure, Rep> & pressure)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `boundary_spatial::Bounds<boundary_common::Pressure> pluss::subsp::natsci::physics::fluids::p_bounds(const boundary_spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `StepLimits pluss::subsp::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::BoxGrid & grid, const common::ScalarQuantity<KinematicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `StepLimits pluss::subsp::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::BoxGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `StepLimits pluss::subsp::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<KinematicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `StepLimits pluss::subsp::natsci::physics::fluids::step_limit(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, const StepGuard & guard = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Frequency> pluss::subsp::natsci::physics::fluids::strain(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Frequency> pluss::subsp::natsci::physics::fluids::strain(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Pressure> pluss::subsp::natsci::physics::fluids::stress(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<DynamicViscosity> & viscosity)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `FlowGhosts pluss::subsp::natsci::physics::fluids::vel_ghosts(const boundary_common::SeriesQuantity<boundary_common::Speed> & velocity, const boundary_spatial::BoxGrid & grid, const FlowBounds & bounds, std::int64_t axis)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/boundary.h` |
+| `common::SeriesQuantity<common::Frequency> pluss::subsp::natsci::physics::fluids::vort(const common::SeriesQuantity<common::Speed> & velocity, const spatial::BoxGrid & grid, const FlowBounds & bounds)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::Frequency> pluss::subsp::natsci::physics::fluids::vort(const common::SeriesQuantity<common::Speed> & velocity, const spatial::PeriodicGrid & grid)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `common::SeriesQuantity<common::AngularMomentum> pluss::subsp::natsci::physics::mechanics::angular_momentum(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `common::SeriesQuantity<common::Length> pluss::subsp::natsci::physics::mechanics::center(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `common::SeriesQuantity<common::Speed> pluss::subsp::natsci::physics::mechanics::center_speed(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `common::SeriesQuantity<common::Acceleration> pluss::subsp::natsci::physics::mechanics::gravity(const Bodies & bodies, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `Bodies pluss::subsp::natsci::physics::mechanics::gravity_step(const Bodies & bodies, common::ScalarQuantity<common::Time> step, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `HamiltonianEvaluation<CoordinateDimension> pluss::subsp::natsci::physics::mechanics::hamiltonian(Fn && fn, const PhaseState<CoordinateDimension> & state, common::ScalarQuantity<common::Time> time = common::ScalarQuantity<common::Time>::from_si(0.0), const VariationalOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/hamiltonian.h` |
+| `common::SeriesQuantity<common::Energy> pluss::subsp::natsci::physics::mechanics::kinetic_energy(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `LagrangeEvaluation<CoordinateDimension> pluss::subsp::natsci::physics::mechanics::lagrange(Fn && fn, const TangentState<CoordinateDimension> & state, common::ScalarQuantity<common::Time> time = common::ScalarQuantity<common::Time>::from_si(0.0), const VariationalOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/lagrangian.h` |
+| `Bodies pluss::subsp::natsci::physics::mechanics::leapfrog(const Bodies & bodies, common::ScalarQuantity<common::Time> step, AccelerationFn && acceleration)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `Bodies pluss::subsp::natsci::physics::mechanics::make(const common::SeriesQuantity<common::Mass> &, const common::SeriesQuantity<common::Length> &, const common::SeriesQuantity<common::Speed> &)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `PhaseState<CoordinateDimension> pluss::subsp::natsci::physics::mechanics::make_phase(const common::SeriesQuantity<CoordinateDimension> & coordinate, const common::SeriesQuantity<CanonicalMomentum<CoordinateDimension> > & momentum)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
+| `PhaseState<D> pluss::subsp::natsci::physics::mechanics::make_phase(const common::SeriesQuantity<D> &, const common::SeriesQuantity<CanonicalMomentum<D> > &)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
+| `TangentState<CoordinateDimension> pluss::subsp::natsci::physics::mechanics::make_tangent(const common::SeriesQuantity<CoordinateDimension> & coordinate, const common::SeriesQuantity<CoordinateRate<CoordinateDimension> > & velocity)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
+| `TangentState<D> pluss::subsp::natsci::physics::mechanics::make_tangent(const common::SeriesQuantity<D> &, const common::SeriesQuantity<CoordinateRate<D> > &)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/state.h` |
+| `common::SeriesQuantity<common::Momentum> pluss::subsp::natsci::physics::mechanics::momentum(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `common::SeriesQuantity<common::Energy> pluss::subsp::natsci::physics::mechanics::potential_energy(const Bodies & bodies, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `Bodies pluss::subsp::natsci::physics::mechanics::shift_to_center(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `PhaseState<CoordinateDimension> pluss::subsp::natsci::physics::mechanics::symplectic_step(const PhaseState<CoordinateDimension> & state, common::ScalarQuantity<common::Time> step, PotentialFn && potential, KineticFn && kinetic, common::ScalarQuantity<common::Time> time = common::ScalarQuantity<common::Time>::from_si(0.0), const VariationalOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics/hamiltonian.h` |
+| `common::SeriesQuantity<common::Energy> pluss::subsp::natsci::physics::mechanics::total_energy(const Bodies & bodies, common::ScalarQuantity<common::GravitationalConstant> constant = = common::constants::codata2022::newtonian_gravitation.measurement .value(), common::ScalarQuantity<common::Length> softening = common::ScalarQuantity<common::Length>::from_si(0.0))` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `common::SeriesQuantity<common::Energy> pluss::subsp::natsci::physics::mechanics::total_kinetic(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `common::SeriesQuantity<common::Mass> pluss::subsp::natsci::physics::mechanics::total_mass(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `common::SeriesQuantity<common::Momentum> pluss::subsp::natsci::physics::mechanics::total_momentum(const Bodies & bodies)` | `PlussMa/include/pluss/subsp/natsci/physics/mechanics.h` |
+| `auto pluss::subsp::natsci::physics::thermo::beta(const common::TemperaturePoint<Rep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::cp(const common::Quantity<SpecificGasConstant, GasRep> & gas_constant, const common::Quantity<common::Dimensionless, RatioRep> & gamma)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::cv(const common::Quantity<SpecificGasConstant, GasRep> & gas_constant, const common::Quantity<common::Dimensionless, RatioRep> & gamma)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::delta_e(const common::Quantity<common::Energy, HeatRep> & heat, const common::Quantity<common::Energy, WorkRep> & work)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::density(const common::Quantity<common::Pressure, PressureRep> & pressure_value, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<SpecificGasConstant, GasRep> & gas_constant)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::energy(const common::Quantity<SpecificHeat, HeatRep> & cv_value, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::enthalpy(const common::Quantity<SpecificHeat, HeatRep> & cp_value, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::gas_const(const common::Quantity<MolarMass, Rep> & molar_mass)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::heat_in(const common::Quantity<common::Energy, EnergyRep> & stored_change, const common::Quantity<common::Energy, WorkRep> & work)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::heat_ratio(const common::Quantity<SpecificHeat, CpRep> & cp_value, const common::Quantity<SpecificHeat, CvRep> & cv_value)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::iso_p(const common::Quantity<common::Mass, MassRep> & mass, const common::Quantity<SpecificHeat, CpRep> & cp_value, const common::Quantity<SpecificHeat, CvRep> & cv_value, const common::TemperaturePoint<InitialRep> & initial_temp, const common::TemperaturePoint<FinalRep> & final_temp)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::iso_s(const common::Quantity<common::Mass, MassRep> & mass, const common::Quantity<SpecificHeat, HeatRep> & cv_value, const common::Quantity<common::Dimensionless, RatioRep> & gamma, const common::TemperaturePoint<TemperatureRep> & initial_temp, const common::Quantity<common::Volume, InitialVolumeRep> & initial_volume, const common::Quantity<common::Volume, FinalVolumeRep> & final_volume)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::iso_t(const common::Quantity<common::Amount, AmountRep> & amount, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<common::Volume, InitialVolumeRep> & initial_volume, const common::Quantity<common::Volume, FinalVolumeRep> & final_volume)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::iso_v(const common::Quantity<common::Mass, MassRep> & mass, const common::Quantity<SpecificHeat, HeatRep> & cv_value, const common::TemperaturePoint<InitialRep> & initial_temp, const common::TemperaturePoint<FinalRep> & final_temp)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::kappa(const common::Quantity<common::Pressure, Rep> & pressure_value)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `MassProps pluss::subsp::natsci::physics::thermo::mass_props(const Nasa7 & model, const common::TemperaturePoint<Series> & temperature, const common::Quantity<MolarMass, MassRep> & molar_mass)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo/species.h` |
+| `auto pluss::subsp::natsci::physics::thermo::moles(const common::Quantity<common::Pressure, PressureRep> & pressure_value, const common::Quantity<common::Volume, VolumeRep> & volume_value, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::pressure(const common::Quantity<MassDensity, DensityRep> & density_value, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<SpecificGasConstant, GasRep> & gas_constant)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::pressure(const common::Quantity<common::Amount, AmountRep> & amount, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<common::Volume, VolumeRep> & volume)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `MolarProps pluss::subsp::natsci::physics::thermo::props(const Nasa7 & model, const common::TemperaturePoint<Series> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo/species.h` |
+| `auto pluss::subsp::natsci::physics::thermo::pv_work(PressureFn pressure_fn, common::ScalarQuantity<common::Volume> initial_volume, common::ScalarQuantity<common::Volume> final_volume, const pluss::subsp::math::integ::QuadraOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::sound_speed(const common::Quantity<common::Dimensionless, RatioRep> & gamma, const common::Quantity<SpecificGasConstant, GasRep> & gas_constant, const common::TemperaturePoint<TemperatureRep> & temperature)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::temp(const common::Quantity<common::Pressure, PressureRep> & pressure_value, const common::Quantity<common::Volume, VolumeRep> & volume_value, const common::Quantity<common::Amount, AmountRep> & amount)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::volume(const common::Quantity<common::Amount, AmountRep> & amount, const common::TemperaturePoint<TemperatureRep> & temperature, const common::Quantity<common::Pressure, PressureRep> & pressure_value)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
+| `auto pluss::subsp::natsci::physics::thermo::work_out(const common::Quantity<common::Energy, HeatRep> & heat, const common::Quantity<common::Energy, EnergyRep> & stored_change)` | `PlussMa/include/pluss/subsp/natsci/physics/thermo.h` |
 
 ## Engineering
 
-### `pluss::eng::circuit`
+### `pluss::subsp::eng::circuit`
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::eng::circuit::Amps` | `output`, `reference`, `positive_input`, `negative_input` | - |
-| `pluss::eng::circuit::Branches` | `positive`, `negative`, `value` | - |
-| `pluss::eng::circuit::Circuit` | - | `batch_shape()`, `dtype()`, `nodes()`, `platform()`, `unknowns()` |
-| `pluss::eng::circuit::Controls` | `positive`, `negative`, `control_positive`, `control_negative`, `gain` | - |
-| `pluss::eng::circuit::Net` | `nodes`, `resistors`, `capacitors`, `inductors`, `current_sources`, `voltage_sources`, `vccs`, `vcvs`, `amps` | - |
-| `pluss::eng::circuit::Result` | `voltage`, `source_current`, `inductor_current`, `vccs_current`, `vcvs_current`, `amp_current`, `residual` | - |
+| `pluss::subsp::eng::circuit::Amps` | `output`, `reference`, `positive_input`, `negative_input` | - |
+| `pluss::subsp::eng::circuit::Branches` | `positive`, `negative`, `value` | - |
+| `pluss::subsp::eng::circuit::Circuit` | - | `batch_shape()`, `dtype()`, `nodes()`, `platform()`, `unknowns()` |
+| `pluss::subsp::eng::circuit::Controls` | `positive`, `negative`, `control_positive`, `control_negative`, `gain` | - |
+| `pluss::subsp::eng::circuit::Net` | `nodes`, `resistors`, `capacitors`, `inductors`, `current_sources`, `voltage_sources`, `vccs`, `vcvs`, `amps` | - |
+| `pluss::subsp::eng::circuit::Result` | `voltage`, `source_current`, `inductor_current`, `vccs_current`, `vcvs_current`, `amp_current`, `residual` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `Result pluss::eng::circuit::ac(const Circuit &, const Series &)` | `PlussMa/include/pluss/subsp/eng/circuit.h` |
-| `Circuit pluss::eng::circuit::make(const Net &)` | `PlussMa/include/pluss/subsp/eng/circuit.h` |
-| `Result pluss::eng::circuit::op(const Circuit &)` | `PlussMa/include/pluss/subsp/eng/circuit.h` |
+| `Result pluss::subsp::eng::circuit::ac(const Circuit &, const Series &)` | `PlussMa/include/pluss/subsp/eng/circuit.h` |
+| `Circuit pluss::subsp::eng::circuit::make(const Net &)` | `PlussMa/include/pluss/subsp/eng/circuit.h` |
+| `Result pluss::subsp::eng::circuit::op(const Circuit &)` | `PlussMa/include/pluss/subsp/eng/circuit.h` |
 
-### `pluss::eng::control`
+### `pluss::subsp::eng::control`
 
 | Public enum | Values |
 | --- | --- |
-| `pluss::eng::control::PidRule` | `Forward`, `Backward`, `Trapezoid` |
+| `pluss::subsp::eng::control::PidRule` | `Forward`, `Backward`, `Trapezoid` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::eng::control::LoopResult` | `response`, `sens`, `comp` | - |
-| `pluss::eng::control::LqeResult` | `covariance`, `gain`, `closed_loop` | - |
-| `pluss::eng::control::MarginResult` | `gain`, `phase`, `stability`, `gain_freq`, `phase_freq`, `stability_freq` | - |
-| `pluss::eng::control::Pid` | - | `diff_rule()`, `filter()`, `int_rule()`, `is_cont()`, `is_disc()`, `kd()`, `ki()`, `kp()`, `sample_time()` |
-| `pluss::eng::control::PlaceOptions` | `sweeps`, `tolerance`, `condition_limit` | - |
-| `pluss::eng::control::PlaceResult` | `gain`, `closed_loop`, `basis`, `residual`, `condition`, `sweeps` | - |
-| `pluss::eng::control::RiccatiResult` | `value`, `gain`, `closed_loop` | - |
-| `pluss::eng::control::mpc::Bounds` | `input_lower`, `input_upper`, `state_lower`, `state_upper` | - |
-| `pluss::eng::control::mpc::Options` | `horizon`, `qp` | - |
-| `pluss::eng::control::mpc::Plan` | - | `dtype()`, `horizon()`, `inputs()`, `platform()`, `states()` |
-| `pluss::eng::control::mpc::Result` | `control`, `controls`, `states`, `optimization` | - |
-| `pluss::eng::control::mpc::Weights` | `state`, `input`, `terminal` | - |
+| `pluss::subsp::eng::control::LoopResult` | `response`, `sens`, `comp` | - |
+| `pluss::subsp::eng::control::LqeResult` | `covariance`, `gain`, `closed_loop` | - |
+| `pluss::subsp::eng::control::MarginResult` | `gain`, `phase`, `stability`, `gain_freq`, `phase_freq`, `stability_freq` | - |
+| `pluss::subsp::eng::control::Pid` | - | `diff_rule()`, `filter()`, `int_rule()`, `is_cont()`, `is_disc()`, `kd()`, `ki()`, `kp()`, `sample_time()` |
+| `pluss::subsp::eng::control::PlaceOptions` | `sweeps`, `tolerance`, `condition_limit` | - |
+| `pluss::subsp::eng::control::PlaceResult` | `gain`, `closed_loop`, `basis`, `residual`, `condition`, `sweeps` | - |
+| `pluss::subsp::eng::control::RiccatiResult` | `value`, `gain`, `closed_loop` | - |
+| `pluss::subsp::eng::control::mpc::Bounds` | `input_lower`, `input_upper`, `state_lower`, `state_upper` | - |
+| `pluss::subsp::eng::control::mpc::Options` | `horizon`, `qp` | - |
+| `pluss::subsp::eng::control::mpc::Plan` | - | `dtype()`, `horizon()`, `inputs()`, `platform()`, `states()` |
+| `pluss::subsp::eng::control::mpc::Result` | `control`, `controls`, `states`, `optimization` | - |
+| `pluss::subsp::eng::control::mpc::Weights` | `state`, `input`, `terminal` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `RiccatiResult pluss::eng::control::care(const Series & a, const Series & b, const Series & q, const Series & r, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `RiccatiResult pluss::eng::control::care(const Series & a, const Series & b, const Series & q, const Series & r, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `RiccatiResult pluss::eng::control::dare(const Series & a, const Series & b, const Series & q, const Series & r, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `RiccatiResult pluss::eng::control::dare(const Series & a, const Series & b, const Series & q, const Series & r, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `Series pluss::eng::control::freqresp(const Pid & controller, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `KalmanResult pluss::eng::control::kalman(const lti::StateSpace & system, const Series & observations, const Series & input, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `KalmanResult pluss::eng::control::kalman(const lti::StateSpace & system, const Series & observations, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `LoopResult pluss::eng::control::loop(const lti::PoleZero & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `LoopResult pluss::eng::control::loop(const lti::StateSpace & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `LqeResult pluss::eng::control::lqe(const lti::StateSpace & system, const Series & process_cov, const Series & noise_cov, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `LqeResult pluss::eng::control::lqe(const lti::StateSpace & system, const Series & process_cov, const Series & noise_cov, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `RiccatiResult pluss::eng::control::lqr(const lti::StateSpace & system, const Series & q, const Series & r, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `RiccatiResult pluss::eng::control::lqr(const lti::StateSpace & system, const Series & q, const Series & r, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `MarginResult pluss::eng::control::margin(const Series & response, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `MarginResult pluss::eng::control::margin(const lti::PoleZero & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `MarginResult pluss::eng::control::margin(const lti::StateSpace & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `Plan pluss::eng::control::mpc::build(const lti::StateSpace &, const Weights &, const Bounds &, Options)` | `PlussMa/include/pluss/subsp/eng/control/mpc.h` |
-| `Result pluss::eng::control::mpc::solve(const Plan &, const Series &, const Series &, pluss::subsp::math::qp::WarmStart)` | `PlussMa/include/pluss/subsp/eng/control/mpc.h` |
-| `Result pluss::eng::control::mpc::solve(const lti::StateSpace & system, const Series & initial_state, const Series & reference, const Weights & weights, const Bounds & bounds, Options options = {}, pluss::subsp::math::qp::WarmStart warm = {})` | `PlussMa/include/pluss/subsp/eng/control/mpc.h` |
-| `Pid pluss::eng::control::pid(const Series &, const Series &, const Series &, const Series &, double, PidRule, PidRule)` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `PlaceResult pluss::eng::control::place(const Series & a, const Series & b, const Series & poles, PlaceOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `PlaceResult pluss::eng::control::place(const lti::StateSpace & system, const Series & poles, PlaceOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `SmoothResult pluss::eng::control::smooth(const lti::StateSpace & system, const Series & observations, const Series & input, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
-| `SmoothResult pluss::eng::control::smooth(const lti::StateSpace & system, const Series & observations, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `RiccatiResult pluss::subsp::eng::control::care(const Series & a, const Series & b, const Series & q, const Series & r, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `RiccatiResult pluss::subsp::eng::control::care(const Series & a, const Series & b, const Series & q, const Series & r, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `RiccatiResult pluss::subsp::eng::control::dare(const Series & a, const Series & b, const Series & q, const Series & r, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `RiccatiResult pluss::subsp::eng::control::dare(const Series & a, const Series & b, const Series & q, const Series & r, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `Series pluss::subsp::eng::control::freqresp(const Pid & controller, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `KalmanResult pluss::subsp::eng::control::kalman(const lti::StateSpace & system, const Series & observations, const Series & input, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `KalmanResult pluss::subsp::eng::control::kalman(const lti::StateSpace & system, const Series & observations, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `LoopResult pluss::subsp::eng::control::loop(const lti::PoleZero & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `LoopResult pluss::subsp::eng::control::loop(const lti::StateSpace & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `LqeResult pluss::subsp::eng::control::lqe(const lti::StateSpace & system, const Series & process_cov, const Series & noise_cov, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `LqeResult pluss::subsp::eng::control::lqe(const lti::StateSpace & system, const Series & process_cov, const Series & noise_cov, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `RiccatiResult pluss::subsp::eng::control::lqr(const lti::StateSpace & system, const Series & q, const Series & r, const Series & cross, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `RiccatiResult pluss::subsp::eng::control::lqr(const lti::StateSpace & system, const Series & q, const Series & r, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `MarginResult pluss::subsp::eng::control::margin(const Series & response, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `MarginResult pluss::subsp::eng::control::margin(const lti::PoleZero & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `MarginResult pluss::subsp::eng::control::margin(const lti::StateSpace & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `Plan pluss::subsp::eng::control::mpc::build(const lti::StateSpace &, const Weights &, const Bounds &, Options)` | `PlussMa/include/pluss/subsp/eng/control/mpc.h` |
+| `Result pluss::subsp::eng::control::mpc::solve(const Plan &, const Series &, const Series &, pluss::subsp::math::qp::WarmStart)` | `PlussMa/include/pluss/subsp/eng/control/mpc.h` |
+| `Result pluss::subsp::eng::control::mpc::solve(const lti::StateSpace & system, const Series & initial_state, const Series & reference, const Weights & weights, const Bounds & bounds, Options options = {}, pluss::subsp::math::qp::WarmStart warm = {})` | `PlussMa/include/pluss/subsp/eng/control/mpc.h` |
+| `Pid pluss::subsp::eng::control::pid(const Series &, const Series &, const Series &, const Series &, double, PidRule, PidRule)` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `PlaceResult pluss::subsp::eng::control::place(const Series & a, const Series & b, const Series & poles, PlaceOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `PlaceResult pluss::subsp::eng::control::place(const lti::StateSpace & system, const Series & poles, PlaceOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `SmoothResult pluss::subsp::eng::control::smooth(const lti::StateSpace & system, const Series & observations, const Series & input, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
+| `SmoothResult pluss::subsp::eng::control::smooth(const lti::StateSpace & system, const Series & observations, const Series & process_cov, const Series & noise_cov, const Series & initial_mean, const Series & initial_cov, KalmanOptions options = {})` | `PlussMa/include/pluss/subsp/eng/control.h` |
 
-### `pluss::eng::lti`
-
-| Public enum | Values |
-| --- | --- |
-| `pluss::eng::lti::Gram` | `Reach`, `Observe` |
-| `pluss::eng::lti::Hold` | `Auto`, `Zero`, `Linear` |
-
-| Public type | Public fields | Public methods |
-| --- | --- | --- |
-| `pluss::eng::lti::PoleZero` | - | `gain()`, `is_cont()`, `is_disc()`, `is_stable()`, `poles()`, `sample_time()`, `zeros()` |
-| `pluss::eng::lti::SimOptions` | `hold` | - |
-| `pluss::eng::lti::SimRun` | `values`, `states` | - |
-| `pluss::eng::lti::StateSpace` | - | `a()`, `b()`, `c()`, `d()`, `inputs()`, `is_cont()`, `is_disc()`, `outputs()`, `sample_time()`, `states()` |
-
-| Public free-call overload | Header |
-| --- | --- |
-| `Series pluss::eng::lti::ctrb(const StateSpace & system)` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
-| `Series pluss::eng::lti::freqresp(const PoleZero & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/lti/response.h` |
-| `Series pluss::eng::lti::freqresp(const StateSpace & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/lti/response.h` |
-| `Series pluss::eng::lti::gram(const StateSpace & system, Gram side, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
-| `Series pluss::eng::lti::obsv(const StateSpace & system)` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
-| `SimRun pluss::eng::lti::sim(const StateSpace & system, const Series & input, const Series & time, const Series & initial, const SimOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/lti/sim.h` |
-| `SimRun pluss::eng::lti::sim(const StateSpace & system, const Series & input, const Series & time, const SimOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/lti/sim.h` |
-| `StateSpace pluss::eng::lti::state(const Series &, const Series &, const Series &, const Series &, double)` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
-| `Series pluss::eng::lti::to_sos(const PoleZero & system)` | `PlussMa/include/pluss/subsp/eng/lti/pole_zero.h` |
-| `PoleZero pluss::eng::lti::zpk(const Series &, const Series &, const Series &, double)` | `PlussMa/include/pluss/subsp/eng/lti/pole_zero.h` |
-
-### `pluss::eng::power`
+### `pluss::subsp::eng::fluid`
 
 Front doors (intended starting points):
 
-- `pluss::eng::power`: `zbase`, `ybase`, `ibase`, `pu`, `si`, `make`, `dc`, `ac`, `ptdf`, `lodf`, `outages`, `dispatch`, `opf`, `estimate`, `trace`
+- `pluss::subsp::eng::fluid`: `network`, `run`, `steady`, `transport`
 
 | Public enum | Values |
 | --- | --- |
-| `pluss::eng::power::BusKind` | `PQ`, `PV`, `Slack` |
-| `pluss::eng::power::MeasureKind` | `FromP`, `ToP`, `BusP`, `Angle`, `FromQ`, `ToQ`, `BusQ`, `Magnitude` |
-| `pluss::eng::power::TraceStop` | `Target`, `Nose` |
+| `pluss::subsp::eng::fluid::Act` | `Open`, `Close`, `Set` |
+| `pluss::subsp::eng::fluid::DemandMode` | `Fixed`, `Pressure` |
+| `pluss::subsp::eng::fluid::Device` | `Pump`, `Valve` |
+| `pluss::subsp::eng::fluid::LossModel` | `DarcyWeisbach`, `HazenWilliams` |
+| `pluss::subsp::eng::fluid::NodeKind` | `Junction`, `Reservoir`, `Tank` |
+| `pluss::subsp::eng::fluid::QualityMode` | `Constituent`, `Age` |
+| `pluss::subsp::eng::fluid::Sense` | `Below`, `Above` |
+| `pluss::subsp::eng::fluid::ValveKind` | `Throttle`, `Flow`, `Reduce`, `Sustain` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::eng::power::AcResult` | `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `residual`, `converged`, `iterations` | - |
-| `pluss::eng::power::Base` | `power`, `voltage` | - |
-| `pluss::eng::power::Buses` | `kind`, `p`, `q`, `vm`, `va`, `g`, `b` | - |
-| `pluss::eng::power::DcResult` | `angle`, `injection`, `from_power`, `to_power`, `residual` | - |
-| `pluss::eng::power::DispatchOptions` | `secure`, `outage_tolerance`, `qp` | - |
-| `pluss::eng::power::DispatchResult` | `generation`, `angle`, `injection`, `flow`, `post_flow`, `outage_valid`, `objective`, `converged`, `iterations`, `primal_residual`, `dual_residual` | - |
-| `pluss::eng::power::EstimateOptions` | `tolerance`, `observability_tolerance`, `max_iterations` | - |
-| `pluss::eng::power::EstimateResult` | `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `predicted`, `residual`, `normalized_residual`, `objective`, `covariance`, `converged`, `iterations` | - |
-| `pluss::eng::power::GenCost` | `lower`, `upper`, `linear`, `quadratic`, `constant`, `q_linear`, `q_quadratic`, `q_constant` | - |
-| `pluss::eng::power::Gens` | `bus`, `p`, `q`, `active` | - |
-| `pluss::eng::power::Grid` | - | `base()`, `base_power()`, `batch_shape()`, `buses()`, `dtype()`, `gens()`, `lines()`, `platform()`, `ybus()`, `yfrom()`, `yto()` |
-| `pluss::eng::power::Limits` | `q_lower`, `q_upper`, `vm_lower`, `vm_upper`, `flow` | - |
-| `pluss::eng::power::Lines` | `from`, `to`, `r`, `x`, `charge`, `tap`, `shift`, `active` | - |
-| `pluss::eng::power::LoadPath` | `p`, `q` | - |
-| `pluss::eng::power::LodfResult` | `factor`, `valid` | - |
-| `pluss::eng::power::Measurements` | `kind`, `index`, `value`, `stddev` | - |
-| `pluss::eng::power::Net` | `base`, `buses`, `gens`, `lines` | - |
-| `pluss::eng::power::OpfOptions` | `max_iterations`, `constraint_tolerance`, `optimality_tolerance` | - |
-| `pluss::eng::power::OpfResult` | `generation_p`, `generation_q`, `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `objective`, `p_price`, `q_price`, `from_shadow`, `to_shadow`, `converged`, `iterations`, `constraint_violation`, `first_order_optimality`, `message` | - |
-| `pluss::eng::power::Options` | `tolerance`, `max_iterations` | - |
-| `pluss::eng::power::OutageResult` | `base_flow`, `flow`, `valid` | - |
-| `pluss::eng::power::TraceOptions` | `stop`, `target`, `step`, `step_min`, `step_max`, `adapt_tolerance`, `adapt_damping`, `tolerance`, `max_steps`, `max_iterations`, `adaptive` | - |
-| `pluss::eng::power::TraceResult` | `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `factor`, `tangent`, `residual`, `valid`, `reached`, `points` | - |
+| `pluss::subsp::eng::fluid::Action` | `device`, `index`, `act`, `value` | - |
+| `pluss::subsp::eng::fluid::Liquid` | `density`, `kinematic_viscosity`, `gravity` | - |
+| `pluss::subsp::eng::fluid::Net` | `nodes`, `tanks`, `pipes`, `pumps`, `valves` | - |
+| `pluss::subsp::eng::fluid::Network` | - | `batch_shape()`, `dtype()`, `junctions()`, `links()`, `liquid()`, `nodes()`, `pipes()`, `platform()`, `pumps()`, `reservoirs()`, `tanks()`, `valves()` |
+| `pluss::subsp::eng::fluid::Nodes` | `kind`, `elevation`, `demand`, `head`, `emitter` | - |
+| `pluss::subsp::eng::fluid::Options` | `loss`, `demand_mode`, `min_pressure`, `full_pressure`, `demand_exponent`, `emitter_exponent`, `head_tolerance`, `flow_tolerance`, `min_gradient`, `max_iterations`, `fail_on_nonconvergence` | - |
+| `pluss::subsp::eng::fluid::Pipes` | `from`, `to`, `length`, `diameter`, `roughness`, `minor` | - |
+| `pluss::subsp::eng::fluid::Pumps` | `from`, `to`, `shutoff_head`, `resistance`, `exponent`, `speed` | - |
+| `pluss::subsp::eng::fluid::Quality` | `mode`, `initial`, `source`, `pipe_rate`, `tank_rate` | - |
+| `pluss::subsp::eng::fluid::QualityOptions` | `step`, `courant`, `flow_tolerance`, `cells` | - |
+| `pluss::subsp::eng::fluid::RunResult` | `time`, `head`, `pressure`, `flow`, `velocity`, `head_loss`, `friction_factor`, `balance`, `energy_residual`, `demand`, `emitter`, `tank_level`, `spill`, `open`, `converged`, `iterations` | - |
+| `pluss::subsp::eng::fluid::Schedule` | `duration`, `step`, `pattern_step`, `demand`, `pump`, `valve`, `time`, `state` | - |
+| `pluss::subsp::eng::fluid::StateControl` | `node`, `sense`, `threshold`, `action` | - |
+| `pluss::subsp::eng::fluid::SteadyResult` | `head`, `pressure`, `flow`, `velocity`, `head_loss`, `friction_factor`, `balance`, `energy_residual`, `converged`, `demand`, `emitter`, `iterations` | - |
+| `pluss::subsp::eng::fluid::Tanks` | `area`, `min_level`, `max_level`, `overflow` | - |
+| `pluss::subsp::eng::fluid::TimeControl` | `at`, `action` | - |
+| `pluss::subsp::eng::fluid::TransportResult` | `hydraulic`, `node`, `link`, `tank`, `mass`, `mass_error` | - |
+| `pluss::subsp::eng::fluid::Valves` | `kind`, `from`, `to`, `diameter`, `minor`, `setting` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `AcResult pluss::eng::power::ac(const Grid &, const Options &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `DcResult pluss::eng::power::dc(const Grid &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `DispatchResult pluss::eng::power::dispatch(const Grid &, const GenCost &, const Series &, const DispatchOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `EstimateResult pluss::eng::power::estimate(const Grid &, const Measurements &, const EstimateOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `double pluss::eng::power::ibase(const Base & base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `LodfResult pluss::eng::power::lodf(const Grid &, double)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `Grid pluss::eng::power::make(const Net &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `OpfResult pluss::eng::power::opf(const Grid &, const GenCost &, const Limits &, const OpfOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `OutageResult pluss::eng::power::outages(const Grid &, double)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `Series pluss::eng::power::ptdf(const Grid &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `Series pluss::eng::power::pu(const Series & value, double base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `Series pluss::eng::power::si(const Series & value, double base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `TraceResult pluss::eng::power::trace(const Grid &, const LoadPath &, const TraceOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `double pluss::eng::power::ybase(const Base & base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
-| `double pluss::eng::power::zbase(const Base & base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `Network pluss::subsp::eng::fluid::network(const Net &, const Liquid &)` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
+| `RunResult pluss::subsp::eng::fluid::run(const Network &, const Schedule &, const Options &)` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
+| `SteadyResult pluss::subsp::eng::fluid::steady(const Network &, const Options &)` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
+| `TransportResult pluss::subsp::eng::fluid::transport(const Network & network, const Schedule & schedule, const Quality & quality, const QualityOptions & quality_options = {}, const Options & hydraulic_options = {})` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
 
-### `pluss::eng::signal`
+### `pluss::subsp::eng::lti`
 
 | Public enum | Values |
 | --- | --- |
-| `pluss::eng::signal::Band` | `Low`, `High`, `Pass`, `Stop` |
-| `pluss::eng::signal::ConvMode` | `Full`, `Same`, `Valid` |
-| `pluss::eng::signal::PadMode` | `Odd`, `Even`, `Constant`, `None` |
-| `pluss::eng::signal::WindowMode` | `Symmetric`, `Periodic` |
+| `pluss::subsp::eng::lti::Gram` | `Reach`, `Observe` |
+| `pluss::subsp::eng::lti::Hold` | `Auto`, `Zero`, `Linear` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::eng::signal::FilterRun` | `values`, `state` | - |
-| `pluss::eng::signal::IirOptions` | `band`, `sample_rate`, `dtype`, `platform` | - |
-| `pluss::eng::signal::PhaseOpts` | `dim`, `edge`, `pad` | - |
-| `pluss::eng::signal::WindowOptions` | `mode`, `dtype`, `platform` | - |
+| `pluss::subsp::eng::lti::PoleZero` | - | `gain()`, `is_cont()`, `is_disc()`, `is_stable()`, `poles()`, `sample_time()`, `zeros()` |
+| `pluss::subsp::eng::lti::SimOptions` | `hold` | - |
+| `pluss::subsp::eng::lti::SimRun` | `values`, `states` | - |
+| `pluss::subsp::eng::lti::StateSpace` | - | `a()`, `b()`, `c()`, `d()`, `inputs()`, `is_cont()`, `is_disc()`, `outputs()`, `sample_time()`, `states()` |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `Series pluss::eng::signal::bartlett(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
-| `Series pluss::eng::signal::blackman(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
-| `Series pluss::eng::signal::boxcar(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
-| `lti::PoleZero pluss::eng::signal::butter(std::int64_t order, double cutoff, const IirOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
-| `lti::PoleZero pluss::eng::signal::butter(std::int64_t order, std::pair<double, double> cutoff, const IirOptions & options)` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
-| `lti::PoleZero pluss::eng::signal::cheby1(std::int64_t order, double ripple, double cutoff, const IirOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
-| `lti::PoleZero pluss::eng::signal::cheby1(std::int64_t order, double ripple, std::pair<double, double> cutoff, const IirOptions & options)` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
-| `lti::PoleZero pluss::eng::signal::cheby2(std::int64_t order, double attenuation, double cutoff, const IirOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
-| `lti::PoleZero pluss::eng::signal::cheby2(std::int64_t order, double attenuation, std::pair<double, double> cutoff, const IirOptions & options)` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
-| `Series pluss::eng::signal::conv(const Series & input, const Series & kernel, std::int64_t dim = -1, ConvMode mode = ConvMode::Full)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `Series pluss::eng::signal::corr(const Series & input, const Series & kernel, std::int64_t dim = -1, ConvMode mode = ConvMode::Full)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `FilterRun pluss::eng::signal::filter(const Series & input, const Series & numerator, const Series & denominator, const Series & state, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `FilterRun pluss::eng::signal::filter(const Series & input, const Series & numerator, const Series & denominator, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `Series pluss::eng::signal::fir(const Series & input, const Series & taps, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `Series pluss::eng::signal::freqz(const Series & numerator, const Series & denominator, const Series & omega, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `Series pluss::eng::signal::freqz(const Series & numerator, const Series & omega, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `Series pluss::eng::signal::hamming(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
-| `Series pluss::eng::signal::hann(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
-| `FilterRun pluss::eng::signal::sos(const Series & input, const Series & sections, const Series & state, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `FilterRun pluss::eng::signal::sos(const Series & input, const Series & sections, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `Series pluss::eng::signal::zero_phase(const Series & input, const Series & numerator, const Series & denominator, const PhaseOpts & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
-| `Series pluss::eng::signal::zero_phase(const Series & input, const Series & sections, const PhaseOpts & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::lti::ctrb(const StateSpace & system)` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
+| `Series pluss::subsp::eng::lti::freqresp(const PoleZero & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/lti/response.h` |
+| `Series pluss::subsp::eng::lti::freqresp(const StateSpace & system, const Series & omega)` | `PlussMa/include/pluss/subsp/eng/lti/response.h` |
+| `Series pluss::subsp::eng::lti::gram(const StateSpace & system, Gram side, pluss::subsp::linearalg::MatrixEqOptions options = {})` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
+| `Series pluss::subsp::eng::lti::obsv(const StateSpace & system)` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
+| `SimRun pluss::subsp::eng::lti::sim(const StateSpace & system, const Series & input, const Series & time, const Series & initial, const SimOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/lti/sim.h` |
+| `SimRun pluss::subsp::eng::lti::sim(const StateSpace & system, const Series & input, const Series & time, const SimOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/lti/sim.h` |
+| `StateSpace pluss::subsp::eng::lti::state(const Series &, const Series &, const Series &, const Series &, double)` | `PlussMa/include/pluss/subsp/eng/lti/state.h` |
+| `Series pluss::subsp::eng::lti::to_sos(const PoleZero & system)` | `PlussMa/include/pluss/subsp/eng/lti/pole_zero.h` |
+| `PoleZero pluss::subsp::eng::lti::zpk(const Series &, const Series &, const Series &, double)` | `PlussMa/include/pluss/subsp/eng/lti/pole_zero.h` |
 
-### `pluss::eng::structure`
+### `pluss::subsp::eng::power`
 
 Front doors (intended starting points):
 
-- `pluss::eng::structure`: `buckling`, `frame`, `mass`, `modes`, `solve`, `truss`
+- `pluss::subsp::eng::power`: `zbase`, `ybase`, `ibase`, `pu`, `si`, `make`, `dc`, `ac`, `ptdf`, `lodf`, `outages`, `dispatch`, `opf`, `estimate`, `trace`
+
+| Public enum | Values |
+| --- | --- |
+| `pluss::subsp::eng::power::BusKind` | `PQ`, `PV`, `Slack` |
+| `pluss::subsp::eng::power::MeasureKind` | `FromP`, `ToP`, `BusP`, `Angle`, `FromQ`, `ToQ`, `BusQ`, `Magnitude` |
+| `pluss::subsp::eng::power::TraceStop` | `Target`, `Nose` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
-| `pluss::eng::structure::Bars` | `area`, `modulus` | - |
-| `pluss::eng::structure::BuckResult` | `factor`, `shape`, `residual`, `converged`, `iterations` | - |
-| `pluss::eng::structure::EigOptions` | `count`, `max_iterations`, `relative_tolerance`, `absolute_tolerance`, `solve` | - |
-| `pluss::eng::structure::Fix` | `node`, `axis`, `value` | - |
-| `pluss::eng::structure::Frame` | - | `dofs()`, `members()`, `nodes()` |
-| `pluss::eng::structure::FrameResult` | `displacement`, `reaction`, `end_force`, `energy`, `residual_norm`, `converged`, `breakdown`, `iterations` | - |
-| `pluss::eng::structure::Mesh` | `position`, `from`, `to` | - |
-| `pluss::eng::structure::ModeResult` | `omega`, `hertz`, `shape`, `residual`, `converged`, `iterations` | - |
-| `pluss::eng::structure::Sections` | `area`, `inertia`, `modulus`, `density` | - |
-| `pluss::eng::structure::SolveOptions` | `cg`, `fail_on_nonconvergence` | - |
-| `pluss::eng::structure::StaticResult` | `displacement`, `reaction`, `strain`, `stress`, `force`, `energy`, `residual_norm`, `converged`, `breakdown`, `iterations` | - |
-| `pluss::eng::structure::Truss` | - | `bars()`, `dim()`, `nodes()` |
+| `pluss::subsp::eng::power::AcResult` | `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `residual`, `converged`, `iterations` | - |
+| `pluss::subsp::eng::power::Base` | `power`, `voltage` | - |
+| `pluss::subsp::eng::power::Buses` | `kind`, `p`, `q`, `vm`, `va`, `g`, `b` | - |
+| `pluss::subsp::eng::power::DcResult` | `angle`, `injection`, `from_power`, `to_power`, `residual` | - |
+| `pluss::subsp::eng::power::DispatchOptions` | `secure`, `outage_tolerance`, `qp` | - |
+| `pluss::subsp::eng::power::DispatchResult` | `generation`, `angle`, `injection`, `flow`, `post_flow`, `outage_valid`, `objective`, `converged`, `iterations`, `primal_residual`, `dual_residual` | - |
+| `pluss::subsp::eng::power::EstimateOptions` | `tolerance`, `observability_tolerance`, `max_iterations` | - |
+| `pluss::subsp::eng::power::EstimateResult` | `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `predicted`, `residual`, `normalized_residual`, `objective`, `covariance`, `converged`, `iterations` | - |
+| `pluss::subsp::eng::power::GenCost` | `lower`, `upper`, `linear`, `quadratic`, `constant`, `q_linear`, `q_quadratic`, `q_constant` | - |
+| `pluss::subsp::eng::power::Gens` | `bus`, `p`, `q`, `active` | - |
+| `pluss::subsp::eng::power::Grid` | - | `base()`, `base_power()`, `batch_shape()`, `buses()`, `dtype()`, `gens()`, `lines()`, `platform()`, `ybus()`, `yfrom()`, `yto()` |
+| `pluss::subsp::eng::power::Limits` | `q_lower`, `q_upper`, `vm_lower`, `vm_upper`, `flow` | - |
+| `pluss::subsp::eng::power::Lines` | `from`, `to`, `r`, `x`, `charge`, `tap`, `shift`, `active` | - |
+| `pluss::subsp::eng::power::LoadPath` | `p`, `q` | - |
+| `pluss::subsp::eng::power::LodfResult` | `factor`, `valid` | - |
+| `pluss::subsp::eng::power::Measurements` | `kind`, `index`, `value`, `stddev` | - |
+| `pluss::subsp::eng::power::Net` | `base`, `buses`, `gens`, `lines` | - |
+| `pluss::subsp::eng::power::OpfOptions` | `max_iterations`, `constraint_tolerance`, `optimality_tolerance` | - |
+| `pluss::subsp::eng::power::OpfResult` | `generation_p`, `generation_q`, `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `objective`, `p_price`, `q_price`, `from_shadow`, `to_shadow`, `converged`, `iterations`, `constraint_violation`, `first_order_optimality`, `message` | - |
+| `pluss::subsp::eng::power::Options` | `tolerance`, `max_iterations` | - |
+| `pluss::subsp::eng::power::OutageResult` | `base_flow`, `flow`, `valid` | - |
+| `pluss::subsp::eng::power::TraceOptions` | `stop`, `target`, `step`, `step_min`, `step_max`, `adapt_tolerance`, `adapt_damping`, `tolerance`, `max_steps`, `max_iterations`, `adaptive` | - |
+| `pluss::subsp::eng::power::TraceResult` | `voltage`, `magnitude`, `angle`, `injection`, `from_power`, `to_power`, `factor`, `tangent`, `residual`, `valid`, `reached`, `points` | - |
 
 | Public free-call overload | Header |
 | --- | --- |
-| `BuckResult pluss::eng::structure::buckling(const Frame &, const Series &, const Fix &, const EigOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
-| `Frame pluss::eng::structure::frame(const Mesh &, const Sections &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
-| `Series pluss::eng::structure::mass(const Frame &, const Series &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
-| `ModeResult pluss::eng::structure::modes(const Frame &, const Fix &, const EigOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
-| `FrameResult pluss::eng::structure::solve(const Frame &, const Series &, const Fix &, const SolveOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
-| `StaticResult pluss::eng::structure::solve(const Truss &, const Series &, const Fix &, const SolveOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
-| `Truss pluss::eng::structure::truss(const Mesh &, const Bars &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `AcResult pluss::subsp::eng::power::ac(const Grid &, const Options &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `DcResult pluss::subsp::eng::power::dc(const Grid &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `DispatchResult pluss::subsp::eng::power::dispatch(const Grid &, const GenCost &, const Series &, const DispatchOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `EstimateResult pluss::subsp::eng::power::estimate(const Grid &, const Measurements &, const EstimateOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `double pluss::subsp::eng::power::ibase(const Base & base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `LodfResult pluss::subsp::eng::power::lodf(const Grid &, double)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `Grid pluss::subsp::eng::power::make(const Net &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `OpfResult pluss::subsp::eng::power::opf(const Grid &, const GenCost &, const Limits &, const OpfOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `OutageResult pluss::subsp::eng::power::outages(const Grid &, double)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `Series pluss::subsp::eng::power::ptdf(const Grid &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `Series pluss::subsp::eng::power::pu(const Series & value, double base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `Series pluss::subsp::eng::power::si(const Series & value, double base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `TraceResult pluss::subsp::eng::power::trace(const Grid &, const LoadPath &, const TraceOptions &)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `double pluss::subsp::eng::power::ybase(const Base & base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+| `double pluss::subsp::eng::power::zbase(const Base & base)` | `PlussMa/include/pluss/subsp/eng/power.h` |
+
+### `pluss::subsp::eng::signal`
+
+| Public enum | Values |
+| --- | --- |
+| `pluss::subsp::eng::signal::Band` | `Low`, `High`, `Pass`, `Stop` |
+| `pluss::subsp::eng::signal::ConvMode` | `Full`, `Same`, `Valid` |
+| `pluss::subsp::eng::signal::PadMode` | `Odd`, `Even`, `Constant`, `None` |
+| `pluss::subsp::eng::signal::WindowMode` | `Symmetric`, `Periodic` |
+
+| Public type | Public fields | Public methods |
+| --- | --- | --- |
+| `pluss::subsp::eng::signal::FilterRun` | `values`, `state` | - |
+| `pluss::subsp::eng::signal::IirOptions` | `band`, `sample_rate`, `dtype`, `platform` | - |
+| `pluss::subsp::eng::signal::PhaseOpts` | `dim`, `edge`, `pad` | - |
+| `pluss::subsp::eng::signal::WindowOptions` | `mode`, `dtype`, `platform` | - |
+
+| Public free-call overload | Header |
+| --- | --- |
+| `Series pluss::subsp::eng::signal::bartlett(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
+| `Series pluss::subsp::eng::signal::blackman(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
+| `Series pluss::subsp::eng::signal::boxcar(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
+| `lti::PoleZero pluss::subsp::eng::signal::butter(std::int64_t order, double cutoff, const IirOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
+| `lti::PoleZero pluss::subsp::eng::signal::butter(std::int64_t order, std::pair<double, double> cutoff, const IirOptions & options)` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
+| `lti::PoleZero pluss::subsp::eng::signal::cheby1(std::int64_t order, double ripple, double cutoff, const IirOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
+| `lti::PoleZero pluss::subsp::eng::signal::cheby1(std::int64_t order, double ripple, std::pair<double, double> cutoff, const IirOptions & options)` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
+| `lti::PoleZero pluss::subsp::eng::signal::cheby2(std::int64_t order, double attenuation, double cutoff, const IirOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
+| `lti::PoleZero pluss::subsp::eng::signal::cheby2(std::int64_t order, double attenuation, std::pair<double, double> cutoff, const IirOptions & options)` | `PlussMa/include/pluss/subsp/eng/signal/design.h` |
+| `Series pluss::subsp::eng::signal::conv(const Series & input, const Series & kernel, std::int64_t dim = -1, ConvMode mode = ConvMode::Full)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::signal::corr(const Series & input, const Series & kernel, std::int64_t dim = -1, ConvMode mode = ConvMode::Full)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `FilterRun pluss::subsp::eng::signal::filter(const Series & input, const Series & numerator, const Series & denominator, const Series & state, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `FilterRun pluss::subsp::eng::signal::filter(const Series & input, const Series & numerator, const Series & denominator, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::signal::fir(const Series & input, const Series & taps, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::signal::freqz(const Series & numerator, const Series & denominator, const Series & omega, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::signal::freqz(const Series & numerator, const Series & omega, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::signal::hamming(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
+| `Series pluss::subsp::eng::signal::hann(std::int64_t size, const WindowOptions & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/window.h` |
+| `FilterRun pluss::subsp::eng::signal::sos(const Series & input, const Series & sections, const Series & state, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `FilterRun pluss::subsp::eng::signal::sos(const Series & input, const Series & sections, std::int64_t dim = -1)` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::signal::zero_phase(const Series & input, const Series & numerator, const Series & denominator, const PhaseOpts & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+| `Series pluss::subsp::eng::signal::zero_phase(const Series & input, const Series & sections, const PhaseOpts & options = {})` | `PlussMa/include/pluss/subsp/eng/signal/filter.h` |
+
+### `pluss::subsp::eng::structure`
+
+Front doors (intended starting points):
+
+- `pluss::subsp::eng::structure`: `buckling`, `frame`, `harmonic`, `mass`, `modes`, `motion`, `solve`, `truss`
+
+| Public type | Public fields | Public methods |
+| --- | --- | --- |
+| `pluss::subsp::eng::structure::Bars` | `area`, `modulus` | - |
+| `pluss::subsp::eng::structure::BuckResult` | `factor`, `shape`, `residual`, `converged`, `iterations` | - |
+| `pluss::subsp::eng::structure::EigOptions` | `count`, `max_iterations`, `relative_tolerance`, `absolute_tolerance`, `solve` | - |
+| `pluss::subsp::eng::structure::Fix` | `node`, `axis`, `value` | - |
+| `pluss::subsp::eng::structure::Frame` | - | `dofs()`, `members()`, `nodes()` |
+| `pluss::subsp::eng::structure::FrameResult` | `displacement`, `reaction`, `end_force`, `energy`, `residual_norm`, `converged`, `breakdown`, `iterations` | - |
+| `pluss::subsp::eng::structure::HarmonicOptions` | `mass_damping`, `stiffness_damping`, `solve`, `fail_on_nonconvergence` | - |
+| `pluss::subsp::eng::structure::HarmonicResult` | `omega`, `displacement`, `velocity`, `acceleration`, `reaction`, `residual_norm`, `relative_residual`, `converged`, `iterations`, `operator_evaluations`, `restarts` | - |
+| `pluss::subsp::eng::structure::Mesh` | `position`, `from`, `to` | - |
+| `pluss::subsp::eng::structure::ModeResult` | `omega`, `hertz`, `shape`, `residual`, `converged`, `iterations` | - |
+| `pluss::subsp::eng::structure::MotionOptions` | `spectral_radius`, `mass_damping`, `stiffness_damping`, `solve`, `fail_on_nonconvergence` | - |
+| `pluss::subsp::eng::structure::MotionResult` | `time`, `displacement`, `velocity`, `acceleration`, `reaction`, `kinetic`, `strain_energy`, `residual_norm`, `converged`, `breakdown`, `iterations` | - |
+| `pluss::subsp::eng::structure::MotionState` | `displacement`, `velocity` | - |
+| `pluss::subsp::eng::structure::NonlinearMotionOptions` | `spectral_radius`, `mass_damping`, `stiffness_damping`, `max_iterations`, `max_line_search`, `relative_tolerance`, `absolute_tolerance`, `line_search_shrink`, `armijo`, `solve`, `fail_on_nonconvergence` | - |
+| `pluss::subsp::eng::structure::NonlinearMotionResult` | `time`, `displacement`, `velocity`, `acceleration`, `reaction`, `kinetic`, `strain_energy`, `residual_norm`, `converged`, `iterations` | - |
+| `pluss::subsp::eng::structure::NonlinearOptions` | `load_steps`, `max_iterations`, `max_line_search`, `max_cutbacks`, `relative_tolerance`, `absolute_tolerance`, `line_search_shrink`, `armijo`, `min_load_step`, `solve`, `fail_on_nonconvergence` | - |
+| `pluss::subsp::eng::structure::NonlinearResult` | `displacement`, `reaction`, `end_force`, `energy`, `residual_norm`, `converged`, `load_factor`, `iterations`, `steps`, `cutbacks` | - |
+| `pluss::subsp::eng::structure::Sections` | `area`, `inertia`, `modulus`, `density` | - |
+| `pluss::subsp::eng::structure::SolveOptions` | `cg`, `fail_on_nonconvergence` | - |
+| `pluss::subsp::eng::structure::StaticResult` | `displacement`, `reaction`, `strain`, `stress`, `force`, `energy`, `residual_norm`, `converged`, `breakdown`, `iterations` | - |
+| `pluss::subsp::eng::structure::Truss` | - | `bars()`, `dim()`, `nodes()` |
+
+| Public free-call overload | Header |
+| --- | --- |
+| `BuckResult pluss::subsp::eng::structure::buckling(const Frame &, const Series &, const Fix &, const EigOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `Frame pluss::subsp::eng::structure::frame(const Mesh &, const Sections &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `HarmonicResult pluss::subsp::eng::structure::harmonic(const Frame &, const Series &, const Series &, const Fix &, const HarmonicOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `Series pluss::subsp::eng::structure::mass(const Frame &, const Series &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `ModeResult pluss::subsp::eng::structure::modes(const Frame &, const Fix &, const EigOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `MotionResult pluss::subsp::eng::structure::motion(const Frame &, const Series &, const Series &, const Fix &, const MotionState &, const MotionOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `NonlinearMotionResult pluss::subsp::eng::structure::motion(const Frame &, const Series &, const Series &, const Fix &, const MotionState &, const NonlinearMotionOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `FrameResult pluss::subsp::eng::structure::solve(const Frame &, const Series &, const Fix &, const SolveOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `NonlinearResult pluss::subsp::eng::structure::solve(const Frame &, const Series &, const Fix &, const NonlinearOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `StaticResult pluss::subsp::eng::structure::solve(const Truss &, const Series &, const Fix &, const SolveOptions &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
+| `Truss pluss::subsp::eng::structure::truss(const Mesh &, const Bars &)` | `PlussMa/include/pluss/subsp/eng/structure.h` |
 
 ## Engineering shared owner
 
@@ -1388,6 +1600,49 @@ Front doors (intended starting points):
 | --- | --- |
 | `Solver pluss::subsp::math::qp::prepare(const Series &, const Series &, Options)` | `PlussMa/include/pluss/subsp/math/qp.h` |
 | `Result pluss::subsp::math::qp::solve(const Series & p, const Series & q, const Series & a, const Series & lower, const Series & upper, Options options = {}, WarmStart warm = {})` | `PlussMa/include/pluss/subsp/math/qp.h` |
+
+## Shared math owners
+
+### `pluss::subsp::math::bezier`
+
+Front doors (intended starting points):
+
+- `pluss::subsp::math::bezier`: `corner`, `evaluate`, `value`, `inverse`
+
+| Public type | Public fields | Public methods |
+| --- | --- | --- |
+| `pluss::subsp::math::bezier::Curve` | `segments`, `slope_below`, `slope_above` | `x_first()`, `x_last()`, `y_first()`, `y_last()` |
+| `pluss::subsp::math::bezier::Result` | `value`, `slope`, `curvature` | - |
+| `pluss::subsp::math::bezier::Segment` | `x`, `y` | - |
+
+| Public free-call overload | Header |
+| --- | --- |
+| `Segment pluss::subsp::math::bezier::corner(double x0, double y0, double dydx0, double x1, double y1, double dydx1, double curviness)` | `PlussMa/include/pluss/subsp/math/bezier.h` |
+| `Result pluss::subsp::math::bezier::evaluate(const Curve & curve, const Series & x, int iterations = 80)` | `PlussMa/include/pluss/subsp/math/bezier.h` |
+| `Series pluss::subsp::math::bezier::inverse(const Curve & curve, const Series & y, int iterations = 80)` | `PlussMa/include/pluss/subsp/math/bezier.h` |
+| `Series pluss::subsp::math::bezier::value(const Curve & curve, const Series & x)` | `PlussMa/include/pluss/subsp/math/bezier.h` |
+
+### `pluss::subsp::math::multigrid`
+
+Front doors (intended starting points):
+
+- `pluss::subsp::math::multigrid`: `solve`, `chebyshev`
+
+| Public enum | Values |
+| --- | --- |
+| `pluss::subsp::math::multigrid::Edge` | `Periodic`, `Dirichlet`, `Neumann` |
+
+| Public type | Public fields | Public methods |
+| --- | --- | --- |
+| `pluss::subsp::math::multigrid::Axis` | `cells`, `spacing`, `low`, `high` | - |
+| `pluss::subsp::math::multigrid::Hierarchy` | - | `Hierarchy()`, `apply()`, `coarsest_cells()`, `levels()`, `prolong_from_coarse()`, `restrict_to_coarse()`, `singular()`, `vcycle()` |
+| `pluss::subsp::math::multigrid::Options` | `smoothing_degree`, `coarsest_cells`, `smoothing_ratio`, `max_levels`, `dense_limit` | - |
+| `pluss::subsp::math::multigrid::Problem` | `axes`, `face_low`, `face_high`, `mass` | - |
+
+| Public free-call overload | Header |
+| --- | --- |
+| `Series pluss::subsp::math::multigrid::chebyshev(Apply && apply, const Series & inv_diag, const Series & b, Series x, std::int64_t degree, double lo, double hi)` | `PlussMa/include/pluss/subsp/math/multigrid.h` |
+| `krylov::CgResult pluss::subsp::math::multigrid::solve(const Hierarchy & h, const Series & rhs, std::size_t spatial_dims, const krylov::CgOptions & options = {})` | `PlussMa/include/pluss/subsp/math/multigrid.h` |
 
 ## Internal by intent (visible in headers, never document)
 
@@ -1410,6 +1665,17 @@ Recorded in `PlussMa/tools/public_intent.yaml`. These compile as public C++ but 
 | `biology/population/birth_death.h` | `normal_cdf` | numeric helper for quasi_extinction_cdf |
 | `biology/population/delay.h` | `Complex` | building block of rightmost_root (complex Lambert W as real/imaginary Series pair); not a supported standalone special function |
 | `biology/population/delay.h` | `lambert_w0_complex` | building block of rightmost_root (complex Lambert W as real/imaginary Series pair); not a supported standalone special function |
+| `chemistry/crystallization.h` | `birth_rate` | constant accessor and kinetic sub-expressions of the MSMPR equations (use moment_rate / pbe_rate / steady_state) |
+| `chemistry/crystallization.h` | `boltzmann` | constant accessor and kinetic sub-expressions of the MSMPR equations (use moment_rate / pbe_rate / steady_state) |
+| `chemistry/crystallization.h` | `driving_force` | constant accessor and kinetic sub-expressions of the MSMPR equations (use moment_rate / pbe_rate / steady_state) |
+| `chemistry/crystallization.h` | `growth_rate` | constant accessor and kinetic sub-expressions of the MSMPR equations (use moment_rate / pbe_rate / steady_state) |
+| `chemistry/rate_theory.h` | `avogadro` | constant accessors and unit factors (physical constants are documented under common::constants) |
+| `chemistry/rate_theory.h` | `boltzmann` | constant accessors and unit factors (physical constants are documented under common::constants) |
+| `chemistry/rate_theory.h` | `eyring_prefactor` | constant accessors and unit factors (physical constants are documented under common::constants) |
+| `chemistry/rate_theory.h` | `gas_constant` | constant accessors and unit factors (physical constants are documented under common::constants) |
+| `chemistry/rate_theory.h` | `light_speed_cm` | constant accessors and unit factors (physical constants are documented under common::constants) |
+| `chemistry/rate_theory.h` | `planck` | constant accessors and unit factors (physical constants are documented under common::constants) |
+| `chemistry/rate_theory.h` | `wavenumber_to_joule` | constant accessors and unit factors (physical constants are documented under common::constants) |
 | `chemistry/spectroscopy.h` | `avogadro` | constant accessors; physical constants are documented under common::constants |
 | `chemistry/spectroscopy.h` | `boltzmann` | constant accessors; physical constants are documented under common::constants |
 | `chemistry/spectroscopy.h` | `speed_of_light` | constant accessors; physical constants are documented under common::constants |
@@ -1431,4 +1697,4 @@ Recorded in `PlussMa/tools/public_intent.yaml`. These compile as public C++ but 
 
 ## Maintenance rule
 
-Every NatSci or Engineering implementation tranche must regenerate this file after its public headers compile. Documentation authors should use the canonical spelling shown here, never a `pluss::subsp::*` implementation spelling where a public alias exists, and should not infer public status from a source symbol or a friend declaration. Intent is recorded in `PlussMa/tools/public_intent.yaml`: a header added by a tranche must list its internal helpers and its front doors there in the same change, and `Internal by intent` above names what stays out of prose.
+Every NatSci or Engineering implementation tranche must regenerate this file after its public headers compile. Documentation authors should use the canonical `pluss::subsp::*` spelling shown here and should not infer public status from a source symbol or a friend declaration. Intent is recorded in `PlussMa/tools/public_intent.yaml`: a header added by a tranche must list its internal helpers and its front doors there in the same change, and `Internal by intent` above names what stays out of prose.

@@ -1,0 +1,741 @@
+# apiref_manifest_distrapi.toml -- the `distr` API reference of PlussMa.
+
+[framework.distr_api]
+title = "Distributions"
+nav_title = "Distributions API"
+nav_prefix = "api/distr/"
+root_page = "api/plussma_distr.html"
+summary = "Probability distributions: densities, distribution functions, random draws and maximum-likelihood fits for fifty-eight families, with an object form for twenty-nine of them and one object that serves every family."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line.md"
+title = "continuous_real_line"
+maxdepth = 2
+children = ["continuous_real_line/Cauchy", "continuous_real_line/ExtremeValue", "continuous_real_line/Gh", "continuous_real_line/HyperbolicSecant", "continuous_real_line/Laplace", "continuous_real_line/Logistic", "continuous_real_line/Nig", "continuous_real_line/Normal", "continuous_real_line/StudentT", "continuous_real_line/TukeyLambda"]
+
+[[family]]
+path = "distr/continuous_positive"
+page = "api/distr/continuous_positive.md"
+title = "continuous_positive"
+maxdepth = 2
+children = ["continuous_positive/Alpha", "continuous_positive/Burr", "continuous_positive/Chi", "continuous_positive/ChiSquare", "continuous_positive/ChiSquareNoncentral", "continuous_positive/Erlang", "continuous_positive/Exponential", "continuous_positive/F", "continuous_positive/FNoncentral", "continuous_positive/Gamma", "continuous_positive/Gig", "continuous_positive/Gompertz", "continuous_positive/InverseGaussian", "continuous_positive/Lognormal", "continuous_positive/Lomax", "continuous_positive/Maxwell", "continuous_positive/Nakagami", "continuous_positive/Pareto", "continuous_positive/Planck", "continuous_positive/Rayleigh", "continuous_positive/Rice", "continuous_positive/Wald", "continuous_positive/Weibull"]
+
+[[family]]
+path = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded.md"
+title = "continuous_bounded"
+maxdepth = 2
+children = ["continuous_bounded/Anglit", "continuous_bounded/Arcsin", "continuous_bounded/Beta", "continuous_bounded/Bradford", "continuous_bounded/Cosine", "continuous_bounded/HalfCosine", "continuous_bounded/NormalTrunc", "continuous_bounded/Quadratic", "continuous_bounded/Semicircle", "continuous_bounded/Triangular", "continuous_bounded/UShape", "continuous_bounded/Uniform", "continuous_bounded/VonMises"]
+
+[[family]]
+path = "distr/discrete"
+page = "api/distr/discrete.md"
+title = "discrete"
+maxdepth = 2
+children = ["discrete/Bernoulli", "discrete/Bessel", "discrete/Binomial", "discrete/Geometric", "discrete/Hypergeometric", "discrete/NegativeBinomial", "discrete/Poisson", "discrete/Rademacher", "discrete/Skellam", "discrete/Yule", "discrete/Zeta"]
+
+[[family]]
+path = "distr/object_based"
+page = "api/distr/object_based.md"
+title = "Object based distributions"
+maxdepth = 2
+children = ["object_based/Bernoulli", "object_based/Beta", "object_based/Binomial", "object_based/Burr", "object_based/ChiSquare", "object_based/Distribution", "object_based/Exponential", "object_based/FDistribution", "object_based/Gamma", "object_based/GaussianMixture", "object_based/Geometric", "object_based/Gh", "object_based/InverseGaussian", "object_based/Laplace", "object_based/Logistic", "object_based/Lognormal", "object_based/Lomax", "object_based/NegativeBinomial", "object_based/Nig", "object_based/Normal", "object_based/NormalTrunc", "object_based/Pareto", "object_based/Poisson", "object_based/Rayleigh", "object_based/Skellam", "object_based/StudentT", "object_based/Uniform", "object_based/Weibull", "object_based/Yule", "object_based/Zeta"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Distribution"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Distribution.md"
+summary = "The generic object for every dst::Kind, with delegated evaluation and sampling plus numerical cumulants and maximum-likelihood fitting."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Cauchy"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/Cauchy.md"
+summary = "The Cauchy distribution: a symmetric bell-shaped curve with tails so heavy that it has no mean and no variance."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::ExtremeValue"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/ExtremeValue.md"
+summary = "The extreme value (Gumbel) distribution: the distribution of the largest of many independent observations of a variable with an exponential-type tail."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Gh"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/Gh.md"
+summary = "The generalised hyperbolic distribution: a five-parameter family that contains the normal inverse Gaussian, the hyperbolic, the variance-gamma and, in a limit, the Student t."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::HyperbolicSecant"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/HyperbolicSecant.md"
+summary = "The hyperbolic secant distribution: a symmetric density proportional to the hyperbolic secant, between the normal and the logistic in tail weight."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Laplace"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/Laplace.md"
+summary = "The Laplace (double-exponential) distribution: a symmetric peak with exponentially decaying tails, the distribution of the error whose best estimate is the median."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Logistic"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/Logistic.md"
+summary = "The logistic distribution: a bell-shaped curve slightly heavier-tailed than the normal, whose distribution function is the logistic (sigmoid) function."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Nig"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/Nig.md"
+summary = "The normal inverse Gaussian distribution: a four-parameter family for skewed, heavy-tailed data."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Normal"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/Normal.md"
+summary = "The normal (Gaussian) distribution: the bell curve, determined by its mean and standard deviation."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::StudentT"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/StudentT.md"
+summary = "The Student t distribution: a bell-shaped curve with heavier tails than the normal, controlled by its degrees of freedom."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::TukeyLambda"
+kind = "function"
+family = "distr/continuous_real_line"
+page = "api/distr/continuous_real_line/TukeyLambda.md"
+summary = "The Tukey lambda distribution: a one-parameter family defined through its quantile function that contains the logistic, uniform and approximately the normal and heavy-tailed distributions."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::GaussianMixture"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/GaussianMixture.md"
+summary = "A mixture of normal distributions fitted by expectation-maximisation."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Alpha"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Alpha.md"
+summary = "The alpha distribution: a positively skewed distribution on the positive axis whose density is a normal density in the reciprocal of the variable."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Burr"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Burr.md"
+summary = "The Burr (type III) distribution: a flexible heavy-tailed distribution on the positive axis with two shape parameters."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Chi"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Chi.md"
+summary = "The chi distribution: the distribution of the length of a vector of independent standard normal variables."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::ChiSquare"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/ChiSquare.md"
+summary = "The chi-squared distribution: the distribution of a sum of squared independent standard normal variables."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::ChiSquareNoncentral"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/ChiSquareNoncentral.md"
+summary = "The noncentral chi-squared distribution: the distribution of a sum of squared independent normal variables whose means are not zero."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Erlang"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Erlang.md"
+summary = "The Erlang distribution: the waiting time until the k-th event of a Poisson process, a gamma distribution with an integer shape."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Exponential"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Exponential.md"
+summary = "The exponential distribution: the waiting time between independent events that occur at a constant rate."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::F"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/F.md"
+summary = "The F distribution: the distribution of a ratio of two independent chi-squared variables, each divided by its degrees of freedom."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::FNoncentral"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/FNoncentral.md"
+summary = "The noncentral F distribution: the distribution of the F statistic when the numerator has a noncentral chi-squared distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Gamma"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Gamma.md"
+summary = "The gamma distribution: a flexible family on the positive axis, the sum of exponential waiting times and the parent of the chi-squared family."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Gig"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Gig.md"
+summary = "The generalised inverse Gaussian distribution: a three-parameter family on the positive axis that contains the inverse Gaussian, the gamma and the inverse gamma distributions."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Gompertz"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Gompertz.md"
+summary = "The Gompertz distribution: the distribution of adult lifetimes, with a hazard rate that grows exponentially with age."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::InverseGaussian"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/InverseGaussian.md"
+summary = "The inverse Gaussian distribution: the distribution of the first time a Brownian motion with positive drift reaches a fixed level."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Lognormal"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Lognormal.md"
+summary = "The lognormal distribution: the distribution of a variable whose logarithm is normal, the standard model of multiplicative growth."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Lomax"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Lomax.md"
+summary = "The Lomax (Pareto type II) distribution: a power-law distribution that starts at zero, the standard heavy-tailed model of lifetimes and claim sizes."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Maxwell"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Maxwell.md"
+summary = "The Maxwell distribution: the length of a three-dimensional vector of independent zero-mean normal variables, the speed of a gas molecule."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Nakagami"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Nakagami.md"
+summary = "The Nakagami distribution: a flexible model of the amplitude of a fading signal, with a shape parameter that covers more and less severe fading than the Rayleigh case."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Pareto"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Pareto.md"
+summary = "The Pareto distribution: the power-law distribution of sizes above a minimum, the standard model of wealth, city sizes and insurance losses."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Planck"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Planck.md"
+summary = "The Planck distribution: a density proportional to `x^a/(exp(b x) - 1)`, the shape of black-body radiation."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Rayleigh"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Rayleigh.md"
+summary = "The Rayleigh distribution: the length of a two-dimensional vector whose components are independent zero-mean normals."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Rice"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Rice.md"
+summary = "The Rice distribution: the length of a two-dimensional vector whose mean is offset from the origin and whose components have independent normal noise."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Wald"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Wald.md"
+summary = "The Wald distribution: the inverse Gaussian distribution with mean 1."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Weibull"
+kind = "function"
+family = "distr/continuous_positive"
+page = "api/distr/continuous_positive/Weibull.md"
+summary = "The Weibull distribution: the standard model of lifetimes and failure times, with a hazard that can fall, stay constant or rise."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Anglit"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Anglit.md"
+summary = "The anglit distribution: a cosine-shaped density on a symmetric interval, the distribution of the arcsine of a random square root."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Arcsin"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Arcsin.md"
+summary = "The arcsine distribution: a U-shaped density on the unit interval that piles up at both ends."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Beta"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Beta.md"
+summary = "The beta distribution: a flexible family on a bounded interval, the standard model of proportions and probabilities."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Bradford"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Bradford.md"
+summary = "The Bradford distribution: a density that decreases over the unit interval, with a single shape parameter."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Cosine"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Cosine.md"
+summary = "The cosine (raised cosine) distribution: a smooth, bounded, bell-shaped density on a symmetric interval."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::HalfCosine"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/HalfCosine.md"
+summary = "The half-cosine distribution: a single half-wave of a cosine as a density on a symmetric interval."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::NormalTrunc"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/NormalTrunc.md"
+summary = "The truncated normal distribution: a normal distribution restricted to an interval."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Quadratic"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Quadratic.md"
+summary = "The quadratic (parabolic, Epanechnikov) distribution: an inverted parabola as a density on a symmetric interval."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Semicircle"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Semicircle.md"
+summary = "The semicircle (Wigner) distribution: a density in the shape of a half-circle, the limit law of the eigenvalues of large random symmetric matrices."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Triangular"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Triangular.md"
+summary = "The triangular distribution: a density that rises linearly to a mode and falls linearly, specified by its minimum, mode and maximum."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::UShape"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/UShape.md"
+summary = "The U-shaped (symmetric arcsine) distribution: a density that is smallest at the centre and unbounded at both ends of a symmetric interval."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Uniform"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/Uniform.md"
+summary = "The uniform distribution: every value in an interval is equally likely."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::VonMises"
+kind = "function"
+family = "distr/continuous_bounded"
+page = "api/distr/continuous_bounded/VonMises.md"
+summary = "The von Mises distribution: the circular analogue of the normal distribution, for angles."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Bernoulli"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Bernoulli.md"
+summary = "The Bernoulli distribution: a single trial with two outcomes, success with probability p and failure otherwise."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Bessel"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Bessel.md"
+summary = "The Bessel distribution: a discrete distribution whose masses are proportional to the terms of a modified Bessel function series."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Binomial"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Binomial.md"
+summary = "The binomial distribution: the number of successes in a fixed number of independent trials with the same success probability."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Geometric"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Geometric.md"
+summary = "The geometric distribution: the number of independent trials needed to obtain the first success."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Hypergeometric"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Hypergeometric.md"
+summary = "The hypergeometric distribution: the number of successes in a sample drawn without replacement from a finite population."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::NegativeBinomial"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/NegativeBinomial.md"
+summary = "The negative binomial distribution: the number of failures before the r-th success, and the standard model of over-dispersed counts."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Poisson"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Poisson.md"
+summary = "The Poisson distribution: the number of events in a fixed interval when events occur independently at a constant average rate."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Rademacher"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Rademacher.md"
+summary = "The Rademacher distribution: the values +1 and -1, each with probability one half."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Skellam"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Skellam.md"
+summary = "The Skellam distribution: the difference of two independent Poisson counts, a distribution on the integers that can be negative."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Yule"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Yule.md"
+summary = "The Yule–Simon distribution: a discrete power-law distribution with a heavy tail, the model of preferential attachment."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Zeta"
+kind = "function"
+family = "distr/discrete"
+page = "api/distr/discrete/Zeta.md"
+summary = "The zeta (Zipf) distribution: a discrete power-law distribution on the positive integers."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Bernoulli"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Bernoulli.md"
+summary = "The object form of the Bernoulli distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Beta"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Beta.md"
+summary = "The object form of the Beta distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Binomial"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Binomial.md"
+summary = "The object form of the Binomial distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::ChiSquare"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/ChiSquare.md"
+summary = "The object form of the ChiSquare distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Exponential"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Exponential.md"
+summary = "The object form of the Exponential distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::FDistribution"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/FDistribution.md"
+summary = "The object form of the F distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Gamma"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Gamma.md"
+summary = "The object form of the Gamma distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Geometric"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Geometric.md"
+summary = "The object form of the Geometric distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Gh"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Gh.md"
+summary = "The object form of the Gh distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::InverseGaussian"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/InverseGaussian.md"
+summary = "The object form of the InverseGaussian distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Laplace"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Laplace.md"
+summary = "The object form of the Laplace distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Logistic"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Logistic.md"
+summary = "The object form of the Logistic distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Lognormal"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Lognormal.md"
+summary = "The object form of the Lognormal distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::NegativeBinomial"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/NegativeBinomial.md"
+summary = "The object form of the NegativeBinomial distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Nig"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Nig.md"
+summary = "The object form of the Nig distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Normal"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Normal.md"
+summary = "The object form of the Normal distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::NormalTrunc"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/NormalTrunc.md"
+summary = "The object form of the NormalTrunc distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Poisson"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Poisson.md"
+summary = "The object form of the Poisson distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Rayleigh"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Rayleigh.md"
+summary = "The object form of the Rayleigh distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Skellam"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Skellam.md"
+summary = "The object form of the Skellam distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::StudentT"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/StudentT.md"
+summary = "The object form of the StudentT distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Uniform"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Uniform.md"
+summary = "The object form of the Uniform distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Weibull"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Weibull.md"
+summary = "The object form of the Weibull distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Pareto"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Pareto.md"
+summary = "The object form of the Pareto distribution, with exact cumulants below the tail index."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Lomax"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Lomax.md"
+summary = "The object form of the Lomax distribution, with exact cumulants below the tail index."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Burr"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Burr.md"
+summary = "The object form of the Burr distribution, with exact cumulants below the tail index."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Zeta"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Zeta.md"
+summary = "The object form of the Zeta distribution, with exact cumulants below the tail index."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::distr::Yule"
+kind = "class"
+family = "distr/object_based"
+page = "api/distr/object_based/Yule.md"
+summary = "The object form of the Yule distribution, with exact cumulants below the tail index."
+overloads = 1

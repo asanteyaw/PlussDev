@@ -27,11 +27,11 @@ Config f64() {
 }
 
 std::vector<double> as_f64_vec(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).host<double>();
 }
 
 std::vector<std::int64_t> as_i64_vec(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  return x.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
 }
 
 bool has_duplicates(const std::vector<std::int64_t>& indices) {

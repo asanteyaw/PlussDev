@@ -525,7 +525,7 @@ auto n = pluss::make_note({"ab", "c", "def", "gh"}, {2,2});
 auto lengths = pluss::transform_axis(
   [](const pluss::Note& slice) {
     int total = 0;
-    for (const auto& s : slice.host<std::string>().vector()) total += static_cast<int>(s.size());
+    for (const auto& s : slice.host<std::string>()) total += static_cast<int>(s.size());
     return total;
   },
   n,
@@ -551,7 +551,7 @@ auto t = pluss::make_timeline({
 
 auto first_hours = pluss::transform_axis(
   [](const pluss::Timeline& slice) {
-    return slice.hour().host<std::int32_t>().vector().front();
+    return slice.hour().host<std::int32_t>().front();
   },
   t,
   1

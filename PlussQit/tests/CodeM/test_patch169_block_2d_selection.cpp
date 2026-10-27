@@ -15,14 +15,14 @@ TEST_CASE("block returns expected 2D submatrix with view-like indexing", "[index
   REQUIRE(b.dim() == 2);
   REQUIRE(b.sizes()[0] == 2);
   REQUIRE(b.sizes()[1] == 3);
-  REQUIRE(b.to_vec<std::int64_t>() == std::vector<std::int64_t>{6, 7, 8, 10, 11, 12});
+  REQUIRE(b.host<std::int64_t>() == std::vector<std::int64_t>{6, 7, 8, 10, 11, 12});
 
   // Negative starts are interpreted from the end, like other indexing APIs.
   const Series b2 = x.block(/*row_start=*/-2, /*row_count=*/1, /*col_start=*/-3, /*col_count=*/2);
   REQUIRE(b2.dim() == 2);
   REQUIRE(b2.sizes()[0] == 1);
   REQUIRE(b2.sizes()[1] == 2);
-  REQUIRE(b2.to_vec<std::int64_t>() == std::vector<std::int64_t>{6, 7});
+  REQUIRE(b2.host<std::int64_t>() == std::vector<std::int64_t>{6, 7});
 
   // Boundary-empty blocks are valid.
   const Series empty = x.block(/*row_start=*/3, /*row_count=*/0, /*col_start=*/4, /*col_count=*/0);

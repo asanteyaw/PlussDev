@@ -5,3 +5,5 @@
 #include "pluss/subsp/natsci/biology/biomechanics/tissue.h"
 #include "pluss/subsp/natsci/biology/biomechanics/hemodynamics.h"
 #include "pluss/subsp/natsci/biology/biomechanics/locomotion.h"
+#include "pluss/subsp/natsci/biology/biomechanics/musculoskeletal.h"
+#include "pluss/subsp/natsci/biology/biomechanics/millard.h"

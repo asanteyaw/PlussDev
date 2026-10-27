@@ -29,7 +29,7 @@ bool approx(double a, double b, double tol = 1e-8) {
 }
 
 std::vector<double> as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 LabeledBatch make_xor_batch() {
@@ -273,10 +273,10 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   // Hard-label MCC / Cohen's kappa flow through report(...) and summary(...).
   const MetricReport mcc_kappa =
       metrics::classification::report(batch.y, predicted_labels, {MetricKind::Mcc, MetricKind::CohenKappa});
-  const double summary_mcc = metrics::classification::summary(batch.y, predicted_labels).mcc.item<double>();
+  const double summary_mcc = metrics::classification::summary(batch.y, predicted_labels).mcc.host<double>().front();
   if (mcc_kappa.values.numel() != 2 || !mcc_kappa.values.isfinite().all().item<bool>() ||
-      std::abs(mcc_kappa.mcc.item<double>()) > 1.0 || std::abs(mcc_kappa.cohen_kappa.item<double>()) > 1.0 ||
-      std::abs(mcc_kappa.mcc.item<double>() - summary_mcc) > 1e-9) {
+      std::abs(mcc_kappa.mcc.host<double>().front()) > 1.0 || std::abs(mcc_kappa.cohen_kappa.host<double>().front()) > 1.0 ||
+      std::abs(mcc_kappa.mcc.host<double>().front() - summary_mcc) > 1e-9) {
     if (err) *err << "metrics::classification MCC / kappa should be in [-1, 1] and agree between report() and summary()\n";
     return false;
   }
@@ -289,7 +289,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
     if (err) *err << "model.reports().metric_series should return finite Gini / AveragePrecision / Brier\n";
     return false;
   }
-  const auto sm = score_metrics.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+  const auto sm = score_metrics.to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
   const double roc_auc = sm[0], gini = sm[1], avg_prec = sm[2], brier = sm[3];
   if (std::abs(gini - (2.0 * roc_auc - 1.0)) > 1e-9) {
     if (err) *err << "Gini must equal 2 * RocAuc - 1\n";
@@ -308,11 +308,11 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   const MetricReport score_report = metrics::classification::score_report(
       probs, score_labels,
       {MetricKind::RocAuc, MetricKind::Gini, MetricKind::AveragePrecision, MetricKind::Brier});
-  const auto sr = score_report.values.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+  const auto sr = score_report.values.to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
   if (std::abs(sr[0] - 2.0 / 3.0) > 1e-9 || std::abs(sr[1] - 1.0 / 3.0) > 1e-9 ||
       std::abs(sr[2] - 29.0 / 36.0) > 1e-9 || std::abs(sr[3] - 0.23) > 1e-9 ||
-      std::abs(score_report.roc_auc.item<double>() - 2.0 / 3.0) > 1e-9 ||
-      std::abs(score_report.brier.item<double>() - 0.23) > 1e-9) {
+      std::abs(score_report.roc_auc.host<double>().front() - 2.0 / 3.0) > 1e-9 ||
+      std::abs(score_report.brier.host<double>().front() - 0.23) > 1e-9) {
     if (err) *err << "metrics::classification::score_report should match the hand-computed score metrics\n";
     return false;
   }
@@ -378,7 +378,7 @@ bool run_lymph_metrics_checks(std::ostream* err = nullptr) {
   AssessOptions assess{};
   assess.metrics = {MetricKind::Accuracy};
   const metrics::CrossValidationReport report_cv = cv_plan.run(model.model_spec().value(), batch, train, assess);
-  const double mean_cv = report_cv.report.mean_metrics.reshape({1}).item<double>();
+  const double mean_cv = report_cv.report.mean_metrics.reshape({1}).host<double>().front();
   if (!approx(score, mean_cv, 1e-10)) {
     if (err) *err << "lymph cross_validate_score should match cross_validate mean metric for same setup\n";
     return false;

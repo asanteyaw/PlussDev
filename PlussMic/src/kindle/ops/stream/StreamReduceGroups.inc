@@ -17,15 +17,15 @@ Stream Stream::reduce_groups(const std::vector<std::int64_t>& source, std::int64
   const std::int64_t n = size();
   const auto groups = static_cast<std::int64_t>(offsets.size()) - 1;
   const std::vector<bool> validity =
-      detail::has_validity_mask(*this) ? detail::validity_mask(*this)->to_vec<bool>() : std::vector<bool>{};
+      detail::has_validity_mask(*this) ? detail::validity_mask(*this)->host<bool>() : std::vector<bool>{};
 
   std::vector<double> numbers;
   std::vector<std::int64_t> times;
   std::vector<std::string_view> words;
   if (k == StreamKind::Series) {
-    numbers = as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+    numbers = as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   } else if (k == StreamKind::Timeline) {
-    times = as_timeline().epoch_nanos().to_vec<std::int64_t>();
+    times = as_timeline().epoch_nanos().host<std::int64_t>();
   } else {
     words = as_note().vector();
   }

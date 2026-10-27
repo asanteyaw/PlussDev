@@ -1,0 +1,367 @@
+<!-- generated from Nig.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Nig` object
+
+The object form of the Nig family: it carries the parameters, and offers the density, the distribution function, random draws, the cumulant generating function and the cumulants as methods, and a maximum-likelihood fit with standard errors.
+
+## Signature
+
+```cpp
+distr::Nig(double alpha, double beta, double location, double scale);
+distr::Nig::Nig(<one Series for each parameter>);   // a different distribution at every point
+pluss::Series distr::Nig::pdf(const pluss::Series& x) const;
+pluss::Series distr::Nig::logpdf(const pluss::Series& x) const;
+pluss::Series distr::Nig::cdf(const pluss::Series& x) const;
+pluss::Series distr::Nig::logcdf(const pluss::Series& x) const;
+pluss::Series distr::Nig::sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+pluss::Series distr::Nig::sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+pluss::Series distr::Nig::cgf(const pluss::Series& t) const;
+pluss::Series distr::Nig::cumulant(std::int64_t order) const;
+distr::NigFit distr::Nig::MLE(const pluss::Series& x) const;
+```
+
+## What It Does
+
+`distr::Nig` holds the parameters of the [Nig](../continuous_real_line/Nig.md) distribution, so that they are written once and the same object is used for every evaluation. Its methods give the same numbers as the kind-based functions `distr::pdf(dst::Nig, ...)` and the others, on a whole `Series` at once.
+
+- `pdf`, `logpdf`, `cdf` and `logcdf` evaluate the density, the distribution function and their logarithms.
+- `sample` draws a `Series` of the given shape; `sample_like` draws one with the shape and dtype of an existing `Series`. The seed fixes the stream.
+- `cgf(t)` is the cumulant generating function `log E[exp(t X)]`, and `cumulant(order)` the cumulant of that order (the first is the mean, the second the variance).
+- A constructor taking a `Series` for each parameter makes an object that stands for a different distribution at every point: the density at the i-th point uses the i-th value of every parameter.
+- `MLE(x)` fits the family to observed values by maximum likelihood and returns a `NigFit` with the estimates (fields `alpha`, `beta`, `location`, `scale`), their standard errors, 95% intervals and the log-likelihood.
+
+The parameters of the family are described on the [Nig](../continuous_real_line/Nig.md) page.
+
+## Parameters
+
+`double alpha, double beta, double location, double scale`
+: `alpha`, `beta`, `location` and `scale`, in that order.
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+`const pluss::Series& like`
+: A Series whose shape and dtype `sample_like` copies for the draws; its values are not used.
+
+`const pluss::Series& t`
+: The points at which to evaluate the cumulant generating function.
+
+`std::int64_t order`
+: The order of the cumulant: 1 is the mean, 2 the variance, 3 the third cumulant, and so on.
+
+`<one Series for each parameter>`
+: Parameters given as Series (all of one length, or one element each to broadcast) make an object that is a different distribution at every point of `x`.
+
+`const pluss::Series& x` (for `MLE`)
+: The observed values to fit, one-dimensional and inside the support of the family.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf`, `logcdf` and `cgf` return a `Series` of the shape of their argument; `sample` and `sample_like` return the drawn `Series`; `cumulant` returns a one-element `Series`. `MLE` returns a `NigFit`.
+
+## Errors
+
+- Parameters outside their valid range are refused when a method is called (`alpha` must exceed `abs(beta)` and `delta` must be positive).
+
+## Methods
+
+- `pdf` -- the density (mass function) at each point.
+- `logpdf` -- the logarithm of the density.
+- `cdf` -- the distribution function.
+- `logcdf` -- the logarithm of the distribution function.
+- `sample` -- random draws of a given shape.
+- `sample_like` -- random draws with the shape and dtype of an existing Series.
+- `cgf` -- the cumulant generating function.
+- `cumulant` -- the cumulant of a given order.
+- `MLE` -- the maximum-likelihood fit with standard errors and intervals.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 uses the object form, `distr::Nig`, which carries the parameters and offers the same functions as methods, plus `cumulant` for the moments.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const distr::Nig d{1.5, -0.4, 0.1, 0.8};
+  const auto sample = d.sample({200000}, f64, 11ULL);
+  const auto at = pluss::make_series({1.0}, f64);
+
+  std::cout << "pdf at 1: " << as_f64(d.pdf(at)) << '\n';
+  std::cout << "cdf at 1: " << as_f64(d.cdf(at)) << '\n';
+  const double m = as_f64(sample.mean());
+  const double v = as_f64(((sample - m) * (sample - m)).mean());
+  std::cout << "cumulant(1), the mean: " << as_f64(d.cumulant(1)) << "   mean of 200000 draws: " << m << '\n';
+  std::cout << "cumulant(2), the variance: " << as_f64(d.cumulant(2)) << "   variance of the draws: " << v << '\n';
+}
+```
+
+Output
+
+```text
+pdf at 1: 0.12740
+cdf at 1: 0.95011
+cumulant(1), the mean: -0.12135   mean of 200000 draws: -0.12054
+cumulant(2), the variance: 0.59573   variance of the draws: 0.58987
+```
+
+`cumulant(1)` and `cumulant(2)` are the exact mean (-0.12135) and variance (0.59573) of the distribution, computed from the parameters without drawing anything; the mean (-0.12054) and variance (0.58987) of 200000 draws land within sampling error of them (the standard error of the mean is about 0.00173).
+
+### Example 2
+
+Example 2 uses every evaluation method of the object `distr::Nig`: the density (mass function), its logarithm, the distribution function and its logarithm, the cumulant generating function `cgf`, and the cumulants of orders 1 to 4.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const distr::Nig d{1.5, -0.4, 0.1, 0.8};
+  const auto x = pluss::make_series({-5.0, -2.0, 0.0, 1.0}, f64);
+  const auto t = pluss::make_series({0.1, 0.2, 0.3}, f64);
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : d.pdf(x).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : d.logpdf(x).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : d.cdf(x).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logcdf:";
+  for (double v : d.logcdf(x).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cgf at t = 0.1 0.2 0.3:";
+  for (double v : d.cgf(t).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+
+  std::cout << "cumulants 1 to 4:";
+  for (int order = 1; order <= 4; ++order) std::cout << ' ' << as_f64(d.cumulant(order));
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -5.00000 -2.00000 0.00000 1.00000
+pdf: 0.00037 0.03238 0.67138 0.12740
+logpdf: -7.90283 -3.43025 -0.39842 -2.06042
+cdf: 0.00027 0.02055 0.54051 0.95011
+logcdf: -8.20071 -3.88513 -0.61524 -0.05118
+cgf at t = 0.1 0.2 0.3: -0.00921 -0.01274 -0.01078
+cumulants 1 to 4: -0.12135 0.59573 -0.34205 1.18244
+```
+
+`logpdf` and `logcdf` are the logarithms of the density and of the distribution function, computed directly, which is more accurate in the tails than taking the logarithm of a tiny number: at the first point exp(-7.90283) = 3.70e-04, the density 3.70e-04 printed above. The cumulants are -0.12135, 0.59573, -0.34205, 1.18244: the first is the mean, the second the variance, the third measures skewness (it is zero for a symmetric distribution), and the fourth the excess of the tails over a normal one. The cumulants are the Taylor coefficients of `cgf`: 0.1 κ1 + 0.1² κ2 / 2 + 0.1³ κ3 / 6 + 0.1⁴ κ4 / 24 = -0.00921 against `cgf(0.1)` = -0.00921.
+
+### Example 3
+
+Example 3 draws random values from the object: `sample_like` takes the shape and dtype of an existing Series, `sample` takes a shape, and the seed fixes the stream; a large sample reproduces the first two cumulants.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const distr::Nig d{1.5, -0.4, 0.1, 0.8};
+
+  // sample_like draws a Series with the shape and dtype of an existing one; the seed fixes the stream.
+  const auto like = pluss::series::zeros({2, 3}, f64);
+  const auto draws = d.sample_like(like, 11ULL);
+  std::cout << "shape of the draws: " << draws.sizes()[0] << " x " << draws.sizes()[1] << "\n";
+
+  const auto again = d.sample_like(like, 11ULL);
+  std::cout << "same seed, same draws: " << (as_f64((draws - again).abs().max()) == 0.0 ? "yes" : "no") << "\n";
+  const auto other = d.sample_like(like, 12ULL);
+  std::cout << "other seed, other draws: " << (as_f64((draws - other).abs().max()) > 0.0 ? "yes" : "no") << "\n";
+
+  // sample takes the shape directly; a large sample estimates the mean and the variance.
+  const auto big = d.sample({200000}, f64, 5ULL);
+  const double m = as_f64(big.mean());
+  const double v = as_f64(((big - m) * (big - m)).mean());
+  std::cout << "mean of 200000 draws " << m << " (cumulant(1) = " << as_f64(d.cumulant(1)) << ")\n";
+  std::cout << "variance of 200000 draws " << v << " (cumulant(2) = " << as_f64(d.cumulant(2)) << ")\n";
+}
+```
+
+Output
+
+```text
+shape of the draws: 2 x 3
+same seed, same draws: yes
+other seed, other draws: yes
+mean of 200000 draws -0.11983 (cumulant(1) = -0.12135)
+variance of 200000 draws 0.59724 (cumulant(2) = 0.59573)
+```
+
+### Example 4
+
+Example 4 gives the object a Series for each parameter. One object then stands for a different distribution at every point of `x`, and its density agrees with scalar objects built one point at a time.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  // A Series for every parameter makes ONE object that is a different distribution at each point:
+  // the density at the i-th point uses the i-th value of every parameter.
+  const auto p0 = pluss::make_series({1.5, 1.875, 2.25}, f64);
+  const auto p1 = pluss::make_series({-0.4, -0.15000000000000002, 0.09999999999999998}, f64);
+  const auto p2 = pluss::make_series({0.1, 0.35, 0.6}, f64);
+  const auto p3 = pluss::make_series({0.8, 1.05, 1.3}, f64);
+  const distr::Nig many{p0, p1, p2, p3};
+  const auto x = pluss::make_series({-5.0, -2.0, 0.0}, f64);
+  const auto density = many.pdf(x);
+  std::cout << "one object, three parameter sets:";
+  for (double v : density.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+
+  // The same numbers, one scalar object at a time.
+  {
+    {
+      const distr::Nig one{1.5, -0.4, 0.1, 0.8};
+      const auto at = pluss::make_series({-5.0}, f64);
+      std::cout << "point 0: " << as_f64(density.select(0, 0)) << " and one object at a time " << as_f64(one.pdf(at)) << "\n";
+    }
+    {
+      const distr::Nig one{1.875, -0.15000000000000002, 0.35, 1.05};
+      const auto at = pluss::make_series({-2.0}, f64);
+      std::cout << "point 1: " << as_f64(density.select(0, 1)) << " and one object at a time " << as_f64(one.pdf(at)) << "\n";
+    }
+    {
+      const distr::Nig one{2.25, 0.09999999999999998, 0.6, 1.3};
+      const auto at = pluss::make_series({0.0}, f64);
+      std::cout << "point 2: " << as_f64(density.select(0, 2)) << " and one object at a time " << as_f64(one.pdf(at)) << "\n";
+    }
+  }
+}
+```
+
+Output
+
+```text
+one object, three parameter sets: 0.00037 0.01210 0.35101
+point 0: 0.00037 and one object at a time 0.00037
+point 1: 0.01210 and one object at a time 0.01210
+point 2: 0.35101 and one object at a time 0.35101
+```
+
+One object with three values of each parameter returned the three densities 3.70e-04, 0.0121, 0.35101. Each equals the density of the scalar object built from the i-th values of the parameters and evaluated at the i-th point (the three lines below the first), so a Series-valued object is the same as three scalar objects without the loop.
+
+### Example 5
+
+Example 5 fits the family back to 1000 draws by maximum likelihood with `MLE`, and reads the estimates, their standard errors, the 95% intervals and the log-likelihood.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+
+  const auto x = distr::Nig{1.5, -0.4, 0.1, 0.8}.sample({2000}, f64, 20261022ULL);
+  const auto fit = distr::Nig{}.MLE(x);
+
+  std::cout << "alpha: " << fit.alpha << '\n';
+  std::cout << "beta: " << fit.beta << '\n';
+  std::cout << "location: " << fit.location << '\n';
+  std::cout << "scale: " << fit.scale << '\n';
+  std::cout << "stderr:";
+  for (double v : fit.stderr(x).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "95% bounds:";
+  for (double v : fit.confint(x).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "loglik: " << as_f64(fit.loglik(x)) << '\n';
+}
+```
+
+Output
+
+```text
+alpha: 1.7454
+beta: -0.5035
+location: 0.1308
+scale: 0.8595
+stderr: 0.1829 0.0998 0.0421 0.0677
+95% bounds: 1.3869 2.1039 -0.6991 -0.3078 0.0482 0.2134 0.7269 0.9922
+loglik: -2160.5778
+```
+
+The fit recovers the generating values: `alpha` 1.7454 against a true 1.5 (1.34 standard errors away); `beta` -0.5035 against a true -0.4 (1.04 standard errors away); `location` 0.1308 against a true 0.1 (0.73 standard errors away); `scale` 0.8595 against a true 0.8 (0.88 standard errors away). The 95% bounds are the estimate ± 1.96 standard errors, one pair per parameter in the order of the fit's fields, and the log-likelihood is the quantity to compare against other families fitted to the same data.
+
+## Changelog
+
+- **0.1** -- the object form with its evaluation, sampling and cumulant methods.
+
+## See Also
+
+- [`distr::Nig`](../continuous_real_line/Nig.md) -- the kind-based functions and the parameters
+- [`distr::Gh`](Gh.md)
+- [`distr::Normal`](Normal.md)
+- [`distr::StudentT`](StudentT.md)
+- [`distr::InverseGaussian`](InverseGaussian.md)
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

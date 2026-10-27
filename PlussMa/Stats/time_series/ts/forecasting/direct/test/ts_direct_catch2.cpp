@@ -27,8 +27,8 @@ Series make_response(const Series& x, std::uint64_t seed, double noise_scale) {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = x.sizes()[0];
   const std::int64_t p = x.sizes()[1];
-  const auto xv = x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
+  const auto xv = x.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).host<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     const double x0_lag = xv[static_cast<std::size_t>((t - 1) * p)];
@@ -40,7 +40,7 @@ Series make_response(const Series& x, std::uint64_t seed, double noise_scale) {
 }
 
 double l2_norm(const Series& x) {
-  const auto vals = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  const auto vals = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
   double sum = 0.0;
   for (const double v : vals) {
     sum += v * v;
@@ -64,7 +64,7 @@ TEST_CASE("ts direct forecaster: low-noise fit is accurate", "[ts][direct][accur
 
   const auto mdl = DirectForecaster::fit(x, y, opt, cfg);
   const Series mse = mdl.loss(x, y, RegressionLoss::MSE, cfg);
-  const auto values = mse.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto values = mse.to(pluss::pCPU, ScalarType::Float64).host<double>();
   REQUIRE(values.size() == 2);
   REQUIRE(values[0] < 0.03);
   REQUIRE(values[1] < 0.05);
@@ -173,13 +173,13 @@ TEST_CASE("ts direct cv forecaster: overlap handling and average loss", "[ts][di
   REQUIRE(pred.sizes()[1] == 3);
   REQUIRE(lavg.sizes()[0] == 3);
 
-  const auto pvals = pred.to(pluss::pCPU, ScalarType::Float64).reshape({pred.numel()}).to_vec<double>();
+  const auto pvals = pred.to(pluss::pCPU, ScalarType::Float64).reshape({pred.numel()}).host<double>();
   const auto finite_count =
       static_cast<std::int64_t>(std::count_if(pvals.begin(), pvals.end(), [](double v) { return std::isfinite(v); }));
   REQUIRE(finite_count > 0);
   REQUIRE(finite_count < pred.numel());
 
-  const auto lvals = lavg.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto lvals = lavg.to(pluss::pCPU, ScalarType::Float64).host<double>();
   REQUIRE(std::all_of(lvals.begin(), lvals.end(), [](double v) { return std::isfinite(v) && v >= 0.0; }));
 }
 
@@ -243,18 +243,18 @@ TEST_CASE("direct forecaster fits only complete rows and blanks the rest", "[ts]
   const std::vector<std::vector<double>> beta{{0.257642, 0.434179, 0.108200, -0.183314, 1.077306, -0.427419},
                                               {1.180341, 0.369032, -0.640171, -0.314757, -0.230175, 1.365510}};
   for (int s = 0; s < 2; ++s) {
-    const auto b = f.step(s).beta.to_vec<double>();
+    const auto b = f.step(s).beta.host<double>();
     for (std::size_t j = 0; j < beta[static_cast<std::size_t>(s)].size(); ++j) REQUIRE(b[j] == Approx(beta[static_cast<std::size_t>(s)][j]).epsilon(1e-5));
   }
 
   // The first rows lack some lag: their prepared predictors and predictions are NaN, not zero-filled.
-  const auto prepared = f.prepared_predictors(xs, ys, 1).to_vec<double>();
+  const auto prepared = f.prepared_predictors(xs, ys, 1).host<double>();
   REQUIRE(std::isnan(prepared[1]));
-  const auto pred = f.predict(xs, ys).to_vec<double>();
+  const auto pred = f.predict(xs, ys).host<double>();
   REQUIRE(std::isnan(pred[0]));
   REQUIRE(std::isfinite(pred[2 * (n - 1)]));
   // The loss averages over the rows that have a prediction.
-  REQUIRE(std::isfinite(f.loss(xs, ys).to_vec<double>()[0]));
+  REQUIRE(std::isfinite(f.loss(xs, ys).host<double>()[0]));
 }
 
 // A forecast is made from the last observation: with the coefficients above, the one-step forecast of Y(n + 1) uses the last observed values as the first lags.
@@ -274,7 +274,7 @@ TEST_CASE("direct forecaster forecasts from the last observation", "[ts][direct]
   o.lag.horizon = {1, 3};
   o.lag.response_lags = {1, 2};
   o.lag.predictor_lags = {{1, 2}, {1}};
-  const auto f = DirectForecaster::fit(xs, ys, o).forecast(xs, ys).to_vec<double>();
+  const auto f = DirectForecaster::fit(xs, ys, o).forecast(xs, ys).host<double>();
   REQUIRE(f.size() == 2);
   REQUIRE(f[0] == Approx(6.689346).epsilon(1e-5));
   REQUIRE(f[1] == Approx(4.948242).epsilon(1e-5));
@@ -289,7 +289,7 @@ TEST_CASE("direct forecaster forecasts from the last observation", "[ts][direct]
   const auto model = DirectForecaster::fit(xs, ys, lead);
   REQUIRE_THROWS(model.forecast(xs, ys));
   const Series future = pluss::make_series(std::vector<double>{1.7, 0.4, 2.2, 0.9}, {2, 2}).to(ScalarType::Float64);
-  const auto g = model.forecast(xs, ys, future).to_vec<double>();
+  const auto g = model.forecast(xs, ys, future).host<double>();
   REQUIRE(g[0] == Approx(4.958580).epsilon(1e-5));
   REQUIRE(g[1] == Approx(4.801808).epsilon(1e-5));
 }

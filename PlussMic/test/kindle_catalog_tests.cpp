@@ -84,7 +84,7 @@ pluss::Series bool_mask(std::initializer_list<bool> values) {
 
 double scalar_stream_to_double(const Stream& s) {
   expect(s.kind() == StreamKind::Series, "scalar_stream_to_double expects Series stream");
-  const auto values = s.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto values = s.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   expect(values.size() == 1, "scalar stream must contain one value");
   return values[0];
 }
@@ -176,7 +176,7 @@ void test_stream_methods() {
 
   const auto filled = metric.fillnull(0.0);
   expect(!pluss::kindle::detail::has_validity_mask(filled), "fillnull should clear validity mask");
-  expect(filled.as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+  expect(filled.as_series().host<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Stream::fillnull(double) should preserve valid values and replace only null rows");
   const auto dropped = metric.dropnull();
   expect(dropped.size() == 3, "dropnull should keep only valid rows");
@@ -186,7 +186,7 @@ void test_stream_methods() {
       {pluss::table::Slate(bool_mask({true, false, true}))},
       {labeled_series({10.0, 20.0, 30.0}, {"r0", "r1", "r2"})},
       labeled_series({1.0, 2.0, 3.0}, {"l0", "l1", "l2"}));
-  expect(picked.as_series().to_vec<double>() == std::vector<double>({10.0, 2.0, 30.0}),
+  expect(picked.as_series().host<double>() == std::vector<double>({10.0, 2.0, 30.0}),
          "Stream::select should choose row-wise payload values");
   expect(note_values(picked.label()->cast().note().as_note()) == std::vector<std::string>({"r0", "l1", "r2"}),
          "Stream::select should choose row-wise labels");
@@ -228,7 +228,7 @@ void test_stream_accessors() {
   const auto timestamp = catalog.keys("timestamp");
   const auto year = timestamp.tl().year();
   expect(year.kind() == StreamKind::Series, "Stream::tl().year should yield Series");
-  expect(year.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
+  expect(year.as_series().host<std::int64_t>() == std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
          "Stream::tl().year values mismatch");
 
   const auto ids_as_note = catalog.keys("id").cast().note();
@@ -572,19 +572,19 @@ void test_catalog_accessors() {
   const auto year = base.keys({"timestamp"}).tl().year();
   expect(year.keys("timestamp").kind() == StreamKind::Series,
          "Catalog::keys().tl().year should yield Series");
-  expect(year.keys("timestamp").as_series().to_vec<std::int64_t>() ==
+  expect(year.keys("timestamp").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
          "Catalog::keys().tl().year values mismatch");
 
   const auto filled = base.keys({"metric"}).fillnull(0.0);
-  expect(filled.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+  expect(filled.keys("metric").as_series().host<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Catalog::keys().fillnull should preserve valid values and replace only null rows");
 
   const auto dropped = base.keys({"metric"}).dropnull();
   expect(dropped.nrows() == 3, "Catalog::keys().dropnull should drop rows by selected key mask");
   expect(dropped.nkeys() == 1 && dropped.has("metric"),
          "Catalog::keys().dropnull should keep the projected key set");
-  expect(dropped.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 30.0, 40.0}),
+  expect(dropped.keys("metric").as_series().host<double>() == std::vector<double>({10.0, 30.0, 40.0}),
          "Catalog::keys().dropnull should keep only valid rows from the projected key");
 
   const auto lagged = base.keys({"metric"}).ts().lag(1);
@@ -621,7 +621,7 @@ void test_catalog_reductions() {
   const auto key_sum = base.sum(ReduceAxis::Key);
   expect(key_sum.nkeys() == 1 && key_sum.has("sum"),
          "Catalog::sum(Key) should return a single reduced stream");
-  expect(key_sum.keys("sum").as_series().to_vec<double>() ==
+  expect(key_sum.keys("sum").as_series().host<double>() ==
              std::vector<double>({13.0, 1.0, 32.0, 45.0, 4.0}),
          "Catalog::sum(Key) should reduce across selected keys row-wise");
 
@@ -635,11 +635,11 @@ void test_catalog_reductions() {
   });
 
   const auto inner = ragged.sum(CatalogReduceOptions{.axis = ReduceAxis::Key, .align = pluss::kindle::Align::Inner});
-  expect(inner.keys("sum").as_series().to_vec<double>() == std::vector<double>({11.0, 22.0, 33.0}),
+  expect(inner.keys("sum").as_series().host<double>() == std::vector<double>({11.0, 22.0, 33.0}),
          "Catalog::sum(Key, Inner) should trim to common length");
 
   const auto outer = ragged.sum(CatalogReduceOptions{.axis = ReduceAxis::Key, .align = pluss::kindle::Align::Outer});
-  expect(outer.keys("sum").as_series().to_vec<double>() == std::vector<double>({11.0, 22.0, 33.0, 4.0, 5.0}),
+  expect(outer.keys("sum").as_series().host<double>() == std::vector<double>({11.0, 22.0, 33.0, 4.0, 5.0}),
          "Catalog::sum(Key, Outer) should preserve the longest stream and ignore missing values by default");
 
   expect_throw(
@@ -657,13 +657,13 @@ void test_catalog_reductions() {
 
 
 std::vector<double> stream_values(const Stream& s) {
-  return s.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  return s.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
 }
 
 // valid[i] == false where the reduction has no value at position i.
 std::vector<bool> stream_valid(const Stream& s) {
   if (!pluss::kindle::detail::has_validity_mask(s)) return std::vector<bool>(stream_values(s).size(), true);
-  return pluss::kindle::detail::validity_mask(s)->to_vec<bool>();
+  return pluss::kindle::detail::validity_mask(s)->host<bool>();
 }
 
 bool near_all(const std::vector<double>& got, const std::vector<double>& want, double tol = 1e-9) {
@@ -1285,8 +1285,8 @@ void test_catalog_construction_and_selection() {
 
   const auto sampled_a = base.sample(2, 42);
   const auto sampled_b = base.sample(2, 42);
-  expect(sampled_a.keys("id").as_series().to_vec<std::int64_t>()
-             == sampled_b.keys("id").as_series().to_vec<std::int64_t>(),
+  expect(sampled_a.keys("id").as_series().host<std::int64_t>()
+             == sampled_b.keys("id").as_series().host<std::int64_t>(),
          "sample with same seed should be deterministic");
 
   const auto queried = base.query([](const Catalog& c) {
@@ -1309,7 +1309,7 @@ void test_catalog_construction_and_selection() {
       {pluss::table::Slate(bool_mask({true, false, true, false, false}))},
       {replaced},
       base);
-  expect(chosen.keys("id").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({103, 1, 102, 5, 4}),
+  expect(chosen.keys("id").as_series().host<std::int64_t>() == std::vector<std::int64_t>({103, 1, 102, 5, 4}),
          "Catalog::select should choose row-wise between catalogs");
   expect(note_values(chosen.keys("city").as_note()) == note_values(base.keys("city").as_note()),
          "Catalog::select should preserve untouched streams");
@@ -1331,7 +1331,7 @@ void test_catalog_label_alignment() {
   expect(note_values(inner.label().values().cast().note().as_note())
              == std::vector<std::string>({"A", "C"}),
          "Catalog::tabelize(label, inner) should preserve anchor label order");
-  expect(inner.features("right").as_series().to_vec<double>() == std::vector<double>({10.0, 30.0}),
+  expect(inner.features("right").as_series().host<double>() == std::vector<double>({10.0, 30.0}),
          "Catalog::tabelize(label, inner) should align values by label");
 
   policy.align = pluss::kindle::Align::Outer;
@@ -1358,7 +1358,7 @@ void test_catalog_label_alignment() {
 void test_catalog_sort_group_missing() {
   const auto base = make_base_catalog();
   const auto sorted = base.sort("id", true);
-  const auto id_sorted = sorted.keys("id").as_series().to_vec<std::int64_t>();
+  const auto id_sorted = sorted.keys("id").as_series().host<std::int64_t>();
   expect((id_sorted == std::vector<std::int64_t>{1, 2, 3, 4, 5}), "sort(id) order mismatch");
 
   const auto sorted_by = base.sort({"city", "id"}, {true, false});
@@ -1377,7 +1377,7 @@ void test_catalog_sort_group_missing() {
   const auto not_nulls = base.keys({"metric"}).notnull();
   const auto invalid = base.keys({"metric"}).invalid();
   expect(filled.nrows() == 5, "fillnull should not change row count");
-  expect(filled.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+  expect(filled.keys("metric").as_series().host<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Catalog::fillnull(double, keys) should preserve valid values and replace only null rows");
   expect(dropped.nrows() == 3, "dropnull(metric) should drop null rows");
   expect(ffilled.nrows() == 5, "ffill should preserve row count");
@@ -1484,7 +1484,7 @@ void test_catalog_and_archive_lvalue_name_ranges() {
 
   const std::vector<std::string> metric{"metric"};
   const auto filled = base.keys(metric).fillnull(0.0);
-  expect(filled.keys("metric").as_series().to_vec<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
+  expect(filled.keys("metric").as_series().host<double>() == std::vector<double>({10.0, 0.0, 30.0, 40.0, 0.0}),
          "Catalog lvalue fillnull should delegate to selected keys");
 
   const auto casted = base.keys(keys).cast().note();
@@ -1529,17 +1529,17 @@ void test_catalog_aggregates_apply_text_merge() {
   expect_throw([&]() { (void)base.merge(right, "id", "sideways"); }, "merge should reject an unknown how");
 
   const auto applied = base.keys({"id"}).map([](const Stream& s) { return s + 10.0; });
-  const auto applied_values = applied.keys("id").as_series().to_vec<std::int64_t>();
+  const auto applied_values = applied.keys("id").as_series().host<std::int64_t>();
   expect(applied_values[0] == 13, "keys().map should transform target field");
 
   const auto transformed_all = base.transform([](const Stream& s) { return s; });
   const auto transformed_one = base.keys({"id"}).map([](const Stream& s) { return s + 1.0; });
   expect(transformed_all.nrows() == base.nrows(), "transform(all) should preserve row count");
-  expect(transformed_one.keys("id").as_series().to_vec<std::int64_t>()[0] == 4,
+  expect(transformed_one.keys("id").as_series().host<std::int64_t>()[0] == 4,
          "keys().map should transform target field");
 
   const auto updated_id_only = base.keys({"id"}).map([](const Stream& s) { return s - 1.0; });
-  expect(updated_id_only.keys("id").as_series().to_vec<std::int64_t>()[0] == 2,
+  expect(updated_id_only.keys("id").as_series().host<std::int64_t>()[0] == 2,
          "keys().map reassignment should update target field");
 
   expect_throw(
@@ -1735,8 +1735,8 @@ void test_archive_to_table_bridge() {
 
   const auto aligned = archive.label().align(
       Stream(pluss::make_note(std::vector<std::string>{"batch_b", "batch_a"}, std::array<std::int64_t, 1>{2})));
-  const auto aligned_first = aligned.catalog(0).keys("id").as_series().to_vec<std::int64_t>();
-  expect(aligned_first == f1.features("id").as_series().to_vec<std::int64_t>(),
+  const auto aligned_first = aligned.catalog(0).keys("id").as_series().host<std::int64_t>();
+  expect(aligned_first == f1.features("id").as_series().host<std::int64_t>(),
          "Archive::label().align should reorder catalogs");
   expect(!relabeled.label().reset().label().has(), "Archive::label().reset should clear labels");
 
@@ -1793,7 +1793,7 @@ void test_archive_to_table_bridge() {
   const auto nulls = archive.keys({"metric"}).isnull();
   const auto notnulls = archive.keys({"metric"}).notnull();
   const auto invalid = archive.keys({"metric"}).invalid();
-  expect(filled.catalog(0).keys("metric").as_series().to_vec<double>()[1] == 0.0,
+  expect(filled.catalog(0).keys("metric").as_series().host<double>()[1] == 0.0,
          "Archive::fillnull should delegate to catalogs");
   expect(dropped_null.catalog(0).nrows() == 2 && dropped_null.catalog(1).nrows() == 2,
          "Archive::dropnull should delegate to catalogs");
@@ -1950,10 +1950,10 @@ void test_archive_time_accessors() {
   const auto years = archive.keys({"timestamp"}).tl().year();
   expect(years.catalog(0).keys("timestamp").kind() == StreamKind::Series,
          "Archive::keys(...).tl().year should convert selected timeline streams to Series");
-  expect(years.catalog(0).keys("timestamp").as_series().to_vec<std::int64_t>()
+  expect(years.catalog(0).keys("timestamp").as_series().host<std::int64_t>()
              == std::vector<std::int64_t>({2024, 2024, 2024}),
          "Archive::keys(...).tl().year should preserve first ragged catalog length");
-  expect(years.catalog(1).keys("timestamp").as_series().to_vec<std::int64_t>()
+  expect(years.catalog(1).keys("timestamp").as_series().host<std::int64_t>()
              == std::vector<std::int64_t>({2024, 2024, 2024, 2024, 2024}),
          "Archive::keys(...).tl().year should preserve second ragged catalog length");
 

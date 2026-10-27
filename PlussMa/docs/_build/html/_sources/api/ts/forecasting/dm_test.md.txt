@@ -56,7 +56,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -93,9 +93,9 @@ int main() {
   ts::DirectForecasterOptions a, b;
   a.lag.response_lags = b.lag.response_lags = {1, 2};
   b.lag.predictor_lags = {{1, 2}};
-  const auto pa = ts::DirectCVForecaster::fit(Series{}, data.y, partition, a).cvpredict(Series{}, data.y).reshape({400}).to_vec<double>();
-  const auto pb = ts::DirectCVForecaster::fit(data.x, data.y, partition, b).cvpredict(data.x, data.y).reshape({400}).to_vec<double>();
-  const auto y = data.y.to_vec<double>();
+  const auto pa = ts::DirectCVForecaster::fit(Series{}, data.y, partition, a).cvpredict(Series{}, data.y).reshape({400}).pull<double>();
+  const auto pb = ts::DirectCVForecaster::fit(data.x, data.y, partition, b).cvpredict(data.x, data.y).reshape({400}).pull<double>();
+  const auto y = data.y.host<double>();
   std::vector<double> ea, eb;
   for (int t = 0; t < 400; ++t)
     if (std::isfinite(pa[t]) && std::isfinite(pb[t])) {
@@ -131,7 +131,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -203,7 +203,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {

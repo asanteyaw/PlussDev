@@ -109,11 +109,11 @@ TEST_CASE("CUDA bridge enables scan fallback when strict native is off", "[cuda]
   const auto x_cuda = x_cpu.to(pluss::pCUDA);
 
   require_close_(
-      x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+      x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+      x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).host<float>());
   require_close_(
-      x_cuda.cumprod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.cumprod(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+      x_cuda.cumprod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+      x_cpu.cumprod(/*dim=*/1, /*keepdim=*/false).host<float>());
 }
 
 TEST_CASE("CUDA strict native scan executes supported route", "[cuda][bridge][policy][scan]") {
@@ -131,11 +131,11 @@ TEST_CASE("CUDA strict native scan executes supported route", "[cuda][bridge][po
   const auto x_cuda = x_cpu.to(pluss::pCUDA);
 
   require_close_(
-      x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+      x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+      x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).host<float>());
   require_close_(
-      x_cuda.cumprod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.cumprod(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+      x_cuda.cumprod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+      x_cpu.cumprod(/*dim=*/1, /*keepdim=*/false).host<float>());
 }
 
 TEST_CASE("CUDA bridge parity covers activation and logical families", "[cuda][bridge][activation]") {
@@ -155,30 +155,30 @@ TEST_CASE("CUDA bridge parity covers activation and logical families", "[cuda][b
   const auto alt_cpu = pluss::make_series(std::vector<float>{10.f, 20.f, 30.f, 40.f, 50.f, 60.f}, {2, 3});
   const auto alt_cuda = alt_cpu.to(pluss::pCUDA);
 
-  require_close_(x_cuda.relu().to(pluss::pCPU).to_vec<float>(), x_cpu.relu().to_vec<float>());
-  require_close_(x_cuda.sigmoid().to(pluss::pCPU).to_vec<float>(), x_cpu.sigmoid().to_vec<float>());
-  require_close_(x_cuda.softplus(1.0, 20.0).to(pluss::pCPU).to_vec<float>(), x_cpu.softplus(1.0, 20.0).to_vec<float>());
-  require_close_(x_cuda.silu().to(pluss::pCPU).to_vec<float>(), x_cpu.silu().to_vec<float>());
-  require_close_(x_cuda.gelu(true).to(pluss::pCPU).to_vec<float>(), x_cpu.gelu(true).to_vec<float>());
+  require_close_(x_cuda.relu().to(pluss::pCPU).host<float>(), x_cpu.relu().host<float>());
+  require_close_(x_cuda.sigmoid().to(pluss::pCPU).host<float>(), x_cpu.sigmoid().host<float>());
+  require_close_(x_cuda.softplus(1.0, 20.0).to(pluss::pCPU).host<float>(), x_cpu.softplus(1.0, 20.0).host<float>());
+  require_close_(x_cuda.silu().to(pluss::pCPU).host<float>(), x_cpu.silu().host<float>());
+  require_close_(x_cuda.gelu(true).to(pluss::pCPU).host<float>(), x_cpu.gelu(true).host<float>());
   require_close_(
-      x_cuda.leaky_relu(0.1).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.leaky_relu(0.1).to_vec<float>());
-  require_close_(x_cuda.softmax(1).to(pluss::pCPU).to_vec<float>(), x_cpu.softmax(1).to_vec<float>());
+      x_cuda.leaky_relu(0.1).to(pluss::pCPU).host<float>(),
+      x_cpu.leaky_relu(0.1).host<float>());
+  require_close_(x_cuda.softmax(1).to(pluss::pCPU).host<float>(), x_cpu.softmax(1).host<float>());
   require_close_(
-      x_cuda.log_softmax(1).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.log_softmax(1).to_vec<float>());
+      x_cuda.log_softmax(1).to(pluss::pCPU).host<float>(),
+      x_cpu.log_softmax(1).host<float>());
   require_close_(
-      x_cuda.logsumexp(1, false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.logsumexp(1, false).to_vec<float>());
+      x_cuda.logsumexp(1, false).to(pluss::pCPU).host<float>(),
+      x_cpu.logsumexp(1, false).host<float>());
   require_close_(
-      x_cuda.where(mask_cuda, alt_cuda).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.where(mask_cpu, alt_cpu).to_vec<float>());
+      x_cuda.where(mask_cuda, alt_cuda).to(pluss::pCPU).host<float>(),
+      x_cpu.where(mask_cpu, alt_cpu).host<float>());
   require_equal_u8_(
-      mask_cuda.logical_and(mask_cuda.logical_not()).to(pluss::pCPU).to_vec<std::uint8_t>(),
-      mask_cpu.logical_and(mask_cpu.logical_not()).to_vec<std::uint8_t>());
+      mask_cuda.logical_and(mask_cuda.logical_not()).to(pluss::pCPU).host<std::uint8_t>(),
+      mask_cpu.logical_and(mask_cpu.logical_not()).host<std::uint8_t>());
   require_equal_u8_(
-      mask_cuda.logical_xor(mask_cuda.logical_not()).to(pluss::pCPU).to_vec<std::uint8_t>(),
-      mask_cpu.logical_xor(mask_cpu.logical_not()).to_vec<std::uint8_t>());
+      mask_cuda.logical_xor(mask_cuda.logical_not()).to(pluss::pCPU).host<std::uint8_t>(),
+      mask_cpu.logical_xor(mask_cpu.logical_not()).host<std::uint8_t>());
 }
 
 TEST_CASE("CUDA strict policy covers activation and logical families", "[cuda][bridge][policy][activation]") {
@@ -201,15 +201,15 @@ TEST_CASE("CUDA strict policy covers activation and logical families", "[cuda][b
   const auto y_cpu = pluss::make_series(std::vector<float>{10.f, 20.f, 30.f, 40.f}, {2, 2});
   const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
-  require_close_(x_cuda.relu().to(pluss::pCPU).to_vec<float>(), x_cpu.relu().to_vec<float>());
-  require_close_(x_cuda.sigmoid().to(pluss::pCPU).to_vec<float>(), x_cpu.sigmoid().to_vec<float>());
-  require_close_(x_cuda.gelu(false).to(pluss::pCPU).to_vec<float>(), x_cpu.gelu(false).to_vec<float>());
-  require_close_(x_cuda.softmax(1).to(pluss::pCPU).to_vec<float>(), x_cpu.softmax(1).to_vec<float>());
+  require_close_(x_cuda.relu().to(pluss::pCPU).host<float>(), x_cpu.relu().host<float>());
+  require_close_(x_cuda.sigmoid().to(pluss::pCPU).host<float>(), x_cpu.sigmoid().host<float>());
+  require_close_(x_cuda.gelu(false).to(pluss::pCPU).host<float>(), x_cpu.gelu(false).host<float>());
+  require_close_(x_cuda.softmax(1).to(pluss::pCPU).host<float>(), x_cpu.softmax(1).host<float>());
   require_close_(
-      x_cuda.where(mask_cuda, y_cuda).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.where(mask_cpu, y_cpu).to_vec<float>());
+      x_cuda.where(mask_cuda, y_cuda).to(pluss::pCPU).host<float>(),
+      x_cpu.where(mask_cpu, y_cpu).host<float>());
   require_equal_u8_(
-      mask_cuda.logical_or(mask_cuda.logical_not()).to(pluss::pCPU).to_vec<std::uint8_t>(),
-      mask_cpu.logical_or(mask_cpu.logical_not()).to_vec<std::uint8_t>());
+      mask_cuda.logical_or(mask_cuda.logical_not()).to(pluss::pCPU).host<std::uint8_t>(),
+      mask_cpu.logical_or(mask_cpu.logical_not()).host<std::uint8_t>());
 }
 

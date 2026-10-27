@@ -61,7 +61,7 @@ int main() {
   indexer.learn(docs);
   const nlp::runtime::SequenceBatch batch = indexer.batch(docs).value();
   std::cout << "shape = " << batch.batch_size << " x " << batch.max_length << "\n";
-  const auto lengths = batch.lengths.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template to_vec<std::int64_t>();
+  const auto lengths = batch.lengths.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template host<std::int64_t>();
   for (std::size_t row = 0; row < lengths.size(); ++row) std::cout << "row " << row << " length = " << lengths[row] << "\n";
   return 0;
 }
@@ -94,7 +94,7 @@ int main() {
   nlp::runtime::Indexer indexer{};
   indexer.learn(wf.infer(std::vector<std::string>{"Ada writes."}));
   const nlp::runtime::SequenceBatch batch = indexer.batch(wf.infer(std::vector<std::string>{"Zed writes."})).value();
-  const auto ids = batch.token_ids.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template to_vec<std::int64_t>();
+  const auto ids = batch.token_ids.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template host<std::int64_t>();
   std::cout << "unk_id = " << indexer.unk_id() << ", first id = " << ids[0] << ", second id = " << ids[1] << "\n";
   return 0;
 }

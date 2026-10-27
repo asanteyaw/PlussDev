@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
+    <script src="../../../_static/api_nav.js?v=fc808d0b"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -184,7 +184,7 @@ must be shared instead.</p>
 </section>
 <section id="round-trips-and-failures">
 <h2>Round Trips And Failures<a class="headerlink" href="#round-trips-and-failures" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">from_epoch(t.epoch_nanos().to_vec&lt;std::int64_t&gt;(),</span> <span class="pre">t.sizes())</span></code> preserves every
+<p><code class="docutils literal notranslate"><span class="pre">from_epoch(t.epoch_nanos().host&lt;std::int64_t&gt;(),</span> <span class="pre">t.sizes())</span></code> preserves every
 tick and shape, but the new timezone defaults to UTC unless supplied. Unknown
 timezone names, negative extents, rank above three, ragged nested input, and
 shape/cardinality mismatch throw before a usable result is returned.</p>

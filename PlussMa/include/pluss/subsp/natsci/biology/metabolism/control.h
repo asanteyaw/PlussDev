@@ -50,7 +50,7 @@ inline Series parameter_derivatives(const std::function<Series(const Series &, c
 inline Series conservation_laws(const Series &stoichiometry, double tolerance = 1e-10) {
   dynamics::require(stoichiometry.dim() == 2, "control::conservation_laws: stoichiometry must be [S, R]");
   const auto dec = ::pluss::subsp::linearalg::svd(stoichiometry, true);
-  const auto sv = dec.s.contiguous().to_vec<double>();
+  const auto sv = dec.s.contiguous().host<double>();
   std::int64_t rank = 0;
   const double cut = tolerance * (sv.empty() ? 1.0 : std::max(1.0, sv.front()));
   for (double s : sv)

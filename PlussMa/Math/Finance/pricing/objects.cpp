@@ -72,7 +72,7 @@ Series option_is_call_mask_(const Vanilla& inst, const Series& ref, Config cfg, 
 }
 
 pricing::OptionType option_type_from_mask_(const Series& is_call_mask_flat, std::int64_t i) {
-  const double v = is_call_mask_flat.select(0, i).reshape({1}).item<double>();
+  const double v = is_call_mask_flat.select(0, i).reshape({1}).select(0, 0).item<double>();
   return (v >= 0.5) ? pricing::OptionType::Call : pricing::OptionType::Put;
 }
 
@@ -88,7 +88,7 @@ double scalar_from_series_(const Series& x, const char* name, Config cfg) {
   const Series v = as_series_vec_(x, name).to(cfg.platform, cfg.dtype);
   PLUSS_CHECK(v.numel() == 1,
               std::string("subsp::math::finance::object::price: ") + name + " must have exactly one element");
-  return v.reshape({1}).item<double>();
+  return v.reshape({1}).select(0, 0).item<double>();
 }
 
 double scalar_or_default_(const Series& x, double fallback, const char* name, Config cfg) {
@@ -403,10 +403,10 @@ PriceResult price(const Vanilla& inst,
   if (eng.return_grid) {
     PLUSS_CHECK(ref.numel() == 1,
                 "subsp::math::finance::object::price: heston FFT grid output requires scalar market/instrument input");
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const auto grid = pricing::heston_price_fft_grid(type, spot, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
@@ -416,11 +416,11 @@ PriceResult price(const Vanilla& inst,
   }
 
   if (ref.numel() == 1) {
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double strike = strike_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::heston_price_fft(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
@@ -430,11 +430,11 @@ PriceResult price(const Vanilla& inst,
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
   for (std::int64_t i = 0; i < ref.numel(); ++i) {
-    const double spot = spot_v.select(0, i).reshape({1}).item<double>();
-    const double strike = strike_v.select(0, i).reshape({1}).item<double>();
-    const double maturity = maturity_v.select(0, i).reshape({1}).item<double>();
-    const double rate = rate_v.select(0, i).reshape({1}).item<double>();
-    const double q = q_v.select(0, i).reshape({1}).item<double>();
+    const double spot = spot_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.select(0, i).reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::heston_price_fft(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
@@ -472,10 +472,10 @@ PriceResult price(const Vanilla& inst,
   if (eng.return_grid) {
     PLUSS_CHECK(ref.numel() == 1,
                 "subsp::math::finance::object::price: bates FFT grid output requires scalar market/instrument input");
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const auto grid = pricing::bates_price_fft_grid(type, spot, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
@@ -485,11 +485,11 @@ PriceResult price(const Vanilla& inst,
   }
 
   if (ref.numel() == 1) {
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double strike = strike_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::bates_price_fft(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
@@ -499,11 +499,11 @@ PriceResult price(const Vanilla& inst,
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
   for (std::int64_t i = 0; i < ref.numel(); ++i) {
-    const double spot = spot_v.select(0, i).reshape({1}).item<double>();
-    const double strike = strike_v.select(0, i).reshape({1}).item<double>();
-    const double maturity = maturity_v.select(0, i).reshape({1}).item<double>();
-    const double rate = rate_v.select(0, i).reshape({1}).item<double>();
-    const double q = q_v.select(0, i).reshape({1}).item<double>();
+    const double spot = spot_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.select(0, i).reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::bates_price_fft(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
@@ -541,11 +541,11 @@ PriceResult price(const Vanilla& inst,
   if (ref.numel() == 1) {
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::heston_price_cos(type,
-                                                spot_v.reshape({1}).item<double>(),
-                                                strike_v.reshape({1}).item<double>(),
-                                                rate_v.reshape({1}).item<double>(),
-                                                q_v.reshape({1}).item<double>(),
-                                                maturity_v.reshape({1}).item<double>(),
+                                                spot_v.reshape({1}).select(0, 0).item<double>(),
+                                                strike_v.reshape({1}).select(0, 0).item<double>(),
+                                                rate_v.reshape({1}).select(0, 0).item<double>(),
+                                                q_v.reshape({1}).select(0, 0).item<double>(),
+                                                maturity_v.reshape({1}).select(0, 0).item<double>(),
                                                 params,
                                                 eng.options,
                                                 out_cfg);
@@ -557,11 +557,11 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::heston_price_cos(type,
-                                  spot_v.select(0, i).reshape({1}).item<double>(),
-                                  strike_v.select(0, i).reshape({1}).item<double>(),
-                                  rate_v.select(0, i).reshape({1}).item<double>(),
-                                  q_v.select(0, i).reshape({1}).item<double>(),
-                                  maturity_v.select(0, i).reshape({1}).item<double>(),
+                                  spot_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                  strike_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                  rate_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                  q_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                  maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
                                   params,
                                   eng.options,
                                   out_cfg);
@@ -599,11 +599,11 @@ PriceResult price(const Vanilla& inst,
   if (ref.numel() == 1) {
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::bates_price_cos(type,
-                                               spot_v.reshape({1}).item<double>(),
-                                               strike_v.reshape({1}).item<double>(),
-                                               rate_v.reshape({1}).item<double>(),
-                                               q_v.reshape({1}).item<double>(),
-                                               maturity_v.reshape({1}).item<double>(),
+                                               spot_v.reshape({1}).select(0, 0).item<double>(),
+                                               strike_v.reshape({1}).select(0, 0).item<double>(),
+                                               rate_v.reshape({1}).select(0, 0).item<double>(),
+                                               q_v.reshape({1}).select(0, 0).item<double>(),
+                                               maturity_v.reshape({1}).select(0, 0).item<double>(),
                                                params,
                                                eng.options,
                                                out_cfg);
@@ -615,11 +615,11 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::bates_price_cos(type,
-                                 spot_v.select(0, i).reshape({1}).item<double>(),
-                                 strike_v.select(0, i).reshape({1}).item<double>(),
-                                 rate_v.select(0, i).reshape({1}).item<double>(),
-                                 q_v.select(0, i).reshape({1}).item<double>(),
-                                 maturity_v.select(0, i).reshape({1}).item<double>(),
+                                 spot_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                 strike_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                 rate_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                 q_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                 maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
                                  params,
                                  eng.options,
                                  out_cfg);
@@ -655,11 +655,11 @@ PriceResult price(const Vanilla& inst,
   const Series is_call_mask_v = option_is_call_mask_(inst, ref, out_cfg, "price").reshape({ref.numel()});
 
   if (ref.numel() == 1) {
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double strike = strike_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::heston_price_mc(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
@@ -669,11 +669,11 @@ PriceResult price(const Vanilla& inst,
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
   for (std::int64_t i = 0; i < ref.numel(); ++i) {
-    const double spot = spot_v.select(0, i).reshape({1}).item<double>();
-    const double strike = strike_v.select(0, i).reshape({1}).item<double>();
-    const double maturity = maturity_v.select(0, i).reshape({1}).item<double>();
-    const double rate = rate_v.select(0, i).reshape({1}).item<double>();
-    const double q = q_v.select(0, i).reshape({1}).item<double>();
+    const double spot = spot_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.select(0, i).reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::heston_price_mc(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
@@ -709,11 +709,11 @@ PriceResult price(const Vanilla& inst,
   const Series is_call_mask_v = option_is_call_mask_(inst, ref, out_cfg, "price").reshape({ref.numel()});
 
   if (ref.numel() == 1) {
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double strike = strike_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::bates_price_mc(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
     return PriceResult{
@@ -723,11 +723,11 @@ PriceResult price(const Vanilla& inst,
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
   for (std::int64_t i = 0; i < ref.numel(); ++i) {
-    const double spot = spot_v.select(0, i).reshape({1}).item<double>();
-    const double strike = strike_v.select(0, i).reshape({1}).item<double>();
-    const double maturity = maturity_v.select(0, i).reshape({1}).item<double>();
-    const double rate = rate_v.select(0, i).reshape({1}).item<double>();
-    const double q = q_v.select(0, i).reshape({1}).item<double>();
+    const double spot = spot_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.select(0, i).reshape({1}).select(0, 0).item<double>();
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::bates_price_mc(type, spot, strike, rate, q, maturity, params, eng.options, out_cfg);
@@ -763,11 +763,11 @@ PriceResult price(const Vanilla& inst,
   const Series is_call_mask_v = option_is_call_mask_(inst, ref, out_cfg, "price").reshape({ref.numel()});
 
   if (ref.numel() == 1) {
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double strike = strike_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const double forward = spot * std::exp((rate - q) * maturity);
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::sabr_price_approx(type, forward, strike, rate, maturity, params, mdl.vol_type, mdl.approx);
@@ -778,11 +778,11 @@ PriceResult price(const Vanilla& inst,
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
   for (std::int64_t i = 0; i < ref.numel(); ++i) {
-    const double spot = spot_v.select(0, i).reshape({1}).item<double>();
-    const double strike = strike_v.select(0, i).reshape({1}).item<double>();
-    const double maturity = maturity_v.select(0, i).reshape({1}).item<double>();
-    const double rate = rate_v.select(0, i).reshape({1}).item<double>();
-    const double q = q_v.select(0, i).reshape({1}).item<double>();
+    const double spot = spot_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.select(0, i).reshape({1}).select(0, 0).item<double>();
     const double forward = spot * std::exp((rate - q) * maturity);
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
@@ -819,11 +819,11 @@ PriceResult price(const Vanilla& inst,
   const Series is_call_mask_v = option_is_call_mask_(inst, ref, out_cfg, "price").reshape({ref.numel()});
 
   if (ref.numel() == 1) {
-    const double spot = spot_v.reshape({1}).item<double>();
-    const double strike = strike_v.reshape({1}).item<double>();
-    const double maturity = maturity_v.reshape({1}).item<double>();
-    const double rate = rate_v.reshape({1}).item<double>();
-    const double q = q_v.reshape({1}).item<double>();
+    const double spot = spot_v.reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.reshape({1}).select(0, 0).item<double>();
     const double forward = spot * std::exp((rate - q) * maturity);
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::sabr_price_mc(type, forward, strike, rate, maturity, params, eng.options, out_cfg);
@@ -834,11 +834,11 @@ PriceResult price(const Vanilla& inst,
 
   std::vector<double> px(static_cast<std::size_t>(ref.numel()));
   for (std::int64_t i = 0; i < ref.numel(); ++i) {
-    const double spot = spot_v.select(0, i).reshape({1}).item<double>();
-    const double strike = strike_v.select(0, i).reshape({1}).item<double>();
-    const double maturity = maturity_v.select(0, i).reshape({1}).item<double>();
-    const double rate = rate_v.select(0, i).reshape({1}).item<double>();
-    const double q = q_v.select(0, i).reshape({1}).item<double>();
+    const double spot = spot_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double strike = strike_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double maturity = maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double rate = rate_v.select(0, i).reshape({1}).select(0, 0).item<double>();
+    const double q = q_v.select(0, i).reshape({1}).select(0, 0).item<double>();
     const double forward = spot * std::exp((rate - q) * maturity);
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] = pricing::sabr_price_mc(type, forward, strike, rate, maturity, params, eng.options, out_cfg);
@@ -876,11 +876,11 @@ PriceResult price(const Vanilla& inst,
   if (ref.numel() == 1) {
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::rough_heston_price_mc(type,
-                                                     spot_v.reshape({1}).item<double>(),
-                                                     strike_v.reshape({1}).item<double>(),
-                                                     rate_v.reshape({1}).item<double>(),
-                                                     q_v.reshape({1}).item<double>(),
-                                                     maturity_v.reshape({1}).item<double>(),
+                                                     spot_v.reshape({1}).select(0, 0).item<double>(),
+                                                     strike_v.reshape({1}).select(0, 0).item<double>(),
+                                                     rate_v.reshape({1}).select(0, 0).item<double>(),
+                                                     q_v.reshape({1}).select(0, 0).item<double>(),
+                                                     maturity_v.reshape({1}).select(0, 0).item<double>(),
                                                      params,
                                                      eng.options,
                                                      out_cfg);
@@ -892,11 +892,11 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::rough_heston_price_mc(type,
-                                       spot_v.select(0, i).reshape({1}).item<double>(),
-                                       strike_v.select(0, i).reshape({1}).item<double>(),
-                                       rate_v.select(0, i).reshape({1}).item<double>(),
-                                       q_v.select(0, i).reshape({1}).item<double>(),
-                                       maturity_v.select(0, i).reshape({1}).item<double>(),
+                                       spot_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                       strike_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                       rate_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                       q_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                       maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
                                        params,
                                        eng.options,
                                        out_cfg);
@@ -934,11 +934,11 @@ PriceResult price(const Vanilla& inst,
   if (ref.numel() == 1) {
     const auto type = option_type_from_mask_(is_call_mask_v, 0);
     const double px = pricing::rough_bergomi_price_mc(type,
-                                                      spot_v.reshape({1}).item<double>(),
-                                                      strike_v.reshape({1}).item<double>(),
-                                                      rate_v.reshape({1}).item<double>(),
-                                                      q_v.reshape({1}).item<double>(),
-                                                      maturity_v.reshape({1}).item<double>(),
+                                                      spot_v.reshape({1}).select(0, 0).item<double>(),
+                                                      strike_v.reshape({1}).select(0, 0).item<double>(),
+                                                      rate_v.reshape({1}).select(0, 0).item<double>(),
+                                                      q_v.reshape({1}).select(0, 0).item<double>(),
+                                                      maturity_v.reshape({1}).select(0, 0).item<double>(),
                                                       params,
                                                       eng.options,
                                                       out_cfg);
@@ -950,11 +950,11 @@ PriceResult price(const Vanilla& inst,
     const auto type = option_type_from_mask_(is_call_mask_v, i);
     px[static_cast<std::size_t>(i)] =
         pricing::rough_bergomi_price_mc(type,
-                                        spot_v.select(0, i).reshape({1}).item<double>(),
-                                        strike_v.select(0, i).reshape({1}).item<double>(),
-                                        rate_v.select(0, i).reshape({1}).item<double>(),
-                                        q_v.select(0, i).reshape({1}).item<double>(),
-                                        maturity_v.select(0, i).reshape({1}).item<double>(),
+                                        spot_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                        strike_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                        rate_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                        q_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
+                                        maturity_v.select(0, i).reshape({1}).select(0, 0).item<double>(),
                                         params,
                                         eng.options,
                                         out_cfg);

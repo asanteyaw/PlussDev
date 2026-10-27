@@ -21,7 +21,7 @@ Series vec(std::initializer_list<double> v) {
   return pluss::series::make(v).to(F64);
 }
 double at(const Series &s, std::int64_t i) {
-  return s.select(-1, i).item<double>();
+  return s.select(-1, i).host<double>().front();
 }
 bool close(double a, double b, double tol) {
   return std::abs(a - b) <= tol * std::max(1e-300, std::abs(b));

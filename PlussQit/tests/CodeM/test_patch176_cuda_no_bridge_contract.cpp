@@ -103,8 +103,8 @@ TEST_CASE("CUDA no-bridge mode rejects CPU-reference native declarations", "[cud
 
   const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar allow_materialize("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", "0");
-  require_close_(add_cuda->to(pluss::pCPU).to_vec<float>(), x_cpu.add(y_cpu).to_vec<float>());
-  require_close_(sum_cuda->to(pluss::pCPU).to_vec<float>(), x_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(add_cuda->to(pluss::pCPU).host<float>(), x_cpu.add(y_cpu).host<float>());
+  require_close_(sum_cuda->to(pluss::pCPU).host<float>(), x_cpu.sum(/*dim=*/1, /*keepdim=*/false).host<float>());
 }
 
 TEST_CASE("CUDA no-bridge provider routes do not materialize CPU internally", "[cuda][no_bridge][provider]") {
@@ -151,7 +151,7 @@ TEST_CASE("CUDA no-bridge provider routes do not materialize CPU internally", "[
 
   const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar allow_result_readback("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", "0");
-  require_close_(out_cuda->to(pluss::pCPU).to_vec<float>(), a_cpu.matmul(b_cpu).to_vec<float>());
+  require_close_(out_cuda->to(pluss::pCPU).host<float>(), a_cpu.matmul(b_cpu).host<float>());
 }
 
 TEST_CASE("CUDA device storage roundtrips through platform transfer", "[cuda][device_storage][transfer]") {
@@ -169,7 +169,7 @@ TEST_CASE("CUDA device storage roundtrips through platform transfer", "[cuda][de
   REQUIRE(x_cuda.platform() == pluss::pCUDA);
   REQUIRE(x_cuda.storage().location() == pluss::codem::StorageLocation::CudaDevice);
   const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
-  require_close_(x_cuda.to(pluss::pCPU).to_vec<float>(), x_cpu.to_vec<float>());
+  require_close_(x_cuda.to(pluss::pCPU).host<float>(), x_cpu.host<float>());
 }
 
 TEST_CASE("CUDA device zeros use device memset", "[cuda][device_storage][factory]") {
@@ -184,5 +184,5 @@ TEST_CASE("CUDA device zeros use device memset", "[cuda][device_storage][factory
   const auto z = pluss::Series::zeros({5}, pluss::ScalarType::Float32).to(pluss::pCUDA);
   REQUIRE(z.storage().location() == pluss::codem::StorageLocation::CudaDevice);
   const ScopedEnvVar readback_bridge("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
-  require_close_(z.to(pluss::pCPU).to_vec<float>(), std::vector<float>{0.f, 0.f, 0.f, 0.f, 0.f});
+  require_close_(z.to(pluss::pCPU).host<float>(), std::vector<float>{0.f, 0.f, 0.f, 0.f, 0.f});
 }

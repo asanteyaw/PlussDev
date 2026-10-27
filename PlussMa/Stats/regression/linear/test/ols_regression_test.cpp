@@ -62,7 +62,7 @@ int main() {
       opt.predictor_names = {"feat1", "feat2"};
 
       const auto fit = reg::ols_fit(y, x, opt, cfg);
-      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
 
       expect(fit.nobs == 8, "ols_fit nobs");
       expect(fit.k_params == 3, "ols_fit k_params");
@@ -75,7 +75,7 @@ int main() {
 
       const Series x_test = mat({9.0, 6.0, 10.0, 7.0}, 2, 2, cfg);
       const Series pred = reg::ols_predict(fit, x_test, cfg);
-      const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).host<double>();
       expect(pred.numel() == 2, "ols_predict shape");
       expect(pv[1] > pv[0], "ols_predict monotonic check");
 
@@ -112,7 +112,7 @@ int main() {
       const Series y = pluss::make_series(yv, {4}).to(ScalarType::Float64);
       const Series none = Series::zeros({4, 0}, ScalarType::Float64);
       const auto fit = reg::ols_fit(y, none);
-      expect(fit.k_params == 1 && std::abs(fit.coefficients.item<double>() - 3.0) < 1e-12, "intercept-only OLS gives the mean");
+      expect(fit.k_params == 1 && std::abs(fit.coefficients.host<double>().front() - 3.0) < 1e-12, "intercept-only OLS gives the mean");
       bool threw = false;
       try {
         reg::OLSOptions o;

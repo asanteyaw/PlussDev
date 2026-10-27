@@ -1,5 +1,5 @@
 // The third optimizer: limited-memory SR1 with a trust region, `l_sr1_trust_region`. It is a sibling of Septima's Adam and
-// L-BFGS for unconstrained problems, and it takes the objective the same way, on `Trace` values. Where L-BFGS takes a step
+// L-BFGS for unconstrained problems, and it takes the objective the same way, on `pluss::Series` values. Where L-BFGS takes a step
 // along a direction it chooses and then shortens it if needed, L-SR1 decides how far to trust a model of the function
 // before it steps: it minimizes a quadratic model inside a ball (the trust region), and grows or shrinks the ball
 // according to how well the model predicted the real decrease. The program prints every field of the result for a
@@ -9,15 +9,15 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
 int main() {
   {
-    auto quadratic = [](const Trace& x) -> Trace { return optim::sum(optim::square(x - 3.0)); };
+    auto quadratic = [](const pluss::Series& x) -> pluss::Series { return (x - 3.0).square().sum(); };
     const auto r = optim::l_sr1_trust_region(quadratic, vec({0.0, 0.0}));
     std::cout << std::boolalpha << "converged            " << r.converged << "\n"
               << "exit_flag            " << static_cast<int>(r.exit_flag) << "  (1 = Converged)\n"
@@ -36,9 +36,9 @@ int main() {
   for (int i = 0; i < n; ++i) start.push_back(i % 2 == 0 ? -1.2 : 1.0);
   const auto head = pluss::make_series(first, {n - 1}).to(pluss::ScalarType::Int64);
   const auto tail = pluss::make_series(second, {n - 1}).to(pluss::ScalarType::Int64);
-  auto chain = [&](const Trace& x) -> Trace {
-    const Trace a = pluss::subsp::math::diff::index_select(x, 0, head), b = pluss::subsp::math::diff::index_select(x, 0, tail);
-    return optim::sum(100.0 * optim::square(b - optim::square(a)) + optim::square(1.0 - a));
+  auto chain = [&](const pluss::Series& x) -> pluss::Series {
+    const pluss::Series a = x.index_select(0, head), b = x.index_select(0, tail);
+    return (100.0 * (b - a.square()).square() + (1.0 - a).square()).sum();
   };
 
   std::cout << std::left << std::setw(12) << "optimizer" << std::setw(14) << "exit" << std::setw(8) << "iters" << std::setw(8) << "evals" << std::setw(12) << "objective"

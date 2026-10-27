@@ -11,13 +11,6 @@
 
 namespace {
 
-double as_f64(const pluss::Series& x) {
-  if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error("expected scalar Series");
-  }
-  return x.to(pluss::pCPU, pluss::ScalarType::Float64).item<double>();
-}
-
 pluss::Series rugged_ackley_blackbox(const pluss::Series& x) {
   const pluss::Series sq_mean = x.square().mean();
   const pluss::Series cos_mean = x.mul(2.0 * 3.14159265358979323846).cos().mean();
@@ -34,25 +27,12 @@ pluss::Series rugged_ackley_blackbox(const pluss::Series& x) {
   return ackley.add(ripple);
 }
 
-std::string to_string(pluss::subsp::math::optimization::BlackboxSolverStatus s) {
-  using pluss::subsp::math::optimization::BlackboxSolverStatus;
-  switch (s) {
-    case BlackboxSolverStatus::Converged:
-      return "Converged";
-    case BlackboxSolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case BlackboxSolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
-  }
-  return "Unknown";
-}
-
 void print_outcome(
     const std::string& name,
     const pluss::subsp::math::optimization::BlackboxSolverOutcome& out) {
   const pluss::Series x = out.minimizer.to(pluss::pCPU, pluss::ScalarType::Float64);
   double max_abs = 0.0;
-  for (double v : x.to_vec<double>()) {
+  for (double v : x.host<double>()) {
     max_abs = std::max(max_abs, std::abs(v));
   }
 

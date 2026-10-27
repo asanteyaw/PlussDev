@@ -13,7 +13,7 @@
     <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -86,7 +86,7 @@
 <span class="w">  </span><span class="n">ode</span><span class="o">::</span><span class="n">OdeEventOptions</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
 <span class="w">  </span><span class="n">e</span><span class="p">.</span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ode</span><span class="o">::</span><span class="n">OdeEventDirection</span><span class="o">::</span><span class="n">Falling</span><span class="p">;</span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ode</span><span class="o">::</span><span class="n">fluxa_until</span><span class="p">(</span><span class="n">fall</span><span class="p">,</span><span class="w"> </span><span class="n">ground</span><span class="p">,</span><span class="w"> </span><span class="n">vec</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}),</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">o</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">y_final</span><span class="p">.</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">y_final</span><span class="p">.</span><span class="n">host</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;triggered : &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">triggered</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;t         : &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">t_final</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;   (exact &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">10.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">9.81</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -121,7 +121,7 @@ rising event: triggered = 0, stopped at t = 5.000000
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
@@ -132,6 +132,7 @@ rising event: triggered = 0, stopped at t = 5.000000
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

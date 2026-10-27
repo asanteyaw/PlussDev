@@ -22,7 +22,7 @@ void show(const char *label, const Series &value) {
   }
   std::cout << "] values=[";
   const auto values = value.to(pluss::pCPU, pluss::ScalarType::Float64)
-                          .to_vec<double>();
+                          .host<double>();
   for (std::size_t i = 0; i < values.size(); ++i) {
     if (i != 0)
       std::cout << ',';

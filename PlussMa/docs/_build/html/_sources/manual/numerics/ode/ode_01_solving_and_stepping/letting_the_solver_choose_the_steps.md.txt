@@ -25,7 +25,7 @@ int main() {
   const double t1 = 20.0 * 3.14159265358979323846;
   std::cout << std::left << std::setw(34) << "setting" << std::setw(10) << "steps" << std::setw(12) << "rejected" << std::setw(12) << "f evals" << "error\n";
   auto row = [&](const std::string& label, const ode::OdeResult& r) {
-    const auto y = r.y_final.to_vec<double>();
+    const auto y = r.y_final.host<double>();
     const double err = std::max(std::abs(y[0] - 1.0), std::abs(y[1]));
     std::cout << std::left << std::setw(34) << label << std::setw(10) << r.steps << std::setw(12) << r.rejected_steps << std::setw(12) << r.function_evaluations
               << std::scientific << std::setprecision(1) << err << "\n";

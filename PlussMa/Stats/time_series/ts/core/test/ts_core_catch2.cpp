@@ -22,11 +22,11 @@ using pluss::subsp::stats::ts::build_lag_plan;
 using pluss::subsp::stats::ts::build_lagged_predictors;
 
 std::vector<std::int64_t> to_i64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();
+  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).host<std::int64_t>();
 }
 
 std::vector<std::uint8_t> to_u8(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Bool).reshape({x.numel()}).to_vec<std::uint8_t>();
+  return x.to(pluss::pCPU, ScalarType::Bool).reshape({x.numel()}).host<std::uint8_t>();
 }
 
 std::int64_t count_non_nan(const Series& x) {

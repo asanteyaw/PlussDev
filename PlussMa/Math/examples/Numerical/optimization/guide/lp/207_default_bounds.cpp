@@ -25,7 +25,7 @@ int main() {
     const auto status = static_cast<lp::Status>(static_cast<int>(r.status.item<double>()));
     std::cout << std::left << std::setw(30) << label << (status == lp::Status::Optimal ? "Optimal" : status == lp::Status::Unbounded ? "Unbounded" : "other");
     if (status == lp::Status::Optimal) {
-      const auto x = r.x.to_vec<double>();
+      const auto x = r.x.host<double>();
       std::cout << std::fixed << std::setprecision(4) << "   x = (" << x[0] << ", " << x[1] << "), objective " << r.objective.item<double>();
     }
     std::cout << "\n";

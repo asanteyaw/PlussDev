@@ -37,7 +37,7 @@ private:
 };
 
 std::vector<float> vec_f32(const pluss::Series& x) {
-  return x.to(pluss::pCPU, pluss::ScalarType::Float32).reshape({x.numel()}).to_vec<float>();
+  return x.to(pluss::pCPU, pluss::ScalarType::Float32).reshape({x.numel()}).host<float>();
 }
 
 bool all_close(const std::vector<float>& got, const std::vector<float>& want, float tol) {

@@ -22,11 +22,8 @@ Step 7 is the one that is skipped, and Program 4 shows why it matters.
 
 ## Programs
 
-- [A minimum-variance portfolio](optima_08_worked_problems/a_minimum_variance_portfolio.md)
-- [A design with a closed-form answer](optima_08_worked_problems/a_design_with_a_closed_form_answer.md)
-- [A design that cannot be built](optima_08_worked_problems/a_design_that_cannot_be_built.md)
-- [A maximum-likelihood fit, and what a flag cannot tell you](optima_08_worked_problems/a_maximum_likelihood_fit_and_what_a_flag_cannot.md)
-- [A plant with every kind of constraint](optima_08_worked_problems/a_plant_with_every_kind_of_constraint.md)
+- [Design problems](optima_08_worked_problems/design_problems.md)
+- [A portfolio and a maximum-likelihood fit](optima_08_worked_problems/fitting_and_portfolio_problems.md)
 
 ## What goes wrong in practice
 

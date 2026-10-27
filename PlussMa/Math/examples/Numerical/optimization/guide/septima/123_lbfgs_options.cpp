@@ -7,23 +7,11 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-
-const char* name_of(optim::SeptimaExitFlag flag) {
-  switch (flag) {
-    case optim::SeptimaExitFlag::Converged: return "Converged";
-    case optim::SeptimaExitFlag::MaxIterations: return "MaxIterations";
-    case optim::SeptimaExitFlag::Stopped: return "Stopped";
-    case optim::SeptimaExitFlag::NoProgress: return "NoProgress";
-    case optim::SeptimaExitFlag::NonFiniteEvaluation: return "NonFiniteEvaluation";
-    case optim::SeptimaExitFlag::InvalidProblem: return "InvalidProblem";
-  }
-  return "?";
-}
 
 int main() {
   const int n = 10;
@@ -32,9 +20,9 @@ int main() {
   for (int i = 0; i < n; ++i) start.push_back(i % 2 == 0 ? -1.2 : 1.0);
   const auto head = pluss::make_series(first, {n - 1}).to(pluss::ScalarType::Int64);
   const auto tail = pluss::make_series(second, {n - 1}).to(pluss::ScalarType::Int64);
-  auto chain = [&](const Trace& x) -> Trace {
-    const Trace a = pluss::subsp::math::diff::index_select(x, 0, head), b = pluss::subsp::math::diff::index_select(x, 0, tail);
-    return optim::sum(100.0 * optim::square(b - optim::square(a)) + optim::square(1.0 - a));
+  auto chain = [&](const pluss::Series& x) -> pluss::Series {
+    const pluss::Series a = x.index_select(0, head), b = x.index_select(0, tail);
+    return (100.0 * (b - a.square()).square() + (1.0 - a).square()).sum();
   };
 
   std::cout << std::left << std::setw(32) << "setup" << std::setw(14) << "exit" << std::setw(8) << "iters" << std::setw(8) << "evals" << "objective\n";
@@ -47,7 +35,7 @@ int main() {
       if (wolfe) options.step.lbfgs.line_search = optim::SeptimaLbfgsLineSearch::StrongWolfe;
       const auto r = optim::septima(chain, vec(start), options);
       std::cout << std::left << std::setw(32) << ((wolfe ? "strong Wolfe, history " : "no line search, history ") + std::to_string(history))
-                << std::setw(14) << name_of(r.exit_flag) << std::setw(8) << r.iteration << std::setw(8) << r.function_evaluations << std::scientific
+                << std::setw(14) << optim::septima_exit_flag_name(r.exit_flag) << std::setw(8) << r.iteration << std::setw(8) << r.function_evaluations << std::scientific
                 << std::setprecision(1) << r.objective_value << "\n";
     }
   }
@@ -58,7 +46,7 @@ int main() {
     options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
     options.step.lbfgs.learning_rate = rate;
     const auto r = optim::septima(chain, vec(start), options);
-    std::cout << "  " << std::left << std::setw(8) << std::defaultfloat << rate << std::setw(22) << name_of(r.exit_flag) << "iterations " << std::setw(6) << r.iteration
+    std::cout << "  " << std::left << std::setw(8) << std::defaultfloat << rate << std::setw(22) << optim::septima_exit_flag_name(r.exit_flag) << "iterations " << std::setw(6) << r.iteration
               << std::scientific << std::setprecision(1) << r.objective_value << "\n";
   }
   return 0;

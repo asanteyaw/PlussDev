@@ -37,8 +37,8 @@ Example 1. A repeated value's count sorts before the singleton's.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1), pluss::make_series(2)});
 auto out = slot.freq();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -54,7 +54,7 @@ auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(1),
 pluss::kindle::FreqOptions options;
 options.top = 1;
 auto out = slot.freq(options);
-std::cout << "size=" << out.size() << " val=" << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
+std::cout << "size=" << out.size() << " val=" << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output

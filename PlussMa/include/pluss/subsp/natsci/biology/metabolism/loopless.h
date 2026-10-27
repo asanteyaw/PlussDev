@@ -98,7 +98,7 @@ inline LoopMilp loop_law_problem(const Network &net, const std::optional<Series>
   const auto dt = net.stoichiometry.scalar_type();
   const Config cfg = Config{}.with_dtype(dt).with_platform(net.stoichiometry.platform());
   const std::int64_t m = net.stoichiometry.size(0), r = net.stoichiometry.size(1);
-  const auto boundary = boundary_reactions(net).to_vec<double>();
+  const auto boundary = boundary_reactions(net).host<double>();
   std::vector<std::int64_t> internal;
   for (std::int64_t j = 0; j < r; ++j)
     if (boundary[static_cast<std::size_t>(j)] < 0.5)
@@ -112,7 +112,7 @@ inline LoopMilp loop_law_problem(const Network &net, const std::optional<Series>
   };
   // null space of the internal stoichiometry = the internal cycles
   const Series s_int = net.stoichiometry.matmul(selector(internal).transpose(0, 1)); // [m, ri_all]
-  const auto sv = pluss::subsp::linearalg::svd_s(s_int, true).to_vec<double>();
+  const auto sv = pluss::subsp::linearalg::svd_s(s_int, true).host<double>();
   const Series vh = pluss::subsp::linearalg::svd_vh(s_int, true);                    // [ri_all, ri_all]
   std::int64_t rank = 0;
   for (double x : sv)
@@ -128,7 +128,7 @@ inline LoopMilp loop_law_problem(const Network &net, const std::optional<Series>
   const Series null_all = vh.slice(0, rank, ri_all, 1); // [k, ri_all]
   // A reaction outside the support of the cycle space has a zero coefficient in N^T G = 0, so its direction indicator and
   // energy are unconstrained and can always be chosen consistently: only the support needs binaries.
-  const auto support_host = null_all.abs().amax(0, false).to_vec<double>();
+  const auto support_host = null_all.abs().amax(0, false).host<double>();
   std::vector<std::int64_t> cyc_pos; // positions within `internal`
   for (std::int64_t i = 0; i < ri_all; ++i)
     if (support_host[static_cast<std::size_t>(i)] > 1e-9)
@@ -205,7 +205,7 @@ inline Series loopless_solution(const Network &net, const Series &objective, con
   const Series obj = objective.to(v.scalar_type()).to(v.platform());
   const Series floor = v.mul(obj).sum(-1, true).amin(0, false); // the smallest objective among the lanes (they share an optimum)
   const double tol = 1e-7;
-  const Series cleaned = detail::cycle_free_lp(net, v, obj, floor.sub(tol * (1.0 + std::abs(floor.item<double>()))), opt);
+  const Series cleaned = detail::cycle_free_lp(net, v, obj, floor.sub(tol * (1.0 + std::abs(floor.host<double>().front()))), opt);
   return fluxes.dim() == 1 ? cleaned.squeeze(0) : cleaned;
 }
 
@@ -258,7 +258,7 @@ inline Variability loopless_flux_variability(const Network &net, const Series &o
   // lanes whose target flux changed under cleaning (and that are not boundary reactions) still carry a loop through the target
   const Series target_boundary = boundary.unsqueeze(0).add(pluss::series::zeros({2 * r, 1}, cfg)).mul(lane_c.abs()).sum(-1, false).gt(0.5);
   const Series needs = ll_target.sub(current).abs().ge(cutoff).logical_and(target_boundary.logical_not());
-  const auto need_host = needs.to(dt).to_vec<double>();
+  const auto need_host = needs.to(dt).host<double>();
   std::vector<double> idx_host;
   for (std::size_t i = 0; i < need_host.size(); ++i)
     if (need_host[i] > 0.5)
@@ -301,8 +301,8 @@ inline Variability loopless_flux_variability(const Network &net, const Series &o
   const Series best_target = best.x.mul(c_s.abs()).sum(-1, false);
   const Series fixed_val = detail::succeeded(best.status).where(best_target, cur_s);
   // scatter the re-optimised values back into their lanes (host-indexed, S entries)
-  const auto fv = fixed_val.to_vec<double>();
-  std::vector<double> rh = result.to_vec<double>();
+  const auto fv = fixed_val.host<double>();
+  std::vector<double> rh = result.host<double>();
   for (std::int64_t k = 0; k < S; ++k)
     rh[static_cast<std::size_t>(idx_host[static_cast<std::size_t>(k)])] = fv[static_cast<std::size_t>(k)];
   result = pluss::make_series(rh, {2 * r}).to(dt).to(cfg.platform);

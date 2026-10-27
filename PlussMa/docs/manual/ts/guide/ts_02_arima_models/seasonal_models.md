@@ -4,85 +4,189 @@
 
 [Back to ARIMA Models](../ts_02_arima_models.md)
 
+Many series repeat a pattern at a fixed period: monthly sales peak every December, hourly demand peaks every evening, quarterly earnings follow the year. A seasonal ARIMA model, SARIMA, captures this with terms at the seasonal lag `s` (12 for monthly data, 4 for quarterly) *alongside* the ordinary terms. A model is written `(p, d, q)(P, D, Q)s`: the usual orders for the short-run dependence, and the same three orders for the dependence at lags `s, 2s, …`.
+
+The two sets of terms **multiply**. With one regular AR term `φ` and one seasonal AR term `Φ` at period 12, the autoregressive polynomial is `(1 − φB)(1 − ΦB¹²) = 1 − φB − ΦB¹² + φΦB¹³`, so the model has dependence at lags 1 and 12 *and* at lag 13, with a coefficient that is not free but equal to `−φΦ`. That is why a seasonal model is so economical: two coefficients describe three lags.
+
+`Sarima::fit_mle(y, SarimaOptions)` takes the orders by their usual letters (`p, d, q, P, D, Q, s`) and returns a `SarimaFit` whose `core` is the same `ArimaFit` you already know (coefficients in `core.ar`, `core.sar`, `core.ma`, `core.sma`), with the same `infer`, `loglik`, `forecast` and `simulate`.
+
+## A seasonal AR model
+
+The first program simulates 240 monthly observations with a regular AR coefficient of 0.5 and a seasonal one of 0.6, fits the matching seasonal model, and compares it with a plain AR(2): the same number of coefficients, but no way to represent the dependence at lags 12 and 13.
 
 ```cpp
 #include <pluss/ma.h>
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
-#include <vector>
 
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-// A reproducible pseudo-random sequence in (-0.5, 0.5): e_t = frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5, t = 1, 2, ...
-std::vector<double> noise(int n) {
-  std::vector<double> e(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    e[static_cast<std::size_t>(i)] = u - 0.5;
-  }
-  return e;
-}
-// AR(1): x_t = phi x_{t-1} + e_t
-std::vector<double> ar1(int n, double phi) {
-  auto e = noise(n);
-  std::vector<double> x(static_cast<std::size_t>(n));
-  double carry = 0.0;
-  for (int i = 0; i < n; ++i) { carry = phi * carry + e[static_cast<std::size_t>(i)]; x[static_cast<std::size_t>(i)] = carry; }
-  return x;
-}
-std::vector<double> running_sum(const std::vector<double>& e) {
-  std::vector<double> w(e.size());
-  double s = 0.0;
-  for (std::size_t i = 0; i < e.size(); ++i) { s += e[i]; w[i] = s; }
-  return w;
-}
-void print_row(const char* label, const Series& s, int precision = 4) {
-  std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
-  std::cout << "\n";
-}
 int main() {
-  const auto e = noise(240);
-  std::vector<double> data(240, 0.0);
-  for (int i = 0; i < 240; ++i) {
-    data[static_cast<std::size_t>(i)] = e[static_cast<std::size_t>(i)] + (i >= 1 ? 0.5 * data[static_cast<std::size_t>(i - 1)] : 0.0) + (i >= 12 ? 0.6 * data[static_cast<std::size_t>(i - 12)] : 0.0) -
-                                        (i >= 13 ? 0.3 * data[static_cast<std::size_t>(i - 13)] : 0.0);
-  }
-  const Series y = vec(data);
-  std::cout << std::fixed << std::setprecision(4);
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.ar = {0.5};
+  truth.sar = {0.6};
+  truth.seasonal_period = 12;
+  const Series y = truth.simulate(240, f64, /*seed=*/22);
 
   ts::SarimaOptions seasonal;
   seasonal.p = 1;
   seasonal.P = 1;
   seasonal.s = 12;
-  const auto fit = ts::Sarima::fit_mle(y, seasonal);
-  std::cout << "seasonal model (1,0,0)(1,0,0)12: phi = " << fit.core.ar[0] << ", Phi = " << fit.core.sar[0] << ", sigma = " << fit.core.sigma << ", loglik = " << fit.loglik(y) << "\n";
+  const auto fit = ts::Sarima::fit_mle(y, seasonal, f64);
 
   ts::SarimaOptions plain;
   plain.p = 2;
-  const auto fit2 = ts::Sarima::fit_mle(y, plain);
-  std::cout << "non-seasonal AR(2)             : loglik = " << fit2.loglik(y) << "  (the seasonal model is better by " << fit.loglik(y) - fit2.loglik(y) << " with the same number of coefficients)\n\n";
+  const auto fit2 = ts::Sarima::fit_mle(y, plain, f64);
 
-  const auto fc = fit.forecast(12, y).to_vec<double>();
-  std::cout << "next 12 forecasts:";
-  for (double v : fc) std::cout << " " << v;
-  std::cout << "\n";
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "seasonal (1,0,0)(1,0,0)12: phi = " << fit.core.ar[0] << " (true 0.5), Phi = " << fit.core.sar[0] << " (true 0.6)\n";
+  std::cout << "  implied coefficient at lag 13: " << -fit.core.ar[0] * fit.core.sar[0] << "\n";
+  std::cout << "loglik, seasonal AR(1)x(1):  " << fit.loglik(y) << "\n";
+  std::cout << "loglik, plain AR(2):          " << fit2.loglik(y) << "\n";
 }
 ```
 
 Output
 
 ```text
-seasonal model (1,0,0)(1,0,0)12: phi = 0.4492, Phi = 0.5622, sigma = 0.2832, loglik = -40.1287
-non-seasonal AR(2)             : loglik = -84.7233  (the seasonal model is better by 44.5946 with the same number of coefficients)
-
-next 12 forecasts: 0.2800 0.2579 0.1096 0.2264 -0.0214 0.3010 0.1837 0.3111 0.0389 -0.1122 0.0885 0.2315
+seasonal (1,0,0)(1,0,0)12: phi = 0.4298 (true 0.5), Phi = 0.6101 (true 0.6)
+  implied coefficient at lag 13: -0.2622
+loglik, seasonal AR(1)x(1):  -334.9325
+loglik, plain AR(2):          -389.2901
 ```
-The multiplicative seasonal AR model recovers both coefficients (0.449 and 0.562; true 0.5 and 0.6). A non-seasonal AR(2), with the same number of coefficients, fits dramatically worse (log-likelihood −84.7 against −40.1), because it cannot represent the dependence at lags 12 and 13. The forecasts carry the seasonal pattern forward.
+
+The seasonal fit recovers both coefficients, and its log-likelihood is dramatically higher than the plain AR(2)'s: two coefficients that name the right lags beat two coefficients that name the wrong ones. When the data have a period, the right place for the extra parameters is the seasonal lag.
+
+## Seasonal differencing
+
+A seasonal pattern that does not fade (the same shape every year, with a trend underneath) is the seasonal analogue of a unit root. It is handled by *seasonal differencing*, `D = 1`, which subtracts the observation one period earlier, `y_t − y_{t−s}`, together with an ordinary difference `d = 1` for the trend. The classic parsimonious model for such data is the "airline" model, `(0,1,1)(0,1,1)12`: difference once and seasonally difference once, and let one moving-average term at each scale absorb the rest.
+
+The program simulates twelve years of monthly data from an airline model with known coefficients (`θ = −0.4`, `Θ = −0.6`), so that the series has a stochastic trend and a seasonal pattern that evolves from year to year. It fits the model back and prints the next twelve forecasts.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.diff_order = 1;
+  truth.seasonal_diff_order = 1;
+  truth.ma = {-0.4};
+  truth.sma = {-0.6};
+  truth.seasonal_period = 12;
+  truth.sigma = 1.0;
+  const Series y = truth.simulate(144, f64, /*seed=*/6);
+
+  ts::SarimaOptions o;
+  o.p = 0; o.d = 1; o.q = 1;
+  o.P = 0; o.D = 1; o.Q = 1;
+  o.s = 12;
+  const auto fit = ts::Sarima::fit_mle(y, o, f64);
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "theta = " << fit.core.ma[0] << " (true -0.4), Theta = " << fit.core.sma[0] << " (true -0.6), sigma = " << fit.core.sigma << "\n\n";
+
+  const auto fc = fit.forecast(12, y, f64).host<double>();
+  const auto last = y.host<double>();
+  std::cout << std::setprecision(2) << std::setw(6) << "step" << std::setw(12) << "forecast" << std::setw(24) << "same month, last year" << "\n";
+  for (int h = 1; h <= 12; ++h)
+    std::cout << std::setw(6) << h << std::setw(12) << fc[h - 1] << std::setw(24) << last[144 - 12 + h - 1] << "\n";
+}
+```
+
+Output
+
+```text
+theta = -0.4463 (true -0.4), Theta = -0.7565 (true -0.6), sigma = 0.9653
+
+  step    forecast   same month, last year
+     1       12.63                   11.19
+     2       13.60                   13.33
+     3       14.95                   13.52
+     4       16.16                   16.36
+     5       15.08                   14.75
+     6       15.26                   14.59
+     7       15.99                   15.39
+     8       15.93                   15.55
+     9       17.00                   15.79
+    10       14.64                   12.17
+    11       15.68                   13.81
+    12       15.67                   14.39
+```
+
+The fit recovers both moving-average coefficients to within sampling error (−0.45 and −0.76 against −0.4 and −0.6; with twelve years of data the seasonal one is the less precisely determined). The forecasts reproduce the shape of the last year with a small step in level: month 1 is forecast at 12.6 against 11.2 a year earlier, month 10 at 14.6 against 12.2. That is what the differencing says, "next year looks like this year plus the usual change", with the moving-average terms deciding how much weight the latest year gets compared with older ones. No sine curve or trend line appears anywhere in the model; the pattern is carried entirely by the differencing, which is the right behaviour when the seasonal pattern drifts from year to year. For a perfectly stable deterministic pattern a regression with seasonal terms would be simpler, and differencing such data would be over-differencing, which shows up as a moving-average coefficient pinned at −1.
+
+## What the seasonal terms buy
+
+The test of a seasonal model is whether the residuals still carry the period. The program simulates the same kind of airline series as above, fits the airline model and a non-seasonal ARIMA(1,1,1) to it, and compares the Ljung–Box test of their residuals at 24 lags (two seasonal periods), with `model_df` set to the number of ARMA coefficients each model fitted. The first `d + s·D` residuals of a differenced model do not exist, so they are dropped before testing.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.diff_order = 1;
+  truth.seasonal_diff_order = 1;
+  truth.ma = {-0.4};
+  truth.sma = {-0.6};
+  truth.seasonal_period = 12;
+  const Series y = truth.simulate(144, f64, /*seed=*/6);
+
+  ts::SarimaOptions airline;
+  airline.p = 0; airline.d = 1; airline.q = 1;
+  airline.D = 1; airline.Q = 1; airline.s = 12;
+  ts::SarimaOptions plain;
+  plain.p = 1; plain.d = 1; plain.q = 1;
+
+  struct Entry { const char* name; ts::SarimaOptions o; int df; int skip; };
+  const Entry entries[] = {{"airline (0,1,1)(0,1,1)12", airline, 2, 13}, {"plain ARIMA(1,1,1)", plain, 2, 1}};
+  std::cout << std::left << std::setw(28) << "model" << std::right << std::setw(10) << "Q(24)" << std::setw(6) << "df" << std::setw(12) << "p-value" << "\n";
+  for (const auto& en : entries) {
+    const auto fit = ts::Sarima::fit_mle(y, en.o, f64);
+    auto r = fit.infer(y, f64).host<double>();
+    r.erase(r.begin(), r.begin() + en.skip);
+    ts::LjungBoxOptions lb;
+    lb.lags = {24};
+    lb.model_df = en.df;
+    const auto q = ts::ljung_box(pluss::make_series(r, f64), lb);
+    std::cout << std::left << std::setw(28) << en.name << std::right << std::fixed << std::setprecision(3) << std::setw(10) << q.stat.host<double>()[0]
+              << std::setw(6) << static_cast<int>(q.dof.host<double>()[0]) << std::setw(12) << q.pvalue.host<double>()[0] << "\n";
+  }
+}
+```
+
+Output
+
+```text
+model                            Q(24)    df     p-value
+airline (0,1,1)(0,1,1)12        32.636    22       0.067
+plain ARIMA(1,1,1)              65.265    22       0.000
+```
+
+The non-seasonal model fails decisively (Q = 65 on 22 degrees of freedom, p < 0.001): the seasonal structure it cannot represent is still in its residuals, spread across lags 12 and 24. The airline model's Q is 33 (p = 0.067), which passes at 5% but not by a wide margin, so a careful analyst would look at its residual autocorrelations at the seasonal lags before accepting it. Note how the missing observations are handled: a differenced model has no residual for the observations it uses up, and `infer` marks them `NaN`, so they are dropped before the test. This is the practical test for seasonality: if the residual autocorrelation function shows spikes at the seasonal lags, add seasonal terms.
+
+## Decisions and pitfalls
+
+- **Set the period `s` from the data's calendar**, not from a guess; the model cannot discover it.
+- **Seasonal differencing before seasonal ARMA terms.** If the seasonal ACF decays slowly (peaks that barely shrink) use `D = 1`; if they decay quickly, seasonal AR terms are enough. Do not do both without a reason: over-differencing creates a spurious moving-average root.
+- **Use few seasonal terms.** One seasonal AR or MA term (`P` or `Q` equal to 1) is usually enough; each adds `s` lags of memory to the model.
+- **You need several periods of data.** With fewer than three or four seasonal cycles the seasonal parameters are poorly determined.
+- **Check the residuals at the seasonal lags**, not only at the first few.
+
+Where next: [Differencing](differencing.md) turns to the other transformation that makes a series fit a stationary model, the ordinary difference.

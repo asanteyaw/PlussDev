@@ -562,7 +562,7 @@ auto d = nth_diff([](const auto& z) { return z * 0.0; }, x, 1, {}, pol); // zero
 From the optimization facade namespace:
 
 ```cpp
-namespace pmo = pluss::optim;
+namespace pmo = pluss::subsp::math::optim;
 auto d3_opt = pmo::nth_diff([](const auto& z) { return z * z * z; }, x, 3);
 ```
 

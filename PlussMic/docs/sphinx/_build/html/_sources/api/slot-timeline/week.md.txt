@@ -32,8 +32,8 @@ Example 1. Extract the ISO week from a January and a February timestamp.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().week();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -48,8 +48,8 @@ mid-year dates.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-07-06T14:00:00Z"), pluss::make_timeline("2023-03-01T00:00:00Z")});
 auto out = slot.tl().week();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

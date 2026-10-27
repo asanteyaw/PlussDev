@@ -49,7 +49,7 @@ int main() {
       opt.family = reg::GLMFamily::Normal;
       opt.link = reg::GLMLink::Identity;
       const auto fit = reg::glm_fit(y, x, opt, cfg);
-      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
       expect(fit.converged, "glm normal converged");
       expect(fit.k_params == 3, "glm normal k_params");
       expect(approx(coef[0], 1.04, 0.40), "glm normal intercept");
@@ -73,7 +73,7 @@ int main() {
       opt.family = reg::GLMFamily::Binomial;
       opt.link = reg::GLMLink::Logit;
       const auto fit = reg::glm_fit(y, x, opt, cfg);
-      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
       expect(fit.converged, "glm binomial converged");
       expect(approx(coef[0], -0.7, 0.35), "glm binomial intercept");
       expect(approx(coef[1], 1.8, 0.35), "glm binomial slope");
@@ -96,7 +96,7 @@ int main() {
       opt.family = reg::GLMFamily::Poisson;
       opt.link = reg::GLMLink::Log;
       const auto fit = reg::glm_fit(y, x, opt, cfg);
-      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
       expect(fit.converged, "glm poisson converged");
       expect(approx(coef[0], 0.4, 0.30), "glm poisson intercept");
       expect(approx(coef[1], 0.18, 0.20), "glm poisson slope");
@@ -108,12 +108,12 @@ int main() {
       reg::GLMOptions ob;
       ob.family = reg::GLMFamily::Binomial;
       const auto fb = reg::glm_fit(pluss::make_series(yb, {8}).to(pluss::ScalarType::Float64), pluss::Series::zeros({8, 0}, pluss::ScalarType::Float64), ob);
-      expect(std::abs(fb.coefficients.item<double>() - std::log(0.625 / 0.375)) < 1e-7, "intercept-only logistic gives logit of the mean");
+      expect(std::abs(fb.coefficients.host<double>().front() - std::log(0.625 / 0.375)) < 1e-7, "intercept-only logistic gives logit of the mean");
       const std::vector<double> yp{2, 0, 3, 1, 4, 2};
       reg::GLMOptions op;
       op.family = reg::GLMFamily::Poisson;
       const auto fp = reg::glm_fit(pluss::make_series(yp, {6}).to(pluss::ScalarType::Float64), pluss::Series::zeros({6, 0}, pluss::ScalarType::Float64), op);
-      expect(std::abs(fp.coefficients.item<double>() - std::log(2.0)) < 1e-7, "intercept-only Poisson gives log of the mean");
+      expect(std::abs(fp.coefficients.host<double>().front() - std::log(2.0)) < 1e-7, "intercept-only Poisson gives log of the mean");
     }
 
     std::cout << "glm_regression_test passed\n";

@@ -20,7 +20,7 @@ int main() {
   const double inf = std::numeric_limits<double>::infinity();
   std::cout << std::fixed << std::setprecision(4);
   const auto show = [](const char* label, const lp::Result& r, int count) {
-    const auto x = r.x.to_vec<double>();
+    const auto x = r.x.host<double>();
     std::cout << std::left << std::setw(40) << label << "objective " << std::setw(9) << r.objective.item<double>() << "x =";
     for (int i = 0; i < count; ++i) std::cout << " " << x[static_cast<std::size_t>(i)];
     std::cout << "\n";

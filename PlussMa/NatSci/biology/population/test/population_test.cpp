@@ -34,21 +34,21 @@ bool close(double a, double b, double tol) { return std::abs(a - b) <= tol * std
 
 void test_growth_closed_forms() {
   const Series n0 = vec({1.5});
-  expect(close(growth::logistic(n0, 0.7, 10.0, 2.0).item<double>() , 4.171215384570667, 1e-12), "logistic closed form");
-  expect(close(growth::gompertz(n0, 0.7, 10.0, 2.0).item<double>(), 6.263637361227007, 1e-12), "gompertz closed form");
+  expect(close(growth::logistic(n0, 0.7, 10.0, 2.0).host<double>().front() , 4.171215384570667, 1e-12), "logistic closed form");
+  expect(close(growth::gompertz(n0, 0.7, 10.0, 2.0).host<double>().front(), 6.263637361227007, 1e-12), "gompertz closed form");
   // numerical RK4 against closed form
   auto rate = [](const Series &n) { return growth::logistic_rate(n, 0.7, 10.0); };
-  expect(close(dyn::simulate(rate, n0, 0, 2, 200).item<double>(), 4.171215384570667, 1e-9), "logistic RK4");
+  expect(close(dyn::simulate(rate, n0, 0, 2, 200).host<double>().front(), 4.171215384570667, 1e-9), "logistic RK4");
   auto grate = [](const Series &n) { return growth::gompertz_rate(n, 0.7, 10.0); };
-  expect(close(dyn::simulate(grate, n0, 0, 2, 200).item<double>(), 6.263637361227007, 1e-9), "gompertz RK4");
+  expect(close(dyn::simulate(grate, n0, 0, 2, 200).host<double>().front(), 6.263637361227007, 1e-9), "gompertz RK4");
   // Allee equilibria: rate zero at 0, A, K; sign pattern
   const Series pts = vec({0.0, 2.0, 10.0, 1.0, 5.0});
   const Series r = growth::strong_allee_rate(pts, 1.0, 2.0, 10.0);
   expect(std::abs(at(r, 0)) < 1e-14 && std::abs(at(r, 1)) < 1e-14 && std::abs(at(r, 2)) < 1e-14, "allee zeros");
   expect(at(r, 3) < 0.0 && at(r, 4) > 0.0, "allee signs");
   // theta=1 reduces to logistic
-  expect(close(growth::theta_logistic_rate(n0, 0.7, 10.0, 1.0).item<double>(),
-               growth::logistic_rate(n0, 0.7, 10.0).item<double>(), 1e-14), "theta=1");
+  expect(close(growth::theta_logistic_rate(n0, 0.7, 10.0, 1.0).host<double>().front(),
+               growth::logistic_rate(n0, 0.7, 10.0).host<double>().front(), 1e-14), "theta=1");
   // batch / broadcast: Series r per lane
   const Series lanes = vec({1.5, 1.5, 1.5});
   const Series rr = vec({0.1, 0.7, 1.0});
@@ -70,8 +70,8 @@ void test_predator_prey() {
   expect(rate(eq).abs().max().item<double>() < 1e-14, "equilibrium rate zero");
   // Holling
   const Series prey = vec({2.0});
-  expect(close(inter::holling2(prey, 0.5, 0.4).item<double>(), 1.0 / 1.4, 1e-14), "holling2");
-  expect(close(inter::holling3(prey, 0.5, 0.4, 2.0).item<double>(), 2.0 / 1.8, 1e-14), "holling3");
+  expect(close(inter::holling2(prey, 0.5, 0.4).host<double>().front(), 1.0 / 1.4, 1e-14), "holling2");
+  expect(close(inter::holling3(prey, 0.5, 0.4, 2.0).host<double>().front(), 2.0 / 1.8, 1e-14), "holling3");
 }
 
 void test_glv() {

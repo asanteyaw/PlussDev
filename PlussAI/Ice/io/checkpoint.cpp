@@ -145,7 +145,7 @@ void write_series_(std::ostringstream& out, std::string_view prefix, const Serie
   if (!series.defined()) return;
   const auto shape_view = series.sizes();
   const std::vector<std::int64_t> shape(shape_view.begin(), shape_view.end());
-  const auto flat = series.reshape({series.numel()}).to_vec<double>();
+  const auto flat = series.reshape({series.numel()}).host<double>();
   write_num_(out, std::string(prefix) + ".dtype", static_cast<int>(series.scalar_type()));
   write_num_(out, std::string(prefix) + ".platform", static_cast<int>(series.platform()));
   write_kv_(out, std::string(prefix) + ".shape", join_i64_(shape));

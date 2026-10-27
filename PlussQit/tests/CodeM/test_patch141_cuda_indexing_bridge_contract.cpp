@@ -72,24 +72,24 @@ TEST_CASE("CUDA bridge enables indexing fallback when strict native is off", "[c
   const auto take_cpu = x_cpu.take(idx_cpu);
   const auto take_cuda = x_cuda.take(idx_cuda);
   REQUIRE(take_cuda.platform() == pluss::pCUDA);
-  require_close_(take_cuda.to(pluss::pCPU).to_vec<float>(), take_cpu.to_vec<float>());
+  require_close_(take_cuda.to(pluss::pCPU).host<float>(), take_cpu.host<float>());
 
   auto put_cpu = pluss::Series::zeros({5}, pluss::ScalarType::Float32);
   auto put_cuda = put_cpu.to(pluss::pCUDA);
   put_cpu.put_(idx_cpu, src_cpu, /*accumulate=*/false);
   put_cuda.put_(idx_cuda, src_cuda, /*accumulate=*/false);
   REQUIRE(put_cuda.platform() == pluss::pCUDA);
-  require_close_(put_cuda.to(pluss::pCPU).to_vec<float>(), put_cpu.to_vec<float>());
+  require_close_(put_cuda.to(pluss::pCPU).host<float>(), put_cpu.host<float>());
 
   const auto nonzero_cpu = x_cpu.nonzero();
   const auto nonzero_cuda = x_cuda.nonzero();
   REQUIRE(nonzero_cuda.platform() == pluss::pCUDA);
-  REQUIRE(nonzero_cuda.to(pluss::pCPU).to_vec<std::int64_t>() == nonzero_cpu.to_vec<std::int64_t>());
+  REQUIRE(nonzero_cuda.to(pluss::pCPU).host<std::int64_t>() == nonzero_cpu.host<std::int64_t>());
 
   const auto index_cpu = x_cpu.index({idx_cpu});
   const auto index_cuda = x_cuda.index({idx_cuda});
   REQUIRE(index_cuda.platform() == pluss::pCUDA);
-  require_close_(index_cuda.to(pluss::pCPU).to_vec<float>(), index_cpu.to_vec<float>());
+  require_close_(index_cuda.to(pluss::pCPU).host<float>(), index_cpu.host<float>());
 }
 
 TEST_CASE("CUDA strict native indexing executes supported native route", "[cuda][bridge][policy][indexing]") {
@@ -110,5 +110,5 @@ TEST_CASE("CUDA strict native indexing executes supported native route", "[cuda]
   const auto take_cpu = x_cpu.take(idx_cpu);
   const auto take_cuda = x_cuda.take(idx_cuda);
   REQUIRE(take_cuda.platform() == pluss::pCUDA);
-  require_close_(take_cuda.to(pluss::pCPU).to_vec<float>(), take_cpu.to_vec<float>());
+  require_close_(take_cuda.to(pluss::pCPU).host<float>(), take_cpu.host<float>());
 }

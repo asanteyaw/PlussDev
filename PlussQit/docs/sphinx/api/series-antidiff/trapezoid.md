@@ -15,9 +15,9 @@ Series SeriesAntidiffProxy::trapezoid(const Series& x, std::int64_t dim = -1) co
 Series SeriesAntidiffProxy::trapezoid(double dx, std::int64_t dim = -1) const
 Series SeriesAntidiffProxy::trapezoid(std::int64_t dim = -1) const
 
-Series pluss::integ::trapezoid(const Series& y, const Series& x, std::int64_t dim = -1)
-Series pluss::integ::trapezoid(const Series& y, double dx, std::int64_t dim = -1)
-Series pluss::integ::trapezoid(const Series& y, std::int64_t dim = -1)
+Series pluss::subsp::math::integ::trapezoid(const Series& y, const Series& x, std::int64_t dim = -1)
+Series pluss::subsp::math::integ::trapezoid(const Series& y, double dx, std::int64_t dim = -1)
+Series pluss::subsp::math::integ::trapezoid(const Series& y, std::int64_t dim = -1)
 ```
 
 ## What It Does
@@ -46,14 +46,14 @@ from `diff`, `slice`, `mul`, `add`, and `sum`.
 `trapezoid()` lives on the `antidiff` accessor because it reverses
 `Series::diff()` — both operate on an already-materialized sequence of
 numbers, never on a callable. This is a genuinely different object from
-`pluss::integ::quadra()`/`aleatoria()` (PlussMa), which integrate an
+`pluss::subsp::math::integ::quadra()`/`aleatoria()` (PlussMa), which integrate an
 arbitrary *function* by evaluating it at points they choose adaptively. A
 `Series` here only ever provides the values it already holds; `trapezoid()`
 cannot ask for a value at a point that was not sampled, which is exactly
 what distinguishes sampled-data quadrature from function quadrature. The
-`pluss::integ::trapezoid` free functions exist purely as a namespaced
+`pluss::subsp::math::integ::trapezoid` free functions exist purely as a namespaced
 convenience matching this module's other calling conventions
-(`pluss::integ::quadra`, `pluss::integ::aleatoria`) — they forward to this
+(`pluss::subsp::math::integ::quadra`, `pluss::subsp::math::integ::aleatoria`) — they forward to this
 exact accessor and share its implementation; there is no duplicate formula
 to keep in sync.
 
@@ -267,7 +267,7 @@ broadcast: incompatible shapes
 
 `trapezoid()` is composite-trapezoidal quadrature over already-sampled
 data — the total area, reduced along one dimension, batchable, and
-differentiable for free. Reach for `pluss::integ::quadra`/`aleatoria`
+differentiable for free. Reach for `pluss::subsp::math::integ::quadra`/`aleatoria`
 instead when the integrand is a function you can call at arbitrary points,
 not data you already have in hand.
 

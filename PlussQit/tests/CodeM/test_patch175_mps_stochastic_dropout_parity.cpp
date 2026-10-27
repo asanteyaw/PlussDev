@@ -41,7 +41,7 @@ private:
 };
 
 std::vector<float> vec_f32(const pluss::Series& x) {
-  return x.to(pluss::pCPU, pluss::ScalarType::Float32).reshape({x.numel()}).to_vec<float>();
+  return x.to(pluss::pCPU, pluss::ScalarType::Float32).reshape({x.numel()}).host<float>();
 }
 
 void require_feature_groups_constant(const pluss::Series& x) {
@@ -295,7 +295,7 @@ TEST_CASE("MPS dropout family matches PyTorch dropout variant contracts", "[mps]
   const pluss::Series taken_i16 = i16.take(index);
   REQUIRE(taken_i16.platform() == pluss::pMPS);
   REQUIRE(taken_i16.scalar_type() == pluss::ScalarType::Int16);
-  REQUIRE(taken_i16.to(pluss::pCPU, pluss::ScalarType::Int16).to_vec<std::int16_t>() ==
+  REQUIRE(taken_i16.to(pluss::pCPU, pluss::ScalarType::Int16).host<std::int16_t>() ==
           std::vector<std::int16_t>{9, -2, 7});
 
   const pluss::Series taken_u8 = u8.take(index);
@@ -586,7 +586,7 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   REQUIRE(conj.platform() == pluss::pMPS);
   REQUIRE(conj.scalar_type() == pluss::ScalarType::Complex64);
   require_close_complex64(
-      conj.to(pluss::pCPU).to_vec<C>(),
+      conj.to(pluss::pCPU).host<C>(),
       {C{1.0f, -2.0f}, C{-3.0f, -0.5f}});
 
   const pluss::Series real_part = pluss::codem::_compat::invoke("real", z);
@@ -613,20 +613,20 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   real_leaf.tracks_slope_(true);
   pluss::codem::_compat::invoke("real", real_leaf).sum().reverse();
   REQUIRE(real_leaf.sensitivity().platform() == pluss::pMPS);
-  require_close_complex64(real_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(), {C{1.0f, 0.0f}, C{1.0f, 0.0f}});
+  require_close_complex64(real_leaf.sensitivity().to(pluss::pCPU).host<C>(), {C{1.0f, 0.0f}, C{1.0f, 0.0f}});
 
   pluss::Series imag_leaf = z.clone();
   imag_leaf.tracks_slope_(true);
   pluss::codem::_compat::invoke("imag", imag_leaf).sum().reverse();
   REQUIRE(imag_leaf.sensitivity().platform() == pluss::pMPS);
-  require_close_complex64(imag_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(), {C{0.0f, 1.0f}, C{0.0f, 1.0f}});
+  require_close_complex64(imag_leaf.sensitivity().to(pluss::pCPU).host<C>(), {C{0.0f, 1.0f}, C{0.0f, 1.0f}});
 
   pluss::Series abs_leaf = z.clone();
   abs_leaf.tracks_slope_(true);
   pluss::codem::_compat::invoke("abs", abs_leaf).sum().reverse();
   REQUIRE(abs_leaf.sensitivity().platform() == pluss::pMPS);
   require_close_complex64(
-      abs_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      abs_leaf.sensitivity().to(pluss::pCPU).host<C>(),
       {C{1.0f / std::sqrt(5.0f), 2.0f / std::sqrt(5.0f)},
        C{-3.0f / std::sqrt(9.25f), 0.5f / std::sqrt(9.25f)}},
       1.0e-5f);
@@ -636,7 +636,7 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   pluss::codem::_compat::invoke("angle", angle_leaf).sum().reverse();
   REQUIRE(angle_leaf.sensitivity().platform() == pluss::pMPS);
   require_close_complex64(
-      angle_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      angle_leaf.sensitivity().to(pluss::pCPU).host<C>(),
       {C{-2.0f / 5.0f, 1.0f / 5.0f}, C{-0.5f / 9.25f, -3.0f / 9.25f}},
       1.0e-5f);
 
@@ -646,7 +646,7 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   pluss::codem::_compat::invoke("abs", zero_leaf).sum().reverse();
   REQUIRE(zero_leaf.sensitivity().platform() == pluss::pMPS);
   require_close_complex64(
-      zero_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      zero_leaf.sensitivity().to(pluss::pCPU).host<C>(),
       {C{0.0f, 0.0f}, C{1.0f / std::sqrt(2.0f), -1.0f / std::sqrt(2.0f)}},
       1.0e-5f);
 
@@ -656,33 +656,33 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   pluss::codem::_compat::invoke("angle", zero_angle_leaf).sum().reverse();
   REQUIRE(zero_angle_leaf.sensitivity().platform() == pluss::pMPS);
   require_close_complex64(
-      zero_angle_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      zero_angle_leaf.sensitivity().to(pluss::pCPU).host<C>(),
       {C{0.0f, 0.0f}, C{0.5f, 0.5f}},
       1.0e-5f);
 
   const pluss::Series add = z.add(w);
   REQUIRE(add.platform() == pluss::pMPS);
   require_close_complex64(
-      add.to(pluss::pCPU).to_vec<C>(),
+      add.to(pluss::pCPU).host<C>(),
       {C{1.5f, 1.0f}, C{-1.0f, 3.5f}});
 
   const pluss::Series mul = z.mul(w);
   REQUIRE(mul.platform() == pluss::pMPS);
   require_close_complex64(
-      mul.to(pluss::pCPU).to_vec<C>(),
+      mul.to(pluss::pCPU).host<C>(),
       {C{2.5f, 0.0f}, C{-7.5f, -8.0f}});
 
   const pluss::Series eq = z.eq(z.clone());
   REQUIRE(eq.platform() == pluss::pMPS);
   REQUIRE(eq.scalar_type() == pluss::ScalarType::Bool);
-  REQUIRE(eq.to(pluss::pCPU).to_vec<bool>() == std::vector<bool>{true, true});
+  REQUIRE(eq.to(pluss::pCPU).host<bool>() == std::vector<bool>{true, true});
 
   const pluss::Series zm = z.reshape({1, 2});
   const pluss::Series wm = w.reshape({2, 1});
   const pluss::Series mm = zm.matmul(wm);
   REQUIRE(mm.platform() == pluss::pMPS);
   REQUIRE(mm.scalar_type() == pluss::ScalarType::Complex64);
-  require_close_complex64(mm.to(pluss::pCPU).to_vec<C>(), {C{-5.0f, -8.0f}}, 1.0e-5f);
+  require_close_complex64(mm.to(pluss::pCPU).host<C>().array().data, {C{-5.0f, -8.0f}}, 1.0e-5f);
 
   pluss::Series zm_grad = z.reshape({1, 2}).clone();
   pluss::Series wm_grad = w.reshape({2, 1}).clone();
@@ -692,11 +692,11 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   REQUIRE(zm_grad.sensitivity().platform() == pluss::pMPS);
   REQUIRE(wm_grad.sensitivity().platform() == pluss::pMPS);
   require_close_complex64(
-      zm_grad.sensitivity().to(pluss::pCPU).reshape({2}).to_vec<C>(),
+      zm_grad.sensitivity().to(pluss::pCPU).reshape({2}).host<C>(),
       {std::conj(C{0.5f, -1.0f}), std::conj(C{2.0f, 3.0f})},
       1.0e-5f);
   require_close_complex64(
-      wm_grad.sensitivity().to(pluss::pCPU).reshape({2}).to_vec<C>(),
+      wm_grad.sensitivity().to(pluss::pCPU).reshape({2}).host<C>(),
       {std::conj(C{1.0f, 2.0f}), std::conj(C{-3.0f, 0.5f})},
       1.0e-5f);
 
@@ -706,11 +706,11 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   elem_mul_w.tracks_slope_(true);
   elem_mul_z.mul(elem_mul_w).reverse(pluss::make_series(std::vector<C>{C{1.0f, 0.0f}, C{1.0f, 0.0f}}, {2}, cfg));
   require_close_complex64(
-      elem_mul_z.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      elem_mul_z.sensitivity().to(pluss::pCPU).host<C>(),
       {std::conj(C{0.5f, -1.0f}), std::conj(C{2.0f, 3.0f})},
       1.0e-5f);
   require_close_complex64(
-      elem_mul_w.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      elem_mul_w.sensitivity().to(pluss::pCPU).host<C>(),
       {std::conj(C{1.0f, 2.0f}), std::conj(C{-3.0f, 0.5f})},
       1.0e-5f);
 
@@ -722,11 +722,11 @@ TEST_CASE("MPS complex64 elementwise ops stay native under strict fallback", "[m
   const C cw0 = std::conj(C{0.5f, -1.0f});
   const C cw1 = std::conj(C{2.0f, 3.0f});
   require_close_complex64(
-      elem_div_z.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      elem_div_z.sensitivity().to(pluss::pCPU).host<C>(),
       {C{1.0f, 0.0f} / cw0, C{1.0f, 0.0f} / cw1},
       1.0e-5f);
   require_close_complex64(
-      elem_div_w.sensitivity().to(pluss::pCPU).to_vec<C>(),
+      elem_div_w.sensitivity().to(pluss::pCPU).host<C>(),
       {-std::conj(C{1.0f, 2.0f}) / (cw0 * cw0), -std::conj(C{-3.0f, 0.5f}) / (cw1 * cw1)},
       1.0e-5f);
 }
@@ -751,13 +751,13 @@ TEST_CASE("MPS complex64 small linalg keeps complex lanes and reverse-mode", "[m
   const pluss::Series det_mps = pluss::subsp::linearalg::det(a_mps);
   REQUIRE(det_mps.platform() == pluss::pMPS);
   REQUIRE(det_mps.scalar_type() == pluss::ScalarType::Complex64);
-  require_close_complex64(det_mps.to(pluss::pCPU).to_vec<C>(), {expected_det}, 1.0e-5f);
+  require_close_complex64(det_mps.to(pluss::pCPU).host<C>().array().data, {expected_det}, 1.0e-5f);
 
   const pluss::Series inv_mps = pluss::subsp::linearalg::inverse(a_mps);
   REQUIRE(inv_mps.platform() == pluss::pMPS);
   REQUIRE(inv_mps.scalar_type() == pluss::ScalarType::Complex64);
   require_close_complex64(
-      inv_mps.matmul(a_mps).to(pluss::pCPU).to_vec<C>(),
+      inv_mps.matmul(a_mps).to(pluss::pCPU).host<C>().array().data,
       {C{1.0f, 0.0f}, C{0.0f, 0.0f}, C{0.0f, 0.0f}, C{1.0f, 0.0f}},
       2.0e-5f);
 
@@ -769,8 +769,8 @@ TEST_CASE("MPS complex64 small linalg keeps complex lanes and reverse-mode", "[m
   pluss::subsp::linearalg::det(det_mps_leaf).reverse();
   REQUIRE(det_mps_leaf.sensitivity().platform() == pluss::pMPS);
   require_close_complex64(
-      det_mps_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(),
-      det_cpu_leaf.sensitivity().to_vec<C>(),
+      det_mps_leaf.sensitivity().to(pluss::pCPU).host<C>().array().data,
+      det_cpu_leaf.sensitivity().host<C>().array().data,
       2.0e-5f);
 
   pluss::Series inv_cpu_leaf = pluss::make_series(values, {2, 2}, cpu_cfg);
@@ -781,8 +781,8 @@ TEST_CASE("MPS complex64 small linalg keeps complex lanes and reverse-mode", "[m
   pluss::subsp::linearalg::inverse(inv_mps_leaf).sum().reverse();
   REQUIRE(inv_mps_leaf.sensitivity().platform() == pluss::pMPS);
   require_close_complex64(
-      inv_mps_leaf.sensitivity().to(pluss::pCPU).to_vec<C>(),
-      inv_cpu_leaf.sensitivity().to_vec<C>(),
+      inv_mps_leaf.sensitivity().to(pluss::pCPU).host<C>().array().data,
+      inv_cpu_leaf.sensitivity().host<C>().array().data,
       2.0e-5f);
 
   const std::vector<C> lower_values{C{2.0f, 0.5f}, C{0.0f, 0.0f}, C{0.5f, -0.25f}, C{1.5f, 0.75f}};
@@ -799,8 +799,8 @@ TEST_CASE("MPS complex64 small linalg keeps complex lanes and reverse-mode", "[m
   pluss::subsp::linearalg::triangular_solve(tri_mps, rhs_mps, /*upper=*/false, /*unitriangular=*/false).sum().reverse();
   REQUIRE(tri_mps.sensitivity().platform() == pluss::pMPS);
   REQUIRE(rhs_mps.sensitivity().platform() == pluss::pMPS);
-  require_close_complex64(tri_mps.sensitivity().to(pluss::pCPU).to_vec<C>(), tri_cpu.sensitivity().to_vec<C>(), 3.0e-5f);
-  require_close_complex64(rhs_mps.sensitivity().to(pluss::pCPU).to_vec<C>(), rhs_cpu.sensitivity().to_vec<C>(), 3.0e-5f);
+  require_close_complex64(tri_mps.sensitivity().to(pluss::pCPU).host<C>().array().data, tri_cpu.sensitivity().host<C>().array().data, 3.0e-5f);
+  require_close_complex64(rhs_mps.sensitivity().to(pluss::pCPU).host<C>().array().data, rhs_cpu.sensitivity().host<C>().array().data, 3.0e-5f);
 
   pluss::Series chol_cpu = pluss::make_series(lower_values, {2, 2}, cpu_cfg);
   pluss::Series chol_mps = pluss::make_series(lower_values, {2, 2}, mps_cfg);
@@ -814,10 +814,10 @@ TEST_CASE("MPS complex64 small linalg keeps complex lanes and reverse-mode", "[m
   pluss::subsp::linearalg::cholesky_solve(chol_mps, chol_rhs_mps, /*upper=*/false).sum().reverse();
   REQUIRE(chol_mps.sensitivity().platform() == pluss::pMPS);
   REQUIRE(chol_rhs_mps.sensitivity().platform() == pluss::pMPS);
-  require_close_complex64(chol_mps.sensitivity().to(pluss::pCPU).to_vec<C>(), chol_cpu.sensitivity().to_vec<C>(), 5.0e-5f);
+  require_close_complex64(chol_mps.sensitivity().to(pluss::pCPU).host<C>().array().data, chol_cpu.sensitivity().host<C>().array().data, 5.0e-5f);
   require_close_complex64(
-      chol_rhs_mps.sensitivity().to(pluss::pCPU).to_vec<C>(),
-      chol_rhs_cpu.sensitivity().to_vec<C>(),
+      chol_rhs_mps.sensitivity().to(pluss::pCPU).host<C>().array().data,
+      chol_rhs_cpu.sensitivity().host<C>().array().data,
       5.0e-5f);
 }
 
@@ -838,7 +838,7 @@ TEST_CASE("MPS complex64 index put accumulate stays native under strict fallback
   const std::array<pluss::Series, 1> indices{{idx}};
   x.index_put_(pluss::msharp::RangeView::Of<pluss::Series>(indices), values, /*accumulate=*/true);
   REQUIRE(x.platform() == pluss::pMPS);
-  require_close_complex64(x.to(pluss::pCPU).to_vec<C>(), {C{0.0f, 0.0f}, C{4.0f, 6.0f}, C{0.0f, 0.0f}});
+  require_close_complex64(x.to(pluss::pCPU).host<C>(), {C{0.0f, 0.0f}, C{4.0f, 6.0f}, C{0.0f, 0.0f}});
 
   pluss::Series y = pluss::make_series(std::vector<C>{C{0.0f, 0.0f}, C{0.0f, 0.0f}, C{0.0f, 0.0f}}, {3}, c64_mps);
   const pluss::Series scalar = pluss::make_series(std::vector<C>{C{1.0f, -1.0f}}, {1}, c64_mps);
@@ -846,5 +846,5 @@ TEST_CASE("MPS complex64 index put accumulate stays native under strict fallback
   const std::array<pluss::Series, 1> scalar_indices{{idx_scalar}};
   y.index_put_(pluss::msharp::RangeView::Of<pluss::Series>(scalar_indices), scalar, /*accumulate=*/true);
   REQUIRE(y.platform() == pluss::pMPS);
-  require_close_complex64(y.to(pluss::pCPU).to_vec<C>(), {C{2.0f, -2.0f}, C{0.0f, 0.0f}, C{1.0f, -1.0f}});
+  require_close_complex64(y.to(pluss::pCPU).host<C>(), {C{2.0f, -2.0f}, C{0.0f, 0.0f}, C{1.0f, -1.0f}});
 }

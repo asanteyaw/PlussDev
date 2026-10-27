@@ -20,7 +20,7 @@ void expect(bool condition, const std::string &message) {
 void expect_close(const pluss::Series &actual,
                   const std::vector<double> &expected,
                   double tolerance = 1e-10) {
-  const auto values = actual.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(pluss::ScalarType::Float64).host<double>();
   expect(values.size() == expected.size(), "signal result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =
@@ -36,7 +36,7 @@ void expect_complex_close(const pluss::Series &actual,
                           const std::vector<std::complex<double>> &expected,
                           double tolerance = 1e-10) {
   const auto values =
-      actual.to(pluss::ScalarType::Complex128).to_vec<std::complex<double>>();
+      actual.to(pluss::ScalarType::Complex128).host<std::complex<double>>();
   expect(values.size() == expected.size(), "complex result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =
@@ -88,8 +88,8 @@ int main() {
   const auto second =
       eng_signal::filter(stream.slice(0, 4, 8), iir_b, iir_a, first.state);
   expect_close(first.values.unite({second.values}, 0),
-               filtered.values.to_vec<double>());
-  expect_close(second.state, filtered.state.to_vec<double>());
+               filtered.values.host<double>());
+  expect_close(second.state, filtered.state.host<double>());
 
   const auto lane_input =
       pluss::series::make({{1.0, 2.0, 3.0, 4.0}, {2.0, 4.0, 6.0, 8.0}});

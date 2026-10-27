@@ -57,8 +57,8 @@ auto localized = stream.tl().localize(options);
 
 auto before = stream.tl().epoch(pluss::table::TimeUnit::Seconds);
 auto after = localized.tl().epoch(pluss::table::TimeUnit::Seconds);
-std::cout << "epoch before: " << before.as_series().to_vec<std::int64_t>()[0] << "\n";
-std::cout << "epoch after: " << after.as_series().to_vec<std::int64_t>()[0] << "\n";
+std::cout << "epoch before: " << before.as_series().host<std::int64_t>()[0] << "\n";
+std::cout << "epoch after: " << after.as_series().host<std::int64_t>()[0] << "\n";
 
 auto fmted = localized.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << "displayed: " << fmted.as_note().at(0);

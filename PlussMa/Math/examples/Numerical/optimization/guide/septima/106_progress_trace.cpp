@@ -6,15 +6,15 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
 
 int main() {
-  std::function<optim::Trace(const Pack&)> rosenbrock = [](const Pack& p) {
-    return 100.0 * optim::square(p.at("y") - optim::square(p.at("x"))) + optim::square(1.0 - p.at("x"));
+  std::function<pluss::Series(const Pack&)> rosenbrock = [](const Pack& p) {
+    return 100.0 * (p.at("y") - p.at("x").square()).square() + (1.0 - p.at("x")).square();
   };
   optim::SeptimaSolveOptions options;
   options.step.adam.learning_rate = 0.05;

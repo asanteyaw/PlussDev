@@ -25,7 +25,7 @@ bool approx(double a, double b, double tol = 1e-8) {
 }
 
 std::vector<double> as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 bool approx_vec(const std::vector<double>& got, const std::vector<double>& want, double tol = 1e-8) {

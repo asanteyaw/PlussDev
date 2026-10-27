@@ -229,7 +229,7 @@ std::vector<double> time_values(const Series &times, const char *operation) {
                                 ": times must be a one-dimensional real "
                                 "floating Series");
   std::vector<double> values =
-      times.to(Platform::CPU, ScalarType::Float64).to_vec<double>();
+      times.to(Platform::CPU, ScalarType::Float64).host<double>();
   for (std::size_t index = 1; index < values.size(); ++index) {
     if (!(values[index] > values[index - 1]))
       throw std::invalid_argument(std::string(operation) +
@@ -340,12 +340,12 @@ Series sparse_right(const Series &matrix, const SparseOp &value) {
 void require_sparse_hermitian(
     const pluss::subsp::math::linear_operator::CooMap &map,
     const char *operation) {
-  const auto rows = map.row_index().to(Platform::CPU).to_vec<std::int64_t>();
+  const auto rows = map.row_index().to(Platform::CPU).host<std::int64_t>();
   const auto columns =
-      map.column_index().to(Platform::CPU).to_vec<std::int64_t>();
+      map.column_index().to(Platform::CPU).host<std::int64_t>();
   const auto values = map.values()
                           .to(Platform::CPU, ScalarType::Complex128)
-                          .to_vec<std::complex<double>>();
+                          .host<std::complex<double>>();
   std::map<std::pair<std::int64_t, std::int64_t>, std::complex<double>>
       canonical;
   for (std::size_t index = 0; index < values.size(); ++index)

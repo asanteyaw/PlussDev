@@ -422,7 +422,7 @@ pluss::codem::Series impl_argsort_duration(const Duration& a) {
 
 std::vector<std::int64_t> impl_to_nanos_flat(const Duration& a) {
   check_duration_core_(a.nanos_);
-  return a.nanos_.to_vec<std::int64_t>();
+  return a.nanos_.host<std::int64_t>().array().data;
 }
 
 static std::string format_one_(std::int64_t ns, std::string_view style) {

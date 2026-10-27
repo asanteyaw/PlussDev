@@ -1,8 +1,0 @@
-# The cache
-
-[Back to Black Boxes](../dfo_04_black_boxes.md)
-
-
-@@example Numerical/optimization/guide/dfo/332_cache.cpp@@
-
-With the cache on, repeated points are answered from memory (`cache_hits`) and the objective runs fewer times than with it off. When a call is expensive this is the first thing to leave on. Turn it off only when the function is not deterministic (the same input can give different outputs), because a cached value is returned for any later request of that point.

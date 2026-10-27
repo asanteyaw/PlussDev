@@ -15,10 +15,6 @@ namespace dfo = pluss::subsp::math::optimization;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series filled(std::int64_t n, double v) { return pluss::make_series(std::vector<double>(n, v), {n}).to(f64); }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   auto blackbox = [](const pluss::Series& x) {
     dfo::BlackboxEvaluation e;
@@ -38,7 +34,7 @@ int main() {
     c.objective_reference = vec({0.0, 0.0});
     c.max_evaluations = 3000;
     const auto o = dfo::mads_blackbox_minimizer(blackbox, vec({0.8}), c);
-    const auto f = o.objective_vector.to_vec<double>();
+    const auto f = o.objective_vector.host<double>();
     std::cout << std::left << std::setw(14) << r.label << std::fixed << std::setprecision(4) << std::setw(12) << o.minimizer.select(0, 0).item<double>()
               << std::setw(12) << f[0] << std::setw(12) << f[1] << o.diagnostics.evaluations << "\n";
   }

@@ -60,8 +60,8 @@ int main() {
   const std::vector<std::string_view> views(lines.begin(), lines.end());
   nlp::runtime::EmbeddingTable restored{};
   std::cout << "load ok = " << restored.load_state_lines(views).ok() << "\n";
-  std::cout << "same first row = " << (original.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>()[0]
-                                    == restored.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>()[0]) << "\n";
+  std::cout << "same first row = " << (original.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>()[0]
+                                    == restored.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>()[0]) << "\n";
   return 0;
 }
 ```

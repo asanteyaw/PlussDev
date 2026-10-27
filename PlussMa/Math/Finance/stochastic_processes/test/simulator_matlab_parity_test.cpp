@@ -239,7 +239,7 @@ void test_hjm_drift_matches_matlab_formulation() {
 
   const std::int64_t k = static_cast<std::int64_t>(p.tenors.size());
   const Series f1 = out.forward.index_select(0, row_index(1)).reshape({paths, k});
-  const std::vector<double> mean_f = f1.mean(0, false).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const std::vector<double> mean_f = f1.mean(0, false).to(pluss::pCPU, ScalarType::Float64).host<double>();
   const std::vector<double> alpha = hjm_alpha(p.tenors, p.vol);
 
   for (std::int64_t j = 0; j < k; ++j) {

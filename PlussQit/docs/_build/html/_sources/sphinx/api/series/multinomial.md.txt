@@ -99,7 +99,7 @@ normalized weights.
 pluss::rng_seed(7);
 auto w = pluss::make_series({1.0, 2.0, 7.0});
 auto s = w.multinomial(100000, true);
-auto v = s.to_vec<long long>();
+auto v = s.host<long long>();
 long c0 = 0, c1 = 0, c2 = 0;
 for (auto x : v) { if (x == 0) ++c0; else if (x == 1) ++c1; else ++c2; }
 std::cout << "freq: " << c0 / 1e5 << " " << c1 / 1e5 << " " << c2 / 1e5

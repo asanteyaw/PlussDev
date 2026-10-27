@@ -23,7 +23,7 @@ int main() {
 
   std::vector<double> seen;
   for (auto batch : data) {
-    const auto v = batch.x().to_vec<double>();
+    const auto v = batch.x().host<double>();
     seen.insert(seen.end(), v.begin(), v.end());
   }
   std::sort(seen.begin(), seen.end());

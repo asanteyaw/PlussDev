@@ -103,12 +103,12 @@ bool is_phase0_family(ModelFamily family) {
 
 [[nodiscard]] std::vector<double> vec_f64(const Series& x) {
   if (!x.defined()) return {};
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>().array().data;
 }
 
 [[nodiscard]] std::vector<std::int64_t> vec_i64(const Series& x) {
   if (!x.defined()) return {};
-  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();
+  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).host<std::int64_t>().array().data;
 }
 
 [[nodiscard]] Series make_index_series(const std::vector<std::int64_t>& indices, Platform platform) {
@@ -504,7 +504,7 @@ struct LinearPenalty {
       ridge = pluss::index_put(ridge, std::vector<Series>{idx0}, pluss::series::zeros({1}, f64_on(ridge.platform())), false);
     }
     const double loss = bce.mean().item<double>() + 0.5 * lambda_l2 * ridge.square().sum().item<double>();
-    const double step = delta.abs().max().reshape({1}).item<double>();
+    const double step = delta.abs().max().reshape({1}).host<double>().front();
     weights = next;
     if (step <= tolerance || std::abs(prev_loss - loss) <= tolerance) break;
     prev_loss = loss;
@@ -710,7 +710,7 @@ struct LinearPenalty {
                                      bool distance_weighted) {
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
-  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
+  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().host<double>().array().data;
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(k, nt));
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
   constexpr double eps = 1e-12;
@@ -724,8 +724,8 @@ struct LinearPenalty {
   StatusOr<KNearestResult> knn_or = index.query_k(query_rows, kk);
   if (!knn_or.ok()) return pluss::make_series(out, {nq}, f64_cpu());
   const KNearestResult knn = knn_or.move_value();
-  const auto knn_idx = knn.indices.to(pluss::pCPU, ScalarType::Int64).reshape({knn.indices.numel()}).to_vec<std::int64_t>();
-  const auto knn_d2 = knn.distances2.to(pluss::pCPU, ScalarType::Float64).reshape({knn.distances2.numel()}).to_vec<double>();
+  const auto knn_idx = knn.indices.to(pluss::pCPU, ScalarType::Int64).reshape({knn.indices.numel()}).host<std::int64_t>().array().data;
+  const auto knn_d2 = knn.distances2.to(pluss::pCPU, ScalarType::Float64).reshape({knn.distances2.numel()}).host<double>().array().data;
 
   for (std::int64_t qi = 0; qi < nq; ++qi) {
     std::vector<std::pair<double, std::int64_t>> best{};
@@ -778,9 +778,9 @@ struct LinearPenalty {
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
   const std::int64_t d = train_rows.sizes()[1];
-  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().host<double>().array().data;
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(fallback_k, nt));
   const double radius2 = radius * radius;
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
@@ -1135,8 +1135,8 @@ public:
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
-    x_train_host_ = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-    y_train_host_ = y_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
+    x_train_host_ = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+    y_train_host_ = y_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().host<double>().array().data;
 
     nodes_.clear();
     nodes_.reserve(static_cast<std::size_t>(2 * sample_count_ + 1));
@@ -1175,7 +1175,7 @@ public:
 
     std::vector<double> pred{};
     Status pred_status = predict_host_rows(
-        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>(),
+        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data,
         matrix.sample_count,
         matrix.feature_count,
         pred);
@@ -1762,9 +1762,9 @@ public:
     if (!y_or.ok()) return y_or.status();
     const Series y_train = y_or.value().reshape({matrix.sample_count});
     const std::vector<double> x_train_host =
-        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
     const std::vector<double> y_train_host =
-        y_train.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+        y_train.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
@@ -2033,7 +2033,7 @@ public:
           "EnsembleRegressor::infer currently has a CPU-only implementation. Provide CPU features for ensemble inference."));
     }
 
-    const std::vector<double> x_host = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+    const std::vector<double> x_host = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
     std::vector<double> pred_sum(static_cast<std::size_t>(matrix.sample_count), 0.0);
     if (method_ == EnsembleMethod::GradientBoost) {
       std::fill(pred_sum.begin(), pred_sum.end(), initial_prediction_);
@@ -2394,7 +2394,7 @@ private:
   Series b = rhs.to(platform, ScalarType::Float64).reshape({n});
   Series r = b;
   Series p = r;
-  double rs = r.square().sum().reshape({1}).item<double>();
+  double rs = r.square().sum().reshape({1}).host<double>().front();
   if (!std::isfinite(rs)) {
     return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite residual norm."));
   }
@@ -2407,14 +2407,14 @@ private:
   constexpr double eps = 1e-18;
   for (std::int64_t iter = 0; iter < iters; ++iter) {
     const Series ap = a.matmul(p.reshape({n, 1})).reshape({n});
-    const double denom = p.mul(ap).sum().reshape({1}).item<double>();
+    const double denom = p.mul(ap).sum().reshape({1}).host<double>().front();
     if (!std::isfinite(denom) || std::abs(denom) <= eps) {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered unstable CG denominator."));
     }
     const double alpha = rs / denom;
     x = x.add(p.mul(alpha));
     r = r.sub(ap.mul(alpha));
-    const double rs_new = r.square().sum().reshape({1}).item<double>();
+    const double rs_new = r.square().sum().reshape({1}).host<double>().front();
     if (!std::isfinite(rs_new)) {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite CG residual norm."));
     }
@@ -2439,9 +2439,9 @@ private:
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
   const std::int64_t d = train_rows.sizes()[1];
-  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto av = alpha.to(pluss::pCPU, ScalarType::Float64).reshape({alpha.numel()}).contiguous().to_vec<double>();
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto av = alpha.to(pluss::pCPU, ScalarType::Float64).reshape({alpha.numel()}).contiguous().host<double>().array().data;
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
   for (std::int64_t qi = 0; qi < nq; ++qi) {
     const double* qptr = qv.data() + static_cast<std::size_t>(qi * d);

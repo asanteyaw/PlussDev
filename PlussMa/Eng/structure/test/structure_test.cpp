@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace structure = pluss::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 
 static_assert(!std::is_default_constructible_v<structure::Truss>);
 static_assert(std::is_copy_constructible_v<structure::Truss>);
@@ -23,7 +23,7 @@ void expect(bool value, const std::string &message) {
 
 void close(const pluss::Series &value, const std::vector<double> &expected,
            double tolerance = 1e-9) {
-  const auto actual = value.to_vec<double>();
+  const auto actual = value.host<double>();
   expect(actual.size() == expected.size(), "result size mismatch");
   for (std::size_t lane = 0; lane < actual.size(); ++lane)
     if (std::abs(actual[lane] - expected[lane]) > tolerance)

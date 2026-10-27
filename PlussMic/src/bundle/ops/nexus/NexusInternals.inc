@@ -116,9 +116,9 @@ std::string nexus_label_string_at(const pluss::table::Slate& labels, std::int64_
       const auto series = labels.as_series();
       switch (series.scalar_type()) {
         case pluss::codem::ScalarType::Int64:
-          return std::to_string(series.to_vec<std::int64_t>(i));
+          return std::to_string(series.host<std::int64_t>().array().data.at(static_cast<std::size_t>(i)));
         case pluss::codem::ScalarType::Float64:
-          return std::to_string(series.to_vec<double>(i));
+          return std::to_string(series.host<double>().array().data.at(static_cast<std::size_t>(i)));
         default:
           return std::string("table_") + std::to_string(i);
       }

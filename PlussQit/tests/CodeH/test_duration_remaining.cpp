@@ -78,7 +78,7 @@ TEST_CASE("Duration ordering is stable and places NaT last",
       {3, pluss::Duration::kNaT, 1, 3, pluss::Duration::kNaT, 2});
   REQUIRE(values.sort().host() == std::vector<std::int64_t>{
       1, 2, 3, 3, pluss::Duration::kNaT, pluss::Duration::kNaT});
-  REQUIRE(values.argsort().to_vec<std::int64_t>() ==
+  REQUIRE(values.argsort().host<std::int64_t>() ==
           std::vector<std::int64_t>{2, 5, 0, 3, 1, 4});
   REQUIRE(values.unique().host() == std::vector<std::int64_t>{
       3, pluss::Duration::kNaT, 1, 2});

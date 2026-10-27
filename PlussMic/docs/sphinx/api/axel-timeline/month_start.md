@@ -41,8 +41,8 @@ auto axel = pluss::scribble::Axel({r0});
 auto out = axel.fields({"ts"}).tl().month_start();
 auto ts = out.registry(0).fields("ts");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(ts.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(ts.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(ts.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(ts.at(1)).host<bool>()[0];
 ```
 
 ### Output

@@ -106,7 +106,7 @@ number itself.
 ```cpp
 auto small = Slate(pluss::make_series({10.0, 20.0}));
 auto out4 = small.std(StatisticOptions{.ddof = 1, .min_count = 5});
-std::cout << out4.slate().notnull().as_series().to_vec<bool>()[0];
+std::cout << out4.slate().notnull().as_series().host<bool>()[0];
 ```
 
 ### Output

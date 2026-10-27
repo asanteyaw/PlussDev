@@ -14,14 +14,11 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::pCPU;
-using pluss::optim::AdamOptions;
-using pluss::optim::AdamState;
-using pluss::optim::Trace;
-using pluss::optim::adam_state_like;
-using pluss::optim::adam_step_inplace;
-using pluss::optim::square;
-using pluss::optim::sum;
-using pluss::optim::value_and_grad;
+using pluss::subsp::math::optim::AdamOptions;
+using pluss::subsp::math::optim::AdamState;
+using pluss::subsp::math::optim::adam_state_like;
+using pluss::subsp::math::optim::adam_step_inplace;
+using pluss::subsp::math::optim::value_and_grad;
 
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {
@@ -35,7 +32,7 @@ Series make_vec(const std::vector<double>& values, const Config& cfg) {
 }
 
 std::vector<double> to_vec_f64(const Series& x) {
-  return x.to(pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 double to_scalar_f64(const Series& x) {
@@ -239,9 +236,9 @@ int main() {
     double end_obj = std::numeric_limits<double>::infinity();
     for (std::int64_t iter = 0; iter < 1500; ++iter) {
       const auto [value, grads] = value_and_grad(
-          [](const std::vector<Trace>& xs) -> Trace {
-            const Trace x = xs[0];
-            return sum(square(square(x) - 1.0));
+          [](const std::vector<Series>& xs) -> Series {
+            const Series x = xs[0];
+            return ((x.square() - 1.0).square()).sum();
           },
           params);
       if (iter == 0) start_obj = to_scalar_f64(value);

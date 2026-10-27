@@ -207,10 +207,10 @@ int main(int argc, char** argv) {
 
   const std::vector<std::int64_t> holdout_train_idx = holdout.train_indices.to(pluss::pCPU, ScalarType::Int64)
                                                            .reshape({holdout.train_indices.numel()})
-                                                           .to_vec<std::int64_t>();
+                                                           .host<std::int64_t>();
   const std::vector<std::int64_t> holdout_test_idx = holdout.test_indices.to(pluss::pCPU, ScalarType::Int64)
                                                          .reshape({holdout.test_indices.numel()})
-                                                         .to_vec<std::int64_t>();
+                                                         .host<std::int64_t>();
 
   const DataFrame train_frame_full = frame.take(holdout_train_idx);
   const DataFrame test_frame_full = frame.take(holdout_test_idx);
@@ -984,7 +984,7 @@ int main(int argc, char** argv) {
     return 1;
   }
   Series final_metrics = final_metrics_or.move_value().to(pluss::pCPU, ScalarType::Float64).reshape({3});
-  const std::vector<double> final_metrics_vec = final_metrics.to_vec<double>();
+  const std::vector<double> final_metrics_vec = final_metrics.host<double>();
 
   StatusOr<Series> final_pred_or = final_reg->infer(test_batch.features);
   if (!final_pred_or.ok()) {
@@ -1036,8 +1036,8 @@ int main(int argc, char** argv) {
 
   const Series pred_cpu = final_pred.to(pluss::pCPU, ScalarType::Float64).reshape({final_pred.numel()});
   const Series restored_cpu = restored_pred.to(pluss::pCPU, ScalarType::Float64).reshape({restored_pred.numel()});
-  const std::vector<double> pred_vec = pred_cpu.to_vec<double>();
-  const std::vector<double> restored_vec = restored_cpu.to_vec<double>();
+  const std::vector<double> pred_vec = pred_cpu.host<double>();
+  const std::vector<double> restored_vec = restored_cpu.host<double>();
 
   double restored_max_abs_diff = 0.0;
   for (std::size_t i = 0; i < pred_vec.size() && i < restored_vec.size(); ++i) {

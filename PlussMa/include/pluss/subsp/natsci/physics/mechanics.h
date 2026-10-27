@@ -73,7 +73,7 @@ inline void require_real_float(const Series &value, const char *name) {
   if (!value.dtype().is_floating())
     throw std::invalid_argument(std::string("natsci::mechanics::make: ") +
                                 name + " must have a real floating dtype");
-  if (!value.isfinite().all().item<bool>())
+  if (!value.isfinite().all().host<bool>().front())
     throw std::invalid_argument(std::string("natsci::mechanics::make: ") +
                                 name + " must be finite");
 }
@@ -104,7 +104,7 @@ inline PairGeometry pairs(const Bodies &bodies, double softening) {
   const Series distance2 =
       displacement.square().sum(-1, true).add(softening * softening);
   const Series safe_distance2 = distance2.add(identity.unsqueeze(-1));
-  if (!safe_distance2.gt(0.0).all().item<bool>())
+  if (!safe_distance2.gt(0.0).all().host<bool>().front())
     throw std::domain_error(
         "natsci::mechanics: distinct bodies occupy the same position; "
         "provide positive softening or separate them");
@@ -162,10 +162,10 @@ make(const common::SeriesQuantity<common::Mass> &mass,
     throw std::invalid_argument(
         "natsci::mechanics::make: mass must broadcast to [..., bodies]");
   }
-  if (!aligned_mass.ge(0.0).all().item<bool>())
+  if (!aligned_mass.ge(0.0).all().host<bool>().front())
     throw std::invalid_argument(
         "natsci::mechanics::make: mass must be non-negative");
-  if (!aligned_mass.sum(-1, false).gt(0.0).all().item<bool>())
+  if (!aligned_mass.sum(-1, false).gt(0.0).all().host<bool>().front())
     throw std::invalid_argument(
         "natsci::mechanics::make: every batch must have positive total mass");
 

@@ -9,7 +9,7 @@ int main() {
   const auto wide = pluss::make_series(std::vector<double>{1.5, 2.5}, {2}, cfg);
   const auto narrow = pluss::tils::as_f32(wide, cfg);
   std::cout << "dtype: " << narrow.dtype() << '\n';
-  for (float v : narrow.to_vec<float>()) std::cout << ' ' << v;
+  for (float v : narrow.host<float>()) std::cout << ' ' << v;
   std::cout << '\n';
   return 0;
 }

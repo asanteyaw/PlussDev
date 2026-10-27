@@ -47,7 +47,7 @@ auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
-  std::cout << std::get<pluss::Series>(ids.at(i)).to_vec<std::int64_t>()[0];
+  std::cout << std::get<pluss::Series>(ids.at(i)).host<std::int64_t>()[0];
 }
 std::cout << "]";
 ```
@@ -89,8 +89,8 @@ auto rg = pluss::scribble::Registry({
 auto out = rg.push(pluss::make_series(99));
 auto a = out.fields("a");
 auto b = out.fields("b");
-std::cout << std::get<pluss::Series>(a.at(2)).to_vec<std::int64_t>()[0] << " ";
-std::cout << std::get<pluss::Series>(b.at(2)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(a.at(2)).host<std::int64_t>()[0] << " ";
+std::cout << std::get<pluss::Series>(b.at(2)).host<std::int64_t>()[0];
 ```
 
 ### Output

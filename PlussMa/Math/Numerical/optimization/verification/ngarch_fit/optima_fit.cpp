@@ -11,18 +11,18 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
-using Trace = optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<Series>;
+using Series = optim::Trace;
 using Series = pluss::Series;
 static const auto f64 = pluss::ScalarType::Float64;
 
 
 template <int N> using Dual = optim::Fwd<N>;
-template <int N> Dual<N> dsqrt(const Dual<N>& a) { return optim::sqrt(a); }
-template <int N> Dual<N> dlog(const Dual<N>& a) { return optim::log(a); }
-template <int N> Dual<N> dtanh(const Dual<N>& a) { return optim::tanh(a); }
-template <int N> Dual<N> dabs(const Dual<N>& a) { return optim::abs(a); }
+template <int N> Dual<N> dsqrt(const Dual<N>& a) { return a.sqrt(); }
+template <int N> Dual<N> dlog(const Dual<N>& a) { return a.log(); }
+template <int N> Dual<N> dtanh(const Dual<N>& a) { return a.tanh(); }
+template <int N> Dual<N> dabs(const Dual<N>& a) { return a.abs(); }
 
 // Gaussian returns negative log-likelihood and its gradient with respect to the unscaled parameters.
 template <int N> double nll_dual(const std::string& model, const std::vector<double>& p, const std::vector<double>& y, double var, double* grad) {
@@ -108,42 +108,42 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < np; ++i) { scaler[i] = std::pow(10.0, std::ceil(std::log10(std::abs(p0[i])))); th0[i] = p0[i] / scaler[i]; lbs[i] = lb[i] / scaler[i]; ubs[i] = ub[i] / scaler[i]; }
 
     optim::ConstrainedProblem prob;
-    prob.objective.autodiff = [&](const Pack& q) -> Trace {
+    prob.objective.autodiff = [&](const Pack& q) -> Series {
       auto P = [&](size_t i) { return q.at("p" + std::to_string(i + 1)) * scaler[i]; };
-      Trace h = pluss::subsp::math::optim::trace(pluss::make_series(var).to(f64).reshape({1}), false);
-      Trace total = h * 0.0;
+      Series h = (pluss::make_series(var).to(f64).reshape({1}));
+      Series total = h * 0.0;
       if (model == "ngarch") {
-        Trace om = P(0), al = P(1), ph = P(2), la = P(3), g = P(4);
-        Trace z = (h * 0.5 + y[0] - la * optim::sqrt(h)) / optim::sqrt(h);
-        total = total + (optim::log(h) * 0.5 + optim::square(z) * 0.5 + c0);
+        Series om = P(0), al = P(1), ph = P(2), la = P(3), g = P(4);
+        Series z = (h * 0.5 + y[0] - la * h.sqrt()) / h.sqrt();
+        total = total + (h.log() * 0.5 + z.square() * 0.5 + c0);
         for (size_t j = 1; j < n; ++j) {
-          h = om + ph * (h - om) + al * (h * optim::square(z) + h * z * g * 2.0 - h);
-          z = (h * 0.5 + y[j] - la * optim::sqrt(h)) / optim::sqrt(h);
-          total = total + (optim::log(h) * 0.5 + optim::square(z) * 0.5 + c0);
+          h = om + ph * (h - om) + al * (h * z.square() + h * z * g * 2.0 - h);
+          z = (h * 0.5 + y[j] - la * h.sqrt()) / h.sqrt();
+          total = total + (h.log() * 0.5 + z.square() * 0.5 + c0);
         }
       } else if (model == "cngarch") {
-        Trace om = P(0), al = P(1), ph = P(2), la = P(3), g1 = P(4), g2 = P(5), p1 = P(6), rho = P(7);
-        Trace qv = h;
-        Trace z = (h * 0.5 + y[0] - la * optim::sqrt(h)) / optim::sqrt(h);
-        total = total + (optim::log(h) * 0.5 + optim::square(z) * 0.5 + c0);
+        Series om = P(0), al = P(1), ph = P(2), la = P(3), g1 = P(4), g2 = P(5), p1 = P(6), rho = P(7);
+        Series qv = h;
+        Series z = (h * 0.5 + y[0] - la * h.sqrt()) / h.sqrt();
+        total = total + (h.log() * 0.5 + z.square() * 0.5 + c0);
         for (size_t j = 1; j < n; ++j) {
-          Trace qn = om + rho * (qv - om) + p1 * h * (optim::square(z) + z * g2 * 2.0 - 1.0);
-          Trace hn = qn + ph * (h - qv) + al * h * (optim::square(z) + z * g1 * 2.0 - 1.0);
+          Series qn = om + rho * (qv - om) + p1 * h * (z.square() + z * g2 * 2.0 - 1.0);
+          Series hn = qn + ph * (h - qv) + al * h * (z.square() + z * g1 * 2.0 - 1.0);
           qv = qn; h = hn;
-          z = (h * 0.5 + y[j] - la * optim::sqrt(h)) / optim::sqrt(h);
-          total = total + (optim::log(h) * 0.5 + optim::square(z) * 0.5 + c0);
+          z = (h * 0.5 + y[j] - la * h.sqrt()) / h.sqrt();
+          total = total + (h.log() * 0.5 + z.square() * 0.5 + c0);
         }
       } else {
-        Trace wx1 = P(0), wx2 = P(1), wx3 = P(2), wh = P(3), bx = P(4), bh = P(5), fw = P(6), fb = P(7), al = P(8), ph = P(9), la = P(10), g = P(11);
-        Trace om = fb, hs = fb * 0.0;
-        Trace z = (h * 0.5 + y[0] - la * optim::sqrt(h)) / optim::sqrt(h);
-        total = total + (optim::log(h) * 0.5 + optim::square(z) * 0.5 + c0);
+        Series wx1 = P(0), wx2 = P(1), wx3 = P(2), wh = P(3), bx = P(4), bh = P(5), fw = P(6), fb = P(7), al = P(8), ph = P(9), la = P(10), g = P(11);
+        Series om = fb, hs = fb * 0.0;
+        Series z = (h * 0.5 + y[0] - la * h.sqrt()) / h.sqrt();
+        total = total + (h.log() * 0.5 + z.square() * 0.5 + c0);
         for (size_t j = 1; j < n; ++j) {
-          hs = optim::tanh(wx1 * om + wx2 * y[j - 1] + wx3 * h + bx + wh * hs + bh);
-          om = optim::sqrt(optim::square(fw * hs + fb));
-          h = om + ph * (h - om) + al * h * (optim::square(z) + z * g * 2.0 - 1.0);
-          z = (h * 0.5 + y[j] - la * optim::sqrt(h)) / optim::sqrt(h);
-          total = total + (optim::log(h) * 0.5 + optim::square(z) * 0.5 + c0);
+          hs = (wx1 * om + wx2 * y[j - 1] + wx3 * h + bx + wh * hs + bh).tanh();
+          om = (fw * hs + fb).square().sqrt();
+          h = om + ph * (h - om) + al * h * (z.square() + z * g * 2.0 - 1.0);
+          z = (h * 0.5 + y[j] - la * h.sqrt()) / h.sqrt();
+          total = total + (h.log() * 0.5 + z.square() * 0.5 + c0);
         }
       }
       return total;
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
       prob.objective.autodiff = nullptr;
       prob.objective.analytic = [&](const optim::ParameterPack<Series>& q) -> std::pair<Series, optim::ParameterPack<Series>> {
         std::vector<double> p(np), g(np, 0.0);
-        for (size_t i = 0; i < np; ++i) p[i] = q.at("p" + std::to_string(i + 1)).item<double>() * scaler[i];
+        for (size_t i = 0; i < np; ++i) p[i] = as_f64(q.at("p" + std::to_string(i + 1))) * scaler[i];
         double f;
         if (np == 5) f = nll_dual<5>(model, p, y, var, g.data());
         else if (np == 8) f = nll_dual<8>(model, p, y, var, g.data());
@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
       auto r = optim::optima(prob, pack(th0), o);
       const double el = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
       std::ostringstream ps; ps << std::setprecision(8) << "[";
-      for (size_t i = 0; i < np; ++i) ps << (i ? " " : "") << r.params.at("p" + std::to_string(i + 1)).item<double>() * scaler[i];
+      for (size_t i = 0; i < np; ++i) ps << (i ? " " : "") << as_f64(r.params.at("p" + std::to_string(i + 1))) * scaler[i];
       ps << "]";
       std::string m = r.message; m = m.substr(0, m.find('\n')).substr(0, 50);
       std::cout << model << "|" << s + 1 << "|" << (int)r.exit_flag << "|" << r.iteration << "|" << r.function_evaluations << "|"

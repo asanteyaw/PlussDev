@@ -9,9 +9,9 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
-using Pack = optim::ParameterPack<Trace>;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -20,7 +20,7 @@ pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_
 int main() {
   std::cout << std::fixed << std::setprecision(4);
   {
-    auto quadratic = [](const Trace& x) -> Trace { return optim::sum(optim::square(x - 3.0)); };
+    auto quadratic = [](const pluss::Series& x) -> pluss::Series { return (x - 3.0).square().sum(); };
     std::cout << "weight decay of 0.1 (the exact minimizer without decay is 3)\n";
     struct Row { const char* label; double decay; bool decoupled; };
     for (const Row row : {Row{"no decay", 0.0, false}, Row{"coupled decay", 0.1, false}, Row{"decoupled decay", 0.1, true}}) {
@@ -38,8 +38,8 @@ int main() {
     }
   }
   {
-    std::function<Trace(const Pack&)> rosenbrock = [](const Pack& p) {
-      return 100.0 * optim::square(p.at("y") - optim::square(p.at("x"))) + optim::square(1.0 - p.at("x"));
+    std::function<pluss::Series(const Pack&)> rosenbrock = [](const Pack& p) {
+      return 100.0 * (p.at("y") - p.at("x").square()).square() + (1.0 - p.at("x")).square();
     };
     const auto start = optim::pack_scalars({{"x", scalar(-1.2)}, {"y", scalar(1.0)}});
     std::cout << "\nRosenbrock, learning rate 0.05, 2000 iterations: objective reached\n";
@@ -58,13 +58,13 @@ int main() {
     }
   }
   {
-    auto concave = [](const Trace& x) -> Trace { return optim::sum(optim::square(x)) * -1.0 + optim::sum(x) * 2.0; };
+    auto concave = [](const pluss::Series& x) -> pluss::Series { return x.square().sum() * -1.0 + x.sum() * 2.0; };
     optim::SeptimaSolveOptions options;
     options.max_iterations = 500;
     options.step.adam.learning_rate = 0.1;
     options.step.adam.maximize = true;
     const auto r = optim::septima(concave, vec({0.0}), options);
-    std::cout << "\nmaximize: x = " << r.params[0].item<double>() << ", objective = " << r.objective_value << "\n";
+    std::cout << "\nmaximize: x = " << as_f64(r.params[0]) << ", objective = " << r.objective_value << "\n";
   }
   return 0;
 }

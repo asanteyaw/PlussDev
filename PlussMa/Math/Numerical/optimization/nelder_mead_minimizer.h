@@ -17,6 +17,18 @@ enum class SolverStatus {
   ReachedEvaluationBudget,
 };
 
+inline std::string to_string(SolverStatus status) {
+  switch (status) {
+    case SolverStatus::Converged:
+      return "Converged";
+    case SolverStatus::ReachedIterationBudget:
+      return "ReachedIterationBudget";
+    case SolverStatus::ReachedEvaluationBudget:
+      return "ReachedEvaluationBudget";
+  }
+  return "Unknown";
+}
+
 enum class SolverDisplay {
   None,
   Iter,

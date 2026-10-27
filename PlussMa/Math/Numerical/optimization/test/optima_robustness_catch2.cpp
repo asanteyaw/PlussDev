@@ -7,22 +7,19 @@
 #include <limits>
 #include <vector>
 
+
 namespace {
 
 using Catch::Approx;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::optim::ConstrainedProblem;
-using pluss::optim::EvalStatus;
-using pluss::optim::OptimaAlgorithm;
-using pluss::optim::OptimaExitFlag;
-using pluss::optim::OptimaOptions;
-using pluss::optim::ParameterPack;
-using pluss::optim::Trace;
-using pluss::optim::optima;
-using pluss::optim::square;
-using pluss::optim::sum;
-using pluss::optim::trace;
+using pluss::subsp::math::optim::ConstrainedProblem;
+using pluss::subsp::math::optim::EvalStatus;
+using pluss::subsp::math::optim::OptimaAlgorithm;
+using pluss::subsp::math::optim::OptimaExitFlag;
+using pluss::subsp::math::optim::OptimaOptions;
+using pluss::subsp::math::optim::ParameterPack;
+using pluss::subsp::math::optim::optima;
 
 double as_f64_scalar(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
@@ -36,14 +33,14 @@ ConstrainedProblem make_structured_working_set_problem(std::int64_t n,
                                                        const Series& target,
                                                        double difference_cap) {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    const Trace x = p.at("x");
-    const Trace diff = x - trace(target, false);
-    return sum(square(diff));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    const Series x = p.at("x");
+    const Series diff = x - target;
+    return diff.square().sum();
   };
 
   std::vector<double> aeq(static_cast<std::size_t>(n), 1.0);
-  std::vector<double> target_vec = target.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  std::vector<double> target_vec = target.to(pluss::pCPU, ScalarType::Float64).host<double>();
   double sum_target = 0.0;
   for (double t : target_vec) sum_target += t;
   problem.linear.Aeq = pluss::make_series(aeq, {1, n}).to(ScalarType::Float64);
@@ -61,8 +58,8 @@ ConstrainedProblem make_structured_working_set_problem(std::int64_t n,
   }
   problem.linear.Aineq = pluss::make_series(aineq, {2 * (n - 1), n}).to(ScalarType::Float64);
   problem.linear.bineq = pluss::make_series(bineq, {2 * (n - 1)}).to(ScalarType::Float64);
-  problem.bounds.lower = pluss::optim::pack_series(pluss::series::zeros({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
-  problem.bounds.upper = pluss::optim::pack_series(pluss::series::ones({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
+  problem.bounds.lower = pluss::subsp::math::optim::pack_series(pluss::series::zeros({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
+  problem.bounds.upper = pluss::subsp::math::optim::pack_series(pluss::series::ones({n}, pluss::Config{}.with_dtype(ScalarType::Float64)));
   return problem;
 }
 
@@ -81,7 +78,7 @@ TEST_CASE("Optima working set remains robust on structured active-constraint fam
 
   const ConstrainedProblem problem = make_structured_working_set_problem(n, target, 0.16);
 
-  OptimaOptions sqp = pluss::optim::presets::sequential_qp();
+  OptimaOptions sqp = pluss::subsp::math::optim::presets::sequential_qp();
   sqp.algorithm = OptimaAlgorithm::SequentialQP;
   sqp.sequential_qp.max_iterations = 220;
   sqp.sequential_qp.constraint_tolerance = 1e-8;
@@ -115,21 +112,21 @@ TEST_CASE("Optima working set remains robust on structured active-constraint fam
 
 TEST_CASE("Internal protocol feasibility mode recovers from infeasible starts", "[optima][internal_protocol][feasibility]") {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
-    const Trace x = p.at("x");
-    const Trace center = trace(pluss::make_series(std::vector<double>{0.2, 0.2}, {2}).to(ScalarType::Float64), false);
-    return sum(square(x - center));
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) -> Series {
+    const Series x = p.at("x");
+    const Series center = (pluss::make_series(std::vector<double>{0.2, 0.2}, {2}).to(ScalarType::Float64));
+    return (x - center).square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    const Trace x = p.at("x");
-    const Trace total = sum(x);
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) -> Series {
+    const Series x = p.at("x");
+    const Series total = x.sum();
     return 1.2 - total;
   };
-  problem.bounds.lower = pluss::optim::pack_series(pluss::make_series(std::vector<double>{0.0, 0.0}, {2}).to(ScalarType::Float64));
-  problem.bounds.upper = pluss::optim::pack_series(pluss::make_series(std::vector<double>{1.0, 1.0}, {2}).to(ScalarType::Float64));
+  problem.bounds.lower = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{0.0, 0.0}, {2}).to(ScalarType::Float64));
+  problem.bounds.upper = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{1.0, 1.0}, {2}).to(ScalarType::Float64));
 
   const Series initial = pluss::make_series(std::vector<double>{0.1, 0.1}, {2}).to(ScalarType::Float64);
-  OptimaOptions options = pluss::optim::presets::internal_protocol();
+  OptimaOptions options = pluss::subsp::math::optim::presets::internal_protocol();
   options.internal_protocol.max_iterations = 160;
   options.internal_protocol.enable_feasibility_phase = true;
   options.internal_protocol.constraint_tolerance = 1e-8;
@@ -154,21 +151,21 @@ TEST_CASE("Internal protocol feasibility mode recovers from infeasible starts", 
 TEST_CASE("Internal protocol remains numerically stable on ill-conditioned scaled constraints", "[optima][internal_protocol][numerical_stability]") {
   ConstrainedProblem problem;
   const Series weights = pluss::make_series(std::vector<double>{1e6, 1e-6}, {2}).to(ScalarType::Float64);
-  problem.objective.autodiff = [weights](const ParameterPack<Trace>& p) -> Trace {
-    const Trace x = p.at("x");
-    return sum(trace(weights, false) * square(x));
+  problem.objective.autodiff = [weights](const ParameterPack<Series>& p) -> Series {
+    const Series x = p.at("x");
+    return (weights * x.square()).sum();
   };
   problem.linear.Aeq = pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2}).to(ScalarType::Float64);
   problem.linear.beq = pluss::make_series(std::vector<double>{1.0}, {1}).to(ScalarType::Float64);
-  problem.bounds.lower = pluss::optim::pack_series(pluss::make_series(std::vector<double>{-2.0, -2.0}, {2}).to(ScalarType::Float64));
-  problem.bounds.upper = pluss::optim::pack_series(pluss::make_series(std::vector<double>{2.0, 2.0}, {2}).to(ScalarType::Float64));
+  problem.bounds.lower = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{-2.0, -2.0}, {2}).to(ScalarType::Float64));
+  problem.bounds.upper = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{2.0, 2.0}, {2}).to(ScalarType::Float64));
 
   const Series initial = pluss::make_series(std::vector<double>{0.8, 0.2}, {2}).to(ScalarType::Float64);
-  OptimaOptions options = pluss::optim::presets::internal_protocol();
+  OptimaOptions options = pluss::subsp::math::optim::presets::internal_protocol();
   options.internal_protocol.max_iterations = 200;
   options.internal_protocol.constraint_tolerance = 1e-10;
   options.internal_protocol.optimality_tolerance = 1e-8;
-  options.internal_protocol.problem_scaling = pluss::optim::OptimaProblemScaling::ObjectiveAndConstraints;
+  options.internal_protocol.problem_scaling = pluss::subsp::math::optim::OptimaProblemScaling::ObjectiveAndConstraints;
 
   const auto result = optima(problem, initial, options);
   const Series x = result.params.at("x").reshape({2});
@@ -192,15 +189,15 @@ TEST_CASE("Internal protocol remains numerically stable on ill-conditioned scale
 
 TEST_CASE("Internal protocol does not enter feasibility mode when already feasible", "[optima][internal_protocol][regression]") {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
-    const Trace x = p.at("x");
-    return sum(square(x));
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) -> Series {
+    const Series x = p.at("x");
+    return x.square().sum();
   };
-  problem.bounds.lower = pluss::optim::pack_series(pluss::make_series(std::vector<double>{-1.0, -1.0}, {2}).to(ScalarType::Float64));
-  problem.bounds.upper = pluss::optim::pack_series(pluss::make_series(std::vector<double>{1.0, 1.0}, {2}).to(ScalarType::Float64));
+  problem.bounds.lower = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{-1.0, -1.0}, {2}).to(ScalarType::Float64));
+  problem.bounds.upper = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{1.0, 1.0}, {2}).to(ScalarType::Float64));
 
   const Series initial = pluss::make_series(std::vector<double>{0.2, -0.3}, {2}).to(ScalarType::Float64);
-  OptimaOptions options = pluss::optim::presets::internal_protocol();
+  OptimaOptions options = pluss::subsp::math::optim::presets::internal_protocol();
   options.internal_protocol.max_iterations = 20;
   options.internal_protocol.max_line_search_iterations = 0; // force no accepted LS step
   options.internal_protocol.enable_restoration = false;     // force direct fallback path
@@ -225,21 +222,21 @@ TEST_CASE("Internal protocol does not enter feasibility mode when already feasib
 TEST_CASE("Optima autodiff stays connected through staged copy_ objectives", "[optima][autodiff][inplace]") {
   ConstrainedProblem problem;
   const Series target = pluss::make_series(std::vector<double>{0.4, -0.6, 0.8}, {3}).to(ScalarType::Float64);
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    const Trace x = p.at("x");
-    const Series xv = x.value();
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    const Series x = p.at("x");
+    const Series xv = x;
     Series staged = pluss::series::zeros_like(xv);
     for (std::int64_t i = 0; i < xv.size(0); ++i) {
       staged.select(0, i).copy_(xv.select(0, i));
     }
-    const Trace diff = Trace(staged) - trace(target, false);
-    return sum(square(diff));
+    const Series diff = staged - target;
+    return diff.square().sum();
   };
-  problem.bounds.lower = pluss::optim::pack_series(pluss::make_series(std::vector<double>{-2.0, -2.0, -2.0}, {3}).to(ScalarType::Float64));
-  problem.bounds.upper = pluss::optim::pack_series(pluss::make_series(std::vector<double>{2.0, 2.0, 2.0}, {3}).to(ScalarType::Float64));
+  problem.bounds.lower = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{-2.0, -2.0, -2.0}, {3}).to(ScalarType::Float64));
+  problem.bounds.upper = pluss::subsp::math::optim::pack_series(pluss::make_series(std::vector<double>{2.0, 2.0, 2.0}, {3}).to(ScalarType::Float64));
 
   const Series initial = pluss::make_series(std::vector<double>{1.4, -1.2, 1.1}, {3}).to(ScalarType::Float64);
-  OptimaOptions options = pluss::optim::presets::internal_protocol();
+  OptimaOptions options = pluss::subsp::math::optim::presets::internal_protocol();
   options.internal_protocol.max_iterations = 80;
   options.internal_protocol.constraint_tolerance = 1e-8;
   options.internal_protocol.optimality_tolerance = 1e-6;
@@ -260,18 +257,18 @@ TEST_CASE("Optima autodiff stays connected through staged copy_ objectives", "[o
 TEST_CASE("analytic nonlinear callbacks may leave an unused residual kind undefined", "[optima][analytic]") {
   // minimize x^2 + y^2 subject to 4 - x*y <= 0; the callback defines only the inequality.
   const auto scalar = [](double v) { return pluss::make_series(v).to(ScalarType::Float64); };
-  const auto pair = [&](double x, double y) { return pluss::optim::pack_scalars({{"x", scalar(x)}, {"y", scalar(y)}}); };
+  const auto pair = [&](double x, double y) { return pluss::subsp::math::optim::pack_scalars({{"x", scalar(x)}, {"y", scalar(y)}}); };
   const auto block = [&](double v) { return pluss::make_series(std::vector<double>{v}, {1, 1}).to(ScalarType::Float64); };
 
   for (const auto algorithm :
        {OptimaAlgorithm::SequentialQP, OptimaAlgorithm::WorkingSet, OptimaAlgorithm::InternalProtocol}) {
     ConstrainedProblem problem;
-    problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
-      return square(p.at("x")) + square(p.at("y"));
+    problem.objective.autodiff = [](const ParameterPack<Series>& p) -> Series {
+      return p.at("x").square() + p.at("y").square();
     };
     problem.nonlinear.analytic = [&](const ParameterPack<Series>& p) {
-      const double x = p.at("x").item<double>(), y = p.at("y").item<double>();
-      pluss::optim::NonlinearConstraintEvaluation e;
+      const double x = as_f64(p.at("x")), y = as_f64(p.at("y"));
+      pluss::subsp::math::optim::NonlinearConstraintEvaluation e;
       e.inequality = pluss::make_series(std::vector<double>{4.0 - x * y}, {1}).to(ScalarType::Float64);
       e.inequality_jacobian = ParameterPack<Series>(std::vector<ParameterPack<Series>::Block>{{"x", block(-y)}, {"y", block(-x)}});
       return e;
@@ -282,8 +279,8 @@ TEST_CASE("analytic nonlinear callbacks may leave an unused residual kind undefi
     options.algorithm = algorithm;
     const auto result = optima(problem, pair(1, 3), options);
     REQUIRE(result.exit_flag == OptimaExitFlag::Converged);
-    REQUIRE(result.params.at("x").item<double>() == Approx(2.0).margin(1e-4));
-    REQUIRE(result.params.at("y").item<double>() == Approx(2.0).margin(1e-4));
+    REQUIRE(as_f64(result.params.at("x")) == Approx(2.0).margin(1e-4));
+    REQUIRE(as_f64(result.params.at("y")) == Approx(2.0).margin(1e-4));
   }
 }
 
@@ -291,8 +288,8 @@ TEST_CASE("the elastic QP solver recovers when its default start stalls", "[opti
   // A step with two boxed variables whose bounds are far from the iterate: the minimizer of the model is the interior
   // point d = -g (curvature 1), every bound is slack and every elastic variable is zero. With the default start the
   // interior iteration cycled for penalty weights between 100 and 10^6 and returned a wrong step.
-  using pluss::optim::detail::QpLinearSolverSettings;
-  using pluss::optim::detail::solve_elastic_qp_;
+  using pluss::subsp::math::optim::detail::QpLinearSolverSettings;
+  using pluss::subsp::math::optim::detail::solve_elastic_qp_;
   const std::vector<double> B = {1, 0, 0, 1}, g = {-11.39554, -0.61824};
   const std::vector<double> Ai = {-1, 0, 0, -1, 1, 0, 0, 1}, c = {-0.9, -49.0, -19.0, -950.0}, Ae, h;
   for (const double rho : {10.0, 100.0, 1e3, 1e4, 1e5, 1e6}) {
@@ -303,4 +300,17 @@ TEST_CASE("the elastic QP solver recovers when its default start stalls", "[opti
     REQUIRE(result.d[1] == Approx(0.61824).margin(1e-6));
     REQUIRE(result.elastic_max < 1e-7);
   }
+}
+
+TEST_CASE("Optima exit flags have readable names", "[optima][names]") {
+  using pluss::subsp::math::optim::optima_exit_flag_name;
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::Converged) == "Converged");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::MaxIterations) == "MaxIterations");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::Stopped) == "Stopped");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::NoFeasiblePoint) == "NoFeasiblePoint");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::ObjectiveTargetReached) == "ObjectiveTargetReached");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::NonFiniteEvaluation) == "NonFiniteEvaluation");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::InvalidProblem) == "InvalidProblem");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::NoProgress) == "NoProgress");
+  REQUIRE(optima_exit_flag_name(OptimaExitFlag::ConstraintStationary) == "ConstraintStationary");
 }

@@ -27,13 +27,8 @@ Each iteration does four things.
 
 ## A guided tour
 
-- [Watching the loop](optima_04_sequential_qp/watching_the_loop.md)
-- [The penalty weight](optima_04_sequential_qp/the_penalty_weight.md)
-- [The line search](optima_04_sequential_qp/the_line_search.md)
-- [Curved constraints and the second-order correction](optima_04_sequential_qp/curved_constraints_and_the_second_order_correcti.md)
-- [Restoration, the last resort](optima_04_sequential_qp/restoration_the_last_resort.md)
-- [The subproblem solvers](optima_04_sequential_qp/the_subproblem_solvers.md)
-- [Stopping tolerances](optima_04_sequential_qp/stopping_tolerances.md)
+- [The sequential QP loop](optima_04_sequential_qp/the_sqp_loop.md)
+- [Subproblems, restoration and stopping](optima_04_sequential_qp/subproblems_restoration_and_stopping.md)
 
 ## Decisions
 
@@ -60,12 +55,7 @@ Chapter 5 opens the working-set method and the interior method, the two other qu
 :maxdepth: 2
 :hidden:
 
-optima_04_sequential_qp/watching_the_loop
-optima_04_sequential_qp/the_penalty_weight
-optima_04_sequential_qp/the_line_search
-optima_04_sequential_qp/curved_constraints_and_the_second_order_correcti
-optima_04_sequential_qp/restoration_the_last_resort
-optima_04_sequential_qp/the_subproblem_solvers
-optima_04_sequential_qp/stopping_tolerances
+optima_04_sequential_qp/the_sqp_loop
+optima_04_sequential_qp/subproblems_restoration_and_stopping
 ```
 <!-- apiref:toctree:end -->

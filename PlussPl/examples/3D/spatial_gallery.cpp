@@ -93,7 +93,7 @@ int main() {
   const auto y3 = t.mul(2.0).sin();
   const auto z3 = t.mul(0.35);
   orbit.path3(x3, y3, z3).label("helix").width(2.2F);
-  const auto exit = t.to_vec<double>()[240];
+  const auto exit = t.host<double>()[240];
   orbit.pin("exit arc", pl::Vec3d{std::cos(2.0 * exit), std::sin(2.0 * exit), 0.35 * exit}, 34.0, -18.0);
 
   gallery.save_svg((root / "outputs" / "svg" / "plusspl_3d_gallery.svg").string());

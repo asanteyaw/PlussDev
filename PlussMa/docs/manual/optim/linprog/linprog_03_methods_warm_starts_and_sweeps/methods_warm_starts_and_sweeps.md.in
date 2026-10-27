@@ -1,0 +1,44 @@
+# Methods, warm starts and sweeps
+
+[Back to Linear Programming 3: Methods, Warm Starts and Sweeps](../linprog_03_methods_warm_starts_and_sweeps.md)
+
+Three practical questions come up once a linear program is working. *Which method?* When many plans are equally good the two methods return different ones: the simplex stops at a corner (a plan that uses as few variables as possible) and the interior-point method approaches the optimal segment from inside and converges to a point in its middle. Neither is wrong; choose by the answer you want.
+
+*How to re-solve cheaply?* When the data change a little, the simplex method can restart from the previous optimal basis. For a diet problem with 30 foods and 12 nutrients, a changed requirement can need *zero* simplex iterations from the old basis, because moving a right-hand side does not change which constraints bind until it moves far enough. *How to solve many related programs?* A batched call solves a whole family at once: one cost vector per row, shared constraints, and the same answers as separate solves with a bounded memory use.
+
+## Program 1: The two methods on a tie
+
+Minimize `x0 + x1` subject to `x0 + x1 >= 1` and `0 <= x <= 1`. Every point on the segment from `(1, 0)` to `(0, 1)` is optimal.
+
+@@example Numerical/optimization/guide/lp/208_two_methods.cpp@@
+
+Both methods report the objective 1. The simplex method stops at a corner, `(1, 0)`. The interior point method approaches the optimal segment from inside and converges to a point in its middle, `(0.5, 0.5)`. Neither is wrong. A corner is a plan that uses as few variables as possible, which is usually what you want to act on; a central point spreads the weight evenly, which is what you want when the optimum is a statement about a mixture. If the answer will be used as a plan, ask for the simplex method; if only the optimal value matters, use the default.
+
+## Program 2: Restarting from a previous answer
+
+A cost-minimizing mix of 30 foods must supply at least the required amounts of 12 nutrients. The program solves it from scratch, keeps the optimal basis, and then solves two changed versions both ways: with two requirements changed (one up by 50%, one halved), and with the food the plan uses most made three times as dear.
+
+@@example Numerical/optimization/guide/lp/209_warm_start.cpp@@
+
+The base problem takes 14 simplex iterations from scratch. With two requirements changed, a cold start takes 15 iterations and the warm start **zero**: the old basis is still optimal, because moving a right-hand side does not change which constraints bind until it moves far enough, and the answer is read off at once. With the main food three times as dear, a cold start takes 18 iterations and the warm start 4: a price change makes the old corner no longer the best, and the method pivots from it to the new one. `warm_started` is `yes` in both, which confirms the basis was used. If a basis cannot be used (its size does not match, or it is singular for the new data), the solver silently falls back to a cold start and `warm_started` says `no`, so check it when you count on the saving.
+
+A warm start is for the simplex method only. Reach for it when you re-solve the same model many times with small changes, as in a scenario study, a rolling plan or a branch-and-bound search.
+
+## Program 3: Many programs in one call
+
+A plan chooses quantities of four activities, each with a cost and an emission, to meet a demand of 10 units exactly, with no activity above 6. Minimizing `(1 - t) cost + t emission` for `t = 0, 0.25, 0.5, 0.75, 1` gives five programs. `c` has shape `[5, 4]`, and the call solves them together.
+
+@@example Numerical/optimization/guide/lp/210_batched_sweep.cpp@@
+
+The table traces the trade-off. For `t` of 0 and 0.25 the cheapest plan wins: 6 units of activity 0 and 4 of activity 1, at cost 14 and emission 78. At `t = 0.5` the plan switches to activities 2 and 3, at cost 38 and emission 22, and at `t = 0.75` and 1 to the cleanest, 4 and 6 units, at cost 42 and emission 18. The plan changes only at certain weights and is constant between them, which is how a linear program behaves: the optimal corner changes at a breakpoint of the weight, not smoothly.
+
+The batch gives exactly the answers of five separate solves (the largest difference is 0), and limiting `max_lanes` to 2 gives exactly the same answers again: it changes how much memory the call needs, not what it returns. The bound *values* may differ between lanes, but the pattern of which bounds are finite must be the same in every lane.
+
+## Decisions and pitfalls
+
+- **Ties are resolved differently.** If you need a vertex solution (few non-zero variables), use the simplex; if you want the symmetric centre of the optimal set, the interior-point method.
+- **A warm start is for the simplex method only.** Use it when you re-solve the same model many times with small changes: a scenario study, a rolling plan, a branch-and-bound search.
+- **A warm start from a basis that is no longer feasible costs iterations.** Large changes in the data can invalidate the old basis; the benefit grows with how close the new problem is.
+- **Batches give exactly the answers of separate solves.** `max_lanes` changes the memory the call needs, not what it returns.
+
+Where next: [Chapter 4](../linprog_04_large_sparse_models.md) is for large, sparse models.

@@ -50,7 +50,7 @@ bool weighted_neighbor_votes_flip(std::ostream* err) {
   if (!cls->learn(batch).ok()) return false;
   auto scores_or = cls->infer_scores(features);
   if (!scores_or.ok()) return false;
-  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(scores.size() == 3 && scores[1] < 0.25)) {
     if (err) *err << "weighted neighbor vote should downweight the positive majority near the center\n";
     return false;
@@ -78,7 +78,7 @@ bool weighted_tree_leaf_flips(std::ostream* err) {
   if (!cls->learn(batch).ok()) return false;
   auto scores_or = cls->infer_scores(features);
   if (!scores_or.ok()) return false;
-  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(scores.size() == 3 && scores[0] < 0.25)) {
     if (err) *err << "weighted tree leaf probability should follow weighted class mass\n";
     return false;
@@ -106,7 +106,7 @@ bool weighted_bayes_prior_flips(std::ostream* err) {
   if (!cls->learn(batch).ok()) return false;
   auto scores_or = cls->infer_scores(features);
   if (!scores_or.ok()) return false;
-  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(scores.size() == 2 && scores[0] > 1.0)) {
     if (err) *err << "weighted Bayes prior should favor the higher-weight class\n";
     return false;
@@ -137,7 +137,7 @@ bool weighted_kernel_solution_flips(std::ostream* err) {
   if (!cls->learn(batch, train).ok()) return false;
   auto scores_or = cls->infer_scores(features);
   if (!scores_or.ok()) return false;
-  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto scores = scores_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(scores.size() == 2 && scores[0] > 0.0)) {
     if (err) *err << "weighted kernel solution should favor the higher-weight class\n";
     return false;

@@ -6,6 +6,7 @@
 
 #include <vector>
 
+
 namespace {
 
 using Catch::Approx;
@@ -14,19 +15,15 @@ using pluss::Series;
 using pluss::series::full;
 using pluss::make_series;
 using pluss::subsp::math::optim::ConstrainedProblem;
-using pluss::subsp::math::optim::DualTrace;
 using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::OptimaProblemScaling;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::SequentialQPOptions;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::init_internal_protocol_state;
 using pluss::subsp::math::optim::init_sequential_qp_state;
 using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
+using pluss::subsp::math::diff::square;
 
 Series scalar(double value) {
   return full({}, value, ScalarType::Float64).to(pluss::pCPU);
@@ -42,11 +39,11 @@ TEST_CASE("sequential qp computes objective and inequality normalization on an i
           "[optim][normalization][sqp]") {
   ConstrainedProblem problem;
   const Series target = vec2(0.25, 1.25);
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e6 * sum(square(p.at("x") - trace(target, false)));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    return 1.0e6 * ((p.at("x") - target).square()).sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e-6 * (sum(p.at("x")) - 1.5);
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) -> Series {
+    return 1.0e-6 * (p.at("x").sum() - 1.5);
   };
 
   const ParameterPack<Series> initial({
@@ -61,22 +58,16 @@ TEST_CASE("sequential qp computes objective and inequality normalization on an i
   REQUIRE(state.normalization.objective_scale < 1e-3);
   REQUIRE(state.normalization.inequality_row_scale.defined());
   REQUIRE(state.normalization.inequality_row_scale.numel() >= 1);
-  REQUIRE(state.normalization.inequality_row_scale.max().item<double>() > 1e3);
+  REQUIRE(as_f64(state.normalization.inequality_row_scale.max()) > 1e3);
 }
 
 TEST_CASE("interior point computes objective and equality normalization on an ill-scaled problem",
           "[optim][normalization][ip]") {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e6 * (square(p.at("x0") - 0.5) + square(p.at("x1") - 0.5));
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) -> Series {
+    return 1.0e6 * ((p.at("x0") - 0.5).square() + (p.at("x1") - 0.5).square());
   };
-  problem.objective.autodiff_dual = [](const ParameterPack<DualTrace>& p) -> DualTrace {
-    return 1.0e6 * (square(p.at("x0") - 0.5) + square(p.at("x1") - 0.5));
-  };
-  problem.nonlinear.equality = [](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e-6 * (p.at("x0") + p.at("x1") - 1.0);
-  };
-  problem.nonlinear.equality_dual = [](const ParameterPack<DualTrace>& p) -> DualTrace {
+  problem.nonlinear.equality = [](const ParameterPack<Series>& p) -> Series {
     return 1.0e-6 * (p.at("x0") + p.at("x1") - 1.0);
   };
 
@@ -94,18 +85,18 @@ TEST_CASE("interior point computes objective and equality normalization on an il
   REQUIRE(state.normalization.objective_scale < 1e-3);
   REQUIRE(state.normalization.equality_row_scale.defined());
   REQUIRE(state.normalization.equality_row_scale.numel() == 1);
-  REQUIRE(state.normalization.equality_row_scale.item<double>() > 1e3);
+  REQUIRE(as_f64(state.normalization.equality_row_scale) > 1e3);
 }
 
 TEST_CASE("optima uses normalization to solve ill-scaled sqp and interior-point problems",
           "[optim][normalization][solve]") {
   ConstrainedProblem sqp_problem;
   const Series sqp_target = vec2(0.25, 1.25);
-  sqp_problem.objective.autodiff = [sqp_target](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e6 * sum(square(p.at("x") - trace(sqp_target, false)));
+  sqp_problem.objective.autodiff = [sqp_target](const ParameterPack<Series>& p) -> Series {
+    return 1.0e6 * ((p.at("x") - sqp_target).square()).sum();
   };
-  sqp_problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e-6 * (sum(p.at("x")) - 1.5);
+  sqp_problem.nonlinear.inequality = [](const ParameterPack<Series>& p) -> Series {
+    return 1.0e-6 * (p.at("x").sum() - 1.5);
   };
   sqp_problem.bounds.lower = ParameterPack<Series>({
       {"x", vec2(0.0, 0.0)},
@@ -122,22 +113,16 @@ TEST_CASE("optima uses normalization to solve ill-scaled sqp and interior-point 
           {"x", vec2(1.0, 1.0)},
       }),
       sqp_options);
-  const auto sqp_x = sqp_result.params.at("x").to_vec<double>();
+  const auto sqp_x = sqp_result.params.at("x").host<double>();
   REQUIRE(sqp_result.evaluation.max_constraint_violation <= 1e-6);
   REQUIRE(sqp_x[0] == Approx(0.25).margin(5e-2));
   REQUIRE(sqp_x[1] == Approx(1.25).margin(5e-2));
 
   ConstrainedProblem ip_problem;
-  ip_problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e6 * (square(p.at("x0") - 0.5) + square(p.at("x1") - 0.5));
+  ip_problem.objective.autodiff = [](const ParameterPack<Series>& p) -> Series {
+    return 1.0e6 * ((p.at("x0") - 0.5).square() + (p.at("x1") - 0.5).square());
   };
-  ip_problem.objective.autodiff_dual = [](const ParameterPack<DualTrace>& p) -> DualTrace {
-    return 1.0e6 * (square(p.at("x0") - 0.5) + square(p.at("x1") - 0.5));
-  };
-  ip_problem.nonlinear.equality = [](const ParameterPack<Trace>& p) -> Trace {
-    return 1.0e-6 * (p.at("x0") + p.at("x1") - 1.0);
-  };
-  ip_problem.nonlinear.equality_dual = [](const ParameterPack<DualTrace>& p) -> DualTrace {
+  ip_problem.nonlinear.equality = [](const ParameterPack<Series>& p) -> Series {
     return 1.0e-6 * (p.at("x0") + p.at("x1") - 1.0);
   };
 
@@ -154,14 +139,14 @@ TEST_CASE("optima uses normalization to solve ill-scaled sqp and interior-point 
                                 }),
                                 ip_options);
   CAPTURE(static_cast<int>(ip_result.exit_flag), ip_result.message,
-          ip_result.evaluation.value.item<double>(),
-          ip_result.params.at("x0").item<double>(),
-          ip_result.params.at("x1").item<double>(),
+          as_f64(ip_result.evaluation.value),
+          as_f64(ip_result.params.at("x0")),
+          as_f64(ip_result.params.at("x1")),
           ip_result.output.first_order_optimality,
-          ip_result.evaluation.gradient.at("x0").item<double>(),
-          ip_result.evaluation.gradient.at("x1").item<double>());
+          as_f64(ip_result.evaluation.gradient.at("x0")),
+          as_f64(ip_result.evaluation.gradient.at("x1")));
 
   REQUIRE(ip_result.evaluation.max_constraint_violation <= 1e-5);
-  REQUIRE(ip_result.params.at("x0").item<double>() == Approx(0.5).margin(1e-2));
-  REQUIRE(ip_result.params.at("x1").item<double>() == Approx(0.5).margin(1e-2));
+  REQUIRE(as_f64(ip_result.params.at("x0")) == Approx(0.5).margin(1e-2));
+  REQUIRE(as_f64(ip_result.params.at("x1")) == Approx(0.5).margin(1e-2));
 }

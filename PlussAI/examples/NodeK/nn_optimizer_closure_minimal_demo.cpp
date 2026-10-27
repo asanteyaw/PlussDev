@@ -30,7 +30,7 @@ int main() {
     }
   }
 
-  const auto ww = w.to_vec<float>();
+  const auto ww = w.host<float>();
   std::cout << "trained_w=[" << ww[0] << ", " << ww[1] << "]\n";
   return 0;
 }

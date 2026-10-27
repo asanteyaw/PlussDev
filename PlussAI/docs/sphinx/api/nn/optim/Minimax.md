@@ -67,24 +67,16 @@ nn::optim::MinimaxConstraints constraints{};
 constraints.inequalities = [](const std::vector<Series>& vars) {
   return std::vector<Series>{vars[0].sub(3.0)};  // x <= 3
 };
-constraints.inequalities_trace = [](const std::vector<diff::Trace>& vars) {
-  return std::vector<diff::Trace>{vars[0] - 3.0};
-};
 
 nn::optim::Minimax minimax({&x}, options, constraints);
 ```
 
-Every constraint an `enable_constraint_autodiff = true`
-[`MinimaxOptions`](MinimaxOptions.md) (the default) needs to actually
-*enforce* -- as opposed to merely tracking violation through the dual
-multiplier update, which alone never moves the primal parameter -- must be
-supplied in **both** forms: the plain `Series`-based callable
-(`equalities`/`inequalities`) *and* the `Trace`-based counterpart
-(`equalities_trace`/`inequalities_trace`). Construction validates this and
-throws immediately if one is set without the other while
-`enable_constraint_autodiff` is on -- see
-[`MinimaxConstraints`](MinimaxConstraints.md) for exactly which state
-each form feeds and the exact error.
+A constraint is written once, as a residual over plain `Series`
+(`equalities`/`inequalities`). With `enable_constraint_autodiff = true`
+(the default) [`MinimaxOptions`](MinimaxOptions.md) differentiates that
+same callable to enforce the constraint on the primal parameter; the dual
+multiplier update reads its value. See
+[`MinimaxConstraints`](MinimaxConstraints.md) for the exact fields.
 
 ## State
 
@@ -130,7 +122,6 @@ constraint.
 ```cpp
 #include <pluss/pluss.h>
 #include <pluss/ai.h>
-#include <pluss/subsp/math/diff.h>
 
 #include <iostream>
 #include <vector>
@@ -138,7 +129,6 @@ constraint.
 int main() {
   namespace nn = pluss::ai::nn;
   namespace optim = nn::optim;
-  namespace diff = pluss::subsp::math::diff;
   using pluss::Config;
   using pluss::ScalarType;
   using pluss::Series;
@@ -154,9 +144,6 @@ int main() {
   optim::MinimaxConstraints constraints{};
   constraints.inequalities = [](const std::vector<Series>& vars) {
     return std::vector<Series>{vars[0].sub(3.0)};
-  };
-  constraints.inequalities_trace = [](const std::vector<diff::Trace>& vars) {
-    return std::vector<diff::Trace>{vars[0] - 3.0};
   };
 
   Series x = pluss::make_series(0.0F, f32);
@@ -196,7 +183,6 @@ constrained optimum is the point on that line closest to `(5, 5)`: `(2,
 ```cpp
 #include <pluss/pluss.h>
 #include <pluss/ai.h>
-#include <pluss/subsp/math/diff.h>
 
 #include <iostream>
 #include <vector>
@@ -204,7 +190,6 @@ constrained optimum is the point on that line closest to `(5, 5)`: `(2,
 int main() {
   namespace nn = pluss::ai::nn;
   namespace optim = nn::optim;
-  namespace diff = pluss::subsp::math::diff;
   using pluss::Config;
   using pluss::ScalarType;
   using pluss::Series;
@@ -220,9 +205,6 @@ int main() {
   optim::MinimaxConstraints constraints{};
   constraints.equalities = [](const std::vector<Series>& vars) {
     return std::vector<Series>{vars[0].add(vars[1]).sub(4.0)};
-  };
-  constraints.equalities_trace = [](const std::vector<diff::Trace>& vars) {
-    return std::vector<diff::Trace>{vars[0] + vars[1] - 4.0};
   };
 
   Series x = pluss::make_series(0.0F, f32);

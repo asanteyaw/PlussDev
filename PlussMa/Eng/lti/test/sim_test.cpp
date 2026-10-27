@@ -21,7 +21,7 @@ void expect(bool condition, const std::string &message) {
 void expect_close(const pluss::Series &actual,
                   const std::vector<double> &expected,
                   double tolerance = 2e-10) {
-  const auto values = actual.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(pluss::ScalarType::Float64).host<double>();
   expect(values.size() == expected.size(), "simulation result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =
@@ -35,7 +35,7 @@ void expect_complex_close(const pluss::Series &actual,
                           const std::vector<std::complex<double>> &expected,
                           double tolerance = 2e-10) {
   const auto values =
-      actual.to(pluss::ScalarType::Complex128).to_vec<std::complex<double>>();
+      actual.to(pluss::ScalarType::Complex128).host<std::complex<double>>();
   expect(values.size() == expected.size(), "complex result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =
@@ -75,7 +75,7 @@ int main() {
          "continuous simulation shapes are wrong");
   expect_close(zoh.values, {0.0, 1.0 - std::exp(-0.2), 1.0 - std::exp(-0.7),
                             1.0 - std::exp(-1.5)});
-  expect_close(zoh.states, zoh.values.to_vec<double>());
+  expect_close(zoh.states, zoh.values.flatten().pull<double>());
 
   const auto ramp = irregular_time.reshape({4, 1});
   const auto linear = lti::sim(first_order(), ramp, irregular_time,
@@ -162,7 +162,7 @@ int main() {
       pluss::series::make({{1.0, 1.0, 1.0, 1.0}}).transpose(0, 1);
   expect(!strided_input.is_contiguous(), "strided input became contiguous");
   expect_close(lti::sim(first_order(), strided_input, irregular_time).values,
-               zoh.values.to_vec<double>());
+               zoh.values.flatten().pull<double>());
 
   using Complex = std::complex<double>;
   const auto complex_system =

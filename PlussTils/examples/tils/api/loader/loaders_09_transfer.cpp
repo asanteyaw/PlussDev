@@ -27,5 +27,5 @@ int main() {
   std::cout << "converted batches float64: "
             << (converted.batch_at(0).x().scalar_type() == pluss::ScalarType::Float64) << '\n';
   std::cout << "values survive conversion: "
-            << (converted.batch_at(1).x().to_vec<double>() == std::vector<double>{2.5, 3.5}) << '\n';
+            << (converted.batch_at(1).x().host<double>() == std::vector<double>{2.5, 3.5}) << '\n';
 }

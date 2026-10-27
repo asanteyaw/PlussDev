@@ -45,7 +45,7 @@ void validate_roots(const Series &value, const char *name) {
 }
 
 std::vector<Complex> host_roots(const Series &value) {
-  return value.to(Platform::CPU, ScalarType::Complex128).to_vec<Complex>();
+  return value.to(Platform::CPU, ScalarType::Complex128).host<Complex>();
 }
 
 double root_scale(const Complex value) {

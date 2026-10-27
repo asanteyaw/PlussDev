@@ -21,7 +21,7 @@ void expect(bool c, const std::string &m) {
 Series mat(const std::vector<double> &v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(F64); }
 Series vec(const std::vector<double> &v) { return mat(v, {static_cast<std::int64_t>(v.size())}); }
 double rel_diff(const Series &a, const std::vector<double> &b, double floor = 1e-14) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch " + std::to_string(av.size()) + " vs " + std::to_string(b.size()));
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -63,7 +63,7 @@ int main() {
       };
       const auto sim = pluss::subsp::natsci::common::ssa::gillespie(prop, nu, x0, 1.7, opt);
       std::vector<double> hist(41, 0.0);
-      for (double v : sim.state.contiguous().to_vec<double>())
+      for (double v : sim.state.contiguous().host<double>())
         hist[static_cast<std::size_t>(std::llround(v))] += 1.0 / 400.0;
       double mean_exact = 0.0, mean_sim = 0.0;
       for (std::size_t i = 0; i <= 40; ++i) {
@@ -78,15 +78,15 @@ int main() {
       const Series n0 = vec({3.0});
       const std::vector<double> ts{0.5, 1.5, 3.0};
       for (std::size_t i = 0; i < ts.size(); ++i) {
-        const double closed = bd::linear_extinction_probability(n0, 1.1, 0.9, vec({ts[i]})).item<double>();
+        const double closed = bd::linear_extinction_probability(n0, 1.1, 0.9, vec({ts[i]})).host<double>().front();
         expect(std::abs(closed - ref::lin_p0_t[i]) < 2e-7, "linear birth-death extinction probability at t = " + std::to_string(ts[i]) + ": " + std::to_string(closed) + " vs " + std::to_string(ref::lin_p0_t[i]));
       }
       expect(std::abs(bd::linear_ultimate_extinction(3.0, 1.1, 0.9) - std::pow(0.9 / 1.1, 3.0)) < 1e-15 && bd::linear_ultimate_extinction(3.0, 0.9, 1.1) == 1.0, "ultimate extinction");
       // critical case b = d: alpha = b t / (1 + b t); the limit from the supercritical formula agrees
-      const double a = bd::linear_extinction_probability(vec({1.0}), 1.0, 1.0, vec({4.0})).item<double>();
-      const double near = bd::linear_extinction_probability(vec({1.0}), 1.0 + 1e-8, 1.0, vec({4.0})).item<double>();
+      const double a = bd::linear_extinction_probability(vec({1.0}), 1.0, 1.0, vec({4.0})).host<double>().front();
+      const double near = bd::linear_extinction_probability(vec({1.0}), 1.0 + 1e-8, 1.0, vec({4.0})).host<double>().front();
       expect(std::abs(a - 0.8) < 1e-14 && std::abs(a - near) < 1e-6, "critical branch alpha = bt / (1 + bt)");
-      expect(std::abs(bd::linear_mean(n0, 1.1, 0.9, vec({2.0})).item<double>() - 3.0 * std::exp(0.4)) < 1e-12, "linear mean n0 e^{(b-d)t}");
+      expect(std::abs(bd::linear_mean(n0, 1.1, 0.9, vec({2.0})).host<double>().front() - 3.0 * std::exp(0.4)) < 1e-12, "linear mean n0 e^{(b-d)t}");
     }
     // ---- Galton-Watson
     {
@@ -103,11 +103,11 @@ int main() {
       for (std::size_t c = 0; c < 3; ++c) {
         const double mu = ref::pva_cases[3 * c], s2 = ref::pva_cases[3 * c + 1], xd = ref::pva_cases[3 * c + 2];
         for (std::size_t k = 0; k < 3; ++k) {
-          const double got = bd::quasi_extinction_cdf(vec({mu}), vec({s2}), vec({xd}), vec({ref::pva_ts[k]})).item<double>();
+          const double got = bd::quasi_extinction_cdf(vec({mu}), vec({s2}), vec({xd}), vec({ref::pva_ts[k]})).host<double>().front();
           expect(std::abs(got - ref::pva_mc[3 * c + k]) < 4e-3, "quasi-extinction CDF case " + std::to_string(c) + " t = " + std::to_string(ref::pva_ts[k]) + ": " + std::to_string(got) + " vs MC " + std::to_string(ref::pva_mc[3 * c + k]));
         }
-        const double ult = bd::ultimate_quasi_extinction(vec({mu}), vec({s2}), vec({xd})).item<double>();
-        const double far = bd::quasi_extinction_cdf(vec({mu}), vec({s2}), vec({xd}), vec({1e6})).item<double>();
+        const double ult = bd::ultimate_quasi_extinction(vec({mu}), vec({s2}), vec({xd})).host<double>().front();
+        const double far = bd::quasi_extinction_cdf(vec({mu}), vec({s2}), vec({xd}), vec({1e6})).host<double>().front();
         expect(std::abs(far - ult) < 1e-9, "the CDF tends to the ultimate probability");
       }
     }

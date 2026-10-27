@@ -27,7 +27,7 @@ int main() {
     lp::Options options;
     options.method = method;
     const auto r = lp::solve(p, options);
-    const auto x = r.x.to_vec<double>();
+    const auto x = r.x.host<double>();
     std::cout << std::left << std::setw(16) << (method == lp::Method::InteriorPoint ? "interior point" : "simplex") << "objective " << r.objective.item<double>()
               << "   x = (" << x[0] << ", " << x[1] << ")\n";
   }

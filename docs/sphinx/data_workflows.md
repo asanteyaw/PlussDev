@@ -108,7 +108,7 @@ Access the underlying payload only when you need lower-level APIs:
 
 ```cpp
 auto balance_series = df.features("balance").as_series();
-auto values = balance_series.to_vec<double>();
+auto values = balance_series.host<double>();
 ```
 
 ## Filter cases
@@ -125,7 +125,7 @@ auto selected_jobs = df.query("job in ('management', 'technician')");
 Use an explicit boolean `Series` mask when the predicate comes from C++ logic:
 
 ```cpp
-auto ages = df.features("age").as_series().to_vec<std::int64_t>();
+auto ages = df.features("age").as_series().host<std::int64_t>();
 auto mask = pluss::Series::zeros(
     {static_cast<std::int64_t>(ages.size())},
     pluss::codem::ScalarType::Bool);
@@ -280,8 +280,8 @@ namespace pl = pluss::pl;
 auto fig = pl::studio("balance");
 fig.pane2("Balance")
     .trend(
-        df.features("age").as_series().to_vec<double>(),
-        df.features("balance").as_series().to_vec<double>())
+        df.features("age").as_series().host<double>(),
+        df.features("balance").as_series().host<double>())
     .title("balance by age");
 fig.save_svg("balance.svg");
 ```

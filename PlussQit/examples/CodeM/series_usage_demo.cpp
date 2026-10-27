@@ -55,7 +55,7 @@ int main() {
     auto a_mps = a.to(pluss::Platform::MPS);
     std::cout << "a.to(MPS) platform enum=" << static_cast<int>(a_mps.platform()) << "\n";
     auto a_mps_back = a_mps.to(pluss::Platform::CPU);
-    std::cout << "a.to(MPS).to(CPU) first=" << a_mps_back.to_vec<double>(0) << "\n";
+    std::cout << "a.to(MPS).to(CPU) first=" << a_mps_back.host<double>().array().data.at(static_cast<std::size_t>(0)) << "\n";
   } else {
     std::cout << "MPS backend not available in this build/runtime\n";
   }
@@ -64,7 +64,7 @@ int main() {
   auto d = b.sum();
 
   std::cout << "a numel=" << a.numel() << " c numel=" << c.numel() << "\n";
-  std::cout << "b shape=(2,2) d=" << d.to_vec<std::int64_t>()[0] << "\n";
+  std::cout << "b shape=(2,2) d=" << d.host<std::int64_t>()[0] << "\n";
 
   std::cout << "looking at 1D rendering\n" << pluss::series::print(a) << "\n";
   std::cout << "looking at 0D rendering\n" << pluss::series::print(d) << "\n";
@@ -81,14 +81,14 @@ int main() {
   auto rand_vals = pluss::series::randn({3, 4});
   std::cout << "randn(3,4) default:\n" << rand_vals << "\n";
   std::cout << "to vec:\n";
-  const auto all_vals = rand_vals.to_vec<double>();
+  const auto all_vals = rand_vals.host<double>();
   std::cout << "all: [";
   for (std::size_t i = 0; i < all_vals.size(); ++i) {
     if (i != 0) std::cout << ", ";
     std::cout << all_vals[i];
   }
   std::cout << "]\n";
-  std::cout << "first via to_vec(index)=" << rand_vals.to_vec<double>(0) << "\n";
+  std::cout << "first via item(index)=" << rand_vals.host<double>().array().data.at(static_cast<std::size_t>(0)) << "\n";
   auto h = rand_vals.host<double>().array();
   std::cout << "host shape=(" << h.shape()[0] << "," << h.shape()[1] << ") numel=" << h.numel() << "\n";
   std::cout << "first=" << h.data.at(0) << "\n";

@@ -102,9 +102,9 @@ void print_keys(const Catalog& catalog) {
 
 void print_numbers(const Catalog& catalog, std::string_view key) {
   const auto stream = catalog.keys(key);
-  const auto values = stream.as_series().to_vec<double>();
+  const auto values = stream.as_series().host<double>();
   const auto valid = pluss::kindle::detail::validity_mask(stream);
-  const auto mask = valid.has_value() ? valid->to_vec<bool>() : std::vector<bool>{};
+  const auto mask = valid.has_value() ? valid->host<bool>() : std::vector<bool>{};
   const auto old_precision = std::cout.precision();
   std::cout << std::setprecision(12) << key << "=[";
   for (std::size_t i = 0; i < values.size(); ++i) {
@@ -119,7 +119,7 @@ void print_words(const Catalog& catalog, std::string_view key) {
   const auto stream = catalog.keys(key);
   const auto values = stream.as_note().vector();
   const auto valid = pluss::kindle::detail::validity_mask(stream);
-  const auto mask = valid.has_value() ? valid->to_vec<bool>() : std::vector<bool>{};
+  const auto mask = valid.has_value() ? valid->host<bool>() : std::vector<bool>{};
   std::cout << key << "=[";
   for (std::size_t i = 0; i < values.size(); ++i) {
     if (i != 0) std::cout << ", ";

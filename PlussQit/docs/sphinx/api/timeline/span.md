@@ -393,7 +393,7 @@ options.unit = pluss::TimelineSpanUnit::BusinessDays;
 options.calendar.holidays =
     pluss::timeline::date("2024-07-08")
         .epoch_days()
-        .to_vec<std::int64_t>();
+        .host<std::int64_t>();
 std::cout << pluss::series::print(friday.span(monday, options)) << '\n';
 ```
 

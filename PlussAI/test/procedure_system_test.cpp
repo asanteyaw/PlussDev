@@ -86,8 +86,8 @@ bool run_procedure_system_checks(std::ostream* err = nullptr) {
     const pluss::Series x = vec({1.0, 2.0, 4.0, 8.0});
     const ai::ProcedureResult serial = branch_graph(1).run({ai::procedure::input("x", x)});
     const ai::ProcedureResult parallel = branch_graph(4).run({ai::procedure::input("x", x)});
-    const std::vector<double> a = serial.get<pluss::Series>("score").to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
-    const std::vector<double> b = parallel.get<pluss::Series>("score").to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+    const std::vector<double> a = serial.get<pluss::Series>("score").to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
+    const std::vector<double> b = parallel.get<pluss::Series>("score").to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
     if (a != b || a != std::vector<double>{-1.75, 2.25, 16.25, 68.25}) {
       if (err) *err << "Procedure system should produce identical Series results in serial and parallel execution\n";
       return false;
@@ -154,7 +154,7 @@ bool run_procedure_system_checks(std::ostream* err = nullptr) {
     proc.save(bundle.string());
     const ai::Procedure restored = ai::procedure::load(bundle.string());
     const ai::ProcedureResult out = restored.run({ai::procedure::input("x", vec({2.0, 5.0}))});
-    const std::vector<double> got = out.get<pluss::Series>("store").to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+    const std::vector<double> got = out.get<pluss::Series>("store").to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
     std::filesystem::remove_all(bundle);
     if (got != std::vector<double>{6.0, 15.0}) {
       if (err) *err << "Procedure system should reload registry-backed callable steps and preserve sink output\n";

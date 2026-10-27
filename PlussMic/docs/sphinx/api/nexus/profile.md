@@ -114,11 +114,11 @@ for (std::int64_t i = 0; i < profile.ncases(); ++i) {
   auto idx = static_cast<std::size_t>(i);
   std::cout << profile.features("table").as_note().at(idx) << " "
             << std::boolalpha
-            << profile.features("meta_ready").as_series().to_vec<bool>()[idx] << " "
+            << profile.features("meta_ready").as_series().host<bool>()[idx] << " "
             << profile.features("primary_key").as_note().at(idx) << " "
-            << profile.features("links").as_series().to_vec<std::int64_t>()[idx] << " "
-            << profile.features("left_links").as_series().to_vec<std::int64_t>()[idx] << " "
-            << profile.features("right_links").as_series().to_vec<std::int64_t>()[idx] << " "
+            << profile.features("links").as_series().host<std::int64_t>()[idx] << " "
+            << profile.features("left_links").as_series().host<std::int64_t>()[idx] << " "
+            << profile.features("right_links").as_series().host<std::int64_t>()[idx] << " "
             << profile.features("time_field").as_note().at(idx) << "\n";
 }
 ```
@@ -141,9 +141,9 @@ health columns.
 
 ```cpp
 std::cout << std::boolalpha
-          << profile.features("meta_ready").as_series().to_vec<bool>()[2] << " "
-          << profile.features("key_missing_rows").as_series().to_vec<std::int64_t>()[2] << " "
-          << profile.features("key_duplicate_rows").as_series().to_vec<std::int64_t>()[2];
+          << profile.features("meta_ready").as_series().host<bool>()[2] << " "
+          << profile.features("key_missing_rows").as_series().host<std::int64_t>()[2] << " "
+          << profile.features("key_duplicate_rows").as_series().host<std::int64_t>()[2];
 ```
 
 ### Output
@@ -168,8 +168,8 @@ auto broken = nx.apply("account", [](const DataFrame&) {
 });
 
 auto broken_profile = broken.profile();
-std::cout << broken_profile.features("key_duplicate_rows").as_series().to_vec<std::int64_t>()[1] << " "
-          << broken_profile.features("key_missing_rows").as_series().to_vec<std::int64_t>()[1];
+std::cout << broken_profile.features("key_duplicate_rows").as_series().host<std::int64_t>()[1] << " "
+          << broken_profile.features("key_missing_rows").as_series().host<std::int64_t>()[1];
 ```
 
 ### Output

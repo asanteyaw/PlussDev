@@ -51,7 +51,7 @@ two absent lanes similarly remain in source order at the end.
 Example 2. Apply the positions at an explicit host boundary.
 
 ```cpp
-auto order = values.argsort().to_vec<std::int64_t>();
+auto order = values.argsort().host<std::int64_t>();
 auto source = values.host();
 std::vector<std::int64_t> arranged;
 arranged.reserve(order.size());

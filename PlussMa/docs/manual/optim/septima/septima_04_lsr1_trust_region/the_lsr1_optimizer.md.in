@@ -1,0 +1,56 @@
+# The L-SR1 trust-region optimizer
+
+[Back to Septima 4: The L-SR1 Trust-Region Optimizer](../septima_04_lsr1_trust_region.md)
+
+Septima's third solver is a **trust-region** method with a limited-memory symmetric-rank-one (SR1) model of the curvature. Where L-BFGS builds a model that is always a bowl (positive curvature) and takes whatever step the model suggests, L-SR1 keeps a *radius* inside which it trusts its model: a step is accepted only if the objective falls about as much as the model predicted, and the radius grows when the model is reliable and shrinks when it is not. The SR1 update can represent negative curvature, which is what lets the method see a direction of descent at a saddle.
+
+The page shows the method in four situations. A first run prints every field of the result for a quadratic and then compares all three optimizers on a ten-variable chain, where they differ in what they *achieve*, not only in how long they take. Saddles are where the model difference matters. The settings that matter (memory and the starting radius) are measured, with a trace of the trust region at work. Finally the block form takes several parameter blocks and a complex parameter.
+
+## Program 1: A first run, and a comparison
+
+The first part prints every field of the result for a quadratic. The second part solves the ten-variable chained Rosenbrock function with all three optimizers.
+
+@@example Numerical/optimization/guide/septima/131_lsr1_first.cpp@@
+
+On the quadratic the method converges in 3 iterations and 4 function evaluations. The evaluations exceed the iterations because a trust-region step may be tried more than once: a step the function does not reward is rejected, the radius shrinks, and the step is tried again. `gradient_norm` is the **2-norm** of the gradient, where Septima's `gradient_inf_norm` is the largest component; the default tolerance is 1e-6 on it.
+
+On the chain, the three optimizers differ in what they achieve, not only in how long they take. L-SR1 converges in 119 iterations and 286 evaluations to an objective of 9.2e-20 with a gradient of 1.1e-08. L-BFGS spends 124 iterations and 124 evaluations and stops with `NoProgress` at 3.3e-10 and a gradient of 2.5e-04: it uses one evaluation per iteration where L-SR1 uses about two and a half, but it cannot get any closer. Adam, at a learning rate of 0.05, converges after 4388 iterations. When you need a very accurate answer to a smooth unconstrained problem, L-SR1 is the optimizer to try.
+
+## Program 2: Saddles
+
+`f(x, y) = x^2 - y^2 + y^4 / 4` curves up along `x` and down along `y`. Its origin is a saddle, and its minima are at `(0, ±sqrt(2))`, where `f = -1`. Each run starts near the line `y = 0`, where the gradient in `y` is small, so that the starting point is almost stationary.
+
+@@example Numerical/optimization/guide/septima/132_saddle.cpp@@
+
+From a start with `y = 0.1` both methods find the minimum. As the start moves closer to the saddle, L-BFGS stops improving beside it: with `(x, y) = (0.001, 0.001)` it ends with `NoProgress` at an objective of -8.0e-06, and with `y = 1e-6` at -1.6e-11, both essentially at the saddle's value of 0. Its model is a bowl, so it sees nothing to gain by leaving. L-SR1 finds the minimum, -1, from every one of these starts, because its model has a direction of falling curvature and the trust-region step follows it.
+
+The last row is the caution. At `y = 1e-9` the gradient is already below the tolerance, so both methods report `Converged` at a point whose objective is -4e-18, the saddle. The tests the solvers use are first-order tests: a gradient of zero identifies a stationary point, and a saddle is as stationary as a minimum. If a saddle could be a stationary point of your problem, perturb the start, run from several starts, and compare the objective values.
+
+## Program 3: The settings that matter
+
+The memory of the curvature model, and the starting size of the trust region, on the chain; then the first twelve iterations.
+
+@@example Numerical/optimization/guide/septima/133_lsr1_options.cpp@@
+
+The memory matters more than for L-BFGS. With a memory of 1 or 3 the model is too poor to follow the valley: neither converges in 1000 iterations, ending at 1.9 and 0.14. With 10 it converges in 119 iterations. A memory larger than the number of variables is capped at the number of variables (more than n step vectors in n dimensions are linearly dependent and add nothing), so 30 gives exactly the same run as 10 on this ten-variable problem; the default of 10 is a sensible value, and more never helps once it reaches n. The initial radius is adapted by the method and matters little: 1 (the default) converges in 119 iterations, 100 in 175, and 0.01, which starts the method taking tiny steps, ends with `NoProgress` after 385 iterations at 6.3e-12.
+
+The trace shows the trust region at work. The radius sits at 1 while the model predicts well; at iteration 6 the decrease in the objective is much smaller than predicted, the radius drops to 0.25 and then recovers to 0.5, and the steps follow it: lengths of 0.5, 0.25, 0.5. The objective falls from 707 to 8.5 in twelve iterations. A radius that keeps shrinking would mean the model is poor, which usually means the memory is too small.
+
+## Program 4: Several blocks, and a complex parameter
+
+The block form takes the objective as a function of a list of `Series` blocks and returns the blocks in their original shapes and dtypes along with the result.
+
+@@example Numerical/optimization/guide/septima/134_lsr1_blocks.cpp@@
+
+The first problem fits a vector `w` and a scalar `b`; the answer, `w = (-0.4, 0.6, 1.6)` and `b = 0.4`, satisfies the optimality conditions of the objective, and is found in 4 iterations. The second fits a complex number to the target `1 + 2i` with a real loss and finds it in 2. As with the other optimizers, the real and imaginary parts are treated as two independent coordinates; the loss must be real.
+
+## Decisions and pitfalls
+
+- **Evaluations exceed iterations in a trust-region method.** A step the function does not reward is rejected, the radius shrinks and the step is tried again; read evaluations, not iterations, when each is expensive.
+- **L-SR1 is more accurate, at more evaluations.** On the chain it reached a gradient of 1e-8 where L-BFGS stopped near 1e-4; choose by whether you need that precision.
+- **All three tests are first-order.** A zero gradient identifies a stationary point and a saddle is as stationary as a minimum; if a saddle could be an answer, check the second-order behaviour yourself.
+- **L-BFGS stops beside a saddle; L-SR1 can leave it.** The bowl model of L-BFGS sees nothing to gain, while the SR1 model sees the negative curvature; but at a start already below the tolerance, neither moves.
+- **Keep the memory at 10 or more.** A memory of 1 or 3 is too poor to follow the valley and neither converges in 1000 iterations; a memory above the number of variables is capped at it.
+- **Watch the radius.** A radius that keeps collapsing means the model predicts the objective badly (nearly flat or non-smooth region); a radius that always sits at its maximum means you can afford larger steps.
+
+Where next: [Chapter 5](../septima_05_choosing_and_worked_problems.md) chooses between the solvers on worked problems.

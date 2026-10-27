@@ -502,7 +502,7 @@ inline Series to_series(const Series& values) {
 }
 
 inline std::vector<double> to_f64_vector(const Series& values) {
-  return values.to(ScalarType::Float64).to_vec<double>();
+  return values.to(ScalarType::Float64).host<double>();
 }
 
 inline Series index_series(std::int64_t count, double first = 1.0) {

@@ -1,8 +1,0 @@
-# The Pareto archive
-
-[Back to The Black-Box MADS Minimisers](../dfo_11_mads_black_box.md)
-
-
-@@example Numerical/optimization/guide/dfo/405_mads_pareto_archive.cpp@@
-
-The archive is a record of the search, not a computed front: it holds non-dominated points among those evaluated. With a tight limit it drops the most crowded entries, so a small archive still spans the front. To trace a front, solve with several weightings and merge the archives.

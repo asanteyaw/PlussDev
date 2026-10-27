@@ -69,7 +69,7 @@ int main() {
 
   const auto problem = build({});
   const auto d = milp::solve(problem);
-  report("dense branch and bound", d.x.to_vec<double>(), d.objective.item<double>(), d.nodes);
+  report("dense branch and bound", d.x.host<double>(), d.objective.item<double>(), d.nodes);
   const auto s = lp::solve_sparse(problem);
   report("sparse branch and cut", s.x, s.objective, s.nodes);
 

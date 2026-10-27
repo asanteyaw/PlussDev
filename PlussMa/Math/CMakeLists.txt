@@ -1,3 +1,5 @@
+add_subdirectory(Calculus)
+
 if(PLUSSMA_MATH_ENABLE_ALGEBRA)
     add_subdirectory(Algebra)
 endif()

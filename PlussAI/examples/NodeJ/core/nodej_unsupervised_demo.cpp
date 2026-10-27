@@ -48,7 +48,7 @@ int main() {
     std::cerr << "kmeans map failed: " << labels_or.status().message << "\n";
     return 1;
   }
-  const auto labels = labels_or.value().reshape({60}).to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+  const auto labels = labels_or.value().reshape({60}).to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
   std::cout << "kmeans labels (first 10): ";
   for (int i = 0; i < 10; ++i) std::cout << labels[static_cast<std::size_t>(i)] << " ";
   std::cout << "\n";

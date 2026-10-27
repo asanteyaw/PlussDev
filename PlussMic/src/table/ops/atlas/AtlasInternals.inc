@@ -79,7 +79,7 @@ std::int64_t find_note_label(const Slate& labels, std::string_view key) {
 std::int64_t find_int_label(const Slate& labels, std::int64_t key) {
   PLUSS_CHECK(labels.kind() == SlateKind::Series, "Atlas::loc(int64): axis0 labels must be numeric Series");
   const auto& s = labels.as_series();
-  const auto vals = s.to_vec<std::int64_t>();
+  const auto vals = s.host<std::int64_t>();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (vals[static_cast<std::size_t>(i)] == key) {
       return i;
@@ -114,9 +114,9 @@ std::string label_string_at(const Slate& labels, std::int64_t i) {
       const auto s = labels.as_series();
       switch (s.scalar_type()) {
         case pluss::codem::ScalarType::Int64:
-          return std::to_string(s.to_vec<std::int64_t>(i));
+          return std::to_string(s.host<std::int64_t>().array().data.at(static_cast<std::size_t>(i)));
         case pluss::codem::ScalarType::Float64:
-          return std::to_string(s.to_vec<double>(i));
+          return std::to_string(s.host<double>().array().data.at(static_cast<std::size_t>(i)));
         default:
           return std::to_string(i);
       }

@@ -155,7 +155,7 @@ LuWorkspace run_lu_factorization_(const Series& a, const char* op) {
 
 std::int32_t read_status_code_(const Series& status_mps) {
   const Series code_cpu = status_mps.to(Platform::CPU).to(ScalarType::Int32).contiguous();
-  const auto v = code_cpu.to_vec<std::int32_t>();
+  const auto v = code_cpu.host<std::int32_t>();
   return v.empty() ? 0 : v[0];
 }
 
@@ -279,8 +279,8 @@ LuDetStats lu_det_stats(const Series& a) {
 
   const Series lu_cpu = ws.lu.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   const Series piv_cpu = ws.pivots.to(Platform::CPU).to(ScalarType::UInt32).contiguous();
-  const auto lu = lu_cpu.to_vec<float>();
-  const auto piv = piv_cpu.to_vec<std::uint32_t>();
+  const auto lu = lu_cpu.host<float>();
+  const auto piv = piv_cpu.host<std::uint32_t>();
 
   const auto n64 = a.sizes()[0];
   int swap_count = 0;

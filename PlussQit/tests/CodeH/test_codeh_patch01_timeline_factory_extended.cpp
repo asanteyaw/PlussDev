@@ -32,7 +32,7 @@ TEST_CASE("CodeH extended Timeline factories cover strict date/time, repetition,
   REQUIRE(repeated_sizes.size() == 2);
   REQUIRE(repeated_sizes[0] == 2);
   REQUIRE(repeated_sizes[1] == 2);
-  REQUIRE(repeated.day().to_vec<std::int32_t>() ==
+  REQUIRE(repeated.day().host<std::int32_t>() ==
           std::vector<std::int32_t>({5, 5, 5, 5}));
 
   const auto random_between =

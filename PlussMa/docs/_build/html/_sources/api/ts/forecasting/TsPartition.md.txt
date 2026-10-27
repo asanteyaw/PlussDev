@@ -161,7 +161,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -235,7 +235,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -310,7 +310,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -386,7 +386,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -421,7 +421,7 @@ int main() {
   const auto partition = ts::TsPartition::expanding_window(20, 3);
   const Series test_idx = partition.test(0);
   std::cout << "test indices of fold 0: ";
-  for (auto i : test_idx.to_vec<std::int64_t>()) std::cout << i << " ";
+  for (auto i : test_idx.host<std::int64_t>()) std::cout << i << " ";
   std::cout << "\ntraining mask sum of fold 0: " << partition.training_mask(0).to(pluss::ScalarType::Float64).sum().item<double>() << "\n";
 }
 ```

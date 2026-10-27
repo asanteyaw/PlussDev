@@ -43,8 +43,8 @@ auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.freq();
 auto counts = out.registry(0).fields("id");
-std::cout << "[" << std::get<pluss::Series>(counts.at(0)).to_vec<std::int64_t>()[0] << ", "
-          << std::get<pluss::Series>(counts.at(1)).to_vec<std::int64_t>()[0] << "]";
+std::cout << "[" << std::get<pluss::Series>(counts.at(0)).host<std::int64_t>()[0] << ", "
+          << std::get<pluss::Series>(counts.at(1)).host<std::int64_t>()[0] << "]";
 ```
 
 ### Output

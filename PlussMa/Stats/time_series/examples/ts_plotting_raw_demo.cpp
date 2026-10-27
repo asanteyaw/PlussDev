@@ -13,7 +13,7 @@ int main() {
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 1800;
 
-  const auto eps = pluss::series::randn({n}, cfg, 20260411ULL).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, 20260411ULL).host<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = 0.70 * y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];

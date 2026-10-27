@@ -556,7 +556,7 @@ std::vector<std::complex<double>> fourier_(
   const auto n = static_cast<std::int64_t>(values.size());
   const Series input = pluss::make_series(values, {n});
   const Series output = inverse ? input.ifft() : input.fft();
-  return output.to_vec<std::complex<double>>();
+  return output.pull<std::complex<double>>();
 }
 
 std::vector<std::complex<double>> frft_(const std::vector<std::complex<double>>& x, double a) {
@@ -576,7 +576,7 @@ std::vector<std::complex<double>> frft_(const std::vector<std::complex<double>>&
 
   const Series fu = pluss::make_series(u, {m}).fft();
   const Series fv = pluss::make_series(v, {m}).fft();
-  const auto convolution = fu.mul(fv).ifft().to_vec<std::complex<double>>();
+  const auto convolution = fu.mul(fv).ifft().pull<std::complex<double>>();
 
   std::vector<std::complex<double>> out(static_cast<std::size_t>(n), {0.0, 0.0});
   for (std::int64_t k = 0; k < n; ++k) {
@@ -1025,7 +1025,7 @@ double heston_price_cos(OptionType type,
   const Series s = pluss::series::full({1}, spot, out_cfg);
   const Series k = pluss::series::full({1}, strike, out_cfg);
   const Series t = pluss::series::full({1}, maturity, out_cfg);
-  return heston_price_cos(type, s, k, rate, dividend_yield, t, params, options, out_cfg).reshape({1}).item<double>();
+  return heston_price_cos(type, s, k, rate, dividend_yield, t, params, options, out_cfg).reshape({1}).select(0, 0).item<double>();
 }
 
 Series heston_price_cos(OptionType type,

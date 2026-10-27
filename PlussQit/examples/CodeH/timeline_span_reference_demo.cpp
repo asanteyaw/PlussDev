@@ -99,7 +99,7 @@ int main() {
   show("business_neither_closed", friday.span(monday, business));
   business.closed = pluss::TimelineSpanClosed::Right;
   business.calendar.holidays =
-      pluss::timeline::date("2024-07-08").epoch_days().to_vec<std::int64_t>();
+      pluss::timeline::date("2024-07-08").epoch_days().host<std::int64_t>();
   show("business_custom_holiday", friday.span(monday, business));
   business.calendar = pluss::BusinessCalendar::monfri();
   business.calendar.weekmask = 0b1000000;

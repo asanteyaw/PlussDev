@@ -74,10 +74,10 @@ TEST_CASE("MPS native sort and argsort strict route parity", "[mps][sort][native
   const auto sort_cpu = x_cpu.sort(/*dim=*/1, /*descending=*/true, /*stable=*/false);
   const auto sort_mps = x_mps.sort(/*dim=*/1, /*descending=*/true, /*stable=*/false);
   REQUIRE(sort_mps.platform() == pluss::pMPS);
-  require_close_vec_(sort_mps.to(pluss::pCPU).to_vec<float>(), sort_cpu.to_vec<float>());
+  require_close_vec_(sort_mps.to(pluss::pCPU).host<float>().array().data, sort_cpu.host<float>().array().data);
 
   const auto argsort_cpu = x_cpu.argsort(/*dim=*/1, /*descending=*/false, /*stable=*/false);
   const auto argsort_mps = x_mps.argsort(/*dim=*/1, /*descending=*/false, /*stable=*/false);
   REQUIRE(argsort_mps.platform() == pluss::pMPS);
-  REQUIRE(argsort_mps.to(pluss::pCPU).to_vec<std::int64_t>() == argsort_cpu.to_vec<std::int64_t>());
+  REQUIRE(argsort_mps.to(pluss::pCPU).host<std::int64_t>() == argsort_cpu.host<std::int64_t>());
 }

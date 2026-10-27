@@ -30,8 +30,8 @@ int main() {
   const auto product = x.calc.diff.ito_product(mu_x, sigma_x, y);
   std::cout << "product:   drift " << product.drift.item<double>() << "   (X mu_y + Y mu_x + cov = "
             << xv * my + yv * mx + cov << ")\n";
-  std::cout << "           diffusion (" << product.diffusion.to_vec<double>()[0] << ", "
-            << product.diffusion.to_vec<double>()[1] << ")   (X sigma_y + Y sigma_x = (" << xv * rho * sy + yv * sx << ", "
+  std::cout << "           diffusion (" << product.diffusion.host<double>()[0] << ", "
+            << product.diffusion.host<double>()[1] << ")   (X sigma_y + Y sigma_x = (" << xv * rho * sy + yv * sx << ", "
             << xv * std::sqrt(1 - rho * rho) * sy << "))\n";
 
   const auto quotient = x.calc.diff.ito_quotient(mu_x, sigma_x, y);

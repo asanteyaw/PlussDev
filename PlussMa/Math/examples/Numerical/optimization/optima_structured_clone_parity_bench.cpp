@@ -23,7 +23,6 @@ using pluss::subsp::math::optim::OptimaLinearSystemStructure;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::OptimaProblemScaling;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::optima_stall_category_name;
 
@@ -51,10 +50,6 @@ std::string var_name(std::int64_t i) {
 
 Series scalar(double v) {
   return pluss::make_series(v).to(ScalarType::Float64);
-}
-
-double as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
 }
 
 ParameterPack<Series> make_scalar_blocks(const std::vector<double>& values) {
@@ -98,15 +93,15 @@ ConstrainedProblem make_structured_problem(std::int64_t n,
   ConstrainedProblem problem;
 
   problem.objective.autodiff =
-      [target, n](const ParameterPack<Trace>& p) -> Trace {
-    Trace value = pluss::subsp::math::optim::trace(scalar(0.0), false);
+      [target, n](const ParameterPack<Series>& p) -> Series {
+    Series value = scalar(0.0);
     for (std::int64_t i = 0; i < n; ++i) {
-      const Trace xi = p.at(var_name(i));
+      const Series xi = p.at(var_name(i));
       const double ti = target[static_cast<std::size_t>(i)];
-      value = value + square(xi - ti);
+      value = value + (xi - ti).square();
       if (i > 0) {
-        const Trace xim1 = p.at(var_name(i - 1));
-        value = value + 0.15 * square(xi - xim1);
+        const Series xim1 = p.at(var_name(i - 1));
+        value = value + 0.15 * (xi - xim1).square();
       }
     }
     return value;

@@ -1,7 +1,7 @@
 // Three ways to hand Septima the same objective, f = (a - 1)^2 + (b + 2)^2. (1) One block: the parameters are a single
-// vector and the objective is a function of one `Trace`. (2) Named blocks: the parameters are a `ParameterPack` and the
+// vector and the objective is a function of one `pluss::Series`. (2) Named blocks: the parameters are a `ParameterPack` and the
 // objective looks them up by name, which keeps a model with many parts readable. (3) A plain `Series` objective over
-// a list of blocks: the function is written with ordinary `Series` operations and no `Trace` at all. All three describe
+// a list of blocks: the function is written with ordinary `Series` operations and no `pluss::Series` at all. All three describe
 // one function, so they must find the same point; the table shows the result of each, and the last row repeats the
 // first in single precision.
 #include <pluss/ma.h>
@@ -9,9 +9,9 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
-using Pack = optim::ParameterPack<Trace>;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -32,32 +32,32 @@ int main() {
 
   // 1. One block: a vector (a, b).
   const auto one = optim::septima(
-      [](const Trace& v) -> Trace {
-        const Trace target = optim::fixed(vec({1.0, -2.0}));
-        return optim::sum(optim::square(v - target));
+      [](const pluss::Series& v) -> pluss::Series {
+        const pluss::Series target = vec({1.0, -2.0});
+        return (v - target).square().sum();
       },
       vec({0.0, 0.0}), options);
   report("one block", one.params[0].select(0, 0).item<double>(), one.params[0].select(0, 1).item<double>(), one);
 
   // 2. Named blocks.
-  std::function<Trace(const Pack&)> named = [](const Pack& p) {
-    return optim::square(p.at("a") - 1.0) + optim::square(p.at("b") + 2.0);
+  std::function<pluss::Series(const Pack&)> named = [](const Pack& p) {
+    return (p.at("a") - 1.0).square() + (p.at("b") + 2.0).square();
   };
   const auto two = optim::septima(named, optim::pack_scalars({{"a", scalar(0.0)}, {"b", scalar(0.0)}}), options);
-  report("named blocks", two.params[0].item<double>(), two.params[1].item<double>(), two);
+  report("named blocks", as_f64(two.params[0]), as_f64(two.params[1]), two);
 
   // 3. A Series objective over a list of blocks.
   std::function<pluss::Series(const std::vector<pluss::Series>&)> plain = [](const std::vector<pluss::Series>& p) {
     return (p[0] - 1.0).square() + (p[1] + 2.0).square();
   };
   const auto three = optim::septima(plain, std::vector<pluss::Series>{scalar(0.0), scalar(0.0)}, options);
-  report("Series objective", three.params[0].item<double>(), three.params[1].item<double>(), three);
+  report("Series objective", as_f64(three.params[0]), as_f64(three.params[1]), three);
 
   // The first form again, in single precision.
   const auto single = optim::septima(
-      [](const Trace& v) -> Trace {
-        const Trace target = optim::fixed(vec({1.0, -2.0}).to(pluss::ScalarType::Float32));
-        return optim::sum(optim::square(v - target));
+      [](const pluss::Series& v) -> pluss::Series {
+        const pluss::Series target = vec({1.0, -2.0}).to(pluss::ScalarType::Float32);
+        return (v - target).square().sum();
       },
       vec({0.0, 0.0}).to(pluss::ScalarType::Float32), options);
   report("one block, Float32", single.params[0].select(0, 0).item<double>(), single.params[0].select(0, 1).item<double>(), single);

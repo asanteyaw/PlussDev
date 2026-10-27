@@ -218,7 +218,7 @@ double black_scholes_price(OptionType type,
                              volatility,
                              cfg,
                              "black_scholes_price");
-  return core.price.item<double>();
+  return core.price.host<double>().front();
 }
 
 Series black_scholes_price(OptionType type,
@@ -278,11 +278,11 @@ BlackScholesGreeks black_scholes_greeks(OptionType type,
                              cfg,
                              "black_scholes_greeks");
   return BlackScholesGreeks{
-      .delta = core.delta.item<double>(),
-      .gamma = core.gamma.item<double>(),
-      .vega = core.vega.item<double>(),
-      .theta = core.theta.item<double>(),
-      .rho = core.rho.item<double>(),
+      .delta = core.delta.host<double>().front(),
+      .gamma = core.gamma.host<double>().front(),
+      .vega = core.vega.host<double>().front(),
+      .theta = core.theta.host<double>().front(),
+      .rho = core.rho.host<double>().front(),
   };
 }
 

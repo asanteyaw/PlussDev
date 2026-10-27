@@ -25,7 +25,7 @@ Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_
 Series mat(const std::vector<double> &v, std::int64_t r, std::int64_t c) { return pluss::make_series(v, {r, c}).to(F64); }
 double rel(double a, double b) { return std::abs(a - b) / (1e-300 + std::abs(b)); }
 double max_rel(const Series &got, const std::vector<double> &want) {
-  const auto g = got.contiguous().to_vec<double>();
+  const auto g = got.contiguous().host<double>();
   expect(g.size() == want.size(), "size mismatch");
   double worst = 0.0;
   for (std::size_t i = 0; i < g.size(); ++i)
@@ -43,7 +43,7 @@ int main() {
       const Series x = vec({0.0, 1e-9, 0.3, 1.0, 50.0});
       const Series w = pluss::subsp::math::special::lambert_w0(x);
       expect(w.mul(w.exp()).sub(x).abs().max().item<double>() < 1e-12, "w e^w = x");
-      expect(std::abs(pluss::subsp::math::special::lambert_w0(vec({1.0})).item<double>() - 0.5671432904097838) < 1e-14, "omega constant");
+      expect(std::abs(pluss::subsp::math::special::lambert_w0(vec({1.0})).host<double>().front() - 0.5671432904097838) < 1e-14, "omega constant");
     }
     // ---- mechanism engine: Michaelis-Menten against the exact steady state and against kcat S / (Km + S)
     {
@@ -53,7 +53,7 @@ int main() {
       expect(max_rel(enz::turnover(mm, conc), ref::mm_v) < 1e-12, "engine MM vs sympy exact");
       const double km = 1.5 / 10.0;
       expect(max_rel(enz::turnover(mm, conc), std::vector<double>{0.5 * 0.1 / (km + 0.1), 0.5 * 0.5 / (km + 0.5), 0.5 * 2.0 / (km + 2.0), 0.5 * 10.0 / (km + 10.0)}) < 1e-12, "engine MM equals the closed form");
-      const auto pi = enz::steady_state(mm, conc).contiguous().to_vec<double>();
+      const auto pi = enz::steady_state(mm, conc).contiguous().host<double>();
       expect(std::abs(pi[0] + pi[1] - 1.0) < 1e-14, "populations sum to one");
     }
     // ---- ordered bi-bi and ping-pong with all reverse steps, concentrations [A, B, P, Q], all lanes in one call
@@ -68,7 +68,7 @@ int main() {
       const double kma = (km1 + k2) / k1, kmb = (km3 + k4) / k3, vmax = k2 * k4 / (k2 + k4);
       const Series a = vec({ref::pp_conc[0], ref::pp_conc[8]}), b = vec({ref::pp_conc[1], ref::pp_conc[9]});
       const Series closed = enz::pingpong_bibi(a, b, vmax, kma * k4 / (k2 + k4), kmb * k2 / (k2 + k4));
-      const std::vector<double> eng = {enz::turnover(pp, mat(std::vector<double>(ref::pp_conc.begin(), ref::pp_conc.begin() + 4), 1, 4)).item<double>(), enz::turnover(pp, mat(std::vector<double>(ref::pp_conc.begin() + 8, ref::pp_conc.begin() + 12), 1, 4)).item<double>()};
+      const std::vector<double> eng = {enz::turnover(pp, mat(std::vector<double>(ref::pp_conc.begin(), ref::pp_conc.begin() + 4), 1, 4)).host<double>().front(), enz::turnover(pp, mat(std::vector<double>(ref::pp_conc.begin() + 8, ref::pp_conc.begin() + 12), 1, 4)).host<double>().front()};
       expect(max_rel(closed, eng) < 1e-12, "ping-pong closed form equals the engine's initial rate");
     }
     // ---- dead-end complexes: the exact steady state reproduces uncompetitive and substrate-inhibition laws
@@ -78,8 +78,8 @@ int main() {
       for (std::size_t i = 0; i < ref::dead_v.size(); ++i) {
         const double kon = ref::dead_params[4 * i], koff = ref::dead_params[4 * i + 1], s = ref::dead_params[4 * i + 2], inh = ref::dead_params[4 * i + 3];
         enz::Mechanism m{3, {step(0, 1, k1, 0), step(1, 0, km1), step(1, 0, kcat, -1, 1.0), step(1, 2, kon, 1), step(2, 1, koff)}};
-        got.push_back(enz::turnover(m, vec({s, inh}).unsqueeze(0)).item<double>());
-        want.push_back(enz::uncompetitive_inhibition(vec({s}), vec({inh}), kcat, km, koff / kon).item<double>());
+        got.push_back(enz::turnover(m, vec({s, inh}).unsqueeze(0)).host<double>().front());
+        want.push_back(enz::uncompetitive_inhibition(vec({s}), vec({inh}), kcat, km, koff / kon).host<double>().front());
       }
       expect(max_rel(vec(got), ref::dead_v) < 1e-12, "dead-end engine vs sympy exact");
       expect(max_rel(vec(want), ref::dead_v) < 1e-12, "uncompetitive inhibition closed form vs exact steady state");
@@ -87,16 +87,16 @@ int main() {
       // mixed inhibition reduces to the competitive and uncompetitive limits
       const Series s = vec({0.2, 1.0}), inh = vec({1.0, 2.0});
       expect(max_rel(enz::mixed_inhibition(s, inh, 0.5, km, 0.8, 1e300), std::vector<double>{0.5 * 0.2 / (km * (1 + 1.0 / 0.8) + 0.2), 0.5 * 1.0 / (km * (1 + 2.0 / 0.8) + 1.0)}) < 1e-12, "mixed -> competitive");
-      expect(max_rel(enz::mixed_inhibition(s, inh, 0.5, km, 1e300, 0.8), enz::uncompetitive_inhibition(s, inh, 0.5, km, 0.8).contiguous().to_vec<double>()) < 1e-12, "mixed -> uncompetitive");
+      expect(max_rel(enz::mixed_inhibition(s, inh, 0.5, km, 1e300, 0.8), enz::uncompetitive_inhibition(s, inh, 0.5, km, 0.8).contiguous().host<double>()) < 1e-12, "mixed -> uncompetitive");
       // reversible Michaelis-Menten: no net flux at equilibrium (Haldane relationship Keq = Vf Kp / (Vr Ks))
       const double vf = 2.0, ks = 0.5, vr = 0.8, kp = 1.5, keq = vf * kp / (vr * ks);
-      expect(std::abs(enz::reversible_michaelis_menten(vec({1.0}), vec({keq}), vf, ks, vr, kp).item<double>()) < 1e-14, "reversible MM: zero flux at S/P = 1/Keq... i.e. P/S = Keq");
+      expect(std::abs(enz::reversible_michaelis_menten(vec({1.0}), vec({keq}), vf, ks, vr, kp).host<double>().front()) < 1e-14, "reversible MM: zero flux at S/P = 1/Keq... i.e. P/S = Keq");
     }
     // ---- Morrison tight binding
     {
       std::vector<double> got;
       for (std::size_t i = 0; i < ref::mor_a.size(); ++i)
-        got.push_back(enz::morrison(vec({ref::mor_E[i]}), vec({ref::mor_I[i]}), ref::mor_K[i]).item<double>());
+        got.push_back(enz::morrison(vec({ref::mor_E[i]}), vec({ref::mor_I[i]}), ref::mor_K[i]).host<double>().front());
       expect(max_rel(vec(got), ref::mor_a) < 1e-9, "Morrison vs the numerical binding equilibrium");
     }
     // ---- progress curves
@@ -107,11 +107,11 @@ int main() {
         const Series sm = enz::integrated_michaelis_menten(tt, s0, kcat * e0, km);
         sm_err = 0.0;
         for (std::size_t i = 0; i < t.size(); ++i)
-          sm_err = std::max(sm_err, std::abs(sm.contiguous().to_vec<double>()[i] - s_ref[i]) / s0);
+          sm_err = std::max(sm_err, std::abs(sm.contiguous().host<double>()[i] - s_ref[i]) / s0);
         tq_err = 0.0;
         for (std::size_t i = 1; i < t.size(); ++i) {
           const Series st = dyn::simulate(enz::tqssa_rates(e0, kcat, km), vec({s0}), 0.0, t[i], 3000);
-          tq_err = std::max(tq_err, std::abs(st.item<double>() - st_ref[i]) / s0);
+          tq_err = std::max(tq_err, std::abs(st.host<double>().front() - st_ref[i]) / s0);
         }
       };
       double sm_a, tq_a, sm_b, tq_b;
@@ -137,25 +137,25 @@ int main() {
         const Series w = th::transformed_formation_gibbs_fixed(vec({ref::th_dgf0[3]}), ref::th_nh[3], ph, temperature);
         const Series dgf = atp.unsqueeze(-1).unite(std::vector<Series>{w.unsqueeze(-1), adp.unsqueeze(-1), pi.unsqueeze(-1)}, -1);
         const Series dgr = th::reaction_gibbs(dgf, vec({-1.0, -1.0, 1.0, 1.0}));
-        got[i] = std::log(th::apparent_equilibrium_constant(dgr, temperature).item<double>());
+        got[i] = std::log(th::apparent_equilibrium_constant(dgr, temperature).host<double>().front());
       }
       double worst = 0.0;
       for (std::size_t i = 0; i < cases; ++i)
         worst = std::max(worst, std::abs(got[i] - ref::th_lnK[i]));
       expect(worst < 1e-9, "apparent equilibrium constant vs explicit species equilibrium, worst |d ln K'| = " + std::to_string(worst));
       // limits: pH << pKa gives P = 1; at pH = pKa the two-state polynomial is 2; batched lanes agree with scalar calls
-      expect(std::abs(th::proton_binding_polynomial(vec({0.0}), vec({7.0}).unsqueeze(0).select(0, 0)).item<double>() - (1.0 + std::pow(10.0, -7.0))) < 1e-15, "P at pH 0");
-      expect(std::abs(th::proton_binding_polynomial(vec({6.5}), vec({6.5})).item<double>() - 2.0) < 1e-14, "P = 2 at pH = pKa");
+      expect(std::abs(th::proton_binding_polynomial(vec({0.0}), vec({7.0}).unsqueeze(0).select(0, 0)).host<double>().front() - (1.0 + std::pow(10.0, -7.0))) < 1e-15, "P at pH 0");
+      expect(std::abs(th::proton_binding_polynomial(vec({6.5}), vec({6.5})).host<double>().front() - 2.0) < 1e-14, "P = 2 at pH = pKa");
       // slope of Delta_r G'^o with pH far from every pKa equals nu_H R T ln10 (here nu_H counts hydrogens of the products minus reactants)
       const double rt = th::gas_constant() * 298.15;
       const Series g = th::transformed_formation_gibbs(vec({0.0, 0.0}), 2.0, vec({1.0}).unsqueeze(0).select(0, 0), vec({10.0, 11.0}), 298.15);
-      const auto gv = g.contiguous().to_vec<double>();
+      const auto gv = g.contiguous().host<double>();
       expect(std::abs((gv[1] - gv[0]) / (rt * std::log(10.0)) - 1.0) < 1e-6, "far above the pKa the group behaves like the deprotonated species (n - 1 hydrogens)");
       // extended Debye-Hueckel: zero ionic strength -> no correction, monotone in |z|
       const Series lg = th::debye_huckel_ln_gamma(vec({1.0, 2.0, 3.0}), vec({0.1, 0.1, 0.1}), 1.17582);
-      const auto lv = lg.contiguous().to_vec<double>();
+      const auto lv = lg.contiguous().host<double>();
       expect(lv[0] < 0.0 && lv[1] < lv[0] && lv[2] < lv[1], "activity coefficient decreases with charge");
-      expect(std::abs(th::debye_huckel_ln_gamma(vec({2.0}), vec({0.0}), 1.17582).item<double>()) < 1e-15, "gamma = 1 at zero ionic strength");
+      expect(std::abs(th::debye_huckel_ln_gamma(vec({2.0}), vec({0.0}), 1.17582).host<double>().front()) < 1e-15, "gamma = 1 at zero ionic strength");
     }
 
     // ---- ionic strength, pMg and charge: the Legendre transform as implemented in eQuilibrator (transcribed in the generator)
@@ -166,12 +166,12 @@ int main() {
       const std::size_t n = ref::eq_group_gibbs.size();
       for (std::size_t i = 0; i < n; ++i) {
         const double ph = ref::eq_cases[4 * i], pmg = ref::eq_cases[4 * i + 1], ionic = ref::eq_cases[4 * i + 2], temperature = ref::eq_cases[4 * i + 3];
-        const double got = th::transformed_group_gibbs(ms, vec({ph}), pmg, vec({ionic}), temperature).item<double>();
+        const double got = th::transformed_group_gibbs(ms, vec({ph}), pmg, vec({ionic}), temperature).host<double>().front();
         expect(std::abs(got - ref::eq_group_gibbs[i]) < 1e-6 * (1.0 + std::abs(ref::eq_group_gibbs[i])), "group transform vs eQuilibrator, case " + std::to_string(i) + ": " + std::to_string(got) + " vs " + std::to_string(ref::eq_group_gibbs[i]));
-        expect(std::abs(th::debye_huckel_factor(vec({ionic}), temperature).item<double>() - ref::eq_dh[i]) < 1e-9 * (1.0 + std::abs(ref::eq_dh[i])), "Debye-Hueckel factor vs eQuilibrator");
+        expect(std::abs(th::debye_huckel_factor(vec({ionic}), temperature).host<double>().front() - ref::eq_dh[i]) < 1e-9 * (1.0 + std::abs(ref::eq_dh[i])), "Debye-Hueckel factor vs eQuilibrator");
       }
       // DH(I, T) = R T alpha_Alberty sqrt(I)/(1 + 1.6 sqrt(I)) with alpha = 1.17582 at 298.15 K (Alberty), within the 1e-3 of the published value
-      const double alpha = th::debye_huckel_factor(vec({1.0}), 298.15).item<double>() * (1.0 + 1.6) / (th::gas_constant() * 298.15);
+      const double alpha = th::debye_huckel_factor(vec({1.0}), 298.15).host<double>().front() * (1.0 + 1.6) / (th::gas_constant() * 298.15);
       expect(std::abs(alpha - 1.17582) < 1e-3, "alpha(298.15 K) = 1.17582 as quoted by Alberty, got " + std::to_string(alpha));
       expect(std::abs(th::magnesium_formation_gibbs(298.15) + 455300.0) < 1e-9, "Delta_f G(Mg2+) at 298.15 K");
     }
@@ -188,8 +188,8 @@ int main() {
         expect(max_rel(enz::mwc_active_probability(c, m, ka, ki, be), pw) < 1e-12, "MWC active probability vs enumeration, case " + std::to_string(i));
         expect(max_rel(enz::mwc_enzyme_velocity(c, m, 1.0, ka, ki, be, b), vw) < 1e-12, "MWC enzyme velocity vs enumeration, case " + std::to_string(i));
         const auto ch = enz::mwc_characteristics(m, vec({ka}), vec({ki}), vec({be}));
-        expect(rel(ch.leakiness.item<double>(), ref::mwc_chars[4 * i]) < 1e-13 && rel(ch.maximum.item<double>(), ref::mwc_chars[4 * i + 1]) < 1e-12, "MWC leakiness / maximum, case " + std::to_string(i));
-        expect(rel(ch.ec50.item<double>(), ref::mwc_chars[4 * i + 2]) < 1e-8 && rel(ch.hill.item<double>(), ref::mwc_chars[4 * i + 3]) < 1e-6, "MWC EC50 and Hill coefficient, case " + std::to_string(i));
+        expect(rel(ch.leakiness.host<double>().front(), ref::mwc_chars[4 * i]) < 1e-13 && rel(ch.maximum.host<double>().front(), ref::mwc_chars[4 * i + 1]) < 1e-12, "MWC leakiness / maximum, case " + std::to_string(i));
+        expect(rel(ch.ec50.host<double>().front(), ref::mwc_chars[4 * i + 2]) < 1e-8 && rel(ch.hill.host<double>().front(), ref::mwc_chars[4 * i + 3]) < 1e-6, "MWC EC50 and Hill coefficient, case " + std::to_string(i));
       }
       // no cooperativity when both states bind alike and turn over alike: v = Vmax c / (K + c)
       const Series cc = vec({0.1, 1.0, 10.0});
@@ -222,7 +222,7 @@ int main() {
         const Series conc = vec({0.05, 0.3, 1.0, 5.0, 40.0}).unsqueeze(-1);
         const Series v = enz::turnover(mech, conc);
         const Series closed = enz::mwc_enzyme_velocity(vec({0.05, 0.3, 1.0, 5.0, 40.0}), m, static_cast<double>(m) * kcat, 0.5, 20.0, -2.0, 0.0);
-        expect(max_rel(v, closed.contiguous().to_vec<double>()) < 2e-3, "mass-action MWC mechanism approaches the rapid-equilibrium rate law (fast exchange)");
+        expect(max_rel(v, closed.contiguous().host<double>()) < 2e-3, "mass-action MWC mechanism approaches the rapid-equilibrium rate law (fast exchange)");
       }
     }
   } catch (const std::exception &e) {

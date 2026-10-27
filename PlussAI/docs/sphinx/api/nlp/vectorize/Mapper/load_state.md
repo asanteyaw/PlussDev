@@ -136,7 +136,7 @@ int main() {
   nlp::vectorize::Mapper restored{};
   restored.load_state(original.dump_state());
   const auto batch = restored.count_dense(wf.infer(std::vector<std::string>{"zebra cat"})).value();
-  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "row shape = " << batch.sample_count() << " x " << batch.feature_count() << "\n";
   std::cout << "counts:";
   for (const double value : values) std::cout << " " << value;

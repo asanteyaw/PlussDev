@@ -1,6 +1,14 @@
 <!-- generated from distributions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
 
-# Distributions and maximum likelihood
+# Distributions guide
+
+This guide covers the probability distributions of PlussMa, `pluss::subsp::stats::distr`: sixty families, each with a density, a distribution function, random draws and, for the common ones, a maximum-likelihood fit with standard errors and intervals. Each page explains one topic in prose and then works through complete programs whose printed output is the real output of the program. Most programs draw their data from a distribution with known parameters, so you can see how closely a method recovers the truth; several repeat an experiment many times to measure how reliable a method is.
+
+The chapters build on each other:
+
+- **Evaluating and sampling** (chapter 1): densities, distribution functions and their logarithms, accurate far into the tails; random draws that are reproducible by seed; and the less common families reached by kind.
+- **Maximum likelihood** (chapter 2): fitting families to data, reading the standard errors, covariance and intervals, and choosing which parameters are held fixed.
+- **Heavy tails and mixtures** (chapter 3): the normal inverse Gaussian family for skewed, heavy-tailed data, and mixtures of normals for data with several groups.
 
 Chapters, in reading order:
 

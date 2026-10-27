@@ -12,14 +12,10 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::pCPU;
-using pluss::optim::SeptimaConstraints;
-using pluss::optim::SeptimaLbfgsLineSearch;
-using pluss::optim::SeptimaOptimizer;
-using pluss::optim::SeptimaSolveOptions;
-using pluss::optim::Trace;
-using pluss::optim::square;
-using pluss::optim::sum;
-using pluss::optim::trace;
+using pluss::subsp::math::optim::SeptimaConstraints;
+using pluss::subsp::math::optim::SeptimaLbfgsLineSearch;
+using pluss::subsp::math::optim::SeptimaOptimizer;
+using pluss::subsp::math::optim::SeptimaSolveOptions;
 
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {
@@ -47,7 +43,7 @@ SeptimaSolveOptions make_default_options() {
 }
 
 std::vector<double> to_vec_f64(const Series& x) {
-  return x.to(pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 void expect_vec_near(const std::vector<double>& lhs,
@@ -72,19 +68,19 @@ void expect_vec_near(const std::vector<double>& lhs,
 } // namespace
 
 int main() {
-  static_assert(pluss::optim::SeptimaOptions{}.optimizer == SeptimaOptimizer::Adam);
+  static_assert(pluss::subsp::math::optim::SeptimaOptions{}.optimizer == SeptimaOptimizer::Adam);
 
   int failures = 0;
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
   const Series init = pluss::make_series(std::vector<double>{6.0, -6.0}, {2}, cfg).reshape({2});
   const Series target = pluss::make_series(std::vector<double>{1.0, -2.0}, {2}, cfg).reshape({2});
-  const auto objective = [target](const Trace& x) -> Trace { return sum(square(x - trace(target, false))) * 0.5; };
+  const auto objective = [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; };
   const double initial_objective = as_f64_scalar((init - target).square().sum() * 0.5);
 
   // --- Scenario 1: ADAM default path remains default and convergent ---
   SeptimaSolveOptions adam_options = make_default_options();
 
-  const auto adam_fit = pluss::optim::septima(objective, init, adam_options);
+  const auto adam_fit = pluss::subsp::math::optim::septima(objective, init, adam_options);
   expect(adam_fit.state.step > 0, "ADAM run should execute at least one step", &failures);
   expect(adam_fit.state.adam.step > 0, "ADAM run should update adam state", &failures);
   expect(adam_fit.objective_value < initial_objective, "ADAM run should reduce objective", &failures);
@@ -97,7 +93,7 @@ int main() {
   lbfgs_options.step.lbfgs.history_size = 12;
   lbfgs_options.step.lbfgs.curvature_tolerance = 1e-12;
 
-  const auto lbfgs_fit = pluss::optim::septima(objective, init, lbfgs_options);
+  const auto lbfgs_fit = pluss::subsp::math::optim::septima(objective, init, lbfgs_options);
   expect(lbfgs_fit.state.step > 0, "LBFGS run should execute at least one step", &failures);
   expect(lbfgs_fit.state.adam.step == 0, "LBFGS run should not mutate adam state", &failures);
   expect(lbfgs_fit.state.lbfgs_prev_grad_flat.defined(), "LBFGS run should track previous gradient", &failures);
@@ -116,8 +112,8 @@ int main() {
   deterministic.max_iterations = 14;
   deterministic.step.lbfgs.learning_rate = 0.2;
   deterministic.step.lbfgs.history_size = 8;
-  const auto lbfgs_fit_a = pluss::optim::septima(objective, init, deterministic);
-  const auto lbfgs_fit_b = pluss::optim::septima(objective, init, deterministic);
+  const auto lbfgs_fit_a = pluss::subsp::math::optim::septima(objective, init, deterministic);
+  const auto lbfgs_fit_b = pluss::subsp::math::optim::septima(objective, init, deterministic);
   expect_vec_near(
       to_vec_f64(lbfgs_fit_a.params[0]),
       to_vec_f64(lbfgs_fit_b.params[0]),
@@ -133,7 +129,7 @@ int main() {
   short_history.max_iterations = 35;
   short_history.step.lbfgs.learning_rate = 0.2;
   short_history.step.lbfgs.history_size = 2;
-  const auto short_history_fit = pluss::optim::septima(objective, init, short_history);
+  const auto short_history_fit = pluss::subsp::math::optim::septima(objective, init, short_history);
   expect(short_history_fit.state.lbfgs_s_history.size() <= 2,
          "LBFGS s-history should respect history_size cap",
          &failures);
@@ -146,7 +142,7 @@ int main() {
   strict_curvature.max_iterations = 20;
   strict_curvature.step.lbfgs.learning_rate = 0.25;
   strict_curvature.step.lbfgs.curvature_tolerance = 1e8;
-  const auto strict_fit = pluss::optim::septima(objective, init, strict_curvature);
+  const auto strict_fit = pluss::subsp::math::optim::septima(objective, init, strict_curvature);
   expect(strict_fit.state.lbfgs_s_history.empty(),
          "LBFGS should reject all curvature pairs with very strict curvature_tolerance",
          &failures);
@@ -160,7 +156,7 @@ int main() {
   strong_wolfe.step.lbfgs.learning_rate = 1.0;
   strong_wolfe.step.lbfgs.max_line_search_iterations = 12;
   strong_wolfe.step.lbfgs.line_search = SeptimaLbfgsLineSearch::StrongWolfe;
-  const auto strong_wolfe_fit = pluss::optim::septima(objective, init, strong_wolfe);
+  const auto strong_wolfe_fit = pluss::subsp::math::optim::septima(objective, init, strong_wolfe);
   expect(strong_wolfe_fit.objective_value < initial_objective, "LBFGS strong-wolfe should reduce objective", &failures);
   expect(strong_wolfe_fit.function_evaluations > strong_wolfe_fit.iteration,
          "LBFGS strong-wolfe should perform extra objective evaluations",
@@ -185,9 +181,9 @@ int main() {
   multiblock_options.step.lbfgs.learning_rate = 0.2;
   const double multiblock_initial =
       as_f64_scalar(((w0 - wt).square().sum() + (b0 - bt).square().sum()) * 0.5);
-  const auto multiblock_fit = pluss::optim::septima(
-      [wt, bt](const std::vector<Trace>& p) -> Trace {
-        return (sum(square(p[0] - trace(wt, false))) + sum(square(p[1] - trace(bt, false)))) * 0.5;
+  const auto multiblock_fit = pluss::subsp::math::optim::septima(
+      [wt, bt](const std::vector<Series>& p) -> Series {
+        return (((p[0] - wt).square()).sum() + ((p[1] - bt).square()).sum()) * 0.5;
       },
       std::vector<Series>{w0, b0},
       multiblock_options,
@@ -204,7 +200,7 @@ int main() {
       SeptimaSolveOptions bad = make_default_options();
       bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.learning_rate = 0.0;
-      (void)pluss::optim::septima(objective, init, bad);
+      (void)pluss::subsp::math::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -216,7 +212,7 @@ int main() {
       SeptimaSolveOptions bad = make_default_options();
       bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.history_size = -1;
-      (void)pluss::optim::septima(objective, init, bad);
+      (void)pluss::subsp::math::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -228,7 +224,7 @@ int main() {
       SeptimaSolveOptions bad = make_default_options();
       bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.wolfe_c1 = 1.2;
-      (void)pluss::optim::septima(objective, init, bad);
+      (void)pluss::subsp::math::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }
@@ -240,7 +236,7 @@ int main() {
       SeptimaSolveOptions bad = make_default_options();
       bad.step.optimizer = SeptimaOptimizer::Lbfgs;
       bad.step.lbfgs.wolfe_c2 = 0.0;
-      (void)pluss::optim::septima(objective, init, bad);
+      (void)pluss::subsp::math::optim::septima(objective, init, bad);
     } catch (const std::exception&) {
       threw = true;
     }

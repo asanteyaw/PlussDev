@@ -573,8 +573,8 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
       loss = pluss::nn::losses::MSE(model->forward(x), y);
       loss.reverse();
       if (debug_grad) {
-        const auto gw = model->weight().sensitivity().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto gb = model->bias().sensitivity().reshape({1}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto gw = model->weight().sensitivity().reshape({2}).to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto gb = model->bias().sensitivity().reshape({1}).to(pluss::pCPU, ScalarType::Float64).host<double>();
         std::cout << "[linear-grad] platform=" << platform_name_(platform)
                   << " optimizer=" << linear_optimizer_name(kind)
                   << " epoch=" << (epoch + 1)
@@ -613,23 +613,23 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
         const Series p_sub_g = p.sub(g);
         const Series g_mul_lr = g.mul(lr);
         const Series p_sub_glr = p.sub(g_mul_lr);
-        const auto p_cpu = p.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto g_cpu = g.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto z_cpu = z.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto zm_cpu = z_mul.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto psg_cpu = p_sub_g.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto gml_cpu = g_mul_lr.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto psglr_cpu = p_sub_glr.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto omb1_cpu = one_minus_beta1.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto m1sim_cpu = m1_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto m2sim_cpu = m2_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto fhsim_cpu = first_hat_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto densim_cpu = den_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto dsim_cpu = delta_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto nsim_cpu = next_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto gb_cpu = gb.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto zbm_cpu = zbm.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto m1b_cpu = m1b_sim.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto p_cpu = p.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto g_cpu = g.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto z_cpu = z.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto zm_cpu = z_mul.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto psg_cpu = p_sub_g.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto gml_cpu = g_mul_lr.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto psglr_cpu = p_sub_glr.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto omb1_cpu = one_minus_beta1.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto m1sim_cpu = m1_sim.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto m2sim_cpu = m2_sim.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto fhsim_cpu = first_hat_sim.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto densim_cpu = den_sim.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto dsim_cpu = delta_sim.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto nsim_cpu = next_sim.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto gb_cpu = gb.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto zbm_cpu = zbm.to(pluss::pCPU, ScalarType::Float64).host<double>();
+        const auto m1b_cpu = m1b_sim.to(pluss::pCPU, ScalarType::Float64).host<double>();
         const double lr_cpu = lr.to(pluss::pCPU, ScalarType::Float64).item<double>();
         std::cout << "[linear-arith] platform=" << platform_name_(platform)
                   << " p0=" << p_cpu[0] << " p1=" << p_cpu[1]
@@ -659,8 +659,8 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
     const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
     trace.epoch_loss.push_back(loss_value);
     if (debug_trace) {
-      const auto w_dbg = model->weight().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-      const auto b_dbg = model->bias().reshape({1}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto w_dbg = model->weight().reshape({2}).to(pluss::pCPU, ScalarType::Float64).host<double>();
+      const auto b_dbg = model->bias().reshape({1}).to(pluss::pCPU, ScalarType::Float64).host<double>();
       std::cout << "[linear-debug] platform=" << platform_name_(platform)
                 << " optimizer=" << linear_optimizer_name(kind)
                 << " epoch=" << (epoch + 1)
@@ -671,8 +671,8 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
     }
   }
 
-  const auto w = model->weight().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto b = model->bias().reshape({1}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto w = model->weight().reshape({2}).to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto b = model->bias().reshape({1}).to(pluss::pCPU, ScalarType::Float64).host<double>();
   trace.flat_parameters = {w[0], w[1], b[0]};
   return trace;
 }
@@ -1010,11 +1010,11 @@ TrainingTrace run_conv_training_trace(Platform platform, int epochs) {
     const Series base = x.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1);
     const Series pick = x.index_select(2, idx).to(pluss::pCPU, ScalarType::Float64).flatten(0, -1);
     const Series unf = x.unfold(2, 3, 1).to(pluss::pCPU, ScalarType::Float64).flatten(0, -1);
-    const auto idx_v = idx.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-    const auto idx_from_cpu_v = idx_from_cpu.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-    const auto base_v = base.to_vec<double>();
-    const auto pick_v = pick.to_vec<double>();
-    const auto unf_v = unf.to_vec<double>();
+    const auto idx_v = idx.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+    const auto idx_from_cpu_v = idx_from_cpu.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+    const auto base_v = base.host<double>();
+    const auto pick_v = pick.host<double>();
+    const auto unf_v = unf.host<double>();
     std::cout << "[conv-probe] platform=" << platform_name_(platform)
               << " idx_native=[" << idx_v[0] << "," << idx_v[1] << "," << idx_v[2] << "]"
               << " idx_from_cpu=[" << idx_from_cpu_v[0] << "," << idx_from_cpu_v[1] << "," << idx_from_cpu_v[2] << "]"
@@ -1058,19 +1058,19 @@ TrainingTrace run_conv_training_trace(Platform platform, int epochs) {
       const Series gb = model->bias().sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({model->bias().numel()});
       const Series w = model->weight().to(pluss::pCPU, ScalarType::Float64).reshape({model->weight().numel()});
       const Series b = model->bias().to(pluss::pCPU, ScalarType::Float64).reshape({model->bias().numel()});
-      const auto wv = w.to_vec<double>();
-      const auto gwv = gw.to_vec<double>();
+      const auto wv = w.host<double>();
+      const auto gwv = gw.host<double>();
       std::cout << "[conv-debug] platform=" << platform_name_(platform)
                 << " epoch=" << (epoch + 1)
                 << " loss=" << loss_value
                 << " w0=" << wv[0]
                 << " w1=" << (wv.size() > 1 ? wv[1] : 0.0)
                 << " w2=" << (wv.size() > 2 ? wv[2] : 0.0)
-                << " b0=" << b.to_vec<double>()[0]
+                << " b0=" << b.host<double>()[0]
                 << " gw0=" << gwv[0]
                 << " gw1=" << (gwv.size() > 1 ? gwv[1] : 0.0)
                 << " gw2=" << (gwv.size() > 2 ? gwv[2] : 0.0)
-                << " gb0=" << gb.to_vec<double>()[0]
+                << " gb0=" << gb.host<double>()[0]
                 << " gw_l2=" << gw.square().sum().sqrt().item<double>()
                 << " gb_l2=" << gb.square().sum().sqrt().item<double>()
                 << "\n";
@@ -1183,14 +1183,14 @@ TrainingTrace run_custom_objective_training_trace(Platform platform, int epochs)
             x.to(pluss::pCPU, ScalarType::Float64)
                 .matmul(w.to(pluss::pCPU, ScalarType::Float64).reshape({3, 1}))
                 .reshape({x.sizes()[0], 1});
-        const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
-        const auto pvc = pred_from_cpu_copy.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
-        const auto yv = y.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
-        const auto xv = x.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).to_vec<double>();
-        const auto xdv = x_device_roundtrip.to_vec<double>();
-        const auto xsel = x.select(1, 0).to(pluss::pCPU, ScalarType::Float64).reshape({x.sizes()[0]}).to_vec<double>();
-        const auto wrv = w.reshape({3, 1}).to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
-        const auto wrcv = w.reshape({3, 1}).contiguous().to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+        const auto pv = pred.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).host<double>();
+        const auto pvc = pred_from_cpu_copy.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).host<double>();
+        const auto yv = y.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).host<double>();
+        const auto xv = x.to(pluss::pCPU, ScalarType::Float64).flatten(0, -1).host<double>();
+        const auto xdv = x_device_roundtrip.host<double>();
+        const auto xsel = x.select(1, 0).to(pluss::pCPU, ScalarType::Float64).reshape({x.sizes()[0]}).host<double>();
+        const auto wrv = w.reshape({3, 1}).to(pluss::pCPU, ScalarType::Float64).reshape({3}).host<double>();
+        const auto wrcv = w.reshape({3, 1}).contiguous().to(pluss::pCPU, ScalarType::Float64).reshape({3}).host<double>();
         std::cout << "[objective-terms] platform=" << platform_name_(platform)
                   << " mse=" << mse.to(pluss::pCPU, ScalarType::Float64).item<double>()
                   << " reg1=" << reg1.to(pluss::pCPU, ScalarType::Float64).item<double>()
@@ -1213,8 +1213,8 @@ TrainingTrace run_custom_objective_training_trace(Platform platform, int epochs)
     const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
     loss.reverse();
     if (debug_trace && epoch < debug_epochs) {
-      const auto grad = w.sensitivity().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-      const auto val = w.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto grad = w.sensitivity().to(pluss::pCPU, ScalarType::Float64).host<double>();
+      const auto val = w.to(pluss::pCPU, ScalarType::Float64).host<double>();
       std::cout << "[objective-debug] platform=" << platform_name_(platform)
                 << " epoch=" << (epoch + 1)
                 << " loss=" << loss_value
@@ -1226,7 +1226,7 @@ TrainingTrace run_custom_objective_training_trace(Platform platform, int epochs)
     trace.epoch_loss.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
   }
 
-  const auto wv = w.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto wv = w.to(pluss::pCPU, ScalarType::Float64).host<double>();
   trace.flat_parameters = wv;
   return trace;
 }

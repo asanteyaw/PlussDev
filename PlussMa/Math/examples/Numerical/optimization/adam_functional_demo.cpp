@@ -16,18 +16,18 @@ int main() {
   Series params_tape = pluss::make_series(std::vector<double>{1.0, -2.0}, {2}, cfg);
   const Series target = pluss::make_series(std::vector<double>{3.0, 3.0}, {2}, cfg);
 
-  pluss::optim::AdamOptions options{};
+  pluss::subsp::math::optim::AdamOptions options{};
   options.learning_rate = 0.1;
 
-  pluss::optim::AdamState state = pluss::optim::adam_state_like(std::vector<Series>{params});
-  pluss::optim::AdamState state_tape = pluss::optim::adam_state_like(std::vector<Series>{params_tape});
+  pluss::subsp::math::optim::AdamState state = pluss::subsp::math::optim::adam_state_like(std::vector<Series>{params});
+  pluss::subsp::math::optim::AdamState state_tape = pluss::subsp::math::optim::adam_state_like(std::vector<Series>{params_tape});
 
   std::cout << "[functional] explicit gradients\n";
   for (int iter = 1; iter <= 60; ++iter) {
     // f(x) = 0.5 * ||x - target||^2 -> grad f = x - target
     const Series grad = params.sub(target);
     std::vector<Series> step_params{params};
-    pluss::optim::adam_step_inplace(step_params, std::vector<Series>{grad}, state, options);
+    pluss::subsp::math::optim::adam_step_inplace(step_params, std::vector<Series>{grad}, state, options);
     params = step_params[0];
 
     if (iter % 15 == 0) {
@@ -49,7 +49,7 @@ int main() {
 
     const Series grad = params_tape.sensitivity();
     std::vector<Series> step_params{params_tape};
-    pluss::optim::adam_step_inplace(step_params, std::vector<Series>{grad}, state_tape, options);
+    pluss::subsp::math::optim::adam_step_inplace(step_params, std::vector<Series>{grad}, state_tape, options);
     params_tape = step_params[0];
 
     if (iter % 15 == 0) {

@@ -43,8 +43,8 @@ private:
   std::optional<std::string> old_;
 };
 
-template <class T>
-void require_equal_(const std::vector<T>& got, const std::vector<T>& want) {
+template <class Got, class Want>
+void require_equal_(const Got& got, const Want& want) {
   REQUIRE(got.size() == want.size());
   for (std::size_t i = 0; i < got.size(); ++i) {
     REQUIRE(got[i] == want[i]);
@@ -71,35 +71,35 @@ TEST_CASE("MPS strict int32 masking ops stay native and match CPU", "[mps][stric
   const auto mask_mps = mask_cpu.to(pluss::pMPS);
 
   require_equal_(
-      x_mps.masked_select(mask_mps).to(pluss::pCPU).to_vec<std::int32_t>(),
-      x_cpu.masked_select(mask_cpu).to_vec<std::int32_t>());
+      x_mps.masked_select(mask_mps).to(pluss::pCPU).host<std::int32_t>(),
+      x_cpu.masked_select(mask_cpu).host<std::int32_t>());
 
   require_equal_(
-      x_mps.masked_fill(mask_mps, -9.0).to(pluss::pCPU).to_vec<std::int32_t>(),
-      x_cpu.masked_fill(mask_cpu, -9.0).to_vec<std::int32_t>());
+      x_mps.masked_fill(mask_mps, -9.0).to(pluss::pCPU).host<std::int32_t>(),
+      x_cpu.masked_fill(mask_cpu, -9.0).host<std::int32_t>());
 
   auto xf_cpu = x_cpu.clone();
   auto xf_mps = x_mps.clone();
   xf_cpu.masked_fill_(mask_cpu, 42.0);
   xf_mps.masked_fill_(mask_mps, 42.0);
   require_equal_(
-      xf_mps.to(pluss::pCPU).to_vec<std::int32_t>(),
-      xf_cpu.to_vec<std::int32_t>());
+      xf_mps.to(pluss::pCPU).host<std::int32_t>(),
+      xf_cpu.host<std::int32_t>());
 
   const auto src_cpu = pluss::make_series(
       std::vector<std::int32_t>{11, 22, 33},
       {3});
   require_equal_(
-      x_mps.masked_scatter(mask_mps, src_cpu.to(pluss::pMPS)).to(pluss::pCPU).to_vec<std::int32_t>(),
-      x_cpu.masked_scatter(mask_cpu, src_cpu).to_vec<std::int32_t>());
+      x_mps.masked_scatter(mask_mps, src_cpu.to(pluss::pMPS)).to(pluss::pCPU).host<std::int32_t>(),
+      x_cpu.masked_scatter(mask_cpu, src_cpu).host<std::int32_t>());
 
   auto xs_cpu = x_cpu.clone();
   auto xs_mps = x_mps.clone();
   xs_cpu.masked_scatter_(mask_cpu, src_cpu);
   xs_mps.masked_scatter_(mask_mps, src_cpu.to(pluss::pMPS));
   require_equal_(
-      xs_mps.to(pluss::pCPU).to_vec<std::int32_t>(),
-      xs_cpu.to_vec<std::int32_t>());
+      xs_mps.to(pluss::pCPU).host<std::int32_t>(),
+      xs_cpu.host<std::int32_t>());
 }
 
 TEST_CASE("MPS strict int32 bincount/unique parity matches CPU", "[mps][strict][int32][counting][parity]") {
@@ -115,10 +115,10 @@ TEST_CASE("MPS strict int32 bincount/unique parity matches CPU", "[mps][strict][
   const auto x_mps = x_cpu.to(pluss::pMPS);
 
   require_equal_(
-      x_mps.bincount(/*minlength=*/7).to(pluss::pCPU).to_vec<std::int64_t>(),
-      x_cpu.bincount(/*minlength=*/7).to_vec<std::int64_t>());
+      x_mps.bincount(/*minlength=*/7).to(pluss::pCPU).host<std::int64_t>(),
+      x_cpu.bincount(/*minlength=*/7).host<std::int64_t>());
 
   require_equal_(
-      x_mps.unique(/*sorted=*/true).to(pluss::pCPU).to_vec<std::int64_t>(),
-      x_cpu.unique(/*sorted=*/true).to_vec<std::int64_t>());
+      x_mps.unique(/*sorted=*/true).to(pluss::pCPU).host<std::int64_t>(),
+      x_cpu.unique(/*sorted=*/true).host<std::int64_t>());
 }

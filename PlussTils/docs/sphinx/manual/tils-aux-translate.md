@@ -38,7 +38,7 @@ int main() {
   const auto totals = pluss::tils::map_axis(
       [](const pluss::Series& row) {
         double sum = 0.0;
-        for (double v : row.to_vec<double>()) sum += v;
+        for (double v : row.host<double>()) sum += v;
         return sum;
       },
       sales, 1);
@@ -74,7 +74,7 @@ The same table can be cut by rows or by columns. This program sums the rows with
 
 double sum_of(const pluss::Series& slice) {
   double total = 0.0;
-  for (double v : slice.to_vec<double>()) total += v;
+  for (double v : slice.host<double>()) total += v;
   return total;
 }
 
@@ -125,7 +125,7 @@ int main() {
 
   const auto averages = pluss::tils::map_axis(
       [](const pluss::Series& slice, std::size_t position) {
-        const auto values = slice.to_vec<double>();
+        const auto values = slice.host<double>();
         const double mean = (values[0] + values[1]) / 2.0;
         std::ostringstream line;
         line << "sensor " << position + 1 << " average " << mean;
@@ -243,7 +243,7 @@ int main() {
 
   const auto column_sum = [](const pluss::Series& s) {
     double total = 0.0;
-    for (double v : s.to_vec<double>()) total += v;
+    for (double v : s.host<double>()) total += v;
     return total;
   };
 
@@ -325,7 +325,7 @@ int main() {
 
   const auto shares = pluss::tils::map_axis(
       [](const pluss::Series& month) {
-        const auto values = month.to_vec<double>();
+        const auto values = month.host<double>();
         double total = 0.0;
         for (double v : values) total += v;
         std::vector<double> out;

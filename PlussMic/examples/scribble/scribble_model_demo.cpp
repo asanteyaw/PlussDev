@@ -39,12 +39,12 @@ bool is_note(const Slot::Value& v) {
 
 std::int64_t to_i64(const Slot::Value& v) {
   const auto& s = std::get<pluss::Series>(v);
-  return s.to(pluss::codem::ScalarType::Int64).to_vec<std::int64_t>()[0];
+  return s.to(pluss::codem::ScalarType::Int64).host<std::int64_t>()[0];
 }
 
 double to_f64(const Slot::Value& v) {
   const auto& s = std::get<pluss::Series>(v);
-  return s.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0];
+  return s.to(pluss::codem::ScalarType::Float64).host<double>()[0];
 }
 
 std::string to_string_value(const Slot::Value& v) {

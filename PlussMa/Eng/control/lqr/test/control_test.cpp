@@ -22,7 +22,7 @@ void expect(bool condition, const std::string &message) {
 void expect_close(const pluss::Series &actual,
                   const std::vector<double> &expected,
                   double tolerance = 2e-9) {
-  const auto values = actual.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(pluss::ScalarType::Float64).host<double>();
   expect(values.size() == expected.size(), "control result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =
@@ -109,13 +109,17 @@ int main() {
       pluss::series::make(std::vector<Complex>{{2.0, 0.0}}, {1, 1});
   const auto complex_x = complex_a.linearalg.lyap(complex_q);
   expect(std::abs(complex_x.to(pluss::ScalarType::Complex128)
+                      .select(-2, 0)
+                      .select(-1, 0)
                       .item<std::complex<double>>() -
                   Complex{1.0, 0.0}) < 2e-9,
          "complex Lyapunov adjoint convention is wrong");
   const auto complex_care = complex_a.linearalg.care(
       pluss::series::make(std::vector<Complex>{{1.0, 0.0}}, {1, 1}),
       pluss::series::make(std::vector<Complex>{{1.0, 0.0}}, {1, 1}));
-  expect(std::abs(complex_care.item<std::complex<double>>() -
+  expect(std::abs(complex_care.select(-2, 0)
+                      .select(-1, 0)
+                      .item<std::complex<double>>() -
                   Complex{std::sqrt(2.0) - 1.0, 0.0}) < 2e-8,
          "complex CARE used transpose instead of adjoint");
 
@@ -273,7 +277,7 @@ int main() {
       {.jitter = 0.0});
   expect_close(
       smooth_result.smoothed_mean.select(-2, 3),
-      smooth_result.filter.filtered_mean.select(-2, 3).to_vec<double>());
+      smooth_result.filter.filtered_mean.select(-2, 3).host<double>());
   expect(
       smooth_result.smoothed_cov.le(smooth_result.filter.filtered_cov.add(1e-8))
           .all()

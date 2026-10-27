@@ -39,14 +39,14 @@ TEST_CASE("MPS nonzero 1D parity and stress", "[mps][nonzero][stress]") {
 
     REQUIRE(got.scalar_type() == pluss::ScalarType::Int64);
     REQUIRE(sizes_vec(got.sizes()) == sizes_vec(ref.sizes()));
-    REQUIRE(got.to_vec<std::int64_t>() == ref.to_vec<std::int64_t>());
+    REQUIRE(got.host<std::int64_t>() == ref.host<std::int64_t>());
   }
 
   const auto lead_zero = pluss::make_series(std::vector<float>{0.0f, 0.0f, 4.0f, 0.0f, 5.0f, 0.0f}, {6});
   const auto lead_ref = lead_zero.nonzero();
   const auto lead_got = lead_zero.to(pluss::pMPS).nonzero().to(pluss::pCPU);
   REQUIRE(sizes_vec(lead_got.sizes()) == sizes_vec(lead_ref.sizes()));
-  REQUIRE(lead_got.to_vec<std::int64_t>() == lead_ref.to_vec<std::int64_t>());
+  REQUIRE(lead_got.host<std::int64_t>() == lead_ref.host<std::int64_t>());
 }
 
 TEST_CASE("MPS nonzero scalar parity", "[mps][nonzero]") {
@@ -74,7 +74,7 @@ TEST_CASE("MPS nonzero repeated concurrency stability", "[mps][nonzero][stabilit
       0.0f, 1.0f, 0.0f, 2.0f, 3.0f, 0.0f, 4.0f, 0.0f,
       5.0f, 0.0f, 6.0f, 0.0f, 7.0f, 8.0f, 0.0f, 9.0f};
   const auto x_cpu = pluss::make_series(data, {static_cast<std::int64_t>(data.size())});
-  const auto ref = x_cpu.nonzero().to_vec<std::int64_t>();
+  const auto ref = x_cpu.nonzero().host<std::int64_t>();
   const auto x_mps = x_cpu.to(pluss::pMPS);
 
   bool ok_a = true;
@@ -83,7 +83,7 @@ TEST_CASE("MPS nonzero repeated concurrency stability", "[mps][nonzero][stabilit
   auto worker = [&](bool& ok_flag) {
     try {
       for (std::int64_t i = 0; i < 200; ++i) {
-        const auto got = x_mps.nonzero().to(pluss::pCPU).to_vec<std::int64_t>();
+        const auto got = x_mps.nonzero().to(pluss::pCPU).host<std::int64_t>();
         if (got != ref) {
           ok_flag = false;
           return;

@@ -174,8 +174,8 @@ int main() {
   // A 90% interval under the Gaussian: mean +- 1.645 * scale.
   const auto lower = forecast.mean.sub(forecast.scale.mul(1.645));
   const auto upper = forecast.mean.add(forecast.scale.mul(1.645));
-  const auto lower_vec = lower.to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
-  const auto upper_vec = upper.to(pluss::pCPU, ScalarType::Float64).reshape({3}).to_vec<double>();
+  const auto lower_vec = lower.to(pluss::pCPU, ScalarType::Float64).reshape({3}).pull<double>();
+  const auto upper_vec = upper.to(pluss::pCPU, ScalarType::Float64).reshape({3}).pull<double>();
   for (std::size_t t = 0; t < lower_vec.size(); ++t) {
     std::cout << "step " << t << ": [" << lower_vec[t] << ", " << upper_vec[t] << "]\n";
   }

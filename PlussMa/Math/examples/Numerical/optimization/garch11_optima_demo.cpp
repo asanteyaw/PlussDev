@@ -50,7 +50,7 @@ Garch11Params decode_params(const Series& unconstrained) {
   return p;
 }
 
-Garch11Params decode_params(const pluss::optim::ParameterPack<Series>& params) {
+Garch11Params decode_params(const pluss::subsp::math::optim::ParameterPack<Series>& params) {
   const auto cfg = scalar_config_like(params.at("log_omega"));
   const Series persistence_cap = scalar(0.999, cfg);
   const Series one = scalar(1.0, cfg);
@@ -117,13 +117,8 @@ Series garch11_negloglik(const Series& returns, const Garch11Params& p) {
   return nll;
 }
 
-double as_f64(const Series& x) {
-  if (!x.defined() || x.numel() != 1) throw std::runtime_error("expected scalar Series");
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
-}
-
-const char* to_string(pluss::optim::OptimaExitFlag flag) {
-  using pluss::optim::OptimaExitFlag;
+const char* to_string(pluss::subsp::math::optim::OptimaExitFlag flag) {
+  using pluss::subsp::math::optim::OptimaExitFlag;
   switch (flag) {
     case OptimaExitFlag::Converged:
       return "Converged";
@@ -147,30 +142,6 @@ const char* to_string(pluss::optim::OptimaExitFlag flag) {
   return "Unknown";
 }
 
-const char* to_string(dfo::SolverStatus status) {
-  switch (status) {
-    case dfo::SolverStatus::Converged:
-      return "Converged";
-    case dfo::SolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case dfo::SolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
-  }
-  return "Unknown";
-}
-
-const char* to_string(dfo::PopulationSolverStatus status) {
-  switch (status) {
-    case dfo::PopulationSolverStatus::Converged:
-      return "Converged";
-    case dfo::PopulationSolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case dfo::PopulationSolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
-  }
-  return "Unknown";
-}
-
 void print_fit(const Garch11Params& fit, const Garch11Params& truth) {
   std::cout << "  fitted omega=" << as_f64(fit.omega)
             << " alpha=" << as_f64(fit.alpha)
@@ -182,16 +153,16 @@ void print_fit(const Garch11Params& fit, const Garch11Params& truth) {
 }
 
 void print_optima_report(const std::string& label,
-                         const pluss::optim::ConstrainedProblem& model,
-                         const pluss::optim::ParameterPack<Series>& initial,
-                         const pluss::optim::OptimaOptions& options,
+                         const pluss::subsp::math::optim::ConstrainedProblem& model,
+                         const pluss::subsp::math::optim::ParameterPack<Series>& initial,
+                         const pluss::subsp::math::optim::OptimaOptions& options,
                          const Garch11Params& truth) {
-  const auto result = pluss::optim::optima(model, initial, options);
+  const auto result = pluss::subsp::math::optim::optima(model, initial, options);
   const Garch11Params est = decode_params(result.params);
 
   std::cout << label << " exit=" << to_string(result.exit_flag) << '\n';
   std::cout << "  ";
-  pluss::optim::reports::compact_summary(std::cout, result) << '\n';
+  pluss::subsp::math::optim::reports::compact_summary(std::cout, result) << '\n';
   print_fit(est, truth);
 }
 
@@ -220,7 +191,7 @@ void print_report(const std::string& label,
 } // namespace
 
 int main() {
-  using namespace pluss::optim;
+  using namespace pluss::subsp::math::optim;
 
   const pluss::Config cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -241,48 +212,48 @@ int main() {
     return garch11_negloglik(returns, decode_params(x_unconstrained));
   };
 
-  const ConstrainedProblem model = pluss::optim::problem()
-      .objective([returns, cfg](const ParameterPack<Trace>& p) -> Trace {
-        const Trace omega = exp(p.at("log_omega"));
-        const Trace s1 = sigmoid(p.at("logit_alpha"));
-        const Trace s2 = sigmoid(p.at("logit_beta"));
-        const Trace alpha = 0.999 * s1;
-        const Trace beta = 0.999 * (1.0 - s1) * s2;
+  const ConstrainedProblem model = pluss::subsp::math::optim::problem()
+      .objective([returns, cfg](const ParameterPack<Series>& p) -> Series {
+        const Series omega = p.at("log_omega").exp();
+        const Series s1 = p.at("logit_alpha").sigmoid();
+        const Series s2 = p.at("logit_beta").sigmoid();
+        const Series alpha = 0.999 * s1;
+        const Series beta = 0.999 * (1.0 - s1) * s2;
 
-        Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-        Trace nll = trace(scalar(0.0, cfg), false);
+        Series variance = omega / (1.0 - alpha - beta).clamp(1e-8, 1e8);
+        Series nll = scalar(0.0, cfg);
         const std::int64_t n = returns.numel();
         for (std::int64_t t_idx = 0; t_idx < n; ++t_idx) {
           if (t_idx > 0) {
-            const Trace prev = trace(returns.select(0, t_idx - 1), false);
+            const Series prev = returns.select(0, t_idx - 1);
             variance = omega + alpha * prev * prev + beta * variance;
           }
-          const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-          const Trace r = trace(returns.select(0, t_idx), false);
-          nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+          const Series var_clamped = variance.clamp(1e-12, 1e12);
+          const Series r = returns.select(0, t_idx);
+          nll = nll + 0.5 * (var_clamped.log() + (r * r) / var_clamped);
         }
         return nll;
       })
       .build();
 
-  const ParameterPack<Series> initial = pluss::optim::pack_scalars({
+  const ParameterPack<Series> initial = pluss::subsp::math::optim::pack_scalars({
       {"log_omega", x0.select(0, 0)},
       {"logit_alpha", x0.select(0, 1)},
       {"logit_beta", x0.select(0, 2)},
   });
 
-  OptimaOptions sqp_options = pluss::optim::presets::sequential_qp();
+  OptimaOptions sqp_options = pluss::subsp::math::optim::presets::sequential_qp();
   sqp_options.sequential_qp.max_iterations = 30;
   sqp_options.sequential_qp.max_line_search_iterations = 12;
   sqp_options.sequential_qp.active_set_tolerance = 1e-6;
   sqp_options.sequential_qp.regularization = 1e-8;
 
-  OptimaOptions ip_options = pluss::optim::presets::internal_protocol();
+  OptimaOptions ip_options = pluss::subsp::math::optim::presets::internal_protocol();
   ip_options.internal_protocol.max_iterations = 35;
   ip_options.internal_protocol.max_line_search_iterations = 16;
   constexpr bool kShowIpTrace = false;
   if (kShowIpTrace) {
-    ip_options.internal_protocol.progress_hook = pluss::optim::reports::iteration_only_trace(std::cout);
+    ip_options.internal_protocol.progress_hook = pluss::subsp::math::optim::reports::iteration_only_trace(std::cout);
   }
 
   dfo::NelderMeadConfig nm_options;

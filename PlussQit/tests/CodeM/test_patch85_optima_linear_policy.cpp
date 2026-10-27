@@ -19,12 +19,8 @@ using pluss::subsp::math::optim::OptimaLinearSystemStructure;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::SequentialQPOptions;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::solve_sequential_qp;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64).to(pluss::pCPU);
@@ -33,12 +29,12 @@ Series make_vec2(double x0, double x1) {
 ConstrainedProblem make_sqp_problem() {
   const Series target = make_vec2(1.0, 2.0);
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -60,7 +56,7 @@ TEST_CASE("sequential qp can use pivoted direct KKT solves", "[optim][sqp][linea
   options.pivot_threshold = 1e-10;
 
   const auto result = solve_sequential_qp(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
   REQUIRE(x[0] == Approx(0.25).margin(5e-2));
@@ -73,8 +69,8 @@ TEST_CASE("interior point auto routing can prefer Krylov for sparse-structured p
   Series target = pluss::series::linspace(0.1, 1.0, n, ScalarType::Float64).to(pluss::pCPU);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    return sum(square(p.at("x") - trace(target, false)));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    return ((p.at("x") - target).square()).sum();
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", pluss::series::zeros({n}, ScalarType::Float64).to(pluss::pCPU)},

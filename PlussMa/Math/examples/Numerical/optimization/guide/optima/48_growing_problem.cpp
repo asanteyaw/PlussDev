@@ -12,7 +12,7 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
 
   struct Row { const char* label; optim::OptimaAlgorithm algorithm; };
@@ -46,8 +46,8 @@ int main() {
       auto vec = [&](const std::vector<double>& v) {
         return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
       };
-      const auto goal = optim::trace(vec(target), false);
-      auto objective = [&](const optim::Trace& x) { return optim::sum(optim::square(x - goal)); };
+      const auto goal = vec(target);
+      auto objective = [&](const pluss::Series& x) { return (x - goal).square().sum(); };
       const auto constraints =
           optim::constraints()
               .ln_ineq(pluss::make_series(diff, {2 * (n - 1), n}).to(f64), vec(cap))

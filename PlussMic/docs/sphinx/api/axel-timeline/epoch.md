@@ -50,7 +50,7 @@ auto r0 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_t
 auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().epoch();
-std::cout << std::get<pluss::Series>(out.registry(0).fields("ts").at(0)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.registry(0).fields("ts").at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -68,8 +68,8 @@ auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().epoch(pluss::table::TimeUnit::Seconds);
 auto ts = out.registry(0).fields("ts");
-std::cout << std::get<pluss::Series>(ts.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(ts.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(ts.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(ts.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

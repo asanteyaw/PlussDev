@@ -19,7 +19,7 @@ TEST_CASE("cplxpair groups conjugates and preserves the authored shape", "[serie
       {3.0, 0.0}, {2.0, 4.0}, {1.0, -2.0}, {2.0, -4.0},
       {-1.0, 0.0}, {1.0, 2.0}}, {2, 3});
   const auto output = input.cplxpair();
-  const auto values = output.to_vec<Complex>();
+  const auto values = output.host<Complex>();
 
   REQUIRE(output.sizes() == input.sizes());
   REQUIRE(values == std::vector<Complex>{
@@ -44,11 +44,11 @@ TEST_CASE("dct and dst transform a selected axis and round trip", "[series][dct]
 TEST_CASE("ediff1d preserves integer and complex value domains", "[series][ediff1d]") {
   const auto integers = pluss::make_series({{1, 4, 9}, {16, 25, 36}}).ediff1d();
   REQUIRE(integers.scalar_type() == pluss::ScalarType::Int64);
-  REQUIRE(integers.to_vec<std::int64_t>() == std::vector<std::int64_t>{3, 5, 7, 9, 11});
+  REQUIRE(integers.host<std::int64_t>() == std::vector<std::int64_t>{3, 5, 7, 9, 11});
 
   const auto complex = pluss::make_series(
       std::vector<Complex>{{1.0, 1.0}, {4.0, -1.0}, {2.0, 3.0}}, {3}).ediff1d();
-  REQUIRE(complex.to_vec<Complex>() ==
+  REQUIRE(complex.host<Complex>() ==
           std::vector<Complex>{{3.0, -2.0}, {-2.0, 4.0}});
 }
 
@@ -62,7 +62,7 @@ TEST_CASE("elu and hardsigmoid promote integral receivers and preserve boundary 
 
   const auto hard = pluss::make_series({-4, -3, 0, 3, 4}).hardsigmoid();
   REQUIRE(hard.scalar_type() == pluss::ScalarType::Float32);
-  REQUIRE(hard.to_vec<float>() ==
+  REQUIRE(hard.host<float>() ==
           std::vector<float>{0.0f, 0.0f, 0.5f, 1.0f, 1.0f});
 }
 
@@ -71,7 +71,7 @@ TEST_CASE("fftshift supports all axes and an explicit negative axis", "[series][
   const std::vector<std::int64_t> last{-1};
 
   REQUIRE(input.fftshift().ifftshift().equal(input));
-  REQUIRE(input.fftshift(last).to_vec<std::int64_t>() ==
+  REQUIRE(input.fftshift(last).host<std::int64_t>() ==
           std::vector<std::int64_t>{2, 3, 0, 1, 6, 7, 4, 5, 10, 11, 8, 9});
   const std::vector<std::int64_t> invalid{2};
   REQUIRE_THROWS(input.fftshift(invalid));
@@ -79,17 +79,17 @@ TEST_CASE("fftshift supports all axes and an explicit negative axis", "[series][
 
 TEST_CASE("hardswish preserves its piecewise contract and reverse rule", "[series][hardswish]") {
   const auto input = pluss::make_series({-4.0, -3.0, -1.5, 0.0, 1.5, 3.0, 4.0});
-  REQUIRE(input.hardswish().to_vec<double>() ==
+  REQUIRE(input.hardswish().host<double>() ==
           std::vector<double>{0.0, 0.0, -0.375, 0.0, 1.125, 3.0, 4.0});
 
   const auto integers = pluss::make_series({-4, 0, 4}).hardswish();
   REQUIRE(integers.scalar_type() == pluss::ScalarType::Float32);
-  REQUIRE(integers.to_vec<float>() == std::vector<float>{0.0f, 0.0f, 4.0f});
+  REQUIRE(integers.host<float>() == std::vector<float>{0.0f, 0.0f, 4.0f});
 
   auto tracked = input.clone();
   tracked.tracks_slope_(true);
   tracked.hardswish().sum().reverse();
-  REQUIRE(tracked.sensitivity().to_vec<double>() ==
+  REQUIRE(tracked.sensitivity().host<double>() ==
           std::vector<double>{0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0});
   REQUIRE_THROWS(pluss::make_series(std::vector<Complex>{{1.0, 1.0}}, {1}).hardswish());
 }
@@ -97,7 +97,7 @@ TEST_CASE("hardswish preserves its piecewise contract and reverse rule", "[serie
 TEST_CASE("hilbert builds the analytic signal along a selected axis", "[series][hilbert]") {
   const auto input = pluss::make_series({1.0, 2.0, 3.0, 4.0});
   const auto output = input.hilbert();
-  const auto values = output.to_vec<Complex>();
+  const auto values = output.host<Complex>();
   REQUIRE(output.scalar_type() == pluss::ScalarType::Complex128);
   REQUIRE(output.sizes() == input.sizes());
   REQUIRE(values[0].real() == Approx(1.0));
@@ -130,9 +130,9 @@ TEST_CASE("idct and idst invert their matching real transforms", "[series][idct]
 TEST_CASE("ifftshift is the exact complementary permutation", "[series][ifftshift]") {
   const auto even = pluss::series::arange(0, 8, 1, pluss::ScalarType::Int64);
   const auto odd = pluss::series::arange(0, 7, 1, pluss::ScalarType::Int64);
-  REQUIRE(even.ifftshift().to_vec<std::int64_t>() ==
+  REQUIRE(even.ifftshift().host<std::int64_t>() ==
           std::vector<std::int64_t>{4, 5, 6, 7, 0, 1, 2, 3});
-  REQUIRE(odd.ifftshift().to_vec<std::int64_t>() ==
+  REQUIRE(odd.ifftshift().host<std::int64_t>() ==
           std::vector<std::int64_t>{3, 4, 5, 6, 0, 1, 2});
   REQUIRE(even.ifftshift().fftshift().equal(even));
   REQUIRE(odd.ifftshift().fftshift().equal(odd));
@@ -144,11 +144,11 @@ TEST_CASE("directional infinity predicates return shape-preserving booleans",
   const auto input = pluss::make_series({-inf, -1.0, 0.0, inf,
                                          std::numeric_limits<double>::quiet_NaN()});
   REQUIRE(input.isneginf().scalar_type() == pluss::ScalarType::Bool);
-  REQUIRE(input.isneginf().to_vec<bool>() ==
+  REQUIRE(input.isneginf().host<bool>() ==
           std::vector<bool>{true, false, false, false, false});
-  REQUIRE(input.isposinf().to_vec<bool>() ==
+  REQUIRE(input.isposinf().host<bool>() ==
           std::vector<bool>{false, false, false, true, false});
-  REQUIRE(pluss::make_series({1, -2, 3}).isneginf().to_vec<bool>() ==
+  REQUIRE(pluss::make_series({1, -2, 3}).isneginf().host<bool>() ==
           std::vector<bool>{false, false, false});
   REQUIRE_THROWS(pluss::make_series(std::vector<Complex>{{inf, 0.0}}, {1}).isposinf());
 }

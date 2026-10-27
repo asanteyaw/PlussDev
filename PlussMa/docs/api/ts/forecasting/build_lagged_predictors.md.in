@@ -55,7 +55,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -94,7 +94,7 @@ int main() {
   const auto plan = ts::build_lag_plan(1, options);
   const Series features = ts::build_lagged_predictors(data.x, data.y, plan);
   std::cout << "rows " << features.sizes()[0] << ", columns " << features.sizes()[1] << "\n";
-  const auto v = features.to_vec<double>();
+  const auto v = features.host<double>();
   for (int r = 0; r < 4; ++r) std::cout << "  row " << r << ": " << std::fixed << std::setprecision(3) << v[2 * r] << "  " << v[2 * r + 1] << "\n";
 }
 ```

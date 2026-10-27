@@ -290,7 +290,7 @@ int main() {
       DfoOptions mads = options;
       mads.solver = solver;
       const auto r = DFO::solve(half, mads);
-      const auto x = r.minimizer.to_vec<double>();
+      const auto x = r.minimizer.host<double>();
       expect(x[0] + x[1] >= 1.0 - 1e-9, "MADS route respects a constraint that was supplied", &failures);
       expect(r.minimum < 0.53, "MADS route is within a few percent of the constrained optimum", &failures);
     }
@@ -302,7 +302,7 @@ int main() {
     boxed.initial = pluss::make_series(std::vector<double>{1.0, 1.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU));
     std::int64_t outside = 0;
     boxed.objective = [&outside](const Series& x) {
-      const auto v = x.to_vec<double>();
+      const auto v = x.host<double>();
       if (v[0] < 0.0 || v[0] > 2.0 || v[1] < 0.0 || v[1] > 2.0) ++outside;
       return x.sub(pluss::make_series(std::vector<double>{3.0, -1.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU))).square().sum();
     };
@@ -311,7 +311,7 @@ int main() {
     DfoOptions options;
     options.solver = DfoSolverKind::NelderMead;
     const auto r = DFO::solve(boxed, options);
-    const auto x = r.minimizer.to_vec<double>();
+    const auto x = r.minimizer.host<double>();
     expect(outside == 0, "Nelder-Mead never evaluates outside the bounds", &failures);
     expect(std::abs(x[0] - 2.0) < 1e-3 && std::abs(x[1]) < 1e-3 && std::abs(r.minimum - 2.0) < 1e-3,
            "Nelder-Mead returns the boxed optimum (2, 0)", &failures);
@@ -324,14 +324,14 @@ int main() {
     const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
     walled.initial = pluss::make_series(std::vector<double>{3.0, 3.0}, {2}, c64);
     walled.objective = [c64](const Series& x) {
-      const auto v = x.to_vec<double>();
+      const auto v = x.host<double>();
       const double value = v[0] < 0.0 ? std::numeric_limits<double>::infinity() : (v[0] + 1.0) * (v[0] + 1.0) + (v[1] - 2.0) * (v[1] - 2.0);
       return pluss::make_series(value).to(ScalarType::Float64);
     };
     DfoOptions options;
     options.solver = DfoSolverKind::NelderMead;
     const auto r = DFO::solve(walled, options);
-    const auto x = r.minimizer.to_vec<double>();
+    const auto x = r.minimizer.host<double>();
     expect(std::abs(r.minimum - 1.0) < 1e-3 && x[0] >= 0.0 && x[0] < 1e-2 && std::abs(x[1] - 2.0) < 1e-2,
            "Nelder-Mead treats +Inf as a forbidden region and finds the wall optimum", &failures);
   }

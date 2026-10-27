@@ -18,7 +18,7 @@ The trust region is the safety. The model is trusted only within a ball whose ra
 | Constraints and bounds | yes (chapter 2) | yes (chapter 2) | **no** |
 | Complex parameters | yes | yes | yes |
 
-The call takes a `Trace` objective and a starting `Series`, and returns an `Lsr1Result`:
+The call takes an objective written on `Series` and a starting `Series`, and returns an `Lsr1Result`:
 
 ```cpp
 auto r = optim::l_sr1_trust_region(objective, x0);          // one Series
@@ -27,10 +27,7 @@ auto [params, r] = optim::l_sr1_trust_region(objective_of_blocks, blocks);  // a
 
 ## Programs
 
-- [A first run, and a comparison](septima_04_lsr1_trust_region/a_first_run_and_a_comparison.md)
-- [Saddles](septima_04_lsr1_trust_region/saddles.md)
-- [The settings that matter](septima_04_lsr1_trust_region/the_settings_that_matter.md)
-- [Several blocks, and a complex parameter](septima_04_lsr1_trust_region/several_blocks_and_a_complex_parameter.md)
+- [The L-SR1 trust-region optimizer](septima_04_lsr1_trust_region/the_lsr1_optimizer.md)
 
 ## Settings
 

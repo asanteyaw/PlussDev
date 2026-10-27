@@ -21,9 +21,9 @@ int main() {
   const pluss::Series z = pluss::make_series(std::vector<double>{1.5, -2.0, 3.0}, {3}).to(f64);
   const std::vector<double> yv = {0.2, 0.5, 0.9}, zv = {1.5, -2.0, 3.0};
 
-  const auto add = y.calc.diff.marcus_flow([](const pluss::Series& s) { return s.mul(0.0).add(1.0); }, z).to_vec<double>();
-  const auto mul = y.calc.diff.marcus_flow([](const pluss::Series& s) { return s; }, z).to_vec<double>();
-  const auto logi = y.calc.diff.marcus_flow([](const pluss::Series& s) { return s.mul(s.neg().add(1.0)); }, z).to_vec<double>();
+  const auto add = y.calc.diff.marcus_flow([](const pluss::Series& s) { return s.mul(0.0).add(1.0); }, z).host<double>();
+  const auto mul = y.calc.diff.marcus_flow([](const pluss::Series& s) { return s; }, z).host<double>();
+  const auto logi = y.calc.diff.marcus_flow([](const pluss::Series& s) { return s.mul(s.neg().add(1.0)); }, z).host<double>();
 
   std::cout << std::fixed << std::setprecision(6);
   for (int i = 0; i < 3; ++i) {

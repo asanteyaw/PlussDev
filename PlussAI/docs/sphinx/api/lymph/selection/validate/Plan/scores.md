@@ -197,7 +197,7 @@ tree   mean accuracy = 0.875
 ### Example 3
 
 `scores` takes one `MetricKind` — here `F1` on a stratified plan — and the
-returned `Series` reads out fold by fold via `to_vec<double>()`.
+returned `Series` reads out fold by fold via `host<double>()`.
 
 ```cpp
 #include <pluss/pluss.h>
@@ -234,7 +234,7 @@ int main() {
   const double f1_mean =
       plan.score(model, frame, data_options, lymph::MetricKind::F1);
 
-  const std::vector<double> folds = f1_per_fold.to_vec<double>();
+  const std::vector<double> folds = f1_per_fold.host<double>();
   std::cout << "fold count = " << folds.size() << "\n";
   for (std::size_t i = 0; i < folds.size(); ++i) {
     std::cout << "  fold " << i << " f1 = " << folds[i] << "\n";

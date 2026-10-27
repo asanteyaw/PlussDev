@@ -12,8 +12,8 @@
 #include <sstream>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
 optim::ParameterPack<pluss::Series> ks(double k, double s) { return optim::pack_scalars({{"k", scalar(k)}, {"s", scalar(s)}}); }
@@ -32,10 +32,10 @@ int main() {
 
   // negative log-likelihood = -sum[ ln k - k ln s + (k - 1) ln x - (x / s)^k ]
   auto nll = [&](const Pack& p) {
-    const optim::Trace constants = optim::trace(log_data, false);
-    const optim::Trace k = p.at("k"), log_s = optim::log(p.at("s"));
-    const optim::Trace term = optim::log(k) - k * log_s + (k - 1.0) * constants - optim::exp(k * (constants - log_s));
-    return -1.0 * optim::sum(term);
+    const pluss::Series constants = log_data;
+    const pluss::Series k = p.at("k"), log_s = p.at("s").log();
+    const pluss::Series term = k.log() - k * log_s + (k - 1.0) * constants - (k * (constants - log_s)).exp();
+    return -1.0 * term.sum();
   };
   const auto fit = optim::constraints().lbs(ks(0.1, 1.0)).ubs(ks(20.0, 1000.0));
 
@@ -51,7 +51,7 @@ int main() {
   const std::pair<double, double> starts[] = {{1.0, 50.0}, {5.0, 200.0}, {2.0, 80.0}, {10.0, 20.0}};
   for (const auto& [k0, s0] : starts) {
     const auto r = optim::optima(nll, ks(k0, s0), {}, fit);
-    const double k = r.params.at("k").item<double>(), s = r.params.at("s").item<double>();
+    const double k = as_f64(r.params.at("k")), s = as_f64(r.params.at("s"));
     std::ostringstream label, fitted, optimality;
     label << "(" << k0 << ", " << s0 << ")";
     fitted << std::fixed << std::setprecision(4) << k << ", " << s;

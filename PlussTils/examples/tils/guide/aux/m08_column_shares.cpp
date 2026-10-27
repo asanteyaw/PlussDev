@@ -15,7 +15,7 @@ int main() {
 
   const auto shares = pluss::tils::map_axis(
       [](const pluss::Series& month) {
-        const auto values = month.to_vec<double>();
+        const auto values = month.host<double>();
         double total = 0.0;
         for (double v : values) total += v;
         std::vector<double> out;

@@ -89,7 +89,7 @@ deviation are both close to `1 / lambda`.
 pluss::rng_seed(11);
 auto x = pluss::series::empty({200000}, pluss::ScalarType::Float64);
 x.exponential_(4.0);
-auto v = x.to_vec<double>();
+auto v = x.host<double>();
 double lo = 1e300, sum = 0;
 for (double e : v) { lo = std::min(lo, e); sum += e; }
 double mean = sum / v.size(), ss = 0;

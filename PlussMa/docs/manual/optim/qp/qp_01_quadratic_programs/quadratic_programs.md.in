@@ -1,0 +1,44 @@
+# Quadratic programs
+
+[Back to Quadratic Programming](../qp_01_quadratic_programs.md)
+
+A quadratic program minimises a convex quadratic `0.5 x'Px + q'x` subject to linear constraints `l <= Ax <= u`. It is the problem behind constrained least squares, portfolio selection and model predictive control, and the solver is a first-order method that factorises the problem once and then iterates, with an adaptive penalty.
+
+The page shows the solver on its own terms. A first program solves a small QP and reads the multipliers (an active constraint has a large multiplier, a slack bound has 0). The constraint forms (equality, one-sided bound, unconstrained) use the same call and differ only in the rows and bounds. Batches and reuse are the efficient route when only `q` or the bounds change: `qp::prepare(P, A)` factorises once and the returned `Solver` solves repeatedly. And a warm start and the options (tolerances, the penalty, the iteration cap) are measured, because the benefit of a warm start is what makes this solver useful in model predictive control.
+
+## Program 1: A first QP
+
+@@example Numerical/optimization/guide/qp/511_first_qp.cpp@@
+
+The sum constraint is active (its multiplier is large), `x1` sits at its upper bound (positive multiplier) and `x0`'s bound is slack (multiplier 0). The accuracy is about 1e-4, which is what the default tolerance of 1e-5 on the residuals buys; tighten it for more (Program 4).
+
+## Program 2: The constraint forms
+
+@@example Numerical/optimization/guide/qp/512_constraint_forms.cpp@@
+
+An equality, a one-sided bound and an unconstrained problem all use the same call; only the rows and the bounds differ.
+
+## Program 3: Batches and reuse
+
+@@example Numerical/optimization/guide/qp/513_batches_and_reuse.cpp@@
+
+A `q` of shape `[B, n]` solves `B` problems that share `P`, `A` and the bounds. When only `q` or the bounds change between solves, `qp::prepare(P, A)` checks the problem and factorises it once; the `Solver` it returns solves again and again without that setup, and `variables()` and `constraints()` report its size. Results agree with the one-shot call.
+
+## Program 4: Warm starts and options
+
+@@example Numerical/optimization/guide/qp/514_warm_start_and_options.cpp@@
+
+- **Warm start.** A slightly changed problem restarted from the previous `warm()` takes fewer iterations than a cold start (50 against 80 here). The benefit grows with how close the new problem is, which is the situation in model predictive control.
+- **Tolerances** trade iterations for accuracy: 1e-9 doubles the work and gains four digits; 1e-3 halves it and loses two.
+- **Penalty.** The starting `rho` hardly matters, because the penalty is rebalanced during the run: starts spanning three orders of magnitude (0.005, 0.1, 5) all converge within about a hundred iterations. Switch `adaptive_rho` off and the starting value matters a great deal; a poor one needs several times the iterations, or fails within the cap.
+- **Iteration cap.** Stopping at the cap returns the current iterate with `converged` false. Check it.
+
+## Decisions and pitfalls
+
+- **The default accuracy is about 1e-4.** The default tolerance of 1e-5 on the residuals buys that; tighten it for more (1e-9 doubles the work and gains four digits).
+- **Check `converged`.** Stopping at the iteration cap returns the current iterate with `converged` false.
+- **A warm start helps when the new problem is close to the old.** A slightly changed problem restarted from the previous `warm()` took 50 iterations against 80 cold.
+- **The starting penalty hardly matters with `adaptive_rho` on.** Starts spanning three orders of magnitude all converge in about a hundred iterations; switch the adaptation off and the starting value matters a great deal.
+- **Reuse the factorisation.** When only `q` or the bounds change between solves, `qp::prepare` does the setup once.
+
+Where next: That completes the optimization guide. The API reference documents the solvers' types and options.

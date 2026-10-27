@@ -40,7 +40,7 @@ std::vector<double> running_sum(const std::vector<double>& e) {
 }
 void print_row(const char* label, const Series& s, int precision = 4) {
   std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
+  for (double v : s.host<double>()) std::cout << " " << std::setw(8) << v;
   std::cout << "\n";
 }
 int main() {
@@ -49,7 +49,7 @@ int main() {
   ts::ArimaOptions o;
   o.ar_order = 1;
   const auto fit = ts::Arima::fit_mle(y, o);
-  const auto fc = fit.forecast(8, y).to_vec<double>();
+  const auto fc = fit.forecast(8, y).host<double>();
   const double phi = fit.ar[0];
   const double mu = fit.mean + fit.intercept / (1.0 - phi);  // the level the series reverts to
   std::cout << std::fixed << std::setprecision(4) << "phi = " << phi << ", mean mu = " << mu << ", last observation x_n = " << data.back() << "\n\n";

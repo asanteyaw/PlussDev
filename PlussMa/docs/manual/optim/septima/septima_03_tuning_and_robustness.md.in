@@ -28,12 +28,8 @@ Septima has two independent groups of settings. The **step** settings, in `optio
 
 ## Programs
 
-- [The learning rate](septima_03_tuning_and_robustness/the_learning_rate.md)
-- [The other Adam settings](septima_03_tuning_and_robustness/the_other_adam_settings.md)
-- [The L-BFGS settings](septima_03_tuning_and_robustness/the_l_bfgs_settings.md)
-- [An objective that is undefined in part of the space](septima_03_tuning_and_robustness/an_objective_that_is_undefined_in_part_of_the_sp.md)
-- [What stops a run](septima_03_tuning_and_robustness/what_stops_a_run.md)
-- [Precision and complex parameters](septima_03_tuning_and_robustness/precision_and_complex_parameters.md)
+- [Tuning Adam and L-BFGS](septima_03_tuning_and_robustness/tuning_adam_and_lbfgs.md)
+- [Robustness, stopping rules and precision](septima_03_tuning_and_robustness/robustness_and_stopping.md)
 
 ## A procedure for a new problem
 

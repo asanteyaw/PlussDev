@@ -35,8 +35,8 @@ auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2),
 auto other = pluss::scribble::Slot({pluss::make_series(4), pluss::make_series(5)});
 auto out = slot.concat(other);
 std::cout << "size=" << out.size() << " last_two="
-          << std::get<pluss::Series>(out.at(3)).to_vec<std::int64_t>()[0] << ","
-          << std::get<pluss::Series>(out.at(4)).to_vec<std::int64_t>()[0];
+          << std::get<pluss::Series>(out.at(3)).host<std::int64_t>()[0] << ","
+          << std::get<pluss::Series>(out.at(4)).host<std::int64_t>()[0];
 ```
 
 ### Output

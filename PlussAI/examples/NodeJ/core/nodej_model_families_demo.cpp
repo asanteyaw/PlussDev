@@ -30,7 +30,7 @@ bool require_status(const Status& st, const std::string& label) {
 }
 
 void print_metric(const std::string& label, const Series& m) {
-  const auto v = m.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto v = m.to(pluss::pCPU, ScalarType::Float64).host<double>();
   std::cout << label << ":";
   for (double x : v) std::cout << " " << x;
   std::cout << "\n";

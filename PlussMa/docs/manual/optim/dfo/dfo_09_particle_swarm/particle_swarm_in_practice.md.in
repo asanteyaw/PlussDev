@@ -1,0 +1,45 @@
+# Particle swarm in practice
+
+[Back to Derivative-Free Optimization 9: The Particle Swarm Minimisers](../dfo_09_particle_swarm.md)
+
+Particle swarm imitates a flock: many particles move through the search region, each pulled toward the best place it has seen itself and the best place any particle has seen. It needs only function values, scales better with the number of variables than a simplex, and is the usual choice for rugged functions in a box. Two standalone minimisers exist: `particle_swarm_minimizer`, the classic scheme, and `particle_swarm_dv_minimizer`, a variant that mixes in differential evolution.
+
+The programs show a direct call on the many-minimum Rastrigin function, a table of the swarm's parameters (each cell one seed, which makes the point that the defaults are forgiving), the differential-evolution variant compared with the classic swarm at three and six variables, and stopping, where the early-stop test ends the run once the swarm has collapsed.
+
+## Program 1: A direct call
+
+@@example Numerical/optimization/guide/dfo/381_particle_swarm_standalone.cpp@@
+
+The swarm covers the whole box, finds the global minimum of this Rastrigin function from a start in a distant local-minimum basin, and ends on the evaluation budget: with the early-stop test off, only budgets end a run (Program 4).
+
+## Program 2: The parameters
+
+@@example Numerical/optimization/guide/dfo/382_particle_swarm_knobs.cpp@@
+
+Each cell is one seed. On this problem nearly every setting finds the global minimum with every seed, so the table mainly shows that the defaults are forgiving. Where there is a difference:
+
+- A **small swarm** (30 particles) fails on one seed in three, with value 0.995: too few particles to cover a rugged box. Use at least 5 to 10 particles per variable, and more for rugged functions.
+- **Constant inertia** 0.7 settles to about 1e-14 instead of exactly 0: without the shrinking schedule the particles never quite stop moving. Keep the schedule on when you need full precision.
+- The pull weights, the speed clamp, the time-varying pulls and the centre particle made no difference here. They matter on harder functions; change one at a time, over several seeds, if you tune.
+
+## Program 3: The differential-evolution variant
+
+@@example Numerical/optimization/guide/dfo/383_particle_swarm_dv.cpp@@
+
+At 3 variables the classic swarm finds the global minimum exactly on every seed and the variant ends within 0.4 of it. At 6 variables, with the same 40000 evaluations, the classic swarm reaches essentially zero on two seeds and about 1 on the third, while the variant stops between 12 and 18. The variant moves each particle only when the move improves it and has no memory of a particle's own best position, so it behaves like differential evolution (Chapter 8, where plain DE also stops near 15 on this problem) rather than like a swarm. The classic swarm is the better first choice on rugged functions; try the variant as a second opinion.
+
+## Program 4: Stopping and execution modes
+
+@@example Numerical/optimization/guide/dfo/384_particle_swarm_stopping.cpp@@
+
+With the test off the run uses its whole generation budget. With `check_every` 10 it stops once the best value has stopped improving and the swarm has collapsed, here after 60 generations on a unimodal function, with the answer already below 1e-28. For rugged functions leave the test off and rely on a budget, or the swarm may collapse on a local minimum and stop there. The sequential mode updates particles one at a time and follows a different random path; both give valid results. A generation limit reports `ReachedIterationBudget`, an evaluation limit `ReachedEvaluationBudget`.
+
+## Decisions and pitfalls
+
+- **Use at least 5 to 10 particles per variable.** A swarm of 30 failed on one seed in three, with too few particles to cover a rugged box; use more for rugged functions.
+- **Keep the inertia schedule when you need full precision.** A constant inertia of 0.7 settles to about 1e-14 instead of exactly 0 because the particles never quite stop.
+- **Tune one setting at a time and over several seeds.** The pull weights, the speed clamp and the centre particle made no difference here; they matter on harder functions.
+- **The variant is not a drop-in improvement.** At six variables with the same budget the classic swarm reached essentially zero on two of three seeds and the variant stopped between 12 and 18, because it moves each particle only along one differential direction.
+- **For rugged functions leave the stopping test off and rely on a budget.** Otherwise the swarm may collapse before it has found the global basin.
+
+Where next: [Chapter 10](../dfo_10_mesh_adaptive_search.md) describes the mesh adaptive direct search family.

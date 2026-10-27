@@ -18,18 +18,8 @@ The curvature models are `Bfgs` (a dense matrix, updated from each step and the 
 
 ## Curvature
 
-- [How the model scales with the problem](optima_06_curvature_linear_algebra_scaling/how_the_model_scales_with_the_problem.md)
-- [The memory of the limited-memory model](optima_06_curvature_linear_algebra_scaling/the_memory_of_the_limited_memory_model.md)
-- [Every algorithm, every model](optima_06_curvature_linear_algebra_scaling/every_algorithm_every_model.md)
-- [The BFGS safeguard](optima_06_curvature_linear_algebra_scaling/the_bfgs_safeguard.md)
-
-## Linear algebra
-
-- [The step's linear system](optima_06_curvature_linear_algebra_scaling/the_step_s_linear_system.md)
-
-## Scaling
-
-- [Units, measured](optima_06_curvature_linear_algebra_scaling/units_measured.md)
+- [Curvature models](optima_06_curvature_linear_algebra_scaling/curvature_models.md)
+- [The step's linear algebra, and units](optima_06_curvature_linear_algebra_scaling/linear_algebra_and_units.md)
 
 ## Decisions
 
@@ -45,7 +35,7 @@ The curvature models are `Bfgs` (a dense matrix, updated from each step and the 
 
 ## Pitfalls
 
-- Asking for an exact model without the dual callbacks: refused with exit flag `-5` (Program 3).
+- Asking for an exact model on an objective given only as a value and a gradient: refused with exit flag `-5` (Program 3).
 - Switching `problem_scaling` to `None` or `InitialPoint` on a problem whose numbers span many orders of magnitude (Program 6).
 - Reading `Converged` as `Optimal`: the flag certifies first-order conditions at the point returned and nothing more.
 

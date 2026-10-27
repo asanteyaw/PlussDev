@@ -1,0 +1,30 @@
+# Functions that fail and functions that are expensive
+
+[Back to Derivative-Free Optimization 4: Black Boxes](../dfo_04_black_boxes.md)
+
+A black box is a function you cannot see inside: a simulation, a solver, a measurement. Two properties of black boxes shape how you call a derivative-free method. First, they fail. The simulation does not converge when a parameter exceeds some value; the instrument returns nothing. The right response is to report the failure (`evaluation_ok = false`), not to invent a huge objective value as a penalty: a made-up value has to be chosen larger than any real one and distorts the comparison between points. The solver then finds the best *usable* point, and the failed calls are the price of finding the edge of the usable region; they count against the budget.
+
+Second, they are expensive, and optimisers revisit points. The **cache** answers repeated points from memory, so the objective runs fewer times. When a call costs minutes it is the first thing to leave on, and the only reason to turn it off is a function that is not deterministic.
+
+## Program 1: A function that fails
+
+Say the simulation does not converge when its first parameter exceeds 1.5. Return `evaluation_ok = false` there; do not invent a huge objective value. A made-up penalty has to be chosen larger than any real value and distorts the comparison between points.
+
+@@example Numerical/optimization/guide/dfo/331_failing_simulation.cpp@@
+
+The true minimum lies inside the failing region. The solver finds the best usable point, at the edge of it, and `Converged` means the mesh shrank around that edge. The failed calls are the price of discovering the edge; they count against the budget.
+
+## Program 2: The cache
+
+@@example Numerical/optimization/guide/dfo/332_cache.cpp@@
+
+With the cache on, repeated points are answered from memory (`cache_hits`) and the objective runs fewer times than with it off. When a call is expensive this is the first thing to leave on. Turn it off only when the function is not deterministic (the same input can give different outputs), because a cached value is returned for any later request of that point.
+
+## Decisions and pitfalls
+
+- **Report failure, do not fake a value.** `evaluation_ok = false` lets the method discard the point without distorting its comparisons.
+- **Failed calls cost budget.** Discovering the edge of the feasible region takes evaluations; allow for it.
+- **`Converged` at the edge means the mesh shrank around it.** The minimum may lie inside the failing region; the answer is the best usable point.
+- **Leave the cache on for deterministic functions.** `cache_hits` counts the saved calls; turn it off only if the same input can give different outputs.
+
+Where next: [Several objectives and constraint policies](several_objectives_and_constraint_policies.md) covers the other two black-box features.

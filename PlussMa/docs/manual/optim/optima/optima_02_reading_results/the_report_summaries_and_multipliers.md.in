@@ -1,0 +1,65 @@
+# The report, the summaries and the multipliers
+
+[Back to Optima 2: Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+Beyond the verdict, a finished run reports how it got there and what it learned. `result.output` is the structured report: the work done, the constraint violation and optimality measure at the returned point, the method's own control parameter, whether a feasible checkpoint was recorded, and, for a failed run, the stall diagnostic. Two ready-made summaries (one line for a log, one field per line for a terminal) print the same facts, and the **Lagrange multipliers** say how hard each constraint pushes on the answer.
+
+Multipliers are the most useful and least read part of the output. For an inequality, a multiplier is the first-order price: relax the limit by one unit and the objective improves by about that amount. A constraint with multiplier zero is inactive and costs nothing; a large multiplier marks the constraint that is shaping the answer. The last program here is about the **best feasible checkpoint**: a run that ends without converging may have visited a better point than its last, and the solver keeps the best feasible point it saw.
+
+## Program 5: Every field of the report
+
+`result.output` is the structured report. This program prints each field of one solve so you can match it against the table below.
+
+@@example Numerical/optimization/guide/optima/25_output_fields.cpp@@
+
+| Field | Meaning |
+|---|---|
+| `algorithm` | The method's label: `merit-method`, `sqp`, `working-set` or `internal-protocol`. |
+| `iterations`, `function_evaluations` | Major iterations and the number of objective evaluations. The second is far larger when line searches or recovery steps run. |
+| `constraint_violation` | The largest violation of any constraint at the returned point. |
+| `first_order_optimality` | How far the returned point is from satisfying the optimality conditions. For sequential QP and the working-set method it is the largest component of the Lagrangian gradient at the returned point, using the multiplier estimate in `result.multipliers`, measured on the scale the optimality tolerance uses: for sequential QP and the interior method it is divided by the larger of 1 and the size of the gradient at the start. A start where the gradient is enormous therefore makes a large absolute residual look small (chapter 8, Program 4). |
+| `step_size`, `line_search_fraction` | The fraction of the full step the last iteration accepted. |
+| `backend_parameter` | The method's own control parameter: the penalty weight for the QP methods and the merit method, the barrier parameter for the interior method. Sequential QP sets its penalty weight from the size of the multipliers at each iteration, so it moves between iterations; here it ended at `3.5769`. |
+| `complementarity` | The complementarity residual; meaningful for the interior method, zero otherwise. |
+| `krylov_iterations` | Iterations spent in the iterative linear solver, when it is used. |
+| `best_feasible_available`, `returned_best_feasible` | Whether a feasible checkpoint was recorded, and whether the answer in `params` is that checkpoint. |
+| `best_feasible_value`, `best_feasible_constraint_violation`, `best_feasible_first_order_optimality` | The checkpoint's objective value, violation and stationarity. Infinity when no checkpoint exists. |
+| `multiplier_max_norm`, `active_multiplier_count` | The largest multiplier magnitude, and how many constraints are active. |
+| `detail_message` | The expanded message, including the stall diagnostic for a failed run. |
+| `stall_category`, `stall_measure`, `stall_reference` | The stall category, the quantity that triggered it, and the threshold it was compared with. |
+
+The solve is a success: `first_order_optimality` is `1e-8`, so the returned point satisfies the optimality conditions to high accuracy in only nine evaluations. `multiplier_max_norm` is `3.2426`, the multiplier of the one active constraint.
+
+## Program 11: The one-line and many-line summaries
+
+Two ready-made reports describe a finished run. `compact_summary` (also reachable as `print_summary`) is one line for logs. `detailed_summary` is one field per line.
+
+@@example Numerical/optimization/guide/optima/30_summaries.cpp@@
+
+Both print the same facts. The compact form is the one to put in a log line; the detailed form is for a terminal, and its field names match the `output` table above.
+
+## Program 10: Reading the multipliers
+
+A Lagrange multiplier measures how hard a constraint pushes on the answer. For an inequality it is the first-order price: relaxing the limit by one unit lowers the objective by about that amount. The result carries six multiplier groups, one per constraint family. This program uses three problems whose multipliers can be worked out by hand and checks each.
+
+@@example Numerical/optimization/guide/optima/29_multipliers.cpp@@
+
+The bound problem has gradient `(-2, -1)` at its answer, so the upper multipliers are `(2, 1)` and the lower group is empty because no lower bound was set. The linear inequality has multiplier `2`, the price of tightening `x0 + x1 <= 4`. The nonlinear equality has multiplier `3.2426`, which equals `(3 - 1/sqrt 2) * sqrt 2`, the gradient magnitude divided by the constraint-gradient magnitude. A family the problem does not use has an empty multiplier series; an inactive constraint has multiplier zero.
+
+## Program 9: The best feasible checkpoint
+
+A run that ends without converging may have visited a better point than its last. The solver keeps the best feasible point it saw. `result.best_feasible` holds it and `output.best_feasible_*` summarizes it. `returned_best_feasible` tells you whether the answer in `params` is the checkpoint or the final iterate.
+
+@@example Numerical/optimization/guide/optima/28_best_feasible.cpp@@
+
+Sequential QP was stopped after three iterations, so the flag is `MaxIterations` and `converged` is false. The returned answer is excellent in value (`10.5147`) but infeasible by `3e-06`, just over the default tolerance, because this method approaches feasibility from outside. The only feasible point it ever visited is the starting point, `(0, 0)` with objective `18`, so that is the checkpoint, and the answer in `params` is not that checkpoint (`false`). Here the checkpoint is feasible but far worse, which shows the trade-off: neither is automatically the one to use. A program that wants a usable point from a run that did not converge should read `best_feasible`, and check its violation, rather than `params`.
+
+## Decisions and pitfalls
+
+- **Read the optimality measure on its own scale.** `first_order_optimality` is scaled by the size of the gradient at the start for some methods, so a huge starting gradient makes a large absolute residual look small; compare it with the tolerance, not with zero.
+- **Multipliers exist only for the families the problem uses.** An unused family has an empty multiplier series, and an inactive constraint has multiplier zero; do not read an empty series as "zero cost".
+- **Use the multiplier as a price, with care.** It is a first-order estimate: it is accurate for small changes of the limit and says nothing about large ones.
+- **The checkpoint is not automatically the better answer.** `returned_best_feasible` tells you whether `params` is the checkpoint; a final iterate that is slightly infeasible but excellent in value may be worth more than a feasible but poor checkpoint. Decide with the tolerance you can accept.
+- **Log the compact summary, show the detailed one.** The field names of the detailed summary match the `output` table above.
+
+Where next: [Watching a run](watching_a_run.md) shows the progress hooks that let you see these quantities as the run proceeds.

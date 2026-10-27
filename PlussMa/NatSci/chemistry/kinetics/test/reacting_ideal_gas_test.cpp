@@ -136,7 +136,7 @@ void test_kinetic_mass_source_and_reverse() {
       mechanism.net_production_rates(temperature, concentration);
   const Series mass_source = omega.mul(gas.molar_masses());
   const double source_scale = mass_source.abs().max().item<double>();
-  expect(std::abs(mass_source.sum(-1, false).item<double>()) <=
+  expect(std::abs(mass_source.sum(-1, false).host<double>().front()) <=
              std::max(1e-11, source_scale * 2e-12),
          "reaction source did not conserve total mass");
 
@@ -144,7 +144,7 @@ void test_kinetic_mass_source_and_reverse() {
   const Series recovered = gas.temperature(energy, y);
   recovered.sum().reverse();
   expect(temperature.has_sensitivity() &&
-             std::abs(temperature.sensitivity().item<double>() - 1.0) < 2e-9,
+             std::abs(temperature.sensitivity().host<double>().front() - 1.0) < 2e-9,
          "temperature inversion severed or distorted reverse sensitivity");
 }
 

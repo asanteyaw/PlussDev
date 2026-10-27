@@ -118,15 +118,15 @@ void test_fisher_kpp() {
 
 void test_membrane() {
   const Series ko = vec({5.0}), ki = vec({140.0});
-  expect(close(mem::nernst(ko, ki, 1.0, 26.7).item<double>(), 26.7 * std::log(5.0 / 140.0), 1e-14), "nernst K");
-  expect(close(mem::nernst(vec({110.0}), vec({10.0}), -1.0, 26.7).item<double>(), -26.7 * std::log(11.0), 1e-14), "nernst Cl");
+  expect(close(mem::nernst(ko, ki, 1.0, 26.7).host<double>().front(), 26.7 * std::log(5.0 / 140.0), 1e-14), "nernst K");
+  expect(close(mem::nernst(vec({110.0}), vec({10.0}), -1.0, 26.7).host<double>().front(), -26.7 * std::log(11.0), 1e-14), "nernst Cl");
   const Series p = vec({1.0, 0.05, 0.45}); // K, Na, Cl
   const Series out = vec({5.0, 145.0, 110.0}), in = vec({140.0, 12.0, 10.0}), sign = vec({1, 1, -1});
   const double expected = 26.7 * std::log((1.0 * 5 + 0.05 * 145 + 0.45 * 10) / (1.0 * 140 + 0.05 * 12 + 0.45 * 110));
   expect(close(mem::ghk_voltage(p, out, in, sign, 26.7).item<double>(), expected, 1e-13), "GHK voltage");
   // single permeant cation reduces GHK to Nernst
   expect(close(mem::ghk_voltage(vec({1.0}), vec({5.0}), vec({140.0}), vec({1.0}), 26.7).item<double>(),
-               mem::nernst(ko, ki, 1.0, 26.7).item<double>(), 1e-13), "GHK -> Nernst");
+               mem::nernst(ko, ki, 1.0, 26.7).host<double>().front(), 1e-13), "GHK -> Nernst");
 }
 
 void test_hodgkin_huxley() {
@@ -187,7 +187,7 @@ void test_hodgkin_huxley() {
         return path.states.select(-1, 0).amax(0, false).sub(40.0);
       },
       lo, hi, {12}).root;
-  expect(std::abs(th.item<double>() - hh_reference::threshold_v0[0]) < 1e-3, "firing threshold equals the independent paper-convention value");
+  expect(std::abs(th.host<double>().front() - hh_reference::threshold_v0[0]) < 1e-3, "firing threshold equals the independent paper-convention value");
 }
 
 // Table 4 of the paper: membrane action potential from a 15 mV initial depolarisation at 18.5 C:

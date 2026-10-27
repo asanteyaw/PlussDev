@@ -80,7 +80,7 @@ void test_union_matching_for_frame_math() {
   expect(positional.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
          "default frame arithmetic should preserve left case labels under positional semantics");
-  expect(positional.features("x").as_series().to_vec<double>() ==
+  expect(positional.features("x").as_series().host<double>() ==
              std::vector<double>({101.0, 202.0}),
          "default frame arithmetic should pair values by position");
   const auto result = left.add(right, {.align = pluss::table::AlignBy::Both});
@@ -91,15 +91,15 @@ void test_union_matching_for_frame_math() {
          "union matching should preserve left case order and append right-only cases");
 
   const auto y = result.features("y");
-  expect(y.as_series().to_vec<double>().front() == 210.0,
+  expect(y.as_series().host<double>().front() == 210.0,
          "matched arithmetic should pair values by case labels");
-  expect(pluss::table::detail::validity_mask(y)->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(y)->host<bool>() ==
              std::vector<bool>({true, false, false}),
          "matched arithmetic should mark one-sided values missing");
-  expect(pluss::table::detail::validity_mask(result.features("x"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(result.features("x"))->host<bool>() ==
              std::vector<bool>({false, false, false}),
          "left-only feature arithmetic should be entirely missing");
-  expect(pluss::table::detail::validity_mask(result.features("z"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(result.features("z"))->host<bool>() ==
              std::vector<bool>({false, false, false}),
          "right-only feature arithmetic should be entirely missing");
 }
@@ -128,10 +128,10 @@ void test_explicit_common_matching() {
   expect(matched.left.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A"}),
          "common case matching should retain shared cases only");
-  expect(matched.left.features("y").as_series().to_vec<double>() ==
+  expect(matched.left.features("y").as_series().host<double>() ==
              std::vector<double>({10.0}),
          "common matching should gather the left value");
-  expect(matched.right.features("y").as_series().to_vec<double>() ==
+  expect(matched.right.features("y").as_series().host<double>() ==
              std::vector<double>({200.0}),
          "common matching should gather the corresponding right value");
 }
@@ -149,9 +149,9 @@ void test_repeated_caselbl_pair_in_order() {
       "default frame arithmetic should reject mismatched positional shape for repeated cases");
   const auto result = left.add(right, {.align = pluss::table::AlignBy::Both});
   expect(result.ncases() == 2, "repeated cases should pair by occurrence without expansion");
-  expect(result.features("x").as_series().to_vec<double>().front() == 11.0,
+  expect(result.features("x").as_series().host<double>().front() == 11.0,
          "the first repeated occurrence should pair with the first peer occurrence");
-  expect(pluss::table::detail::validity_mask(result.features("x"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(result.features("x"))->host<bool>() ==
              std::vector<bool>({true, false}),
          "an unmatched repeated occurrence should be missing");
 
@@ -187,13 +187,13 @@ void test_case_aware_horizontal_composition() {
   expect(combined.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B"}),
          "horizontal composition should match cases by label");
-  expect(pluss::table::detail::validity_mask(combined.features("x"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(combined.features("x"))->host<bool>() ==
              std::vector<bool>({true, true, false}),
          "horizontal composition should null-mark missing left rows");
-  expect(pluss::table::detail::validity_mask(combined.features("y"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(combined.features("y"))->host<bool>() ==
              std::vector<bool>({true, false, true}),
          "horizontal composition should null-mark missing right rows");
-  const auto y = combined.features("y").as_series().to_vec<double>();
+  const auto y = combined.features("y").as_series().host<double>();
   expect(y[0] == 20.0 && y[2] == 10.0,
          "horizontal composition should gather right values by case label");
 
@@ -204,7 +204,7 @@ void test_case_aware_horizontal_composition() {
   expect(updated.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
          "update should keep the left case axis");
-  expect(updated.features("x").as_series().to_vec<double>() ==
+  expect(updated.features("x").as_series().host<double>() ==
              std::vector<double>({9.0, 2.0}),
          "update should preserve left values where the right frame is missing");
 }
@@ -230,10 +230,10 @@ void test_vertical_case_extension() {
   expect(extended.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C", "B", "A"}),
          "case extension should append the full case axes");
-  expect(pluss::table::detail::validity_mask(extended.features("x"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(extended.features("x"))->host<bool>() ==
              std::vector<bool>({true, true, false, false}),
          "case extension should null-fill a missing right feature");
-  expect(pluss::table::detail::validity_mask(extended.features("z"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(extended.features("z"))->host<bool>() ==
              std::vector<bool>({false, false, true, true}),
          "case extension should null-fill a missing left feature");
 
@@ -241,7 +241,7 @@ void test_vertical_case_extension() {
       left.extend(right, FrameMatchRule::Common, true);
   expect(common.features() == std::vector<std::string>({"y"}),
          "common case extension should retain shared features only");
-  expect(common.labels().values().as_series().to_vec<std::int64_t>() ==
+  expect(common.labels().values().as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "fresh case extension should create one contiguous case axis");
 
@@ -270,36 +270,36 @@ void test_unify_modes() {
 
   const auto common = left.unify("id", right, "", "common");
   expect(common.ncases() == 1 &&
-             common.features("id").as_series().to_vec<std::int64_t>(0) == 2,
+             common.features("id").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == 2,
          "common unification should retain matching keys");
 
   const auto united = left.unify("id", right, "", "unite");
   expect(united.ncases() == 3,
          "unite mode should retain matched and one-sided keys");
-  expect(united.features("id").as_series().to_vec<std::int64_t>() ==
+  expect(united.features("id").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 2, 3}),
          "unite mode should coalesce a shared key feature");
-  expect(pluss::table::detail::validity_mask(united.features("left_value"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(united.features("left_value"))->host<bool>() ==
              std::vector<bool>({true, true, false}),
          "unite mode should null-mark missing left payloads");
-  expect(pluss::table::detail::validity_mask(united.features("right_value"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(united.features("right_value"))->host<bool>() ==
              std::vector<bool>({false, true, true}),
          "unite mode should null-mark missing right payloads");
 
   const auto keep_right = left.unify("id", right, "", "keep_right");
   expect(keep_right.ncases() == 2 &&
-             keep_right.features("id").as_series().to_vec<std::int64_t>() ==
+             keep_right.features("id").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({2, 3}),
          "keep_right mode should preserve right-key order");
 
   const auto left_only = left.unify("id", right, "", "left_only");
   expect(left_only.ncases() == 1 &&
-             left_only.features("id").as_series().to_vec<std::int64_t>(0) == 1,
+             left_only.features("id").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == 1,
          "left_only mode should retain unmatched left keys");
 
   const auto right_only = left.unify("id", right, "", "right_only");
   expect(right_only.ncases() == 1 &&
-             right_only.features("id").as_series().to_vec<std::int64_t>(0) == 3,
+             right_only.features("id").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == 3,
          "right_only mode should retain unmatched right keys");
 
   const auto crossed = left.unify("", right, "", "cross");
@@ -334,35 +334,35 @@ void test_vectorized_group_reductions() {
   expect(grouped.features("group").as_note().vector() ==
              std::vector<std::string_view>({"A", "B"}),
          "grouping should preserve first-seen key order and key dtype");
-  expect(grouped.features("n").as_series().to_vec<std::int64_t>() ==
+  expect(grouped.features("n").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3}),
          "group count should use vectorized group ids");
-  expect(grouped.features("distinct").as_series().to_vec<std::int64_t>() ==
+  expect(grouped.features("distinct").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3}),
          "group distinct count should count unique observed values");
-  expect(grouped.features("total").as_series().to_vec<double>() ==
+  expect(grouped.features("total").as_series().host<double>() ==
              std::vector<double>({4.0, 12.0}),
          "group sum should reduce by group id");
-  expect(grouped.features("average").as_series().to_vec<double>() ==
+  expect(grouped.features("average").as_series().host<double>() ==
              std::vector<double>({2.0, 4.0}),
          "group mean should reduce by group id");
-  expect(grouped.features("middle").as_series().to_vec<double>() ==
+  expect(grouped.features("middle").as_series().host<double>() ==
              std::vector<double>({2.0, 4.0}),
          "group median should reduce by group id");
-  expect(grouped.features("num_mode").as_series().to_vec<double>() ==
+  expect(grouped.features("num_mode").as_series().host<double>() ==
              std::vector<double>({1.0, 2.0}),
          "group numeric mode should tie-break by first-seen row");
   expect(grouped.features("label_mode").as_note().vector() ==
              std::vector<std::string_view>({"x", "z"}),
          "group note mode should reduce by group id");
-  expect(grouped.features("smallest").as_series().to_vec<double>() ==
+  expect(grouped.features("smallest").as_series().host<double>() ==
              std::vector<double>({1.0, 2.0}),
          "group minimum should reduce by group id");
-  expect(grouped.features("largest").as_series().to_vec<double>() ==
+  expect(grouped.features("largest").as_series().host<double>() ==
              std::vector<double>({3.0, 6.0}),
          "group maximum should reduce by group id");
-  const auto std_values = grouped.features("spread").as_series().to_vec<double>();
-  const auto var_values = grouped.features("variance").as_series().to_vec<double>();
+  const auto std_values = grouped.features("spread").as_series().host<double>();
+  const auto var_values = grouped.features("variance").as_series().host<double>();
   expect(std::abs(std_values[0] - std::sqrt(2.0)) < 1e-12 &&
              std::abs(std_values[1] - 2.0) < 1e-12,
          "group standard deviation should use sample degrees of freedom");
@@ -377,7 +377,7 @@ void test_vectorized_group_reductions() {
   });
   const auto pivoted = pivot_frame.pivot_table(
       "case", "feature", "value", DataFrame::GroupOp::Median, true, false);
-  expect(pivoted.features("c1").as_series().to_vec<double>() ==
+  expect(pivoted.features("c1").as_series().host<double>() ==
              std::vector<double>({3.0, 5.0}),
          "pivot_table median should aggregate duplicate cells");
 
@@ -386,10 +386,10 @@ void test_vectorized_group_reductions() {
       {"feature", Slate(pluss::make_note({"c1", "c2"}))},
       {"value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
   }).pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, true, false);
-  expect(pluss::table::detail::validity_mask(sparse_counts.features("c1"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(sparse_counts.features("c1"))->host<bool>() ==
              std::vector<bool>({true, false}),
          "pivot_table count should leave unobserved cells missing instead of materializing zeros");
-  expect(pluss::table::detail::validity_mask(sparse_counts.features("c2"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(sparse_counts.features("c2"))->host<bool>() ==
              std::vector<bool>({false, true}),
          "pivot_table count should preserve sparsity per pivoted feature");
 
@@ -405,14 +405,14 @@ void test_vectorized_group_reductions() {
       collision_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, false, false);
   expect(collision_pivot.get("NULL").has_value() && collision_pivot.get("<NULL>").has_value(),
          "pivot_table should distinguish literal 'NULL' feature keys from missing feature keys");
-  expect(collision_pivot.features("NULL").as_series().to_vec<std::int64_t>() ==
+  expect(collision_pivot.features("NULL").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 0}) &&
-             pluss::table::detail::validity_mask(collision_pivot.features("NULL"))->to_vec<bool>() ==
+             pluss::table::detail::validity_mask(collision_pivot.features("NULL"))->host<bool>() ==
                  std::vector<bool>({true, false}),
          "pivot_table should keep the literal 'NULL' key in its own output feature");
-  expect(collision_pivot.features("<NULL>").as_series().to_vec<std::int64_t>() ==
+  expect(collision_pivot.features("<NULL>").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}) &&
-             pluss::table::detail::validity_mask(collision_pivot.features("<NULL>"))->to_vec<bool>() ==
+             pluss::table::detail::validity_mask(collision_pivot.features("<NULL>"))->host<bool>() ==
                  std::vector<bool>({false, true}),
          "pivot_table should render missing feature keys as '<NULL>' on the feature axis");
 
@@ -420,8 +420,8 @@ void test_vectorized_group_reductions() {
       pivot_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Std, true, false);
   const auto pivot_var =
       pivot_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Var, true, false);
-  const auto std_col = pivot_std.features("c1").as_series().to_vec<double>();
-  const auto var_col = pivot_var.features("c1").as_series().to_vec<double>();
+  const auto std_col = pivot_std.features("c1").as_series().host<double>();
+  const auto var_col = pivot_var.features("c1").as_series().host<double>();
   expect(std::abs(std_col[0] - std::sqrt(8.0)) < 1e-12 &&
              std::abs(std_col[1] - std::sqrt(18.0)) < 1e-12,
          "pivot_table(std) should support sample standard deviation per cell");
@@ -468,11 +468,11 @@ void test_vectorized_group_reductions() {
                  "revenue_sum :: Phone",
              }),
          "pivot_table(options) should flatten multi-value outputs deterministically");
-  const auto units_laptop = multi_pivot.features("units_sum :: Laptop").as_series().to_vec<double>();
+  const auto units_laptop = multi_pivot.features("units_sum :: Laptop").as_series().host<double>();
   expect(std::abs(units_laptop[0] - 2.0) < 1e-12 &&
              std::abs(units_laptop[1] - 4.0) < 1e-12 &&
              std::abs(units_laptop[2] - 1.0) < 1e-12 &&
-             pluss::table::detail::validity_mask(multi_pivot.features("units_sum :: Laptop"))->to_vec<bool>() ==
+             pluss::table::detail::validity_mask(multi_pivot.features("units_sum :: Laptop"))->host<bool>() ==
                  std::vector<bool>({true, true, true, false}),
          "pivot_table(options) should populate the requested value-column aggregates per pivoted column");
 
@@ -485,10 +485,10 @@ void test_vectorized_group_reductions() {
   expect(pivot_with_totals.labels().part("city").as_note().vector().back() == "All" &&
              pivot_with_totals.labels().part("quarter").as_note().vector().back() == "",
          "pivot_table(options) should append a bottom total row on a structured case axis");
-  expect(pivot_with_totals.features("units_sum :: Phone").as_series().to_vec<double>() ==
+  expect(pivot_with_totals.features("units_sum :: Phone").as_series().host<double>() ==
              std::vector<double>({3.0, 0.0, 0.0, 5.0, 8.0}),
          "pivot_table(fill_value, margins) should fill missing cells before exposing the result");
-  expect(pivot_with_totals.features("units_sum :: All").as_series().to_vec<double>() ==
+  expect(pivot_with_totals.features("units_sum :: All").as_series().host<double>() ==
              std::vector<double>({5.0, 4.0, 1.0, 5.0, 15.0}),
          "pivot_table(margins=true) should add row totals plus a grand total");
 }
@@ -504,16 +504,16 @@ void test_group_phase5_contracts() {
   expect(counted.features() ==
              std::vector<std::string>({"group", "value_count", "label_count"}),
          "group().by(...).count() should count non-key value features with stable default names");
-  expect(counted.features("value_count").as_series().to_vec<std::int64_t>() ==
+  expect(counted.features("value_count").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3}) &&
-             counted.features("label_count").as_series().to_vec<std::int64_t>() ==
+             counted.features("label_count").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({2, 3}),
          "grouped count convenience should count non-null values per remaining feature");
 
   const auto rows = frame.features({"group"}).group().by({"group"}).count();
   expect(rows.features() == std::vector<std::string>({"group", "count"}),
          "grouped count should fall back to row count when no value features remain");
-  expect(rows.features("count").as_series().to_vec<std::int64_t>() ==
+  expect(rows.features("count").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3}),
          "grouped row-count fallback should count cases per group");
 
@@ -521,7 +521,7 @@ void test_group_phase5_contracts() {
   expect(targeted_count.features() ==
              std::vector<std::string>({"group", "value_count"}),
          "targeted grouped count should only emit the requested value feature");
-  expect(targeted_count.features("value_count").as_series().to_vec<std::int64_t>() ==
+  expect(targeted_count.features("value_count").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3}),
          "targeted grouped count should preserve non-null count semantics");
 
@@ -529,7 +529,7 @@ void test_group_phase5_contracts() {
   expect(targeted_mean.features() ==
              std::vector<std::string>({"group", "value_mean"}),
          "targeted grouped mean should only emit the requested value feature");
-  expect(targeted_mean.features("value_mean").as_series().to_vec<double>() ==
+  expect(targeted_mean.features("value_mean").as_series().host<double>() ==
              std::vector<double>({2.0, 4.0}),
          "targeted grouped mean should aggregate only the requested feature");
 
@@ -546,9 +546,9 @@ void test_group_phase5_contracts() {
   expect(unnamed.features() ==
              std::vector<std::string>({"group", "count", "value_mean", "label_count"}),
          "omitted grouped output names should resolve deterministically");
-  expect(unnamed.features("count").as_series().to_vec<std::int64_t>() ==
+  expect(unnamed.features("count").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3}) &&
-             unnamed.features("value_mean").as_series().to_vec<double>() ==
+             unnamed.features("value_mean").as_series().host<double>() ==
                  std::vector<double>({2.0, 4.0}),
          "omitted grouped output naming should preserve the requested aggregations");
 
@@ -584,10 +584,10 @@ void test_group_transform_and_filter() {
                               .group({.dropnull = true})
                               .by(frame.features("group"))
                               .transform(pluss::table::GroupOp::Mean);
-  expect(value_mean.as_series().to_vec<double>() ==
+  expect(value_mean.as_series().host<double>() ==
              std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}),
          "SlateGrouped::transform should broadcast grouped reductions back to row space");
-  expect(pluss::table::detail::validity_mask(value_mean)->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(value_mean)->host<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
          "SlateGrouped::transform should null out rows excluded by dropnull keys");
 
@@ -602,12 +602,12 @@ void test_group_transform_and_filter() {
   expect(multi_value.ncases() == frame.ncases() &&
              multi_value.features() == std::vector<std::string>({"value_mean", "value_count"}),
          "SlateGrouped::transform(specs) should return broadcasted output features only");
-  expect(multi_value.features("value_mean").as_series().to_vec<double>() ==
+  expect(multi_value.features("value_mean").as_series().host<double>() ==
              std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}) &&
-             multi_value.features("value_count").as_series().to_vec<std::int64_t>() ==
+             multi_value.features("value_count").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({2, 2, 2, 2, 2}),
          "SlateGrouped::transform(specs) should broadcast multiple grouped reductions");
-  expect(pluss::table::detail::validity_mask(multi_value.features("value_count"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(multi_value.features("value_count"))->host<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
          "SlateGrouped::transform(specs) should preserve dropped-key nulls");
 
@@ -619,14 +619,14 @@ void test_group_transform_and_filter() {
   expect(transformed.ncases() == frame.ncases() &&
              transformed.features() == std::vector<std::string>({"value_mean", "count", "label_mode"}),
          "DataFrameGrouped::transform should return broadcasted output features only");
-  expect(transformed.features("value_mean").as_series().to_vec<double>() ==
+  expect(transformed.features("value_mean").as_series().host<double>() ==
              std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}) &&
-             transformed.features("count").as_series().to_vec<std::int64_t>() ==
+             transformed.features("count").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({2, 2, 2, 2, 2}) &&
              transformed.features("label_mode").as_note().vector() ==
                  std::vector<std::string_view>({"x", "x", "z", "x", "z"}),
          "DataFrameGrouped::transform should broadcast explicit grouped specs");
-  expect(pluss::table::detail::validity_mask(transformed.features("count"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(transformed.features("count"))->host<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
          "DataFrameGrouped::transform should preserve nulls for dropped key rows");
 
@@ -638,7 +638,7 @@ void test_group_transform_and_filter() {
   const auto filtered = frame.group({.dropnull = true}).by({"group"}).filter(keep);
   expect(filtered.ncases() == 2 &&
              filtered.features("group").as_note().vector() == std::vector<std::string_view>({"B", "B"}) &&
-             filtered.features("value").as_series().to_vec<double>() == std::vector<double>({2.0, 6.0}),
+             filtered.features("value").as_series().host<double>() == std::vector<double>({2.0, 6.0}),
          "DataFrameGrouped::filter should keep whole groups selected by a grouped keep mask");
 }
 
@@ -662,7 +662,7 @@ void test_group_yield_and_ndistinct() {
   expect(yielded.features("group").as_note().vector() ==
              std::vector<std::string_view>({"A", "A", "B", "B", "B"}),
          "group().yield() should materialize rows in grouped key order");
-  expect(yielded.features("amount").as_series().to_vec<double>() ==
+  expect(yielded.features("amount").as_series().host<double>() ==
              std::vector<double>({10.0, 40.0, 20.0, 30.0, 60.0}),
          "group().yield() should preserve original within-group row order");
   expect(yielded.labels().values().as_note().vector() ==
@@ -672,7 +672,7 @@ void test_group_yield_and_ndistinct() {
   const auto grouped = frame.group({.dropnull = true}).by({"group"}).agg({
       {"active_months", "month_code", DataFrame::GroupOp::Ndistinct},
   });
-  expect(grouped.features("active_months").as_series().to_vec<std::int64_t>() ==
+  expect(grouped.features("active_months").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 2}),
          "grouped ndistinct should count unique non-null values per group");
 
@@ -689,7 +689,7 @@ void test_group_yield_and_ndistinct() {
   const auto label_yield = indexed.group().by(DataFrame::LabelGroup{.label = "region"}).yield();
   expect(!label_yield.get("__pluss_case_level_region").has_value(),
          "group(...).by(LabelGroup).yield() should not leak internal grouping features");
-  expect(label_yield.features("sales").as_series().to_vec<double>() ==
+  expect(label_yield.features("sales").as_series().host<double>() ==
              std::vector<double>({10.0, 20.0, 30.0, 40.0}),
          "label-group yield should regroup rows by case-label keys");
 }
@@ -729,10 +729,10 @@ void test_contingency_and_split() {
   expect(counts.features("city").as_note().vector() ==
              std::vector<std::string_view>({"A", "B"}),
          "to_frame() should preserve the sorted row levels by default");
-  expect(counts.features("Card").as_series().to_vec<std::int64_t>() ==
+  expect(counts.features("Card").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 1}),
          "to_frame() should materialize the count cells");
-  expect(counts.features("Cash").as_series().to_vec<std::int64_t>() ==
+  expect(counts.features("Cash").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 2}),
          "to_frame() should materialize the count cells");
 
@@ -745,22 +745,22 @@ void test_contingency_and_split() {
   expect(totals.features("city").as_note().vector() ==
              std::vector<std::string_view>({"A", "B", "Total"}),
          "to_frame(..., totals=true) should append a total row marker");
-  expect(totals.features("Total").as_series().to_vec<std::int64_t>() ==
+  expect(totals.features("Total").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 3, 5}),
          "to_frame(..., totals=true) should report row and grand totals");
 
   const auto shares = counts_ct.share().to_frame();
-  expect(std::abs(shares.features("Card").as_series().to_vec<double>()[0] - 0.2) < 1e-12,
+  expect(std::abs(shares.features("Card").as_series().host<double>()[0] - 0.2) < 1e-12,
          "share() should normalize by the full table total");
-  expect(std::abs(shares.features("Cash").as_series().to_vec<double>()[1] - 0.4) < 1e-12,
+  expect(std::abs(shares.features("Cash").as_series().host<double>()[1] - 0.4) < 1e-12,
          "share() should normalize by the full table total");
 
   const auto conditional = counts_ct.condition({"city"}).to_frame();
-  const auto conditional_card = conditional.features("Card").as_series().to_vec<double>();
+  const auto conditional_card = conditional.features("Card").as_series().host<double>();
   expect(std::abs(conditional_card[0] - 0.5) < 1e-12 &&
              std::abs(conditional_card[1] - (1.0 / 3.0)) < 1e-12,
          "condition({city}) should normalize within each city slice");
-  expect(std::abs(conditional.features("Cash").as_series().to_vec<double>()[1] - (2.0 / 3.0)) < 1e-12,
+  expect(std::abs(conditional.features("Cash").as_series().host<double>()[1] - (2.0 / 3.0)) < 1e-12,
          "condition({city}) should normalize across the complementary dimensions");
 
   const auto multi_ct = cont_frame.contingency({"city", "channel", "weekend"});
@@ -776,18 +776,18 @@ void test_contingency_and_split() {
          "to_frame(row, col) should flatten extra column dimensions deterministically");
 
   const auto weekend_yes = multi_ct.slice({{"weekend", "yes"}}).to_frame({"city"}, {"channel"});
-  expect(weekend_yes.features("Card").as_series().to_vec<std::int64_t>() ==
+  expect(weekend_yes.features("Card").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}),
          "slice(...) should fix a level before rendering");
-  expect(weekend_yes.features("Cash").as_series().to_vec<std::int64_t>() ==
+  expect(weekend_yes.features("Cash").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}),
          "slice(...) should preserve the remaining dimensions");
 
   const auto marginalized = multi_ct.marginalize({"weekend"}).to_frame({"city"}, {"channel"});
-  expect(marginalized.features("Card").as_series().to_vec<std::int64_t>() ==
+  expect(marginalized.features("Card").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 1}),
          "marginalize(...) should sum out the requested dimensions");
-  expect(marginalized.features("Cash").as_series().to_vec<std::int64_t>() ==
+  expect(marginalized.features("Cash").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 2}),
          "marginalize(...) should sum out the requested dimensions");
 
@@ -799,10 +799,10 @@ void test_contingency_and_split() {
   expect(facets.axis0_labels()->as_note().vector() ==
              std::vector<std::string_view>({"weekend=no", "weekend=yes"}),
          "facet(row, col) should label each rendered slice");
-  expect(facets.frame(0).features("Cash").as_series().to_vec<std::int64_t>() ==
+  expect(facets.frame(0).features("Cash").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 1}),
          "facet(row, col) should render the first remaining level slice");
-  expect(facets.frame(1).features("Card").as_series().to_vec<std::int64_t>() ==
+  expect(facets.frame(1).features("Card").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}),
          "facet(row, col) should render the second remaining level slice");
 
@@ -866,24 +866,24 @@ void test_temporal_subtraction_and_sort_builder() {
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
   }));
-  expect((left - right).as_series().to_vec<std::int64_t>() ==
+  expect((left - right).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({172800000000000LL, 259200000000000LL}),
          "Timeline - Timeline should delegate to the span kernel in nanosecond mode");
-  expect((left - right).as_series().to_vec<std::int64_t>() ==
-             right.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
+  expect((left - right).as_series().host<std::int64_t>() ==
+             right.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().host<std::int64_t>(),
          "Timeline - Timeline should preserve subtraction direction while matching tl().span(..., Nanos)");
 
   const auto idx = Slate(pluss::make_timeline({"2024-01-01", "2024-01-04"}));
-  expect((left - idx).as_series().to_vec<std::int64_t>() ==
+  expect((left - idx).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({172800000000000LL, 86400000000000LL}),
          "Timeline subtraction should produce nanosecond deltas for indexed axes");
-  expect((left - idx).as_series().to_vec<std::int64_t>() ==
-             idx.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
+  expect((left - idx).as_series().host<std::int64_t>() ==
+             idx.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().host<std::int64_t>(),
          "indexed Timeline subtraction should match tl().span(..., Nanos) with direction preserved");
 
   const auto values = Slate(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
   const Slate sorted_slate = values.sort();
-  expect(sorted_slate.as_series().to_vec<double>() == std::vector<double>({1.0, 2.0, 3.0}),
+  expect(sorted_slate.as_series().host<double>() == std::vector<double>({1.0, 2.0, 3.0}),
          "Slate::sort() should remain usable through implicit conversion");
 
   const auto frame = DataFrame(
@@ -895,27 +895,27 @@ void test_temporal_subtraction_and_sort_builder() {
       Slate(pluss::make_note({"r2", "r1", "r3", "r0"})));
 
   const auto by = frame.sort().by({"a", "b"}).yield();
-  expect(by.features("v").as_series().to_vec<double>() ==
+  expect(by.features("v").as_series().host<double>() ==
              std::vector<double>({40.0, 10.0, 30.0, 20.0}),
          "DataFrame::sort().by(features) should reuse arrange semantics");
 
   const auto chained = frame.sort().by("a").desc().then("b").asc().yield();
-  expect(chained.features("v").as_series().to_vec<double>() ==
+  expect(chained.features("v").as_series().host<double>() ==
              std::vector<double>({30.0, 20.0, 40.0, 10.0}),
          "DataFrame::sort() should support per-key chained sort policies");
 
   const auto order = frame.sort().by("v").desc().order();
-  expect(order.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({3, 2, 0, 1}),
+  expect(order.as_series().host<std::int64_t>() == std::vector<std::int64_t>({3, 2, 0, 1}),
          "DataFrame::sort().order() should expose the reusable row permutation");
   const auto reordered = frame.take(order);
-  expect(reordered.features("v").as_series().to_vec<double>() ==
+  expect(reordered.features("v").as_series().host<double>() ==
              std::vector<double>({40.0, 30.0, 20.0, 10.0}),
          "DataFrame::take(order) should reuse a sort permutation directly");
   const auto top2 = frame.sort().by("v").desc().head(2);
-  expect(top2.features("v").as_series().to_vec<double>() == std::vector<double>({40.0, 30.0}),
+  expect(top2.features("v").as_series().host<double>() == std::vector<double>({40.0, 30.0}),
          "DataFrame::sort().head(n) should return the ranked prefix");
   const auto tail2 = frame.sort().by("v").desc().tail(2);
-  expect(tail2.features("v").as_series().to_vec<double>() == std::vector<double>({20.0, 10.0}),
+  expect(tail2.features("v").as_series().host<double>() == std::vector<double>({20.0, 10.0}),
          "DataFrame::sort().tail(n) should return the ranked suffix");
 
   const auto grouped = DataFrame(
@@ -929,11 +929,11 @@ void test_temporal_subtraction_and_sort_builder() {
   expect(within.features("g").as_note().vector() ==
              std::vector<std::string_view>({"B", "B", "A", "A", "C"}),
          "DataFrame::sort().within(keys) should keep first-seen group order");
-  expect(within.features("score").as_series().to_vec<std::int64_t>() ==
+  expect(within.features("score").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({3, 2, 4, 1, 0}),
          "DataFrame::sort().within(keys) should sort inside each group");
   const auto within_head3 = grouped.sort().within("g").by("score").desc().head(3);
-  expect(within_head3.features("score").as_series().to_vec<std::int64_t>() ==
+  expect(within_head3.features("score").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({3, 2, 4}),
          "DataFrame::sort().within(keys).head(n) should rank across the grouped view without full materialization");
 }
@@ -958,7 +958,7 @@ void test_bundelize_and_tabelize_interop() {
   const auto from_registry = registry.tabelize();
   expect(from_registry.features() == orders.features(),
          "Registry::tabelize() should rebuild feature names from a bundelized frame");
-  expect(from_registry.features("sales").as_series().to_vec<double>() ==
+  expect(from_registry.features("sales").as_series().host<double>() ==
              std::vector<double>({100.0, 150.0, 90.0}),
          "Registry::tabelize() should preserve numeric values");
 
@@ -998,20 +998,20 @@ void test_group_phase7_hardening() {
   });
   expect(stable.features("k1").as_note().vector() ==
              std::vector<std::string_view>({"b", "a", "b", "a"}) &&
-             stable.features("k2").as_series().to_vec<std::int64_t>() ==
+             stable.features("k2").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({2, 2, 1, 1}),
          "sort=false should preserve first-seen multi-key order");
-  expect(stable.features("n").as_series().to_vec<std::int64_t>() ==
+  expect(stable.features("n").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 1, 1, 1}),
          "row-count grouping should ignore dropped-key rows while retaining valid keyed rows");
-  expect(pluss::table::detail::validity_mask(stable.features("avg"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(stable.features("avg"))->host<bool>() ==
              std::vector<bool>({true, true, true, false}),
          "numeric grouped results should null groups with no observed values");
 
   const auto sorted = frame.group({.dropnull = true, .sort = true}).by({"k1", "k2"}).count();
   expect(sorted.features("k1").as_note().vector() ==
              std::vector<std::string_view>({"a", "a", "b", "b"}) &&
-             sorted.features("k2").as_series().to_vec<std::int64_t>() ==
+             sorted.features("k2").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({1, 2, 1, 2}),
          "sort=true should produce deterministic sorted multi-key order");
 
@@ -1038,9 +1038,9 @@ void test_group_phase7_hardening() {
       {"n", "", DataFrame::GroupOp::Count},
       {"total", "value", DataFrame::GroupOp::Sum},
   });
-  expect(pluss::table::detail::validity_mask(empty_tx.features("n"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(empty_tx.features("n"))->host<bool>() ==
              std::vector<bool>({false, false, false}) &&
-             pluss::table::detail::validity_mask(empty_tx.features("total"))->to_vec<bool>() ==
+             pluss::table::detail::validity_mask(empty_tx.features("total"))->host<bool>() ==
                  std::vector<bool>({false, false, false}),
          "all-null keys should broadcast all-invalid grouped transform results");
   const auto none = all_null.filter(Slate(pluss::Series::empty({0}, pluss::codem::ScalarType::Bool)));
@@ -1060,7 +1060,7 @@ void test_group_phase7_hardening() {
       {"value", Slate(pluss::make_series(values))},
   }).group({.dropnull = true, .sort = false}).by({"group"}).count();
   expect(high_cardinality.ncases() == 128 &&
-             high_cardinality.features("value_count").as_series().to_vec<std::int64_t>()[127] == 1,
+             high_cardinality.features("value_count").as_series().host<std::int64_t>()[127] == 1,
          "high-cardinality grouping should preserve one output row per distinct key");
 }
 
@@ -1083,10 +1083,10 @@ void test_lengthen_reshape() {
   expect(long_form.features("feature").as_note().vector() ==
              std::vector<std::string_view>({"a", "a", "b", "b"}),
          "lengthen should identify each source value feature");
-  expect(long_form.features("value").as_series().to_vec<double>() ==
+  expect(long_form.features("value").as_series().host<double>() ==
              std::vector<double>({1.0, 2.0, 3.0, 4.0}),
          "lengthen should concatenate homogeneous value payloads");
-  expect(long_form.labels().values().as_series().to_vec<std::int64_t>() ==
+  expect(long_form.labels().values().as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2, 3}),
          "lengthen should create fresh contiguous cases by default");
 
@@ -1125,14 +1125,14 @@ void test_hierarchical_case_axis_engine() {
   const auto selected = indexed.case_study().pick(
       DataFrame::CasePick{.label = "region", .value = "West"});
   expect(selected.ncases() == 2 &&
-             selected.labels().part("account").as_series().to_vec<std::int64_t>() ==
+             selected.labels().part("account").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({102, 101}),
          "case_study(level,value) should perform partial hierarchical selection");
 
   const auto full_key = indexed.case_study().pick(
       DataFrame::CasePick{.key = {"East", "202"}});
   expect(full_key.ncases() == 1 &&
-             full_key.features("sales").as_series().to_vec<double>() ==
+             full_key.features("sales").as_series().host<double>() ==
                  std::vector<double>({40.0}),
          "case_study(key) should match a full structured key");
 
@@ -1144,7 +1144,7 @@ void test_hierarchical_case_axis_engine() {
       DataFrame::SortLabelOptions{.names = {"region", "account"}});
   expect(sorted.labels().part("region").as_note().vector() ==
              std::vector<std::string_view>({"East", "East", "West", "West"}) &&
-             sorted.labels().part("account").as_series().to_vec<std::int64_t>() ==
+             sorted.labels().part("account").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({201, 202, 101, 102}),
          "label().sort(names) should sort by typed case labels");
 
@@ -1156,7 +1156,7 @@ void test_hierarchical_case_axis_engine() {
       indexed.group().by(DataFrame::LabelGroup{.label = "region"}).agg(specs);
   expect(grouped.features("region").as_note().vector() ==
              std::vector<std::string_view>({"West", "East"}) &&
-             grouped.features("total").as_series().to_vec<double>() ==
+             grouped.features("total").as_series().host<double>() ==
                  std::vector<double>({30.0, 70.0}),
          "group(...).by(LabelGroup).agg(...) should group by case levels without requiring key features");
 
@@ -1164,7 +1164,7 @@ void test_hierarchical_case_axis_engine() {
       indexed.group().by(DataFrame::LabelGroup{.label = "region"}).transform({
           {"region_total", "sales", DataFrame::GroupOp::Sum},
       });
-  expect(transformed.features("region_total").as_series().to_vec<double>() ==
+  expect(transformed.features("region_total").as_series().host<double>() ==
              std::vector<double>({30.0, 30.0, 70.0, 70.0}),
          "group(...).by(LabelGroup).transform(...) should broadcast case-level grouped values");
 
@@ -1172,7 +1172,7 @@ void test_hierarchical_case_axis_engine() {
   const auto east_only =
       indexed.group().by(DataFrame::LabelGroup{.label = "region"}).filter(keep_east);
   expect(east_only.ncases() == 2 &&
-             east_only.features("sales").as_series().to_vec<double>() == std::vector<double>({30.0, 40.0}),
+             east_only.features("sales").as_series().host<double>() == std::vector<double>({30.0, 40.0}),
          "group(...).by(LabelGroup).filter(...) should keep full label groups");
 
   const auto renamed = indexed.labels().rename({{"account", "acct"}});
@@ -1223,16 +1223,16 @@ void test_stack_unstack_hierarchical_cases() {
   expect(wide.labels().has() &&
              wide.labels().names() == std::vector<std::string>({"region", "account"}) &&
              wide.features() == std::vector<std::string>({"Q1", "Q2"}) &&
-             wide.features("Q1").as_series().to_vec<double>() ==
+             wide.features("Q1").as_series().host<double>() ==
                  std::vector<double>({10.0, 30.0}) &&
-             wide.features("Q2").as_series().to_vec<double>() ==
+             wide.features("Q2").as_series().host<double>() ==
                  std::vector<double>({20.0, 40.0}),
          "unstack should move one case level into wide features");
 
   const auto long_again = wide.stack("quarter", "sales");
   expect(long_again.labels().has() &&
              long_again.labels().names() == std::vector<std::string>({"region", "account", "quarter"}) &&
-             long_again.features("sales").as_series().to_vec<double>() ==
+             long_again.features("sales").as_series().host<double>() ==
                  std::vector<double>({10.0, 30.0, 20.0, 40.0}),
          "stack should move features into the case hierarchy and keep typed values");
 
@@ -1255,9 +1255,9 @@ void test_transform_axis_surface() {
         return value + 10.0;
       },
       pluss::table::Axis::Feature);
-  expect(by_feature.features("x").as_series().to_vec<double>() ==
+  expect(by_feature.features("x").as_series().host<double>() ==
              std::vector<double>({11.0, 12.0}) &&
-             by_feature.features("y").as_series().to_vec<double>() ==
+             by_feature.features("y").as_series().host<double>() ==
                  std::vector<double>({13.0, 14.0}),
          "transform(slate_fn, Axis::Feature) should apply column-wise");
 
@@ -1265,7 +1265,7 @@ void test_transform_axis_surface() {
       [](const pluss::table::SlateValue& value) {
         return pluss::table::SlateValue(value.slate() + 5.0);
       });
-  expect(slate_transformed.as_series().to_vec<double>() ==
+  expect(slate_transformed.as_series().host<double>() ==
              std::vector<double>({6.0, 7.0}),
          "Slate::transform(value_fn) should apply element-wise");
 
@@ -1273,7 +1273,7 @@ void test_transform_axis_surface() {
       [](const Slate& value) {
         return value + 20.0;
       });
-  expect(whole_slate_default.as_series().to_vec<double>() ==
+  expect(whole_slate_default.as_series().host<double>() ==
              std::vector<double>({21.0, 22.0}),
          "Slate::transform(slate_fn) should preserve length by default");
 
@@ -1282,7 +1282,7 @@ void test_transform_axis_surface() {
         return Slate(pluss::make_series({value.sum().to_dbl()}));
       },
       pluss::table::ResultShape::Reduce);
-  expect(whole_slate_reduce.as_series().to_vec<double>() ==
+  expect(whole_slate_reduce.as_series().host<double>() ==
              std::vector<double>({3.0}),
          "Slate::transform(slate_fn, Reduce) should accept one-row output");
 
@@ -1308,10 +1308,10 @@ void test_category_factor() {
   expect(encoding.levels.as_note().vector() ==
              std::vector<std::string_view>({"Calgary", "Edmonton", "Banff"}),
          "factor should preserve stable first-seen level order");
-  expect(encoding.codes.as_series().to_vec<std::int64_t>() ==
+  expect(encoding.codes.as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 0, 2, -1}),
          "factor should encode levels and reserve -1 for missing values");
-  expect(pluss::table::detail::validity_mask(encoding.codes)->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(encoding.codes)->host<bool>() ==
              std::vector<bool>({true, true, true, true, false}),
          "factor should preserve source missingness");
   const auto decoded = encoding.decode();
@@ -1319,7 +1319,7 @@ void test_category_factor() {
              decoded.as_note().vector()[1] == "Edmonton" &&
              decoded.as_note().vector()[3] == "Banff",
          "category decoding should recover observed labels");
-  expect(!pluss::table::detail::validity_mask(decoded)->to_vec<bool>()[4],
+  expect(!pluss::table::detail::validity_mask(decoded)->host<bool>()[4],
          "category decoding should recover missingness");
 
   const auto sorted = frame.factor("city", true, true);
@@ -1349,12 +1349,12 @@ void test_streamed_csv_case_batches() {
   DataFrame batch;
   expect(reader.next(batch) && batch.ncases() == 2,
          "streamed CSV reader should return the first bounded case batch");
-  expect(batch.features("value").as_series().to_vec<std::int64_t>() ==
+  expect(batch.features("value").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({10, 20}),
          "streamed CSV reader should parse the first batch values");
   expect(reader.next(batch) && batch.ncases() == 2,
          "streamed CSV reader should return the next bounded case batch");
-  expect(batch.features("value").as_series().to_vec<std::int64_t>() ==
+  expect(batch.features("value").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({30, 40}),
          "streamed CSV reader should continue from its current file position");
   expect(!reader.next(batch) && reader.cases_read() == 4,
@@ -1378,16 +1378,16 @@ void test_case_aligned_set_and_reduction_axis_rules() {
          "Slate::ncases/shape should report a 1D case vector");
 
   const auto row_totals = df.features({"A1", "A2"}).sum(Axis::Feature);
-  expect(row_totals.as_series().to_vec<double>() ==
+  expect(row_totals.as_series().host<double>() ==
              std::vector<double>({11.0, 22.0, 33.0, 44.0}),
          "Axis::Feature reduction should reduce across features row-wise");
   df.set("Assignments") = row_totals;
-  expect(df.features("Assignments").as_series().to_vec<double>() ==
+  expect(df.features("Assignments").as_series().host<double>() ==
              std::vector<double>({11.0, 22.0, 33.0, 44.0}),
          "case-length row-wise reduction should assign cleanly");
 
   const auto column_totals = df.features({"A1", "A2"}).sum();
-  expect(column_totals.as_series().to_vec<double>() ==
+  expect(column_totals.as_series().host<double>() ==
              std::vector<double>({100.0, 10.0}),
          "default DataFrame reduction should reduce down cases column-wise");
   bool wrong_axis_default_threw = false;
@@ -1399,7 +1399,7 @@ void test_case_aligned_set_and_reduction_axis_rules() {
   expect(wrong_axis_default_threw,
          "default assignment should reject feature-indexed reduction length mismatch");
   df.set("WrongAxis", {.align = pluss::table::AlignBy::Caselbl}) = column_totals;
-  expect(pluss::table::detail::validity_mask(df.features("WrongAxis"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(df.features("WrongAxis"))->host<bool>() ==
              std::vector<bool>({false, false, false, false}),
          "explicit case-label assignment should make feature-indexed reduction null when labels do not match");
 
@@ -1416,17 +1416,17 @@ void test_case_aligned_set_and_reduction_axis_rules() {
   expect(scholarship_default_threw,
          "default assignment should reject partial labeled rhs");
   df.set("scholarship", {.align = pluss::table::AlignBy::Caselbl}) = scholarship;
-  const auto scholarship_values = df.features("scholarship").as_series().to_vec<double>();
+  const auto scholarship_values = df.features("scholarship").as_series().host<double>();
   expect(scholarship_values[0] == 2500.0 &&
              scholarship_values[2] == 1500.0 &&
              scholarship_values[3] == 1000.0,
          "case-aligned assignment should gather matching rhs values");
-  expect(pluss::table::detail::validity_mask(df.features("scholarship"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(df.features("scholarship"))->host<bool>() ==
              std::vector<bool>({true, false, true, true}),
          "case-aligned assignment should mark missing target cases null");
 
   df.set("flat") = pluss::make_series(7235.0);
-  expect(df.features("flat").as_series().to_vec<double>() ==
+  expect(df.features("flat").as_series().host<double>() ==
              std::vector<double>({7235.0, 7235.0, 7235.0, 7235.0}),
          "scalar Series assignment should broadcast over established cases");
 
@@ -1452,10 +1452,10 @@ void test_align_reindex_equivalent() {
   expect(cases.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing", "r1"}),
          "align_caselbl should conform the case-label axis exactly");
-  const auto case_values = cases.features("A").as_series().to_vec<double>();
+  const auto case_values = cases.features("A").as_series().host<double>();
   expect(case_values[0] == 20.0 && case_values[2] == 10.0,
          "align_caselbl should gather existing rows by case label");
-  expect(pluss::table::detail::validity_mask(cases.features("A"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(cases.features("A"))->host<bool>() ==
              std::vector<bool>({true, false, true}),
          "align_caselbl should mark missing case labels null");
 
@@ -1469,14 +1469,14 @@ void test_align_reindex_equivalent() {
   expect(both.labels().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing"}),
          "align should conform case labels exactly");
-  expect(both.features("A").as_series().to_vec<double>() ==
+  expect(both.features("A").as_series().host<double>() ==
              std::vector<double>({20.0, 0.0}),
          "align(fill) should fill missing numeric case-label rows");
-  expect(both.features("C").as_series().to_vec<double>() ==
+  expect(both.features("C").as_series().host<double>() ==
              std::vector<double>({0.0, 0.0}),
          "align(fill) should create filled numeric features for missing feature labels");
   expect(!pluss::table::detail::has_validity_mask(both.features("C")) ||
-             pluss::table::detail::validity_mask(both.features("C"))->to_vec<bool>() ==
+             pluss::table::detail::validity_mask(both.features("C"))->host<bool>() ==
                  std::vector<bool>({true, true}),
          "align(fill) missing numeric features should be valid filled values");
 }
@@ -1489,7 +1489,7 @@ void test_timeline_epoch_days_surface() {
   });
   const auto slate_days =
       Slate(timeline).tl().epoch(pluss::table::TimeUnit::Days);
-  expect(slate_days.as_series().to_vec<std::int64_t>() ==
+  expect(slate_days.as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
          "Slate::tl().epoch(TimeUnit::Days) should return epoch-day integers");
 
@@ -1498,14 +1498,14 @@ void test_timeline_epoch_days_surface() {
       {"value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
   });
   const auto frame_days = frame.features({"when"}).tl().epoch(pluss::table::TimeUnit::Days);
-  expect(frame_days.features("when").as_series().to_vec<std::int64_t>() ==
+  expect(frame_days.features("when").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
          "DataFrame::tl().epoch(TimeUnit::Days) should delegate through Slate::tl()");
 }
 
 void test_timeline_span_surface() {
   const auto day = [](std::string_view iso) {
-    return pluss::make_timeline(iso).epoch_days().to_vec<std::int64_t>(0);
+    return pluss::make_timeline(iso).epoch_days().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0));
   };
   const auto has_day = [](const pluss::table::BusinessCalendar& calendar, std::int64_t label) {
     return std::find(calendar.holidays.begin(), calendar.holidays.end(), label) != calendar.holidays.end();
@@ -1524,7 +1524,7 @@ void test_timeline_span_surface() {
 
   expect(starts.tl().span(ends, pluss::table::TimeUnit::Days)
              .as_series()
-             .to_vec<std::int64_t>() ==
+             .host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 365, 4}),
          "Slate::tl().span(Days) should use fixed UTC 24-hour spans");
 
@@ -1532,7 +1532,7 @@ void test_timeline_span_surface() {
   complete_months.unit = pluss::table::TimeUnit::Months;
   expect(starts.tl().span(ends, complete_months)
              .as_series()
-             .to_vec<std::int64_t>() ==
+             .host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 11, 0}),
          "Slate::tl().span(Months, Complete) should count completed calendar months");
 
@@ -1541,7 +1541,7 @@ void test_timeline_span_surface() {
   boundary_years.mode = pluss::table::TimelineSpanMode::Boundary;
   expect(starts.tl().span(ends, boundary_years)
              .as_series()
-             .to_vec<std::int64_t>() ==
+             .host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 0}),
          "Slate::tl().span(Years, Boundary) should count crossed year labels");
 
@@ -1552,7 +1552,7 @@ void test_timeline_span_surface() {
              .tl()
              .span(Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"})), month_end_months)
              .as_series()
-             .to_vec<std::int64_t>() ==
+             .host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
          "Slate::tl().span(Months, MonthEnd) should treat paired month ends as complete");
 
@@ -1563,16 +1563,16 @@ void test_timeline_span_surface() {
              .tl()
              .span(Slate(pluss::make_timeline({"2025-02-28T00:00:00Z"})), month_end_years)
              .as_series()
-             .to_vec<std::int64_t>() ==
+             .host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
          "Slate::tl().span(Years, MonthEnd) should handle leap-day to February month-end");
 
   const auto holiday =
-      pluss::make_timeline({"2024-01-03T00:00:00Z"}).epoch_days().to_vec<std::int64_t>(0);
+      pluss::make_timeline({"2024-01-03T00:00:00Z"}).epoch_days().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0));
   pluss::table::TimelineSpanOptions business;
   business.unit = pluss::table::TimeUnit::BusinessDays;
   business.calendar.holidays = {holiday};
-  expect(starts.tl().span(ends, business).as_series().to_vec<std::int64_t>()[2] == 3,
+  expect(starts.tl().span(ends, business).as_series().host<std::int64_t>()[2] == 3,
          "Slate::tl().span(BusinessDays) should honor explicit holiday calendars");
 
   const auto business_start = Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
@@ -1580,15 +1580,15 @@ void test_timeline_span_surface() {
   pluss::table::TimelineSpanOptions closed;
   closed.unit = pluss::table::TimeUnit::BusinessDays;
   closed.closed = pluss::table::TimelineSpanClosed::Right;
-  expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
+  expect(business_start.tl().span(business_end, closed).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({4}),
          "Slate::tl().span(BusinessDays, Right) should use (start,end]");
   closed.closed = pluss::table::TimelineSpanClosed::Both;
-  expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
+  expect(business_start.tl().span(business_end, closed).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({5}),
          "Slate::tl().span(BusinessDays, Both) should use [start,end]");
   closed.closed = pluss::table::TimelineSpanClosed::Neither;
-  expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
+  expect(business_start.tl().span(business_end, closed).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({3}),
          "Slate::tl().span(BusinessDays, Neither) should use (start,end)");
 
@@ -1663,20 +1663,20 @@ void test_timeline_span_surface() {
              .tl()
              .span(Slate(pluss::make_timeline({"2026-04-06T00:00:00Z"}).tz_convert("America/New_York")), nyse_span)
              .as_series()
-             .to_vec<std::int64_t>() ==
+             .host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
          "BusinessCalendar::nyse should remove Good Friday from business-day spans");
 
   const auto ny = pluss::make_timeline({"2026-07-01T12:00:00Z", "2026-01-01T12:00:00Z"})
                       .tz_convert("America/New_York")
                       .hour()
-                      .to_vec<std::int64_t>();
+                      .host<std::int64_t>();
   expect(ny == std::vector<std::int64_t>({8, 7}),
          "TimeZone should support America/New_York DST and standard offsets");
   const auto london = pluss::make_timeline({"2026-07-01T12:00:00Z", "2026-01-01T12:00:00Z"})
                           .tz_convert("Europe/London")
                           .hour()
-                          .to_vec<std::int64_t>();
+                          .host<std::int64_t>();
   expect(london == std::vector<std::int64_t>({13, 12}),
          "TimeZone should support Europe/London DST and standard offsets");
 
@@ -1686,7 +1686,7 @@ void test_timeline_span_surface() {
   });
   const auto frame_months =
       frame.features({"start"}).tl().span(frame.features("end"), complete_months);
-  expect(frame_months.features("start").as_series().to_vec<std::int64_t>() ==
+  expect(frame_months.features("start").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 11, 0}),
          "DataFrame::tl().span should delegate through Slate::tl().span");
 }

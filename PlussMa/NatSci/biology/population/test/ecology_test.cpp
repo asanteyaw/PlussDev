@@ -40,10 +40,10 @@ void test_effort_harvesting() {
     const Series h = e.mul(1e-5);
     return yield(e.add(h)).sub(yield(e.sub(h))).div(h.mul(2.0));
   }, seed);
-  expect(std::abs(msy_effort.root.item<double>() - r / (2 * q)) < 1e-4, "effort at maximum sustainable yield is r/(2q)");
-  expect(std::abs(yield(vec({r / (2 * q)})).item<double>() - eco::maximum_sustainable_yield(r, k, like).item<double>()) < 1e-10, "MSY = rK/4");
+  expect(std::abs(msy_effort.root.host<double>().front() - r / (2 * q)) < 1e-4, "effort at maximum sustainable yield is r/(2q)");
+  expect(std::abs(yield(vec({r / (2 * q)})).host<double>().front() - eco::maximum_sustainable_yield(r, k, like).host<double>().front()) < 1e-10, "MSY = rK/4");
   // overfishing (qE > r) drives the stock to extinction: equilibrium formula clamps below zero
-  expect(eco::effort_equilibrium(r, k, q, vec({50.0}), vec({0.0})).item<double>() < 0.0, "effort beyond r/q has no positive equilibrium");
+  expect(eco::effort_equilibrium(r, k, q, vec({50.0}), vec({0.0})).host<double>().front() < 0.0, "effort beyond r/q has no positive equilibrium");
 }
 
 void test_constant_yield_saddle_node() {
@@ -69,8 +69,8 @@ void test_constant_yield_saddle_node() {
     return end.gt(0.05).to(F64).mul(2.0).sub(1.0).neg(); // -1 survives, +1 collapses
   };
   const auto thr = roots::bisect(survives, vec({0.2}), vec({0.3}), {14});
-  expect(std::abs(thr.root.item<double>() - r * k / 4.0) < 5e-3, "collapse threshold equals rK/4 (found " + std::to_string(thr.root.item<double>()) + ")");
-  expect(eco::constant_yield_equilibria(r, k, vec({0.3}), vec({0.3})).exists.item<double>() == 0.0, "no equilibrium above rK/4");
+  expect(std::abs(thr.root.host<double>().front() - r * k / 4.0) < 5e-3, "collapse threshold equals rK/4 (found " + std::to_string(thr.root.host<double>().front()) + ")");
+  expect(eco::constant_yield_equilibria(r, k, vec({0.3}), vec({0.3})).exists.host<double>().front() == 0.0, "no equilibrium above rK/4");
 }
 
 void test_levins() {
@@ -107,7 +107,7 @@ void test_patch_network() {
     return stab::unstable_modes(jac).unstable;
   };
   const auto thr = roots::bisect([&](const Series &e) { return unstable_at(e).neg().add(0.5); }, vec({0.5}), vec({3.0}), {50});
-  expect(std::abs(thr.root.item<double>() - 3 * a) < 1e-6, "extinction threshold equals the metapopulation capacity");
+  expect(std::abs(thr.root.host<double>().front() - 3 * a) < 1e-6, "extinction threshold equals the metapopulation capacity");
   // dynamics: above threshold (e < 3a) the network persists, below it (e > 3a) it dies out
   const Series p0 = vec({0.2, 0.2, 0.2, 0.2});
   const auto persist = dyn::simulate([&](const Series &x) { return eco::patch_occupancy_rate(x, cmat, 0.5); }, p0, 0.0, 300.0, 3000);

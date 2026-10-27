@@ -118,7 +118,7 @@ StatusOr<double> best_threshold(const Series& scores, const Series& labels, Metr
   const Series best_index =
       objective_curve.argmax(0, false).reshape({1}).to(scores.platform(), ScalarType::Int64);
   const Series best_value = curve.thresholds.index_select(0, best_index).reshape({1});
-  return StatusOr<double>(best_value.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  return StatusOr<double>(best_value.to(pluss::pCPU, ScalarType::Float64).host<double>().front());
 }
 
 StatusOr<double> average_precision(const Series& scores, const Series& labels) {
@@ -141,7 +141,7 @@ StatusOr<double> average_precision(const Series& scores, const Series& labels) {
                     .unite({curve.recall.index_select(0, pluss::series::arange(0, m - 1, i64_cfg))}, 0)
               : pluss::series::zeros({1}, f64_on(platform));
   const Series ap = curve.recall.sub(recall_prev).mul(curve.precision).sum().clamp(0.0, 1.0).reshape({1});
-  return StatusOr<double>(ap.to(pluss::pCPU, ScalarType::Float64).item<double>());
+  return StatusOr<double>(ap.to(pluss::pCPU, ScalarType::Float64).host<double>().front());
 }
 
 } // namespace pluss::ai::nodej

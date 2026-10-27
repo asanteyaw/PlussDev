@@ -1,0 +1,65 @@
+# Blocks, problems as values, gradients and reading the result
+
+[Back to Optima 1: Your First Constrained Problems](../optima_01_first_problems.md)
+
+The first page treated the unknowns as a single anonymous vector. Real problems have unknowns that *mean* something: the slope and the intercept of a line, the weights and the offset of a model. `optima` lets you name them. A problem with several quantities of different shapes uses one **block** per quantity, and blocks keep their names and shapes in the answer, so results are read back by name rather than by position.
+
+This page also covers the other ways to hand a problem over: bundled as a value (a `ConstrainedProblem`) when it is solved repeatedly or passed to another function, or with a hand-written gradient when you have one. It then reads the result object, which answers six questions (where, how good, how feasible, how much work, why it stopped, and what each constraint costs), and ends with the two slips that account for most first-day errors: bounds that do not match the block names, and an objective that returns more than one number.
+
+## Program 7: Named blocks and a model
+
+Named blocks shine when the unknowns mean something. This program fits a straight line to five points. The objective reads like the model, with `slope` and `intercept` as separate blocks, and the answer is read back by those names.
+
+@@example Numerical/optimization/guide/optima/07_named_blocks.cpp@@
+
+The slope `1.9601` and intercept `1.0999` match the closed-form least-squares line for these data, `1.96` and `1.10`, to the solver tolerance. The result keeps both blocks, in order.
+
+## Program 8: A problem as a value
+
+When the same problem is solved from several starting points, or handed to another function, bundle it into a `ConstrainedProblem`. You can fill the struct directly or use the `problem()` builder, which accepts the same callables as the struct and picks the right slot. Either value is passed to `optima` with a start given as a plain vector or as a pack.
+
+@@example Numerical/optimization/guide/optima/08_problem_object.cpp@@
+
+Both routes produce the same answer, the point of `x0 + x1 <= 1.5` nearest `(1, 2)`. Starting from a plain vector produces a block named `x`, which is the same result as passing the vector wrapped as a pack.
+
+## Program 9: Analytic gradients
+
+If you can write the gradient by hand, you skip automatic differentiation and give the solver a function returning the value and the gradient together. Two forms exist: one over a single vector, and one over named blocks where the gradient is a pack with the same blocks. Declare the callable as a `std::function` of the exact signature so the overload is unambiguous.
+
+@@example Numerical/optimization/guide/optima/09_analytic_gradient.cpp@@
+
+Both forms find the minimum `(1, -2)`. The solver trusts the gradient you return, so a wrong gradient gives a wrong answer without any warning. The chapter on checking derivatives shows how to audit one against the automatic result.
+
+## Program 10: Reading the result
+
+The returned object answers six questions: where, how good, how feasible, how much work, why it stopped, and what each constraint costs. This program prints one of each for a problem with a linear inequality and bounds.
+
+@@example Numerical/optimization/guide/optima/10_reading_the_result.cpp@@
+
+`params` holds the answer, `evaluation` the objective value and feasibility at the answer, `iteration` and `function_evaluations` the work, `exit_flag` and `message` the reason, and `multipliers` how strongly each constraint pushes on the answer. The multiplier of the linear inequality is `1`, the price of tightening it: the objective would improve by about that much per unit the limit is relaxed. The zero counts for equalities show that multipliers exist only for the constraint families the problem uses. `converged` is true exactly when the exit flag is `Converged`.
+
+## Program 11: Bounds that do not match the blocks
+
+`lbs` and `ubs` with a plain vector attach to a block named `x`. On a problem whose blocks have other names, `optima` refuses the problem before it starts and shows both layouts, so you can see the mismatch at once. The fix is to build bounds as a pack with the same blocks.
+
+@@example Numerical/optimization/guide/optima/11_pitfall_bound_names.cpp@@
+
+The first call is refused with a message naming the parameter blocks and the bounds layout. The second succeeds once the bounds carry the block names `a` and `b`.
+
+## Program 12: An objective that returns more than one number
+
+The objective must reduce to a single number. Returning a vector of residuals, instead of their sum of squares, is the usual slip. The solver returns immediately with the `InvalidProblem` flag and a message that names the fix.
+
+@@example Numerical/optimization/guide/optima/12_pitfall_nonscalar_objective.cpp@@
+
+`optima` does not throw here: it returns a result with exit flag `-5` and an explanation, so a calling program can inspect it. `converged` is false because the exit flag is not `Converged`.
+
+## Decisions and pitfalls
+
+- **One vector or named blocks?** Use one vector when the unknowns are interchangeable coordinates (portfolio weights); use named blocks when they mean different things or have different shapes. Once you use blocks, build bounds as packs with the same block names.
+- **Automatic or analytic gradient?** Start with plain `Series` code. Move to a hand-written gradient only when you have a reason, and audit it first: the solver trusts the gradient you give it, and a wrong one gives a wrong answer without a warning.
+- **Inline objective or a `ConstrainedProblem`?** Inline for a one-off solve; a `ConstrainedProblem` when the problem is reused, stored or passed around.
+- **A returned vector is not an objective.** The objective must reduce to one number; return the sum of squares, not the residual vector. `optima` reports `InvalidProblem` instead of throwing, so a calling program can inspect the result.
+- **Read the flag, not just the point.** `converged` is true exactly when the exit flag is `Converged`; the next chapter covers what every other flag means.
+
+Where next: [Chapter 2](../optima_02_reading_results.md) reads results in depth: every exit flag, every field of the report, and how to watch a run.

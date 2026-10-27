@@ -141,7 +141,7 @@ bool run_ice_action_value_agent_checks(std::ostream* err = nullptr) {
 
   const Series stacked = pluss::make_series(std::vector<float>{1.0F, 0.0F, 0.0F, 1.0F}, {2, 2}, cfg);
   const Series q = agent.predict(stacked).to(pluss::pCPU, ScalarType::Float64);
-  const auto qv = q.reshape({4}).to_vec<double>();
+  const auto qv = q.reshape({4}).host<double>();
   if (!(qv[1] > qv[0] && qv[2] > qv[3])) {
     if (err) {
       *err << "ice ActionValueAgent should score the optimal action highest; got "
@@ -159,7 +159,7 @@ bool run_ice_action_value_agent_checks(std::ostream* err = nullptr) {
   std::filesystem::remove(tmp.string() + ".target.weights");
 
   const Series q_restored = restored.predict(stacked).to(pluss::pCPU, ScalarType::Float64);
-  const auto rv = q_restored.reshape({4}).to_vec<double>();
+  const auto rv = q_restored.reshape({4}).host<double>();
   for (std::size_t i = 0; i < qv.size(); ++i) {
     if (std::abs(qv[i] - rv[i]) > 1e-9) {
       if (err) *err << "ice ActionValueAgent save/load should preserve q-values exactly\n";

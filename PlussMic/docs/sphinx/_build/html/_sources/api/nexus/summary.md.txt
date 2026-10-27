@@ -102,8 +102,8 @@ std::cout << summary.ncases() << " " << summary.nfeatures() << "\n";
 for (std::int64_t i = 0; i < summary.ncases(); ++i) {
   auto idx = static_cast<std::size_t>(i);
   std::cout << summary.features("table").as_note().at(idx) << " "
-            << summary.features("ncases").as_series().to_vec<std::int64_t>()[idx] << " "
-            << summary.features("nfeatures").as_series().to_vec<std::int64_t>()[idx] << "\n";
+            << summary.features("ncases").as_series().host<std::int64_t>()[idx] << " "
+            << summary.features("nfeatures").as_series().host<std::int64_t>()[idx] << "\n";
 }
 ```
 

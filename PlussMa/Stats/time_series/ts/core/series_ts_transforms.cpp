@@ -259,7 +259,7 @@ Series ewm_std(const Series& x, double alpha, double epsilon) {
   // starting from m_0 = x_0, v_0 = 0. It equals EMA(x^2) - EMA(x)^2 without the cancellation error of that difference.
   const std::int64_t n = xr.numel();
   const Series host = xr.to(pluss::pCPU, ScalarType::Float64).contiguous();
-  const auto values = host.to_vec<double>();
+  const auto values = host.host<double>();
   std::vector<double> out(static_cast<std::size_t>(n), std::numeric_limits<double>::quiet_NaN());
   double m = 0.0, v = 0.0;
   for (std::int64_t i = 0; i < n; ++i) {

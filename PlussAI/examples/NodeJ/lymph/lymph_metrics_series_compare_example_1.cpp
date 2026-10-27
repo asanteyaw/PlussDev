@@ -22,7 +22,7 @@ int main() {
       lymph::metrics::compare_series(expected, actual);
 
   std::cout << "abs_error   =";
-  for (const double v : diff.abs_error.to_vec<double>()) std::cout << " " << v;
+  for (const double v : diff.abs_error.host<double>()) std::cout << " " << v;
   std::cout << "\nmax_abs_diff = " << diff.max_abs_diff.item<double>() << "\n";
   std::cout << "mae         = " << diff.mae.item<double>() << "\n";
 

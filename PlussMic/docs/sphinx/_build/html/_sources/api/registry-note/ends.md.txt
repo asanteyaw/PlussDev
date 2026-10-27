@@ -41,8 +41,8 @@ auto rg = pluss::scribble::Registry({
 auto out = rg.fields({"city"}).nt().ends("ma");
 auto city = out.fields("city");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(city.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(city.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(city.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(city.at(1)).host<bool>()[0];
 ```
 
 ### Output

@@ -47,7 +47,7 @@ int main() {
   const auto market_px = out.price;
   std::cout << "self loss: " << pipe.loss(market_px, cfg) << "\n";
 
-  auto shifted = pipe.model.parameters(cfg).to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+  auto shifted = pipe.model.parameters(cfg).to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
   shifted[0] = 1.3;
   shifted[1] = 0.05;
   shifted[2] = 0.34;

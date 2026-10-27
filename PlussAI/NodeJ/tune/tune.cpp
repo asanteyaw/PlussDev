@@ -71,7 +71,7 @@ void populate_tune_ledger(TuneReport& report);
   const std::int64_t i = index_or.value();
   const Series idx = pluss::series::arange(i, i + 1, Config{}.with_dtype(ScalarType::Int64).with_platform(assess.mean_metrics.platform()));
   const Series objective = assess.mean_metrics.reshape({assess.mean_metrics.numel()}).index_select(0, idx);
-  const double value = objective.reshape({1}).to(ScalarType::Float64).item<double>();
+  const double value = objective.reshape({1}).to(ScalarType::Float64).host<double>().front();
   if (!std::isfinite(value)) {
     return StatusOr<double>(Status::numerical_failure("tune objective value is non-finite."));
   }
@@ -424,10 +424,10 @@ void populate_tune_ledger(TuneReport& report) {
     if (!trial.status.ok() || metric_count == 0) continue;
     const std::vector<double> mean_vec = trial.assess.mean_metrics.to(pluss::pCPU, ScalarType::Float64)
                                              .reshape({static_cast<std::int64_t>(metric_count)})
-                                             .to_vec<double>();
+                                             .host<double>();
     const std::vector<double> std_vec = trial.assess.std_metrics.to(pluss::pCPU, ScalarType::Float64)
                                             .reshape({static_cast<std::int64_t>(metric_count)})
-                                            .to_vec<double>();
+                                            .host<double>();
     for (std::size_t m = 0; m < metric_count; ++m) {
       mean_test[i * metric_count + m] = mean_vec[m];
       std_test[i * metric_count + m] = std_vec[m];
@@ -435,7 +435,7 @@ void populate_tune_ledger(TuneReport& report) {
     for (std::size_t f = 0; f < trial.assess.folds.size(); ++f) {
       const std::vector<double> fold_vec = trial.assess.folds[f].metrics.to(pluss::pCPU, ScalarType::Float64)
                                                .reshape({static_cast<std::int64_t>(metric_count)})
-                                               .to_vec<double>();
+                                               .host<double>();
       for (std::size_t m = 0; m < metric_count; ++m) {
         split_test[i * (max_folds * metric_count) + f * metric_count + m] = fold_vec[m];
       }

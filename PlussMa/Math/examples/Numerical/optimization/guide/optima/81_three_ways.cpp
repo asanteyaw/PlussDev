@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -17,14 +17,14 @@ optim::ParameterPack<pluss::Series> pair(double x, double y) { return optim::pac
 optim::ConstrainedProblem with_box(optim::ProblemBuilder b) { return b.lbs(pair(-2, -2)).ubs(pair(2, 2)).build(); }
 
 int main() {
-  // 1. Reverse-mode autodiff: write the function once on Trace values.
-  auto traced = with_box(optim::problem().objective([](const optim::ParameterPack<optim::Trace>& p) -> optim::Trace {
-    return 100.0 * optim::square(p.at("y") - optim::square(p.at("x"))) + optim::square(1.0 - p.at("x"));
+  // 1. Reverse-mode autodiff: write the function once on pluss::Series values.
+  auto traced = with_box(optim::problem().objective([](const optim::ParameterPack<pluss::Series>& p) -> pluss::Series {
+    return 100.0 * (p.at("y") - p.at("x").square()).square() + (1.0 - p.at("x")).square();
   }));
 
   // 2. Analytic: return the value and a pack with the same blocks holding the gradient.
   auto analytic = with_box(optim::problem().objective_analytic([](const optim::ParameterPack<pluss::Series>& p) {
-    const double x = p.at("x").item<double>(), y = p.at("y").item<double>();
+    const double x = as_f64(p.at("x")), y = as_f64(p.at("y"));
     const double value = 100.0 * (y - x * x) * (y - x * x) + (1.0 - x) * (1.0 - x);
     const double gx = -400.0 * x * (y - x * x) - 2.0 * (1.0 - x);
     const double gy = 200.0 * (y - x * x);
@@ -43,8 +43,8 @@ int main() {
             << std::setw(14) << "evaluations" << std::setw(14) << "objective" << "x, y\n";
   for (const auto& m : modes) {
     const auto r = optim::optima(*m.problem, pair(-1.2, 1.0));
-    const auto x = r.params.at("x").item<double>();
-    const auto y = r.params.at("y").item<double>();
+    const auto x = as_f64(r.params.at("x"));
+    const auto y = as_f64(r.params.at("y"));
     std::cout << std::left << std::setw(16) << m.label << std::setw(8) << static_cast<int>(r.exit_flag) << std::setw(12)
               << r.iteration << std::setw(14) << r.function_evaluations << std::scientific << std::setprecision(2)
               << std::setw(14) << r.evaluation.value.item<double>() << std::fixed << std::setprecision(6) << x << ", " << y

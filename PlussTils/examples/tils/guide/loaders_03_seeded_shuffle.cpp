@@ -11,7 +11,7 @@ namespace {
 std::vector<double> one_pass(pluss::loader::DataLoader& loader) {
   std::vector<double> order;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).to_vec<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).host<double>();
     order.insert(order.end(), values.begin(), values.end());
   }
   return order;

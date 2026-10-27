@@ -194,7 +194,7 @@ inline double scalar_magnitude_(const Series& x) {
 // in CodeM/core/Series.h + OpsInternal.cpp), not here: PlussMa depends on
 // PlussQit, never the other way around, so PlussQit's own `Series` class
 // cannot call into this PlussMa module -- these free functions exist
-// purely as this module's own namespaced surface (`pluss::integ::
+// purely as this module's own namespaced surface (`pluss::subsp::math::integ::
 // trapezoid(y, x)`, matching every other engine in this file's calling
 // convention) and simply forward to `y`'s own `antidiff` ACCESSOR
 // (`Series::AntidiffAccessor`/`SeriesAntidiffProxy` in
@@ -212,7 +212,7 @@ inline double scalar_magnitude_(const Series& x) {
 // re-invoke a function at points they choose, which a single
 // already-computed Series value cannot provide (see the module-level
 // comment near their definitions).
-// Both call paths (`pluss::integ::trapezoid(y, x)` and
+// Both call paths (`pluss::subsp::math::integ::trapezoid(y, x)` and
 // `y.antidiff().trapezoid(x)`) run the exact same code -- there is no
 // duplicate formula to keep in sync. Built entirely from existing Series
 // primitives (diff, slice, mul, add, sum/cumsum): no new CodeM kernel, no

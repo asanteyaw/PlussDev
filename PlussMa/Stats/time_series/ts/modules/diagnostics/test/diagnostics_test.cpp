@@ -24,7 +24,7 @@ void expect(bool condition, const std::string& message) {
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).host<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = phi * y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -39,7 +39,7 @@ void test_acf_white_noise() {
   AcfOptions opt;
   opt.max_lag = 20;
   opt.norm = AcfNorm::Biased;
-  const auto out = pluss::subsp::stats::ts::acf(y, opt, cfg).to_vec<double>();
+  const auto out = pluss::subsp::stats::ts::acf(y, opt, cfg).host<double>();
 
   expect(out.size() == 21, "acf size mismatch");
   expect(std::abs(out[0] - 1.0) < 1e-12, "acf lag-0 must be 1");
@@ -55,7 +55,7 @@ void test_pacf_ar1() {
   PacfOptions opt;
   opt.max_lag = 10;
   opt.norm = AcfNorm::Biased;
-  const auto out = pluss::subsp::stats::ts::pacf(y, opt, cfg).to_vec<double>();
+  const auto out = pluss::subsp::stats::ts::pacf(y, opt, cfg).host<double>();
 
   expect(out.size() == 11, "pacf size mismatch");
   expect(std::abs(out[0] - 1.0) < 1e-12, "pacf lag-0 must be 1");
@@ -72,8 +72,8 @@ void test_ljung_box_signal_vs_noise() {
   opt.lags = {10, 20};
   const auto lb_wn = pluss::subsp::stats::ts::ljung_box(wn, opt, cfg);
   const auto lb_ar = pluss::subsp::stats::ts::ljung_box(ar, opt, cfg);
-  const auto p_wn = lb_wn.pvalue.to_vec<double>();
-  const auto p_ar = lb_ar.pvalue.to_vec<double>();
+  const auto p_wn = lb_wn.pvalue.host<double>();
+  const auto p_ar = lb_ar.pvalue.host<double>();
 
   expect(p_wn.size() == 2, "ljung_box output size mismatch");
   expect(p_ar.size() == 2, "ljung_box output size mismatch");

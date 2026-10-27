@@ -39,7 +39,7 @@ auto axel = pluss::scribble::Axel({
     pluss::scribble::Registry({{"ids", pluss::scribble::Slot({pluss::make_series(3)})}}),
 });
 auto reg = axel.registry(1);
-std::cout << std::get<pluss::Series>(reg.fields("ids").at(0)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(reg.fields("ids").at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output

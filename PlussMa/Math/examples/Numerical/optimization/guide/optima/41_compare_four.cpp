@@ -8,8 +8,8 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
@@ -29,8 +29,8 @@ int main() {
       optim::constraints()
           .nl_ineq([](const Pack& p) { return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d"); })
           .nl_eq([](const Pack& p) {
-            return optim::square(p.at("a")) + optim::square(p.at("b")) + optim::square(p.at("c")) +
-                   optim::square(p.at("d")) - 40.0;
+            return p.at("a").square() + p.at("b").square() + p.at("c").square() +
+                   p.at("d").square() - 40.0;
           })
           .lbs(four(1, 1, 1, 1))
           .ubs(four(5, 5, 5, 5));
@@ -55,8 +55,8 @@ int main() {
               << std::setprecision(2) << r.evaluation.max_constraint_violation << std::defaultfloat << "\n";
   }
   std::cout << std::fixed << std::setprecision(4) << "\nMeritMethod ended at a = "
-            << merit_result.params.at("a").item<double>() << ", b = " << merit_result.params.at("b").item<double>()
-            << ", c = " << merit_result.params.at("c").item<double>() << ", d = "
-            << merit_result.params.at("d").item<double>() << " (a is at its lower bound 1, b at its upper bound 5)\n";
+            << as_f64(merit_result.params.at("a")) << ", b = " << as_f64(merit_result.params.at("b"))
+            << ", c = " << as_f64(merit_result.params.at("c")) << ", d = "
+            << as_f64(merit_result.params.at("d")) << " (a is at its lower bound 1, b at its upper bound 5)\n";
   return 0;
 }

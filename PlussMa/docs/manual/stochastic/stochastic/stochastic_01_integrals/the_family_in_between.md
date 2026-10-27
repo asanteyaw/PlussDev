@@ -25,11 +25,11 @@ int main() {
   const pluss::Series qv = w.antidiff().quadratic_variation(0);
   std::cout << std::fixed << std::setprecision(5);
   for (int path = 0; path < 2; ++path) {
-    const double wt = w.select(0, steps).to_vec<double>()[path];
-    const double q = qv.to_vec<double>()[path];
+    const double wt = w.select(0, steps).host<double>()[path];
+    const double q = qv.host<double>()[path];
     std::cout << "path " << path << ": W_T^2/2 = " << 0.5 * wt * wt << ", QV/2 = " << 0.5 * q << "\n";
     for (const double theta : {0.0, 0.5, 1.0}) {
-      const double value = w.calc.antidiff.theta(f, theta, 0.0, T).to_vec<double>()[path];
+      const double value = w.calc.antidiff.theta(f, theta, 0.0, T).host<double>()[path];
       std::cout << "  theta = " << std::setprecision(1) << theta << std::setprecision(5) << "   integral = " << value
                 << "   = W_T^2/2 " << std::showpos << (value - 0.5 * wt * wt) / (0.5 * q) << " QV/2" << std::noshowpos
                 << "\n";

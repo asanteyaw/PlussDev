@@ -17,7 +17,7 @@ int main() {
   const roots::Fn f = [](const Series& x) { return x.exp() - 5.0; };
   std::cout << std::left << std::setw(42) << "setting" << std::setw(12) << "iterations" << "|residual|\n";
   auto show = [&](const char* label, const roots::Result& r) {
-    std::cout << std::left << std::setw(42) << label << std::setw(12) << r.iterations << std::scientific << std::setprecision(1) << std::abs(r.residual.item<double>()) << "\n";
+    std::cout << std::left << std::setw(42) << label << std::setw(12) << r.iterations << std::scientific << std::setprecision(1) << std::abs(as_f64(r.residual)) << "\n";
   };
   show("illinois, no tolerance, 30 iterations", roots::illinois(f, vec({0.0}), vec({3.0}), {30, 0.0, 0.0, 8}));
   show("illinois, f_tolerance 1e-8, every 1", roots::illinois(f, vec({0.0}), vec({3.0}), {30, 0.0, 1e-8, 1}));
@@ -26,5 +26,5 @@ int main() {
 
   const roots::Fn g = [](const Series& x) { return x.square() + 1.0; };  // no real root
   const auto bad = roots::bisect(g, vec({-1.0}), vec({1.0}));
-  std::cout << "\nx^2 + 1 on [-1, 1]: bracketed = " << (bad.bracketed ? "yes" : "no") << ", residual " << std::fixed << std::setprecision(3) << bad.residual.item<double>() << "\n";
+  std::cout << "\nx^2 + 1 on [-1, 1]: bracketed = " << (bad.bracketed ? "yes" : "no") << ", residual " << std::fixed << std::setprecision(3) << as_f64(bad.residual) << "\n";
 }

@@ -93,13 +93,12 @@ lagrange(Fn &&fn, const TangentState<CoordinateDimension> &state,
         .sum();
   };
   auto trace_objective =
-      [&](const std::vector<lagrangian_detail::math_diff::Trace> &variables) {
+      [&](const std::vector<Series> &variables) -> Series {
         displayed =
             lagrangian_detail::invoke_energy<FnType, CoordinateDimension>(
-                fn_copy, variables[0].value(), variables[1].value(),
-                variables[2].value())
+                fn_copy, variables[0], variables[1], variables[2])
                 .si_value();
-        return lagrangian_detail::math_diff::Trace(displayed.sum());
+        return displayed.sum();
       };
 
   auto [total, gradients] = lagrangian_detail::math_diff::value_and_grad(

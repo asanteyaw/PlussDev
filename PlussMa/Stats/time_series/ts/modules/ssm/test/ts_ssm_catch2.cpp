@@ -94,7 +94,7 @@ ScalarKalmanRef scalar_kalman_reference(const std::vector<double>& y,
 }
 
 std::vector<double> as_vec(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 } // namespace

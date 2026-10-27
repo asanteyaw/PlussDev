@@ -47,8 +47,8 @@ auto r1 = pluss::scribble::Registry({{"ts", pluss::scribble::Slot({pluss::make_t
 auto axel = pluss::scribble::Axel({r0, r1});
 
 auto out = axel.fields({"ts"}).tl().year();
-std::cout << std::get<pluss::Series>(out.registry(0).fields("ts").at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.registry(1).fields("ts").at(0)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.registry(0).fields("ts").at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.registry(1).fields("ts").at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output

@@ -78,7 +78,7 @@ double mean_abs_diff(const std::vector<float>& a, const std::vector<float>& b) {
 }
 
 std::vector<float> as_f32_vec(const pluss::Series& s) {
-  return s.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
+  return s.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
 }
 
 bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {

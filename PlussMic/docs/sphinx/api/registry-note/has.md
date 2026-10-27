@@ -74,8 +74,8 @@ auto rg = pluss::scribble::Registry({
 auto out = rg.fields({"city"}).nt().has("Ac");
 auto city = out.fields("city");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(city.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(city.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(city.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(city.at(1)).host<bool>()[0];
 ```
 
 ### Output
@@ -99,8 +99,8 @@ opts.case_sensitive = false;
 auto out = rg.fields({"city"}).nt().has("AC", opts);
 auto city = out.fields("city");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(city.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(city.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(city.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(city.at(1)).host<bool>()[0];
 ```
 
 ### Output
@@ -123,8 +123,8 @@ opts.regex = true;
 auto out = rg.fields({"code"}).nt().has(R"(\d+)", opts);
 auto code = out.fields("code");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(code.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(code.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(code.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(code.at(1)).host<bool>()[0];
 ```
 
 ### Output

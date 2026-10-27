@@ -10,7 +10,7 @@
 #include <iostream>
 #include <vector>
 
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) { return pluss::make_series(v, {r, c}).to(f64); }
@@ -24,9 +24,9 @@ pluss::Series covariance() {
 const std::vector<double> expected = {0.12, 0.10, 0.15, 0.05};
 
 optim::OptimaState solve(double target) {
-  auto risk = [](const optim::Trace& w) {
-    const auto column = pluss::subsp::math::diff::reshape(w, {4, 1});  // matmul wants matrices
-    return optim::sum(column * optim::matmul(optim::trace(covariance(), false), column));
+  auto risk = [](const pluss::Series& w) {
+    const auto column = w.reshape({4, 1});  // matmul wants matrices
+    return (column * covariance().matmul(column)).sum();
   };
   // The return constraint expected . w >= target is written as -expected . w <= -target.
   const auto constraints = optim::constraints()
@@ -39,7 +39,7 @@ optim::OptimaState solve(double target) {
 
 int main() {
   const auto r = solve(0.09);
-  const auto w = r.params.at("x").to_vec<double>();
+  const auto w = r.params.at("x").host<double>();
   double total = 0.0, ret = 0.0;
   for (std::size_t i = 0; i < 4; ++i) { total += w[i]; ret += expected[i] * w[i]; }
   std::cout << std::fixed << std::setprecision(4) << "exit flag " << static_cast<int>(r.exit_flag) << "\n";
@@ -47,7 +47,7 @@ int main() {
   std::cout << "sum of weights " << total << ", expected return " << ret << " (target 0.0900)\n";
   std::cout << "variance " << std::setprecision(6) << r.evaluation.value.item<double>() << "\n";
 
-  const double price = r.multipliers.linear_inequalities.to_vec<double>()[0];
+  const double price = r.multipliers.linear_inequalities.host<double>()[0];
   const double above = solve(0.0905).evaluation.value.item<double>();
   const double below = solve(0.0895).evaluation.value.item<double>();
   std::cout << std::setprecision(4) << "\nmultiplier of the return constraint " << price << "\n";

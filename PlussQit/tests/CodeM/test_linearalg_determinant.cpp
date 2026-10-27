@@ -17,7 +17,7 @@ TEST_CASE("linearalg logdet preserves the real logarithm domain", "[linearalg][d
   REQUIRE(std::isinf(singular.linearalg.logdet().item<double>()));
   REQUIRE(singular.linearalg.logdet().item<double>() < 0.0);
 
-  const auto signed_log = negative.linearalg.slogdet().to_vec<double>();
+  const auto signed_log = negative.linearalg.slogdet().host<double>();
   REQUIRE(signed_log.size() == 2);
   REQUIRE(signed_log[0] == Catch::Approx(-1.0));
   REQUIRE(signed_log[1] == Catch::Approx(std::log(10.0)));

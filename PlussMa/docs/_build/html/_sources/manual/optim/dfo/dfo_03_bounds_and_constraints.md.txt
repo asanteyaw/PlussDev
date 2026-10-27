@@ -27,11 +27,8 @@ The sign convention matters: a constraint is satisfied when its value is **zero 
 
 ## Programs
 
-- [Bounds only](dfo_03_bounds_and_constraints/bounds_only.md)
-- [Inequality constraints](dfo_03_bounds_and_constraints/inequality_constraints.md)
-- [Equality constraints](dfo_03_bounds_and_constraints/equality_constraints.md)
-- [Mesh methods with constraints](dfo_03_bounds_and_constraints/mesh_methods_with_constraints.md)
-- [No feasible point](dfo_03_bounds_and_constraints/no_feasible_point.md)
+- [Bounds, inequalities and equalities](dfo_03_bounds_and_constraints/bounds_and_constraint_types.md)
+- [Mesh methods with constraints, and infeasible problems](dfo_03_bounds_and_constraints/mesh_methods_and_infeasible_problems.md)
 
 ## Checklist
 
@@ -46,10 +43,7 @@ The sign convention matters: a constraint is satisfied when its value is **zero 
 :maxdepth: 2
 :hidden:
 
-dfo_03_bounds_and_constraints/bounds_only
-dfo_03_bounds_and_constraints/inequality_constraints
-dfo_03_bounds_and_constraints/equality_constraints
-dfo_03_bounds_and_constraints/mesh_methods_with_constraints
-dfo_03_bounds_and_constraints/no_feasible_point
+dfo_03_bounds_and_constraints/bounds_and_constraint_types
+dfo_03_bounds_and_constraints/mesh_methods_and_infeasible_problems
 ```
 <!-- apiref:toctree:end -->

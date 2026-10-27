@@ -1,0 +1,52 @@
+# Tuning Adam and L-BFGS
+
+[Back to Septima 3: Tuning and Robustness](../septima_03_tuning_and_robustness.md)
+
+Both solvers have a handful of settings that matter and many that do not. This page measures the ones that do, changing each on its own on a problem where its effect can be seen. For Adam the main setting is the **learning rate**, swept over five values on the Rosenbrock valley: too small leaves the run short of the answer when the budget ends, too large overshoots, and the best is the largest that is not too large. The other Adam settings are weight decay (which *changes the answer*, because it adds a term to the gradient), the momentum settings (which matter less than the learning rate and can hurt) and `maximize`.
+
+For L-BFGS the settings are the history size (how many recent step pairs the method remembers), the line search (fewer iterations at the cost of more evaluations) and the length of the first trial step. A ten-variable chained Rosenbrock function, where every neighbouring pair of variables forms a valley, is the test.
+
+## Program 1: The learning rate
+
+The Rosenbrock valley is solved for 2000 iterations with five learning rates.
+
+@@example Numerical/optimization/guide/septima/121_learning_rate.cpp@@
+
+At 0.001 the run is still at an objective of 3.9 when the budget ends, and at 0.01 at 4.6e-02: the steps are too short to get down the valley. At 0.05 it reaches 8.7e-09. At 0.2 it converges, and in 1486 iterations, so the best of these is the largest that is not too large. At 1 the run ends at an objective of 0.14, worse than at 0.05: the steps are too long for the narrow valley. The picture is general: there is a range of learning rates that works, it spans about one order of magnitude, and both sides of it are visibly worse. Find it by trying a factor of three or ten at a time and watching the trace (chapter 1, Program 6), not by reasoning about the problem.
+
+## Program 2: The other Adam settings
+
+Each setting changed on its own.
+
+@@example Numerical/optimization/guide/septima/122_adam_options.cpp@@
+
+**Weight decay changes the answer.** Without decay the quadratic's minimum, 3, is found in 245 iterations. Coupled decay of 0.1 adds `0.1 x` to the gradient, so the solver is now minimizing a different function, whose minimum is `6 / 2.1 = 2.8571`, and it finds exactly that, ending with `NoProgress` because that is where it settles. Decoupled decay shrinks the parameter directly instead and, with the same value, is still moving after 3000 iterations at 2.9594. Weight decay is a regularizer: use it when you want the pull toward zero, and never to speed a run up.
+
+**The momentum settings matter less than the learning rate and can hurt.** On the Rosenbrock valley at a learning rate of 0.05 the defaults reach 8.7e-09 after 2000 iterations. `amsgrad` reaches 2.3e-05, a shorter memory of the gradient (`beta1 = 0.5`) 4.3e-03, and a shorter memory of the squared gradient (`beta2 = 0.9`) 3.4e-03. Change them only with a reason, and one at a time.
+
+**`maximize` flips the direction.** The last line maximizes `-x^2 + 2x` and finds `x = 1`, objective 1. The reported `objective_value` is the function you wrote, not its negative.
+
+## Program 3: The L-BFGS settings
+
+A ten-variable chained Rosenbrock function, where every neighbouring pair of variables forms a valley.
+
+@@example Numerical/optimization/guide/septima/123_lbfgs_options.cpp@@
+
+The history size matters at the short end. With a history of 1 the method uses only the last step pair and needs 214 iterations; with 3 it needs 155, with 10 it needs 137, and beyond that there is no gain (144 at a history of 30). The default of 20 is comfortably in the flat part.
+
+(With equality or inequality constraints, chapter 2, L-BFGS always protects each step with a backtracking test on the augmented function, whatever this setting says.) The line search buys fewer iterations and costs more evaluations. With a history of 10, no line search needs 137 iterations and 137 evaluations; the strong-Wolfe search needs 94 iterations but 248 evaluations. When an evaluation is expensive, the run that uses fewer evaluations is the one without the line search. The line search earns its cost when a full step is not safe: with constraints (chapter 2), or on an objective with sharp changes in curvature.
+
+The learning rate is the length of the first trial step. Values from 0.1 to 1 all work, and 1 needs the fewest iterations (124), 0.1 the most (413); at 2 the steps become so long that the run reaches non-finite values and ends with `NonFiniteEvaluation` after 32 iterations. Without a line search, keep it at or below 1.
+
+All the L-BFGS runs here end with `NoProgress` at an objective near 1e-10. As in chapter 1, that is the method reaching the limit of what it can do with these tolerances, at a very good point.
+
+## Decisions and pitfalls
+
+- **Tune the learning rate first and alone.** It is the setting with the largest effect on Adam; try a sweep over powers of ten before touching anything else.
+- **Weight decay changes the problem.** With coupled decay the solver minimises a different function; the answer moves from 3 to 6/2.1 on the example quadratic. Use it deliberately.
+- **Leave the momentum settings at their defaults unless you can show a gain.** On the valley the defaults beat `amsgrad` and shorter memories.
+- **An L-BFGS history of 10 to 20 is in the flat part.** History 1 needs far more iterations; beyond 10 there is no gain.
+- **Without a line search keep the learning rate at or below 1.** At 2 the steps run into non-finite values and the run ends with `NonFiniteEvaluation`.
+- **The line search trades iterations for evaluations.** Choose by which is expensive in your objective.
+
+Where next: [Robustness and stopping](robustness_and_stopping.md) covers objectives that are undefined in places, stopping rules and precision.

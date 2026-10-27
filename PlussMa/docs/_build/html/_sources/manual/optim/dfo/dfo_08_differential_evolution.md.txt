@@ -41,12 +41,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(objective, initial
 
 ## Programs
 
-- [A direct call](dfo_08_differential_evolution/a_direct_call.md)
-- [The parameters](dfo_08_differential_evolution/the_parameters.md)
-- [Seeds and execution modes](dfo_08_differential_evolution/seeds_and_execution_modes.md)
-- [Where the population starts](dfo_08_differential_evolution/where_the_population_starts.md)
-- [Stopping](dfo_08_differential_evolution/stopping.md)
-- [The self-adapting variant](dfo_08_differential_evolution/the_self_adapting_variant.md)
+- [Differential evolution in practice](dfo_08_differential_evolution/differential_evolution_in_practice.md)
 
 ## Checklist
 
@@ -61,11 +56,6 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(objective, initial
 :maxdepth: 2
 :hidden:
 
-dfo_08_differential_evolution/a_direct_call
-dfo_08_differential_evolution/the_parameters
-dfo_08_differential_evolution/seeds_and_execution_modes
-dfo_08_differential_evolution/where_the_population_starts
-dfo_08_differential_evolution/stopping
-dfo_08_differential_evolution/the_self_adapting_variant
+dfo_08_differential_evolution/differential_evolution_in_practice
 ```
 <!-- apiref:toctree:end -->

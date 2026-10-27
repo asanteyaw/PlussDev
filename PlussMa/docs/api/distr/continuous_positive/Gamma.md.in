@@ -1,0 +1,214 @@
+# `distr::Gamma`
+
+The gamma distribution: a flexible family on the positive axis, the sum of exponential waiting times and the parent of the chi-squared family.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Gamma, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Gamma, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Gamma, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Gamma, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Gamma, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The gamma distribution is the distribution of the waiting time until the `shape`-th event of a Poisson process, and more generally a flexible model for positive, right-skewed quantities such as rainfall amounts, claim sizes and service times. Its mean is `shape × scale` and its variance `shape × scale²`. With `shape = 1` it is the exponential distribution, with integer shape the Erlang distribution, and with `shape = ν/2` and `scale = 2` the chi-squared distribution with `ν` degrees of freedom.
+
+The kind-based functions take `{shape}` (scale 1, location 0) or the long form `{location, scale, shape}`, note the order. The object `distr::Gamma{shape, scale, location}` has the order shape, scale, location.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `location` | any real | the left end of the support (0 in the short form) |
+| `scale` | > 0 | stretches the axis; the mean is `shape × scale` |
+| `shape` | > 0 | controls the skewness: small values pile up near the location, large values approach a bell shape |
+
+Support: `x` above the location.
+
+The object form of this family, with the same functions as methods, is on its own page: [`distr::Gamma`](../object_based/Gamma.md).
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above (a shorter list selects the defaults: `{shape}` gives scale 1 and location 0). A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape.
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`shape` and `scale` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Gamma on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.25, 1.0, 2.0, 3.5, 6.0, 10.0}, f64);
+  const std::vector<double> params = {0.0, 1.3, 2.5};
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Gamma, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Gamma, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Gamma, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+The density is largest on this grid at x = 2, where it is 0.23709; the distribution function runs from 0.00426 at x = 0.25 to 0.99116 at x = 10, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.23709) = -1.43932 at x = 2.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {0.0, 1.3, 2.5};
+
+  // The three ways to the probability that the variable lies in [1, 6]:
+  const auto grid = pluss::series::linspace(1.0, 6.0, 3001, f64);
+  const double area = as_f64(distr::pdf(dst::Gamma, grid, params).antidiff(grid).trapezoid());
+
+  const auto edges = pluss::make_series({1.0, 6.0}, f64);
+  const auto c = distr::cdf(dst::Gamma, edges, params).pull<double>();
+
+  const auto draws = distr::sample(dst::Gamma, params, {200000}, f64, 7ULL);
+  const double fraction = as_f64(((draws >= 1.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean());
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(6) - cdf(1): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+The integral of the density (0.80838) and the difference of the distribution function (0.80838) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.80714) differs from it by 0.00124, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 8.80e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({0.25, 1.0, 2.0, 4.0, 8.0, 14.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 0.8:";
+  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 0.8}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 2.5:";
+  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 2.5}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 8  :";
+  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 8.0}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Read down the rows: `shape 0.8` peaks on this grid at x = 0.25 (value 0.7581); `shape 2.5` peaks on this grid at x = 2 (value 0.2371); `shape 8` peaks on this grid at x = 8 (value 0.1084). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 confirms that the chi-squared distribution with 5 degrees of freedom is a gamma with shape 2.5 and scale 2.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::scientific << std::setprecision(2);
+  const auto x = pluss::make_series({0.5, 1.5, 3.0, 6.0, 12.0}, f64);
+  const std::vector<double> here = {0.0, 2.0, 2.5};
+  const std::vector<double> there = {5.0};
+
+  const double dpdf = as_f64((distr::pdf(dst::Gamma, x, here) - distr::pdf(dst::ChiSquare, x, there)).abs().max());
+  const double dcdf = as_f64((distr::cdf(dst::Gamma, x, here) - distr::cdf(dst::ChiSquare, x, there)).abs().max());
+  std::cout << "largest difference in the density: " << dpdf << '\n';
+  std::cout << "largest difference in the distribution function: " << dcdf << '\n';
+}
+```
+
+The two largest differences are 0 for the density and 0 for the distribution function over the grid: zero up to rounding, so the two descriptions are the same distribution.
+
+## See Also
+
+- [`Exponential`](../continuous_positive/Exponential.md)
+- [`ChiSquare`](../continuous_positive/ChiSquare.md)
+- [`Erlang`](../continuous_positive/Erlang.md)
+- [`Weibull`](../continuous_positive/Weibull.md)
+- [`Lognormal`](../continuous_positive/Lognormal.md)
+- [`InverseGaussian`](../continuous_positive/InverseGaussian.md)
+- [`distr::Gamma`](../object_based/Gamma.md) -- the object form

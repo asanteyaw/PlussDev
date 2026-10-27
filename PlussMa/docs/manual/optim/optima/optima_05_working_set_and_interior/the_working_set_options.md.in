@@ -1,8 +1,0 @@
-# The working-set options
-
-[Back to The Working-Set and Interior Methods](../optima_05_working_set_and_interior.md)
-
-
-@@example Numerical/optimization/guide/optima/63_working_set_options.cpp@@
-
-None of `add_constraint_tolerance`, `drop_multiplier_tolerance` or `max_working_set_violations` changed the run here: 4 iterations and 5 evaluations in every row. Only `favor_working_set_updates` mattered, and in the wrong direction: switching it off took 6 iterations. The defaults are sound for a well-posed problem. These options are for the degenerate cases, where a constraint hovers at its limit and is added and dropped repeatedly (a stall the method reports itself, and the `max_stalled_iterations` setting caps).

@@ -2,8 +2,8 @@
 
 This guide covers the full public optimization surface in PlussMa:
 
-- constrained gradient-based optimization (`pluss::optim`)
-- functional Adam and Septima (`pluss::optim`)
+- constrained gradient-based optimization (`pluss::subsp::math::optim`)
+- functional Adam and Septima (`pluss::subsp::math::optim`)
 - derivative-free optimization (`pluss::subsp::math::optimization`)
 
 ## Include And Namespace
@@ -11,12 +11,12 @@ This guide covers the full public optimization surface in PlussMa:
 ### API Signature
 
 - `#include <pluss/ma.h>`
-- `namespace pmo = pluss::optim`
+- `namespace pmo = pluss::subsp::math::optim`
 - `namespace dfo = pluss::subsp::math::optimization`
 
 ### Notes
 
-`pluss::optim` is the core constrained optimization and functional optimizer surface.
+`pluss::subsp::math::optim` is the core constrained optimization and functional optimizer surface.
 DFO solvers live under `pluss::subsp::math::optimization`.
 
 ### Inputs
@@ -37,7 +37,7 @@ DFO solvers live under `pluss::subsp::math::optimization`.
 ```cpp
 #include <pluss/ma.h>
 
-namespace pmo = pluss::optim;
+namespace pmo = pluss::subsp::math::optim;
 namespace dfo = pluss::subsp::math::optimization;
 ```
 
@@ -121,7 +121,7 @@ Use this split:
 
 ```cpp
 using namespace pluss;
-namespace pmo = pluss::optim;
+namespace pmo = pluss::subsp::math::optim;
 
 const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 const Series x0 = make_series(std::vector<double>{0.2, 0.2}, {2}, cfg);
@@ -197,7 +197,7 @@ For MATLAB-style constrained NLP behavior, prefer `SequentialQP` or `InternalPro
 
 ```cpp
 using namespace pluss;
-namespace pmo = pluss::optim;
+namespace pmo = pluss::subsp::math::optim;
 
 const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 const Series x0 = make_series(std::vector<double>{1.2, 0.9}, {2}, cfg);
@@ -510,8 +510,8 @@ const auto out = pmo::septima(my_series_objective, x0, opt, c);
 Trace-from-Series objective:
 
 ```cpp
-pluss::optim::Trace my_trace_from_series(const pluss::Series& x) {
-  return pluss::optim::trace(x.square().sum() * 0.5);
+pluss::subsp::math::optim::Trace my_trace_from_series(const pluss::Series& x) {
+  return pluss::subsp::math::optim::trace(x.square().sum() * 0.5);
 }
 
 const auto out = pmo::septima(my_trace_from_series, x0, opt, c);
@@ -601,7 +601,7 @@ pluss::Series theta_hat = fit.params[0];
 
 ### PlussMa Septima vs PlussAI Minimax
 
-- `pluss::optim::septima(...)` (PlussMa): one-shot solve API; returns `SeptimaResult`; best for numerical optimization workflows similar to `optima(...)`.
+- `pluss::subsp::math::optim::septima(...)` (PlussMa): one-shot solve API; returns `SeptimaResult`; best for numerical optimization workflows similar to `optima(...)`.
 - `pluss::nn::optim::Minimax` (PlussAI): optimizer object for training loops; you construct optimizer on parameter pointers and call `step()` repeatedly (or `step(closure)`).
 - PlussMa septima owns the outer iteration loop internally; PlussAI minimax integrates into your explicit loop and module/optimizer state flow.
 

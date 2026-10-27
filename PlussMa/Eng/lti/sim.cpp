@@ -35,7 +35,7 @@ void validate_time(const StateSpace &system, const Series &time) {
   PLUSS_CHECK(time.platform() == system.a().platform(),
               "eng::lti::sim: time and system must share one platform");
   const auto host =
-      time.to(Platform::CPU, ScalarType::Float64).to_vec<double>();
+      time.to(Platform::CPU, ScalarType::Float64).pull<double>();
   for (std::size_t lane = 0; lane < host.size(); ++lane) {
     PLUSS_CHECK(std::isfinite(host[lane]),
                 "eng::lti::sim: time values must be finite");

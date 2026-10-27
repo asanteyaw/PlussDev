@@ -45,11 +45,8 @@ Bounds and constraints are optional everywhere. Leave `lower_bounds`, `upper_bou
 
 ## Programs
 
-- [A first solve](dfo_01_first_problems/a_first_solve.md)
-- [Three ways to call](dfo_01_first_problems/three_ways_to_call.md)
-- [What Auto chooses](dfo_01_first_problems/what_auto_chooses.md)
-- [Budgets and the five statuses](dfo_01_first_problems/budgets_and_the_five_statuses.md)
-- [Seeds and repeatability](dfo_01_first_problems/seeds_and_repeatability.md)
+- [First derivative-free solves](dfo_01_first_problems/first_solves.md)
+- [Budgets, the five statuses and repeatability](dfo_01_first_problems/budgets_statuses_and_repeatability.md)
 
 ## Checklist
 
@@ -64,10 +61,7 @@ Bounds and constraints are optional everywhere. Leave `lower_bounds`, `upper_bou
 :maxdepth: 2
 :hidden:
 
-dfo_01_first_problems/a_first_solve
-dfo_01_first_problems/three_ways_to_call
-dfo_01_first_problems/what_auto_chooses
-dfo_01_first_problems/budgets_and_the_five_statuses
-dfo_01_first_problems/seeds_and_repeatability
+dfo_01_first_problems/first_solves
+dfo_01_first_problems/budgets_statuses_and_repeatability
 ```
 <!-- apiref:toctree:end -->

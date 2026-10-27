@@ -76,7 +76,7 @@ int main() {
         warm += w;
       std::cout << "  warm starts engaged in " << warm << "/" << L << " lanes (max pivots " << pivots_max << ")\n";
       expect(warm == L, "every FVA lane must be warm-started from the wild-type basis");
-      const auto obj_v = sol.objective.to_vec<double>();
+      const auto obj_v = sol.objective.host<double>();
       for (int k = 0; k < nf; ++k) {
         const double mn = obj_v[static_cast<std::size_t>(k)], mx = -obj_v[static_cast<std::size_t>(nf + k)];
         worst_fva = std::max({worst_fva, std::abs(mn - ref::fva_min[static_cast<std::size_t>(k)]), std::abs(mx - ref::fva_max[static_cast<std::size_t>(k)])});

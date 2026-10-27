@@ -10,7 +10,7 @@ TEST_CASE("Timeline ordering is stable and places NaT last", "[timeline-ordering
       "2025-03-01T00:00:00Z", "",
   });
 
-  REQUIRE(input.argsort().to_vec<std::int64_t>() ==
+  REQUIRE(input.argsort().host<std::int64_t>() ==
           std::vector<std::int64_t>{2, 0, 3, 1, 4});
   REQUIRE(input.sort().ticks() ==
           std::vector<std::int64_t>{1704067200000000000LL, 1740787200000000000LL,
@@ -47,8 +47,8 @@ TEST_CASE("Timeline searchsorted respects ties, NaT, and query shape", "[timelin
   const auto right = sorted.searchsorted_right(queries);
   REQUIRE(left.sizes().vec() == std::vector<std::int64_t>{2, 2});
   REQUIRE(right.sizes().vec() == std::vector<std::int64_t>{2, 2});
-  REQUIRE(left.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 1, 3, 4});
-  REQUIRE(right.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 3, 3, 6});
+  REQUIRE(left.host<std::int64_t>() == std::vector<std::int64_t>{0, 1, 3, 4});
+  REQUIRE(right.host<std::int64_t>() == std::vector<std::int64_t>{0, 3, 3, 6});
 }
 
 TEST_CASE("Timeline ordering rejects ranks outside its one-dimensional contract",

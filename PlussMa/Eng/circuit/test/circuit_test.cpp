@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace circuit = pluss::eng::circuit;
+namespace circuit = pluss::subsp::eng::circuit;
 
 namespace {
 
@@ -20,7 +20,7 @@ void expect(bool value, const std::string &message) {
 
 void close(const pluss::Series &value, const std::vector<double> &expected,
            double tolerance = 1e-9) {
-  const auto actual = value.to_vec<double>();
+  const auto actual = value.host<double>();
   expect(actual.size() == expected.size(), "result size mismatch");
   for (std::size_t i = 0; i < actual.size(); ++i)
     expect(std::abs(actual[i] - expected[i]) <= tolerance,

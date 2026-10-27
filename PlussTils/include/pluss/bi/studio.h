@@ -701,8 +701,8 @@ inline void render_plot_tile_into_pane_(
           axis,
           z,
           {});
-      pane.x_ticks(axis.to_vec<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
-          .y_ticks(axis.to_vec<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views));
+      pane.x_ticks(axis.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
+          .y_ticks(axis.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views));
       pane.x_label("feature").y_label("feature");
       return;
     }

@@ -9,15 +9,15 @@
 #include <iostream>
 #include <sstream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
 int main() {
   const auto target = vec({2.0, 1.0, -1.0});
-  auto objective = [&](const Trace& x) -> Trace { return optim::sum(optim::square(x - optim::fixed(target))) * 0.5; };
+  auto objective = [&](const pluss::Series& x) -> pluss::Series { return (x - target).square().sum() * 0.5; };
 
   optim::SeptimaConstraints box;
   box.lbs = {vec({0.0, 0.0, 0.0})};

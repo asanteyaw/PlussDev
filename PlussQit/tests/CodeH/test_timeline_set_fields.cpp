@@ -15,15 +15,15 @@ TEST_CASE("Timeline field setters preserve every unnamed field", "[timeline-set-
                            .set_hour(6).set_minute(15).set_second(0);
 
   REQUIRE(changed.sizes().vec() == std::vector<std::int64_t>{2, 2});
-  REQUIRE(changed.year().to_vec<std::int32_t>() == std::vector<std::int32_t>(4, 2030));
-  REQUIRE(changed.month().to_vec<std::int32_t>() == std::vector<std::int32_t>(4, 2));
-  REQUIRE(changed.day().to_vec<std::int32_t>() == std::vector<std::int32_t>(4, 1));
-  REQUIRE(changed.hour().to_vec<std::int32_t>() == std::vector<std::int32_t>(4, 6));
-  REQUIRE(changed.minute().to_vec<std::int32_t>() == std::vector<std::int32_t>(4, 15));
-  REQUIRE(changed.second().to_vec<std::int32_t>() == std::vector<std::int32_t>(4, 0));
-  REQUIRE(changed.nanosecond().to_vec<std::int32_t>() ==
+  REQUIRE(changed.year().host<std::int32_t>() == std::vector<std::int32_t>(4, 2030));
+  REQUIRE(changed.month().host<std::int32_t>() == std::vector<std::int32_t>(4, 2));
+  REQUIRE(changed.day().host<std::int32_t>() == std::vector<std::int32_t>(4, 1));
+  REQUIRE(changed.hour().host<std::int32_t>() == std::vector<std::int32_t>(4, 6));
+  REQUIRE(changed.minute().host<std::int32_t>() == std::vector<std::int32_t>(4, 15));
+  REQUIRE(changed.second().host<std::int32_t>() == std::vector<std::int32_t>(4, 0));
+  REQUIRE(changed.nanosecond().host<std::int32_t>() ==
           std::vector<std::int32_t>{123456789, 4, 900000000, 1});
-  REQUIRE(base.year().to_vec<std::int32_t>() == std::vector<std::int32_t>(4, 2024));
+  REQUIRE(base.year().host<std::int32_t>() == std::vector<std::int32_t>(4, 2024));
 }
 
 TEST_CASE("Timeline field setters validate arguments and reconstructed dates",
@@ -40,7 +40,7 @@ TEST_CASE("Timeline field setters validate arguments and reconstructed dates",
   REQUIRE_THROWS(empty.set_second(60));
 
   const auto with_nat = pluss::timeline::make({"2024-01-01T00:00:00Z", ""});
-  REQUIRE(with_nat.set_hour(8).isnat().to_vec<bool>() == std::vector<bool>{false, true});
+  REQUIRE(with_nat.set_hour(8).isnat().host<bool>() == std::vector<bool>{false, true});
 
   const auto gap = pluss::timeline::make("2024-03-10T06:30:00Z")
                        .tz_convert("America/New_York");
@@ -64,7 +64,7 @@ TEST_CASE("Timeline field setters follow logical strides and retain timezone",
         }, "America/New_York");
 
     const auto changed = strided.set_year(2030);
-    REQUIRE(changed.year().to_vec<std::int32_t>() == std::vector<std::int32_t>{2030, 2030});
+    REQUIRE(changed.year().host<std::int32_t>() == std::vector<std::int32_t>{2030, 2030});
     REQUIRE(changed.tz() == "America/New_York");
   }
   REQUIRE(released);

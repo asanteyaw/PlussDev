@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bessel_k.h"
+#include "pluss/tils/aux/scalar_cast.h"
 #include "distr_object_detail.h"
 
 #include <algorithm>
@@ -21,7 +22,7 @@ namespace pluss::subsp::stats::distr::fit_detail {
 
 inline std::vector<double> data_f64(const Series& x, std::string_view op) {
   PLUSS_CHECK(x.defined(), std::string(op) + ": x must be defined");
-  const auto values = x.to(ScalarType::Float64).to_vec<double>();
+  const auto values = x.to(ScalarType::Float64).host<double>();
   PLUSS_CHECK(!values.empty(), std::string(op) + ": x must contain at least one observation");
   PLUSS_CHECK(std::all_of(values.begin(), values.end(), [](double v) { return std::isfinite(v); }),
               std::string(op) + ": x must contain finite values only");
@@ -33,7 +34,7 @@ inline double wald_z(double level, std::string_view op) {
   constexpr double kEps = 1e-15;
   const double alpha = 1.0 - level;
   const double p = std::clamp(1.0 - 0.5 * alpha, kEps, 1.0 - kEps);
-  return detail::scalar_f64(2.0 * p).erfcinv().mul(-std::sqrt(2.0)).item<double>();
+  return pluss::tils::to_scalar<double>(detail::scalar_f64(2.0 * p).erfcinv().mul(-std::sqrt(2.0)));
 }
 
 inline double fd_step(double x) {

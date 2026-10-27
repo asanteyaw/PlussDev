@@ -45,8 +45,8 @@ auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"id"}).cast().series();
 auto ids = out.registry(0).fields("id");
-std::cout << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(ids.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(ids.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(ids.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

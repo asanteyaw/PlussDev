@@ -515,7 +515,7 @@ GroupFactorization_ factor_group_keys_(std::span<const Slate> keys,
     if (!options.dropnull || !detail::has_validity_mask(key)) {
       continue;
     }
-    const auto valid = detail::validity_mask(key)->to_vec<bool>();
+    const auto valid = detail::validity_mask(key)->host<bool>();
     std::transform(
         factor.included.begin(),
         factor.included.end(),
@@ -750,9 +750,9 @@ pluss::Series group_keep_mask_(const Slate& keep,
     return group_bool_mask_(std::vector<bool>(state.group_ids.size(), false), platform);
   }
 
-  auto keep_values = keep.as_series().to_vec<bool>();
+  auto keep_values = keep.as_series().host<bool>();
   if (detail::has_validity_mask(keep)) {
-    const auto keep_valid = detail::validity_mask(keep)->to_vec<bool>();
+    const auto keep_valid = detail::validity_mask(keep)->host<bool>();
     std::transform(
         keep_values.begin(),
         keep_values.end(),
@@ -970,7 +970,7 @@ std::vector<std::vector<double>> group_numeric_mode_ties_(const Slate& value,
                                                            const GroupState_& state) {
   PLUSS_CHECK(value.kind() == SlateKind::Series && is_numeric_series_type(value.as_series()),
               "DataFrameGrouped::mode_ties: value feature must be Note or a numeric Series");
-  const auto values = value.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto values = value.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
 
   std::vector<std::unordered_map<double, std::int64_t>> counts(
       static_cast<std::size_t>(state.ngroups));
@@ -1189,8 +1189,8 @@ Slate group_temporal_slate_(const Slate& value,
 
   const auto ordered_ticks = reorder_group_slate_(Slate(reduced), state);
   const auto ordered_counts = reorder_group_slate_(Slate(counts), state);
-  const auto tick_values = ordered_ticks.as_series().to_vec<std::int64_t>();
-  const auto count_values = ordered_counts.as_series().to_vec<double>();
+  const auto tick_values = ordered_ticks.as_series().host<std::int64_t>();
+  const auto count_values = ordered_counts.as_series().host<double>();
 
   std::vector<bool> valid(count_values.size(), false);
   for (std::size_t i = 0; i < count_values.size(); ++i) {

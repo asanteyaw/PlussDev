@@ -22,7 +22,7 @@ subject to  lower <= x <= upper              (bounds)
 Four ideas carry the rest of the chapter.
 
 - **The unknown is a pack of named blocks.** A problem with one vector of unknowns has a single block called `x`. A problem with several quantities of different shapes uses one block per quantity, such as `slope` and `intercept`. Blocks keep their names and shapes in the answer, so you read results back by name.
-- **Derivatives are exact and automatic.** You write `f`, `g` and `h` with the `Trace` type, a number that remembers how it was computed. The solver then has exact gradients and Jacobians without you deriving them. If you already have a gradient, you can hand it over instead (program 9).
+- **Derivatives are exact and automatic.** You write `f`, `g` and `h` with ordinary `Series` operations, and the library records how each value was computed. The solver then has exact gradients and Jacobians without you deriving them. If you already have a gradient, you can hand it over instead (program 9).
 - **Inequalities are written "at most zero".** A nonlinear inequality returns `g(x)`, and the constraint holds when `g(x) <= 0`. To require `x0 + x1 <= 1.5`, return `x0 + x1 - 1.5`. Linear inequalities use the matrix form `Aineq x <= bineq`.
 - **Answers satisfy tolerances, not equalities.** The solver stops when constraints are met to within `1e-6` and the optimality measure is below `1e-6`. A coordinate that should be exactly `0` may come back as `1e-7`. Program 2 shows this.
 
@@ -32,8 +32,8 @@ Four ideas carry the rest of the chapter.
 
 | Objective | Start | Use when |
 |---|---|---|
-| `Trace` function of one vector `Trace` | one `Series` | one vector of unknowns (programs 1 to 5) |
-| `Trace` function of a pack | `ParameterPack<Series>` | several named blocks (programs 6, 7, 11) |
+| function of one `Series` | one `Series` | one vector of unknowns (programs 1 to 5) |
+| function of a pack of `Series` | `ParameterPack<Series>` | several named blocks (programs 6, 7, 11) |
 | a `ConstrainedProblem` | one `Series` | the problem is built once and reused (program 8) |
 | a `ConstrainedProblem` | `ParameterPack<Series>` | the problem is reused and has named blocks (program 8) |
 | value-and-gradient function of one `Series` | one `Series` | you have an analytic gradient (program 9) |
@@ -43,28 +43,15 @@ The four overloads that take a function (the first, second, fifth and sixth rows
 
 ## A guided tour
 
-- [The smallest call](optima_01_first_problems/the_smallest_call.md)
-- [Bounds](optima_01_first_problems/bounds.md)
-- [A nonlinear inequality](optima_01_first_problems/a_nonlinear_inequality.md)
-- [A nonlinear equality](optima_01_first_problems/a_nonlinear_equality.md)
-- [Linear constraints](optima_01_first_problems/linear_constraints.md)
-- [Every constraint family at once](optima_01_first_problems/every_constraint_family_at_once.md)
-- [Named blocks and a model](optima_01_first_problems/named_blocks_and_a_model.md)
-- [A problem as a value](optima_01_first_problems/a_problem_as_a_value.md)
-- [Analytic gradients](optima_01_first_problems/analytic_gradients.md)
-- [Reading the result](optima_01_first_problems/reading_the_result.md)
+- [Stating a constrained problem](optima_01_first_problems/stating_a_constrained_problem.md)
+- [Blocks, problems as values, gradients and reading the result](optima_01_first_problems/blocks_values_and_reading_the_result.md)
 
 ## Decisions
 
 - **One vector or named blocks?** Use one vector when the unknowns are interchangeable coordinates, such as portfolio weights. Use named blocks when they mean different things or have different shapes, such as a matrix and an offset. Once you use blocks, build bounds as packs with the same names.
-- **Automatic or analytic gradient?** Start with `Trace`. Move to an analytic gradient only when you have a reason to, and audit it before trusting it.
+- **Automatic or analytic gradient?** Start with plain `Series` code. Move to an analytic gradient only when you have a reason to, and audit it before trusting it.
 - **Inline objective or a `ConstrainedProblem`?** Inline for one-off solves. A `ConstrainedProblem` when the problem is reused, stored, or passed around.
 - **Struct or builder?** The builder is shorter and chooses the right objective slot for the callable you give it. Fill the struct when you need slots the builder does not cover.
-
-## Pitfalls
-
-- [Bounds that do not match the blocks](optima_01_first_problems/bounds_that_do_not_match_the_blocks.md)
-- [An objective that returns more than one number](optima_01_first_problems/an_objective_that_returns_more_than_one_number.md)
 
 ## Where next
 
@@ -75,17 +62,7 @@ The next chapter reads results in depth: every exit flag, what each field of the
 :maxdepth: 2
 :hidden:
 
-optima_01_first_problems/the_smallest_call
-optima_01_first_problems/bounds
-optima_01_first_problems/a_nonlinear_inequality
-optima_01_first_problems/a_nonlinear_equality
-optima_01_first_problems/linear_constraints
-optima_01_first_problems/every_constraint_family_at_once
-optima_01_first_problems/named_blocks_and_a_model
-optima_01_first_problems/a_problem_as_a_value
-optima_01_first_problems/analytic_gradients
-optima_01_first_problems/reading_the_result
-optima_01_first_problems/bounds_that_do_not_match_the_blocks
-optima_01_first_problems/an_objective_that_returns_more_than_one_number
+optima_01_first_problems/stating_a_constrained_problem
+optima_01_first_problems/blocks_values_and_reading_the_result
 ```
 <!-- apiref:toctree:end -->

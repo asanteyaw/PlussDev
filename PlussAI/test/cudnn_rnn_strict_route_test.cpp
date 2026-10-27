@@ -145,44 +145,44 @@ bool run_cudnn_rnn_strict_route_checks(std::ostream* err = nullptr) {
 
   const auto [rnn_cpu_y, rnn_cpu_h] = pluss::nn::rnn(x, h0, rnn_w_cpu, run_cfg);
   const auto [rnn_gpu_y, rnn_gpu_h] = pluss::nn::rnn(x.to(pluss::pCUDA), h0.to(pluss::pCUDA), rnn_w_gpu, run_cfg);
-  if (max_abs_diff_(rnn_cpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    rnn_gpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 1e-2) {
+  if (max_abs_diff_(rnn_cpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    rnn_gpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 1e-2) {
     if (err) *err << "strict RNN output parity exceeded tolerance\n";
     return false;
   }
-  if (max_abs_diff_(rnn_cpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    rnn_gpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 1e-2) {
+  if (max_abs_diff_(rnn_cpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    rnn_gpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 1e-2) {
     if (err) *err << "strict RNN state parity exceeded tolerance\n";
     return false;
   }
 
   const auto [gru_cpu_y, gru_cpu_h] = pluss::nn::gru(x, h0, gru_w_cpu, run_cfg);
   const auto [gru_gpu_y, gru_gpu_h] = pluss::nn::gru(x.to(pluss::pCUDA), h0.to(pluss::pCUDA), gru_w_gpu, run_cfg);
-  if (max_abs_diff_(gru_cpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    gru_gpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 2e-2) {
+  if (max_abs_diff_(gru_cpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    gru_gpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 2e-2) {
     if (err) *err << "strict GRU output parity exceeded tolerance\n";
     return false;
   }
-  if (max_abs_diff_(gru_cpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    gru_gpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 2e-2) {
+  if (max_abs_diff_(gru_cpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    gru_gpu_h.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 2e-2) {
     if (err) *err << "strict GRU state parity exceeded tolerance\n";
     return false;
   }
 
   const auto [lstm_cpu_y, lstm_cpu_state] = pluss::nn::lstm(x, h0, c0, lstm_w_cpu, run_cfg);
   const auto [lstm_gpu_y, lstm_gpu_state] = pluss::nn::lstm(x.to(pluss::pCUDA), h0.to(pluss::pCUDA), c0.to(pluss::pCUDA), lstm_w_gpu, run_cfg);
-  if (max_abs_diff_(lstm_cpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    lstm_gpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 2e-2) {
+  if (max_abs_diff_(lstm_cpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    lstm_gpu_y.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 2e-2) {
     if (err) *err << "strict LSTM output parity exceeded tolerance\n";
     return false;
   }
-  if (max_abs_diff_(std::get<0>(lstm_cpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    std::get<0>(lstm_gpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 2e-2) {
+  if (max_abs_diff_(std::get<0>(lstm_cpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    std::get<0>(lstm_gpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 2e-2) {
     if (err) *err << "strict LSTM hidden-state parity exceeded tolerance\n";
     return false;
   }
-  if (max_abs_diff_(std::get<1>(lstm_cpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    std::get<1>(lstm_gpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 2e-2) {
+  if (max_abs_diff_(std::get<1>(lstm_cpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    std::get<1>(lstm_gpu_state).to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 2e-2) {
     if (err) *err << "strict LSTM cell-state parity exceeded tolerance\n";
     return false;
   }

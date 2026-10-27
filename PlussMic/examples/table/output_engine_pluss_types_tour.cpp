@@ -18,7 +18,7 @@
 //   2. The inner knobs -- `notation`, `precision`, `grouping`, `sign`,
 //      `humanize`, `bool_style`, container brackets, `quote_strings` -- bite on
 //      C++ scalars and containers. With Pluss data you reach them by extracting:
-//      `series.item<double>()`, `series.to_vec<double>()`, `df.features()`,
+//      `series.item<double>()`, `series.host<double>()`, `df.features()`,
 //      `df.shape()`, `timeline.to_epoch_nanos_vector()`, `slate.sum().to_dbl()`.
 //
 //  Build (from the CMake build dir):
@@ -152,22 +152,22 @@ int main() {
                            .sign = Sign::Always});
 
   // C3 -- Series -> std::vector<double>, capped + verbose
-  out.writeln("C3 first prices (capped):", prices.to_vec<double>(),
+  out.writeln("C3 first prices (capped):", prices.host<double>(),
               PrintOptions{.max_items = 3, .more_verbose = true});
 
   // C4 -- Series<double> as a % column
   Series ratios = pluss::make_series({0.031, 0.5, 0.812, 1.0});
-  out.writeln("C4 ratios as percents:", ratios.to_vec<double>(),
+  out.writeln("C4 ratios as percents:", ratios.host<double>(),
               PrintOptions{.notation = Notation::Percent, .precision = 1});
 
   // C5 -- Series<int64> of bytes -> human sizes
   Series bytes = pluss::make_series(std::vector<std::int64_t>{512, 1536, 3221225472LL});
-  out.writeln("C5 sizes (IEC):", bytes.to_vec<std::int64_t>(),
+  out.writeln("C5 sizes (IEC):", bytes.host<std::int64_t>(),
               PrintOptions{.humanize = Humanize::BytesIEC});
 
   // C6 -- Humanize::DurationNs is for ELAPSED spans (nanoseconds). Here: the
   //       gaps between consecutive build timestamps, pulled from the Timeline.
-  std::vector<std::int64_t> ns = built.epoch_nanos().to_vec<std::int64_t>();
+  std::vector<std::int64_t> ns = built.epoch_nanos().host<std::int64_t>();
   std::vector<std::int64_t> gaps;
   for (std::size_t i = 1; i < ns.size(); ++i) gaps.push_back(ns[i] - ns[i - 1]);
   out.writeln("C6 gaps between build dates :", gaps,
@@ -184,16 +184,16 @@ int main() {
 
   // C9 -- Series<int64> -> grouped (values large enough to see the separator)
   Series big = pluss::make_series(std::vector<std::int64_t>{1234567, 89, 900000000});
-  out.writeln("C9 big counts, grouped:", big.to_vec<std::int64_t>(),
+  out.writeln("C9 big counts, grouped:", big.host<std::int64_t>(),
               PrintOptions{.grouping = '_'});
 
   // C10 -- multiline vector pulled from a Series
-  out.writeln("C10 prices, one per line:", prices.to_vec<double>(),
+  out.writeln("C10 prices, one per line:", prices.host<double>(),
               PrintOptions{.notation = Notation::Fixed, .precision = 2,
                            .grouping = ',', .multiline = true, .indent = "   "});
 
   // C11 -- bool column extracted -> std::vector<bool>, YesNo style
-  out.writeln("C11 sold flags:", homes.features("sold").as_series().to_vec<bool>(),
+  out.writeln("C11 sold flags:", homes.features("sold").as_series().host<bool>(),
               PrintOptions{.bool_style = BoolStyle::YesNo});
 
   // C12 -- a genuine "value_counts" Slate rendered, then its labels extracted
@@ -201,7 +201,7 @@ int main() {
   out.writeln("C12 city frequencies (Slate renders itself):");
   out.writeln(freq);
   out.writeln("C12b same counts as a C++ vector, indexed:",
-              freq.as_series().to_vec<std::int64_t>(),
+              freq.as_series().host<std::int64_t>(),
               PrintOptions{.show_indices = true});
 
   // C13 -- pluss::series::scalar_inf as an open bound in a formatted line

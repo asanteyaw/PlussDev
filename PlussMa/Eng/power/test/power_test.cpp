@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace power = pluss::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 namespace {
 
@@ -22,7 +22,7 @@ void expect(bool value, const std::string &message) {
 
 void close(const pluss::Series &value, const std::vector<double> &expected,
            double tolerance = 1e-9) {
-  const auto actual = value.to_vec<double>();
+  const auto actual = value.host<double>();
   expect(actual.size() == expected.size(), "result size mismatch");
   for (std::size_t i = 0; i < actual.size(); ++i) {
     if (std::abs(actual[i] - expected[i]) > tolerance)
@@ -37,7 +37,7 @@ void close_complex(const pluss::Series &value,
                    const std::vector<std::complex<double>> &expected,
                    double tolerance = 1e-9) {
   const auto actual =
-      value.to(pluss::ScalarType::Complex128).to_vec<std::complex<double>>();
+      value.to(pluss::ScalarType::Complex128).host<std::complex<double>>();
   expect(actual.size() == expected.size(), "complex result size mismatch");
   for (std::size_t i = 0; i < actual.size(); ++i)
     expect(std::abs(actual[i] - expected[i]) <= tolerance,
@@ -306,7 +306,7 @@ int main() {
     removed.lines.active = {true, true, true};
     removed.lines.active[static_cast<std::size_t>(line)] = false;
     const auto direct = power::dc(power::make(removed)).from_power;
-    close(screen.flow.select(-2, line), direct.to_vec<double>());
+    close(screen.flow.select(-2, line), direct.host<double>());
   }
 
   const auto batch_screen = power::outages(power::make(triangle(true)));
@@ -316,7 +316,7 @@ int main() {
                             -0.15, 0.45, 0.15, 0.0, 0.3, 0.45, 0.3, 0.0});
 
   const auto radial_lodf = power::lodf(grid);
-  expect(!radial_lodf.valid.item<bool>(),
+  expect(!radial_lodf.valid.host<bool>().front(),
          "bridge outage was reported as connected");
   expect(radial_lodf.factor.isnan().all().item<bool>(),
          "bridge LODF was not represented as unavailable");
@@ -359,7 +359,7 @@ int main() {
   const auto unbounded =
       power::dispatch(power::make(dispatch_net()), open_cost,
                       pluss::series::make({2.0}), precise_dispatch());
-  close(unbounded.generation, economic.generation.to_vec<double>(), 2e-7);
+  close(unbounded.generation, economic.generation.host<double>(), 2e-7);
 
   const auto congested =
       power::dispatch(power::make(dispatch_net()), dispatch_cost(),
@@ -415,10 +415,10 @@ int main() {
   const auto radial_secure =
       power::dispatch(power::make(dispatch_net()), dispatch_cost(),
                       pluss::series::make({2.0}), precise_dispatch(true));
-  expect(!radial_secure.outage_valid.item<bool>() &&
-             radial_secure.post_flow.isnan().all().item<bool>(),
+  expect(!radial_secure.outage_valid.host<bool>().front() &&
+             radial_secure.post_flow.isnan().all().host<bool>().front(),
          "bridge contingency was enforced as a connected network");
-  close(radial_secure.generation, economic.generation.to_vec<double>(), 2e-7);
+  close(radial_secure.generation, economic.generation.host<double>(), 2e-7);
 
   auto tracked_load = pluss::series::make({0.0, -1.0});
   tracked_load.tracks_slope_(true);
@@ -519,7 +519,17 @@ int main() {
              float_opf.generation_p.scalar_type() ==
                  pluss::ScalarType::Float32 &&
              float_opf.magnitude.scalar_type() == pluss::ScalarType::Float32,
-         "float32 AC OPF changed dtype or failed to converge");
+         "float32 AC OPF changed dtype or failed to converge: converged=" +
+             std::to_string(float_opf.converged) +
+             ", generation dtype=" +
+             std::string(float_opf.generation_p.dtype().name) +
+             ", magnitude dtype=" +
+             std::string(float_opf.magnitude.dtype().name) +
+             ", constraint=" +
+             std::to_string(float_opf.constraint_violation) +
+             ", optimality=" +
+             std::to_string(float_opf.first_order_optimality) +
+             ", message=" + float_opf.message);
 
   auto tracked_cost = opf_cost();
   tracked_cost.quadratic = pluss::series::make({1.0, 2.0});
@@ -531,18 +541,18 @@ int main() {
              tracked_cost.quadratic.sensitivity().isfinite().all().item<bool>(),
          "AC OPF objective detached from cost coefficients");
   close(tracked_cost.quadratic.sensitivity(),
-        tracked_opf.generation_p.square().to_vec<double>(), 2e-4);
+        tracked_opf.generation_p.square().host<double>(), 2e-4);
 
   const auto estimated_truth = power::ac(grid);
   const auto complete_measurements = all_measurements(estimated_truth, 2, 1);
   const auto estimated = power::estimate(grid, complete_measurements);
   expect(estimated.converged.item<bool>(),
          "exact AC state estimate did not converge");
-  close(estimated.magnitude, estimated_truth.magnitude.to_vec<double>(), 2e-9);
-  close(estimated.angle, estimated_truth.angle.to_vec<double>(), 2e-9);
+  close(estimated.magnitude, estimated_truth.magnitude.host<double>(), 2e-9);
+  close(estimated.angle, estimated_truth.angle.host<double>(), 2e-9);
   close_complex(estimated.voltage,
                 estimated_truth.voltage.to(pluss::ScalarType::Complex128)
-                    .to_vec<std::complex<double>>(),
+                    .host<std::complex<double>>(),
                 2e-9);
   expect(estimated.objective.item<double>() < 1e-16,
          "exact measurements retained weighted residual");
@@ -559,8 +569,8 @@ int main() {
   reordered_measurements.value = reordered_measurements.value.flip(-1);
   reordered_measurements.stddev = reordered_measurements.stddev.flip(-1);
   const auto reordered = power::estimate(grid, reordered_measurements);
-  close(reordered.magnitude, estimated.magnitude.to_vec<double>(), 2e-9);
-  close(reordered.angle, estimated.angle.to_vec<double>(), 2e-9);
+  close(reordered.magnitude, estimated.magnitude.host<double>(), 2e-9);
+  close(reordered.angle, estimated.angle.host<double>(), 2e-9);
 
   auto rough_start = two_bus();
   rough_start.buses.vm = pluss::series::make({1.08, 0.85});
@@ -569,8 +579,8 @@ int main() {
       power::estimate(power::make(rough_start), complete_measurements);
   expect(recovered.converged.item<bool>(),
          "state estimate did not recover from an imperfect initial state");
-  close(recovered.magnitude, estimated_truth.magnitude.to_vec<double>(), 2e-9);
-  close(recovered.angle, estimated_truth.angle.to_vec<double>(), 2e-9);
+  close(recovered.magnitude, estimated_truth.magnitude.host<double>(), 2e-9);
+  close(recovered.angle, estimated_truth.angle.host<double>(), 2e-9);
 
   auto wrapped_measurements = complete_measurements;
   std::vector<double> angle_shift(
@@ -579,7 +589,7 @@ int main() {
   wrapped_measurements.value =
       wrapped_measurements.value.add(pluss::series::make(angle_shift));
   const auto wrapped = power::estimate(grid, wrapped_measurements);
-  close(wrapped.angle, estimated.angle.to_vec<double>(), 2e-9);
+  close(wrapped.angle, estimated.angle.host<double>(), 2e-9);
   expect(wrapped.objective.item<double>() < 1e-16,
          "equivalent wrapped angle produced a residual");
 
@@ -606,15 +616,18 @@ int main() {
              batch_estimate.covariance.sizes() ==
                  std::vector<std::int64_t>{2, 3, 3},
          "state-estimation scenario axes were not retained");
-  close(batch_estimate.magnitude, batch_truth.magnitude.to_vec<double>(), 3e-9);
-  close(batch_estimate.angle, batch_truth.angle.to_vec<double>(), 3e-9);
+  close(batch_estimate.magnitude,
+        batch_truth.magnitude.flatten().pull<double>(), 3e-9);
+  close(batch_estimate.angle, batch_truth.angle.flatten().pull<double>(),
+        3e-9);
 
   auto tracked_measurements = complete_measurements;
   const std::vector<std::int64_t> measurement_shape(
       complete_measurements.value.sizes().begin(),
       complete_measurements.value.sizes().end());
+  const auto flat_measurements = complete_measurements.value.host<double>();
   tracked_measurements.value = pluss::series::make(
-      complete_measurements.value.to_vec<double>(), measurement_shape);
+      std::vector<double>(flat_measurements.begin(), flat_measurements.end()), measurement_shape);
   tracked_measurements.value.tracks_slope_(true);
   power::estimate(grid, tracked_measurements).angle.select(-1, 1).reverse();
   expect(
@@ -646,9 +659,9 @@ int main() {
          "continuation point axes are inconsistent");
   close(target_trace.factor.select(-1, target_trace.points - 1), {1.0}, 1e-12);
   close(target_trace.magnitude.select(-2, target_trace.points - 1),
-        nonlinear.magnitude.to_vec<double>(), 2e-9);
+        nonlinear.magnitude.host<double>(), 2e-9);
   close(target_trace.angle.select(-2, target_trace.points - 1),
-        nonlinear.angle.to_vec<double>(), 2e-9);
+        nonlinear.angle.host<double>(), 2e-9);
   expect(
       target_trace.residual.select(-1, target_trace.points - 1).item<double>() <
           1e-9,
@@ -703,7 +716,7 @@ int main() {
                  std::vector<std::int64_t>{2, batch_trace.points},
          "batched continuation lost scenario or point axes");
   close(batch_trace.magnitude.select(-2, batch_trace.points - 1),
-        batch.magnitude.to_vec<double>(), 3e-9);
+        batch.magnitude.flatten().pull<double>(), 3e-9);
 
   const auto batch_nose =
       power::trace(power::make(empty_batch), batch_path, nose_options);
@@ -765,7 +778,7 @@ int main() {
              float_trace.magnitude.scalar_type() == pluss::ScalarType::Float32,
          "float32 continuation changed dtype or missed its target");
   close(float_trace.magnitude.select(-2, float_trace.points - 1),
-        nonlinear.magnitude.to_vec<double>(), 2e-5);
+        nonlinear.magnitude.host<double>(), 2e-5);
 
   auto tracked_target = pluss::series::make({0.0, -0.1});
   tracked_target.tracks_slope_(true);

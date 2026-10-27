@@ -44,7 +44,7 @@ Series as_vector_(const Series& x, const char* name) {
 }
 
 std::vector<double> centered_values_(const Series& x, bool demean) {
-  auto values = x.to(ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  auto values = x.to(ScalarType::Float64).reshape({x.numel()}).host<double>();
   PLUSS_CHECK(!values.empty(), "subsp::stats::ts::diagnostics: expected non-empty input");
   if (demean) {
     const double mean = std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());
@@ -97,6 +97,7 @@ std::vector<std::int64_t> normalize_lags_(const std::vector<std::int64_t>& lags,
 }
 
 double chisq_survival_(double stat, std::int64_t dof, Config /*cfg*/) {
+  if (std::isnan(stat)) return std::numeric_limits<double>::quiet_NaN();
   return std::clamp(pluss::subsp::stats::tails::chi2_sf(stat, static_cast<double>(dof)), 0.0, 1.0);
 }
 
@@ -181,7 +182,9 @@ LjungBoxResult ljung_box(const Series& x, const LjungBoxOptions& options, Config
   dof.reserve(lags.size());
 
   for (const auto lag : lags) {
-    const double q = std::max(0.0, scale * prefix[static_cast<std::size_t>(lag)]);
+    // A NaN input makes every autocorrelation NaN; keep it NaN rather than letting max() turn it into a statistic of zero.
+    const double raw = scale * prefix[static_cast<std::size_t>(lag)];
+    const double q = std::isnan(raw) ? raw : std::max(0.0, raw);
     const auto d = std::max<std::int64_t>(1, lag - options.model_df);
     stats.push_back(q);
     pvals.push_back(chisq_survival_(q, d, out_cfg));

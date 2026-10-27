@@ -1,0 +1,32 @@
+# Mesh methods with constraints, and infeasible problems
+
+[Back to Derivative-Free Optimization 3: Bounds and Constraints](../dfo_03_bounds_and_constraints.md)
+
+The mesh adaptive methods accept inequality constraints and handle them with a **progressive barrier**: a poll point that violates a constraint may be accepted when the violation is below a threshold that shrinks as the run proceeds, so the search approaches the boundary rather than jumping over it. The first program runs pattern search and the mesh methods on one constrained problem and compares them.
+
+The second program asks the opposite question. If the constraints contradict each other, no method can succeed; what matters is whether it *says so*. With a roomy budget the run ends in `InfeasibleStationary`, having reached a point where no poll reduces the violation; with the default budget the run may instead be cut off by the budget before it can say so, which is why that flag is worth knowing.
+
+## Program 4: Mesh methods with constraints
+
+The mesh adaptive methods accept inequality constraints. They use a progressive barrier: a poll point that violates a constraint may be accepted when the violation is below a threshold that shrinks as the run proceeds, so the search approaches the boundary and does not jump over it.
+
+@@example Numerical/optimization/guide/dfo/324_mads_with_constraints.cpp@@
+
+All three return feasible points. The mesh methods use fewer evaluations and stop with `Converged` but end a little above the exact objective (3.3487 and 3.3534 against 3.3431): when the optimum is on a curved boundary, their polls land just inside it. If you need more digits, give the problem more budget, use `PatternSearch`, or enable `MadsAdvanced`'s search step (Chapter 4).
+
+## Program 5: No feasible point
+
+If the constraints contradict each other, no method can succeed; the question is whether it says so.
+
+@@example Numerical/optimization/guide/dfo/323_infeasible.cpp@@
+
+With a roomy budget the run ends in `InfeasibleStationary`: it reached a point where no poll reduces the violation. The returned point is the least-violating one found (here `x0 = 1.5`, halfway between the two contradictory requirements, violating each by 0.5). With the default budget the run is cut off earlier, with a budget status, but the violation reported is the same. Whatever the status, **always check `diagnostics.max_constraint_violation` when you pass constraints**; a status of `Converged` together with a violation of 0 is what a good answer looks like.
+
+## Decisions and pitfalls
+
+- **Mesh methods end a little above the exact objective on a curved boundary.** Their polls land just inside it; give the problem more evaluations or polish with pattern search if you need more digits.
+- **A returned point after an infeasible solve is the least-violating one, not a solution.** Always read the status and the violation before using it.
+- **An infeasible verdict needs budget.** With the default budget a hopeless problem may end on a budget status; raise it if you suspect infeasibility and want a clear answer.
+- **Mesh methods reject equalities.** They fail with an error rather than ignore them; use pattern search for equalities.
+
+Where next: [Chapter 4](../dfo_04_black_boxes.md) covers black-box functions that fail, cost a lot or return several objectives.

@@ -16,11 +16,7 @@ using pluss::subsp::math::optim::ConstrainedProblem;
 using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64).to(pluss::pCPU);
@@ -33,12 +29,12 @@ TEST_CASE("interior-point tracks primal-dual complementarity on a constrained pr
   const Series target = make_vec2(1.0, 2.0);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -56,7 +52,7 @@ TEST_CASE("interior-point tracks primal-dual complementarity on a constrained pr
   options.internal_protocol.optimality_tolerance = 1e-6;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
   REQUIRE(result.output.complementarity >= 0.0);

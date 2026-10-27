@@ -25,7 +25,7 @@ TEST_CASE("index_put_ accumulate supports complex64", "[indexing][accumulate][co
   const std::array<Series, 1> indices{{idx}};
   x.index_put_(pluss::msharp::RangeView::Of<Series>(indices), v, true);
   REQUIRE(x.numel() == 3);
-  const auto got = x.to_vec<c64>();
+  const auto got = x.host<c64>();
   REQUIRE(got[0] == c64(0, 0));
   REQUIRE(got[1] == c64(4, 6));
   REQUIRE(got[2] == c64(0, 0));
@@ -41,7 +41,7 @@ TEST_CASE("index_put_ accumulate supports complex128", "[indexing][accumulate][c
   const std::array<Series, 1> indices{{idx}};
   x.index_put_(pluss::msharp::RangeView::Of<Series>(indices), v, true);
   REQUIRE(x.numel() == 3);
-  const auto got = x.to_vec<c128>();
+  const auto got = x.host<c128>();
   REQUIRE(got[0] == c128(0, 0));
   REQUIRE(got[1] == c128(0, 0));
   REQUIRE(got[2] == c128(4.75, 2.5));

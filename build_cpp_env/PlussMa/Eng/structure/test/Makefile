@@ -234,6 +234,62 @@ eng_structure_spectral_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_spectral_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_spectral_test.dir/build
 .PHONY : eng_structure_spectral_test/fast
 
+# Convenience name for target.
+PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/rule
+.PHONY : PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/rule
+
+# Convenience name for target.
+eng_structure_motion_test: PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/rule
+.PHONY : eng_structure_motion_test
+
+# fast build rule for target.
+eng_structure_motion_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/build
+.PHONY : eng_structure_motion_test/fast
+
+# Convenience name for target.
+PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/rule
+.PHONY : PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/rule
+
+# Convenience name for target.
+eng_structure_harmonic_test: PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/rule
+.PHONY : eng_structure_harmonic_test
+
+# fast build rule for target.
+eng_structure_harmonic_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/build
+.PHONY : eng_structure_harmonic_test/fast
+
+# Convenience name for target.
+PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/rule
+.PHONY : PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/rule
+
+# Convenience name for target.
+eng_structure_nonlinear_test: PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/rule
+.PHONY : eng_structure_nonlinear_test
+
+# fast build rule for target.
+eng_structure_nonlinear_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/build
+.PHONY : eng_structure_nonlinear_test/fast
+
+# Convenience name for target.
+PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/rule
+.PHONY : PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/rule
+
+# Convenience name for target.
+eng_structure_nonlinear_motion_test: PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/rule
+.PHONY : eng_structure_nonlinear_motion_test
+
+# fast build rule for target.
+eng_structure_nonlinear_motion_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/build
+.PHONY : eng_structure_nonlinear_motion_test/fast
+
 frame_test.o: frame_test.cpp.o
 .PHONY : frame_test.o
 
@@ -257,6 +313,102 @@ frame_test.s: frame_test.cpp.s
 frame_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_frame_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_frame_test.dir/frame_test.cpp.s
 .PHONY : frame_test.cpp.s
+
+harmonic_test.o: harmonic_test.cpp.o
+.PHONY : harmonic_test.o
+
+# target to build an object file
+harmonic_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/harmonic_test.cpp.o
+.PHONY : harmonic_test.cpp.o
+
+harmonic_test.i: harmonic_test.cpp.i
+.PHONY : harmonic_test.i
+
+# target to preprocess a source file
+harmonic_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/harmonic_test.cpp.i
+.PHONY : harmonic_test.cpp.i
+
+harmonic_test.s: harmonic_test.cpp.s
+.PHONY : harmonic_test.s
+
+# target to generate assembly for a file
+harmonic_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_harmonic_test.dir/harmonic_test.cpp.s
+.PHONY : harmonic_test.cpp.s
+
+motion_test.o: motion_test.cpp.o
+.PHONY : motion_test.o
+
+# target to build an object file
+motion_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/motion_test.cpp.o
+.PHONY : motion_test.cpp.o
+
+motion_test.i: motion_test.cpp.i
+.PHONY : motion_test.i
+
+# target to preprocess a source file
+motion_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/motion_test.cpp.i
+.PHONY : motion_test.cpp.i
+
+motion_test.s: motion_test.cpp.s
+.PHONY : motion_test.s
+
+# target to generate assembly for a file
+motion_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_motion_test.dir/motion_test.cpp.s
+.PHONY : motion_test.cpp.s
+
+nonlinear_motion_test.o: nonlinear_motion_test.cpp.o
+.PHONY : nonlinear_motion_test.o
+
+# target to build an object file
+nonlinear_motion_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/nonlinear_motion_test.cpp.o
+.PHONY : nonlinear_motion_test.cpp.o
+
+nonlinear_motion_test.i: nonlinear_motion_test.cpp.i
+.PHONY : nonlinear_motion_test.i
+
+# target to preprocess a source file
+nonlinear_motion_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/nonlinear_motion_test.cpp.i
+.PHONY : nonlinear_motion_test.cpp.i
+
+nonlinear_motion_test.s: nonlinear_motion_test.cpp.s
+.PHONY : nonlinear_motion_test.s
+
+# target to generate assembly for a file
+nonlinear_motion_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_motion_test.dir/nonlinear_motion_test.cpp.s
+.PHONY : nonlinear_motion_test.cpp.s
+
+nonlinear_test.o: nonlinear_test.cpp.o
+.PHONY : nonlinear_test.o
+
+# target to build an object file
+nonlinear_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/nonlinear_test.cpp.o
+.PHONY : nonlinear_test.cpp.o
+
+nonlinear_test.i: nonlinear_test.cpp.i
+.PHONY : nonlinear_test.i
+
+# target to preprocess a source file
+nonlinear_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/nonlinear_test.cpp.i
+.PHONY : nonlinear_test.cpp.i
+
+nonlinear_test.s: nonlinear_test.cpp.s
+.PHONY : nonlinear_test.s
+
+# target to generate assembly for a file
+nonlinear_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/build.make PlussMa/Eng/structure/test/CMakeFiles/eng_structure_nonlinear_test.dir/nonlinear_test.cpp.s
+.PHONY : nonlinear_test.cpp.s
 
 spectral_test.o: spectral_test.cpp.o
 .PHONY : spectral_test.o
@@ -322,11 +474,27 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... eng_structure_frame_test"
+	@echo "... eng_structure_harmonic_test"
+	@echo "... eng_structure_motion_test"
+	@echo "... eng_structure_nonlinear_motion_test"
+	@echo "... eng_structure_nonlinear_test"
 	@echo "... eng_structure_spectral_test"
 	@echo "... eng_structure_test"
 	@echo "... frame_test.o"
 	@echo "... frame_test.i"
 	@echo "... frame_test.s"
+	@echo "... harmonic_test.o"
+	@echo "... harmonic_test.i"
+	@echo "... harmonic_test.s"
+	@echo "... motion_test.o"
+	@echo "... motion_test.i"
+	@echo "... motion_test.s"
+	@echo "... nonlinear_motion_test.o"
+	@echo "... nonlinear_motion_test.i"
+	@echo "... nonlinear_motion_test.s"
+	@echo "... nonlinear_test.o"
+	@echo "... nonlinear_test.i"
+	@echo "... nonlinear_test.s"
 	@echo "... spectral_test.o"
 	@echo "... spectral_test.i"
 	@echo "... spectral_test.s"

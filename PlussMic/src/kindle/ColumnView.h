@@ -3,7 +3,7 @@
 // Read-only access to a Series' values as a contiguous array of T, without a
 // copy when the data already is one (CPU, contiguous, the wanted dtype) and with
 // one conversion/copy otherwise. Hot loops (reductions, join key encoding) use
-// this instead of Series::to_vec so large columns are not duplicated.
+// this instead of owning Series::host exports so large columns are not duplicated.
 //
 // The view keeps the Series alive; the pointer is valid for the view's lifetime.
 // Do not edit the Series in place while a view of it is being read.
@@ -30,7 +30,7 @@ public:
       n_ = static_cast<std::size_t>(series.numel());
       return;
     }
-    owned_ = series.to(want).template to_vec<T>();
+    owned_ = series.to(want).template host<T>();
     ptr_ = owned_.data();
     n_ = owned_.size();
   }

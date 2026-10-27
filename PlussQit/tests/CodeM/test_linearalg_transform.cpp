@@ -11,7 +11,7 @@
 namespace {
 
 void require_close(const pluss::Series& actual, const std::vector<double>& expected, double margin = 1e-9) {
-  const auto values = actual.to_vec<double>();
+  const auto values = actual.host<double>();
   REQUIRE(values.size() == expected.size());
   for (std::size_t i = 0; i < values.size(); ++i) {
     REQUIRE(values[i] == Catch::Approx(expected[i]).margin(margin));

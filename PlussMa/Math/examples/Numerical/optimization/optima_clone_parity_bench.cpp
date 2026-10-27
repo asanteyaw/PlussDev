@@ -20,7 +20,6 @@ using pluss::subsp::math::optim::OptimaExitFlag;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::OptimaProblemScaling;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::optima_stall_category_name;
 using pluss::subsp::math::optimization::DifferentialEvolutionPrmmConfig;
@@ -71,13 +70,6 @@ Series scalar(double v, const pluss::Config& cfg) {
 
 pluss::Config scalar_config_like(const Series& x) {
   return pluss::Config{}.with_dtype(x.scalar_type()).with_platform(x.platform());
-}
-
-double as_f64(const Series& x) {
-  if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error("expected scalar Series");
-  }
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
 }
 
 Series logit_series(const Series& p) {
@@ -190,30 +182,6 @@ const char* to_string(OptimaExitFlag flag) {
       return "NoProgress";
     case OptimaExitFlag::ConstraintStationary:
       return "ConstraintStationary";
-  }
-  return "Unknown";
-}
-
-const char* to_string(SolverStatus status) {
-  switch (status) {
-    case SolverStatus::Converged:
-      return "Converged";
-    case SolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case SolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
-  }
-  return "Unknown";
-}
-
-const char* to_string(PopulationSolverStatus status) {
-  switch (status) {
-    case PopulationSolverStatus::Converged:
-      return "Converged";
-    case PopulationSolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case PopulationSolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
   }
   return "Unknown";
 }
@@ -414,27 +382,27 @@ int main() {
     const Series x0 = encode_guess(omega_guess, alpha_guess, beta_guess);
 
     ConstrainedProblem problem;
-    problem.objective.autodiff = [returns, cfg](const ParameterPack<Trace>& p) -> Trace {
+    problem.objective.autodiff = [returns, cfg](const ParameterPack<Series>& p) -> Series {
       using namespace pluss::subsp::math::optim;
 
-      const Trace omega = exp(p.at("log_omega"));
-      const Trace s1 = sigmoid(p.at("logit_alpha"));
-      const Trace s2 = sigmoid(p.at("logit_beta"));
-      const Trace alpha = 0.999 * s1;
-      const Trace beta = 0.999 * (1.0 - s1) * s2;
+      const Series omega = p.at("log_omega").exp();
+      const Series s1 = p.at("logit_alpha").sigmoid();
+      const Series s2 = p.at("logit_beta").sigmoid();
+      const Series alpha = 0.999 * s1;
+      const Series beta = 0.999 * (1.0 - s1) * s2;
 
-      Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-      Trace nll = trace(scalar(0.0, cfg), false);
+      Series variance = omega / (1.0 - alpha - beta).clamp(1e-8, 1e8);
+      Series nll = scalar(0.0, cfg);
 
       for (std::int64_t t = 0; t < returns.numel(); ++t) {
         if (t > 0) {
-          const Trace prev = trace(returns.select(0, t - 1), false);
+          const Series prev = returns.select(0, t - 1);
           variance = omega + alpha * prev * prev + beta * variance;
         }
 
-        const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-        const Trace r = trace(returns.select(0, t), false);
-        nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+        const Series var_clamped = variance.clamp(1e-12, 1e12);
+        const Series r = returns.select(0, t);
+        nll = nll + 0.5 * (var_clamped.log() + (r * r) / var_clamped);
       }
       return nll;
     };

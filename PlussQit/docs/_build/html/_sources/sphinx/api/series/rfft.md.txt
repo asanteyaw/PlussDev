@@ -122,7 +122,7 @@ auto amplitude = pluss::make_series(samples).rfft().abs().mul(2.0 / n);
 std::cout << std::fixed << std::setprecision(4);
 std::cout << "bin 2: " << amplitude.select(0, 2).item<double>() << "\n";
 std::cout << "bin 5: " << amplitude.select(0, 5).item<double>() << "\n";
-std::vector<double> rest = amplitude.to_vec<double>();
+std::vector<double> rest = amplitude.host<double>();
 rest[2] = rest[5] = 0.0;
 std::cout << "every other bin is below 1e-14: "
           << std::boolalpha << (*std::max_element(rest.begin(), rest.end()) < 1e-14) << "\n";

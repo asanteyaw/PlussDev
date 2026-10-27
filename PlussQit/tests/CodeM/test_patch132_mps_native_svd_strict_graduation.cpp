@@ -60,17 +60,18 @@ pluss::Series make_full_rank_matrix_(
 
 pluss::Series svd_reconstruct_(const pluss::Series& u, const pluss::Series& s, const pluss::Series& vh) {
   auto us = u.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous();
-  const auto ss = s.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().to_vec<float>();
+  const auto ss = s.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().host<float>();
   const auto us_sizes = us.sizes();
   const auto m = us_sizes[0];
   const auto k = us_sizes[1];
-  auto uv = us.to_vec<float>();
+  auto uv = us.host<float>();
   for (std::int64_t i = 0; i < m; ++i) {
     for (std::int64_t j = 0; j < k; ++j) {
       uv[static_cast<std::size_t>(i * k + j)] *= ss[static_cast<std::size_t>(j)];
     }
   }
-  const auto us_scaled = pluss::make_series(uv, {m, k}).to(pluss::pCPU).to(pluss::ScalarType::Float32);
+  const auto us_scaled =
+      pluss::make_series(uv.array().data, {m, k}).to(pluss::pCPU).to(pluss::ScalarType::Float32);
   return us_scaled.matmul(vh.to(pluss::pCPU).to(pluss::ScalarType::Float32));
 }
 
@@ -147,7 +148,7 @@ TEST_CASE("MPS native reduced SVD strict route stress/repeat is crash-free", "[m
     const auto recon = svd_reconstruct_(u, s, vh).to(pluss::ScalarType::Float32);
     REQUIRE(max_abs_diff_(recon, a_cpu.to(pluss::ScalarType::Float32)) < 8e-2f);
 
-    const auto s_vec = s.to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>();
+    const auto s_vec = s.to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>();
     for (const auto sv : s_vec) {
       REQUIRE(sv >= -1e-6f);
     }

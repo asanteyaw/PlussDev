@@ -26,11 +26,11 @@ int main() {
     o.degree = degree;
     const auto fit = reg::poly_fit(vec(ys), column(xs), o);
     std::cout << "degree " << degree << ": coefficients";
-    for (double c : fit.ols.coefficients.to_vec<double>()) std::cout << " " << std::round(c * 1e6) / 1e6 + 0.0;
+    for (double c : fit.ols.coefficients.host<double>()) std::cout << " " << std::round(c * 1e6) / 1e6 + 0.0;
     std::cout << "   R-squared " << fit.ols.rsquared << "\n";
   }
   std::cout << "poly_expand of x = 2 at degree 3: ";
-  for (double v : reg::poly_expand(column({2.0}), 3).to_vec<double>()) std::cout << v << " ";
+  for (double v : reg::poly_expand(column({2.0}), 3).host<double>()) std::cout << v << " ";
   std::cout << "\n";
 
   // y = 1 + x1 + 2 x2 + 0.5 x1 x2 on a grid
@@ -44,6 +44,6 @@ int main() {
   std::cout << "two predictors with cross term, degree 2:";
   for (const auto& name : fit.ols.coefficient_names) std::cout << " " << name;
   std::cout << "\n  coefficients:";
-  for (double c : fit.ols.coefficients.to_vec<double>()) std::cout << " " << std::setprecision(4) << c;
+  for (double c : fit.ols.coefficients.host<double>()) std::cout << " " << std::setprecision(4) << c;
   std::cout << "\n";
 }

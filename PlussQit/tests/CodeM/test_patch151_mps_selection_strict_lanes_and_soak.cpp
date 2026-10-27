@@ -78,17 +78,17 @@ TEST_CASE("MPS strict native selection supports non-last dim lane", "[mps][parit
   const auto x_mps = x_cpu.to(pluss::pMPS);
 
   require_close_(
-      x_mps.sort(/*dim=*/0, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.sort(/*dim=*/0, /*descending=*/false, /*stable=*/false).to_vec<float>());
+      x_mps.sort(/*dim=*/0, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).host<float>().array().data,
+      x_cpu.sort(/*dim=*/0, /*descending=*/false, /*stable=*/false).host<float>().array().data);
   require_equal_(
-      x_mps.argsort(/*dim=*/0, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-      x_cpu.argsort(/*dim=*/0, /*descending=*/true, /*stable=*/false).to_vec<std::int64_t>());
+      x_mps.argsort(/*dim=*/0, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).host<std::int64_t>().array().data,
+      x_cpu.argsort(/*dim=*/0, /*descending=*/true, /*stable=*/false).host<std::int64_t>().array().data);
   require_close_(
-      x_mps.topk(/*k=*/2, /*dim=*/0, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.topk(/*k=*/2, /*dim=*/0, /*largest=*/true, /*sorted=*/true).to_vec<float>());
+      x_mps.topk(/*k=*/2, /*dim=*/0, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).host<float>().array().data,
+      x_cpu.topk(/*k=*/2, /*dim=*/0, /*largest=*/true, /*sorted=*/true).host<float>().array().data);
   require_close_(
-      x_mps.kthvalue(/*k=*/2, /*dim=*/0, /*keepdim=*/true).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.kthvalue(/*k=*/2, /*dim=*/0, /*keepdim=*/true).to_vec<float>());
+      x_mps.kthvalue(/*k=*/2, /*dim=*/0, /*keepdim=*/true).to(pluss::pCPU).host<float>().array().data,
+      x_cpu.kthvalue(/*k=*/2, /*dim=*/0, /*keepdim=*/true).host<float>().array().data);
 }
 
 TEST_CASE("MPS strict native selection rejects cast-assisted dtype lanes", "[mps][parity][torch][strict][selection][policy]") {
@@ -140,19 +140,19 @@ TEST_CASE("MPS strict native selection soak stays parity-stable", "[mps][parity]
     const bool keepdim = ((rep % 5) == 0);
 
     require_close_(
-        x_mps.sort(dim, descending, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.sort(dim, descending, /*stable=*/false).to_vec<float>(),
+        x_mps.sort(dim, descending, /*stable=*/false).to(pluss::pCPU).host<float>().array().data,
+        x_cpu.sort(dim, descending, /*stable=*/false).host<float>().array().data,
         2e-4f);
     require_equal_(
-        x_mps.argsort(dim, descending, /*stable=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-        x_cpu.argsort(dim, descending, /*stable=*/false).to_vec<std::int64_t>());
+        x_mps.argsort(dim, descending, /*stable=*/false).to(pluss::pCPU).host<std::int64_t>().array().data,
+        x_cpu.argsort(dim, descending, /*stable=*/false).host<std::int64_t>().array().data);
     require_close_(
-        x_mps.topk(k, dim, largest, /*sorted=*/true).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.topk(k, dim, largest, /*sorted=*/true).to_vec<float>(),
+        x_mps.topk(k, dim, largest, /*sorted=*/true).to(pluss::pCPU).host<float>().array().data,
+        x_cpu.topk(k, dim, largest, /*sorted=*/true).host<float>().array().data,
         2e-4f);
     require_close_(
-        x_mps.kthvalue(k, dim, keepdim).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.kthvalue(k, dim, keepdim).to_vec<float>(),
+        x_mps.kthvalue(k, dim, keepdim).to(pluss::pCPU).host<float>().array().data,
+        x_cpu.kthvalue(k, dim, keepdim).host<float>().array().data,
         2e-4f);
   }
 }

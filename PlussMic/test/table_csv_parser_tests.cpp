@@ -142,7 +142,7 @@ void test_comma_fixture_load_and_cases() {
   const auto agency_project = df.features("Agency Project ID");
   expect(pluss::table::detail::has_validity_mask(agency_project), "comma fixture: Agency Project ID should carry null mask");
 
-  const auto idx = df.labels().values().as_series().to_vec<std::int64_t>();
+  const auto idx = df.labels().values().as_series().host<std::int64_t>();
   expect(!idx.empty(), "comma fixture: cases unexpectedly empty");
   expect(idx.front() == 0, "comma fixture: cases must start at 0");
   expect(idx.back() == 63, "comma fixture: cases last value mismatch");
@@ -171,7 +171,7 @@ void test_utf8_bom_is_removed_from_first_header() {
     const auto df = DataFrame::load_csv(path.string(), options);
     expect(df.get("OrgDefinedId").has_value(),
            "UTF-8 BOM must not become part of the first CSV header");
-    expect(df.features("OrgDefinedId").as_series().item<std::int64_t>() == 30277231,
+    expect(df.features("OrgDefinedId").as_series().host<std::int64_t>().front() == 30277231,
            "BOM-normalized first column should retain its value");
   }
 }
@@ -184,7 +184,7 @@ void test_auto_initializer_list_assignment_and_row_sum() {
   auto names = {"a", "b"};
 
   df.set(names) = df.features(names).fillnull(0.0);
-  const auto totals = df.features(names).sum(Axis::Feature).as_series().to_vec<double>();
+  const auto totals = df.features(names).sum(Axis::Feature).as_series().host<double>();
 
   expect(totals == std::vector<double>({11.0, 22.0}),
          "auto initializer-list selection should support assignment and row-wise sum");
@@ -217,55 +217,55 @@ void test_dataframe_axis_reductions() {
     }
   };
 
-  expect_close(df.sum(Axis::Case).as_series().to_vec<double>(), {7.0, 100.0, 20.0},
+  expect_close(df.sum(Axis::Case).as_series().host<double>(), {7.0, 100.0, 20.0},
                "DataFrame::sum(axis=0) values mismatch");
-  expect_close(df.sum(Axis::Feature).as_series().to_vec<double>(), {13.0, 26.0, 36.0, 52.0},
+  expect_close(df.sum(Axis::Feature).as_series().host<double>(), {13.0, 26.0, 36.0, 52.0},
                "DataFrame::sum(axis=1) values mismatch");
-  expect_close(df.min(Axis::Case).as_series().to_vec<double>(), {1.0, 10.0, 2.0},
+  expect_close(df.min(Axis::Case).as_series().host<double>(), {1.0, 10.0, 2.0},
                "DataFrame::min(axis=0) values mismatch");
-  expect_close(df.min(Axis::Feature).as_series().to_vec<double>(), {1.0, 2.0, 6.0, 4.0},
+  expect_close(df.min(Axis::Feature).as_series().host<double>(), {1.0, 2.0, 6.0, 4.0},
                "DataFrame::min(axis=1) values mismatch");
-  expect_close(df.max(Axis::Case).as_series().to_vec<double>(), {4.0, 40.0, 8.0},
+  expect_close(df.max(Axis::Case).as_series().host<double>(), {4.0, 40.0, 8.0},
                "DataFrame::max(axis=0) values mismatch");
-  expect_close(df.max(Axis::Feature).as_series().to_vec<double>(), {10.0, 20.0, 30.0, 40.0},
+  expect_close(df.max(Axis::Feature).as_series().host<double>(), {10.0, 20.0, 30.0, 40.0},
                "DataFrame::max(axis=1) values mismatch");
-  expect_close(df.mean(Axis::Case).as_series().to_vec<double>(), {7.0 / 3.0, 25.0, 5.0},
+  expect_close(df.mean(Axis::Case).as_series().host<double>(), {7.0 / 3.0, 25.0, 5.0},
                "DataFrame::mean(axis=0) values mismatch");
-  expect_close(df.mean(Axis::Feature).as_series().to_vec<double>(), {13.0 / 3.0, 26.0 / 3.0, 18.0, 52.0 / 3.0},
+  expect_close(df.mean(Axis::Feature).as_series().host<double>(), {13.0 / 3.0, 26.0 / 3.0, 18.0, 52.0 / 3.0},
                "DataFrame::mean(axis=1) values mismatch");
-  expect_close(df.median(Axis::Case).as_series().to_vec<double>(), {2.0, 25.0, 5.0},
+  expect_close(df.median(Axis::Case).as_series().host<double>(), {2.0, 25.0, 5.0},
                "DataFrame::median(axis=0) values mismatch");
-  expect_close(df.median(Axis::Feature).as_series().to_vec<double>(), {2.0, 4.0, 18.0, 8.0},
+  expect_close(df.median(Axis::Feature).as_series().host<double>(), {2.0, 4.0, 18.0, 8.0},
                "DataFrame::median(axis=1) values mismatch");
-  expect_close(df.prod(Axis::Case).as_series().to_vec<double>(), {8.0, 240000.0, 384.0},
+  expect_close(df.prod(Axis::Case).as_series().host<double>(), {8.0, 240000.0, 384.0},
                "DataFrame::prod(axis=0) values mismatch");
-  expect_close(df.prod(Axis::Feature).as_series().to_vec<double>(), {20.0, 160.0, 180.0, 1280.0},
+  expect_close(df.prod(Axis::Feature).as_series().host<double>(), {20.0, 160.0, 180.0, 1280.0},
                "DataFrame::prod(axis=1) values mismatch");
-  expect_close(df.var(Axis::Case).as_series().to_vec<double>(), {7.0 / 3.0, 500.0 / 3.0, 20.0 / 3.0},
+  expect_close(df.var(Axis::Case).as_series().host<double>(), {7.0 / 3.0, 500.0 / 3.0, 20.0 / 3.0},
                "DataFrame::var(axis=0) sample variance mismatch");
-  expect_close(df.var(Axis::Feature).as_series().to_vec<double>(), {73.0 / 3.0, 292.0 / 3.0, 288.0, 1168.0 / 3.0},
+  expect_close(df.var(Axis::Feature).as_series().host<double>(), {73.0 / 3.0, 292.0 / 3.0, 288.0, 1168.0 / 3.0},
                "DataFrame::var(axis=1) sample variance mismatch");
-  expect_close(df.std(Axis::Case).as_series().to_vec<double>(),
+  expect_close(df.std(Axis::Case).as_series().host<double>(),
                {std::sqrt(7.0 / 3.0), std::sqrt(500.0 / 3.0), std::sqrt(20.0 / 3.0)},
                "DataFrame::std(axis=0) sample standard deviation mismatch");
-  expect_close(df.std(Axis::Feature).as_series().to_vec<double>(),
+  expect_close(df.std(Axis::Feature).as_series().host<double>(),
                {std::sqrt(73.0 / 3.0), std::sqrt(292.0 / 3.0), std::sqrt(288.0),
                 std::sqrt(1168.0 / 3.0)},
                "DataFrame::std(axis=1) sample standard deviation mismatch");
 
-  expect(df.count(Axis::Case).as_series().to_vec<std::int64_t>()
+  expect(df.count(Axis::Case).as_series().host<std::int64_t>()
              == std::vector<std::int64_t>({3, 4, 4, 3}),
          "DataFrame::count(axis=0) should include numeric and nonnumeric features");
-  expect(df.count(Axis::Feature).as_series().to_vec<std::int64_t>()
+  expect(df.count(Axis::Feature).as_series().host<std::int64_t>()
              == std::vector<std::int64_t>({4, 3, 3, 4}),
          "DataFrame::count(axis=1) should count non-missing values across all features");
 
   const auto sum_strict_columns = df.sum(Axis::Case, false);
-  expect(pluss::table::detail::validity_mask(sum_strict_columns)->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(sum_strict_columns)->host<bool>()
              == std::vector<bool>({false, true, true}),
          "DataFrame::sum(axis=0, skipnull=false) should invalidate nullable reductions");
   const auto sum_strict_rows = df.sum(Axis::Feature, false);
-  expect(pluss::table::detail::validity_mask(sum_strict_rows)->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(sum_strict_rows)->host<bool>()
              == std::vector<bool>({true, true, false, true}),
          "DataFrame::sum(axis=1, skipnull=false) should invalidate rows containing numeric nulls");
 
@@ -298,13 +298,13 @@ void test_dataframe_axis_reductions() {
       {{"x", Slate(pluss::make_series({9.0, 9.0}),
                     pluss::make_series(std::vector<bool>{false, false}))}},
       Slate(pluss::make_note({"left", "right"})));
-  expect(all_missing.sum(Axis::Case).as_series().to_vec<double>() == std::vector<double>({0.0}),
+  expect(all_missing.sum(Axis::Case).as_series().host<double>() == std::vector<double>({0.0}),
          "sum of an all-missing feature should use the additive identity");
-  expect(all_missing.prod(Axis::Case).as_series().to_vec<double>() == std::vector<double>({1.0}),
+  expect(all_missing.prod(Axis::Case).as_series().host<double>() == std::vector<double>({1.0}),
          "product of an all-missing feature should use the multiplicative identity");
-  expect(!pluss::table::detail::validity_mask(all_missing.min(Axis::Case))->to_vec<bool>(0),
+  expect(!pluss::table::detail::validity_mask(all_missing.min(Axis::Case))->host<bool>().array().data.at(static_cast<std::size_t>(0)),
          "minimum of an all-missing feature should be missing");
-  expect(!pluss::table::detail::validity_mask(all_missing.csmin())->to_vec<bool>(0),
+  expect(!pluss::table::detail::validity_mask(all_missing.csmin())->host<bool>().array().data.at(static_cast<std::size_t>(0)),
          "idxmin of an all-missing feature should be missing");
 
   const auto bools = DataFrame(
@@ -314,18 +314,18 @@ void test_dataframe_axis_reductions() {
                        pluss::make_series(std::vector<bool>{true, false, true}))},
       },
       Slate(pluss::make_note({"u", "v", "w"})));
-  expect(bools.any().as_series().to_vec<bool>() == std::vector<bool>({true, true}),
+  expect(bools.any().as_series().host<bool>() == std::vector<bool>({true, true}),
          "DataFrame::any() should default to axis=0");
-  expect(bools.all().as_series().to_vec<bool>() == std::vector<bool>({false, true}),
+  expect(bools.all().as_series().host<bool>() == std::vector<bool>({false, true}),
          "DataFrame::all() should default to axis=0 and skip missing values");
-  expect(bools.any(Axis::Feature).as_series().to_vec<bool>() == std::vector<bool>({true, false, true}),
+  expect(bools.any(Axis::Feature).as_series().host<bool>() == std::vector<bool>({true, false, true}),
          "DataFrame::any(axis=1) values mismatch");
-  expect(bools.all(Axis::Feature).as_series().to_vec<bool>() == std::vector<bool>({true, false, true}),
+  expect(bools.all(Axis::Feature).as_series().host<bool>() == std::vector<bool>({true, false, true}),
          "DataFrame::all(axis=1) values mismatch");
-  expect(pluss::table::detail::validity_mask(bools.any(Axis::Case, false))->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(bools.any(Axis::Case, false))->host<bool>()
              == std::vector<bool>({true, false}),
          "DataFrame::any(axis=0, skipnull=false) should propagate missing validity");
-  expect(pluss::table::detail::validity_mask(bools.all(Axis::Feature, false))->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(bools.all(Axis::Feature, false))->host<bool>()
              == std::vector<bool>({true, false, true}),
          "DataFrame::all(axis=1, skipnull=false) should propagate missing validity");
 
@@ -373,7 +373,7 @@ void test_axis_feature_assignment_alignment_and_shape() {
   expect(row_totals.size() == grades.ncases(),
          "DataFrame::sum(Axis::Feature) should reduce row-wise to case length");
   grades.set("Assignments") = row_totals;
-  expect(grades.features("Assignments").as_series().to_vec<double>()
+  expect(grades.features("Assignments").as_series().host<double>()
              == std::vector<double>({11.0, 22.0, 33.0, 44.0}),
          "row-wise assignment total should align to original cases");
 
@@ -389,16 +389,16 @@ void test_axis_feature_assignment_alignment_and_shape() {
   expect(scholarship_default_threw,
          "default assignment should reject partial labeled rhs");
   grades.set("scholarship", {.align = pluss::table::AlignBy::Caselbl}) = scholarships;
-  const auto awarded = grades.features("scholarship").as_series().to_vec<double>();
+  const auto awarded = grades.features("scholarship").as_series().host<double>();
   const auto awarded_valid =
-      pluss::table::detail::validity_mask(grades.features("scholarship"))->to_vec<bool>();
+      pluss::table::detail::validity_mask(grades.features("scholarship"))->host<bool>();
   expect(awarded_valid == std::vector<bool>({true, false, true, true}),
          "labeled partial assignment should mark unmatched cases null");
   expect(awarded[0] == 2500.0 && awarded[2] == 1500.0 && awarded[3] == 1000.0,
          "labeled partial assignment should align by case label, not position");
 
   grades.set("flat") = pluss::make_series(7.0);
-  expect(grades.features("flat").as_series().to_vec<double>()
+  expect(grades.features("flat").as_series().host<double>()
              == std::vector<double>({7.0, 7.0, 7.0, 7.0}),
          "0D Series assignment should broadcast over DataFrame cases");
   bool one_row_default_threw = false;
@@ -421,7 +421,7 @@ void test_axis_feature_assignment_alignment_and_shape() {
          "default assignment should reject feature-labeled reduction length mismatch");
   grades.set("wrong_axis", {.align = pluss::table::AlignBy::Caselbl}) = wrong_axis;
   const auto wrong_valid =
-      pluss::table::detail::validity_mask(grades.features("wrong_axis"))->to_vec<bool>();
+      pluss::table::detail::validity_mask(grades.features("wrong_axis"))->host<bool>();
   expect(wrong_axis.size() == 2,
          "DataFrame::sum(Axis::Case) should reduce column-wise to feature length");
   expect(wrong_valid == std::vector<bool>({false, false, false, false}),
@@ -485,8 +485,8 @@ void test_bad_line_policy_and_locale_numeric_parsing() {
 
   const auto amount = df.features("amount");
   expect(pluss::table::detail::has_validity_mask(amount), "amount should have null mask due missing value");
-  const auto amount_values = amount.as_series().to_vec<double>();
-  const auto amount_valid = pluss::table::detail::validity_mask(amount)->to_vec<bool>();
+  const auto amount_values = amount.as_series().host<double>();
+  const auto amount_valid = pluss::table::detail::validity_mask(amount)->host<bool>();
 
   expect(amount_valid.size() == 4, "amount mask length mismatch");
   expect(amount_valid[0] && amount_valid[1] && !amount_valid[2] && amount_valid[3], "amount validity mask values mismatch");
@@ -676,7 +676,7 @@ void test_describe_numeric_summary() {
   expect(labels.at(1) == "mean", "describe cases label[1] mismatch");
   expect(labels.at(7) == "max", "describe cases label[7] mismatch");
 
-  const auto age_values = df.features("age").as_series().to_vec<std::int64_t>();
+  const auto age_values = df.features("age").as_series().host<std::int64_t>();
   double sum_age = 0.0;
   std::int64_t min_age = age_values.front();
   std::int64_t max_age = age_values.front();
@@ -687,7 +687,7 @@ void test_describe_numeric_summary() {
   }
   const double mean_age = sum_age / static_cast<double>(age_values.size());
 
-  const auto age_stats = desc.features("age").as_series().to_vec<double>();
+  const auto age_stats = desc.features("age").as_series().host<double>();
   expect(std::fabs(age_stats[0] - static_cast<double>(age_values.size())) < 1e-9, "describe count mismatch");
   expect(std::fabs(age_stats[1] - mean_age) < 1e-9, "describe mean mismatch");
   expect(std::fabs(age_stats[3] - static_cast<double>(min_age)) < 1e-9, "describe min mismatch");
@@ -714,23 +714,23 @@ void test_view_windowing() {
 
   const auto v1 = df.view(5, 10, false);
   expect(v1.ncases() == 5, "view(5,10) should contain 5 rows");
-  const auto x1 = v1.features("x").as_series().to_vec<std::int64_t>();
+  const auto x1 = v1.features("x").as_series().host<std::int64_t>();
   expect(x1.front() == 5 && x1.back() == 9, "view(5,10) should show rows 5..9");
 
   const auto v2 = df.view(-5, -1, false);
   expect(v2.ncases() == 4, "view(-5,-1) should follow half-open slice semantics");
-  const auto x2 = v2.features("x").as_series().to_vec<std::int64_t>();
+  const auto x2 = v2.features("x").as_series().host<std::int64_t>();
   expect(x2.front() == 5 && x2.back() == 8, "view(-5,-1) should exclude the last row");
   expect(v2.equals(df.slice(-5, -1)), "view(-5,-1) should match slice(-5,-1)");
 
   const auto v3 = df.view(0, 3, false);
   expect(v3.ncases() == 3, "view(0,3) should behave like head(3)");
-  const auto x3 = v3.features("x").as_series().to_vec<std::int64_t>();
+  const auto x3 = v3.features("x").as_series().host<std::int64_t>();
   expect(x3.front() == 0 && x3.back() == 2, "view(0,3) mismatch");
 
   const auto v4 = df.view(3, -1, false);
   expect(v4.ncases() == 6, "view(3,-1) should follow half-open slice semantics");
-  const auto x4 = v4.features("x").as_series().to_vec<std::int64_t>();
+  const auto x4 = v4.features("x").as_series().host<std::int64_t>();
   expect(x4.front() == 3 && x4.back() == 8, "view(3,-1) mismatch");
   expect(v4.equals(df.slice(3, -1)), "view(3,-1) should match slice(3,-1)");
 }
@@ -753,7 +753,7 @@ void test_dataframe_cast_accessor_surface() {
              && temporal.features("closed_at").kind() == SlateKind::Timeline,
          "cast accessor timeline() should cast every bound feature to Timeline");
   expect(pluss::table::detail::has_validity_mask(temporal.features("opened_at"))
-             && !pluss::table::detail::validity_mask(temporal.features("opened_at"))->to_vec<bool>(1),
+             && !pluss::table::detail::validity_mask(temporal.features("opened_at"))->host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "cast accessor timeline() should honor invalid=Null on unparseable text");
 
   pluss::table::SlateCastOptions series_options;
@@ -762,7 +762,7 @@ void test_dataframe_cast_accessor_surface() {
   expect(amounts.nfeatures() == 1 && amounts.features("amount_text").kind() == SlateKind::Series,
          "features(...).cast(options).series() should cast the selected Note feature to Series");
   expect(pluss::table::detail::has_validity_mask(amounts.features("amount_text"))
-             && !pluss::table::detail::validity_mask(amounts.features("amount_text"))->to_vec<bool>(1),
+             && !pluss::table::detail::validity_mask(amounts.features("amount_text"))->host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "cast accessor series() should preserve parse-failure nulls from Note -> Series conversion");
 
   const auto note_back = amounts.cast().note();
@@ -778,22 +778,22 @@ void test_dataframe_equals_and_reflected_logicals() {
       {{"x", pluss::table::Slate(pluss::make_series(std::vector<double>{1.0 + 1e-7, 2.0 - 5e-7}))}},
       pluss::table::Slate(pluss::make_note({"r0", "r1"})));
 
-  expect(exact.eq(rounded).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, false}),
+  expect(exact.eq(rounded).features("x").as_series().host<bool>() == std::vector<bool>({false, false}),
          "eq should remain elementwise exact even for tiny floating differences");
-  expect((exact == rounded).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, false}),
+  expect((exact == rounded).features("x").as_series().host<bool>() == std::vector<bool>({false, false}),
          "operator==(DataFrame, DataFrame) should delegate to eq(frame)");
   expect(!exact.equals(rounded), "equals(frame) should remain strict whole-frame equality");
   expect(exact.equals(rounded, 1e-6, 1e-6),
          "equals(frame, atol, rtol) should tolerate tiny floating differences");
-  expect((exact < 1.5).features("x").as_series().to_vec<bool>() == std::vector<bool>({true, false}),
+  expect((exact < 1.5).features("x").as_series().host<bool>() == std::vector<bool>({true, false}),
          "operator<(DataFrame, scalar) should delegate to lt(scalar)");
-  expect((1.5 <= exact).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, true}),
+  expect((1.5 <= exact).features("x").as_series().host<bool>() == std::vector<bool>({false, true}),
          "reflected scalar/DataFrame compare should invert through the dataframe surface");
 
   const auto feature_threshold = pluss::table::Slate(pluss::make_series(std::vector<double>{1.5}));
-  expect((exact >= feature_threshold).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, true}),
+  expect((exact >= feature_threshold).features("x").as_series().host<bool>() == std::vector<bool>({false, true}),
          "operator>=(DataFrame, Slate) should delegate to ge(slate) on the default feature axis");
-  expect((feature_threshold < exact).features("x").as_series().to_vec<bool>() == std::vector<bool>({false, true}),
+  expect((feature_threshold < exact).features("x").as_series().host<bool>() == std::vector<bool>({false, true}),
          "reflected Slate/DataFrame compare should preserve the dataframe feature-axis contract");
 
   const auto dates_left = DataFrame(
@@ -821,9 +821,9 @@ void test_dataframe_equals_and_reflected_logicals() {
       },
       pluss::table::Slate(pluss::make_note({"r0", "r1"})));
   const auto temporal_cmp = dates_left == dates_right;
-  expect(temporal_cmp.features("Date").as_series().to_vec<bool>() == std::vector<bool>({true, false}),
+  expect(temporal_cmp.features("Date").as_series().host<bool>() == std::vector<bool>({true, false}),
          "operator==(DataFrame, DataFrame) should support Timeline feature comparisons");
-  expect(temporal_cmp.features("Date2").as_series().to_vec<bool>() == std::vector<bool>({true, false}),
+  expect(temporal_cmp.features("Date2").as_series().host<bool>() == std::vector<bool>({true, false}),
          "operator==(DataFrame, DataFrame) should compare each Timeline feature positionally");
 
   const auto left = DataFrame(
@@ -1307,16 +1307,16 @@ void test_dataframe_lvalue_name_range_surfaces() {
          "drop(vector<string>) should accept lvalue feature-name ranges");
 
   const std::vector<std::string> value_cols{"value"};
-  const auto null_mask = df.isnull(value_cols).features("value").as_series().to_vec<bool>();
+  const auto null_mask = df.isnull(value_cols).features("value").as_series().host<bool>();
   expect(null_mask == std::vector<bool>({false, true, false, false}),
          "isnull(vector<string>) should project selected features from an lvalue range");
 
   const auto filled = df.fillnull(9.0, value_cols);
-  expect(filled.features("value").as_series().to_vec<double>() == std::vector<double>({1.0, 9.0, 3.0, 4.0}),
+  expect(filled.features("value").as_series().host<double>() == std::vector<double>({1.0, 9.0, 3.0, 4.0}),
          "fillnull(vector<string>) should accept lvalue feature-name ranges");
 
   const auto replaced = df.replace(4.0, 7.0, value_cols);
-  expect(replaced.features("value").as_series().to_vec<double>() == std::vector<double>({1.0, 0.0, 3.0, 7.0}),
+  expect(replaced.features("value").as_series().host<double>() == std::vector<double>({1.0, 0.0, 3.0, 7.0}),
          "replace(vector<string>) should accept lvalue feature-name ranges");
 
   const auto dropped_null = df.dropnull(value_cols);
@@ -1330,7 +1330,7 @@ void test_dataframe_lvalue_name_range_surfaces() {
   });
   expect(grouped.ncases() == 2 && grouped.nfeatures() == 3,
          "group().by(vector<string>) should accept lvalue key ranges");
-  expect(grouped.features("sum_value").as_series().to_vec<double>() == std::vector<double>({1.0, 7.0}),
+  expect(grouped.features("sum_value").as_series().host<double>() == std::vector<double>({1.0, 7.0}),
          "group().by(vector<string>) should preserve grouped aggregation semantics");
 }
 
@@ -1474,12 +1474,12 @@ void test_parallel_engine_matches_serial_engine() {
   expect(df_serial.features() == df_parallel.features(),
          "serial engine: column names mismatch vs parallel");
 
-  const auto p_age = df_parallel.features("age").as_series().to_vec<std::int64_t>();
-  const auto s_age = df_serial.features("age").as_series().to_vec<std::int64_t>();
+  const auto p_age = df_parallel.features("age").as_series().host<std::int64_t>();
+  const auto s_age = df_serial.features("age").as_series().host<std::int64_t>();
   expect(s_age == p_age, "serial engine: age mismatch vs parallel");
 
-  const auto p_balance = df_parallel.features("balance").as_series().to_vec<std::int64_t>();
-  const auto s_balance = df_serial.features("balance").as_series().to_vec<std::int64_t>();
+  const auto p_balance = df_parallel.features("balance").as_series().host<std::int64_t>();
+  const auto s_balance = df_serial.features("balance").as_series().host<std::int64_t>();
   expect(s_balance == p_balance, "serial engine: balance mismatch vs parallel");
 
   const auto p_job = df_parallel.features("job").as_note();
@@ -1525,12 +1525,12 @@ void test_auto_engine_policy_switches_between_parallel_and_serial() {
   expect(df_auto_serial.features() == df_serial.features(),
          "auto(serial policy): column names mismatch");
 
-  const auto p_age = df_parallel.features("age").as_series().to_vec<std::int64_t>();
-  const auto ap_age = df_auto_parallel.features("age").as_series().to_vec<std::int64_t>();
+  const auto p_age = df_parallel.features("age").as_series().host<std::int64_t>();
+  const auto ap_age = df_auto_parallel.features("age").as_series().host<std::int64_t>();
   expect(ap_age == p_age, "auto(parallel policy): age mismatch");
 
-  const auto s_age = df_serial.features("age").as_series().to_vec<std::int64_t>();
-  const auto as_age = df_auto_serial.features("age").as_series().to_vec<std::int64_t>();
+  const auto s_age = df_serial.features("age").as_series().host<std::int64_t>();
+  const auto as_age = df_auto_serial.features("age").as_series().host<std::int64_t>();
   expect(as_age == s_age, "auto(serial policy): age mismatch");
 }
 
@@ -1547,7 +1547,7 @@ void test_dataframe_sql_accessor() {
   expect(filtered.get("age").has_value() && filtered.get("job").has_value(),
          "sql().execute: projection should keep requested features");
   expect(filtered.ncases() <= 5, "sql().execute: LIMIT should cap row count");
-  const auto ages = filtered.features("age").as_series().to_vec<std::int64_t>();
+  const auto ages = filtered.features("age").as_series().host<std::int64_t>();
   for (std::size_t i = 1; i < ages.size(); ++i) {
     expect(ages[i - 1] >= ages[i], "sql().execute: ORDER BY age DESC mismatch");
   }
@@ -1564,8 +1564,8 @@ void test_dataframe_sql_accessor() {
   expect(with_case.nfeatures() == 2 && with_case.get("case").has_value() && with_case.get("age").has_value(),
          "sql().execute: case projection should materialize as output feature");
   const auto sorted = df.arrange({DataFrame::ArrangeSpec{"age", true, true}});
-  const auto expected = sorted.slice(2, 6).features("age").as_series().to_vec<std::int64_t>();
-  const auto actual = with_case.features("age").as_series().to_vec<std::int64_t>();
+  const auto expected = sorted.slice(2, 6).features("age").as_series().host<std::int64_t>();
+  const auto actual = with_case.features("age").as_series().host<std::int64_t>();
   expect(expected == actual, "sql().execute: LIMIT/OFFSET should match native slice over sorted data");
 
   expect_throw([&]() { (void)df.sql().execute("DELETE FROM df"); },
@@ -1722,7 +1722,7 @@ void test_versatile_dataframe_families() {
   options.usefeats = {"age", "job", "balance", "duration"};
   const auto df = DataFrame::load_csv(fixture_path("bank-full.csv").string(), options);
 
-  const auto age = df.features("age").as_series().to_vec<std::int64_t>();
+  const auto age = df.features("age").as_series().host<std::int64_t>();
   auto mask = pluss::Series::zeros({static_cast<std::int64_t>(age.size())}, pluss::codem::ScalarType::Bool);
   auto* keep = reinterpret_cast<bool*>(mask.raw_data());
   std::int64_t expected_rows = 0;
@@ -1864,7 +1864,7 @@ void test_versatile_dataframe_families() {
          "sample(n) should return n sampled cases with same feature count");
 
   const auto sorted_age = df.arrange({"age"});
-  const auto sorted_age_values = sorted_age.features("age").as_series().to_vec<std::int64_t>();
+  const auto sorted_age_values = sorted_age.features("age").as_series().host<std::int64_t>();
   for (std::size_t i = 1; i < sorted_age_values.size(); ++i) {
     expect(sorted_age_values[i - 1] <= sorted_age_values[i],
            "arrange(feature) should sort ascending by default");
@@ -1875,8 +1875,8 @@ void test_versatile_dataframe_families() {
   const auto top_age = df.top("age", 3);
   const auto bot_age = df.bottom("age", 3);
   expect(top_age.ncases() == 3 && bot_age.ncases() == 3, "top/bottom should return requested row count");
-  const auto top_vals = top_age.features("age").as_series().to_vec<std::int64_t>();
-  const auto bot_vals = bot_age.features("age").as_series().to_vec<std::int64_t>();
+  const auto top_vals = top_age.features("age").as_series().host<std::int64_t>();
+  const auto bot_vals = bot_age.features("age").as_series().host<std::int64_t>();
   expect(top_vals.front() >= top_vals.back(), "top should sort descending by feature");
   expect(bot_vals.front() <= bot_vals.back(), "bottom should sort ascending by feature");
   const auto dup_mask = df.features({"job"}).repeated();
@@ -1920,8 +1920,8 @@ void test_versatile_dataframe_families() {
     }
   }
   expect(row_ca >= 0 && row_tx >= 0, "pivot should retain all case keys");
-  const auto c0 = pivoted.features(pivot_features[0]).as_series().to_vec<double>();
-  const auto c1 = pivoted.features(pivot_features[1]).as_series().to_vec<double>();
+  const auto c0 = pivoted.features(pivot_features[0]).as_series().host<double>();
+  const auto c1 = pivoted.features(pivot_features[1]).as_series().host<double>();
   const auto ca0 = c0[static_cast<std::size_t>(row_ca)];
   const auto ca1 = c1[static_cast<std::size_t>(row_ca)];
   const auto tx0 = c0[static_cast<std::size_t>(row_tx)];
@@ -1948,11 +1948,11 @@ void test_versatile_dataframe_families() {
   const auto pivot_dup_mean =
       pivot_dup.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Mean, true, false);
   expect(pivot_dup_mean.ncases() == 1 && pivot_dup_mean.nfeatures() == 1, "pivot_table should aggregate duplicate pairs");
-  const auto d = pivot_dup_mean.features(pivot_dup_mean.features().front()).as_series().to_vec<double>();
+  const auto d = pivot_dup_mean.features(pivot_dup_mean.features().front()).as_series().host<double>();
   expect(std::fabs(d[0] - 11.0) < 1e-9, "pivot_table(mean) should aggregate duplicates correctly");
   const auto pivot_dup_median =
       pivot_dup.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Median, true, false);
-  const auto dm = pivot_dup_median.features(pivot_dup_median.features().front()).as_series().to_vec<double>();
+  const auto dm = pivot_dup_median.features(pivot_dup_median.features().front()).as_series().host<double>();
   expect(std::fabs(dm[0] - 11.0) < 1e-9, "pivot_table(median) should aggregate duplicates correctly");
   const auto case_df = df.features({"job", "age"}).labels().set("job", true);
   expect(case_df.nfeatures() == 1 && case_df.features()[0] == "age",
@@ -2002,7 +2002,7 @@ void test_versatile_dataframe_families() {
              !pluss::table::detail::valid_at(aligned_labels.features("A"), 1) &&
              pluss::table::detail::valid_at(aligned_labels.features("A"), 2),
          "label().align should insert nulls for missing case labels");
-  const auto aligned_label_vals = aligned_labels.features("A").as_series().to_vec<double>();
+  const auto aligned_label_vals = aligned_labels.features("A").as_series().host<double>();
   expect(std::fabs(aligned_label_vals[0] - 20.0) < 1e-9 && std::fabs(aligned_label_vals[2] - 10.0) < 1e-9,
          "label().align should reorder matched case labels");
   const auto align_filled =
@@ -2015,7 +2015,7 @@ void test_versatile_dataframe_families() {
   expect(pluss::table::detail::valid_at(align_filled.features("C"), 0) &&
              pluss::table::detail::valid_at(align_filled.features("C"), 1),
          "align(fill) should fill entirely missing numeric features");
-  const auto filled_a = align_filled.features("A").as_series().to_vec<double>();
+  const auto filled_a = align_filled.features("A").as_series().host<double>();
   expect(std::fabs(filled_a[0] - 20.0) < 1e-9 && std::fabs(filled_a[1]) < 1e-9,
          "align(fill) should fill missing case-label rows for numeric features");
   const auto sleft = df.features({"job", "age"}).head(12, false);
@@ -2059,7 +2059,7 @@ void test_versatile_dataframe_families() {
          "unify(left) should preserve left row order");
   expect(pluss::table::detail::has_validity_mask(unified_left.features("Final Points Grade")),
          "unify(left) should mark unmatched right payload rows as invalid");
-  expect(pluss::table::detail::validity_mask(unified_left.features("Final Points Grade"))->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(unified_left.features("Final Points Grade"))->host<bool>()
              == std::vector<bool>({false, true, true}),
          "unify(left) should null-mark unmatched right payload rows");
   const DataFrame rel_left_unique({
@@ -2130,18 +2130,18 @@ void test_versatile_dataframe_families() {
   const auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(depth_series));
   expect(atlas.depth() == 2 && atlas.ncases() == 5, "Atlas should track depth and frame shape");
   expect(atlas.label().has(), "Atlas::label().has should report explicit depth labels");
-  expect(atlas.label().values().as_series().to_vec<std::int64_t>() ==
+  expect(atlas.label().values().as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}),
          "Atlas::label().values should expose typed depth labels");
   expect(atlas.label().find(pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{1, 9})))
-             .as_series().to_vec<std::int64_t>() ==
+             .as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, -1}),
          "Atlas::label().find should delegate to Slate label indexing");
   expect(atlas.label().unite(pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{1, 2})))
-             .as_series().to_vec<std::int64_t>() ==
+             .as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
          "Atlas::label().unite should preserve typed numeric depth labels");
-  expect(atlas.label().pos(static_cast<double>(1)).as_series().to_vec<std::int64_t>() ==
+  expect(atlas.label().pos(static_cast<double>(1)).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
          "Atlas::label().pos should return depth positions through Slate label indexing");
   const auto atlas_head = atlas.head(1);
@@ -2169,10 +2169,10 @@ void test_versatile_dataframe_families() {
   expect(atlas_aligned.dloc(0).ncases() == f1.ncases(), "Atlas align_depth should reorder by requested labels");
   const auto atlas_label_aligned = atlas.label().align(pluss::table::Slate(align_series));
   expect(atlas_label_aligned.dloc(0).ncases() == f1.ncases() &&
-             atlas_label_aligned.label().values().as_series().to_vec<std::int64_t>() ==
+             atlas_label_aligned.label().values().as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({1, 0}),
          "Atlas::label().align should reorder frames and carry requested depth labels");
-  expect(atlas.label().range().label().values().as_series().to_vec<std::int64_t>() ==
+  expect(atlas.label().range().label().values().as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}),
          "Atlas::label().range should materialize typed range depth labels");
   expect(!atlas.label().reset().label().has(),
@@ -2188,7 +2188,7 @@ void test_versatile_dataframe_families() {
   std::int64_t expected_in = 0;
   std::int64_t expected_not_in = 0;
   std::int64_t expected_feat_cmp = 0;
-  const auto duration = df.features("duration").as_series().to_vec<std::int64_t>();
+  const auto duration = df.features("duration").as_series().host<std::int64_t>();
   for (std::size_t i = 0; i < age.size(); ++i) {
     if (age[i] >= 45 && age[i] <= 50) {
       ++expected_between;
@@ -2233,7 +2233,7 @@ void test_versatile_dataframe_families() {
   const auto with_flag = df.assign({{
       "is_senior",
       [&](const DataFrame& frame) {
-        const auto ages = frame.features("age").as_series().to_vec<std::int64_t>();
+        const auto ages = frame.features("age").as_series().host<std::int64_t>();
         auto flag = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(flag.raw_data());
         for (std::size_t i = 0; i < ages.size(); ++i) {
@@ -2255,7 +2255,7 @@ void test_versatile_dataframe_families() {
   });
   expect(transformed_all.ncases() == df.ncases() && transformed_all.nfeatures() == df.nfeatures(),
          "transform(all) should preserve frame shape");
-  expect(transformed_all.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 1,
+  expect(transformed_all.features("age").as_series().host<std::int64_t>()[0] == age[0] + 1,
          "transform(all) should transform Series-backed features");
   expect(std::string(transformed_all.features("job").as_note().at(0)) == std::string(df.features("job").as_note().at(0)),
          "transform(all) should allow passthrough for Note-backed features");
@@ -2264,7 +2264,7 @@ void test_versatile_dataframe_families() {
   transformed_age.set("age") = df.features("age").transform([](const pluss::table::Slate& feature) {
     return feature * 2.0;
   });
-  expect(transformed_age.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] * 2,
+  expect(transformed_age.features("age").as_series().host<std::int64_t>()[0] == age[0] * 2,
          "transform(feature) should update target feature");
   expect(std::string(transformed_age.features("job").as_note().at(0)) == std::string(df.features("job").as_note().at(0)),
          "transform(feature) should keep non-target features unchanged");
@@ -2273,9 +2273,9 @@ void test_versatile_dataframe_families() {
       {"age", [](const pluss::table::Slate& feature) { return feature + 3.0; }},
       {"duration", [](const pluss::table::Slate& feature) { return feature - 2.0; }},
   });
-  expect(transformed_specs.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 3,
+  expect(transformed_specs.features("age").as_series().host<std::int64_t>()[0] == age[0] + 3,
          "transform(specs) should apply per-feature transform");
-  expect(transformed_specs.features("duration").as_series().to_vec<std::int64_t>()[0] == duration[0] - 2,
+  expect(transformed_specs.features("duration").as_series().host<std::int64_t>()[0] == duration[0] - 2,
          "transform(specs) should apply second transform");
   expect_throw([&]() {
                 auto bad = df;
@@ -2287,7 +2287,7 @@ void test_versatile_dataframe_families() {
   transformed_frame.set("age_plus_duration") = df.features("age") + df.features("duration");
   expect(transformed_frame.get("age_plus_duration").has_value(),
          "transform(feature, dataframe-fn) should allow deriving a new feature");
-  expect(transformed_frame.features("age_plus_duration").as_series().to_vec<std::int64_t>()[0] ==
+  expect(transformed_frame.features("age_plus_duration").as_series().host<std::int64_t>()[0] ==
              age[0] + duration[0],
          "transform(feature, dataframe-fn) should evaluate against the full DataFrame");
 
@@ -2328,7 +2328,7 @@ void test_versatile_dataframe_families() {
          "rename_features(...) should rename mapped features");
 
   const auto sorted_single = df.arrange({"age"}, false);
-  const auto sorted_single_age = sorted_single.features("age").as_series().to_vec<std::int64_t>();
+  const auto sorted_single_age = sorted_single.features("age").as_series().host<std::int64_t>();
   expect(sorted_single_age.size() >= 2 && sorted_single_age[0] >= sorted_single_age[1],
          "arrange(feature, descending) should sort as requested");
 
@@ -2350,11 +2350,11 @@ void test_versatile_dataframe_families() {
 
   auto applied = df;
   applied.set("age") = df.features("age") + 5.0;
-  expect(applied.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 5,
+  expect(applied.features("age").as_series().host<std::int64_t>()[0] == age[0] + 5,
          "transform(feature, fn) should transform selected feature");
   auto applied_inplace = df;
   applied_inplace.set("age") = applied_inplace.features("age") + 4.0;
-  expect(applied_inplace.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 4,
+  expect(applied_inplace.features("age").as_series().host<std::int64_t>()[0] == age[0] + 4,
          "transform(feature, fn) should support assignment-back update");
 
   const auto merged = jleft.unify("age", jright, "age", "common", "_m");
@@ -2424,9 +2424,9 @@ void test_versatile_dataframe_families() {
       false);
   expect(summary.ncases() == 1, "summarize should produce one summary row");
   expect(summary.nfeatures() == 3, "summarize should emit requested output features");
-  expect(summary.features("cases").as_series().to_vec<std::int64_t>(0) == df.ncases(),
+  expect(summary.features("cases").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == df.ncases(),
          "summarize count should match frame row count");
-  expect(summary.features("jobs").as_series().to_vec<std::int64_t>(0) > 0,
+  expect(summary.features("jobs").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) > 0,
          "summarize ndistinct should be positive for job feature");
 
   const auto text_only = df.feataxis().note();
@@ -2458,7 +2458,7 @@ void test_versatile_dataframe_families() {
   expect(mean_scalar.defined(), "mean() should return a defined scalar SlateValue");
   const auto mean_series = mean_scalar.as_series();
   expect(mean_series.numel() == 1, "mean() should return scalar-sized Series payload");
-  const auto mean_vals = mean_series.to_vec<double>();
+  const auto mean_vals = mean_series.host<double>();
   expect(mean_vals.size() == 1, "mean() scalar payload should contain a single value");
   const auto logged = mean_series.log();
   expect(logged.defined(), "log() over reduction scalar should stay defined");
@@ -2486,10 +2486,10 @@ void test_versatile_dataframe_families() {
 
   const auto age_shifted = age_slate.shift(1);
   expect(pluss::table::detail::has_validity_mask(age_shifted), "Slate::shift should null-pad shifted edge");
-  const auto age_shifted_valid = pluss::table::detail::validity_mask(age_shifted)->to_vec<bool>();
+  const auto age_shifted_valid = pluss::table::detail::validity_mask(age_shifted)->host<bool>();
   expect(!age_shifted_valid.front(),
          "Slate::shift(periods=1) should set first row null");
-  expect(age_shifted.as_series().to_vec<std::int64_t>(1) == age_slate.as_series().to_vec<std::int64_t>(0),
+  expect(age_shifted.as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(1)) == age_slate.as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)),
          "Slate::shift(periods=1) should move values by one case");
 
   const auto age_self_corr = age_slate.corr(age_slate);
@@ -2501,25 +2501,25 @@ void test_versatile_dataframe_families() {
          "Slate::corr should return finite coefficients on numeric inputs");
 
   auto df_assign = df;
-  const auto age_before = df_assign.features("age").as_series().to_vec<std::int64_t>();
+  const auto age_before = df_assign.features("age").as_series().host<std::int64_t>();
   df_assign.set_("age", df_assign.features("age") + 7.0);
-  const auto age_after = df_assign.features("age").as_series().to_vec<std::int64_t>();
+  const auto age_after = df_assign.features("age").as_series().host<std::int64_t>();
   expect(age_after.size() == age_before.size(), "feature assignment should preserve case count");
   expect(age_after[0] == age_before[0] + 7, "set_features_(\"age\", feature(\"age\") + 7) should update in place");
 
   df_assign.set_("age_plus_1", df_assign.features("age") + 1.0);
   expect(df_assign.get("age_plus_1").has_value(),
          "set_features_(\"new\", feature(\"curr\") + 1) should create a new feature");
-  const auto age_plus = df_assign.features("age_plus_1").as_series().to_vec<std::int64_t>();
+  const auto age_plus = df_assign.features("age_plus_1").as_series().host<std::int64_t>();
   expect(age_plus[0] == age_after[0] + 1, "new feature assignment should store RHS values");
 
   auto df_bulk = df;
-  const auto age_before_bulk = df_bulk.features("age").as_series().to_vec<std::int64_t>();
-  const auto dur_before_bulk = df_bulk.features("duration").as_series().to_vec<std::int64_t>();
+  const auto age_before_bulk = df_bulk.features("age").as_series().host<std::int64_t>();
+  const auto dur_before_bulk = df_bulk.features("duration").as_series().host<std::int64_t>();
   df_bulk.set_("age", df_bulk.features("age") + 2.0);
   df_bulk.set_("duration", df_bulk.features("duration") + 3.0);
-  const auto age_after_bulk = df_bulk.features("age").as_series().to_vec<std::int64_t>();
-  const auto dur_after_bulk = df_bulk.features("duration").as_series().to_vec<std::int64_t>();
+  const auto age_after_bulk = df_bulk.features("age").as_series().host<std::int64_t>();
+  const auto dur_after_bulk = df_bulk.features("duration").as_series().host<std::int64_t>();
   expect(age_after_bulk[0] == age_before_bulk[0] + 2 && dur_after_bulk[0] == dur_before_bulk[0] + 3,
          "set_features_ should update multiple existing features in place");
 
@@ -2570,7 +2570,7 @@ void test_versatile_dataframe_families() {
   const auto age_in = df.assign({{
       "age_in_set",
       [](const DataFrame& frame) {
-        const auto ages = frame.features("age").as_series().to_vec<std::int64_t>();
+        const auto ages = frame.features("age").as_series().host<std::int64_t>();
         auto out = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(out.raw_data());
         for (std::size_t i = 0; i < ages.size(); ++i) {
@@ -2611,7 +2611,7 @@ void test_versatile_dataframe_families() {
                               return pluss::table::Slate(end_ns.sub(start_ns).div(6.0e10));
                             }},
                            {"Is_RushHour", [](const DataFrame& frame) {
-                              const auto h = frame.features("Start_Hour").as_series().to_vec<std::int64_t>();
+                              const auto h = frame.features("Start_Hour").as_series().host<std::int64_t>();
                               auto out = pluss::Series::zeros({static_cast<std::int64_t>(h.size())}, pluss::codem::ScalarType::Bool);
                               auto* p = reinterpret_cast<bool*>(out.raw_data());
                               for (std::size_t i = 0; i < h.size(); ++i) {
@@ -2639,16 +2639,16 @@ void test_versatile_dataframe_families() {
          "features(...).shift(periods) should preserve case count and selected feature count");
   expect(pluss::table::detail::has_validity_mask(shifted_age.features("age")),
          "shift should introduce null validity at shifted edge");
-  const auto shifted_age_valid = pluss::table::detail::validity_mask(shifted_age.features("age"))->to_vec<bool>();
-  const auto shifted_age_values = shifted_age.features("age").as_series().to_vec<std::int64_t>();
-  const auto base_age_values = df.features("age").as_series().to_vec<std::int64_t>();
+  const auto shifted_age_valid = pluss::table::detail::validity_mask(shifted_age.features("age"))->host<bool>();
+  const auto shifted_age_values = shifted_age.features("age").as_series().host<std::int64_t>();
+  const auto base_age_values = df.features("age").as_series().host<std::int64_t>();
   expect(!shifted_age_valid.front() && shifted_age_values[1] == base_age_values[0],
          "shift(periods=1) should move values down and mark first row null");
 
   const auto shifted_job_lead = df.features({"job"}).shift(-1);
   expect(pluss::table::detail::has_validity_mask(shifted_job_lead.features("job")),
          "shift with negative periods should null-pad tail rows");
-  const auto shifted_job_valid = pluss::table::detail::validity_mask(shifted_job_lead.features("job"))->to_vec<bool>();
+  const auto shifted_job_valid = pluss::table::detail::validity_mask(shifted_job_lead.features("job"))->host<bool>();
   expect(!shifted_job_valid.back(),
          "shift(periods=-1) should set last row null");
   expect(std::string(shifted_job_lead.features("job").as_note().at(0))
@@ -2669,15 +2669,15 @@ void test_versatile_dataframe_families() {
   expect(daily_mean.ncases() == 2 && daily_mean.get("Duration_min").has_value(),
          "resample should aggregate values onto time bins");
 
-  const auto years = tdf.features("Start_Year").as_series().to_vec<std::int64_t>();
+  const auto years = tdf.features("Start_Year").as_series().host<std::int64_t>();
   expect(years.size() == 2 && years[0] == 2020 && years[1] == 2020,
          "assign should expose Timeline year extraction");
 
-  const auto mins = tdf.features("Duration_min").as_series().to_vec<double>();
+  const auto mins = tdf.features("Duration_min").as_series().host<double>();
   expect(mins.size() == 2 && std::fabs(mins[0] - 90.0) < 1e-6 && std::fabs(mins[1] - 60.0) < 1e-6,
          "assign should compute End_Time - Start_Time in minutes");
 
-  const auto rush = tdf.features("Is_RushHour").as_series().to_vec<bool>();
+  const auto rush = tdf.features("Is_RushHour").as_series().host<bool>();
   expect(rush.size() == 2 && !rush[0] && rush[1],
          "assign should mark Start_Hour membership against provided values");
 
@@ -2750,15 +2750,15 @@ void test_versatile_dataframe_families() {
   const auto combined_update = left_small.combine(
       right_update,
       {DataFrame::CombineOp::Update, "_r", true});
-  const auto updated_age = combined_update.features("age").as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
-  const auto left_age = left_small.features("age").as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto updated_age = combined_update.features("age").as_series().to(pluss::codem::ScalarType::Float64).host<double>();
+  const auto left_age = left_small.features("age").as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   expect(std::fabs(updated_age[0] - (left_age[0] + 100.0)) < 1e-9,
          "combine(update, overwrite=true) should replace overlapping features");
 
   const auto combined_update_keep = left_small.combine(
       right_update,
       {DataFrame::CombineOp::Update, "_r", false});
-  const auto kept_age = combined_update_keep.features("age").as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto kept_age = combined_update_keep.features("age").as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   expect(std::fabs(kept_age[0] - left_age[0]) < 1e-9,
          "combine(update, overwrite=false) should keep left feature values");
 
@@ -2768,15 +2768,15 @@ void test_versatile_dataframe_families() {
   auto let_df = df.features({"age", "duration", "balance"});
   let_df.set("age_copy") = let_df.features("age");
   expect(let_df.get("age_copy").has_value(), "set(single)=Slate should create/update feature");
-  expect(let_df.features("age_copy").as_series().to_vec<std::int64_t>() == let_df.features("age").as_series().to_vec<std::int64_t>(),
+  expect(let_df.features("age_copy").as_series().host<std::int64_t>() == let_df.features("age").as_series().host<std::int64_t>(),
          "set(single)=Slate should preserve assigned values");
 
   let_df.set("age_plus_duration") = let_df.features("age") + let_df.features("duration");
   expect(let_df.get("age_plus_duration").has_value(), "set(single)=expression should assign computed Slate");
 
   let_df.set("age") = let_df.features("duration");
-  expect(let_df.features("age").as_series().to_vec<std::int64_t>() ==
-             let_df.features("duration").as_series().to_vec<std::int64_t>(),
+  expect(let_df.features("age").as_series().host<std::int64_t>() ==
+             let_df.features("duration").as_series().host<std::int64_t>(),
          "set(single) should allow assigning into an existing feature");
 
   let_df.set({"age_rhs", "dur_rhs"}) = let_df.features({"age", "duration"});
@@ -2798,10 +2798,10 @@ void test_versatile_dataframe_families() {
          "set(single) default should reject partial rhs length mismatch");
   let_df.set("partial_age", {.align = pluss::table::AlignBy::Caselbl}) = short_age;
   expect(let_df.get("partial_age").has_value(), "set(single) should accept labeled partial assignment");
-  expect(pluss::table::detail::validity_mask(let_df.features("partial_age"))->to_vec<bool>()[0]
-             && pluss::table::detail::validity_mask(let_df.features("partial_age"))->to_vec<bool>()[1]
-             && pluss::table::detail::validity_mask(let_df.features("partial_age"))->to_vec<bool>()[2]
-             && !pluss::table::detail::validity_mask(let_df.features("partial_age"))->to_vec<bool>()[3],
+  expect(pluss::table::detail::validity_mask(let_df.features("partial_age"))->host<bool>()[0]
+             && pluss::table::detail::validity_mask(let_df.features("partial_age"))->host<bool>()[1]
+             && pluss::table::detail::validity_mask(let_df.features("partial_age"))->host<bool>()[2]
+             && !pluss::table::detail::validity_mask(let_df.features("partial_age"))->host<bool>()[3],
          "set(single) should align labeled partial rhs and null-fill unmatched cases");
   bool default_partial_threw = false;
   try {
@@ -2814,10 +2814,10 @@ void test_versatile_dataframe_families() {
          "set(single) default should reject default-label rhs length mismatch");
   let_df.set("default_partial", {.align = pluss::table::AlignBy::Caselbl}) =
       pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}));
-  expect(pluss::table::detail::validity_mask(let_df.features("default_partial"))->to_vec<bool>()[0]
-             && pluss::table::detail::validity_mask(let_df.features("default_partial"))->to_vec<bool>()[1]
-             && pluss::table::detail::validity_mask(let_df.features("default_partial"))->to_vec<bool>()[2]
-             && !pluss::table::detail::validity_mask(let_df.features("default_partial"))->to_vec<bool>()[3],
+  expect(pluss::table::detail::validity_mask(let_df.features("default_partial"))->host<bool>()[0]
+             && pluss::table::detail::validity_mask(let_df.features("default_partial"))->host<bool>()[1]
+             && pluss::table::detail::validity_mask(let_df.features("default_partial"))->host<bool>()[2]
+             && !pluss::table::detail::validity_mask(let_df.features("default_partial"))->host<bool>()[3],
          "set(single) should align default-case rhs and null-fill unmatched cases");
   bool multi_default_partial_threw = false;
   try {
@@ -2835,17 +2835,17 @@ void test_versatile_dataframe_families() {
       pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{1, 2, 3})),
   };
   expect(let_df.get("default_a").has_value() && let_df.get("default_b").has_value() &&
-             !pluss::table::detail::validity_mask(let_df.features("default_b"))->to_vec<bool>()[3],
+             !pluss::table::detail::validity_mask(let_df.features("default_b"))->host<bool>()[3],
          "set(multi) should align each rhs by cases and null-fill unmatched cases");
 
   const auto first_duration =
-      let_df.features("duration").as_series().to_vec<std::int64_t>(0);
+      let_df.features("duration").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0));
   const auto selected_duration =
       let_df.features("duration") == static_cast<double>(first_duration);
   const auto age_put = let_df.features({"age"}).put(selected_duration, 60.0);
-  const auto selected = selected_duration.as_series().to_vec<bool>();
-  const auto before_put = let_df.features("age").as_series().to_vec<std::int64_t>();
-  const auto after_put = age_put.features("age").as_series().to_vec<std::int64_t>();
+  const auto selected = selected_duration.as_series().host<bool>();
+  const auto before_put = let_df.features("age").as_series().host<std::int64_t>();
+  const auto after_put = age_put.features("age").as_series().host<std::int64_t>();
   for (std::size_t row = 0; row < selected.size(); ++row) {
     expect(after_put[row] == (selected[row] ? 60 : before_put[row]),
            selected[row]
@@ -2855,7 +2855,7 @@ void test_versatile_dataframe_families() {
 
   auto put_inplace = df.features({"age", "job"});
   const auto put_ages =
-      put_inplace.features("age").as_series().to_vec<std::int64_t>();
+      put_inplace.features("age").as_series().host<std::int64_t>();
   put_inplace.put_(
       "job",
       put_inplace.features("age") == static_cast<double>(put_ages[0]),
@@ -2869,28 +2869,28 @@ void test_versatile_dataframe_families() {
   const auto nulled_job = put_inplace.features({"job"}).put(
       put_inplace.features("age") == static_cast<double>(put_ages[1]),
       pluss::series::null);
-  expect(nulled_job.features("job").isnull().as_series().to_vec<bool>()[1],
+  expect(nulled_job.features("job").isnull().as_series().host<bool>()[1],
          "put(feature, mask, null) should nullify masked rows");
 
   const auto numeric = df.features({"age", "balance", "duration"});
-  const auto age0 = numeric.features("age").as_series().to_vec<std::int64_t>(0);
+  const auto age0 = numeric.features("age").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0));
 
   const auto add_scalar = numeric.add(1.0);
-  expect(add_scalar.features("age").as_series().to_vec<std::int64_t>(0) == age0 + 1,
+  expect(add_scalar.features("age").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == age0 + 1,
          "add(scalar) should shift numeric Series features");
   const auto add_frame = numeric.add(numeric);
-  expect(add_frame.features("age").as_series().to_vec<std::int64_t>(0) == age0 * 2,
+  expect(add_frame.features("age").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == age0 * 2,
          "add(frame) should add feature-wise values");
 
   const auto sub_alias = numeric.sub(1.0);
-  expect(sub_alias.features("age").as_series().to_vec<std::int64_t>(0) == age0 - 1,
+  expect(sub_alias.features("age").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == age0 - 1,
          "subtract alias should delegate to sub");
   const auto mul_alias = numeric.mul(2.0);
-  expect(mul_alias.features("age").as_series().to_vec<std::int64_t>(0) == age0 * 2,
+  expect(mul_alias.features("age").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == age0 * 2,
          "multiply alias should delegate to mul");
 
   const auto reverse_sub = numeric.rsub(100.0);
-  expect(reverse_sub.features("age").as_series().to_vec<std::int64_t>(0) == 100 - age0,
+  expect(reverse_sub.features("age").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(0)) == 100 - age0,
          "rsub(scalar) should reverse scalar-column subtraction");
 
   const auto reverse_add = numeric.radd(10.0);
@@ -2949,18 +2949,18 @@ void test_versatile_dataframe_families() {
   expect(ge_scalar.features("age").as_series().scalar_type() == pluss::codem::ScalarType::Bool,
          "ge should return bool Series features");
 
-  const auto eq_age = eq_self.features("age").as_series().to_vec<bool>();
-  const auto ne_age = ne_self.features("age").as_series().to_vec<bool>();
+  const auto eq_age = eq_self.features("age").as_series().host<bool>();
+  const auto ne_age = ne_self.features("age").as_series().host<bool>();
   expect(std::all_of(eq_age.begin(), eq_age.end(), [](bool v) { return v; }),
          "eq(frame) should be true for identical numeric frames");
   expect(std::none_of(ne_age.begin(), ne_age.end(), [](bool v) { return v; }),
          "ne(frame) should be false for identical numeric frames");
 
-  const auto ge_age = ge_scalar.features("age").as_series().to_vec<bool>();
+  const auto ge_age = ge_scalar.features("age").as_series().host<bool>();
   const auto ge_count = static_cast<std::int64_t>(std::count(ge_age.begin(), ge_age.end(), true));
   expect(ge_count == expected_rows, "ge(scalar) should match manual threshold count");
   const auto cmp_alias = numeric.compare(numeric.add(1.0));
-  expect(cmp_alias.features("age").as_series().to_vec<bool>(0),
+  expect(cmp_alias.features("age").as_series().host<bool>().array().data.at(static_cast<std::size_t>(0)),
          "compare alias should delegate to ne for changed values");
 
   const auto mixed_add = df.add(5.0);
@@ -2971,7 +2971,7 @@ void test_versatile_dataframe_families() {
   const auto mixed_eq = df.eq(df);
   expect(mixed_eq.features("job").kind() == SlateKind::Series,
          "eq(frame) should produce bool output for non-numeric features too");
-  expect(mixed_eq.features("job").as_series().to_vec<bool>(0),
+  expect(mixed_eq.features("job").as_series().host<bool>().array().data.at(static_cast<std::size_t>(0)),
          "eq(frame) should mark identical text values as true");
 
   ReadCsvOptions missing_opts;
@@ -2989,31 +2989,31 @@ void test_versatile_dataframe_families() {
   expect(miss_isnull.nfeatures() == miss.nfeatures(), "missing(isnull) should retain all features by default");
   expect(miss_isnull.features("score").as_series().scalar_type() == pluss::codem::ScalarType::Bool,
          "missing(isnull) should return bool mask features");
-  expect(miss_isnull.features("score").as_series().to_vec<bool>(1),
+  expect(miss_isnull.features("score").as_series().host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "missing(isnull) should mark null score rows");
   const auto miss_any = miss_isnull.any(Axis::Feature);
   expect(miss_any.kind() == SlateKind::Series, "DataFrame::any should return a Series-backed Slate");
-  const auto miss_any_values = miss_any.as_series().to_vec<bool>();
+  const auto miss_any_values = miss_any.as_series().host<bool>();
   expect(miss_any_values == std::vector<bool>({false, true, false, true}),
          "DataFrame::any should reduce bool features row-wise with OR semantics");
   expect(miss.filter(miss_any).ncases() == 2,
          "filter(df.isnull().any()) should keep rows where any selected feature is null");
   const auto miss_all = miss_isnull.features({"score", "label"}).all(Axis::Feature);
-  const auto miss_all_values = miss_all.as_series().to_vec<bool>();
+  const auto miss_all_values = miss_all.as_series().host<bool>();
   expect(miss_all_values == std::vector<bool>({false, true, false, false}),
          "DataFrame::all should reduce bool features row-wise with AND semantics");
   expect(miss.filter(miss_all).ncases() == 1,
          "filter(df.isnull().all({score,label})) should keep rows where both selected features are null");
   const auto miss_any_score = miss_isnull.features({"score"}).any(Axis::Feature);
-  expect(miss_any_score.as_series().to_vec<bool>() == miss_isnull.features("score").as_series().to_vec<bool>(),
+  expect(miss_any_score.as_series().host<bool>() == miss_isnull.features("score").as_series().host<bool>(),
          "DataFrame::any(single feature) should match the source bool feature");
   expect_throw([&]() { (void)miss.features({"score"}).any(); },
                "DataFrame::any should reject non-bool features");
   const auto miss_any_axis1 = miss_isnull.any(Axis::Feature);
-  expect(miss_any_axis1.as_series().to_vec<bool>() == miss_any_values,
+  expect(miss_any_axis1.as_series().host<bool>() == miss_any_values,
          "DataFrame::any(axis=1) should reduce row-wise");
   const auto miss_any_axis0 = miss_isnull.any(Axis::Case);
-  expect(miss_any_axis0.as_series().to_vec<bool>() == std::vector<bool>({false, true, true}),
+  expect(miss_any_axis0.as_series().host<bool>() == std::vector<bool>({false, true, true}),
          "DataFrame::any(axis=0) should reduce over cases and return one value per feature");
   expect(miss_any_axis0.label().has(), "DataFrame::any(axis=0) should carry feature labels");
   const auto miss_any_axis0_labels = miss_any_axis0.label().values().as_note();
@@ -3022,7 +3022,7 @@ void test_versatile_dataframe_families() {
              && std::string(miss_any_axis0_labels.at(2)) == "label",
          "DataFrame::any(axis=0) labels should match reduced feature order");
   const auto miss_all_axis0 = miss_isnull.all(Axis::Case);
-  expect(miss_all_axis0.as_series().to_vec<bool>() == std::vector<bool>({false, false, false}),
+  expect(miss_all_axis0.as_series().host<bool>() == std::vector<bool>({false, false, false}),
          "DataFrame::all(axis=0) should reduce over cases and return one value per feature");
   expect_throw([&]() { (void)miss_isnull.any(static_cast<Axis>(2)); },
                "DataFrame::any(axis) should reject unsupported axis values");
@@ -3032,22 +3032,22 @@ void test_versatile_dataframe_families() {
          "Slate::all should reduce Bool Series slate to a scalar true/false");
 
   const auto miss_notnull = miss.notnull();
-  expect(!miss_notnull.features("score").as_series().to_vec<bool>(1),
+  expect(!miss_notnull.features("score").as_series().host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "missing(notnull) should invert isnull mask");
 
   const auto miss_isna = miss.isnull({"score"});
   const auto miss_notna = miss.notnull({"score"});
   expect(miss_isna.nfeatures() == 1 && miss_notna.nfeatures() == 1,
          "isnull/notnull should support selected feature subsets");
-  expect(miss_isna.features("score").as_series().to_vec<bool>(1),
+  expect(miss_isna.features("score").as_series().host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "isnull should mark null rows");
-  expect(!miss_notna.features("score").as_series().to_vec<bool>(1),
+  expect(!miss_notna.features("score").as_series().host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "notnull should invert isnull mask");
 
   const auto miss_filled = miss.fillnull(0.0, {"score"});
-  expect(miss_filled.features("score").as_series().to_vec<std::int64_t>(1) == 0,
+  expect(miss_filled.features("score").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(1)) == 0,
          "fillnull(value, features) should replace selected numeric nulls");
-  expect(miss_filled.features("score").as_series().to_vec<std::int64_t>()
+  expect(miss_filled.features("score").as_series().host<std::int64_t>()
              == std::vector<std::int64_t>({10, 0, 30, 0}),
          "fillnull(value, features) should preserve selected numeric non-null values");
   expect(!pluss::table::detail::has_validity_mask(miss_filled.features("score")),
@@ -3110,17 +3110,17 @@ void test_versatile_dataframe_families() {
          "fillnull(Timeline, features) should clear Timeline validity mask when all nulls are filled");
 
   const auto miss_ffill = miss.ffill();
-  expect(miss_ffill.features("score").as_series().to_vec<std::int64_t>(1) == 10,
+  expect(miss_ffill.features("score").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(1)) == 10,
          "ffill should propagate previous numeric value");
   expect(std::string(miss_ffill.features("label").as_note().at(1)) == "a",
          "ffill should propagate previous Note value");
 
   const auto miss_bfill = miss.bfill();
-  expect(miss_bfill.features("score").as_series().to_vec<std::int64_t>(1) == 30,
+  expect(miss_bfill.features("score").as_series().host<std::int64_t>().array().data.at(static_cast<std::size_t>(1)) == 30,
          "bfill should propagate next numeric value");
   expect(pluss::table::detail::has_validity_mask(miss_bfill.features("score")),
          "bfill should preserve trailing null when no backward source exists");
-  expect(!pluss::table::detail::validity_mask(miss_bfill.features("score"))->to_vec<bool>(3),
+  expect(!pluss::table::detail::validity_mask(miss_bfill.features("score"))->host<bool>().array().data.at(static_cast<std::size_t>(3)),
          "bfill should keep trailing nulls unresolved");
 
   auto limited_validity = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
@@ -3135,32 +3135,32 @@ void test_versatile_dataframe_families() {
   });
 
   const auto limited_ffill = limited.ffill(DataFrame::FillOptions{{"score"}, 1});
-  expect(pluss::table::detail::validity_mask(limited_ffill.features("score"))->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(limited_ffill.features("score"))->host<bool>()
              == std::vector<bool>({true, true, false, true}),
          "ffill(limit) should fill only the configured number of consecutive nulls");
-  expect(limited_ffill.features("score").as_series().to_vec<double>(1) == 1.0,
+  expect(limited_ffill.features("score").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 1.0,
          "ffill(limit) should use the previous valid numeric value");
 
   const auto limited_bfill = limited.bfill(DataFrame::FillOptions{{"score"}, 1});
-  expect(pluss::table::detail::validity_mask(limited_bfill.features("score"))->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(limited_bfill.features("score"))->host<bool>()
              == std::vector<bool>({true, false, true, true}),
          "bfill(limit) should fill only the configured number of consecutive nulls");
-  expect(limited_bfill.features("score").as_series().to_vec<double>(2) == 4.0,
+  expect(limited_bfill.features("score").as_series().host<double>().array().data.at(static_cast<std::size_t>(2)) == 4.0,
          "bfill(limit) should use the next valid numeric value");
 
   const auto limited_interp = limited.interp(DataFrame::FillOptions{{"score"}, 1});
-  expect(pluss::table::detail::validity_mask(limited_interp.features("score"))->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(limited_interp.features("score"))->host<bool>()
              == std::vector<bool>({true, true, false, true}),
          "interp(limit) should preserve unresolved nulls beyond the limit");
-  expect(std::abs(limited_interp.features("score").as_series().to_vec<double>(1) - 2.0) < 1e-12,
+  expect(std::abs(limited_interp.features("score").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) - 2.0) < 1e-12,
          "interp(limit) should linearly interpolate interior numeric gaps");
 
   const auto mapped_fill = limited.fillnull({
       DataFrame::FillSpec{"score", pluss::table::Slate(pluss::make_series(std::vector<double>{99.0}))},
       DataFrame::FillSpec{"label", pluss::table::Slate(pluss::make_note(std::vector<std::string>{"missing"}))},
   });
-  expect(mapped_fill.features("score").as_series().to_vec<double>(1) == 99.0
-             && mapped_fill.features("score").as_series().to_vec<double>(2) == 99.0,
+  expect(mapped_fill.features("score").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 99.0
+             && mapped_fill.features("score").as_series().host<double>().array().data.at(static_cast<std::size_t>(2)) == 99.0,
          "fillnull(FillSpec...) should fill numeric features with per-feature scalar Slates");
   expect(std::string(mapped_fill.features("label").as_note().at(1)) == "missing"
              && std::string(mapped_fill.features("label").as_note().at(2)) == "missing",
@@ -3173,7 +3173,7 @@ void test_versatile_dataframe_families() {
   null_mask_ptr[2] = false;
   null_mask_ptr[3] = true;
   const auto masked_score = miss.mask(pluss::table::Slate(null_mask), {"score"});
-  expect(pluss::table::detail::validity_mask(masked_score.features("score"))->to_vec<bool>()
+  expect(pluss::table::detail::validity_mask(masked_score.features("score"))->host<bool>()
              == std::vector<bool>({true, false, true, false}),
          "mask(mask, features) should set selected cells to null while preserving unmasked values");
   expect(!pluss::table::detail::has_validity_mask(masked_score.features("id")),
@@ -3205,14 +3205,14 @@ void test_versatile_dataframe_families() {
          "dropnull(DropOptions threshold, Axis::Feature) should drop selected features below threshold");
 
   const auto arranged_age = df.arrange({"age"});
-  const auto arranged_age_values = arranged_age.features("age").as_series().to_vec<std::int64_t>();
+  const auto arranged_age_values = arranged_age.features("age").as_series().host<std::int64_t>();
   for (std::size_t i = 1; i < arranged_age_values.size(); ++i) {
     expect(arranged_age_values[i - 1] <= arranged_age_values[i],
            "arrange(feature) should sort ascending by default");
   }
 
   const auto arranged_score = miss.arrange({"score"});
-  const auto arranged_score_ids = arranged_score.features("id").as_series().to_vec<std::int64_t>();
+  const auto arranged_score_ids = arranged_score.features("id").as_series().host<std::int64_t>();
   expect(arranged_score_ids[0] == 1 && arranged_score_ids[1] == 3 && arranged_score_ids[2] == 2 && arranged_score_ids[3] == 4,
          "arrange(score): expected ascending values with nulls last and stable tie order");
 
@@ -3221,7 +3221,7 @@ void test_versatile_dataframe_families() {
       false,
       false,
   }});
-  const auto arranged_score_desc_ids = arranged_score_desc_nulls_first.features("id").as_series().to_vec<std::int64_t>();
+  const auto arranged_score_desc_ids = arranged_score_desc_nulls_first.features("id").as_series().host<std::int64_t>();
   expect(arranged_score_desc_ids[0] == 2 && arranged_score_desc_ids[1] == 4
              && arranged_score_desc_ids[2] == 3 && arranged_score_desc_ids[3] == 1,
          "arrange(spec): descending with nulls first should position null cases first");
@@ -3252,7 +3252,7 @@ void test_versatile_dataframe_families() {
          "cast(spec): Note -> Series should convert payload kind");
   expect(pluss::table::detail::has_validity_mask(note_cast.features(note_feature)),
          "cast(spec): Note -> Series should set validity mask when parse fails");
-  expect(!pluss::table::detail::validity_mask(note_cast.features(note_feature))->to_vec<bool>(2),
+  expect(!pluss::table::detail::validity_mask(note_cast.features(note_feature))->host<bool>().array().data.at(static_cast<std::size_t>(2)),
          "cast(spec): unparsable Note value should become null");
 
   ReadCsvOptions timeline_opts;
@@ -3280,11 +3280,11 @@ void test_versatile_dataframe_families() {
          "window numeric outputs should be float64");
   expect(pluss::table::detail::has_validity_mask(rolling_mean.features("age_roll_mean")),
          "window with min_periods > 1 should produce a validity mask");
-  expect(!pluss::table::detail::validity_mask(rolling_mean.features("age_roll_mean"))->to_vec<bool>(0),
+  expect(!pluss::table::detail::validity_mask(rolling_mean.features("age_roll_mean"))->host<bool>().array().data.at(static_cast<std::size_t>(0)),
          "window first row should be null when min_periods is not met");
 
-  const auto age_i64 = numeric.features("age").as_series().to_vec<std::int64_t>();
-  const auto mean_v = rolling_mean.features("age_roll_mean").as_series().to_vec<double>();
+  const auto age_i64 = numeric.features("age").as_series().host<std::int64_t>();
+  const auto mean_v = rolling_mean.features("age_roll_mean").as_series().host<double>();
   expect(std::fabs(mean_v[1] - (static_cast<double>(age_i64[0] + age_i64[1]) / 2.0)) < 1e-9,
          "window rolling mean row1 mismatch");
   expect(std::fabs(mean_v[2] - (static_cast<double>(age_i64[0] + age_i64[1] + age_i64[2]) / 3.0)) < 1e-9,
@@ -3311,7 +3311,7 @@ void test_versatile_dataframe_families() {
       1,
   }},
                                        false);
-  const auto score_roll_max_vals = score_roll_max.features("score_rollmax").as_series().to_vec<double>();
+  const auto score_roll_max_vals = score_roll_max.features("score_rollmax").as_series().host<double>();
   expect(!pluss::table::detail::has_validity_mask(score_roll_max.features("score_rollmax")),
          "rolling max(min_periods=1) should clear mask when every output row is valid");
   expect(std::fabs(score_roll_max_vals[1] - 10.0) < 1e-9,
@@ -3325,7 +3325,7 @@ void test_versatile_dataframe_families() {
       2,
   }},
                                               false);
-  const auto score_roll_min_valid = pluss::table::detail::validity_mask(score_roll_min_minp2.features("score_rollmin"))->to_vec<bool>();
+  const auto score_roll_min_valid = pluss::table::detail::validity_mask(score_roll_min_minp2.features("score_rollmin"))->host<bool>();
   expect(!score_roll_min_valid[1] && !score_roll_min_valid[3],
          "rolling min should be null when min_periods is not met due nulls");
 }
@@ -3343,11 +3343,11 @@ void test_slate_and_dataframe_freq_surfaces() {
          "Slate::freq should return one count per distinct value");
   expect(city_freq.label().values().as_note().vector() == std::vector<std::string_view>({"Accra", "Tema"}),
          "Slate::freq should sort values by descending frequency");
-  expect(city_freq.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({3, 2}),
+  expect(city_freq.as_series().host<std::int64_t>() == std::vector<std::int64_t>({3, 2}),
          "Slate::freq should count distinct values correctly");
 
   const auto city_prop = city_slate.freq(SlateFreqOptions{.kind = SlateFreqKind::Prop});
-  const auto city_prop_values = city_prop.as_series().to_vec<double>();
+  const auto city_prop_values = city_prop.as_series().host<double>();
   expect(city_prop.name() == "prop",
          "Slate::freq(prop) should rename the output `prop`");
   expect(city_prop_values.size() == 2
@@ -3369,7 +3369,7 @@ void test_slate_and_dataframe_freq_surfaces() {
   const auto counts = df.features({"default", "is_adult"}).freq();
   expect(counts.name() == "count",
          "DataFrame::freq() should name the default output `count`");
-  expect(counts.as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({3, 1, 1, 1}),
+  expect(counts.as_series().host<std::int64_t>() == std::vector<std::int64_t>({3, 1, 1, 1}),
          "DataFrame::freq() should count row combinations across selected features");
 
   std::ostringstream rendered;
@@ -3384,7 +3384,7 @@ void test_slate_and_dataframe_freq_surfaces() {
 
   const auto prop = df.features({"default", "is_adult"}).freq(
       DataFrame::FreqOptions{.kind = DataFrame::FreqKind::Prop});
-  const auto prop_values = prop.as_series().to_vec<double>();
+  const auto prop_values = prop.as_series().host<double>();
   expect(prop.name() == "prop",
          "DataFrame::freq(prop) should rename the output to `prop`");
   expect(prop_values.size() == 4
@@ -3496,21 +3496,21 @@ void test_replace_exact_and_null_overloads() {
 
   const auto numeric = Slate(pluss::make_series(std::vector<double>{2.0, 0.0, 2.0, 4.0}));
   const auto numeric_replaced = numeric.replace(2.0, 5.0);
-  expect(numeric_replaced.as_series().to_vec<double>() == std::vector<double>({5.0, 0.0, 5.0, 4.0}),
+  expect(numeric_replaced.as_series().host<double>() == std::vector<double>({5.0, 0.0, 5.0, 4.0}),
          "Slate::replace(double, double) should replace exact numeric matches");
 
   const auto numeric_put = numeric.put(numeric == 2.0, 9.0);
-  expect(numeric_put.as_series().to_vec<double>() == std::vector<double>({9.0, 0.0, 9.0, 4.0}),
+  expect(numeric_put.as_series().host<double>() == std::vector<double>({9.0, 0.0, 9.0, 4.0}),
          "Slate::put(mask, double) should assign into masked numeric rows");
 
   const auto numeric_nulled = numeric.replace(0.0, pluss::series::null);
   expect(pluss::table::detail::has_validity_mask(numeric_nulled), "Slate::replace(double, null) should create a validity mask");
-  expect(pluss::table::detail::validity_mask(numeric_nulled)->to_vec<bool>() == std::vector<bool>({true, false, true, true}),
+  expect(pluss::table::detail::validity_mask(numeric_nulled)->host<bool>() == std::vector<bool>({true, false, true, true}),
          "Slate::replace(double, null) should null-mark exact numeric matches");
 
   const auto numeric_refilled = numeric_nulled.replace(pluss::series::null, 9.0);
   expect(!pluss::table::detail::has_validity_mask(numeric_refilled), "Slate::replace(null, double) should resolve null mask when fully filled");
-  expect(numeric_refilled.as_series().to_vec<double>() == std::vector<double>({2.0, 9.0, 2.0, 4.0}),
+  expect(numeric_refilled.as_series().host<double>() == std::vector<double>({2.0, 9.0, 2.0, 4.0}),
          "Slate::replace(null, double) should fill numeric null rows");
 
   const auto name_slate = Slate(pluss::make_note({"Laurel", "Laurel Kirk", "Kojo"}));
@@ -3556,9 +3556,9 @@ void test_replace_exact_and_null_overloads() {
   }).title("gradebook");
 
   const auto all_numeric_replaced = gradebook.replace(2.0, 5.0);
-  expect(all_numeric_replaced.features("Midterm 1").as_series().to_vec<double>()
+  expect(all_numeric_replaced.features("Midterm 1").as_series().host<double>()
              == std::vector<double>({5.0, 0.0, 3.0})
-             && all_numeric_replaced.features("Midterm 2").as_series().to_vec<double>()
+             && all_numeric_replaced.features("Midterm 2").as_series().host<double>()
                     == std::vector<double>({0.0, 5.0, 0.0}),
          "DataFrame::replace without features should dispatch to every compatible column");
   expect(std::string(all_numeric_replaced.features("Name").as_note().at(0)) == "Laurel",
@@ -3567,17 +3567,17 @@ void test_replace_exact_and_null_overloads() {
          "DataFrame::replace should preserve the DataFrame title");
 
   const auto mid_replaced = gradebook.replace(2.0, 5.0, {"Midterm 1", "Midterm 2"});
-  expect(mid_replaced.features("Midterm 1").as_series().to_vec<double>() == std::vector<double>({5.0, 0.0, 3.0}),
+  expect(mid_replaced.features("Midterm 1").as_series().host<double>() == std::vector<double>({5.0, 0.0, 3.0}),
          "DataFrame::replace(double, double, features) should replace exact matches in selected numeric features");
-  expect(mid_replaced.features("Midterm 2").as_series().to_vec<double>() == std::vector<double>({0.0, 5.0, 0.0}),
+  expect(mid_replaced.features("Midterm 2").as_series().host<double>() == std::vector<double>({0.0, 5.0, 0.0}),
          "DataFrame::replace(double, double, features) should apply to every selected numeric feature");
   expect(std::string(mid_replaced.features("Name").as_note().at(0)) == "Laurel",
          "DataFrame::replace(double, double, features) should not mutate unselected Note features");
 
   const auto mid_nulled = gradebook.replace(0.0, pluss::series::null, {"Midterm 1", "Midterm 2"});
-  expect(pluss::table::detail::validity_mask(mid_nulled.features("Midterm 1"))->to_vec<bool>() == std::vector<bool>({true, false, true}),
+  expect(pluss::table::detail::validity_mask(mid_nulled.features("Midterm 1"))->host<bool>() == std::vector<bool>({true, false, true}),
          "DataFrame::replace(double, null, features) should null-mark exact matches in selected numeric features");
-  expect(pluss::table::detail::validity_mask(mid_nulled.features("Midterm 2"))->to_vec<bool>() == std::vector<bool>({false, true, false}),
+  expect(pluss::table::detail::validity_mask(mid_nulled.features("Midterm 2"))->host<bool>() == std::vector<bool>({false, true, false}),
          "DataFrame::replace(double, null, features) should handle multiple selected numeric features");
 
   const auto name_replaced = gradebook.replace("Laurel", "L", {"Name"});
@@ -3590,7 +3590,7 @@ void test_replace_exact_and_null_overloads() {
       pluss::make_series(std::vector<double>{3.0}),
       pluss::make_series(std::vector<double>{7.0}),
       {"Midterm 1"});
-  expect(typed_numeric.features("Midterm 1").as_series().to_vec<double>()
+  expect(typed_numeric.features("Midterm 1").as_series().host<double>()
              == std::vector<double>({2.0, 0.0, 7.0}),
          "DataFrame::replace(Series, Series) should delegate typed scalar replacement");
 
@@ -3603,7 +3603,7 @@ void test_replace_exact_and_null_overloads() {
 
   const auto name_nulled = gradebook.replace(pluss::make_note("Kojo"), pluss::series::null, {"Name"});
   expect(pluss::table::detail::has_validity_mask(name_nulled.features("Name"))
-             && !pluss::table::detail::validity_mask(name_nulled.features("Name"))->to_vec<bool>(2),
+             && !pluss::table::detail::validity_mask(name_nulled.features("Name"))->host<bool>().array().data.at(static_cast<std::size_t>(2)),
          "DataFrame::replace(Note, null) should delegate Note nullification");
   const auto name_refilled = name_nulled.replace(pluss::series::null, pluss::make_note("Ama"), {"Name"});
   expect(!pluss::table::detail::has_validity_mask(name_refilled.features("Name"))
@@ -3643,8 +3643,8 @@ void test_replace_exact_and_null_overloads() {
          "DataFrame temporal replacement should preserve the DataFrame title");
 
   const auto temporal_nulled = temporal.replace(old_time, pluss::series::null);
-  expect(!pluss::table::detail::validity_mask(temporal_nulled.features("event"))->to_vec<bool>(1)
-             && !pluss::table::detail::validity_mask(temporal_nulled.features("indexed"))->to_vec<bool>(1),
+  expect(!pluss::table::detail::validity_mask(temporal_nulled.features("event"))->host<bool>().array().data.at(static_cast<std::size_t>(1))
+             && !pluss::table::detail::validity_mask(temporal_nulled.features("indexed"))->host<bool>().array().data.at(static_cast<std::size_t>(1)),
          "DataFrame::replace(Timeline, null) should nullify matching temporal values");
 
   expect_throw([&]() { (void)gradebook.replace(1.0, 2.0, {"missing"}); },
@@ -3663,14 +3663,14 @@ void test_select_and_place_helpers() {
   const auto pick2 = pluss::make_series(std::vector<double>{30.0, 30.0, 30.0, 30.0});
 
   const auto selected = pluss::series::select({cond0, cond1, cond2}, {pick0, pick1, pick2}, -1.0);
-  expect(selected.to_vec<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
+  expect(selected.host<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
          "pluss::series::select should choose branch values by the first matching boolean condition");
 
   const auto slate_selected = Slate::select(
       {Slate(cond0), Slate(cond1), Slate(cond2)},
       {Slate(pick0), Slate(pick1), Slate(pick2)},
       -1.0);
-  expect(slate_selected.as_series().to_vec<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
+  expect(slate_selected.as_series().host<double>() == std::vector<double>({10.0, 20.0, 30.0, -1.0}),
          "Slate::select should delegate multi-branch numeric selection to pluss::series::select");
 
   expect_throw([&]() { (void)Slate(pluss::make_note("A+")); },
@@ -3684,7 +3684,7 @@ void test_select_and_place_helpers() {
          "Slate::select should accept explicit length-1 Note choices");
   expect(letter_selected.as_note().vector() == std::vector<std::string_view>({"A+", "B", "C", ""}),
          "Slate::select should broadcast explicit length-1 Note choices across matching rows");
-  expect(pluss::table::detail::validity_mask(letter_selected)->to_vec<bool>() == std::vector<bool>({true, true, true, false}),
+  expect(pluss::table::detail::validity_mask(letter_selected)->host<bool>() == std::vector<bool>({true, true, true, false}),
          "Slate::select should preserve null default when selecting explicit length-1 Note choices");
 
   const auto slate_selected_null = Slate::select(
@@ -3693,7 +3693,7 @@ void test_select_and_place_helpers() {
       pluss::series::null);
   expect(pluss::table::detail::has_validity_mask(slate_selected_null),
          "Slate::select(null) should mark unmatched rows as null");
-  const auto slate_selected_null_valid = pluss::table::detail::validity_mask(slate_selected_null)->to_vec<bool>();
+  const auto slate_selected_null_valid = pluss::table::detail::validity_mask(slate_selected_null)->host<bool>();
   expect(slate_selected_null_valid == std::vector<bool>({true, true, true, false}),
          fmt::format(
              "Slate::select(null) should preserve validity only on matched rows; got [{}, {}, {}, {}]",
@@ -3724,7 +3724,7 @@ void test_select_and_place_helpers() {
       {Slate(cond0), Slate(cond1), Slate(cond2)},
       {branch0, branch1, branch2},
       default_branch);
-  expect(frame_selected.features("score").as_series().to_vec<double>() ==
+  expect(frame_selected.features("score").as_series().host<double>() ==
              std::vector<double>({10.0, 20.0, 30.0, -1.0}) &&
              frame_selected.features("grade").as_note().vector() ==
                  std::vector<std::string_view>({"A", "B", "C", "NA"}),
@@ -3782,19 +3782,19 @@ void test_series_nan_participates_in_table_missing_semantics() {
   const auto raw = pluss::make_series(std::vector<double>{1.0, nan, 3.0});
   const auto slate = Slate(raw);
 
-  expect(slate.isnull().as_series().to_vec<bool>() == std::vector<bool>({false, true, false}),
+  expect(slate.isnull().as_series().host<bool>() == std::vector<bool>({false, true, false}),
          "Slate::isnull should treat floating NaN as missing for Series payloads");
-  expect(slate.notnull().as_series().to_vec<bool>() == std::vector<bool>({true, false, true}),
+  expect(slate.notnull().as_series().host<bool>() == std::vector<bool>({true, false, true}),
          "Slate::notnull should mark floating NaN as missing for Series payloads");
 
   const auto filled = slate.fillnull(9.0);
-  expect(filled.as_series().to_vec<double>() == std::vector<double>({1.0, 9.0, 3.0}),
+  expect(filled.as_series().host<double>() == std::vector<double>({1.0, 9.0, 3.0}),
          "Slate::fillnull should fill floating NaN values even without an explicit validity mask");
   expect(!pluss::table::detail::has_validity_mask(filled),
          "Slate::fillnull should clear missingness after filling floating NaN values");
 
   const auto df = DataFrame({{"score", slate}});
-  const auto null_mask = df.isnull({"score"}).features("score").as_series().to_vec<bool>();
+  const auto null_mask = df.isnull({"score"}).features("score").as_series().host<bool>();
   expect(null_mask == std::vector<bool>({false, true, false}),
          "DataFrame::isnull should treat floating NaN as missing through Slate delegation");
 
@@ -3802,7 +3802,7 @@ void test_series_nan_participates_in_table_missing_semantics() {
   expect(dropped.ncases() == 2,
          "DataFrame::dropnull(..., all=true) should drop rows whose selected numeric features are NaN");
 
-  const auto summed = df.sum(Axis::Case).as_series().to_vec<double>();
+  const auto summed = df.sum(Axis::Case).as_series().host<double>();
   expect(summed == std::vector<double>({4.0}),
          "DataFrame::sum(skipnull=true) should skip floating NaN values in numeric reductions");
 
@@ -3830,14 +3830,14 @@ void test_dataframe_shownull_and_zoom() {
   const auto null_rows_any = row_source.shownull();
   expect(null_rows_any.ncases() == 3 && null_rows_any.nfeatures() == row_source.nfeatures(),
          "DataFrame::shownull() should keep rows with at least one null by default");
-  expect(null_rows_any.isnull({"a"}).features("a").as_series().to_vec<bool>() ==
+  expect(null_rows_any.isnull({"a"}).features("a").as_series().host<bool>() ==
              std::vector<bool>({true, false, true}),
          "DataFrame::shownull(Axis::Case) should preserve row order for null-containing rows");
 
   const auto null_rows_all = row_source.shownull(Axis::Case, true);
   expect(null_rows_all.ncases() == 1,
          "DataFrame::shownull(Axis::Case, all=true) should keep only rows whose selected cells are all null");
-  expect(null_rows_all.isnull().all(Axis::Feature).as_series().to_vec<bool>() == std::vector<bool>({true}),
+  expect(null_rows_all.isnull().all(Axis::Feature).as_series().host<bool>() == std::vector<bool>({true}),
          "DataFrame::shownull(Axis::Case, all=true) should keep the fully-null row");
 
   const auto feature_source = DataFrame({
@@ -3871,7 +3871,7 @@ void test_dataframe_shownull_and_zoom() {
          "DataFrame::zoom should return the requested rectangular half-open block");
   expect(zoomed.features() == std::vector<std::string>({"x", "y", "z"}),
          "DataFrame::zoom should project the requested feature block");
-  expect(zoomed.features("y").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({10, 11}),
+  expect(zoomed.features("y").as_series().host<std::int64_t>() == std::vector<std::int64_t>({10, 11}),
          "DataFrame::zoom should preserve the values inside the carved block");
   expect(zoomed.labels().values().as_note().vector() == std::vector<std::string_view>({"r1", "r2"}),
          "DataFrame::zoom should preserve the matching case labels for the carved block");
@@ -3883,16 +3883,16 @@ void test_slate_arrange_and_corr_stability() {
   const auto slate = pluss::table::Slate(values, valid);
 
   const auto asc = slate.arrange(true, true);
-  const auto asc_vals = asc.as_series().to_vec<std::int64_t>();
-  const auto asc_valid = pluss::table::detail::validity_mask(asc)->to_vec<bool>();
+  const auto asc_vals = asc.as_series().host<std::int64_t>();
+  const auto asc_valid = pluss::table::detail::validity_mask(asc)->host<bool>();
   expect(asc_vals == std::vector<std::int64_t>({1, 2, 3, 99}),
          "Slate::arrange(ascending) values mismatch");
   expect(asc_valid == std::vector<bool>({true, true, true, false}),
          "Slate::arrange(ascending) validity ordering mismatch");
 
   const auto desc_nulls_first = slate.arrange(false, false);
-  const auto desc_vals = desc_nulls_first.as_series().to_vec<std::int64_t>();
-  const auto desc_valid = pluss::table::detail::validity_mask(desc_nulls_first)->to_vec<bool>();
+  const auto desc_vals = desc_nulls_first.as_series().host<std::int64_t>();
+  const auto desc_valid = pluss::table::detail::validity_mask(desc_nulls_first)->host<bool>();
   expect(desc_vals == std::vector<std::int64_t>({99, 3, 2, 1}),
          "Slate::arrange(descending, nulls_first) values mismatch");
   expect(desc_valid == std::vector<bool>({false, true, true, true}),
@@ -3919,7 +3919,7 @@ void test_slate_arrange_and_corr_stability() {
          fmt::format("Slate::corr should remain strongly positive on monotone data (actual={})", actual));
 
   const auto centered = lhs.as_series().sub(lhs.as_series().mean().item<double>(), 1.0);
-  const auto centered_values = centered.to_vec<double>();
+  const auto centered_values = centered.host<double>();
   expect(centered_values.size() == x.size(), "Series::sub(double, alpha) should preserve length");
   expect(std::fabs(centered_values.front() - (x.front() - lhs.as_series().mean().item<double>())) < 1e-9,
          "Series::sub(double, alpha) should subtract scalar operands correctly");
@@ -3939,7 +3939,7 @@ void test_corr_feature_projection_and_sort_chain() {
   expect(corr.nfeatures() == 3 && corr.ncases() == 3, "corr() should produce a square 3x3 matrix");
 
   const auto sorted_target = corr.features("x").arrange(/*ascending=*/false);
-  const auto values = sorted_target.as_series().to_vec<double>();
+  const auto values = sorted_target.as_series().host<double>();
   expect(values.size() == 3, "corr().features(target) should project one 1D slate");
   expect(values[0] >= values[1] && values[1] >= values[2],
          "arrange(descending) should sort projected correlation values");
@@ -3970,7 +3970,7 @@ void test_timeline_sort_nat_ordering() {
       {5});
   const auto t = pluss::timeline::from_epoch(ticks);
 
-  expect(t.argsort().to_vec<std::int64_t>() == std::vector<std::int64_t>({2, 4, 0, 1, 3}),
+  expect(t.argsort().host<std::int64_t>() == std::vector<std::int64_t>({2, 4, 0, 1, 3}),
          "Timeline::argsort should keep NaT values at the end while preserving NaT order");
   expect(t.sort().ticks() == std::vector<std::int64_t>({
              10'000'000'000LL,
@@ -3993,35 +3993,35 @@ void test_atlas_label_accessor() {
   const auto atlas = pluss::table::Atlas({f0, f1}, labels);
 
   expect(atlas.label().has(), "Atlas::label().has should report explicit depth labels");
-  expect(atlas.label().values().as_series().to_vec<std::int64_t>() ==
+  expect(atlas.label().values().as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}),
          "Atlas::label().values should expose typed depth labels");
   expect(atlas.label().find(pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{1, 9})))
-             .as_series().to_vec<std::int64_t>() ==
+             .as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, -1}),
          "Atlas::label().find should delegate to Slate label indexing");
   expect(atlas.label().unite(pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{1, 2})))
-             .as_series().to_vec<std::int64_t>() ==
+             .as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
          "Atlas::label().unite should preserve typed numeric depth labels");
-  expect(atlas.label().pos(static_cast<double>(1)).as_series().to_vec<std::int64_t>() ==
+  expect(atlas.label().pos(static_cast<double>(1)).as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
          "Atlas::label().pos should return depth positions through Slate label indexing");
 
   const auto relabeled = atlas.label().set(
       pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{10, 11})));
-  expect(relabeled.loc(static_cast<std::int64_t>(11)).features("sales").as_series().to_vec<double>() ==
+  expect(relabeled.loc(static_cast<std::int64_t>(11)).features("sales").as_series().host<double>() ==
              std::vector<double>({30.0, 40.0}),
          "Atlas::label().set should replace depth labels");
 
   const auto aligned = atlas.label().align(
       pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{1, 0})));
-  expect(aligned.dloc(0).features("sales").as_series().to_vec<double>() ==
+  expect(aligned.dloc(0).features("sales").as_series().host<double>() ==
              std::vector<double>({30.0, 40.0}) &&
-             aligned.label().values().as_series().to_vec<std::int64_t>() ==
+             aligned.label().values().as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({1, 0}),
          "Atlas::label().align should reorder frames and carry requested depth labels");
-  expect(atlas.label().range().label().values().as_series().to_vec<std::int64_t>() ==
+  expect(atlas.label().range().label().values().as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1}),
          "Atlas::label().range should materialize typed range depth labels");
   expect(!atlas.label().reset().label().has(),
@@ -4290,31 +4290,31 @@ void test_nexus_validation_and_audit_layer() {
   const auto account_dups = nx.detect_duplicates("account");
   expect(account_dups.ncases() == 2,
          "Nexus::detect_duplicates should materialize repeated declared-key rows");
-  expect(account_dups.features("account_id").as_series().to_vec<std::int64_t>() ==
+  expect(account_dups.features("account_id").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({11, 11}),
          "Nexus::detect_duplicates should retain duplicate key values");
 
   const auto grain = nx.grain_audit("account");
   expect(grain.ncases() == 2 && grain.nfeatures() == 9,
          "Nexus::grain_audit should emit one audit row per declared key set");
-  expect(grain.features("duplicate_rows").as_series().to_vec<std::int64_t>() ==
+  expect(grain.features("duplicate_rows").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({2, 0}),
          "Nexus::grain_audit should quantify duplicate pressure per declared key set");
-  expect(grain.features("valid").as_series().to_vec<bool>() ==
+  expect(grain.features("valid").as_series().host<bool>() ==
              std::vector<bool>({false, true}),
          "Nexus::grain_audit should mark invalid and valid key declarations explicitly");
 
   const auto left_orphans =
       nx.detect_orphans("loan_account", pluss::bundle::nexus::RelationshipSide::Left);
   expect(left_orphans.ncases() == 1 &&
-             left_orphans.features("loan_id").as_series().to_vec<std::int64_t>() ==
+             left_orphans.features("loan_id").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({3}),
          "Nexus::detect_orphans(left) should expose unmatched complete-key left rows and exclude missing keys");
 
   const auto right_orphans =
       nx.detect_orphans("loan_account", pluss::bundle::nexus::RelationshipSide::Right);
   expect(right_orphans.ncases() == 1 &&
-             right_orphans.features("account_id").as_series().to_vec<std::int64_t>() ==
+             right_orphans.features("account_id").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({12}),
          "Nexus::detect_orphans(right) should expose unmatched right-side rows");
 
@@ -4323,15 +4323,15 @@ void test_nexus_validation_and_audit_layer() {
 
   const auto audit = nx.relationship_audit("loan_account");
   expect(audit.ncases() == 1, "Nexus::relationship_audit should return a one-row audit summary");
-  expect(audit.features("left_missing_keys").as_series().to_vec<std::int64_t>() ==
+  expect(audit.features("left_missing_keys").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({1}) &&
-             audit.features("left_orphans").as_series().to_vec<std::int64_t>() ==
+             audit.features("left_orphans").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({1}) &&
-             audit.features("right_duplicate_rows").as_series().to_vec<std::int64_t>() ==
+             audit.features("right_duplicate_rows").as_series().host<std::int64_t>() ==
                  std::vector<std::int64_t>({2}),
          "Nexus::relationship_audit should expose missing-key, orphan, and duplicate pressure together");
   expect(audit.features("computed_status").as_note().at(0) == "invalid" &&
-             !audit.features("valid").as_series().to_vec<bool>().front(),
+             !audit.features("valid").as_series().host<bool>().front(),
          "Nexus::relationship_audit should surface the computed invalid state");
 }
 
@@ -4396,7 +4396,7 @@ void test_nexus_relational_execution_helpers() {
          "Nexus::join should assign a stable default result title");
   expect(joined.get("status_account").has_value(),
          "Nexus::join should use deterministic right-table suffixing for feature collisions");
-  expect(joined.features("district_id").as_series().to_vec<std::int64_t>() ==
+  expect(joined.features("district_id").as_series().host<std::int64_t>() ==
              std::vector<std::int64_t>({1, 2}),
          "Nexus::join should pull right-table payload columns through DataFrame::unify");
 
@@ -4611,17 +4611,17 @@ void test_nexus_pull_surface() {
          "Nexus::pull should expose plain workspace projections and aggregate child projections with stable aliases");
   expect(pulled.features("regions_zone").as_note().at(0) == "west" &&
              pulled.features("regions_zone").as_note().at(1) == "east" &&
-             pulled.features("events_spend_count").as_series().to_vec<std::int64_t>()
+             pulled.features("events_spend_count").as_series().host<std::int64_t>()
                  == std::vector<std::int64_t>({2, 3, 0}) &&
-             pulled.features("events_spend_sum").as_series().to_vec<double>(0) == 15.0 &&
-             pulled.features("events_spend_sum_30d").as_series().to_vec<double>(1) == 12.0 &&
-             pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(0) == 5.0 &&
-             pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(1) == 10.0 &&
-             pulled.features("events_metric_value_max").as_series().to_vec<double>(0) == 120.0 &&
+             pulled.features("events_spend_sum").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) == 15.0 &&
+             pulled.features("events_spend_sum_30d").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 12.0 &&
+             pulled.features("events_spend_sum_30d_root").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) == 5.0 &&
+             pulled.features("events_spend_sum_30d_root").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 10.0 &&
+             pulled.features("events_metric_value_max").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) == 120.0 &&
              !pluss::table::detail::valid_at(pulled.features("events_spend_sum"), 2) &&
              !pluss::table::detail::valid_at(pulled.features("events_metric_value_max"), 2) &&
-             pulled.features("events_spend_sum_30d").as_series().to_vec<double>(0) !=
-                 pulled.features("events_spend_sum_30d_root").as_series().to_vec<double>(0),
+             pulled.features("events_spend_sum_30d").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) !=
+                 pulled.features("events_spend_sum_30d_root").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)),
          "Nexus::pull should aggregate one-to-many related rows back to root grain, including dotted feature names and explicit root-relative windows");
 
   auto chained_pull = nx.pull("customers");
@@ -4656,19 +4656,19 @@ void test_nexus_pull_surface() {
              built.get("recent_spend").has_value(),
          "Nexus::pull(root).take(...).sum(...).collect() should assemble typed root-grain features without per-field namespace repetition");
   expect(built.features("zone").as_note().at(0) == "west" &&
-             built.features("event_count").as_series().to_vec<std::int64_t>()
+             built.features("event_count").as_series().host<std::int64_t>()
                  == std::vector<std::int64_t>({2, 3, 0}) &&
-             built.features("median_spend").as_series().to_vec<double>(0) == 7.5 &&
-             built.features("median_spend").as_series().to_vec<double>(1) == 4.0 &&
-             built.features("min_spend").as_series().to_vec<double>(0) == 5.0 &&
-             built.features("max_spend").as_series().to_vec<double>(1) == 8.0 &&
+             built.features("median_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) == 7.5 &&
+             built.features("median_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 4.0 &&
+             built.features("min_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) == 5.0 &&
+             built.features("max_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 8.0 &&
              built.features("first_event_at").as_timeline().ticks()[0] ==
                  events.features("occurred_at").as_timeline().ticks()[0] &&
              built.features("last_event_at").as_timeline().ticks()[1] ==
                  events.features("occurred_at").as_timeline().ticks()[4] &&
-             built.features("std_spend").as_series().to_vec<double>(0) > 0.0 &&
-             built.features("var_spend").as_series().to_vec<double>(1) > 0.0 &&
-             built.features("recent_spend").as_series().to_vec<double>(1) == 12.0 &&
+             built.features("std_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) > 0.0 &&
+             built.features("var_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) > 0.0 &&
+             built.features("recent_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 12.0 &&
              !pluss::table::detail::valid_at(built.features("total_spend"), 2) &&
              !pluss::table::detail::valid_at(built.features("first_event_at"), 2) &&
              !pluss::table::detail::valid_at(built.features("last_event_at"), 2),
@@ -4702,10 +4702,10 @@ void test_nexus_pull_surface() {
              batched.get("dated_event_count").has_value() &&
              batched.get("total_spend").has_value() &&
              batched.get("max_spend").has_value() &&
-             batched.features("dated_event_count").as_series().to_vec<std::int64_t>()
+             batched.features("dated_event_count").as_series().host<std::int64_t>()
                  == std::vector<std::int64_t>({2, 3, 0}) &&
-             batched.features("total_spend").as_series().to_vec<double>(0) == 15.0 &&
-             batched.features("max_spend").as_series().to_vec<double>(1) == 8.0,
+             batched.features("total_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(0)) == 15.0 &&
+             batched.features("max_spend").as_series().host<double>().array().data.at(static_cast<std::size_t>(1)) == 8.0,
          "Nexus fluent builders should accept batched std::map/std::unordered_map specs for metadata, take(), and grouped reducers");
 
   const auto typed = nx.pull("customers", {
@@ -4814,7 +4814,7 @@ void test_nexus_workspace_insights_and_views() {
   expect(profile.ncases() == 3 && profile.get("null_cells").has_value(),
          "Nexus::profile should return one profiling row per workspace table");
   expect(profile.features("table").as_note().at(0) == "loan" &&
-             profile.features("key_duplicate_rows").as_series().to_vec<std::int64_t>()[0] == 0,
+             profile.features("key_duplicate_rows").as_series().host<std::int64_t>()[0] == 0,
          "Nexus::profile should expose declared-key health beside size metrics");
 
   const auto scan = nx.scan();
@@ -4833,7 +4833,7 @@ void test_nexus_workspace_insights_and_views() {
          "Nexus::deduce should suggest plausible joins from shared names and uniqueness pressure");
   expect(deduced.features("left").as_note().at(0) == "loan" &&
              deduced.features("right").as_note().at(0) == "account" &&
-             deduced.features("confidence").as_series().to_vec<double>()[0] >= 0.5,
+             deduced.features("confidence").as_series().host<double>()[0] >= 0.5,
          "Nexus::deduce should report confident advisory matches without auto-committing them");
   {
     const auto names = deduced.features("name").as_note();
@@ -5100,7 +5100,7 @@ void test_nexus_cache_invalidation_on_mutation() {
   expect_throw([&]() { (void)renamed.path("loan", "account"); },
                "Old path cache entries should not survive an in-place rename");
   expect(renamed.has_store("sheet") &&
-             renamed.run("sheet").features("district_id").as_series().to_vec<std::int64_t>()[1] == 2,
+             renamed.run("sheet").features("district_id").as_series().host<std::int64_t>()[1] == 2,
          "Stored plans should rewrite their table references after in-place rename");
 }
 

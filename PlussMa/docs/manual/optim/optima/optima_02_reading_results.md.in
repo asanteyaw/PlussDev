@@ -33,36 +33,15 @@ Only the first row is a success. `ObjectiveTargetReached` is a success you asked
 
 ## Programs
 
-- [The four algorithms side by side](optima_02_reading_results/the_four_algorithms_side_by_side.md)
-
-## A guided tour
-
-- [The flags that mean a healthy run](optima_02_reading_results/the_flags_that_mean_a_healthy_run.md)
-- [The five failure flags](optima_02_reading_results/the_five_failure_flags.md)
-- [The ten stall categories](optima_02_reading_results/the_ten_stall_categories.md)
-- [Every field of the report](optima_02_reading_results/every_field_of_the_report.md)
-
-## Watching a run
-
-- [Printing progress](optima_02_reading_results/printing_progress.md)
-- [Writing your own hook](optima_02_reading_results/writing_your_own_hook.md)
-- [Which hook runs](optima_02_reading_results/which_hook_runs.md)
-
-## Best feasible points and multipliers
-
-- [The best feasible checkpoint](optima_02_reading_results/the_best_feasible_checkpoint.md)
-- [Reading the multipliers](optima_02_reading_results/reading_the_multipliers.md)
-- [The one-line and many-line summaries](optima_02_reading_results/the_one_line_and_many_line_summaries.md)
+- [Exit flags and stall categories](optima_02_reading_results/exit_flags_and_stall_categories.md)
+- [The report, the summaries and the multipliers](optima_02_reading_results/the_report_summaries_and_multipliers.md)
+- [Watching a run](optima_02_reading_results/watching_a_run.md)
 
 ## Decisions
 
 - **What to branch on.** Branch on `exit_flag`. Use `converged` as a shorthand for "the flag is `Converged`". Treat the message as text for people.
 - **What to do after a failure.** If the flag is `MaxIterations` or `Stopped`, read `output.best_feasible_available`; the checkpoint may be a usable answer. If it is `NoProgress`, `NoFeasiblePoint` or `ConstraintStationary`, suspect the problem (infeasible constraints, a bad start) before the solver settings.
 - **How much progress output.** `reports::iter` for a watched run. A custom hook for a monitor, a stop rule, or a record. Nothing for production.
-
-## Pitfalls
-
-- [Using the answer without checking the flag](optima_02_reading_results/using_the_answer_without_checking_the_flag.md)
 
 ## Where next
 

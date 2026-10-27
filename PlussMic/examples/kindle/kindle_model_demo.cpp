@@ -64,7 +64,7 @@ pluss::table::DataFrame make_base_frame() {
 }
 
 double scalar_stream_value(const pluss::kindle::Stream& stream) {
-  const auto values = stream.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto values = stream.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   return values.empty() ? 0.0 : values[0];
 }
 
@@ -152,7 +152,7 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   std::cout << "selected keys: " << selected.nkeys()
             << ", dropped keys: " << dropped.nkeys()
             << ", renamed has(distance): " << renamed.has("distance") << "\n";
-  std::cout << "sorted head id: " << sorted.keys("id").head(1).as_series().to_vec<std::int64_t>()[0] << "\n";
+  std::cout << "sorted head id: " << sorted.keys("id").head(1).as_series().host<std::int64_t>()[0] << "\n";
   std::cout << "sorted_by rows: " << sorted_by.nrows()
             << ", grouped buckets: " << grouped.size()
             << ", filtered rows: " << filtered.nrows()
@@ -178,7 +178,7 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
 
   auto applied = catalog.keys({"id"}).map([](const pluss::kindle::Stream& s) { return s + 10.0; });
   applied = applied.keys({"id"}).map([](const pluss::kindle::Stream& s) { return s * 2.0; });
-  std::cout << "applied id head: " << applied.keys("id").head(1).as_series().to_vec<std::int64_t>()[0] << "\n";
+  std::cout << "applied id head: " << applied.keys("id").head(1).as_series().host<std::int64_t>()[0] << "\n";
 
   const auto text_clean = catalog.clean("text");
   const auto keywords = catalog.keywords("text", 5);

@@ -70,7 +70,7 @@ pluss::Series bool_series_on(const std::vector<bool>& values,
 
 std::vector<bool> slate_validity(const Slate& slate) {
   if (detail::has_validity_mask(slate)) {
-    return detail::validity_mask(slate)->to_vec<bool>();
+    return detail::validity_mask(slate)->host<bool>();
   }
   return std::vector<bool>(static_cast<std::size_t>(slate.size()), true);
 }
@@ -79,7 +79,7 @@ template <class T>
 void append_scalar_keys(const pluss::Series& series,
                         const std::vector<bool>& valid,
                         std::vector<std::string>& keys) {
-  const auto values = series.to_vec<T>();
+  const auto values = series.host<T>();
   for (std::size_t i = 0; i < values.size(); ++i) {
     if (!valid[i]) {
       keys[i] = std::string(1, '\0');
@@ -176,7 +176,7 @@ std::vector<std::string> case_keys(const Slate& cases) {
       break;
     }
     case SlateKind::Timeline: {
-      const auto ticks = cases.as_timeline().epoch_nanos().to_vec<std::int64_t>();
+      const auto ticks = cases.as_timeline().epoch_nanos().host<std::int64_t>();
       for (std::size_t i = 0; i < ticks.size(); ++i) {
         if (!valid[i] || ticks[i] == pluss::Timeline::kNaT) {
           keys[i] = std::string(1, '\0');

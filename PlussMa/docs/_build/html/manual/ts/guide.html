@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Guide &#8212; PlussMa  documentation</title>
+    <title>Time series guide &#8212; PlussMa  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -38,8 +38,19 @@
           <div class="body" role="main">
             
   <!-- generated from guide.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
-<section id="guide">
-<h1>Guide<a class="headerlink" href="#guide" title="Link to this heading">¶</a></h1>
+<section id="time-series-guide">
+<h1>Time series guide<a class="headerlink" href="#time-series-guide" title="Link to this heading">¶</a></h1>
+<p>This guide covers the time-series framework of PlussMa, <code class="docutils literal notranslate"><span class="pre">pluss::subsp::stats::ts</span></code>, from describing a series to forecasting it. Each chapter is a short series of pages; each page explains one topic in prose and then works through complete programs whose printed output is the real output of the program. Most of the programs generate their own data from a model with known parameters, so you can see how closely a method recovers the truth, and several repeat an experiment many times to show how reliable a method is.</p>
+<p>The chapters build on each other in this order, and each page ends with a pointer to the next:</p>
+<ul class="simple">
+<li><p><strong>Describing a series</strong> (chapter 1) is where every analysis starts: transforms, autocorrelation, and the tests for noise, unit roots, stationarity and volatility clustering.</p></li>
+<li><p><strong>ARIMA models</strong> (chapter 2) fit, forecast and check models for the mean of a single series.</p></li>
+<li><p><strong>Volatility models</strong> (chapter 3) model its variance, and <strong>vector models</strong> (chapter 4) model several series together, with their long-run relations.</p></li>
+<li><p><strong>State-space models</strong> (chapter 5) describe a series by a hidden state, with missing data and simulation.</p></li>
+<li><p><strong>Direct forecasting</strong> (chapter 6) forecasts each horizon separately and compares models out of sample.</p></li>
+<li><p><strong>Plots</strong> (chapter 7) show the correlation and residual pictures used throughout.</p></li>
+</ul>
+<p>The API reference documents every function and type these chapters use.</p>
 <p>Chapters, in reading order:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="guide/ts_01_describing_a_series.html"><span class="std std-doc">Time Series 1: Describing a Series</span></a></p></li>
@@ -68,7 +79,7 @@
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Guides</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Guide</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../regress.html">Regression</a></li>
@@ -79,6 +90,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

@@ -398,7 +398,7 @@ private:
       }();
       if (debug_adam_update && parameter_value.platform() == pluss::pMPS && step_ <= 3) {
         auto print_vec = [&](const char* label, const Series& s) {
-          const auto v = s.reshape({s.numel()}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+          const auto v = s.reshape({s.numel()}).to(pluss::pCPU, ScalarType::Float64).host<double>();
           std::cerr << " " << label << "=";
           for (std::size_t k = 0; k < v.size(); ++k) {
             if (k) std::cerr << ",";

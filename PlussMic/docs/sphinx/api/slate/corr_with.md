@@ -74,7 +74,7 @@ Example 2. Below `min_count` valid pairs, the result is marked invalid.
 auto small = Slate(pluss::make_series({1.0, 2.0}));
 auto small_other = Slate(pluss::make_series({3.0, 4.0}));
 auto out2 = small.corr_with(small_other, SlateCorrMethod::Pearson, 5);
-std::cout << out2.slate().notnull().as_series().to_vec<bool>()[0];
+std::cout << out2.slate().notnull().as_series().host<bool>()[0];
 ```
 
 ### Output
@@ -91,7 +91,7 @@ Example 3. Zero variance on the Pearson path is caught by the validity check
 auto constant = Slate(pluss::make_series({5.0, 5.0, 5.0}));
 auto varying = Slate(pluss::make_series({1.0, 2.0, 3.0}));
 auto out3 = constant.corr_with(varying, SlateCorrMethod::Pearson, 1);
-std::cout << out3.slate().notnull().as_series().to_vec<bool>()[0];
+std::cout << out3.slate().notnull().as_series().host<bool>()[0];
 ```
 
 ### Output
@@ -106,7 +106,7 @@ caught too, not just the Pearson path.
 
 ```cpp
 auto out4 = constant.corr_with(varying, SlateCorrMethod::KendallTau, 1);
-std::cout << out4.slate().notnull().as_series().to_vec<bool>()[0];
+std::cout << out4.slate().notnull().as_series().host<bool>()[0];
 ```
 
 ### Output

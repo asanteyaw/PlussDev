@@ -43,14 +43,14 @@ auto rg = pluss::scribble::Registry({
 });
 
 auto out = rg.keep("id", [](const pluss::scribble::Slot::Value& v) {
-  return std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] % 2 == 1;
+  return std::get<pluss::Series>(v).host<std::int64_t>()[0] % 2 == 1;
 });
 
 auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
-  std::cout << std::get<pluss::Series>(ids.at(i)).to_vec<std::int64_t>()[0];
+  std::cout << std::get<pluss::Series>(ids.at(i)).host<std::int64_t>()[0];
 }
 std::cout << "] nfields=" << out.nfields();
 ```

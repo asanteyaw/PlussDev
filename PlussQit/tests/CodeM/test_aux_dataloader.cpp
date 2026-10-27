@@ -55,7 +55,7 @@ TEST_CASE("aux dataloader batches map-style Series fields", "[aux][dataloader]")
   REQUIRE(first.x().sizes()[1] == 2);
   REQUIRE(first.y().sizes()[0] == 4);
   REQUIRE(first.y().sizes()[1] == 1);
-  const auto x0 = first.x().to_vec<float>();
+  const auto x0 = first.x().host<float>();
   REQUIRE(x0.size() == 8);
   REQUIRE(x0[0] == Approx(0.0f));
   REQUIRE(x0[1] == Approx(1.0f));
@@ -85,8 +85,8 @@ TEST_CASE("aux dataloader supports deterministic shuffling and drop_last", "[aux
   REQUIRE(a.batch_count() == 2);
   REQUIRE(b.batch_count() == 2);
 
-  const auto first_a = (*a.begin()).x().to_vec<float>();
-  const auto first_b = (*b.begin()).x().to_vec<float>();
+  const auto first_a = (*a.begin()).x().host<float>();
+  const auto first_b = (*b.begin()).x().host<float>();
   REQUIRE(first_a == first_b);
 }
 
@@ -256,7 +256,7 @@ TEST_CASE(
 
   std::vector<double> seen;
   for (auto batch : loader) {
-    const auto values = batch.x().to_vec<double>();
+    const auto values = batch.x().host<double>();
     seen.insert(seen.end(), values.begin(), values.end());
   }
   REQUIRE(seen == std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0});
@@ -282,7 +282,7 @@ Series make_big_x() {
 std::vector<float> collect_first_column(pluss::loader::DataLoader& loader) {
   std::vector<float> seen;
   for (auto batch : loader) {
-    const auto col = batch.x().to_vec<float>();
+    const auto col = batch.x().host<float>();
     for (std::size_t i = 0; i < col.size(); i += 2) seen.push_back(col[i]);
   }
   return seen;
@@ -410,7 +410,7 @@ TEST_CASE("aux dataloader pin_memory does not alter batch values", "[aux][datalo
   pluss::loader::DataLoader a({x, y}, without_pin);
   pluss::loader::DataLoader b({x, y}, with_pin);
 
-  REQUIRE(a.batch_at(0).x().to_vec<float>() == b.batch_at(0).x().to_vec<float>());
+  REQUIRE(a.batch_at(0).x().host<float>() == b.batch_at(0).x().host<float>());
 }
 
 TEST_CASE("aux dataloader rejects invalid num_workers/prefetch/persistent combinations", "[aux][dataloader]") {

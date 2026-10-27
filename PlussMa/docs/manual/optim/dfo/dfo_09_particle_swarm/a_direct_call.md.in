@@ -1,8 +1,0 @@
-# A direct call
-
-[Back to The Particle Swarm Minimisers](../dfo_09_particle_swarm.md)
-
-
-@@example Numerical/optimization/guide/dfo/381_particle_swarm_standalone.cpp@@
-
-The swarm covers the whole box, finds the global minimum of this Rastrigin function from a start in a distant local-minimum basin, and ends on the evaluation budget: with the early-stop test off, only budgets end a run (Program 4).

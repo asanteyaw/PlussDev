@@ -62,9 +62,9 @@ int main() {
   nlp::Workflow wf{.lang = nlp::Language::English, .stages = {nlp::stage::tokenize()}};
   const nlp::vectorize::Hasher hasher{pluss::ai::classic::HashMapOptions{.n_features = 4}};
   const auto matrix = hasher.sparse(wf.infer(std::vector<std::string>{"cat sat cat"})).value();
-  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto cols = matrix.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto cols = matrix.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "rows = " << matrix.rows << ", cols = " << matrix.cols << ", nonzeros = " << values.size() << "\n";
   for (std::size_t i = 0; i < values.size(); ++i) {
     std::cout << "  (" << rows[i] << ", " << cols[i] << ") = " << values[i] << "\n";
@@ -99,7 +99,7 @@ int main() {
   const nlp::vectorize::Hasher hasher{pluss::ai::classic::HashMapOptions{.n_features = 16}};
 
   const auto dense = hasher.dense(docs).value();
-  const auto dense_values = dense.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto dense_values = dense.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::int64_t dense_nonzero = 0;
   for (const double value : dense_values) {
     if (value != 0.0) ++dense_nonzero;

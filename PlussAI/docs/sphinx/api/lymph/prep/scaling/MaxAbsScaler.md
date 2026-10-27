@@ -135,7 +135,7 @@ int main() {
   scaler.features({"amount"}).learn(train);
   const auto s = scaler.summary();
   std::cout << "state tensors: " << s.state.size() << "\n";
-  std::cout << "learned max magnitude = " << s.state[1].to_vec<double>()[0] << "\n";
+  std::cout << "learned max magnitude = " << s.state[1].host<double>()[0] << "\n";
 
   return 0;
 }

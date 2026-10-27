@@ -1,0 +1,40 @@
+# Reading a result and how a solve ends
+
+[Back to Linear Programming 1: First Programs](../linprog_01_first_programs.md)
+
+A linear-program result carries the answer *and its proof*. The solution `x` and the objective come with the **dual values** (one per row, the price of that constraint), the bound duals and `dual_objective`, which for a correct optimum equals the objective: a feasible point with a matching dual value cannot be improved. That is the certificate of optimality, and checking it takes arithmetic rather than trust.
+
+There are five ways a solve can end, and the status must be read before the point. `Optimal` and `NearOptimal` give a plan; `PrimalInfeasible` carries `farkas` multipliers that prove no plan exists; `Unbounded` carries a `ray` along which the objective falls forever; `IterationLimit` means the budget ran out. A result for an infeasible program still has an `x`, and it means nothing.
+
+## Program 3: Reading the result
+
+A small program with an equality row, an inequality row and bounds: minimize `2 x0 + 3 x1 + x2` subject to `x0 + x1 + x2 = 10`, `x0 - x1 <= 2` and `0 <= x <= 6`. The program prints every field of the result.
+
+@@example Numerical/optimization/guide/lp/203_reading_result.cpp@@
+
+The optimum is `x = (3, 1, 6)` with an objective of 15 (the cheap variable `x2` is at its upper bound of 6). `dual_objective` equals the objective, which is the certificate that the answer is optimal: a feasible point with a matching dual value cannot be improved. `dual_eq` and `dual_ub` are the prices of the rows (chapter 2). `status` is a number held in a `Series`; the status codes are in the next program.
+
+## Program 4: How a solve ends
+
+Each of the four outcomes, produced on purpose.
+
+@@example Numerical/optimization/guide/lp/204_status_codes.cpp@@
+
+| Status | Code | Meaning | What the result carries |
+|---|---|---|---|
+| `Optimal` | 0 | the optimum was found | `x`, `objective`, the duals |
+| `PrimalInfeasible` | 1 | no point satisfies the constraints | `farkas`: multipliers that prove it |
+| `Unbounded` | 2 | the objective falls without limit | `ray`: a direction of unbounded descent |
+| `IterationLimit` | 3 | the budget ran out first | the last iterate |
+| `NearOptimal` | 4 | the iteration stalled with small residuals | the best iterate; `lp::success` accepts it |
+
+Read the status before reading `x`: a result for an infeasible program still has an `x`, and it means nothing. `lp::success(status)` is true for `Optimal` and `NearOptimal`. The Farkas multipliers and the ray are certificates, and chapter 2 shows how to check them.
+
+## Decisions and pitfalls
+
+- **Read the status before reading `x`.** `lp::success(status)` is true for `Optimal` and `NearOptimal` only.
+- **`dual_objective` equal to `objective` is the proof of optimality.** A gap means the answer is not yet optimal.
+- **The Farkas multipliers and the ray are certificates.** Chapter 2 shows how to check them by arithmetic.
+- **`NearOptimal` is accepted by `lp::success`.** It means the iteration stalled with small residuals; check the residuals if the plan is critical.
+
+Where next: [Chapter 2](../linprog_02_prices_and_certificates.md) uses the duals as prices and checks the certificates.

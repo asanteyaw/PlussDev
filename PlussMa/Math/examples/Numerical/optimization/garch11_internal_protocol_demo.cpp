@@ -13,20 +13,19 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::optim::ConstrainedProblem;
-using pluss::optim::ConstraintMultipliers;
-using pluss::optim::OptimaAlgorithm;
-using pluss::optim::OptimaExitFlag;
-using pluss::optim::OptimaHessianApproximation;
-using pluss::optim::OptimaLinearSystemSolver;
-using pluss::optim::OptimaLinearSystemStructure;
-using pluss::optim::OptimaProgressSnapshot;
-using pluss::optim::OptimaProgressStage;
-using pluss::optim::OptimaProblemScaling;
-using pluss::optim::ParameterPack;
-using pluss::optim::Trace;
-using pluss::optim::optima;
-using pluss::optim::optima_stall_category_name;
+using pluss::subsp::math::optim::ConstrainedProblem;
+using pluss::subsp::math::optim::ConstraintMultipliers;
+using pluss::subsp::math::optim::OptimaAlgorithm;
+using pluss::subsp::math::optim::OptimaExitFlag;
+using pluss::subsp::math::optim::OptimaHessianApproximation;
+using pluss::subsp::math::optim::OptimaLinearSystemSolver;
+using pluss::subsp::math::optim::OptimaLinearSystemStructure;
+using pluss::subsp::math::optim::OptimaProgressSnapshot;
+using pluss::subsp::math::optim::OptimaProgressStage;
+using pluss::subsp::math::optim::OptimaProblemScaling;
+using pluss::subsp::math::optim::ParameterPack;
+using pluss::subsp::math::optim::optima;
+using pluss::subsp::math::optim::optima_stall_category_name;
 
 struct Garch11Params {
   Series omega{pluss::series::undefined()};
@@ -88,11 +87,6 @@ Series garch11_negloglik(const Series& returns, const Garch11Params& p) {
   }
 
   return nll;
-}
-
-double as_f64(const Series& x) {
-  if (!x.defined() || x.numel() != 1) throw std::runtime_error("expected scalar Series");
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
 }
 
 double max_abs_series(const Series& x) {
@@ -165,7 +159,7 @@ std::string_view to_string(OptimaProgressStage stage) {
   return "iter";
 }
 
-void print_ip_options(const pluss::optim::InternalProtocolOptions& opt) {
+void print_ip_options(const pluss::subsp::math::optim::InternalProtocolOptions& opt) {
   std::cout << "InternalProtocol options\n";
   std::cout << "  max_iterations=" << opt.max_iterations << '\n';
   std::cout << "  max_line_search_iterations=" << opt.max_line_search_iterations << '\n';
@@ -212,7 +206,7 @@ void print_multiplier_summary(const ConstraintMultipliers& multipliers) {
 } // namespace
 
 int main() {
-  using namespace pluss::optim;
+  using namespace pluss::subsp::math::optim;
 
   const pluss::Config cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -228,48 +222,48 @@ int main() {
   const Series alpha_guess = scalar(0.15, cfg);
   const Series beta_guess = scalar(0.70, cfg);
 
-  const ConstrainedProblem problem = pluss::optim::problem()
-      .objective([returns, cfg](const ParameterPack<Trace>& p) -> Trace {
-    const Trace omega = clamp(p.at("omega"), 1e-12, 1e12);
-    const Trace alpha = clamp(p.at("alpha"), 1e-12, 0.999);
-    const Trace beta = clamp(p.at("beta"), 1e-12, 0.999);
-    Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-    Trace nll = trace(scalar(0.0, cfg), false);
+  const ConstrainedProblem problem = pluss::subsp::math::optim::problem()
+      .objective([returns, cfg](const ParameterPack<Series>& p) -> Series {
+    const Series omega = p.at("omega").clamp(1e-12, 1e12);
+    const Series alpha = p.at("alpha").clamp(1e-12, 0.999);
+    const Series beta = p.at("beta").clamp(1e-12, 0.999);
+    Series variance = omega / (1.0 - alpha - beta).clamp(1e-8, 1e8);
+    Series nll = scalar(0.0, cfg);
 
     const std::int64_t n = returns.numel();
     for (std::int64_t t_idx = 0; t_idx < n; ++t_idx) {
       if (t_idx > 0) {
-        const Trace prev = trace(returns.select(0, t_idx - 1), false);
+        const Series prev = returns.select(0, t_idx - 1);
         variance = omega + alpha * prev * prev + beta * variance;
       }
-    const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-    const Trace r = trace(returns.select(0, t_idx), false);
-    nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+    const Series var_clamped = variance.clamp(1e-12, 1e12);
+    const Series r = returns.select(0, t_idx);
+    nll = nll + 0.5 * (var_clamped.log() + (r * r) / var_clamped);
   }
   return nll;
       })
-      .nonlinear_inequality([](const ParameterPack<Trace>& p) -> Trace {
+      .nonlinear_inequality([](const ParameterPack<Series>& p) -> Series {
         return p.at("alpha") + p.at("beta") - 0.999;
       })
-      .lbs(pluss::optim::pack_scalars({
+      .lbs(pluss::subsp::math::optim::pack_scalars({
           {"omega", scalar(1e-6, cfg)},
           {"alpha", scalar(1e-6, cfg)},
           {"beta", scalar(1e-6, cfg)},
       }))
-      .ubs(pluss::optim::pack_scalars({
+      .ubs(pluss::subsp::math::optim::pack_scalars({
           {"omega", scalar(1.0, cfg)},
           {"alpha", scalar(0.999, cfg)},
           {"beta", scalar(0.999, cfg)},
       }))
       .build();
 
-  const ParameterPack<Series> initial = pluss::optim::pack_scalars({
+  const ParameterPack<Series> initial = pluss::subsp::math::optim::pack_scalars({
       {"omega", omega_guess},
       {"alpha", alpha_guess},
       {"beta", beta_guess},
   });
 
-  OptimaOptions options = pluss::optim::presets::robust_internal_protocol();
+  OptimaOptions options = pluss::subsp::math::optim::presets::robust_internal_protocol();
   options.internal_protocol.max_line_search_iterations = 20;
   options.internal_protocol.max_krylov_iterations = 25;
   options.internal_protocol.iterative_dimension_threshold = 16;
@@ -338,7 +332,7 @@ int main() {
   std::cout << "  initial_objective=" << as_f64(initial_value) << "\n\n";
 
   std::cout << "Compact summary\n  ";
-  pluss::optim::print_summary(std::cout, result) << "\n\n";
+  pluss::subsp::math::optim::print_summary(std::cout, result) << "\n\n";
 
   std::cout << "Estimated parameters\n";
   std::cout << "  omega=" << as_f64(est.omega) << '\n';

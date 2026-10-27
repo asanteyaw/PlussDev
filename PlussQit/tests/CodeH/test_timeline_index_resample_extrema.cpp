@@ -73,10 +73,10 @@ TEST_CASE("TimelineIndexAccessor resample extrema and endpoints skip floating Na
   const auto values = pluss::make_series(std::vector<double>{
       std::numeric_limits<double>::quiet_NaN(), 3.0, 1.0, 7.0});
 
-  const auto mins = index.resample_min(values, "H").to_vec<double>();
-  const auto maxs = index.resample_max(values, "H").to_vec<double>();
-  const auto first = index.resample_first(values, "H").to_vec<double>();
-  const auto last = index.resample_last(values, "H").to_vec<double>();
+  const auto mins = index.resample_min(values, "H").host<double>();
+  const auto maxs = index.resample_max(values, "H").host<double>();
+  const auto first = index.resample_first(values, "H").host<double>();
+  const auto last = index.resample_last(values, "H").host<double>();
 
   REQUIRE(mins[0] == 1.0);
   REQUIRE(maxs[0] == 3.0);
@@ -106,7 +106,7 @@ TEST_CASE("TimelineIndexAccessor integer resampling represents empty bins as flo
            index.resample_first(values, "H"),
            index.resample_last(values, "H")}) {
     REQUIRE(result.scalar_type() == pluss::ScalarType::Float64);
-    const auto out = result.to_vec<double>();
+    const auto out = result.host<double>();
     REQUIRE(out[0] == 4.0);
     require_nan(out[1]);
     REQUIRE(out[2] == 9.0);
@@ -126,13 +126,13 @@ TEST_CASE("TimelineIndexAccessor resample options control closed edges and label
   options.closed = pluss::Timeline::ResampleClosed::Right;
   options.label = pluss::Timeline::ResampleLabel::Right;
 
-  REQUIRE(index.resample_first(values, options).to_vec<double>() ==
+  REQUIRE(index.resample_first(values, options).host<double>() ==
           std::vector<double>{1.0, 3.0});
-  REQUIRE(index.resample_last(values, options).to_vec<double>() ==
+  REQUIRE(index.resample_last(values, options).host<double>() ==
           std::vector<double>{2.0, 3.0});
-  REQUIRE(index.resample_min(values, options).to_vec<double>() ==
+  REQUIRE(index.resample_min(values, options).host<double>() ==
           std::vector<double>{1.0, 3.0});
-  REQUIRE(index.resample_max(values, options).to_vec<double>() ==
+  REQUIRE(index.resample_max(values, options).host<double>() ==
           std::vector<double>{2.0, 3.0});
   REQUIRE(pluss::timeline::format(index.resample_bins(options).labels,
                                   "%FT%T.%f%z").vector() ==
@@ -150,13 +150,13 @@ TEST_CASE("TimelineIndexAccessor resample endpoint methods preserve dtype withou
   });
   const auto values = pluss::make_series(std::vector<std::int64_t>{4, 2, 9});
 
-  REQUIRE(index.resample_min(values, "H").to_vec<std::int64_t>() ==
+  REQUIRE(index.resample_min(values, "H").host<std::int64_t>() ==
           std::vector<std::int64_t>{2, 9});
-  REQUIRE(index.resample_max(values, "H").to_vec<std::int64_t>() ==
+  REQUIRE(index.resample_max(values, "H").host<std::int64_t>() ==
           std::vector<std::int64_t>{4, 9});
-  REQUIRE(index.resample_first(values, "H").to_vec<std::int64_t>() ==
+  REQUIRE(index.resample_first(values, "H").host<std::int64_t>() ==
           std::vector<std::int64_t>{4, 9});
-  REQUIRE(index.resample_last(values, "H").to_vec<std::int64_t>() ==
+  REQUIRE(index.resample_last(values, "H").host<std::int64_t>() ==
           std::vector<std::int64_t>{2, 9});
 }
 
@@ -188,11 +188,11 @@ TEST_CASE("TimelineIndexAccessor named rolling reductions use valid values in in
       std::numeric_limits<double>::quiet_NaN(), 8.0, 2.0, 9.0, 4.0});
   const auto window = pluss::duration::minutes(45);
 
-  const auto means = index.rolling_mean(values, window).to_vec<double>();
-  const auto mins = index.rolling_min(values, window).to_vec<double>();
-  const auto maxs = index.rolling_max(values, window).to_vec<double>();
-  const auto first = index.rolling_first(values, window).to_vec<double>();
-  const auto last = index.rolling_last(values, window).to_vec<double>();
+  const auto means = index.rolling_mean(values, window).host<double>();
+  const auto mins = index.rolling_min(values, window).host<double>();
+  const auto maxs = index.rolling_max(values, window).host<double>();
+  const auto first = index.rolling_first(values, window).host<double>();
+  const auto last = index.rolling_last(values, window).host<double>();
 
   require_nan(means[0]);
   require_nan(mins[0]);
@@ -224,10 +224,10 @@ TEST_CASE("TimelineIndexAccessor integer rolling mean promotes while endpoint re
 
   const auto mean = index.rolling_mean(values, window);
   REQUIRE(mean.scalar_type() == pluss::ScalarType::Float64);
-  REQUIRE(mean.to_vec<double>() == std::vector<double>{8.0, 5.0, 5.5});
-  REQUIRE(index.rolling_first(values, window).to_vec<std::int64_t>() ==
+  REQUIRE(mean.host<double>() == std::vector<double>{8.0, 5.0, 5.5});
+  REQUIRE(index.rolling_first(values, window).host<std::int64_t>() ==
           std::vector<std::int64_t>{8, 8, 2});
-  REQUIRE(index.rolling_last(values, window).to_vec<std::int64_t>() ==
+  REQUIRE(index.rolling_last(values, window).host<std::int64_t>() ==
           std::vector<std::int64_t>{8, 2, 9});
 }
 

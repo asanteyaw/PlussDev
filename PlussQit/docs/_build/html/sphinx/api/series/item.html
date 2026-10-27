@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=389a5f95"></script>
+    <script src="../../../_static/api_nav.js?v=fc808d0b"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -51,15 +51,15 @@
 </section>
 <section id="crossing-into-a-c-scalar">
 <h2>Crossing Into A C++ Scalar<a class="headerlink" href="#crossing-into-a-c-scalar" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">item()</span></code> extracts the sole logical element of a <code class="docutils literal notranslate"><span class="pre">Series</span></code>. It is the deliberate
+<p><code class="docutils literal notranslate"><span class="pre">item()</span></code> extracts the value of a rank-zero <code class="docutils literal notranslate"><span class="pre">Series</span></code>. It is the deliberate
 boundary between array computation and ordinary C++ control flow: use it when
 a result must become a loop condition, log value, test assertion, configuration
 number, or argument to an API that accepts a native scalar rather than a
 <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
-<p>The precondition is about element count, not rank. A rank-zero scalar and a
-one-element vector, matrix, or higher-rank view are all valid. Any receiver with
-zero elements or more than one element is rejected; <code class="docutils literal notranslate"><span class="pre">item()</span></code> never guesses
-which lane was intended.</p>
+<p>The precondition is deliberately about rank, not merely element count. Shape
+<code class="docutils literal notranslate"><span class="pre">[]</span></code> is a scalar and may be extracted. Shapes <code class="docutils literal notranslate"><span class="pre">[1]</span></code>, <code class="docutils literal notranslate"><span class="pre">[1,1]</span></code>, and higher-rank
+singletons remain arrays and are rejected. Use <a class="reference internal" href="pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pull()</span></code></span></a> for a 1-D
+Series or <a class="reference internal" href="host.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">host()</span></code></span></a> for a rank-aware host representation.</p>
 <p>The typed overload, <code class="docutils literal notranslate"><span class="pre">item&lt;T&gt;()</span></code>, converts the value to the requested C++ type.
 The untyped overload preserves the Series dtype in a tagged <code class="docutils literal notranslate"><span class="pre">pluss::Scalar</span></code>,
 which is useful when generic code does not know the dtype at compile time.
@@ -100,19 +100,28 @@ exact type. Numeric conversion follows the same representability constraints
 as the corresponding host materialization.</p>
 </section>
 </section>
-<section id="a-one-element-vector-is-valid">
-<h3>2. A one-element vector is valid<a class="headerlink" href="#a-one-element-vector-is-valid" title="Link to this heading">¶</a></h3>
+<section id="scalar-rank-not-numel-controls-the-contract">
+<h3>2. Scalar rank, not <code class="docutils literal notranslate"><span class="pre">numel()</span></code>, controls the contract<a class="headerlink" href="#scalar-rank-not-numel-controls-the-contract" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">singleton</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">42.0</span><span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">singleton</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">singleton</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">singleton</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">().</span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">singleton</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <section id="id1">
 <h4>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>42
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dim=1 values=42
+Series::item&lt;T&gt;(): expected a rank-zero Series
 </pre></div>
 </div>
-<p>The vector has shape <code class="docutils literal notranslate"><span class="pre">[1]</span></code>, not <code class="docutils literal notranslate"><span class="pre">[]</span></code>, but its <code class="docutils literal notranslate"><span class="pre">numel()</span></code> is one. <code class="docutils literal notranslate"><span class="pre">item()</span></code> does
-not require a rank-zero receiver.</p>
+<p>The one-element vector is intentionally not collapsed into a scalar. This
+keeps rank visible at the C++ boundary and prevents accidental acceptance of a
+mis-shaped result.</p>
 </section>
 </section>
 <section id="preserve-runtime-dtype-with-the-tagged-overload">
@@ -178,7 +187,7 @@ calling <code class="docutils literal notranslate"><span class="pre">select(...)
 </div>
 <section id="id5">
 <h4>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::item&lt;T&gt;: expected tensor with exactly one element
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series::item&lt;T&gt;(): expected a rank-zero Series
 </pre></div>
 </div>
 <p>Reduce or select explicitly before extraction. The failure protects code from
@@ -189,7 +198,9 @@ silently reading only the first lane of a larger result.</p>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="numel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">numel()</span></code></span></a> reports whether the one-element precondition holds.</p></li>
+<li><p><a class="reference internal" href="dim.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dim()</span></code></span></a> reports whether the receiver is rank zero.</p></li>
+<li><p><a class="reference internal" href="pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pull()</span></code></span></a> exports a rank-one Series as <code class="docutils literal notranslate"><span class="pre">std::vector&lt;T&gt;</span></code>.</p></li>
+<li><p><a class="reference internal" href="host.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">host()</span></code></span></a> exports any rank without collapsing its structure.</p></li>
 <li><p><a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">select()</span></code></span></a> chooses one lane while remaining inside Series.</p></li>
 <li><p><a class="reference internal" href="tensor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tensor()</span></code></span></a> provides the external tensor interoperability
 boundary in enabled builds.</p></li>

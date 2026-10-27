@@ -19,10 +19,6 @@ pluss::Series rastrigin(const pluss::Series& x) {
   const double pi = 3.14159265358979323846;
   return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();
 }
-const char* name(dfo::PopulationSolverStatus s) {
-  return s == dfo::PopulationSolverStatus::Converged ? "Converged"
-         : s == dfo::PopulationSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 
 int main() {
   std::cout << std::left << std::setw(8) << "dim" << std::setw(16) << "method" << std::setw(26) << "status" << std::setw(12) << "minimum" << "evals\n";
@@ -33,7 +29,7 @@ int main() {
       c.upper_bounds = filled(n, 5.12);
       c.max_evaluations = 40000;
       const auto o = dfo::differential_evolution_minimizer(rastrigin, filled(n, 3.0), c);
-      std::cout << std::left << std::setw(8) << n << std::setw(16) << "DE" << std::setw(26) << name(o.status) << std::scientific << std::setprecision(2)
+      std::cout << std::left << std::setw(8) << n << std::setw(16) << "DE" << std::setw(26) << dfo::to_string(o.status) << std::scientific << std::setprecision(2)
                 << std::setw(12) << o.minimum << std::defaultfloat << o.diagnostics.evaluations << "\n";
     }
     {
@@ -42,7 +38,7 @@ int main() {
       c.upper_bounds = filled(n, 5.12);
       c.max_evaluations = 40000;
       const auto o = dfo::differential_evolution_prmm_minimizer(rastrigin, filled(n, 3.0), c);
-      std::cout << std::left << std::setw(8) << n << std::setw(16) << "DE-PRMM" << std::setw(26) << name(o.status) << std::scientific << std::setprecision(2)
+      std::cout << std::left << std::setw(8) << n << std::setw(16) << "DE-PRMM" << std::setw(26) << dfo::to_string(o.status) << std::scientific << std::setprecision(2)
                 << std::setw(12) << o.minimum << std::defaultfloat << o.diagnostics.evaluations << "\n";
     }
   }

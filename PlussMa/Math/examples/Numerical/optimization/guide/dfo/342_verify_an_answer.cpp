@@ -35,7 +35,7 @@ int main() {
   other.solver = dfo::DfoSolverKind::OrthoMads;
   const auto b = dfo::DFO::solve(make({0.5, 3.5}), other);
 
-  const auto xa = a.minimizer.to_vec<double>(), xb = b.minimizer.to_vec<double>();
+  const auto xa = a.minimizer.host<double>(), xb = b.minimizer.host<double>();
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "1. status      : " << dfo::to_string(a.status) << "\n";
   std::cout << "2. violation   : " << violation(xa) << std::scientific << std::setprecision(1) << "  (reported " << a.diagnostics.max_constraint_violation << ")\n";

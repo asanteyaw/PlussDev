@@ -46,8 +46,8 @@ int main() {
     o.lag_order = 1;
     o.statistic = stat;
     const auto r = ts::johansen_test(y, o);
-    const auto lambda = r.eigenvalues.to_vec<double>(), s = r.stat.to_vec<double>(), c = r.critical.to_vec<double>(), p = r.pvalue.to_vec<double>();
-    const auto rej = r.reject.to_vec<std::int64_t>();
+    const auto lambda = r.eigenvalues.host<double>(), s = r.stat.host<double>(), c = r.critical.host<double>(), p = r.pvalue.host<double>();
+    const auto rej = r.reject.host<std::int64_t>();
     std::cout << (stat == ts::JohansenStat::Trace ? "trace statistic\n" : "maximum-eigenvalue statistic\n");
     std::cout << std::setw(10) << "H0: rank<=" << std::setw(12) << "eigenvalue" << std::setw(12) << "statistic" << std::setw(12) << "5% critical" << std::setw(10) << "p-value" << "\n";
     for (std::size_t i = 0; i < s.size(); ++i)

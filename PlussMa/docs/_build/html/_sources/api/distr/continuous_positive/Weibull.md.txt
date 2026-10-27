@@ -1,0 +1,243 @@
+<!-- generated from Weibull.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Weibull`
+
+The Weibull distribution: the standard model of lifetimes and failure times, with a hazard that can fall, stay constant or rise.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Weibull, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Weibull, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Weibull, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Weibull, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Weibull, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The Weibull distribution describes the time until a failure when the failure rate changes as a power of time. With `shape = 1` the failure rate is constant and the Weibull is the exponential distribution; with `shape < 1` it falls (early failures dominate); with `shape > 1` it rises (wear-out). `scale` stretches the time axis: it is the time by which 63.2% of items have failed, whatever the shape.
+
+The short form of `params` is `{shape, scale}`. A longer form `{theta, alpha, beta}` adds a location `theta` (the earliest possible failure time) before the shape and scale.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `shape` | > 0 | the shape; 1 is the exponential distribution, 2 the Rayleigh, larger values give a more peaked, symmetric density |
+| `scale` | > 0 | the characteristic life: the time by which 63.2% of items have failed |
+
+Support: `x` above the location (0 for the short form).
+
+The object form of this family, with the same functions as methods, is on its own page: [`distr::Weibull`](../object_based/Weibull.md).
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above (a shorter list selects the defaults: none; the short form is `{shape, scale}`, the long form `{theta, alpha, beta}` with a location). A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape.
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`shape` and `scale` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Weibull on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.25, 0.5, 1.0, 2.0, 4.0}, f64);
+  const std::vector<double> params = {1.7, 2.1};
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Weibull, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Weibull, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Weibull, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.25000 0.50000 1.00000 2.00000 4.00000
+pdf: 0.17766 0.27170 0.36278 0.31165 0.06389
+cdf: 0.02648 0.08350 0.24670 0.60164 0.94973
+logpdf: -1.72791 -1.30306 -1.01395 -1.16587 -2.75066
+```
+
+The density is largest on this grid at x = 1, where it is 0.36278; the distribution function runs from 0.02648 at x = 0.25 to 0.94973 at x = 4, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.36278) = -1.01396 at x = 1.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {1.7, 2.1};
+
+  // The three ways to the probability that the variable lies in [0.5, 2]:
+  const auto grid = pluss::series::linspace(0.5, 2.0, 3001, f64);
+  const double area = as_f64(distr::pdf(dst::Weibull, grid, params).antidiff(grid).trapezoid());
+
+  const auto edges = pluss::make_series({0.5, 2.0}, f64);
+  const auto c = distr::cdf(dst::Weibull, edges, params).pull<double>();
+
+  const auto draws = distr::sample(dst::Weibull, params, {200000}, f64, 7ULL);
+  const double fraction = as_f64(((draws >= 0.5).to(pluss::ScalarType::Float64) * (draws <= 2.0).to(pluss::ScalarType::Float64)).mean());
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(2) - cdf(0.5): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+integral of the density: 0.51814
+cdf(2) - cdf(0.5): 0.51814
+fraction of 200000 draws in range: 0.51714
+```
+
+The integral of the density (0.51814) and the difference of the distribution function (0.51814) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.51714) differs from it by 0.001, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 0.00112), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({0.25, 0.5, 1.0, 2.0, 4.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 0.8 (falling hazard):";
+  for (double v : distr::pdf(dst::Weibull, x, {0.8, 2.1}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 1.0 (exponential)    :";
+  for (double v : distr::pdf(dst::Weibull, x, {1.0, 2.1}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 3.0 (wear-out)       :";
+  for (double v : distr::pdf(dst::Weibull, x, {3.0, 2.1}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.2500 0.5000 1.0000 2.0000 4.0000
+shape 0.8 (falling hazard): 0.4860 0.3696 0.2543 0.1470 0.0628
+shape 1.0 (exponential)    : 0.4227 0.3753 0.2958 0.1837 0.0709
+shape 3.0 (wear-out)       : 0.0202 0.0799 0.2908 0.5462 0.0052
+```
+
+Read down the rows: `shape 0.8 (falling hazard)` peaks on this grid at x = 0.25 (value 0.486); `shape 1.0 (exponential)` peaks on this grid at x = 0.25 (value 0.4227); `shape 3.0 (wear-out)` peaks on this grid at x = 2 (value 0.5462). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 confirms that a Weibull with shape 1 is an exponential distribution with rate `1/scale`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::scientific << std::setprecision(2);
+  const auto x = pluss::make_series({0.2, 0.7, 1.5, 3.0, 6.0}, f64);
+  const std::vector<double> here = {1.0, 2.0};
+  const std::vector<double> there = {0.5};
+
+  const double dpdf = as_f64((distr::pdf(dst::Weibull, x, here) - distr::pdf(dst::Exponential, x, there)).abs().max());
+  const double dcdf = as_f64((distr::cdf(dst::Weibull, x, here) - distr::cdf(dst::Exponential, x, there)).abs().max());
+  std::cout << "largest difference in the density: " << dpdf << '\n';
+  std::cout << "largest difference in the distribution function: " << dcdf << '\n';
+}
+```
+
+Output
+
+```text
+largest difference in the density: 0.00e+00
+largest difference in the distribution function: 0.00e+00
+```
+
+The two largest differences are 0 for the density and 0 for the distribution function over the grid: zero up to rounding, so the two descriptions are the same distribution.
+
+## See Also
+
+- [`Exponential`](../continuous_positive/Exponential.md)
+- [`Rayleigh`](../continuous_positive/Rayleigh.md)
+- [`Gamma`](../continuous_positive/Gamma.md)
+- [`Lognormal`](../continuous_positive/Lognormal.md)
+- [`Gompertz`](../continuous_positive/Gompertz.md)
+- [`distr::Weibull`](../object_based/Weibull.md) -- the object form

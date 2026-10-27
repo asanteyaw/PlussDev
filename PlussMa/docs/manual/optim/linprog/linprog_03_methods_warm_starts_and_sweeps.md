@@ -25,9 +25,7 @@ The two methods also differ in which optimal point they return when the optimum 
 
 ## Programs
 
-- [The two methods on a tie](linprog_03_methods_warm_starts_and_sweeps/the_two_methods_on_a_tie.md)
-- [Restarting from a previous answer](linprog_03_methods_warm_starts_and_sweeps/restarting_from_a_previous_answer.md)
-- [Many programs in one call](linprog_03_methods_warm_starts_and_sweeps/many_programs_in_one_call.md)
+- [Methods, warm starts and sweeps](linprog_03_methods_warm_starts_and_sweeps/methods_warm_starts_and_sweeps.md)
 
 ## What to remember
 
@@ -41,8 +39,6 @@ The two methods also differ in which optimal point they return when the optimum 
 :maxdepth: 2
 :hidden:
 
-linprog_03_methods_warm_starts_and_sweeps/the_two_methods_on_a_tie
-linprog_03_methods_warm_starts_and_sweeps/restarting_from_a_previous_answer
-linprog_03_methods_warm_starts_and_sweeps/many_programs_in_one_call
+linprog_03_methods_warm_starts_and_sweeps/methods_warm_starts_and_sweeps
 ```
 <!-- apiref:toctree:end -->

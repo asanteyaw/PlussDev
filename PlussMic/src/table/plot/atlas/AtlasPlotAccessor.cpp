@@ -176,7 +176,7 @@ pluss::Series slate_to_numeric_series(const Slate& t, std::string_view where, st
 std::vector<double> slate_to_numeric_values(const Slate& t,
                                              std::string_view where,
                                              std::string_view feature_name) {
-  return slate_to_numeric_series(t, where, feature_name).to_vec<double>();
+  return slate_to_numeric_series(t, where, feature_name).host<double>();
 }
 
 void require_size(std::int64_t actual, std::int64_t expected, std::string_view where, std::string_view what) {

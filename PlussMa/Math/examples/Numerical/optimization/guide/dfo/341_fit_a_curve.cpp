@@ -29,7 +29,7 @@ int main() {
   prob.upper_bounds = vec({10.0, 5.0, 5.0});
 
   auto show = [](const char* label, const dfo::DfoResult& r) {
-    const auto p = r.minimizer.to_vec<double>();
+    const auto p = r.minimizer.host<double>();
     std::cout << std::left << std::setw(26) << label << std::setw(26) << dfo::to_string(r.status) << std::fixed << std::setprecision(4)
               << "a " << p[0] << "  b " << p[1] << "  c " << p[2] << std::scientific << std::setprecision(1) << "  sse " << r.minimum
               << std::defaultfloat << "  evals " << r.diagnostics.evaluations << "\n";

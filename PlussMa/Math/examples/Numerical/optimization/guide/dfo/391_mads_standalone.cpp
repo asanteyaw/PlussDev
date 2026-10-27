@@ -18,15 +18,11 @@ pluss::Series rosenbrock(const pluss::Series& x) {
   const auto a = x.select(0, 0), b = x.select(0, 1);
   return (b - a * a).square() * 100.0 + (a * -1.0 + 1.0).square();
 }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   const auto o = dfo::mesh_adaptive_direct_search_minimizer(rosenbrock, vec({-1.2, 1.0}));
   std::cout << std::fixed << std::setprecision(5) << "minimizer   : " << o.minimizer.select(0, 0).item<double>() << ", " << o.minimizer.select(0, 1).item<double>() << "\n";
   std::cout << std::scientific << std::setprecision(2) << "minimum     : " << o.minimum << "\n";
-  std::cout << "status      : " << name(o.status) << "\n";
+  std::cout << "status      : " << dfo::to_string(o.status) << "\n";
   const auto& d = o.diagnostics;
   std::cout << "iterations  : " << d.iterations << "\nevaluations : " << d.evaluations << "\nfinal mesh  : " << d.mesh_size
             << "\nfinal frame : " << d.frame_size << "\nlast phase  : " << d.last_phase << "\n";

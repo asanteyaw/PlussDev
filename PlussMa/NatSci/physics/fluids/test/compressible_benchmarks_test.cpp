@@ -276,10 +276,10 @@ void test_lax_riemann_problem() {
   const auto path = gas::evolve_to(initial, grid, rules, seconds(0.0),
                                    seconds(stop), {}, options);
   const auto result = final_state(path, grid);
-  const auto density = result.density().si_value().to_vec<double>();
+  const auto density = result.density().si_value().host<double>();
   const auto speed =
-      gas::velocity(result, grid).si_value().select(0, 0).to_vec<double>();
-  const auto p = gas::pressure(result, grid).si_value().to_vec<double>();
+      gas::velocity(result, grid).si_value().select(0, 0).host<double>();
+  const auto p = gas::pressure(result, grid).si_value().host<double>();
   double density_l1 = 0.0;
   double velocity_l1 = 0.0;
   double pressure_l1 = 0.0;
@@ -624,7 +624,7 @@ void test_double_mach_reflection() {
           .to(ScalarType::Float64)
           .mean()
           .item<double>();
-  const auto bottom = result_rho.select(1, 0).to_vec<double>();
+  const auto bottom = result_rho.select(1, 0).host<double>();
   double mach_stem_front = 0.0;
   for (std::int64_t index = 0; index < nx; ++index)
     if (bottom[static_cast<std::size_t>(index)] > 4.0)

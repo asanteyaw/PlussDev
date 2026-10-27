@@ -164,9 +164,9 @@ int main() {
   a.reset(vocab, indexer.pad_id());
   b.reset(vocab, indexer.pad_id());
   c.reset(vocab, indexer.pad_id());
-  const double first_a = a.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>()[4];
-  const double first_b = b.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>()[4];
-  const double first_c = c.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>()[4];
+  const double first_a = a.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>()[4];
+  const double first_b = b.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>()[4];
+  const double first_c = c.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>()[4];
   std::cout << "same seed equal = " << (first_a == first_b) << ", other seed equal = " << (first_a == first_c) << "\n";
   return 0;
 }

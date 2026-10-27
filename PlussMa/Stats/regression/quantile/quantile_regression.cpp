@@ -60,7 +60,7 @@ Series as_matrix_(const Series& x, const char* op) {
 }
 
 double scalar_(const Series& x) {
-  return x.to(ScalarType::Float64).reshape({1}).item<double>();
+  return x.to(ScalarType::Float64).reshape({1}).host<double>().front();
 }
 
 double clamp01_(double p) {
@@ -69,7 +69,7 @@ double clamp01_(double p) {
 
 double norm_cdf_(double x, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, cfg);
-  return clamp01_(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::Normal{0.0, 1.0}.cdf(q).host<double>().front());
 }
 
 double norm_quantile_(double p, Config cfg) {
@@ -94,7 +94,7 @@ double norm_quantile_(double p, Config cfg) {
 
 double t_cdf_(double x, double dof, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, cfg);
-  return clamp01_(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::StudentT{dof, 0.0, 1.0}.cdf(q).host<double>().front());
 }
 
 double t_quantile_(double p, double dof, Config cfg) {
@@ -374,7 +374,7 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
   double crit = std::numeric_limits<double>::quiet_NaN();
   if (df_resid > 0) {
     const double dof = static_cast<double>(df_resid);
-    const auto tv = t_v.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto tv = t_v.to(pluss::pCPU, ScalarType::Float64).host<double>();
     std::vector<double> pv(tv.size());
     for (std::size_t i = 0; i < tv.size(); ++i) {
       pv[i] = pluss::subsp::stats::tails::student_t_two_sided(tv[i], dof);
@@ -484,11 +484,11 @@ std::ostream& print_quantile_summary(std::ostream& os, const QuantileFitResult& 
      << '\n';
   os << "------------------------------------------------------------------------------\n";
 
-  const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto se = fit.std_errors.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto tval = fit.t_values.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto pval = fit.p_values.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto ci = fit.conf_int.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto se = fit.std_errors.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto tval = fit.t_values.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto pval = fit.p_values.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto ci = fit.conf_int.to(pluss::pCPU, ScalarType::Float64).host<double>();
 
   for (std::size_t i = 0; i < coef.size(); ++i) {
     const std::string name = (i < fit.coefficient_names.size()) ? fit.coefficient_names[i] : ("x" + std::to_string(i + 1));

@@ -19,7 +19,7 @@ int main() {
   const pluss::Series d_square = dw.calc.diff.malliavin([](const pluss::Series& inc) { return inc.sum().pow(2.0); });
   std::cout << std::fixed << std::setprecision(5);
   std::cout << "W_T = " << wT << ", so D_i (W_T^2) = 2 W_T = " << 2 * wT << "; computed:";
-  for (double v : d_square.to_vec<double>()) std::cout << " " << v;
+  for (double v : d_square.host<double>()) std::cout << " " << v;
   std::cout << "\n";
 
   // The path form takes the path W itself (n + 1 samples starting at 0) and differentiates with respect to its
@@ -27,9 +27,9 @@ int main() {
   const pluss::Series w = pluss::Series::zeros({1}, f64).unite({dw.cumsum(0)}, 0);
   const pluss::Series d_max = w.calc.diff.malliavin_path([](const pluss::Series& path) { return path.amax(0); });
   std::cout << "W at the grid:";
-  for (double v : w.to_vec<double>()) std::cout << " " << v;
+  for (double v : w.host<double>()) std::cout << " " << v;
   std::cout << "\nD_i max(W): ";
-  for (double v : d_max.to_vec<double>()) std::cout << " " << v;
+  for (double v : d_max.host<double>()) std::cout << " " << v;
   std::cout << "\n";
   return 0;
 }

@@ -33,10 +33,8 @@ The options live in `DfoOptions::mads`:
 
 ## Programs
 
-- [A function that fails](dfo_04_black_boxes/a_function_that_fails.md)
-- [The cache](dfo_04_black_boxes/the_cache.md)
-- [Two objectives](dfo_04_black_boxes/two_objectives.md)
-- [Constraint handling](dfo_04_black_boxes/constraint_handling.md)
+- [Functions that fail and functions that are expensive](dfo_04_black_boxes/failing_and_expensive_functions.md)
+- [Several objectives and constraint policies](dfo_04_black_boxes/several_objectives_and_constraint_policies.md)
 
 ## Checklist
 
@@ -51,9 +49,7 @@ The options live in `DfoOptions::mads`:
 :maxdepth: 2
 :hidden:
 
-dfo_04_black_boxes/a_function_that_fails
-dfo_04_black_boxes/the_cache
-dfo_04_black_boxes/two_objectives
-dfo_04_black_boxes/constraint_handling
+dfo_04_black_boxes/failing_and_expensive_functions
+dfo_04_black_boxes/several_objectives_and_constraint_policies
 ```
 <!-- apiref:toctree:end -->

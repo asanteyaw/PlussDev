@@ -111,7 +111,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -152,8 +152,8 @@ int main() {
   const auto cv_a = ts::DirectCVForecaster::fit(Series{}, data.y, partition, a);
   const auto cv_b = ts::DirectCVForecaster::fit(data.x, data.y, partition, b);
   std::cout << std::fixed << std::setprecision(4) << "mean squared error per fold    fold 1    fold 2    fold 3    fold 4\n";
-  const auto la = cv_a.cvloss(Series{}, data.y, ts::CVLossMode::Individual).to_vec<double>();
-  const auto lb = cv_b.cvloss(data.x, data.y, ts::CVLossMode::Individual).to_vec<double>();
+  const auto la = cv_a.cvloss(Series{}, data.y, ts::CVLossMode::Individual).host<double>();
+  const auto lb = cv_b.cvloss(data.x, data.y, ts::CVLossMode::Individual).host<double>();
   std::cout << "  y lags only            ";
   for (double v : la) std::cout << std::setw(10) << v;
   std::cout << "\n  y lags and x lags      ";
@@ -188,7 +188,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -230,7 +230,7 @@ int main() {
   show("average mse", cv.cvloss(data.x, data.y));
   const auto pred = cv.cvpredict(data.x, data.y);
   double tested = 0.0;
-  for (double v : pred.select(1, 0).to_vec<double>()) tested += std::isfinite(v) ? 1.0 : 0.0;
+  for (double v : pred.select(1, 0).host<double>()) tested += std::isfinite(v) ? 1.0 : 0.0;
   std::cout << "rows with an out-of-sample prediction: " << tested << " of " << pred.sizes()[0] << "\n";
 }
 ```

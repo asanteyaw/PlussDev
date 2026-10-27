@@ -1,7 +1,7 @@
 # Engineering Structures Implementation
 
 This file records implemented behavior, ownership, verification, and deliberately deferred
-scope for `pluss::eng::structure`. It is an implementation boundary, not user-facing API
+scope for `pluss::subsp::eng::structure`. It is an implementation boundary, not user-facing API
 prose. The generated public inventory in `PlussMa/public_calls.md` remains the source of
 truth for which declarations may be documented publicly.
 
@@ -439,3 +439,465 @@ spectral searches, mode tracking through crossings, follower-load geometric term
 material instability, nonlinear equilibrium paths, or post-buckling. The generic Series
 solver accepts user-supplied inverse actions, but PlussMa currently supplies Jacobi-PCG
 rather than a production sparse direct or multilevel shift-invert solver.
+
+## E6d: Transient Frame Motion
+
+### Public contract
+
+`structure::motion(frame, load, time, fix, initial, options)` integrates the linear
+second-order frame equation
+
+```text
+M a(t) + C v(t) + K u(t) = load(t)
+C = mass_damping M + stiffness_damping K.
+```
+
+`load` has shape `[..., time, node, 3]`; `time` is a strictly increasing vector with at
+least two samples. Frame properties, load scenarios, initial displacement/velocity, and
+zero-valued support batches broadcast to one leading scenario shape. Results store
+displacement, velocity, acceleration, and support reaction as
+`[..., time, node, 3]`; kinetic/strain energy and Krylov diagnostics are
+`[..., time]`. The returned time vector is the supplied Series, and iteration counts are
+integer metadata over the time axis.
+
+Only homogeneous supports are accepted. A constant nonzero support displacement is not
+a complete transient boundary condition because its velocity and acceleration histories
+are unspecified; accepting it as stationary would silently inject an impulse at the
+initial sample. Moving support motion needs a later explicit history contract.
+
+### Generalized-alpha step
+
+The public control is the high-frequency spectral radius `rho_inf` in `[0, 1]`, stored as
+`MotionOptions::spectral_radius`. Parameters follow the second-order Chung--Hulbert
+convention used independently by MFEM:
+
+```text
+alpha_m = (2 - rho_inf) / (1 + rho_inf)
+alpha_f = 1 / (1 + rho_inf)
+gamma   = 1/2 + alpha_m - alpha_f
+beta    = (1 + alpha_m - alpha_f)^2 / 4.
+```
+
+`rho_inf = 1` is the average-acceleration Newmark rule. Lower values damp unresolved
+high-frequency response without adding physical Rayleigh damping. For each possibly
+nonuniform step `dt`, the implementation predicts the intermediate alpha state and
+solves directly for `a_alpha`:
+
+```text
+u_pred = u_n + alpha_f dt v_n
+       + alpha_f dt^2 (1/2 - beta/alpha_m) a_n
+v_pred = v_n + alpha_f dt (1 - gamma/alpha_m) a_n
+
+c_u = beta  alpha_f dt^2 / alpha_m
+c_v = gamma alpha_f dt   / alpha_m
+
+[(1 + c_v mass_damping) M
+ + (c_u + c_v stiffness_damping) K] a_alpha
+  = load_alpha - C v_pred - K u_pred.
+```
+
+The endpoint state is extrapolated from
+`u_alpha = u_pred + c_u a_alpha`,
+`v_alpha = v_pred + c_v a_alpha`, and
+`a_alpha = (1-alpha_m) a_n + alpha_m a_(n+1)`. Loads are linearly sampled at the same
+alpha point. This keeps force, inertia, damping, and stiffness synchronized; it does not
+mix endpoint loading with an intermediate equilibrium equation.
+
+### Matrix-free ownership and initialization
+
+Every effective solve reuses the E6b frame stiffness and consistent-mass actions plus the
+canonical batched PCG engine. Rayleigh damping is never assembled: its two terms are
+folded into the mass and stiffness coefficients above. A Jacobi diagonal is assembled
+once from the exact stiffness diagonal and the consistent-mass diagonal, then rescaled
+per step. No global `M`, `C`, or `K` is materialized.
+
+Initial acceleration is recovered from equilibrium rather than assumed zero:
+
+```text
+M a_0 = load_0 - C v_0 - K u_0.
+```
+
+An exact zero right-hand side normally lets an iterative method return in zero steps.
+That primal shortcut would make algorithmic reverse mode report a zero Jacobian even
+though the mathematical derivative is `M^-1`. For tracked zero-RHS scenario lanes,
+initialization therefore uses the linear identity
+
+```text
+M(a + p) = r + p
+M p0      = p
+a         = (a + p) - p0,
+```
+
+with a deterministic free-degree probe `p`. The two primal solutions cancel exactly at
+`r = 0`, while reverse history retains the inverse-mass action. Untracked zero states keep
+the zero-iteration fast path. This policy is local to consistent initialization and does
+not perturb ordinary time steps.
+
+Endpoint reactions are recovered as `M a + C v + K u - load` and masked to constrained
+degrees. Kinetic and strain energies are respectively `v^T M v / 2` and `u^T K u / 2`.
+The average-acceleration undamped rule preserves the verified linear oscillator energy;
+generalized-alpha filtering deliberately dissipates its high-frequency component.
+
+### Performance and differentiation
+
+The time loop is necessarily sequential because every state depends on its predecessor.
+Within each sample, all scenarios, nodes, members, and degrees are Series lanes. Member
+gather/transform/scatter, mass and stiffness actions, damping, energies, reactions, and
+PCG iterations remain batched and platform-neutral. Time increments remain scalar Series
+views, so no host conversion severs a differentiable time schedule. Histories are joined
+in one allocation per result field rather than repeatedly reallocated.
+
+The complete trajectory retains reverse history through initial equilibrium, every
+effective solve, Rayleigh damping, nonuniform `dt`, and output assembly. The permanent
+test checks the full load-history Jacobian, including the exact-zero first sample that
+exercises the shifted inverse-mass rule.
+
+### Permanent verification
+
+`Eng/structure/test/motion_test.cpp` covers:
+
+- undamped axial free vibration against an independently coded scalar
+  average-acceleration recurrence and exact energy conservation;
+- nonuniform, forced, mass-and-stiffness-damped generalized-alpha motion against a
+  separate scalar recurrence;
+- batched density and output shape, Float32 retention, reactions only on supports, and
+  generalized-alpha high-frequency dissipation;
+- reverse sensitivities to initial displacement and every force sample, including a
+  zero initial force whose consistent-acceleration derivative is nonzero;
+- diagnostic return when the iteration budget is exhausted; and
+- stable failures for absent density, repeated time, moving supports, invalid spectral
+  radius, negative damping, and inconsistent supported initial motion.
+
+The pre-existing static, mass, modal, and buckling tests remain independent regressions
+for every operator consumed by the integrator.
+
+### References inspected
+
+- N. M. Newmark, “A Method of Computation for Structural Dynamics,” ASCE Journal of the
+  Engineering Mechanics Division 85(3), 1959, as identified and independently encoded
+  by the MFEM second-order solver;
+- J. Chung and G. M. Hulbert, “A Time Integration Algorithm for Structural Dynamics With
+  Improved Numerical Dissipation: The Generalized-alpha Method,” Journal of Applied
+  Mechanics 60(2), 371--375, 1993, DOI `10.1115/1.2900803`, for the spectral-radius
+  parameterization and intermediate-state equilibrium;
+- MFEM `linalg/ode.hpp` and `linalg/ode.cpp` on the `master` revision visible
+  2026-10-23, specifically `NewmarkSolver` and `GeneralizedAlpha2Solver`, for an
+  independent second-order predictor/corrector implementation, stability checks, and
+  `rho_inf` conversion;
+- OpenSees `SRC/analysis/integrator/Newmark.cpp` and `GeneralizedAlpha.cpp` on the
+  `master` revision visible 2026-10-23, for displacement-form effective coefficients,
+  alpha-level load synchronization, and mass/damping/stiffness tangent composition;
+- PETSc 3.26 `TSALPHA2` documentation and its Chung--Hulbert reference, inspected
+  2026-10-23, for the scalable implicit second-order solver boundary; and
+- local MATLAB R2025b
+  `toolbox/pde/pde/+pde/+internal/@FESolverUtilities/solveTimeDependent.m`, inspected
+  2026-10-23, for second-order initial-condition constraint reduction, proportional
+  damping ownership, nonuniform requested output times, and full-state reconstruction.
+
+### Deliberate limits
+
+E6d is linear small-displacement motion of the current planar Euler--Bernoulli frame.
+It does not claim adaptive time stepping, nonlinear iteration, plasticity, contact,
+follower loads, base-acceleration input, moving supports, distributed member loads,
+modal superposition, or frequency-response analysis. Those require distinct load and
+state contracts rather than hidden reinterpretation of nodal force histories.
+
+## E6e: Matrix-Free Harmonic Response
+
+### Public contract
+
+`structure::harmonic(frame, load, omega, fix, options)` solves the steady-state phasor
+equation
+
+```text
+[K + i omega C - omega^2 M] u(omega) = load(omega)
+C = mass_damping M + stiffness_damping K.
+```
+
+`omega` is a non-empty, finite, non-negative real vector in radians per unit time.
+`load` has shape `[..., frequency, node, 3]` and may be real or complex. A real force
+amplitude is promoted through differentiable dtype conversion to the complex precision
+paired with the frame: Float32 becomes Complex64 and Float64 becomes Complex128. The
+result returns displacement, velocity, acceleration, and constrained reaction phasors;
+velocity is `i omega u` and acceleration is `-omega^2 u`.
+
+Frame parameter batches and load-scenario batches broadcast before the explicit
+frequency axis. A material batch `[case, member]` and a force sweep
+`[frequency, node, 3]` therefore produce `[case, frequency, node, 3]`; the two extents
+are never accidentally aligned as competing broadcast axes. Complex phase is retained
+through forcing, response, reactions, and reverse mode.
+
+Only homogeneous support amplitudes are accepted. A prescribed complex support motion
+requires its own kinematic forcing terms and cannot be represented correctly by merely
+inserting a nonzero constrained displacement into the reduced right-hand side.
+
+### Matrix-free dynamic stiffness
+
+The implementation reuses the E6b `FrameKernel` actions for stiffness and consistent
+mass. Rayleigh damping is evaluated as a linear combination of those same actions, so
+neither `K`, `M`, `C`, nor the frequency-dependent dynamic stiffness is assembled. One
+operator call evaluates every model batch, force scenario, and frequency lane:
+
+```text
+x -> Kx + i omega (mass_damping Mx + stiffness_damping Kx) - omega^2 Mx.
+```
+
+Constrained degrees use identity rows inside the Krylov operator and zero right-hand
+sides. Physical reactions are recovered from complete dynamic equilibrium and masked to
+constrained degrees. Free degrees are checked against the canonical stiffness diagonal
+before iteration so an unsupported mechanism fails with a structural diagnostic rather
+than an opaque Krylov result.
+
+The complex, generally indefinite system delegates to the canonical restarted
+`math::krylov::gmres` implementation. PCG is deliberately not reused: positive
+definiteness is lost near and above resonance even when `K` and `M` are individually
+positive definite. `HarmonicResult` carries physical and relative residuals, convergence
+lanes, iteration count, operator-evaluation count, and restart count. By default, any
+unconverged frequency is an error; disabling `fail_on_nonconvergence` returns diagnostics
+for application-owned retry policy.
+
+### Performance and differentiation
+
+Frequency is a Series batch axis, not a host loop. Element gathers, coordinate
+transforms, stiffness/mass actions, Arnoldi vectors, small Hessenberg solves, reactions,
+and phasor kinematics all remain vectorized over frequency and scenario lanes. GMRES
+allocates a restarted basis rather than a dense global structural matrix, and its
+iteration budget is shared across the batch.
+
+The complete solve remains on the Series reverse graph. Sensitivities can flow through
+real-to-complex force promotion, complex forcing, material properties, both damping
+coefficients, frequency, the Krylov projection, and final result projections. As with
+any iterative differentiable solve, the graph represents the iterations that executed.
+
+### Permanent verification
+
+`Eng/structure/test/harmonic_test.cpp` covers:
+
+- independently evaluated complex axial responses at zero and nonzero frequencies;
+- complex force phase and exact velocity/acceleration phasor identities;
+- support reactions confined to constrained degrees;
+- independent material and frequency batch axes;
+- Float32-to-Complex64 retention;
+- reverse sensitivity from a real force amplitude through complex promotion and GMRES;
+- explicit zero-budget nonconvergence reporting; and
+- stable failures for negative frequency, missing density, mismatched force/frequency
+  extents, nonzero support amplitudes, and required convergence.
+
+The complete E6a--E6d suite remains an independent regression for every frame operator
+used by the harmonic solver.
+
+### References inspected
+
+- local MATLAB R2025b
+  `toolbox/pde/pde/+pde/+internal/@FESolverUtilities/solveDirectFrequencyResponse.m`,
+  inspected 2026-10-24, for the constrained direct equation
+  `K + i omega C - omega^2 M`, synchronized phasor kinematics, damping ownership, and
+  frequency-wise forcing;
+- local MATLAB R2025b
+  `toolbox/pde/pde/+pde/+internal/@FESolverUtilities/solveModalFrequencyResponse.m`,
+  inspected 2026-10-24, for an independent modal projection of the same dynamic
+  stiffness and the distinction between direct and reduced response;
+- Y. Saad and M. H. Schultz, “GMRES: A Generalized Minimal Residual Algorithm for
+  Solving Nonsymmetric Linear Systems,” SIAM Journal on Scientific and Statistical
+  Computing 7(3), 856--869, 1986, DOI `10.1137/0907058`, for Arnoldi residual
+  minimization and restarted basis ownership; and
+- PETSc 3.26 `KSPGMRES` documentation and `src/ksp/ksp/impls/gmres/gmres.c`, inspected
+  2026-10-24, for complex-system support, restart controls, orthogonalization, residual
+  diagnostics, and scalable operator/preconditioner separation.
+
+### Deliberate limits and next depth
+
+E6e is direct linear frequency response with proportional viscous damping. It does not
+yet provide modal truncation, hysteretic material damping, frequency-dependent
+impedance, prescribed base motion, response spectra, random vibration, or nonlinear
+harmonic balance. Near an undamped eigenfrequency the dynamic stiffness is singular by
+physics; the method reports nonconvergence instead of silently regularizing the model.
+
+Plasticity, follower loads, and contact remain separate E6 tranches because each
+introduces path state or nonsmooth constraints that should not be hidden inside the
+elastic geometric solver.
+
+## E6f: Corotational Nonlinear Equilibrium
+
+### Public contract
+
+`structure::solve(frame, load, fix, nonlinear_options)` is the geometric-nonlinear
+overload of the canonical frame solve. It keeps the E6b planar Euler--Bernoulli section
+law elastic while permitting large nodal translations and rotations under the
+small-strain corotational assumption. The result returns displacement, constrained
+reaction, current-local member end actions, strain energy, final free residual,
+per-scenario convergence, attained load factor, Newton iterations, accepted steps, and
+cutbacks.
+
+The overload is selected by `NonlinearOptions`; the original `SolveOptions` overload
+remains the small-displacement linear solve. Loads and prescribed support values retain
+the established `[..., node, 3]` / `[..., constrained dof]` shape contract. Model,
+loading, and support scenario axes broadcast once before continuation. The current
+implementation uses proportional loading, so both external load and nonzero prescribed
+support displacement advance with the same scalar load factor.
+
+### Objective element state
+
+One private corotational owner serves static and transient analysis. For each member it
+forms the current chord from original coordinates plus nodal translation, then removes
+that chord's rigid rotation from both nodal rotations. The three deformational measures
+are current extension and two end rotations:
+
+```text
+e      = current_length - reference_length
+theta1 = nodal_rotation_1 - chord_rotation
+theta2 = nodal_rotation_2 - chord_rotation.
+```
+
+The basic elastic forces are `N = EA e / L0` and
+`[M1, M2] = EI/L0 [[4,2],[2,4]] [theta1, theta2]`. Their exact transformation produces
+global internal force, current-local end actions, and an analytical consistent tangent
+action. Axial-force and end-moment geometric terms are included in that action; a global
+stiffness matrix is never assembled. Summed member energy is
+`(N e + M1 theta1 + M2 theta2)/2`.
+
+This separation is objective: translating or finitely rotating an undeformed member
+does not create strain, force, or energy. A current chord that collapses to zero length
+is a hard error because its frame and tangent are undefined.
+
+### Continuation and safeguarded Newton solves
+
+`load_steps` defines the initial proportional increment. Every target load is solved by
+Newton iterations on the free residual `load - internal(displacement)`. The tangent is
+applied matrix-free through member gather, batched local algebra, and scatter assembly.
+Backtracking accepts only a residual-decreasing correction. A failed inner solve or
+line search restores the last accepted equilibrium and halves the load increment;
+`max_cutbacks` and `min_load_step` bound that retry policy.
+
+The elastic tangent is symmetric on the stable branch, so corrections use canonical
+batched CG. Loss of positive curvature is reported as nonconvergence rather than hidden
+behind an arbitrary regularization. Load control therefore does not claim to pass a
+limit point; arc-length continuation belongs to a later contract. Setting
+`fail_on_nonconvergence=false` returns the last accepted state and attained load factor
+for application-owned retry or diagnosis.
+
+For reverse mode, residual construction remains recorded while each converged Newton
+Jacobian is treated as the local linearization. This is the implicit-solve derivative:
+it retains dependence on load, geometry, and section properties without differentiating
+the Jacobian construction itself. Tracked exact-zero right-hand sides use two cancelling
+shifted solves, preserving the inverse-tangent derivative while leaving the primal state
+exactly zero.
+
+### Performance and permanent verification
+
+Continuation and Newton iterations are sequential by mathematical dependency. All
+scenario, member, node, and degree axes remain Series lanes; current frames, basic
+deformations, force transformation, tangent actions, residuals, and energies are
+vectorized and platform-neutral. Connectivity is gathered and scattered without dense
+global assembly.
+
+`Eng/structure/test/nonlinear_test.cpp` covers the exact axial oracle, a
+large-displacement cantilever, member end-force signs, strain energy, finite rigid-body
+rotation, batched areas, Float32 retention,
+nonzero and exactly-zero reverse load sensitivities, bounded cutback reporting, and
+invalid continuation controls. The complete linear structure suite remains an
+independent small-displacement regression.
+
+### References inspected
+
+- OpenSees `SRC/coordTransformation/CorotCrdTransf2d.cpp` on `master`, inspected
+  2026-10-24, for current chord length/direction, exact basic-to-global force
+  transformation, geometric tangent composition, and zero-length rejection;
+- OpenSees `SRC/analysis/algorithm/equiSolnAlgo/NewtonRaphson.cpp` on `master`,
+  inspected 2026-10-24, for current-tangent reformation, unbalance ownership, linear
+  solve failure propagation, and convergence-test separation;
+- Roman Vetter, *Growth, Interaction and Packing of Thin Objects*, Section 2.3,
+  inspected 2026-10-24, for the corotated-frame construction, removal of rigid motion,
+  consistent tangent requirement, and Euler--Bernoulli strain energy; and
+- local MATLAB R2025b
+  `toolbox/pde/pde/+pde/+internal/@FESolverUtilities/solveStationaryNonlinear.m`,
+  inspected 2026-10-24, for residual-scaled Newton iteration, residual-decreasing step
+  bisection, finite-state checks, and explicit failure on singular or exhausted solves.
+
+## E6g: Nonlinear Generalized-Alpha Motion
+
+### Public contract
+
+`structure::motion(frame, load, time, fix, initial, nonlinear_options)` integrates the
+same elastic corotational frame under a nodal force history. `load` is
+`[..., time, node, 3]`; `time` is a finite, strictly increasing vector in the frame
+precision. Initial displacement and velocity broadcast over model and load scenarios.
+Transient supports are homogeneous because moving-base acceleration and support work
+need a separate kinematic-input contract.
+
+The result carries time, displacement, velocity, acceleration, support reaction,
+kinetic energy, nonlinear strain energy, alpha-level residual norm, per-sample
+convergence, and Newton iteration count. The existing `MotionOptions` overload remains
+the linear E6d integrator.
+
+### Coupled nonlinear step
+
+E6g retains the Chung--Hulbert generalized-alpha parameterization already verified in
+E6d, but equilibrium is re-formed at every Newton iterate:
+
+```text
+R(a_alpha) = load_alpha - M a_alpha - C v_alpha - fint(u_alpha)
+J          = M + c_v C + c_u Kt(u_alpha)
+C          = mass_damping M + stiffness_damping K0.
+```
+
+`K0` is the initial elastic stiffness, making Rayleigh damping a stable linear operator;
+`Kt` is the current corotational tangent. Force, inertia, damping, and internal force are
+all evaluated at their synchronized alpha states. Each Newton correction uses the same
+residual-decreasing backtracking policy as E6f. The consistent mass and initial
+stiffness actions are reused from E6b, and the nonlinear force/tangent owner is reused
+unchanged from E6f.
+
+Initial acceleration is recovered from full nonlinear equilibrium. Its SPD mass solve
+uses canonical preconditioned CG and the exact-zero shifted-inverse policy from E6d.
+Effective step tangents use CG on the stable symmetric branch; curvature loss or an
+exhausted iteration budget becomes a failed sample. With
+`fail_on_nonconvergence=false`, the approximate history and diagnostics are returned.
+
+Reactions are reconstructed at output endpoints as
+`M a + C v + fint(u) - load` and masked to supported degrees. Kinetic energy is
+`v^T M v/2`; strain energy comes from current corotational element measures, not from
+the invalid nonlinear expression `u^T K0 u/2`.
+
+### Performance, differentiation, and verification
+
+Time and Newton loops are sequential. All scenarios, members, nodes, and degrees remain
+batched Series lanes inside each iteration. No host lane loop or global matrix assembly
+is introduced. Histories are accumulated by sample and joined once per returned field.
+
+The recorded residual and detached local Jacobian implement first-order implicit
+sensitivity of converged states while avoiding derivative-of-Jacobian paths that would
+request unsupported higher-order angle rules. The permanent verifier compares the full
+force-history Jacobian with an independently coded scalar recurrence in the axial limit,
+including a zero first force sample.
+
+`Eng/structure/test/nonlinear_motion_test.cpp` also covers forced nonuniform time steps,
+mass and stiffness damping, large-displacement lateral free motion, finite energy,
+batched density, Float32 retention, zero-budget diagnostic return, homogeneous-support
+enforcement, and invalid line-search controls.
+
+### References inspected
+
+- J. Chung and G. M. Hulbert, “A Time Integration Algorithm for Structural Dynamics
+  With Improved Numerical Dissipation: The Generalized-alpha Method,” *Journal of
+  Applied Mechanics* 60(2), 371--375, 1993, DOI `10.1115/1.2900803`, for second-order
+  accuracy, alpha-state equilibrium, and high-frequency spectral damping;
+- OpenSees `SRC/analysis/integrator/GeneralizedAlpha.cpp` on `master`, inspected
+  2026-10-24, for `beta`/`gamma`, synchronized alpha states, and effective current
+  tangent composition `alphaF Kt + alphaF c2 C + alphaM c3 M`;
+- OpenSees `SRC/coordTransformation/CorotCrdTransf2d.cpp` on `master`, inspected
+  2026-10-24, for current basic velocity/acceleration transforms and corotational
+  resisting-force/tangent ownership; and
+- local MATLAB R2025b
+  `toolbox/pde/pde/+pde/+internal/@FESolverUtilities/solveTimeDependent.m`, inspected
+  2026-10-24, for constrained second-order initial states, proportional damping,
+  nonuniform requested times, nonlinear coefficient reevaluation, and full-state
+  recovery.
+
+### Deliberate limits and next depth
+
+E6f/E6g provide planar elastic Euler--Bernoulli frames with large geometry on the stable
+load-controlled branch. They do not yet provide 3-D rotations, Timoshenko shear,
+distributed/follower member loads, plastic hinges or fiber sections, contact, arc-length
+continuation, adaptive time-step rejection, moving supports, or nonlinear damping.
+Those are separate state and solver contracts, not flags to attach to this one.

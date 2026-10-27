@@ -4,7 +4,7 @@
 
 A hypothesis test asks whether the data are consistent with a stated claim, the null hypothesis, for instance that a mean equals a target. It computes a statistic whose distribution is known if the claim is true, and reports how unusual the observed value is: the p-value, the probability under the null hypothesis of a statistic at least as extreme. After this chapter you can test means (one sample, paired, two samples), a mean with known spread, and variances, choose one- or two-sided alternatives, and read the result.
 
-Every program is complete and its output is the output of that program. The data are fill volumes (in cl) from two cup-filling machines, A (8 cups) and B (9 cups), with a target of 5.0.
+Every program is complete and its output is the output of that program. The data are fill volumes (in cl) from two cup-filling machines, A (8 cups) and B (9 cups), with a target of 5.0. The programs print with `OutputEngine` and take the standard 5% level unless they say otherwise.
 
 ## The result
 

@@ -81,8 +81,8 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     std::size_t correct = 0;
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (approx(pred[i], truth[i])) ++correct;
@@ -98,7 +98,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "ensemble classifier assess should succeed\n";
       return false;
     }
-    const auto metric = metric_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metric = metric_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metric.empty() || metric[0] < 0.95) {
       if (err) *err << "ensemble classifier assess should report high accuracy\n";
       return false;
@@ -138,7 +138,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "ensemble regressor assess should succeed\n";
       return false;
     }
-    const auto metric = metric_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metric = metric_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metric.size() != 2 || metric[0] > 0.5 || metric[1] < 0.7) {
       if (err) *err << "ensemble regressor should model smooth nonlinear train signal\n";
       return false;
@@ -185,8 +185,8 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "bayes regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i], 1e-3)) {
         if (err) *err << "bayes regressor should recover near-linear relationship on train set\n";
@@ -233,7 +233,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "bayes bernoulli regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (double v : pred) {
       if (!(v >= -1e-9 && v <= 1.0 + 1e-9)) {
         if (err) *err << "bayes bernoulli regressor outputs should stay in [0,1]\n";
@@ -280,7 +280,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "bayes multinomial regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (double v : pred) {
       if (!(v >= -1e-9 && std::isfinite(v))) {
         if (err) *err << "bayes multinomial regressor outputs should be finite and non-negative\n";
@@ -382,8 +382,8 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "gradient-boost classifier infer should succeed\n";
       return false;
     }
-    const auto boost_cls_pred = boost_cls_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth_cls = y_cls.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto boost_cls_pred = boost_cls_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth_cls = y_cls.to(pluss::pCPU, ScalarType::Float64).host<double>();
     std::size_t cls_correct = 0;
     for (std::size_t i = 0; i < boost_cls_pred.size(); ++i) {
       if (approx(boost_cls_pred[i], truth_cls[i])) ++cls_correct;
@@ -422,7 +422,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "gradient-boost classifier infer after load_state should succeed\n";
       return false;
     }
-    const auto cls_reload_pred = cls_reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto cls_reload_pred = cls_reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (cls_reload_pred.size() != boost_cls_pred.size()) {
       if (err) *err << "reloaded gradient-boost classifier prediction size mismatch\n";
       return false;
@@ -441,7 +441,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "gradient-boost classifier assess should succeed\n";
       return false;
     }
-    const auto cls_metric = cls_metric_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto cls_metric = cls_metric_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (cls_metric.empty() || cls_metric.front() < 0.5) {
       if (err) *err << "gradient-boost classifier should report usable training accuracy\n";
       return false;
@@ -471,7 +471,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "adaboost classifier infer should succeed\n";
       return false;
     }
-    const auto ada_cls_pred = ada_cls_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto ada_cls_pred = ada_cls_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     std::size_t ada_cls_correct = 0;
     for (std::size_t i = 0; i < ada_cls_pred.size(); ++i) {
       if (approx(ada_cls_pred[i], truth_cls[i])) ++ada_cls_correct;
@@ -506,8 +506,8 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "gradient-boost regressor infer should succeed\n";
       return false;
     }
-    const auto boost_pred = boost_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth_reg = y_reg.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto boost_pred = boost_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth_reg = y_reg.to(pluss::pCPU, ScalarType::Float64).host<double>();
     double mse = 0.0;
     for (std::size_t i = 0; i < boost_pred.size(); ++i) {
       const double e = boost_pred[i] - truth_reg[i];
@@ -543,7 +543,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "adaboost regressor infer should succeed\n";
       return false;
     }
-    const auto ada_reg_pred = ada_reg_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto ada_reg_pred = ada_reg_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     double ada_mse = 0.0;
     for (std::size_t i = 0; i < ada_reg_pred.size(); ++i) {
       const double e = ada_reg_pred[i] - truth_reg[i];
@@ -584,7 +584,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "gradient-boost regressor infer after load_state should succeed\n";
       return false;
     }
-    const auto reload_pred = reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto reload_pred = reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (reload_pred.size() != boost_pred.size()) {
       if (err) *err << "reloaded gradient-boost regressor prediction size mismatch\n";
       return false;
@@ -674,7 +674,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "robust linear regressor infer should succeed\n";
       return false;
     }
-    const auto robust_pred = robust_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto robust_pred = robust_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (robust_pred.size() != 12) {
       if (err) *err << "robust linear regressor prediction size mismatch\n";
       return false;
@@ -714,7 +714,7 @@ bool run_nodej_ensemble_bayes_regression_checks(std::ostream* err = nullptr) {
       if (err) *err << "robust linear regressor infer after load_state should succeed\n";
       return false;
     }
-    const auto robust_reload_pred = robust_reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto robust_reload_pred = robust_reload_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (robust_reload_pred.size() != robust_pred.size()) {
       if (err) *err << "reloaded robust linear regressor prediction size mismatch\n";
       return false;

@@ -26,7 +26,7 @@ int main() {
   auto s2d = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 10.0, 20.0, 30.0}, {2, 3});
   auto row_means = pluss::tils::map_axis(
       [](const pluss::Series& row) {
-        return row.mean().to_vec<double>(0);
+        return row.mean().host<double>().array().data.at(static_cast<std::size_t>(0));
       },
       s2d,
       1);
@@ -51,7 +51,7 @@ int main() {
   });
   auto row_hour_totals = pluss::tils::map_axis(
       [](const pluss::codeh::Timeline& row) {
-        const auto hours = row.hour().to_vec<std::int32_t>();
+        const auto hours = row.hour().host<std::int32_t>();
         std::int64_t total = 0;
         for (const auto h : hours) total += static_cast<std::int64_t>(h);
         return total;
@@ -79,7 +79,7 @@ int main() {
   par.workers = 2;
   auto row_sums_parallel = pluss::tils::map_axis(
       [](const pluss::Series& row) {
-        return row.sum().to_vec<double>(0);
+        return row.sum().host<double>().array().data.at(static_cast<std::size_t>(0));
       },
       s2d,
       1,

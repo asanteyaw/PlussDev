@@ -84,12 +84,12 @@ TEST_CASE("fused BLAS scaling and receiver broadcasting are exact", "[matmul][fu
   const auto rhs = pluss::make_series({{5.0, 6.0}, {7.0, 8.0}});
   const auto row_bias = pluss::make_series({10.0, 20.0});
 
-  REQUIRE(row_bias.addmm(lhs, rhs, 0.5, 2.0).to_vec<double>() ==
+  REQUIRE(row_bias.addmm(lhs, rhs, 0.5, 2.0).host<double>() ==
           std::vector<double>{43.0, 54.0, 91.0, 110.0});
 
   const auto nan_base = pluss::make_series({std::numeric_limits<double>::quiet_NaN()});
   REQUIRE(nan_base.addmv(pluss::make_series({2.0}).reshape({1, 1}), pluss::make_series({3.0}), 0.0, 1.0)
-              .item<double>() == 6.0);
+              .host<double>().front() == 6.0);
 
   const auto wrong_receiver = pluss::make_series({1.0, 2.0, 3.0});
   REQUIRE_THROWS(wrong_receiver.addmm(lhs, rhs, 0.0, 1.0));

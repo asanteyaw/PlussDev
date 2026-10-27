@@ -28,11 +28,11 @@ int main() {
   const auto lower = vec({1.0, 0.0, 0.0});
   const auto upper = vec({1.0, 0.7, 0.7});
   const auto r = qp::solve(p, q, a, lower, upper);
-  const auto x = r.x.to_vec<double>();
+  const auto x = r.x.host<double>();
   std::cout << std::fixed << std::setprecision(4) << "x          : " << x[0] << ", " << x[1] << "\n";
   std::cout << "objective  : " << r.objective.item<double>() << "\n";
   std::cout << "converged  : " << (r.converged ? "yes" : "no") << " after " << r.iterations << " iterations\n";
   std::cout << std::scientific << std::setprecision(1) << "residuals  : primal " << r.primal_residual << ", dual " << r.dual_residual << "\n";
-  const auto y = r.y.to_vec<double>();
+  const auto y = r.y.host<double>();
   std::cout << std::fixed << std::setprecision(4) << "multipliers: " << y[0] << ", " << y[1] << ", " << y[2] << "  (one per constraint row)\n";
 }

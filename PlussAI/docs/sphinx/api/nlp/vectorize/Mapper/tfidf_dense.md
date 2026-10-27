@@ -74,7 +74,7 @@ int main() {
   mapper.learn(docs);
 
   const auto batch = mapper.tfidf_dense(docs).value();
-  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   const std::int64_t cols = batch.feature_count();
   for (std::int64_t row = 0; row < batch.sample_count(); ++row) {
     std::cout << "document " << row << ":";
@@ -124,7 +124,7 @@ int main() {
   };
   for (const auto& [name, options] : settings) {
     const auto batch = mapper.tfidf_dense(docs, options).value();
-    const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+    const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
     std::cout << name << ": first document =";
     for (std::int64_t col = 0; col < batch.feature_count(); ++col) {
       std::cout << " " << values[static_cast<std::size_t>(col)];
@@ -167,7 +167,7 @@ int main() {
   for (const bool sublinear : {false, true}) {
     const auto batch = mapper.tfidf_dense(repeated, pluss::ai::classic::TfIdfMapOptions{.sublinear_tf = sublinear,
                                                                                       .l2_normalize = false}).value();
-    const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+    const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
     std::cout << "sublinear_tf = " << (sublinear ? "true" : "false") << ": cat = " << values[0]
               << ", sat = " << values[1] << "\n";
   }

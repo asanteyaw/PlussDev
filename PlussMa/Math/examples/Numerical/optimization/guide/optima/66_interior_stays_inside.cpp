@@ -12,13 +12,13 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
 int main() {
-  auto f = [](const optim::Trace& x) { return optim::sum(x) - 0.1 * optim::sum(optim::log(x)); };
+  auto f = [](const pluss::Series& x) { return x.sum() - 0.1 * x.log().sum(); };
   const auto cons = optim::constraints().lbs(vec({0.0, 0.0})).ubs(vec({10.0, 10.0}));
   const std::pair<const char*, optim::OptimaAlgorithm> algs[] = {
       {"InternalProtocol", optim::OptimaAlgorithm::InternalProtocol}, {"SequentialQP", optim::OptimaAlgorithm::SequentialQP}};
@@ -29,7 +29,7 @@ int main() {
     o.algorithm = alg;
     double smallest = 1e300;
     o.progress_hook = [&](const optim::OptimaProgressSnapshot& s) {
-      for (double v : s.params.at("x").to_vec<double>()) smallest = std::min(smallest, v);
+      for (double v : s.params.at("x").host<double>()) smallest = std::min(smallest, v);
       return false;
     };
     const auto r = optim::optima(f, vec({9.0, 9.0}), o, cons);

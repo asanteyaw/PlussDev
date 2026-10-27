@@ -4,6 +4,7 @@
 #include "pluss/subsp/natsci/common/solve.h"
 #include "pluss/subsp/natsci/physics/fluids/boundary.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -945,6 +946,83 @@ inline double pressure_diag(const spatial::BoxGrid &grid) {
   return diagonal;
 }
 
+// Auto uses multigrid once the grid is big enough for the iteration-count advantage to repay the cost of a V-cycle (conjugate gradients on the
+// diagonally scaled operator needs O(n) iterations, multigrid O(1)); small grids keep the cheap baseline.
+inline bool pick_multigrid(spatial::PoissonMethod method, const std::vector<std::int64_t> &shape, bool admissible) {
+  if (method == spatial::PoissonMethod::Multigrid)
+    return true;
+  if (method != spatial::PoissonMethod::Auto || !admissible)
+    return false;
+  return *std::max_element(shape.begin(), shape.end()) >= 64;
+}
+inline void require_pressure_method(spatial::PoissonMethod method, bool multigrid_ok, const char *what) {
+  if (method == spatial::PoissonMethod::Fft)
+    throw std::invalid_argument(std::string("natsci::fluids::project: the Fft method needs constant density on a periodic grid (") + what + ")");
+  if (method == spatial::PoissonMethod::Multigrid && !multigrid_ok)
+    throw std::invalid_argument(std::string("natsci::fluids::project: multigrid needs even periodic extents (") + what + ")");
+}
+// Multigrid-preconditioned CG on the exact bounded operator D(beta G). The centred operator couples cells two apart, so the preconditioner is the
+// multigrid of its 2^d parity sub-lattices (spacing 2h, conductance beta of the cell between, the wall condition reflected on each sub-lattice); the
+// exact operator couples the classes only through the wall rows, which CG absorbs. Odd extents have no such splitting and use the compact lattice.
+template <class Apply>
+inline math::krylov::CgResult bounded_multigrid(Apply &&apply, const Series &rhs, const spatial::BoxGrid &grid, const auto &bounds, const Series &rho, const spatial::PoissonOptions &options) {
+  namespace mgrid = pluss::subsp::math::multigrid;
+  const std::int64_t d = grid.dim();
+  bool even = true;
+  for (const std::int64_t n : grid.shape())
+    even = even && n % 2 == 0;
+  const auto edge_of = [&](std::int64_t a, spatial::Side side) {
+    return bounds.at(a, side).kind() == spatial::BoundKind::Value ? mgrid::Edge::Dirichlet : mgrid::Edge::Neumann;
+  };
+  mgrid::Problem problem;
+  for (std::int64_t a = 0; a < d; ++a) {
+    const std::int64_t n = grid.shape()[static_cast<std::size_t>(a)];
+    problem.axes.push_back({even ? n / 2 : n, (even ? 2.0 : 1.0) * grid.spacing(a).si_value(), edge_of(a, spatial::Side::Low), edge_of(a, spatial::Side::High)});
+  }
+  if (even) {
+    // The exact operator couples the parity classes only through the wall rows, so a class-wise constant is a weakly damped mode of it, not a null mode:
+    // a mass term of the size of that coupling (one wall row of n per lattice, beta / (n H^2), local conductance beta) keeps each class lattice definite.
+    double n_lat = 1.0, h_lat = 0.0;
+    for (const auto &ax : problem.axes) {
+      n_lat = std::max(n_lat, static_cast<double>(ax.cells));
+      h_lat = std::max(h_lat, ax.spacing);
+    }
+    const double scale = 1.0 / (n_lat * h_lat * h_lat);
+    const Series beta_field = rho.defined() ? rho.reciprocal().mul(scale) : pluss::series::ones_like(rhs).mul(scale);
+    problem.mass = spatial::detail::split_classes(beta_field, d);
+  }
+  if (rho.defined()) {
+    for (std::int64_t a = 0; a < d; ++a) {
+      const std::int64_t axis = rho.dim() - d + a;
+      const mgrid::Axis wall{grid.shape()[static_cast<std::size_t>(a)], 1.0, mgrid::Edge::Neumann, mgrid::Edge::Neumann};
+      const Series beta = rho.reciprocal();
+      // split: conductance of the cell between lattice neighbours (beta_{i+1}); compact: harmonic mean of the two cells sharing the face
+      const Series face = even ? mgrid::detail::upper_neighbor(beta, axis, wall) : rho.add(mgrid::detail::upper_neighbor(rho, axis, wall)).mul(0.5).reciprocal();
+      problem.face_high.push_back(even ? spatial::detail::split_classes(face, d) : face);
+    }
+  }
+  std::vector<std::int64_t> dims;
+  for (std::int64_t a = 0; a < d; ++a)
+    dims.push_back(rhs.dim() - d + a);
+  if (!even) {
+    const mgrid::Hierarchy hierarchy(std::move(problem), rhs);
+    return math::krylov::pcg(std::forward<Apply>(apply), [&](const Series &r) { return hierarchy.vcycle(r); }, rhs, dims, options.solve);
+  }
+  const mgrid::Hierarchy hierarchy(std::move(problem), spatial::detail::split_classes(rhs, d));
+  const bool singular = hierarchy.singular(); // false: the mass term makes every class lattice definite
+  const auto precondition = [&](const Series &r) {
+    Series split = spatial::detail::split_classes(r, d);
+    if (singular) {
+      std::vector<std::int64_t> spatial_dims;
+      for (std::int64_t a = 0; a < d; ++a)
+        spatial_dims.push_back(split.dim() - d + a);
+      split = split.sub(split.mean(spatial_dims, true)); // each class lattice is singular: keep its equation consistent
+    }
+    return spatial::detail::merge_classes(hierarchy.vcycle(split), d);
+  };
+  return math::krylov::pcg(std::forward<Apply>(apply), precondition, rhs, dims, options.solve);
+}
+
 // Centered divergence and gradient with their exact composition (the wide
 // stencil) as the Poisson operator: second-order consistent on a cell-centered
 // grid, and the centered divergence of the projected velocity is zero to solver
@@ -1003,9 +1081,27 @@ project_core(const IncompressibleState &state,
   };
   spatial::PoissonOptions poisson = poisson_options;
   poisson.stencil = spatial::PoissonStencil::Wide;
-  auto solved = spatial::detail::solve_spd(
-      [&](const Series &value) { return apply(value).neg(); },
-      compatible_rhs.neg(), axes, poisson, pressure_diag(rho, grid));
+  require_pressure_method(poisson_options.method, spatial::detail::even_extents(grid), "periodic variable-density");
+  const bool multigrid = pick_multigrid(poisson_options.method, grid.shape(), spatial::detail::even_extents(grid));
+  auto solved = multigrid
+      ? [&] {
+          // the centred D(beta G) couples cells two apart: 2^d exact compact problems on the parity sub-lattices, conductance beta of the cell between
+          const std::int64_t d = grid.dim();
+          const Series beta = rho.reciprocal();
+          pluss::subsp::math::multigrid::Problem problem;
+          for (std::int64_t a = 0; a < d; ++a) {
+            problem.axes.push_back({grid.shape()[static_cast<std::size_t>(a)] / 2, 2.0 * grid.spacing(a).si_value(),
+                                    pluss::subsp::math::multigrid::Edge::Periodic, pluss::subsp::math::multigrid::Edge::Periodic});
+            problem.face_high.push_back(spatial::detail::split_classes(beta.roll(-1, beta.dim() - d + a), d));
+          }
+          const Series split_rhs = spatial::detail::split_classes(compatible_rhs.neg(), d);
+          const pluss::subsp::math::multigrid::Hierarchy hierarchy(std::move(problem), split_rhs);
+          return spatial::detail::fold_classes(
+              pluss::subsp::math::multigrid::solve(hierarchy, split_rhs, static_cast<std::size_t>(d), poisson_options.solve), d);
+        }()
+      : spatial::detail::solve_spd(
+            [&](const Series &value) { return apply(value).neg(); },
+            compatible_rhs.neg(), axes, poisson, pressure_diag(rho, grid));
   Series solution = solved.solution.sub(spatial::detail::null_component(
       solved.solution, grid, spatial::PoissonStencil::Wide));
   if (poisson_options.require_convergence &&
@@ -1081,9 +1177,12 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
   };
   const Series diagonal =
       pluss::codem::make_scalar_like(compatible_rhs, pressure_diag(grid));
-  auto solved = spatial::detail::solve_spd(
-      [&](const Series &value) { return apply(value).neg(); },
-      compatible_rhs.neg(), axes, poisson_options, diagonal);
+  require_pressure_method(poisson_options.method, true, "bounded");
+  auto solved = pick_multigrid(poisson_options.method, grid.shape(), true)
+      ? bounded_multigrid([&](const Series &value) { return apply(value).neg(); }, compatible_rhs.neg(), grid, correction_bounds, pluss::series::undefined(), poisson_options)
+      : spatial::detail::solve_spd(
+            [&](const Series &value) { return apply(value).neg(); },
+            compatible_rhs.neg(), axes, poisson_options, diagonal);
   Series solution = std::move(solved.solution);
   if (gauged)
     solution = solution.sub(solution.mean(axes, true));
@@ -1158,9 +1257,12 @@ project_core(const IncompressibleState &state, const spatial::BoxGrid &grid,
                               weighted_gradient(value)),
                           grid, homogeneous_flow);
   };
-  auto solved = spatial::detail::solve_spd(
-      [&](const Series &value) { return apply(value).neg(); },
-      compatible_rhs.neg(), axes, poisson_options, pressure_diag(rho, grid));
+  require_pressure_method(poisson_options.method, true, "bounded variable-density");
+  auto solved = pick_multigrid(poisson_options.method, grid.shape(), true)
+      ? bounded_multigrid([&](const Series &value) { return apply(value).neg(); }, compatible_rhs.neg(), grid, correction_bounds, rho, poisson_options)
+      : spatial::detail::solve_spd(
+            [&](const Series &value) { return apply(value).neg(); },
+            compatible_rhs.neg(), axes, poisson_options, pressure_diag(rho, grid));
   Series solution = std::move(solved.solution);
   if (gauged)
     solution = solution.sub(solution.mean(axes, true));

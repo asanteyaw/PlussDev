@@ -1,8 +1,0 @@
-# Stopping tolerances
-
-[Back to Sequential QP in Depth](../optima_04_sequential_qp.md)
-
-
-@@example Numerical/optimization/guide/optima/57_stopping_tolerances.cpp@@
-
-Tightening the optimality and constraint tolerances together from 1e-3 to 1e-9 moves the objective from 17.01371683 to 17.01401729 and the iteration count from 3 to 5. The tightest run stops on "predicted objective improvement below tolerance at a feasible point" rather than on the optimality test: at 1e-9 the remaining improvement is below what the objective can resolve, which is the sign to stop asking for more precision. Ask for the precision your decision needs, not more: the three runs agree to four decimals.

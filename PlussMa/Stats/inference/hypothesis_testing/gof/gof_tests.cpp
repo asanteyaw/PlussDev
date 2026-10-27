@@ -1,11 +1,14 @@
 #include "pluss/subsp/stats/inference/hypothesis_testing.h"
 
 #include "CodeM/core/Errors.h"
+#include "pluss/tils/aux/scalar_cast.h"
 #include "pluss/subsp/stats/tails.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/stats/distr.h"
+#include "jb_tables.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -48,7 +51,7 @@ Series as_vector_(const Series& x, const char* op) {
 }
 
 double scalar_(const Series& x) {
-  return x.to(ScalarType::Float64).reshape({1}).item<double>();
+  return pluss::tils::to_scalar<double>(x.to(ScalarType::Float64));
 }
 
 Series finite_values_sorted_(const Series& x, const char* op, Config cfg) {
@@ -60,12 +63,12 @@ Series finite_values_sorted_(const Series& x, const char* op, Config cfg) {
 
 double normal_cdf_(double x, double mean, double stddev, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::Normal{mean, stddev}.cdf(q).item<double>());
+  return clamp01_(pluss::tils::to_scalar<double>(pluss::subsp::stats::distr::Normal{mean, stddev}.cdf(q)));
 }
 
 double chisq_cdf_(double x, std::int64_t dof, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>());
+  return clamp01_(pluss::tils::to_scalar<double>(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q)));
 }
 
 double chisq_quantile_(double p, std::int64_t dof, Config cfg) {
@@ -272,6 +275,63 @@ double ks_critical_one_sided_(double n_eff, double alpha) {
   return std::sqrt(std::max(0.0, -0.5 * std::log(alpha) / std::max(kEps, n_eff)));
 }
 
+
+// Finite-sample p-value of the Jarque-Bera statistic. The chi-squared(2) limit is a poor guide below a few hundred
+// observations (at n = 25 it reports about 0.56 where the true tail probability is 0.37), so the statistic is looked up in the
+// simulated null distribution of jb_tables.h: critical values at fixed upper-tail levels, interpolated in log(n) between
+// the tabulated sample sizes and in log(p) between levels. Beyond the last sample size the limit is used; beyond the
+// smallest tabulated level the tail continues with the chi-squared(2) decay rate.
+double jb_pvalue_(double jb, std::int64_t n) {
+  using namespace jb_tables;
+  if (n > kN[kSizes - 1]) {
+    return pluss::subsp::stats::tails::chi2_sf(jb, 2.0);
+  }
+  std::array<double, kLevels> c{};
+  const double ln = std::log(static_cast<double>(n));
+  int i = 0;
+  while (i + 2 < kSizes && static_cast<double>(kN[i + 1]) < static_cast<double>(n)) {
+    ++i;
+  }
+  const double w = std::clamp((ln - std::log(static_cast<double>(kN[i]))) / (std::log(static_cast<double>(kN[i + 1])) - std::log(static_cast<double>(kN[i]))), 0.0, 1.0);
+  for (int l = 0; l < kLevels; ++l) {
+    c[static_cast<std::size_t>(l)] = (1.0 - w) * kCritical[i][l] + w * kCritical[i + 1][l];
+  }
+  if (jb <= c[0]) {
+    return 1.0 - (1.0 - kQ[0]) * std::max(0.0, jb) / std::max(kEps, c[0]);
+  }
+  if (jb >= c[kLevels - 1]) {
+    return kQ[kLevels - 1] * std::exp(-0.5 * (jb - c[kLevels - 1]));
+  }
+  int l = 0;
+  while (l + 1 < kLevels - 1 && jb >= c[static_cast<std::size_t>(l + 1)]) {
+    ++l;
+  }
+  const double lo = c[static_cast<std::size_t>(l)];
+  const double hi = c[static_cast<std::size_t>(l + 1)];
+  const double t = hi > lo ? (jb - lo) / (hi - lo) : 1.0;
+  return std::exp((1.0 - t) * std::log(kQ[l]) + t * std::log(kQ[l + 1]));
+}
+
+double jb_critical_(double alpha, std::int64_t n, const Config& cfg) {
+  if (n > jb_tables::kN[jb_tables::kSizes - 1]) {
+    return chisq_quantile_(1.0 - alpha, 2, cfg);
+  }
+  double lo = 0.0;
+  double hi = 1.0;
+  while (jb_pvalue_(hi, n) > alpha && hi < 1e6) {
+    hi *= 2.0;
+  }
+  for (int it = 0; it < 100; ++it) {
+    const double mid = 0.5 * (lo + hi);
+    if (jb_pvalue_(mid, n) > alpha) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return 0.5 * (lo + hi);
+}
+
 } // namespace
 
 KSTestResult kstest(const Series& x,
@@ -341,8 +401,10 @@ KSTest2Result kstest2(const Series& x,
   const std::int64_t ny = yvals.numel();
   PLUSS_CHECK(nx > 0 && ny > 0, std::string(op) + ": requires nonempty finite samples");
 
-  const Series fx_x = Series::arange(1, nx + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).div(static_cast<double>(nx));
-  const Series fy_y = Series::arange(1, ny + 1, 1, ScalarType::Int64).to(out_cfg.platform, out_cfg.dtype).div(static_cast<double>(ny));
+  // Each empirical distribution function is evaluated as the fraction of its own sample that is <= the point, so repeated
+  // values are counted together (an index-based i/n would understate the step at a tie and overstate the distance).
+  const Series fx_x = xvals.reshape({1, nx}).le(xvals.reshape({nx, 1})).to(out_cfg.dtype).sum(1, false).div(static_cast<double>(nx));
+  const Series fy_y = yvals.reshape({1, ny}).le(yvals.reshape({ny, 1})).to(out_cfg.dtype).sum(1, false).div(static_cast<double>(ny));
   const Series fy_x = yvals.reshape({1, ny}).le(xvals.reshape({nx, 1})).to(out_cfg.dtype).sum(1, false).div(static_cast<double>(ny));
   const Series fx_y = xvals.reshape({1, nx}).le(yvals.reshape({ny, 1})).to(out_cfg.dtype).sum(1, false).div(static_cast<double>(nx));
 
@@ -409,14 +471,14 @@ JBTestResult jbtest(const Series& x, double alpha, Config cfg) {
   const double kurt = m4 / (m2 * m2);
   const double jb = nd * (skew * skew + 0.25 * (kurt - 3.0) * (kurt - 3.0)) / 6.0;
 
-  const double pvalue = pluss::subsp::stats::tails::chi2_sf(jb, 2.0);
-  const double critical = chisq_quantile_(1.0 - alpha, 2, out_cfg);
+  const double pvalue = jb_pvalue_(jb, n);
+  const double critical = jb_critical_(alpha, n, out_cfg);
 
   JBTestResult out;
   out.stat = jb;
   out.pvalue = clamp01_(pvalue);
   out.critical = critical;
-  out.reject = jb > critical;
+  out.reject = pvalue < alpha;
   out.skewness = skew;
   out.kurtosis = kurt;
   out.effective_n = n;

@@ -73,7 +73,8 @@ All operations need the same facts about a catalog, so compute them once.
 - `RaggedLayout`: per-stream length, anchor offset, longest and shortest extent, and per-index presence counts (a difference array, O(streams + longest)). Cached on the catalog and invalidated by stream identity.
 - Reduction kernel (already written for sum/mean/min/max/var/std): one pass per stream over the slice it covers, position blocks sized to stay in cache, blocks run in parallel. Next: fuse several reductions into one pass (sum + count + mean + var share the sweep).
 - Join: key columns encoded to integers, one hash match, every stream rebuilt through the index pairs (already written). Next: cache the encodings and hash tables per (stream identity, mode) so repeated joins, audits and pulls on the same catalogs pay once.
-- Zero-copy reads: use contiguous CPU `Float64` buffers directly instead of `to_vec` where possible.
+- Zero-copy reads: use contiguous CPU `Float64` buffers directly instead of an
+  owning `host<double>()` export where possible.
 - Measured so far: jagged reductions 290-450x faster than padding; native join 5.5-7x faster than the DataFrame join with tables already aligned, ~30x end to end at 4M records.
 
 ## Scribble

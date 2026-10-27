@@ -547,7 +547,7 @@ public:
 
   [[nodiscard]] std::vector<double> coefficients() const {
     if (!coeff.defined()) return {};
-    return coeff.to(pluss::pCPU, ScalarType::Float64).reshape({coeff.numel()}).to_vec<double>();
+    return coeff.to(pluss::pCPU, ScalarType::Float64).reshape({coeff.numel()}).host<double>();
   }
 
   [[nodiscard]] double intercept_term() const {
@@ -992,7 +992,7 @@ struct FoldFramePair_ {
 };
 
 [[nodiscard]] inline std::vector<std::int64_t> split_indices_to_vector_(const Series& indices) {
-  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).to_vec<std::int64_t>();
+  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).host<std::int64_t>();
 }
 
 [[nodiscard]] inline std::vector<FoldFramePair_> materialize_fold_frames_(const pluss::table::DataFrame& frame,

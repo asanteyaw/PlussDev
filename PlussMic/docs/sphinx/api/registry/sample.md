@@ -61,8 +61,8 @@ auto second = rg.sample(2, 42);
 
 bool same_ids = true;
 for (std::int64_t i = 0; i < first.fields("id").size(); ++i) {
-  if (std::get<pluss::Series>(first.fields("id").at(i)).to_vec<std::int64_t>()[0] !=
-      std::get<pluss::Series>(second.fields("id").at(i)).to_vec<std::int64_t>()[0]) {
+  if (std::get<pluss::Series>(first.fields("id").at(i)).host<std::int64_t>()[0] !=
+      std::get<pluss::Series>(second.fields("id").at(i)).host<std::int64_t>()[0]) {
     same_ids = false;
   }
 }

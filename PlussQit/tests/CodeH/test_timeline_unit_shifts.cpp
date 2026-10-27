@@ -86,7 +86,7 @@ TEST_CASE("Timeline unit shifts preserve shape timezone absence and logical stri
   const auto shifted = matrix.add_years(1).add_seconds(1);
   REQUIRE(shifted.sizes().vec() == std::vector<std::int64_t>{2, 2});
   REQUIRE(shifted.tz() == "America/New_York");
-  REQUIRE(shifted.isnat().to_vec<bool>() ==
+  REQUIRE(shifted.isnat().host<bool>() ==
           std::vector<bool>{false, false, true, false});
 
   std::array<std::int64_t, 4> backing{
@@ -99,7 +99,7 @@ TEST_CASE("Timeline unit shifts preserve shape timezone absence and logical stri
   REQUIRE(strided.add_hours(1).ticks() ==
           std::vector<std::int64_t>{1'704'070'800'123'456'789LL,
                                     1'709'168'400'000'000'004LL});
-  REQUIRE(strided.add_years(1).year().to_vec<std::int32_t>() ==
+  REQUIRE(strided.add_years(1).year().host<std::int32_t>() ==
           std::vector<std::int32_t>{2025, 2025});
 
   const auto empty = pluss::timeline::epoch({0, 2}).add_months(1);

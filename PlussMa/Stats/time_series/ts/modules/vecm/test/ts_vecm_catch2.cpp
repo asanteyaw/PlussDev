@@ -159,15 +159,15 @@ TEST_CASE("ts vecm: Johansen test and reduced-rank fit match reference values", 
   JohansenOptions jopt;
   jopt.lag_order = 1;
   const auto j = johansen_test(y, jopt);
-  const auto eig = j.eigenvalues.to_vec<double>();
-  const auto stat = j.stat.to_vec<double>();
-  const auto p = j.pvalue.to_vec<double>();
+  const auto eig = j.eigenvalues.host<double>();
+  const auto stat = j.stat.host<double>();
+  const auto p = j.pvalue.host<double>();
   REQUIRE(eig[0] == Approx(0.230144).epsilon(1e-4));
   REQUIRE(eig[1] == Approx(0.026096).epsilon(1e-4));
   REQUIRE(stat[0] == Approx(115.473).epsilon(1e-3));
   REQUIRE(stat[1] == Approx(11.1135).epsilon(1e-3));
   // The limiting law of the trace statistic is not chi-squared: at 3 - r = 2 series the 5% point is about 15.5 (chi-squared with 4 degrees of freedom: 9.5).
-  REQUIRE(j.critical.to_vec<double>()[1] == Approx(15.49).epsilon(0.02));
+  REQUIRE(j.critical.host<double>()[1] == Approx(15.49).epsilon(0.02));
   REQUIRE(p[0] < 1e-6);
   REQUIRE(p[1] > 0.15);
   REQUIRE(p[1] < 0.25);
@@ -177,8 +177,8 @@ TEST_CASE("ts vecm: Johansen test and reduced-rank fit match reference values", 
   opt.lag_order = 1;
   opt.rank = 1;
   const auto fit = Vecm::fit_mle(y, opt);
-  const auto beta = fit.beta.reshape({3}).to_vec<double>();
-  const auto alpha = fit.alpha.reshape({3}).to_vec<double>();
+  const auto beta = fit.beta.reshape({3}).host<double>();
+  const auto alpha = fit.alpha.reshape({3}).host<double>();
   REQUIRE(beta[0] == Approx(1.0));
   REQUIRE(beta[1] == Approx(-0.978829).epsilon(1e-4));
   REQUIRE(beta[2] == Approx(-0.003581).epsilon(2e-3));
@@ -186,5 +186,5 @@ TEST_CASE("ts vecm: Johansen test and reduced-rank fit match reference values", 
   REQUIRE(alpha[1] == Approx(0.486002).epsilon(1e-4));
   REQUIRE(fit.loglik(y) == Approx(-193.0305).margin(1e-3));
   // impact = beta alpha'
-  REQUIRE(fit.impact.to_vec<double>()[1] == Approx(beta[0] * alpha[1]).epsilon(1e-9));
+  REQUIRE(fit.impact.host<double>()[1] == Approx(beta[0] * alpha[1]).epsilon(1e-9));
 }

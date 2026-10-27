@@ -1,0 +1,41 @@
+# Bounds, inequalities and equalities
+
+[Back to Derivative-Free Optimization 3: Bounds and Constraints](../dfo_03_bounds_and_constraints.md)
+
+Real problems have limits: a dose cannot be negative, a design must carry a load, a budget must balance. Three kinds of limit are available, and which methods accept which is the first thing to know: **bounds** (`lower <= x <= upper`) are accepted by every method; **inequalities** (`g(x) <= 0`, every entry) by pattern search and the mesh methods but not by Nelder–Mead, differential evolution or particle swarm; **equalities** (`h(x) = 0`) only by pattern search. `Auto` routes any problem with constraints to pattern search, the one method that handles all three.
+
+The sign convention matters: a constraint is satisfied when its value is zero or negative, so to require `x0 + x1 >= 1` return `1 - x0 - x1`. The three programs state each kind in turn on small problems whose answers are visible: a box whose optimum is on a corner, a disc, and a curve. Each reports the violation of the returned point, where 0 means feasible.
+
+## Program 1: Bounds only
+
+Every method keeps its trial points inside the box; the objective in this program counts the calls made outside it.
+
+@@example Numerical/optimization/guide/dfo/325_active_bounds.cpp@@
+
+The optimum sits on a corner, where two bounds are active. All five methods find it. `NelderMead` does it by projecting: the simplex is free to move, but each point is clamped into the box before the objective sees it.
+
+## Program 2: Inequality constraints
+
+`constraints` returns a vector with one entry per constraint.
+
+@@example Numerical/optimization/guide/dfo/321_inequality_constraints.cpp@@
+
+The answer is on the boundary of the disc, as it must be, since the objective wants to go further out. `violation` is the largest positive constraint value of the returned point; 0 means feasible. The run stopped on its iteration budget while still creeping along the boundary, which is typical of constrained direct search: the last digits are slow, and the objective agrees with the exact value to 1e-4.
+
+## Program 3: Equality constraints
+
+Put them in `constraints_values`, whose result has an `inequality` and an `equality` part; fill either or both.
+
+@@example Numerical/optimization/guide/dfo/322_equality_constraints.cpp@@
+
+An equality is harder than an inequality for a method that only compares values: a feasible point must lie on a surface of lower dimension, and a random poll almost never does. Pattern search handles it with an augmented Lagrangian, a penalty that grows with the violation. The violation therefore settles near 1e-7, not at zero; the constraint is met to a tolerance.
+
+## Decisions and pitfalls
+
+- **Every method keeps its trial points in the box.** Even Nelder–Mead, whose simplex is free to move, projects each point into the box before the objective sees it; you will never be called outside the bounds.
+- **Constraints are `<= 0`.** A requirement written the other way round is a constraint on the wrong side; the solver will obey it faithfully.
+- **An equality is harder than an inequality.** A feasible point lies on a surface of lower dimension, which a random poll almost never hits; pattern search uses an augmented Lagrangian, so the violation shrinks as the run proceeds rather than being zero at once.
+- **Stopping on the budget while creeping along a boundary is typical.** Check the violation and raise the budget if you need more digits.
+- **Check feasibility yourself.** Recompute the constraints at the returned point.
+
+Where next: [Mesh methods and infeasible problems](mesh_methods_and_infeasible_problems.md) covers the other constrained solvers and what happens when no point is feasible.

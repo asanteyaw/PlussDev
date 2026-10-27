@@ -31,7 +31,7 @@ torch::Tensor export_after_source_handle_dies() {
 TEST_CASE("from_torch imports an offset view exactly once", "[interop][torch]") {
   auto imported = import_after_source_handle_dies();
 
-  REQUIRE(imported.to_vec<std::int64_t>() == std::vector<std::int64_t>{2, 3, 4, 5});
+  REQUIRE(imported.host<std::int64_t>() == std::vector<std::int64_t>{2, 3, 4, 5});
 }
 
 TEST_CASE("torch interop handles keep shared storage alive", "[interop][torch]") {
@@ -65,7 +65,7 @@ TEST_CASE("from_torch import can begin a fresh Pluss reverse graph", "[interop][
   loss.reverse();
 
   REQUIRE(values.has_sensitivity());
-  REQUIRE(values.sensitivity().to_vec<double>() == std::vector<double>{2.0, 4.0, 6.0});
+  REQUIRE(values.sensitivity().host<double>() == std::vector<double>{2.0, 4.0, 6.0});
 }
 
 TEST_CASE("from_torch import can enter a Pluss CUDA reverse graph", "[interop][torch][cuda][autodiff]") {
@@ -82,7 +82,7 @@ TEST_CASE("from_torch import can enter a Pluss CUDA reverse graph", "[interop][t
   auto loss = device_values.square().sum();
   loss.reverse();
 
-  REQUIRE(values.sensitivity().to_vec<float>() == std::vector<float>{2.0F, 4.0F, 6.0F});
+  REQUIRE(values.sensitivity().host<float>() == std::vector<float>{2.0F, 4.0F, 6.0F});
 }
 
 TEST_CASE("complex dtypes round trip through torch interop", "[interop][torch]") {

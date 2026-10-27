@@ -1,0 +1,45 @@
+# Robustness, stopping rules and precision
+
+[Back to Septima 3: Tuning and Robustness](../septima_03_tuning_and_robustness.md)
+
+Real objectives are undefined in some region of the parameter space, real problems are badly scaled, and real runs need to know when to stop. This page covers the three things that decide whether a run is trustworthy. First, an objective such as `-x - 0.2 log(1 - x)` is defined only for `x < 1`, and a large first step can jump past it; the NaN-recovery settings retry an update with a smaller step, but they look only at non-finite *parameters*, not at where the objective becomes undefined, so the learning rate is the real control.
+
+Second, the stopping rules: three gradient tolerances on the ten-variable chain show that asking for more than a method can deliver changes the flag and nothing else, and a problem whose curvature differs by 10 000 between its variables shows how differently Adam and L-BFGS cope with scale. Third, precision and complex parameters: the same valley in double and in single precision, and a complex number fitted to a target (with bounds on a complex parameter rejected, since complex numbers have no order).
+
+## Program 4: An objective that is undefined in part of the space
+
+`f(x) = -x - 0.2 log(1 - x)` is defined only for `x < 1` and has its minimum at `x = 0.8`. With a large learning rate the first Adam step from 0 jumps past 1, where the logarithm is NaN.
+
+@@example Numerical/optimization/guide/septima/124_keeping_in_domain.cpp@@
+
+The first run ends after two iterations with `NonFiniteEvaluation`, at `x = 1.5`. The second asks for six recovery attempts and ends the same way. The settings `nan_recovery_attempts` and `nan_recovery_shrink` retry an update that itself produces non-finite parameters or optimizer state with a smaller step. They do not look at the objective at the new point, so they cannot rescue a step into a region where the objective is undefined. What does rescue it is a bound that keeps every iterate inside the domain: with `x <= 0.99` the same run converges to 0.8 in 422 iterations. A smaller learning rate would also avoid the jump here, but a bound makes the guarantee. The general rule is to **bound the parameters wherever the objective is undefined outside the bounds**, and to set the bound a little inside the edge of the domain.
+
+## Program 5: What stops a run
+
+Three gradient tolerances on the ten-variable chain with L-BFGS, and then a problem whose curvature differs by a factor of 10 000 between its two variables.
+
+@@example Numerical/optimization/guide/septima/125_stopping_rules.cpp@@
+
+With a gradient tolerance of 1e-3 the run converges in 99 iterations. With 1e-6 and 1e-9 it ends in 124 iterations with `NoProgress`, at the same gradient (2.5e-04) and the same objective (3.3e-10): this method, without a line search, cannot bring the gradient lower than that, so asking for more changes the flag and nothing else. **If a run ends with `NoProgress` and the gradient is within a small factor of what you need, the answer is usually the answer; loosen the tolerance to match what you can use, and the flag will say so.**
+
+On the stretched quadratic, both Adam runs converge (in 531 and 422 iterations), and L-BFGS in 5. Adam divides each coordinate's step by the size of that coordinate's own gradients, so a stretch along the axes costs it little. L-BFGS learns the curvature itself and needs far fewer iterations.
+
+## Program 6: Precision and complex parameters
+
+The Rosenbrock valley in double and in single precision, and a complex number fitted to a target.
+
+@@example Numerical/optimization/guide/septima/126_precision_and_complex.cpp@@
+
+In double precision L-BFGS ends with `NoProgress` at an objective of 5.6e-11; in single precision it ends with `Converged` at 3.6e-15. Single precision has fewer digits, but in this run the smaller gradients it computes happen to satisfy the tolerances sooner; do not read it as single precision being better. The point is that single precision works, and that its floor is the accuracy of the arithmetic.
+
+A complex parameter needs a real loss. Here `|z - (1 + 2i)|^2` is written with `abs` and `pow`, and Septima treats the real and imaginary parts as two independent coordinates. Adam finds `1 + 2i` in 213 iterations and L-BFGS in 3. Bounds on a complex parameter are rejected, because complex numbers have no order.
+
+## Decisions and pitfalls
+
+- **Control the step, not the recovery.** If a step can leave the domain, use a smaller learning rate; the recovery settings fix non-finite parameters, they do not know where your objective ends.
+- **A tighter tolerance than the method can reach changes only the flag.** Without a line search L-BFGS cannot bring the gradient below a floor; asking for 1e-9 gives `NoProgress` at the same point as 1e-6.
+- **Adam copes with stretch, L-BFGS with curvature.** Adam divides each coordinate's step by its own gradient scale; L-BFGS learns the curvature and needs far fewer iterations when it can.
+- **Single precision is not better, it is different.** It converged sooner in one run by chance; use it when memory or speed demands it and check the answer.
+- **A complex parameter needs a real loss.** Write it with `abs` and `pow`; the real and imaginary parts are treated as independent coordinates.
+
+Where next: [Chapter 4](../septima_04_lsr1_trust_region.md) introduces the third solver, a trust-region method.

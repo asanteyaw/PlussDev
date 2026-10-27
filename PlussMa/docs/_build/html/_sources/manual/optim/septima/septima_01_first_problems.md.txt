@@ -13,7 +13,7 @@ An iteration does four things. It evaluates the objective and its gradient (by r
 | Piece | What it is |
 |---|---|
 | `optim::septima(objective, start, options, constraints)` | the one call that runs the solver and returns a `SeptimaResult` |
-| `objective` | a function of the parameters that returns one number, written on `Trace` values (or on plain `Series` values) |
+| `objective` | a function of the parameters that returns one number, written on plain `Series` values |
 | `start` | the starting parameters: one `Series`, a list of them, or a named `ParameterPack` |
 | `SeptimaSolveOptions` | the budget and the tolerances; its member `step` holds the optimizer settings |
 | `SeptimaConstraints` | bounds, equalities and inequalities (chapter 2); omit it for an unconstrained problem |
@@ -25,12 +25,8 @@ The defaults are a starting point, not a tuned recipe. The first program shows h
 
 ## Programs
 
-- [The smallest problem, and why the defaults are not enough](septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no.md)
-- [A curved valley](septima_01_first_problems/a_curved_valley.md)
-- [Three ways to hand over the same objective](septima_01_first_problems/three_ways_to_hand_over_the_same_objective.md)
-- [Reading the result](septima_01_first_problems/reading_the_result.md)
-- [How a run ends](septima_01_first_problems/how_a_run_ends.md)
-- [Watching a run](septima_01_first_problems/watching_a_run.md)
+- [First problems with Septima](septima_01_first_problems/first_problems.md)
+- [Reading and watching a run](septima_01_first_problems/reading_a_run.md)
 
 ## What to remember
 
@@ -38,7 +34,7 @@ The defaults are a starting point, not a tuned recipe. The first program shows h
 - The defaults are not tuned. Adam's default learning rate (0.001) and budget (200 iterations) will not solve most problems; set the learning rate to the scale of your parameters, or use L-BFGS.
 - `Converged` needs all three of gradient, step and violation within tolerance. A run that ends with `MaxIterations` or `NoProgress` may still have a good answer: read `objective_value`, `stationarity` and `step_inf_norm`.
 - `stationarity` is the measure of optimality; `gradient_inf_norm` is the objective's gradient alone and is not zero at a constrained optimum.
-- Pass parameters as one block, a list of blocks, or named blocks; write the objective on `Trace` or on `Series`. The result is the same.
+- Pass parameters as one block, a list of blocks, or named blocks; write the objective on `Series`. The result is the same.
 - A progress hook sees every iteration and can stop the run.
 
 <!-- apiref:toctree:start -->
@@ -46,11 +42,7 @@ The defaults are a starting point, not a tuned recipe. The first program shows h
 :maxdepth: 2
 :hidden:
 
-septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no
-septima_01_first_problems/a_curved_valley
-septima_01_first_problems/three_ways_to_hand_over_the_same_objective
-septima_01_first_problems/reading_the_result
-septima_01_first_problems/how_a_run_ends
-septima_01_first_problems/watching_a_run
+septima_01_first_problems/first_problems
+septima_01_first_problems/reading_a_run
 ```
 <!-- apiref:toctree:end -->

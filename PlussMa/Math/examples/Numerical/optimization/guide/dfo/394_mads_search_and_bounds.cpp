@@ -18,10 +18,6 @@ pluss::Series rosenbrock(const pluss::Series& x) {
   const auto a = x.select(0, 0), b = x.select(0, 1);
   return (b - a * a).square() * 100.0 + (a * -1.0 + 1.0).square();
 }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   const double pi = 3.14159265358979323846;
   auto rastrigin = [pi](const pluss::Series& x) { return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum(); };

@@ -43,14 +43,14 @@ int main() {
          "MPC control trajectory shape is wrong");
   expect(result.states.sizes() == std::vector<std::int64_t>{4, 1},
          "MPC state trajectory shape is wrong");
-  expect(result.control.item<double>() <= 0.40001 &&
-             result.control.item<double>() >= -0.40001,
+  expect(result.control.select(-1, 0).item<double>() <= 0.40001 &&
+             result.control.select(-1, 0).item<double>() >= -0.40001,
          "MPC first control violates bounds");
   expect(result.controls.abs().amax().item<double>() <= 0.40001,
          "MPC trajectory violates input bounds");
   expect(result.states.amax().item<double>() <= 1.05001,
          "MPC trajectory violates state bounds");
-  expect(result.states.select(0, 3).item<double>() > 0.8,
+  expect(result.states.select(0, 3).select(-1, 0).item<double>() > 0.8,
          "MPC did not approach its reference");
 
   const auto plan = control::mpc::build(system, weights, bounds, options);

@@ -36,8 +36,8 @@ int main() {
   lp::Options simplex;
   simplex.method = lp::Method::Simplex;          // vertices, so that the plans are easy to read
   const auto result = lp::solve(batch, simplex);
-  const auto x = result.x.to_vec<double>();      // [5, 4], row-major
-  const auto status = result.status.to_vec<double>();
+  const auto x = result.x.host<double>();      // [5, 4], row-major
+  const auto status = result.status.host<double>();
 
   std::cout << std::fixed << std::setprecision(2) << std::left << std::setw(6) << "t" << std::setw(10) << "status" << std::setw(26) << "plan" << std::setw(8) << "cost" << "emission\n";
   double worst = 0.0;
@@ -55,12 +55,12 @@ int main() {
 
     lp::Problem single = batch;  // the same lane solved alone
     single.c = vec(std::vector<double>(c.begin() + l * 4, c.begin() + (l + 1) * 4));
-    worst = std::max(worst, std::abs(lp::solve(single, simplex).objective.item<double>() - result.objective.to_vec<double>()[static_cast<std::size_t>(l)]));
+    worst = std::max(worst, std::abs(lp::solve(single, simplex).objective.item<double>() - result.objective.host<double>()[static_cast<std::size_t>(l)]));
   }
   lp::Options chunked = simplex;
   chunked.max_lanes = 2;
   const auto again = lp::solve(batch, chunked);
-  const auto a = again.objective.to_vec<double>(), b = result.objective.to_vec<double>();
+  const auto a = again.objective.host<double>(), b = result.objective.host<double>();
   double diff = 0.0;
   for (std::size_t l = 0; l < a.size(); ++l) diff = std::max(diff, std::abs(a[l] - b[l]));
   std::cout << std::scientific << std::setprecision(1) << "\nlargest difference between the batch and separate solves: " << worst

@@ -218,10 +218,10 @@ void test_covariance() {
                "batched covariance map value shape failed");
   expect_shape(mapped.covariance().si_value(), {2, 1, 1},
                "batched covariance map covariance shape failed");
-  expect(close(mapped.values().si_value().select(0, 0).item<double>(), 5.0),
+  expect(close(mapped.values().si_value().select(0, 0).host<double>().front(), 5.0),
          "covariance map mean failed");
   expect(
-      close(mapped.covariance().si_value().select(0, 0).item<double>(), 19.0),
+      close(mapped.covariance().si_value().select(0, 0).host<double>().front(), 19.0),
       "covariance map propagation failed");
 
   bool asymmetric = false;

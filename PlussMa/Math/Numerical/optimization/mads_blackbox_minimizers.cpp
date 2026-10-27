@@ -68,7 +68,7 @@ double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
     ::pluss::throw_error(std::string(op) + ": expected scalar Series");
   }
-  return x.to(ScalarType::Float64).item<double>();
+  return x.to(ScalarType::Float64).host<double>().front();
 }
 
 void require_valid_initial(const Series& initial, const char* op) {
@@ -619,7 +619,7 @@ double positive_violation_sum(
   if (c.numel() == 0) {
     return 0.0;
   }
-  const std::vector<double> values = c.to_vec<double>();
+  const std::vector<double> values = c.host<double>().array().data;
   double sum = 0.0;
   for (double v : values) {
     if (!std::isfinite(v)) {
@@ -635,7 +635,7 @@ double positive_violation_sum(
 
 std::string point_cache_key(const Series& point, std::int64_t round_digits) {
   const Series p = point.to(ScalarType::Float64).contiguous();
-  const std::vector<double> v = p.to_vec<double>();
+  const std::vector<double> v = p.host<double>().array().data;
   const std::int64_t d = std::clamp<std::int64_t>(round_digits, 0, 15);
   const double scale = std::pow(10.0, static_cast<double>(d));
   std::ostringstream oss;
@@ -712,7 +712,7 @@ Series subset_from_indices(
     const std::vector<std::int64_t>& indices,
     const Config& cfg) {
   const Series cpu = full_flat.to(ScalarType::Float64).contiguous();
-  const std::vector<double> src = cpu.to_vec<double>();
+  const std::vector<double> src = cpu.host<double>().array().data;
   std::vector<double> sub(indices.size(), 0.0);
   for (std::size_t i = 0; i < indices.size(); ++i) {
     sub[i] = src[static_cast<std::size_t>(indices[i])];
@@ -729,8 +729,8 @@ Series inject_from_indices(
     const std::vector<std::int64_t>& indices,
     const Series& sub_flat,
     const Config& cfg) {
-  const std::vector<double> dst0 = full_flat.to(ScalarType::Float64).contiguous().to_vec<double>();
-  const std::vector<double> src = sub_flat.to(ScalarType::Float64).contiguous().to_vec<double>();
+  const std::vector<double> dst0 = full_flat.to(ScalarType::Float64).contiguous().host<double>().array().data;
+  const std::vector<double> src = sub_flat.to(ScalarType::Float64).contiguous().host<double>().array().data;
   std::vector<double> dst = dst0;
   for (std::size_t i = 0; i < indices.size(); ++i) {
     dst[static_cast<std::size_t>(indices[i])] = src[i];
@@ -825,7 +825,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       if (w.numel() != obj_dim) {
         ::pluss::throw_error(std::string(op) + ": objective_weights size mismatch");
       }
-      objective_weights = w.to_vec<double>();
+      objective_weights = w.host<double>().array().data;
     } else {
       objective_weights.assign(static_cast<std::size_t>(obj_dim), 1.0 / static_cast<double>(obj_dim));
     }
@@ -837,7 +837,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       if (r.numel() != obj_dim) {
         ::pluss::throw_error(std::string(op) + ": objective_reference size mismatch");
       }
-      objective_reference = r.to_vec<double>();
+      objective_reference = r.host<double>().array().data;
     } else {
       objective_reference.assign(static_cast<std::size_t>(obj_dim), 0.0);
     }
@@ -1015,7 +1015,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       out.feasible = out.feasible && (out.violation <= 0.0);
     }
 
-    const std::vector<double> obj_values = out.objectives.to_vec<double>();
+    const std::vector<double> obj_values = out.objectives.host<double>().array().data;
     const double scalarized = scalarize_objectives(obj_values);
     if (!std::isfinite(scalarized) || !out.evaluation_ok) {
       out.merit = std::numeric_limits<double>::infinity();
@@ -1028,7 +1028,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     }
 
     if (std::isfinite(out.merit)) {
-      const std::vector<double> point_vec = point.to(ScalarType::Float64).to_vec<double>();
+      const std::vector<double> point_vec = point.to(ScalarType::Float64).host<double>().array().data;
       train_x.push_back(point_vec);
       train_y.push_back(out.merit);
       if (config.surrogate_max_points > 0 &&
@@ -1112,10 +1112,10 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
 
     const Series order_series = predicted.to(pluss::pCPU).to(ScalarType::Float64).argsort(0, false);  // leave the accelerator before widening
     const std::vector<std::int64_t> order =
-        order_series.to(ScalarType::Int64).to_vec<std::int64_t>();
+        order_series.to(ScalarType::Int64).host<std::int64_t>().array().data;
 
     const Series offsets_cpu = offsets.to(ScalarType::Float64).contiguous();
-    const std::vector<double> in = offsets_cpu.to_vec<double>();
+    const std::vector<double> in = offsets_cpu.host<double>().array().data;
     std::vector<double> out(in.size(), 0.0);
     for (std::int64_t i = 0; i < n_rows; ++i) {
       const std::int64_t src = order[static_cast<std::size_t>(i)];
@@ -1303,7 +1303,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     std::vector<double> points_buf;
     points_buf.reserve(static_cast<std::size_t>(rows * n_dim));
     for (const Series& p : pareto_points) {
-      const std::vector<double> v = p.to(ScalarType::Float64).to_vec<double>();
+      const std::vector<double> v = p.to(ScalarType::Float64).host<double>().array().data;
       points_buf.insert(points_buf.end(), v.begin(), v.end());
     }
     std::vector<double> obj_buf;
@@ -1660,13 +1660,13 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
     if (!ev.evaluation_ok || !ev.objectives.defined() || ev.objectives.numel() < 1) {
       return false;
     }
-    for (double v : ev.objectives.to(ScalarType::Float64).to_vec<double>()) {
+    for (double v : ev.objectives.to(ScalarType::Float64).host<double>().array().data) {
       if (!std::isfinite(v)) {
         return false;
       }
     }
     if (ev.constraints.defined()) {
-      for (double v : ev.constraints.to(ScalarType::Float64).to_vec<double>()) {
+      for (double v : ev.constraints.to(ScalarType::Float64).host<double>().array().data) {
         if (!std::isfinite(v) || v > config.base.constraint_tolerance) {
           return false;
         }

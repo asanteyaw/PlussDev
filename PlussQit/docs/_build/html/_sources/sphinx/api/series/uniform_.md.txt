@@ -84,7 +84,7 @@ with its mean near the midpoint.
 pluss::rng_seed(3);
 auto x = pluss::series::empty({200000}, pluss::ScalarType::Float64);
 x.uniform_(-1.0, 3.0);
-auto v = x.to_vec<double>();
+auto v = x.host<double>();
 double lo = 1e300, hi = -1e300, sum = 0;
 for (double e : v) { lo = std::min(lo, e); hi = std::max(hi, e); sum += e; }
 std::cout << "min=" << lo << "  max=" << hi << "  mean~" << sum / v.size() << "\n";

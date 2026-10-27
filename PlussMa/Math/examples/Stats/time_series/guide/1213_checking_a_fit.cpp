@@ -41,13 +41,13 @@ void report(const char* label, const Series& x) {
   lb.lags = {10};
   const auto q = ts::ljung_box(x * x, lb);
   std::cout << std::left << std::setw(24) << label << std::fixed << std::setprecision(2) << "ARCH-LM " << std::setw(8) << lm.stat << std::scientific << std::setprecision(2)
-            << "p " << std::setw(10) << lm.pvalue << "Ljung-Box on squares p " << q.pvalue.to_vec<double>()[0] << "\n";
+            << "p " << std::setw(10) << lm.pvalue << "Ljung-Box on squares p " << q.pvalue.host<double>()[0] << "\n";
 }
 int main() {
   const auto r = garch_returns(1000);
   const Series y = vec(r);
   const auto fit = ts::Garch11::fit_mle(y);
-  const auto h = fit.infer(y).to_vec<double>();
+  const auto h = fit.infer(y).host<double>();
   std::vector<double> z(r.size());
   for (std::size_t t = 0; t < r.size(); ++t) z[t] = (r[t] - fit.mean) / std::sqrt(h[t]);
   report("raw returns", y);

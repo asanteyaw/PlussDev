@@ -26,7 +26,7 @@
 <span class="card-name">Distributions</span>
 <span class="card-model">distr</span>
 <p class="card-desc">Sixty probability families, sampling and maximum-likelihood fitting.</p>
-<a href="manual/distr.html">Read the distributions guides</a>
+<a href="manual/distr.html">Read the distributions guides</a> &middot; <a href="api/plussma_distr.html">API reference</a>
 </div>
 
 <div class="pluss-card">

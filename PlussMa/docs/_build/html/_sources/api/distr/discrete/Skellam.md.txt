@@ -1,0 +1,204 @@
+<!-- generated from Skellam.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Skellam`
+
+The Skellam distribution: the difference of two independent Poisson counts, a distribution on the integers that can be negative.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Skellam, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Skellam, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Skellam, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Skellam, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Skellam, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The Skellam distribution is the distribution of the difference of two independent Poisson variables with means `mu1` and `mu2`: the score difference between two teams, the net change of a population with independent births and deaths, the price change of a tick-by-tick quote. Its mean is `mu1 - mu2` and its variance `mu1 + mu2`; it is symmetric when the means are equal.
+
+The kind-based functions take `{mu1, mu2}`; the object is `distr::Skellam{lambda1, lambda2}`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `mu1` | > 0 | the mean of the positive Poisson count |
+| `mu2` | > 0 | the mean of the negative Poisson count |
+
+Support: all integers, negative and positive.
+
+The object form of this family, with the same functions as methods, is on its own page: [`distr::Skellam`](../object_based/Skellam.md).
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. The mass function is zero at a value that is not a possible count.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape.
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`mu1` and `mu2` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Skellam on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({-4.0, -2.0, -1.0, 0.0, 1.0, 3.0, 6.0}, f64);
+  const std::vector<double> params = {2.0, 1.5};
+
+  std::cout << "x:";
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pmf:";
+  for (double v : distr::pdf(dst::Skellam, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Skellam, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpmf:";
+  for (double v : distr::logpdf(dst::Skellam, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -4 -2 -1 0 1 3 6
+pmf: 0.01130 0.08358 0.15712 0.21618 0.20949 0.08120 0.00408
+cdf: 0.01530 0.13314 0.29025 0.50644 0.71593 0.94572 0.99856
+logpmf: -4.48319 -2.48196 -1.85077 -1.53163 -1.56309 -2.51079 -5.50260
+```
+
+The mass is largest on this grid at x = 0, where it is 0.21618; the distribution function runs from 0.0153 at x = -4 to 0.99856 at x = 6, and it is the running total of the mass. `logpdf` is the logarithm of the mass, for example log(0.21618) = -1.53164 at x = 0.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {2.0, 1.5};
+
+  // The three ways to the probability that the variable lies in [-3, 6]:
+  const auto grid = pluss::series::linspace(-3.0, 6.0, 10, f64).round();
+  const double mass_sum = as_f64(distr::pdf(dst::Skellam, grid, params).sum());
+
+  const auto edges = pluss::make_series({-4.0, 6.0}, f64);
+  const auto c = distr::cdf(dst::Skellam, edges, params).pull<double>();
+
+  const auto draws = distr::sample(dst::Skellam, params, {200000}, f64, 7ULL);
+  const double fraction = as_f64(((draws >= -3.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean());
+
+  std::cout << "sum of the masses at -3..6: " << mass_sum << '\n';
+  std::cout << "cdf(6) - cdf(-4): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+sum of the masses at -3..6: 0.98325
+cdf(6) - cdf(-4): 0.98325
+fraction of 200000 draws in range: 0.98351
+```
+
+The sum of the masses (0.98325) and the difference of the distribution function (0.98325) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.98351) differs from it by 2.60e-04, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 2.87e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({-4.0, -2.0, 0.0, 2.0, 4.0, 6.0}, f64);
+
+  std::cout << "x:";
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "mu1 1, mu2 1:";
+  for (double v : distr::pdf(dst::Skellam, x, {1.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "mu1 2, mu2 1.5:";
+  for (double v : distr::pdf(dst::Skellam, x, {2.0, 1.5}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "mu1 5, mu2 1:";
+  for (double v : distr::pdf(dst::Skellam, x, {5.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -4 -2 0 2 4 6
+mu1 1, mu2 1: 0.0069 0.0932 0.3085 0.0932 0.0069 0.0002
+mu1 2, mu2 1.5: 0.0113 0.0836 0.2162 0.1486 0.0357 0.0041
+mu1 5, mu2 1: 0.0003 0.0051 0.0423 0.1283 0.1635 0.1068
+```
+
+Read down the rows: `mu1 1, mu2 1` peaks on this grid at x = 0 (value 0.3085); `mu1 2, mu2 1.5` peaks on this grid at x = 0 (value 0.2162); `mu1 5, mu2 1` peaks on this grid at x = 4 (value 0.1635). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+## See Also
+
+- [`Poisson`](../discrete/Poisson.md)
+- [`Binomial`](../discrete/Binomial.md)
+- [`Normal`](../continuous_real_line/Normal.md)
+- [`distr::Skellam`](../object_based/Skellam.md) -- the object form

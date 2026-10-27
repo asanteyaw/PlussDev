@@ -13,13 +13,13 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Optima Sequential QP" href="optima_sequential_qp.html" />
-    <link rel="prev" title="A plant with every kind of constraint" href="optima_08_worked_problems/a_plant_with_every_kind_of_constraint.html" />
+    <link rel="prev" title="A portfolio and a maximum-likelihood fit" href="optima_08_worked_problems/fitting_and_portfolio_problems.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -74,7 +74,7 @@
 </ul>
 <p>The public parameter surface is always <code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Series&gt;</span></code>. Derivatives come from either:</p>
 <ul class="simple">
-<li><p>autodiff callbacks over <code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Trace&gt;</span></code></p></li>
+<li><p>autodiff callbacks over <code class="docutils literal notranslate"><span class="pre">ParameterPack&lt;Series&gt;</span></code></p></li>
 <li><p>user-supplied analytic callbacks</p></li>
 </ul>
 <p>Autodiff/analytic are the derivative paths in <code class="docutils literal notranslate"><span class="pre">Optima</span></code>.</p>
@@ -290,7 +290,7 @@ just allocates more recovery budget and explicit solver defaults:</p>
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
@@ -301,6 +301,7 @@ just allocates more recovery budget and explicit solver defaults:</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

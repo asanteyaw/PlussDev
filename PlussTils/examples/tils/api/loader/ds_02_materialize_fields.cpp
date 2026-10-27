@@ -12,6 +12,6 @@ int main() {
   const loader::SeriesDataset dataset({x});
   const auto materialized = dataset.materialize_fields();
   std::cout << "materialized field count: " << materialized.size() << '\n';
-  std::cout << "values survive: " << (materialized[0].to_vec<double>() == std::vector<double>{10, 20, 30}) << '\n';
+  std::cout << "values survive: " << (materialized[0].host<double>() == std::vector<double>{10, 20, 30}) << '\n';
   return 0;
 }

@@ -56,8 +56,8 @@ void check_group(const Group &g, std::map<std::string, int> &tally, lp::Method m
   lp::Options opts;
   opts.method = method;
   const auto r = lp::solve(p, opts);
-  const auto st = r.status.to_vec<double>(), obj = r.objective.to_vec<double>(), dual = r.dual_objective.to_vec<double>();
-  const auto xs = r.x.to_vec<double>(), ray = r.ray.to_vec<double>(), fk = r.farkas.to_vec<double>();
+  const auto st = r.status.host<double>(), obj = r.objective.host<double>(), dual = r.dual_objective.host<double>();
+  const auto xs = r.x.host<double>(), ray = r.ray.host<double>(), fk = r.farkas.host<double>();
   const std::size_t rows = fk.size() / static_cast<std::size_t>(L);
   for (int li = 0; li < L; ++li) {
     const auto &lane = g.lanes[static_cast<std::size_t>(li)];

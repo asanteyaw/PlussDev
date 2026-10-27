@@ -38,7 +38,7 @@ int main() {
   auto run = [&](const char* label, qp::Options o) {
     const auto r = qp::solve(p, vec({1.0, 1.0}), a, lower, upper, o);
     std::cout << std::left << std::setw(30) << label << std::setw(12) << r.iterations << std::setw(12) << (r.converged ? "yes" : "no")
-              << std::scientific << std::setprecision(1) << std::abs(r.x.to_vec<double>()[0] - 0.3) << "\n";
+              << std::scientific << std::setprecision(1) << std::abs(r.x.host<double>()[0] - 0.3) << "\n";
   };
   run("defaults (1e-5)", qp::Options{});
   qp::Options tight; tight.abs_tol = 1e-9; tight.rel_tol = 1e-9;

@@ -27,7 +27,7 @@ bool require_ok(const StatusOr<T>& out, const std::string& label) {
 }
 
 void print_metrics(const std::string& label, const Series& metrics) {
-  const auto v = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()}).to_vec<double>();
+  const auto v = metrics.to(pluss::pCPU, ScalarType::Float64).reshape({metrics.numel()}).host<double>();
   std::cout << label << ":";
   for (double m : v) std::cout << " " << m;
   std::cout << "\n";

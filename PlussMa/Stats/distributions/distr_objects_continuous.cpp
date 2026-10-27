@@ -1,4 +1,5 @@
 #include "distr_fit_common.h"
+#include "pluss/tils/aux/scalar_cast.h"
 #include "pluss/subsp/math/integ.h"
 
 #include <algorithm>
@@ -79,7 +80,7 @@ std::array<double, 4> beta_params(double low, double high, double alpha, double 
 double series_scalar_param_(const Series& param, const char* op, const char* name) {
   PLUSS_CHECK(param.defined(), std::string(op) + ": missing " + name + " Series parameter");
   PLUSS_CHECK(param.numel() == 1, std::string(op) + ": " + name + " Series parameter must be scalar for sampling");
-  return param.to(ScalarType::Float64).item<double>();
+  return pluss::tils::to_scalar<double>(param.to(ScalarType::Float64));
 }
 
 std::int64_t series_scalar_int_param_(const Series& param, const char* op, const char* name) {
@@ -108,7 +109,7 @@ Series matrix_2x2_inverse_(const Series& m, const char* op) {
   const Series c = row1.select(0, 0).reshape({1});
   const Series d = row1.select(0, 1).reshape({1});
   const Series det = a.mul(d).sub(b.mul(c));
-  PLUSS_CHECK(det.item<double>() > 0.0,
+  PLUSS_CHECK(pluss::tils::to_scalar<double>(det) > 0.0,
               std::string(op) + ": expected positive-definite 2x2 matrix");
   const Series inv_det = det.reciprocal();
   return pack_2x2_(
@@ -176,7 +177,7 @@ double std_normal_pdf_scalar(double x) {
 }
 
 double std_normal_logcdf_scalar(double x) {
-  return ::pluss::subsp::stats::distr::logcdf(dst::Normal, detail::scalar_f64(x), std::initializer_list<double>{}).item<double>();
+  return pluss::tils::to_scalar<double>(::pluss::subsp::stats::distr::logcdf(dst::Normal, detail::scalar_f64(x), std::initializer_list<double>{}));
 }
 
 double logsubexp_scalar(double log_hi, double log_lo) {
@@ -1258,7 +1259,7 @@ Series ExponentialFit::observed_inf(const Series& x) const {
 }
 
 Series ExponentialFit::vcov(const Series& x) const {
-  const double info = fisher_inf(x).item<double>();
+  const double info = pluss::tils::to_scalar<double>(fisher_inf(x));
   PLUSS_CHECK(info > 0.0, "ExponentialFit::vcov: fisher_inf must be > 0");
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
@@ -1269,7 +1270,7 @@ Series ExponentialFit::stderr(const Series& x) const {
 
 Series ExponentialFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "ExponentialFit::confint");
-  const double se = stderr(x).item<double>();
+  const double se = pluss::tils::to_scalar<double>(stderr(x));
   const std::array<double, 2> ci = {std::max(0.0, rate - z * se), rate + z * se};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -1547,7 +1548,7 @@ Series RayleighFit::observed_inf(const Series& x) const {
 }
 
 Series RayleighFit::vcov(const Series& x) const {
-  const double info = fisher_inf(x).item<double>();
+  const double info = pluss::tils::to_scalar<double>(fisher_inf(x));
   PLUSS_CHECK(info > 0.0, "RayleighFit::vcov: fisher_inf must be > 0");
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
@@ -1558,7 +1559,7 @@ Series RayleighFit::stderr(const Series& x) const {
 
 Series RayleighFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "RayleighFit::confint");
-  const double se = stderr(x).item<double>();
+  const double se = pluss::tils::to_scalar<double>(stderr(x));
   const std::array<double, 2> ci = {std::max(0.0, sigma - z * se), sigma + z * se};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},

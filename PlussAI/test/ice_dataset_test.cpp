@@ -77,7 +77,7 @@ bool run_cross_section_dataset_checks(std::ostream* err = nullptr) {
                            .narrow_copy(1, 0, 1)
                            .to(pluss::pCPU, ScalarType::Float64)
                            .reshape({holdout.size()})
-                           .to_vec<double>();
+                           .host<double>();
   if (std::abs(encoded[0] - 2.0) > 1e-8) {
     if (err) *err << "Unseen categorical value should map to reserved unknown code in reused vocabularies\n";
     return false;

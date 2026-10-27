@@ -51,7 +51,7 @@ auto rg = pluss::scribble::Registry({
 std::vector<std::int64_t> picks{1};
 rg.take_("id", picks);
 auto ids = rg.fields("id");
-std::cout << "[" << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0] << "]";
+std::cout << "[" << std::get<pluss::Series>(ids.at(0)).host<std::int64_t>()[0] << "]";
 ```
 
 ### Output

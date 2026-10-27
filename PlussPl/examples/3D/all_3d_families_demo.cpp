@@ -29,9 +29,9 @@ std::tuple<pluss::Series, pluss::Series, pluss::Series, pluss::Series> synthetic
   auto x = pluss::series::linspace(-1.4, 1.4, nx, pluss::ScalarType::Float64);
   auto y = pluss::series::linspace(-1.4, 1.4, ny, pluss::ScalarType::Float64);
   auto z = pluss::series::linspace(-1.2, 1.2, nz, pluss::ScalarType::Float64);
-  const auto xv = x.to_vec<double>();
-  const auto yv = y.to_vec<double>();
-  const auto zv = z.to_vec<double>();
+  const auto xv = x.host<double>();
+  const auto yv = y.host<double>();
+  const auto zv = z.host<double>();
 
   std::vector<double> values;
   values.reserve(static_cast<std::size_t>(nx * ny * nz));
@@ -98,9 +98,9 @@ int main() {
   const auto py = t.mul(1.9).sin();
   const auto pz = t.mul(0.22);
   pane3.path3(px, py, pz).label("path3").width(2.1F);
-  const auto host_px = px.to_vec<double>();
-  const auto host_py = py.to_vec<double>();
-  const auto host_pz = pz.to_vec<double>();
+  const auto host_px = px.host<double>();
+  const auto host_py = py.host<double>();
+  const auto host_pz = pz.host<double>();
   std::vector<double> sample_x;
   std::vector<double> sample_y;
   std::vector<double> sample_z;

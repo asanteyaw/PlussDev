@@ -45,15 +45,15 @@ TEST_CASE("like factories inherit options and strided layout", "[factories][like
   REQUIRE(z.scalar_type() == like.scalar_type());
   REQUIRE(z.platform() == like.platform());
   REQUIRE_FALSE(z.source().has_value());
-  REQUIRE(z.to_vec<double>() == std::vector<double>(6, 0.0));
+  REQUIRE(z.host<double>() == std::vector<double>(6, 0.0));
 
   const auto o = pluss::series::ones_like(like);
   REQUIRE(o.strides() == like.strides());
-  REQUIRE(o.to_vec<double>() == std::vector<double>(6, 1.0));
+  REQUIRE(o.host<double>() == std::vector<double>(6, 1.0));
 
   const auto f = pluss::series::full_like(like, 7.0);
   REQUIRE(f.strides() == like.strides());
-  REQUIRE(f.to_vec<double>() == std::vector<double>(6, 7.0));
+  REQUIRE(f.host<double>() == std::vector<double>(6, 7.0));
 }
 
 TEST_CASE("like factory default-valued options remain explicit overrides", "[factories][like]") {
@@ -95,7 +95,7 @@ TEST_CASE("like factories inherit and can override platform", "[factories][like]
   const auto inherited = pluss::series::zeros_like(like);
   REQUIRE(inherited.platform() == pluss::pMPS);
   REQUIRE(inherited.strides() == like.strides());
-  REQUIRE(inherited.to(pluss::pCPU).to_vec<float>() == std::vector<float>(6, 0.0f));
+  REQUIRE(inherited.to(pluss::pCPU).host<float>() == std::vector<float>(6, 0.0f));
   REQUIRE(pluss::series::zeros_like(
               like,
               pluss::Config{}.with_platform(pluss::pCPU))

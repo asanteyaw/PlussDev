@@ -1,6 +1,7 @@
 #include "pluss/subsp/stats/inference/hypothesis_testing.h"
 
 #include "CodeM/core/Errors.h"
+#include "pluss/tils/aux/scalar_cast.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/stats/distr.h"
 
@@ -49,7 +50,7 @@ Series as_vector_(const Series& x, const char* op) {
 
 std::vector<double> finite_values_(const Series& x, const char* op) {
   const Series xv = as_vector_(x, op).to(pluss::pCPU, ScalarType::Float64);
-  const auto raw = xv.to_vec<double>();
+  const auto raw = xv.host<double>();
   std::vector<double> out;
   out.reserve(raw.size());
   for (double v : raw) {
@@ -74,8 +75,8 @@ std::vector<double> finite_paired_diffs_(const Series& x, const Series& y, const
   const Series xv = as_vector_(x, op).to(pluss::pCPU, ScalarType::Float64);
   const Series yv = as_vector_(y, op).to(pluss::pCPU, ScalarType::Float64);
   PLUSS_CHECK(xv.numel() == yv.numel(), std::string(op) + ": paired inputs must have same length");
-  const auto xa = xv.to_vec<double>();
-  const auto ya = yv.to_vec<double>();
+  const auto xa = xv.host<double>();
+  const auto ya = yv.host<double>();
   std::vector<double> out;
   out.reserve(xa.size());
   for (std::size_t i = 0; i < xa.size(); ++i) {
@@ -88,7 +89,7 @@ std::vector<double> finite_paired_diffs_(const Series& x, const Series& y, const
 
 double normal_cdf_(double z, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{z}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::Normal{}.cdf(q).item<double>());
+  return clamp01_(pluss::tils::to_scalar<double>(pluss::subsp::stats::distr::Normal{}.cdf(q)));
 }
 
 double normal_quantile_(double p, Config cfg) {
@@ -378,7 +379,8 @@ SignRankResult signrank_from_diffs_(const std::vector<double>& diffs,
   const double mean = 0.5 * total_rank;
   const double var = 0.25 * sumsq_rank;
   const double sd = std::sqrt(std::max(kEps, var));
-  const double z = continuity_corrected_z_(wplus, mean, sd, options.tail);
+  // The normal approximation of the signed-rank statistic carries no continuity correction.
+  const double z = (wplus - mean) / sd;
   // Exact distribution for small samples (n <= 15 nonzero differences), the normal approximation otherwise.
   const bool exact = options.method == PValueMethod::Exact || (options.method == PValueMethod::Auto && n <= 15);
   const double pvalue = exact ? signrank_exact_p_(ranks, wplus, options.tail)

@@ -604,9 +604,9 @@ Slate pivot_make_note_slate_(const std::vector<std::string>& values,
 Slate pivot_fill_numeric_column_(const Slate& source,
                                   const SlateValue::HostAny& fill_value,
                                   bool integral_fill) {
-  auto valid = detail::validity_mask(source)->to_vec<bool>();
+  auto valid = detail::validity_mask(source)->host<bool>();
   if (integral_fill) {
-    auto values = source.as_series().to_vec<std::int64_t>();
+    auto values = source.as_series().host<std::int64_t>();
     const auto fill = fill_value.to_int();
     for (std::size_t i = 0; i < values.size(); ++i) {
       if (!valid[i]) {
@@ -616,7 +616,7 @@ Slate pivot_fill_numeric_column_(const Slate& source,
     }
     return make_i64_slate(values, valid);
   }
-  auto values = source.as_series().to_vec<double>();
+  auto values = source.as_series().host<double>();
   const auto fill = fill_value.to_dbl();
   for (std::size_t i = 0; i < values.size(); ++i) {
     if (!valid[i]) {
@@ -634,7 +634,7 @@ Slate pivot_fill_note_column_(const Slate& source, const SlateValue::HostAny& fi
   for (const auto token : raw) {
     values.emplace_back(token);
   }
-  auto valid = detail::validity_mask(source)->to_vec<bool>();
+  auto valid = detail::validity_mask(source)->host<bool>();
   const auto fill = fill_value.to_str();
   for (std::size_t i = 0; i < values.size(); ++i) {
     if (!valid[i]) {
@@ -663,7 +663,7 @@ Slate pivot_fill_duration_column_(
   PLUSS_CHECK(fill != pluss::Duration::kNaT,
               "DataFrame::pivot_table: Duration fill_value cannot be NaT");
   auto values = source.as_duration().host();
-  auto valid = detail::validity_mask(source)->to_vec<bool>();
+  auto valid = detail::validity_mask(source)->host<bool>();
   for (std::size_t i = 0; i < values.size(); ++i) {
     if (!valid[i]) {
       values[i] = fill;
@@ -1110,7 +1110,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
       } else if (integral_output) {
         std::vector<std::int64_t> values(final_rows, 0);
         std::vector<bool> valid(final_rows, false);
-        const auto source_values = source.as_series().to_vec<std::int64_t>();
+        const auto source_values = source.as_series().host<std::int64_t>();
         for (std::int64_t row = 0; row < grouped.ncases(); ++row) {
           if (col_positions[static_cast<std::size_t>(row)] != combo || !detail::valid_at(source, row)) {
             continue;
@@ -1122,7 +1122,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         if (add_margin_row) {
           if (plan.columns.empty()) {
             if (grand_totals->ncases() > 0 && detail::valid_at(grand_totals->features(spec.group_output), 0)) {
-              values[out_rows] = grand_totals->features(spec.group_output).as_series().to_vec<std::int64_t>().front();
+              values[out_rows] = grand_totals->features(spec.group_output).as_series().host<std::int64_t>().front();
               valid[out_rows] = true;
             }
           } else {
@@ -1131,7 +1131,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
               const auto total_row = it->second;
               const auto total_source = col_totals->features(spec.group_output);
               if (detail::valid_at(total_source, total_row)) {
-                values[out_rows] = total_source.as_series().to_vec<std::int64_t>()[static_cast<std::size_t>(total_row)];
+                values[out_rows] = total_source.as_series().host<std::int64_t>()[static_cast<std::size_t>(total_row)];
                 valid[out_rows] = true;
               }
             }
@@ -1143,7 +1143,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
       } else {
         std::vector<double> values(final_rows, std::numeric_limits<double>::quiet_NaN());
         std::vector<bool> valid(final_rows, false);
-        const auto source_values = source.as_series().to_vec<double>();
+        const auto source_values = source.as_series().host<double>();
         for (std::int64_t row = 0; row < grouped.ncases(); ++row) {
           if (col_positions[static_cast<std::size_t>(row)] != combo || !detail::valid_at(source, row)) {
             continue;
@@ -1155,7 +1155,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         if (add_margin_row) {
           if (plan.columns.empty()) {
             if (grand_totals->ncases() > 0 && detail::valid_at(grand_totals->features(spec.group_output), 0)) {
-              values[out_rows] = grand_totals->features(spec.group_output).as_series().to_vec<double>().front();
+              values[out_rows] = grand_totals->features(spec.group_output).as_series().host<double>().front();
               valid[out_rows] = true;
             }
           } else {
@@ -1164,7 +1164,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
               const auto total_row = it->second;
               const auto total_source = col_totals->features(spec.group_output);
               if (detail::valid_at(total_source, total_row)) {
-                values[out_rows] = total_source.as_series().to_vec<double>()[static_cast<std::size_t>(total_row)];
+                values[out_rows] = total_source.as_series().host<double>()[static_cast<std::size_t>(total_row)];
                 valid[out_rows] = true;
               }
             }
@@ -1238,7 +1238,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
       } else if (integral_output) {
         std::vector<std::int64_t> values(final_rows, 0);
         std::vector<bool> valid(final_rows, false);
-        const auto total_values = total_source.as_series().to_vec<std::int64_t>();
+        const auto total_values = total_source.as_series().host<std::int64_t>();
         for (std::size_t row_idx = 0; row_idx < out_rows; ++row_idx) {
           const auto it = row_total_source_row.find(row_combo_keys[row_idx]);
           if (it == row_total_source_row.end() || !detail::valid_at(total_source, it->second)) {
@@ -1248,7 +1248,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
           valid[row_idx] = true;
         }
         if (add_margin_row && grand_totals->ncases() > 0 && detail::valid_at(grand_totals->features(spec.group_output), 0)) {
-          values[out_rows] = grand_totals->features(spec.group_output).as_series().to_vec<std::int64_t>().front();
+          values[out_rows] = grand_totals->features(spec.group_output).as_series().host<std::int64_t>().front();
           valid[out_rows] = true;
         }
         out_cols.emplace_back(
@@ -1257,7 +1257,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
       } else {
         std::vector<double> values(final_rows, std::numeric_limits<double>::quiet_NaN());
         std::vector<bool> valid(final_rows, false);
-        const auto total_values = total_source.as_series().to_vec<double>();
+        const auto total_values = total_source.as_series().host<double>();
         for (std::size_t row_idx = 0; row_idx < out_rows; ++row_idx) {
           const auto it = row_total_source_row.find(row_combo_keys[row_idx]);
           if (it == row_total_source_row.end() || !detail::valid_at(total_source, it->second)) {
@@ -1267,7 +1267,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
           valid[row_idx] = true;
         }
         if (add_margin_row && grand_totals->ncases() > 0 && detail::valid_at(grand_totals->features(spec.group_output), 0)) {
-          values[out_rows] = grand_totals->features(spec.group_output).as_series().to_vec<double>().front();
+          values[out_rows] = grand_totals->features(spec.group_output).as_series().host<double>().front();
           valid[out_rows] = true;
         }
         out_cols.emplace_back(

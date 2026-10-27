@@ -1,3 +1,4 @@
+#include <pluss/tils/aux/scalar_cast_compat.h>
 #include "../dfo_minimizers.h"
 
 #include <cmath>
@@ -14,13 +15,6 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::pCPU;
 using namespace pluss::subsp::math::optimization;
-
-double as_f64(const Series& x) {
-  if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error("expected scalar Series");
-  }
-  return x.to(pCPU, ScalarType::Float64).item<double>();
-}
 
 double l2_norm(const Series& x) {
   return as_f64(x.square().sum().sqrt());
@@ -53,6 +47,9 @@ Series guarded_sphere(const Series& x) {
 
 int main() {
   int failures = 0;
+  expect(to_string(PopulationSolverStatus::Converged) == "Converged" && to_string(PopulationSolverStatus::ReachedIterationBudget) == "ReachedIterationBudget" &&
+             to_string(PopulationSolverStatus::ReachedEvaluationBudget) == "ReachedEvaluationBudget",
+         "PopulationSolverStatus names", &failures);
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
   const std::int64_t dim = 6;
   const Series x0 = pluss::series::full({dim}, 2.0, cfg);

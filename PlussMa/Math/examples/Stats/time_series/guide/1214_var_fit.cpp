@@ -57,7 +57,7 @@ int main() {
   std::cout << std::setprecision(4);
   const auto row = [](const char* label, const Series& x) {
     std::cout << label;
-    for (double v : x.reshape({x.numel()}).to_vec<double>()) std::cout << std::setw(9) << v;
+    for (double v : x.reshape({x.numel()}).host<double>()) std::cout << std::setw(9) << v;
     std::cout << "\n";
   };
   std::cout << "\n";

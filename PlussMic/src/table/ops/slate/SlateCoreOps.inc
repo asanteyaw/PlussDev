@@ -153,7 +153,7 @@ bool Slate::is_valid(std::int64_t row) const {
       mask.is_contiguous()) {
     return reinterpret_cast<const bool*>(mask.raw_data())[static_cast<std::size_t>(idx)];
   }
-  return mask.to_vec<bool>(idx);
+  return mask.host<bool>().array().data.at(static_cast<std::size_t>(idx));
 }
 
 bool Slate::has_validity_mask() const { return impl_ref_().validity_mask_.has_value(); }
@@ -653,7 +653,7 @@ Slate SlateLabelAccessor::sort(bool ascending, bool nulls_last) const {
   std::vector<std::int64_t> positions(static_cast<std::size_t>(labels.size()));
   std::iota(positions.begin(), positions.end(), static_cast<std::int64_t>(0));
   const auto sorted = labels.label().set(Slate(pluss::make_series(positions))).arrange(ascending, nulls_last);
-  return base_.take(sorted.label().values().as_series().to_vec<std::int64_t>());
+  return base_.take(sorted.label().values().as_series().host<std::int64_t>());
 }
 
 bool SlateLabelAccessor::monotonic(bool ascending, bool strict, bool nulls_last) const {
@@ -792,7 +792,7 @@ Slate Slate::fillnull(std::string_view value) const {
   if (!has_validity_mask()) {
     return *this;
   }
-  const auto valid = validity_mask()->to_vec<bool>();
+  const auto valid = validity_mask()->host<bool>();
   std::vector<std::string> values;
   values.reserve(static_cast<std::size_t>(size()));
   for (std::int64_t i = 0; i < size(); ++i) {
@@ -869,8 +869,8 @@ Slate Slate::put(const Slate& bool_mask, const Slate& value) const {
   validate_slate_put_value_(*this, aligned_value, "Slate::put");
 
   if (kind() == SlateKind::Note) {
-    const auto hit = mask.to_vec<bool>();
-    auto out_valid = notnull().as_series().to_vec<bool>();
+    const auto hit = mask.host<bool>();
+    auto out_valid = notnull().as_series().host<bool>();
     std::vector<std::string> out_values;
     out_values.reserve(static_cast<std::size_t>(size()));
     const bool scalar_value = aligned_value.size() == 1;
@@ -977,7 +977,7 @@ Slate Slate::select(pluss::msharp::RangeView::Of<Slate> conditions,
     }
     PLUSS_CHECK(valid.numel() == 1,
                 "Slate::select: validity mask must match output size or be scalar-like");
-    const bool keep = valid.to_vec<bool>()[0];
+    const bool keep = valid.host<bool>()[0];
     return pluss::Series::full(
         {output_size},
         keep ? 1.0 : 0.0,
@@ -1007,7 +1007,7 @@ Slate Slate::select(pluss::msharp::RangeView::Of<Slate> conditions,
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))
-              .to_vec<bool>());
+              .host<bool>());
       return Slate(out, std::move(out_valid));
     }
 
@@ -1027,14 +1027,14 @@ Slate Slate::select(pluss::msharp::RangeView::Of<Slate> conditions,
               pluss::msharp::RangeView::Of<pluss::Series>(cond_masks),
               pluss::msharp::RangeView::Of<pluss::Series>(expanded_validity),
               expand_validity(validity_series(default_value), out.numel()))
-              .to_vec<bool>());
+              .host<bool>());
       return Slate(out, std::move(out_valid));
     }
 
     case SlateKind::Note: {
       std::vector<std::string> out_values;
       out_values.reserve(static_cast<std::size_t>(output_size));
-      auto out_valid = expand_validity(validity_series(default_value), output_size).to_vec<bool>();
+      auto out_valid = expand_validity(validity_series(default_value), output_size).host<bool>();
       const bool default_scalar = default_value.size() == 1;
       for (std::int64_t i = 0; i < output_size; ++i) {
         out_values.emplace_back(default_value.as_note().at(default_scalar ? 0 : i));
@@ -1043,13 +1043,13 @@ Slate Slate::select(pluss::msharp::RangeView::Of<Slate> conditions,
       std::vector<std::vector<bool>> cond_hits;
       cond_hits.reserve(cond_masks.size());
       for (const auto& cond_mask : cond_masks) {
-        cond_hits.push_back(cond_mask.to_vec<bool>());
+        cond_hits.push_back(cond_mask.host<bool>());
       }
 
       for (std::size_t cond_idx = conditions.size(); cond_idx > 0; --cond_idx) {
         const auto& choice = choices[cond_idx - 1];
         const bool scalar_choice = choice.size() == 1;
-        const auto choice_valid = expand_validity(choice_validity[cond_idx - 1], output_size).to_vec<bool>();
+        const auto choice_valid = expand_validity(choice_validity[cond_idx - 1], output_size).host<bool>();
         const auto& hits = cond_hits[cond_idx - 1];
         for (std::int64_t row = 0; row < output_size; ++row) {
           const auto row_idx = static_cast<std::size_t>(row);
@@ -1381,7 +1381,7 @@ Slate Slate::shift(std::int64_t periods) const {
   std::vector<bool> out_valid(static_cast<std::size_t>(n), false);
   std::optional<std::vector<bool>> src_valid = std::nullopt;
   if (has_validity_mask()) {
-    src_valid = validity_mask()->to_vec<bool>();
+    src_valid = validity_mask()->host<bool>();
   }
 
   std::transform(out_rows.begin(), out_rows.end(), out_valid.begin(), [&](std::int64_t out_row) {
@@ -1494,7 +1494,7 @@ Slate Slate::dropnull() const {
   if (!has_validity_mask()) {
     return *this;
   }
-  const auto valid = validity_mask()->to_vec<bool>();
+  const auto valid = validity_mask()->host<bool>();
   std::vector<std::int64_t> indices;
   indices.reserve(valid.size());
   for (std::size_t i = 0; i < valid.size(); ++i) {
@@ -1519,11 +1519,11 @@ Slate Slate::arrange(bool ascending, bool nulls_last) const {
 
     if (!has_validity_mask()) {
       const auto order = values.argsort(/*dim=*/0, /*descending=*/!ascending, /*stable=*/true)
-                             .to_vec<std::int64_t>();
+                             .host<std::int64_t>();
       return take(order);
     }
 
-    const auto valid = validity_mask()->to_vec<bool>();
+    const auto valid = validity_mask()->host<bool>();
     std::vector<std::int64_t> valid_idx;
     std::vector<std::int64_t> null_idx;
     valid_idx.reserve(static_cast<std::size_t>(size()));
@@ -1541,7 +1541,7 @@ Slate Slate::arrange(bool ascending, bool nulls_last) const {
     if (!valid_idx.empty()) {
       const auto valid_order_local = values.take(int64_index_series(valid_idx))
                                          .argsort(/*dim=*/0, /*descending=*/!ascending, /*stable=*/true)
-                                         .to_vec<std::int64_t>();
+                                         .host<std::int64_t>();
       for (const auto local_idx : valid_order_local) {
         sorted_valid_global_idx.push_back(valid_idx[static_cast<std::size_t>(local_idx)]);
       }
@@ -1564,7 +1564,7 @@ Slate Slate::arrange(bool ascending, bool nulls_last) const {
     const auto ticks = as_timeline().ticks();
     std::optional<std::vector<bool>> valid = std::nullopt;
     if (has_validity_mask()) {
-      valid = validity_mask()->to_vec<bool>();
+      valid = validity_mask()->host<bool>();
     }
 
     std::vector<std::int64_t> indices(static_cast<std::size_t>(size()));
@@ -1606,7 +1606,7 @@ Slate Slate::arrange(bool ascending, bool nulls_last) const {
 
     std::optional<std::vector<bool>> valid = std::nullopt;
     if (has_validity_mask()) {
-      valid = validity_mask()->to_vec<bool>();
+      valid = validity_mask()->host<bool>();
     }
 
     std::vector<std::int64_t> indices(static_cast<std::size_t>(size()));
@@ -1693,14 +1693,14 @@ Slate Slate::interp(std::int64_t limit) const {
   if (limit == 0 || size() == 0) {
     return *this;
   }
-  auto valid = notnull().as_series().to_vec<bool>();
+  auto valid = notnull().as_series().host<bool>();
   if (all_true(valid)) {
     return *this;
   }
 
   const auto source = as_series().to(pluss::codem::ScalarType::Float64);
   const auto platform = as_series().platform();
-  const auto values = source.to_vec<double>();
+  const auto values = source.host<double>();
   std::vector<double> out = values;
 
   std::int64_t left = -1;
@@ -1821,7 +1821,7 @@ Slate Slate::distinct(bool dropnull) const {
 
   std::optional<std::vector<bool>> valid;
   if (has_validity_mask()) {
-    valid = validity_mask()->to_vec<bool>();
+    valid = validity_mask()->host<bool>();
   }
 
   for (std::int64_t i = 0; i < size(); ++i) {
@@ -1862,7 +1862,7 @@ Slate Slate::freq(SlateFreqOptions options) const {
 
   std::optional<std::vector<bool>> valid;
   if (has_validity_mask()) {
-    valid = validity_mask()->to_vec<bool>();
+    valid = validity_mask()->host<bool>();
   }
 
   for (std::int64_t i = 0; i < size(); ++i) {
@@ -1943,7 +1943,7 @@ Slate Slate::duplicated(bool keep_first, bool keep_last) const {
   std::vector<bool> duplicated_mask(static_cast<std::size_t>(size()), false);
   std::optional<std::vector<bool>> valid;
   if (has_validity_mask()) {
-    valid = validity_mask()->to_vec<bool>();
+    valid = validity_mask()->host<bool>();
   }
 
   std::unordered_map<std::string, std::vector<std::int64_t>> rows_by_key;
@@ -1971,7 +1971,7 @@ Slate Slate::repeated() const {
   std::vector<bool> repeated_mask(static_cast<std::size_t>(size()), false);
   std::optional<std::vector<bool>> valid;
   if (has_validity_mask()) {
-    valid = validity_mask()->to_vec<bool>();
+    valid = validity_mask()->host<bool>();
   }
 
   std::unordered_map<std::string, std::vector<std::int64_t>> rows_by_key;
@@ -2011,7 +2011,7 @@ SlateView Slate::describe(bool render) const {
     std::int64_t top_freq = 0;
     if (counts.size() > 0) {
       top_value = slate_scalar_string_at(counts.label().values(), 0);
-      top_freq = counts.as_series().to_vec<std::int64_t>().front();
+      top_freq = counts.as_series().host<std::int64_t>().front();
     }
 
     std::vector<std::string> summary_values{
@@ -2072,7 +2072,7 @@ SlateValue Slate::count(bool count_true) const {
   PLUSS_CHECK(count_true, "Slate::count(false) is only valid for Bool Series payload");
   std::int64_t total = size();
   if (has_validity_mask()) {
-    const auto valid = notnull().as_series().to_vec<bool>();
+    const auto valid = notnull().as_series().host<bool>();
     total = static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
   }
   auto out = pluss::Series::empty({1}, pluss::codem::ScalarType::Int64);
@@ -2306,15 +2306,15 @@ double Slate::corr(const Slate& other, SlateCorrMethod method) const {
       return std::clamp(corr, -1.0, 1.0);
     }
     case SlateCorrMethod::Spearman: {
-      const auto x = lhs_valid.to_vec<double>();
-      const auto y = rhs_valid.to_vec<double>();
+      const auto x = lhs_valid.host<double>();
+      const auto y = rhs_valid.host<double>();
       const auto rx = rank_average_ties_(x);
       const auto ry = rank_average_ties_(y);
       return pearson_corr_from_vectors_(rx, ry);
     }
     case SlateCorrMethod::KendallTau: {
-      const auto x = lhs_valid.to_vec<double>();
-      const auto y = rhs_valid.to_vec<double>();
+      const auto x = lhs_valid.host<double>();
+      const auto y = rhs_valid.host<double>();
       return kendall_tau_b_from_vectors_(x, y);
     }
     default: {
@@ -2375,9 +2375,9 @@ Slate Slate::rstrip(std::string_view chars) const {
 namespace {
 
 std::optional<pluss::Series> nullify_matches_mask(const Slate& t, const pluss::Series& matches, bool& changed) {
-  auto valid = detail::has_validity_mask(t) ? detail::validity_mask(t)->to_vec<bool>()
+  auto valid = detail::has_validity_mask(t) ? detail::validity_mask(t)->host<bool>()
                                            : std::vector<bool>(static_cast<std::size_t>(t.size()), true);
-  const auto hit = matches.to_vec<bool>();
+  const auto hit = matches.host<bool>();
 
   changed = false;
   for (std::int64_t i = 0; i < t.size(); ++i) {
@@ -2462,7 +2462,7 @@ Slate Slate::replace(const pluss::Note& from, const pluss::Note& to) const {
 
   const auto from_text = std::string(from.at(0));
   const auto to_text = std::string(to.at(0));
-  const auto valid = has_validity_mask() ? validity_mask()->to_vec<bool>()
+  const auto valid = has_validity_mask() ? validity_mask()->host<bool>()
                                          : std::vector<bool>(static_cast<std::size_t>(size()), true);
   std::vector<std::string> values;
   values.reserve(static_cast<std::size_t>(size()));
@@ -2487,7 +2487,7 @@ Slate Slate::replace(const pluss::Note& from, pluss::null_t to) const {
   PLUSS_CHECK(from.numel() == 1, "Slate::replace(Note, null): from Note must be scalar");
 
   const auto from_text = std::string(from.at(0));
-  auto valid = has_validity_mask() ? validity_mask()->to_vec<bool>()
+  auto valid = has_validity_mask() ? validity_mask()->host<bool>()
                                    : std::vector<bool>(static_cast<std::size_t>(size()), true);
   bool changed = false;
   for (std::int64_t i = 0; i < size(); ++i) {
@@ -2664,7 +2664,7 @@ Slate Slate::compare(double other, SlateBinaryCompareOp op) const {
 
   std::optional<std::vector<bool>> valid;
   if (has_validity_mask()) {
-    valid = validity_mask()->to_vec<bool>();
+    valid = validity_mask()->host<bool>();
   }
 
   for (std::int64_t i = 0; i < size(); ++i) {
@@ -2726,7 +2726,7 @@ Slate Slate::compare(std::string_view other, SlateBinaryCompareOp op) const {
 
   std::optional<std::vector<bool>> valid;
   if (has_validity_mask()) {
-    valid = validity_mask()->to_vec<bool>();
+    valid = validity_mask()->host<bool>();
   }
 
   const std::string rhs_text(other);
@@ -2975,7 +2975,7 @@ Slate Slate::window(std::int64_t window_size, SlateWindowOp op, std::int64_t min
 
   std::vector<bool> in_valid(static_cast<std::size_t>(n), true);
   if (has_validity_mask()) {
-    in_valid = validity_mask()->to_vec<bool>();
+    in_valid = validity_mask()->host<bool>();
   }
 
   std::vector<double> values(static_cast<std::size_t>(n), 0.0);
@@ -3226,7 +3226,7 @@ Slate cast_note_to_timeline_(
   const auto n = source.size();
   std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
   std::vector<bool> valid = pluss::table::detail::has_validity_mask(source)
-      ? pluss::table::detail::validity_mask(source)->to_vec<bool>()
+      ? pluss::table::detail::validity_mask(source)->host<bool>()
       : std::vector<bool>(static_cast<std::size_t>(n), true);
   const auto& notes = source.as_note();
   for (std::int64_t i = 0; i < n; ++i) {
@@ -3495,7 +3495,7 @@ Slate Slate::cast_(
       if (kind() == SlateKind::Series) {
         PLUSS_CHECK(as_series().scalar_type() == pluss::codem::ScalarType::Int64,
                     "Slate::cast(Duration): Series source must have Int64 dtype");
-        return Slate(pluss::duration::nanos(as_series().to_vec<std::int64_t>(), {size()}),
+        return Slate(pluss::duration::nanos(as_series().pull<std::int64_t>(), {size()}),
                       validity_mask());
       }
 
@@ -3503,7 +3503,7 @@ Slate Slate::cast_(
                   "Slate::cast(Duration): source must be an Int64 Series or decimal-nanosecond Note");
       std::vector<std::int64_t> nanos(static_cast<std::size_t>(size()), 0);
       auto valid = has_validity_mask()
-                       ? validity_mask()->to_vec<bool>()
+                       ? validity_mask()->host<bool>()
                        : std::vector<bool>(static_cast<std::size_t>(size()), true);
       for (std::int64_t i = 0; i < size(); ++i) {
         const auto pos = static_cast<std::size_t>(i);
@@ -3668,8 +3668,8 @@ Slate ts_align_right_to_left_(const Slate& left,
           .label().set(left_axis);
     }
 
-    const auto left_ticks = left_axis_ta.timeline().epoch_nanos().to_vec<std::int64_t>();
-    const auto right_ticks = right_axis_ta.timeline().epoch_nanos().to_vec<std::int64_t>();
+    const auto left_ticks = left_axis_ta.timeline().epoch_nanos().host<std::int64_t>();
+    const auto right_ticks = right_axis_ta.timeline().epoch_nanos().host<std::int64_t>();
     std::unordered_map<std::int64_t, std::vector<std::int64_t>> positions;
     positions.reserve(right_ticks.size());
     for (std::int64_t row = 0; row < n_right; ++row) {

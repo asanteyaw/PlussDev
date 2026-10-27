@@ -176,8 +176,8 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
           tc.dilation,
           tc.groups);
 
-      const std::vector<float> out_ref = y_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
-      const std::vector<float> out_val = y_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
+      const std::vector<float> out_ref = y_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
+      const std::vector<float> out_val = y_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
       const double out_max = max_abs_diff(out_ref, out_val);
       const double out_mean = mean_abs_diff(out_ref, out_val);
       log.line(
@@ -200,9 +200,9 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
       w_cpu_g.clear();
       b_cpu_g.clear();
       pluss::nn::conv(x_cpu_g, w_cpu_g, b_cpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
-      const std::vector<float> gx_ref = x_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
-      const std::vector<float> gw_ref = w_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
-      const std::vector<float> gb_ref = b_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
+      const std::vector<float> gx_ref = x_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
+      const std::vector<float> gw_ref = w_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
+      const std::vector<float> gb_ref = b_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
 
       auto x_gpu_g = x_cpu.to(pluss::pCUDA);
       auto w_gpu_g = w_cpu.to(pluss::pCUDA);
@@ -214,9 +214,9 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
       w_gpu_g.clear();
       b_gpu_g.clear();
       pluss::nn::conv(x_gpu_g, w_gpu_g, b_gpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
-      const std::vector<float> gx_val = x_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
-      const std::vector<float> gw_val = w_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
-      const std::vector<float> gb_val = b_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
+      const std::vector<float> gx_val = x_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
+      const std::vector<float> gw_val = w_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
+      const std::vector<float> gb_val = b_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
 
       const double gx_max = max_abs_diff(gx_ref, gx_val);
       const double gx_mean = mean_abs_diff(gx_ref, gx_val);

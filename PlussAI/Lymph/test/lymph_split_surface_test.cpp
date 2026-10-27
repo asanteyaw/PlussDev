@@ -97,13 +97,13 @@ bool run_split_checks(std::ostream* err) {
     if (err) *err << "timeseries_split(frame,time_feature,...) should produce the requested number of ordered folds\n";
     return false;
   }
-  const auto ordered_values = ordered_ts.back().test_set.features("value").as_series().to_vec<double>();
+  const auto ordered_values = ordered_ts.back().test_set.features("value").as_series().host<double>();
   if (ordered_values.size() != 2 || ordered_values[0] != 70.0 || ordered_values[1] != 80.0) {
     if (err) *err << "timeseries_split(frame,time_feature,...) should sort by the temporal feature before taking the last fold\n";
     return false;
   }
   const prep::TimeSeriesSplit ordered_holdout = prep::time_holdout(timed, "stamp", ts);
-  const auto holdout_values = ordered_holdout.test_set.features("value").as_series().to_vec<double>();
+  const auto holdout_values = ordered_holdout.test_set.features("value").as_series().host<double>();
   if (holdout_values.size() != 2 || holdout_values[0] != 70.0 || holdout_values[1] != 80.0) {
     if (err) *err << "time_holdout(frame,time_feature,...) should return the last chronological block\n";
     return false;

@@ -29,18 +29,17 @@ using pluss::ScalarType;
 using pluss::Series;
 using Complex = std::complex<double>;
 
-using pluss::integ::AleatoriaOptions;
-using pluss::integ::IntegraOptions;
-using pluss::integ::IntegraStrategy;
-using pluss::integ::IntegrandFn;
-using pluss::integ::IntegrandNdFn;
-using pluss::integ::QuadraNdOptions;
-using pluss::integ::QuadraOptions;
-using pluss::integ::QuadraRule;
-using pluss::integ::QuadraScalarOptions;
-using pluss::integ::ScalarIntegrandFn;
-using pluss::subsp::math::diff::trace;
-namespace analytica = pluss::integ::analytica;
+using pluss::subsp::math::integ::AleatoriaOptions;
+using pluss::subsp::math::integ::IntegraOptions;
+using pluss::subsp::math::integ::IntegraStrategy;
+using pluss::subsp::math::integ::IntegrandFn;
+using pluss::subsp::math::integ::IntegrandNdFn;
+using pluss::subsp::math::integ::QuadraNdOptions;
+using pluss::subsp::math::integ::QuadraOptions;
+using pluss::subsp::math::integ::QuadraRule;
+using pluss::subsp::math::integ::QuadraScalarOptions;
+using pluss::subsp::math::integ::ScalarIntegrandFn;
+namespace analytica = pluss::subsp::math::integ::analytica;
 
 constexpr double kPi = 3.14159265358979323846;
 
@@ -66,10 +65,10 @@ Series complex_series(const std::vector<Complex>& values, const std::vector<std:
   return pluss::make_series(values, shape).to(ScalarType::Complex128);
 }
 
-double scalar_f64(const Series& x) { return x.to(pluss::pCPU, ScalarType::Float64).item<double>(); }
+double scalar_f64(const Series& x) { return x.to(pluss::pCPU, ScalarType::Float64).host<double>().front(); }
 
 std::vector<double> vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 void expect_vec_near(const std::vector<double>& got, const std::vector<double>& want, double atol,
@@ -102,19 +101,19 @@ int main() {
   const Series x1 = real_series({0.0, 0.5, 1.0, 2.0, 3.0, 4.0}, {6});
 
   {
-    const double got = scalar_f64(pluss::integ::trapezoid(y1, x1));
+    const double got = scalar_f64(pluss::subsp::math::integ::trapezoid(y1, x1));
     expect_near(got, 41.0, 1e-9, "trapezoid(y, x) vs torch oracle", &failures);
   }
   {
-    const double got = scalar_f64(pluss::integ::trapezoid(y1, 0.5));
+    const double got = scalar_f64(pluss::subsp::math::integ::trapezoid(y1, 0.5));
     expect_near(got, 21.25, 1e-9, "trapezoid(y, dx=0.5) vs torch oracle", &failures);
   }
   {
-    const auto got = vec_f64(pluss::integ::cumulative_trapezoid(y1, x1));
+    const auto got = vec_f64(pluss::subsp::math::integ::cumulative_trapezoid(y1, x1));
     expect_vec_near(got, {0.25, 1.5, 8.0, 20.5, 41.0}, 1e-9, "cumulative_trapezoid(y, x) vs torch oracle", &failures);
   }
   {
-    const auto got = vec_f64(pluss::integ::cumulative_trapezoid(y1, 0.5));
+    const auto got = vec_f64(pluss::subsp::math::integ::cumulative_trapezoid(y1, 0.5));
     expect_vec_near(got, {0.25, 1.5, 4.75, 11.0, 21.25}, 1e-9, "cumulative_trapezoid(y, dx=0.5) vs torch oracle",
                     &failures);
   }
@@ -123,9 +122,9 @@ int main() {
   {
     const Series y2 = real_series({0.0, 1.0, 4.0, 9.0, 1.0, 2.0, 5.0, 10.0}, {2, 4});
     const Series x2 = real_series({0.0, 1.0, 2.0, 3.0}, {4});
-    const auto got = vec_f64(pluss::integ::trapezoid(y2, x2, -1));
+    const auto got = vec_f64(pluss::subsp::math::integ::trapezoid(y2, x2, -1));
     expect_vec_near(got, {9.5, 12.5}, 1e-9, "2D trapezoid(y, x, dim=-1) vs torch oracle", &failures);
-    const auto gotc = vec_f64(pluss::integ::cumulative_trapezoid(y2, x2, -1).reshape({6}));
+    const auto gotc = vec_f64(pluss::subsp::math::integ::cumulative_trapezoid(y2, x2, -1).reshape({6}));
     expect_vec_near(gotc, {0.5, 3.0, 9.5, 1.5, 5.0, 12.5}, 1e-9,
                     "2D cumulative_trapezoid(y, x, dim=-1) vs torch oracle", &failures);
   }
@@ -138,7 +137,7 @@ int main() {
   {
     const Series yr = real_series({16.0, 9.0, 4.0, 1.0, 0.25, 0.0}, {6});
     const Series xr = real_series({4.0, 3.0, 2.0, 1.0, 0.5, 0.0}, {6});
-    const double got = scalar_f64(pluss::integ::trapezoid(yr, xr));
+    const double got = scalar_f64(pluss::subsp::math::integ::trapezoid(yr, xr));
     expect_near(got, -21.875, 1e-9, "descending-x trapezoid vs torch oracle", &failures);
   }
 
@@ -149,12 +148,12 @@ int main() {
   {
     const Series yc = complex_series({{0.0, 0.0}, {1.0, 2.0}, {4.0, 8.0}}, {3});
     const Series xc = real_series({0.0, 1.0, 2.0}, {3}).to(ScalarType::Complex128);
-    const Complex got = pluss::integ::trapezoid(yc, xc).to(pluss::pCPU, ScalarType::Complex128).item<Complex>();
+    const Complex got = pluss::subsp::math::integ::trapezoid(yc, xc).to(pluss::pCPU, ScalarType::Complex128).item<Complex>();
     // real part: trapezoid([0,1,4], [0,1,2]) = 0.5*(0+1) + 0.5*(1+4) = 3.0
     // imag part: trapezoid([0,2,8], [0,1,2]) = 0.5*(0+2) + 0.5*(2+8) = 6.0
     expect_near(got.real(), 3.0, 1e-9, "complex trapezoid real part", &failures);
     expect_near(got.imag(), 6.0, 1e-9, "complex trapezoid imag part", &failures);
-    expect(pluss::integ::trapezoid(yc, xc).scalar_type() == ScalarType::Complex128,
+    expect(pluss::subsp::math::integ::trapezoid(yc, xc).scalar_type() == ScalarType::Complex128,
            "complex trapezoid preserves Complex128 dtype", &failures);
   }
 
@@ -170,12 +169,13 @@ int main() {
   // ---------------------------------------------------------------
   {
     const Series y0 = real_series({0.0, 1.0, 4.0, 9.0, 16.0}, {5});
-    auto tx = trace(y0, /*tracks_slope=*/true);
-    const Series y = tx.value();
+    auto tx = y0;
+    tx.tracks_slope_(true);
+    const Series y = tx;
     const Series x = real_series({0.0, 1.0, 2.0, 3.0, 4.0}, {5});
 
     // Exercises the "safe call style" accessor form directly (as opposed
-    // to the free-function pluss::integ::trapezoid used everywhere else
+    // to the free-function pluss::subsp::math::integ::trapezoid used everywhere else
     // in this file, and the dot-style convenience form used just below).
     const Series integral = y.antidiff().trapezoid(x);
     expect_near(scalar_f64(integral), 22.0, 1e-9, "autodiff trapezoid forward value", &failures);
@@ -193,8 +193,9 @@ int main() {
     // second, independent check that the cumsum-based reverse path agrees
     // with the sum-based one.
     const Series y0 = real_series({0.0, 1.0, 4.0, 9.0, 16.0}, {5});
-    auto tx = trace(y0, /*tracks_slope=*/true);
-    const Series y = tx.value();
+    auto tx = y0;
+    tx.tracks_slope_(true);
+    const Series y = tx;
     const Series x = real_series({0.0, 1.0, 2.0, 3.0, 4.0}, {5});
 
     // Dot-style convenience form this time: `y.antidiff.cumulative_trapezoid(x)`.
@@ -220,12 +221,13 @@ int main() {
     // integral's minimum over mean -- gradient 0 confirms that, not a
     // degenerate check).
     const Series mean0 = real_series({0.5}, {1});
-    auto tmean = trace(mean0, /*tracks_slope=*/true);
-    const Series mean = tmean.value();
+    auto tmean = mean0;
+    tmean.tracks_slope_(true);
+    const Series mean = tmean;
     IntegrandFn f = [&](const Series& x) { return x.sub(mean).mul(x.sub(mean)); };
     QuadraOptions opts;
     opts.rule = QuadraRule::Simpson;
-    const auto r = pluss::integ::quadra(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, opts);
     expect_near(scalar_f64(r.value), 1.0 / 12.0, 1e-8, "quadra integrand captures outer parameter (forward)",
                &failures);
     r.value.reverse();
@@ -247,19 +249,20 @@ int main() {
     // .sum().reverse() over the whole batch (an ordinary "batch loss"
     // reduction, exactly how a real per-row objective would be trained).
     const Series k0 = real_series({1.0, 2.0, 3.0, 4.0}, {4, 1});
-    auto tk = trace(k0, /*tracks_slope=*/true);
-    const Series k = tk.value();
+    auto tk = k0;
+    tk.tracks_slope_(true);
+    const Series k = tk;
     IntegrandFn f = [&](const Series& x) { return x.reshape({1, x.numel()}).mul(k); };
     for (QuadraRule rule : {QuadraRule::Trapezoidal, QuadraRule::Simpson, QuadraRule::GaussLegendre}) {
       QuadraOptions opts;
       opts.rule = rule;
-      const auto r = pluss::integ::quadra(f, 0.0, 1.0, opts);
+      const auto r = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, opts);
       expect_vec_near(vec_f64(r.value), {0.5, 1.0, 1.5, 2.0}, 1e-8, "batched quadra forward matches k/2 per row",
                       &failures);
     }
     QuadraOptions opts;
     opts.rule = QuadraRule::Simpson;
-    const auto r = pluss::integ::quadra(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, opts);
     r.value.sum().reverse();
     expect_vec_near(vec_f64(k.sensitivity()), {0.5, 0.5, 0.5, 0.5}, 1e-8,
                     "batched quadra gradient is 0.5 for every row independently", &failures);
@@ -275,13 +278,13 @@ int main() {
   // ---------------------------------------------------------------
   {
     IntegrandNdFn xy = [](const std::vector<Series>& c) { return c[0].mul(c[1]); };
-    const auto r = pluss::integ::quadra(xy, {{0.0, 1.0}, {0.0, 1.0}});
+    const auto r = pluss::subsp::math::integ::quadra(xy, {{0.0, 1.0}, {0.0, 1.0}});
     expect_near(scalar_f64(r.value), 0.25, 1e-9, "quadra (N-D) 2D int_0^1 int_0^1 x*y dx dy == 0.25", &failures);
     expect(r.dimensions == 2, "quadra (N-D) reports the correct dimension count", &failures);
   }
   {
     IntegrandNdFn xyz = [](const std::vector<Series>& c) { return c[0].add(c[1]).add(c[2]); };
-    const auto r = pluss::integ::quadra(xyz, {{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}});
+    const auto r = pluss::subsp::math::integ::quadra(xyz, {{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}});
     expect_near(scalar_f64(r.value), 1.5, 1e-9, "quadra (N-D) 3D int over unit cube of (x+y+z) == 1.5", &failures);
   }
   {
@@ -293,7 +296,7 @@ int main() {
     QuadraNdOptions opts;
     opts.rule = QuadraRule::Simpson;
     opts.resolution = 16;
-    const auto r_simpson = pluss::integ::quadra(xy, {{0.0, 1.0}, {0.0, 1.0}}, opts);
+    const auto r_simpson = pluss::subsp::math::integ::quadra(xy, {{0.0, 1.0}, {0.0, 1.0}}, opts);
     expect_near(scalar_f64(r_simpson.value), 0.25, 1e-6, "quadra (N-D) Simpson rule agrees with GaussLegendre default",
                &failures);
 
@@ -302,7 +305,7 @@ int main() {
     mc_opts.samples = 1'000'000;
     mc_opts.seed = 41;
     const auto r_mc =
-        pluss::integ::aleatoria(xy_mc, std::vector<std::pair<double, double>>{{0.0, 1.0}, {0.0, 1.0}}, mc_opts);
+        pluss::subsp::math::integ::aleatoria(xy_mc, std::vector<std::pair<double, double>>{{0.0, 1.0}, {0.0, 1.0}}, mc_opts);
     expect(std::abs(scalar_f64(r_mc.value) - 0.25) <= 6.0 * r_mc.standard_error,
            "quadra (N-D)'s exact result agrees with an independent aleatoria() N-D Monte Carlo estimate", &failures);
   }
@@ -314,7 +317,7 @@ int main() {
     opts.max_total_nodes = 1000;
     bool threw = false;
     try {
-      (void)pluss::integ::quadra(
+      (void)pluss::subsp::math::integ::quadra(
           f, std::vector<std::pair<double, double>>{{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}}, opts);
     } catch (const std::exception&) {
       threw = true;
@@ -325,10 +328,11 @@ int main() {
     // Autograd through quadra (N-D): int_0^1 int_0^1 k*x*y dxdy = k/4, so
     // d/dk = 1/4 -- verified via .reverse() against the captured k.
     const Series k0 = real_series({2.0}, {1});
-    auto tk = trace(k0, /*tracks_slope=*/true);
-    const Series k = tk.value();
+    auto tk = k0;
+    tk.tracks_slope_(true);
+    const Series k = tk;
     IntegrandNdFn f = [&](const std::vector<Series>& c) { return c[0].mul(c[1]).mul(k); };
-    const auto r = pluss::integ::quadra(f, {{0.0, 1.0}, {0.0, 1.0}});
+    const auto r = pluss::subsp::math::integ::quadra(f, {{0.0, 1.0}, {0.0, 1.0}});
     expect_near(scalar_f64(r.value), 0.5, 1e-8, "quadra (N-D) forward value with captured parameter (k=2 -> k/4=0.5)",
                &failures);
     r.value.reverse();
@@ -344,7 +348,7 @@ int main() {
     for (QuadraRule rule : {QuadraRule::Trapezoidal, QuadraRule::Simpson, QuadraRule::GaussLegendre}) {
       QuadraOptions opts;
       opts.rule = rule;
-      const auto r = pluss::integ::quadra(f, 0.0, 1.0, opts);
+      const auto r = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, opts);
       expect_near(scalar_f64(r.value), 1.0 / 3.0, 1e-8, "quadra x^2 over [0,1]", &failures);
       expect(r.converged, "quadra x^2 converged", &failures);
     }
@@ -353,7 +357,7 @@ int main() {
     IntegrandFn sinf = [](const Series& x) { return x.sin(); };
     QuadraOptions opts;
     opts.rule = QuadraRule::Simpson;
-    const auto r = pluss::integ::quadra(sinf, 0.0, kPi, opts);
+    const auto r = pluss::subsp::math::integ::quadra(sinf, 0.0, kPi, opts);
     expect_near(scalar_f64(r.value), 2.0, 1e-8, "quadra sin(x) over [0,pi] == 2", &failures);
   }
   {
@@ -362,7 +366,7 @@ int main() {
     QuadraOptions opts;
     opts.rule = QuadraRule::GaussLegendre;
     opts.panels = 64;
-    const auto r = pluss::integ::quadra(gauss, -6.0, 6.0, opts);
+    const auto r = pluss::subsp::math::integ::quadra(gauss, -6.0, 6.0, opts);
     expect_near(scalar_f64(r.value), std::sqrt(2.0 * kPi), 1e-6, "quadra Gaussian kernel over [-6,6]", &failures);
   }
   {
@@ -370,7 +374,7 @@ int main() {
     // casing and relies on diff()'s natural sign -- quadra() generates its
     // OWN nodes from [min(a,b), max(a,b)] so it needs an explicit flip).
     IntegrandFn f = [](const Series& x) { return x.mul(x); };
-    const auto r = pluss::integ::quadra(f, 1.0, 0.0);
+    const auto r = pluss::subsp::math::integ::quadra(f, 1.0, 0.0);
     expect_near(scalar_f64(r.value), -1.0 / 3.0, 1e-8, "quadra reversed bounds flips sign", &failures);
   }
   {
@@ -392,7 +396,7 @@ int main() {
     for (QuadraRule rule : {QuadraRule::Trapezoidal, QuadraRule::Simpson, QuadraRule::GaussLegendre}) {
       QuadraOptions opts;
       opts.rule = rule;
-      const auto r = pluss::integ::quadra(f, 0.0, 1.0, opts);
+      const auto r = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, opts);
       expect(r.value.scalar_type() == ScalarType::Complex128, "complex quadra preserves Complex128 dtype", &failures);
       const Complex got = r.value.to(pluss::pCPU, ScalarType::Complex128).item<Complex>();
       expect(std::abs(got - want) < 1e-6, "complex quadra int_0^1 exp(i*x) dx matches closed form", &failures);
@@ -413,14 +417,14 @@ int main() {
   {
     constexpr double kInf = std::numeric_limits<double>::infinity();
     IntegrandFn exp_neg = [](const Series& x) { return x.mul(-1.0).exp(); };
-    const auto r = pluss::integ::quadra(exp_neg, 0.0, kInf);
+    const auto r = pluss::subsp::math::integ::quadra(exp_neg, 0.0, kInf);
     expect_near(scalar_f64(r.value), 1.0, 1e-6, "quadra semi-infinite [0,inf): int exp(-x) dx == 1", &failures);
     expect(r.converged, "quadra semi-infinite upper converged", &failures);
   }
   {
     constexpr double kInf = std::numeric_limits<double>::infinity();
     IntegrandFn exp_pos = [](const Series& x) { return x.exp(); };
-    const auto r = pluss::integ::quadra(exp_pos, -kInf, 0.0);
+    const auto r = pluss::subsp::math::integ::quadra(exp_pos, -kInf, 0.0);
     expect_near(scalar_f64(r.value), 1.0, 1e-6, "quadra semi-infinite (-inf,0]: int exp(x) dx == 1", &failures);
   }
   {
@@ -428,7 +432,7 @@ int main() {
     // sqrt(pi), also cross-checked against analytica::gaussian below.
     constexpr double kInf = std::numeric_limits<double>::infinity();
     IntegrandFn gauss = [](const Series& x) { return x.mul(x).mul(-1.0).exp(); };
-    const auto r = pluss::integ::quadra(gauss, -kInf, kInf);
+    const auto r = pluss::subsp::math::integ::quadra(gauss, -kInf, kInf);
     expect_near(scalar_f64(r.value), std::sqrt(kPi), 1e-6, "quadra fully infinite: int exp(-x^2) dx == sqrt(pi)",
                &failures);
   }
@@ -441,7 +445,7 @@ int main() {
     AleatoriaOptions opts;
     opts.samples = 2'000'000;
     opts.seed = 31;
-    const auto r = pluss::integ::aleatoria(exp_neg, 0.0, kInf, opts);
+    const auto r = pluss::subsp::math::integ::aleatoria(exp_neg, 0.0, kInf, opts);
     expect(std::abs(scalar_f64(r.value) - 1.0) <= 6.0 * r.standard_error,
            "aleatoria semi-infinite [0,inf) within 6 standard errors of 1.0", &failures);
   }
@@ -459,7 +463,7 @@ int main() {
       const Series oscillation = x.to(ScalarType::Complex128).mul(i_unit).exp();
       return decay.mul(oscillation);
     };
-    const auto r = pluss::integ::quadra(f, 0.0, kInf);
+    const auto r = pluss::subsp::math::integ::quadra(f, 0.0, kInf);
     const Complex got = r.value.to(pluss::pCPU, ScalarType::Complex128).item<Complex>();
     expect(std::abs(got - want) < 1e-6,
            "quadra complex characteristic-function-style integrand over a semi-infinite domain matches closed form",
@@ -472,7 +476,7 @@ int main() {
   // ---------------------------------------------------------------
   {
     ScalarIntegrandFn f = [](double x) { return x * x; };
-    const auto r = pluss::integ::quadra_scalar(f, 0.0, 1.0);
+    const auto r = pluss::subsp::math::integ::quadra_scalar(f, 0.0, 1.0);
     expect_near(r.value, 1.0 / 3.0, 1e-9, "quadra_scalar x^2 over [0,1]", &failures);
     expect(r.converged, "quadra_scalar non-adaptive always converged", &failures);
   }
@@ -483,7 +487,7 @@ int main() {
     ScalarIntegrandFn f = [](double x) { return std::exp(-x); };
     QuadraScalarOptions opts;
     opts.nodes = 2048;
-    const auto r = pluss::integ::quadra_scalar(f, 0.0, 5.0, opts);
+    const auto r = pluss::subsp::math::integ::quadra_scalar(f, 0.0, 5.0, opts);
     const double exact = 1.0 - std::exp(-5.0);
     expect_near(r.value, exact, 1e-9, "quadra_scalar matches old n=2048 Simpson default", &failures);
   }
@@ -492,7 +496,7 @@ int main() {
     QuadraScalarOptions opts;
     opts.adaptive = true;
     opts.tolerance = 1e-12;
-    const auto r = pluss::integ::quadra_scalar(f, 0.0, kPi, opts);
+    const auto r = pluss::subsp::math::integ::quadra_scalar(f, 0.0, kPi, opts);
     expect_near(r.value, 2.0, 1e-9, "quadra_scalar adaptive sin(x) over [0,pi]", &failures);
     expect(r.converged, "quadra_scalar adaptive converged", &failures);
   }
@@ -516,13 +520,14 @@ int main() {
   // ---------------------------------------------------------------
   {
     const Series mean0 = real_series({0.5}, {1});
-    auto tmean = trace(mean0, /*tracks_slope=*/true);
-    const Series mean = tmean.value();
+    auto tmean = mean0;
+    tmean.tracks_slope_(true);
+    const Series mean = tmean;
     IntegrandFn f = [&](const Series& x) { return x.sub(mean).mul(x.sub(mean)); };
     AleatoriaOptions opts;
     opts.samples = 4'000'000;
     opts.seed = 29;
-    const auto r = pluss::integ::aleatoria(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::aleatoria(f, 0.0, 1.0, opts);
     expect_near(scalar_f64(r.value), 1.0 / 12.0, 0.01, "aleatoria integrand captures outer parameter (forward)",
                &failures);
     r.value.reverse();
@@ -541,7 +546,7 @@ int main() {
     AleatoriaOptions opts;
     opts.samples = 2'000'000;
     opts.seed = 7;
-    const auto r = pluss::integ::aleatoria(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::aleatoria(f, 0.0, 1.0, opts);
     const double got = scalar_f64(r.value);
     expect(std::abs(got - 1.0 / 3.0) <= 6.0 * r.standard_error,
            "aleatoria x^2 over [0,1] within 6 standard errors of 1/3", &failures);
@@ -555,7 +560,7 @@ int main() {
     opts.samples = 500'000;
     opts.seed = 11;
     opts.stratified = true;
-    const auto r = pluss::integ::aleatoria(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::aleatoria(f, 0.0, 1.0, opts);
     expect(std::abs(scalar_f64(r.value) - 1.0 / 3.0) <= 6.0 * r.standard_error,
            "stratified aleatoria x^2 over [0,1] within 6 standard errors", &failures);
   }
@@ -570,7 +575,7 @@ int main() {
     AleatoriaOptions opts;
     opts.samples = 2'000'000;
     opts.seed = 13;
-    const auto r = pluss::integ::aleatoria(
+    const auto r = pluss::subsp::math::integ::aleatoria(
         indicator, std::vector<std::pair<double, double>>{{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}}, opts);
     const double want = kPi / 6.0;
     expect(std::abs(scalar_f64(r.value) - want) <= 6.0 * r.standard_error,
@@ -597,7 +602,7 @@ int main() {
     opts.seed = 17;
     bool threw = false;
     try {
-      const auto r = pluss::integ::aleatoria(f, 0.0, 1.0, opts);
+      const auto r = pluss::subsp::math::integ::aleatoria(f, 0.0, 1.0, opts);
       expect(r.value.scalar_type() == ScalarType::Complex128, "complex aleatoria preserves Complex128 dtype",
              &failures);
       const Complex got = r.value.to(pluss::pCPU, ScalarType::Complex128).item<Complex>();
@@ -661,12 +666,12 @@ int main() {
     // Cross-check the new closed forms against quadra()'s own independent
     // numeric result, same discipline as the gaussian cross-check below.
     IntegrandFn sigmoid_fn = [](const Series& x) { return x.neg().exp().add(1.0).pow(-1.0); };
-    const auto r = pluss::integ::quadra(sigmoid_fn, -5.0, 5.0);
+    const auto r = pluss::subsp::math::integ::quadra(sigmoid_fn, -5.0, 5.0);
     expect_near(scalar_f64(r.value), analytica::sigmoid(-5.0, 5.0), 1e-6,
                "analytica::sigmoid matches quadra() numerically", &failures);
 
     IntegrandFn tanh_fn = [](const Series& x) { return x.tanh(); };
-    const auto r2 = pluss::integ::quadra(tanh_fn, 0.0, 2.0);
+    const auto r2 = pluss::subsp::math::integ::quadra(tanh_fn, 0.0, 2.0);
     expect_near(scalar_f64(r2.value), analytica::hyperbolic_tangent(0.0, 2.0), 1e-6,
                "analytica::hyperbolic_tangent matches quadra() numerically", &failures);
   }
@@ -678,7 +683,7 @@ int main() {
     // each other rather than only against a hand-typed constant.
     constexpr double kInf = std::numeric_limits<double>::infinity();
     IntegrandFn lorentz = [](const Series& x) { return x.mul(x).add(1.0).pow(-1.0); };
-    const auto r = pluss::integ::quadra(lorentz, -kInf, kInf);
+    const auto r = pluss::subsp::math::integ::quadra(lorentz, -kInf, kInf);
     expect_near(scalar_f64(r.value), kPi, 1e-6, "quadra fully-infinite Lorentzian == pi", &failures);
     expect_near(analytica::lorentzian(1.0, -kInf, kInf), kPi, 1e-9,
                "analytica::lorentzian itself accepts infinite bounds directly (pure atan formula, no substitution "
@@ -692,7 +697,7 @@ int main() {
     QuadraOptions opts;
     opts.rule = QuadraRule::GaussLegendre;
     opts.panels = 64;
-    const auto r = pluss::integ::quadra(gauss, -6.0, 6.0, opts);
+    const auto r = pluss::subsp::math::integ::quadra(gauss, -6.0, 6.0, opts);
     const double closed_form = analytica::gaussian(-6.0, 6.0);
     expect_near(scalar_f64(r.value), closed_form, 1e-6, "analytica::gaussian matches quadra() numerically",
                &failures);
@@ -703,7 +708,7 @@ int main() {
   // ---------------------------------------------------------------
   {
     IntegrandFn f = [](const Series& x) { return x.mul(x); };
-    const auto r = pluss::integ::integra(f, 0.0, 1.0);
+    const auto r = pluss::subsp::math::integ::integra(f, 0.0, 1.0);
     expect_near(scalar_f64(r.value), 1.0 / 3.0, 1e-8, "integra() default Auto resolves to Quadrature", &failures);
     expect(r.strategy_used == IntegraStrategy::Quadrature, "integra() Auto reports Quadrature as strategy_used",
            &failures);
@@ -712,7 +717,7 @@ int main() {
     opts.strategy = IntegraStrategy::MonteCarlo;
     opts.monte_carlo.samples = 1'000'000;
     opts.monte_carlo.seed = 23;
-    const auto rmc = pluss::integ::integra(f, 0.0, 1.0, opts);
+    const auto rmc = pluss::subsp::math::integ::integra(f, 0.0, 1.0, opts);
     expect(rmc.strategy_used == IntegraStrategy::MonteCarlo, "integra() explicit MonteCarlo strategy honored",
            &failures);
     expect(std::abs(scalar_f64(rmc.value) - 1.0 / 3.0) <= 6.0 * rmc.error_estimate,
@@ -727,7 +732,7 @@ int main() {
     IntegrandFn f = [](const Series& x) { return x.mul(x); };
     QuadraOptions opts;
     opts.rule = QuadraRule::Auto;
-    const auto r = pluss::integ::quadra(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, opts);
     expect_near(scalar_f64(r.value), 1.0 / 3.0, 1e-8, "quadra() Auto matches the exact value for a smooth integrand",
                &failures);
     expect(r.converged, "quadra() Auto converges for a smooth integrand", &failures);
@@ -753,7 +758,7 @@ int main() {
     QuadraOptions opts;
     opts.rule = QuadraRule::Auto;
     opts.max_refinements = 0;
-    const auto r = pluss::integ::quadra(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, opts);
     expect(!r.converged, "quadra() Auto honestly reports non-convergence when the tolerance is unreachable",
            &failures);
     expect(r.rule_used == QuadraRule::Trapezoidal, "quadra() Auto falls all the way through to Trapezoidal",
@@ -763,7 +768,7 @@ int main() {
     // any single rung's own evaluation count.
     QuadraOptions single_rung = opts;
     single_rung.rule = QuadraRule::GaussLegendre;
-    const auto r_single = pluss::integ::quadra(f, 0.0, 1.0, single_rung);
+    const auto r_single = pluss::subsp::math::integ::quadra(f, 0.0, 1.0, single_rung);
     expect(r.evaluations > r_single.evaluations,
            "quadra() Auto's evaluation count reflects ALL escalated rungs, not just the last one", &failures);
   }
@@ -781,7 +786,7 @@ int main() {
     opts.quadrature.max_refinements = 0;
     opts.monte_carlo.samples = 500'000;
     opts.monte_carlo.seed = 31;
-    const auto r = pluss::integ::integra(f, 0.0, 1.0, opts);
+    const auto r = pluss::subsp::math::integ::integra(f, 0.0, 1.0, opts);
     expect(r.strategy_used == IntegraStrategy::MonteCarlo,
            "integra() Auto escalates to MonteCarlo when Quadrature genuinely fails to converge", &failures);
     expect(r.converged, "integra() Auto's MonteCarlo fallback still reports converged (MC always completes)",
@@ -794,7 +799,7 @@ int main() {
   // default 1e-10 tolerance by a small margin (error about 1e-9) but is still far more accurate than 1e6 random samples (about 1e-4).
   {
     IntegrandFn f = [](const Series& x) { return x.sqrt(); };
-    const auto r = pluss::integ::integra(f, 0.0, 1.0);
+    const auto r = pluss::subsp::math::integ::integra(f, 0.0, 1.0);
     expect_near(scalar_f64(r.value), 2.0 / 3.0, 1e-7, "integra() Auto keeps the more accurate quadrature value", &failures);
     expect(r.strategy_used == IntegraStrategy::Quadrature, "integra() Auto reports Quadrature when it is the better answer", &failures);
   }

@@ -4,6 +4,13 @@
 
 [Back to ARIMA Models](../ts_02_arima_models.md)
 
+A fitted ARIMA model produces a forecast of the next `h` observations with `ArimaFit::forecast(h, y)`. The forecast is the expected value of each future observation given everything observed so far: the model is run forward, with every unknown future shock replaced by its expectation, zero. That one rule explains the shape of every ARIMA forecast. This page shows the shapes, derives how uncertain the forecasts are, and checks the claimed uncertainty against what actually happens.
+
+## What the forecasts look like
+
+The forecast of a stationary model starts near the last observation and decays towards the level the series reverts to, `mean + intercept / (1 − Σ a)`. How fast depends on the model. For an AR(1) the h-step forecast has the closed form `μ + φʰ (x_n − μ)`; for a moving-average model the memory is finite, so after `q` steps the forecast is exactly the mean; and a differenced model has no level to return to, so its forecasts continue from the last level (with the drift, if any).
+
+The program fits an AR(1) and an MA(2) to simulated data, prints the forecasts beside the closed form for the AR(1), and shows the finite memory of the MA.
 
 ```cpp
 #include <pluss/ma.h>
@@ -11,58 +18,139 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
-#include <vector>
 
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-// A reproducible pseudo-random sequence in (-0.5, 0.5): e_t = frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5, t = 1, 2, ...
-std::vector<double> noise(int n) {
-  std::vector<double> e(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    e[static_cast<std::size_t>(i)] = u - 0.5;
-  }
-  return e;
-}
-// AR(1): x_t = phi x_{t-1} + e_t
-std::vector<double> ar1(int n, double phi) {
-  auto e = noise(n);
-  std::vector<double> x(static_cast<std::size_t>(n));
-  double carry = 0.0;
-  for (int i = 0; i < n; ++i) { carry = phi * carry + e[static_cast<std::size_t>(i)]; x[static_cast<std::size_t>(i)] = carry; }
-  return x;
-}
-std::vector<double> running_sum(const std::vector<double>& e) {
-  std::vector<double> w(e.size());
-  double s = 0.0;
-  for (std::size_t i = 0; i < e.size(); ++i) { s += e[i]; w[i] = s; }
-  return w;
-}
-void print_row(const char* label, const Series& s, int precision = 4) {
-  std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
-  std::cout << "\n";
-}
 int main() {
-  const auto data = ar1(200, 0.7);
-  const Series y = vec(data);
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  ts::ArimaFit ar_truth;
+  ar_truth.ar = {0.7};
+  ar_truth.intercept = 3.0 * (1.0 - 0.7);  // a series that reverts to 3
+  const Series y = ar_truth.simulate(300, f64, /*seed=*/7);
   ts::ArimaOptions o;
   o.ar_order = 1;
-  const auto fit = ts::Arima::fit_mle(y, o);
-  const auto fc = fit.forecast(8, y).to_vec<double>();
+  const auto fit = ts::Arima::fit_mle(y, o, f64);
+  const auto fc = fit.forecast(8, y, f64).host<double>();
+  const double last = y.host<double>().back();
   const double phi = fit.ar[0];
-  const double mu = fit.mean + fit.intercept / (1.0 - phi);  // the level the series reverts to
-  std::cout << std::fixed << std::setprecision(4) << "phi = " << phi << ", mean mu = " << mu << ", last observation x_n = " << data.back() << "\n\n";
-  std::cout << std::left << std::setw(8) << "step" << std::setw(14) << "forecast" << std::setw(26) << "mu + phi^h (x_n - mu)" << "difference\n";
-  for (int h = 1; h <= 8; ++h) {
-    const double by_hand = mu + std::pow(phi, h) * (data.back() - mu);
-    std::cout << std::left << std::setw(8) << h << std::setw(14) << fc[static_cast<std::size_t>(h - 1)] << std::setw(26) << by_hand << std::scientific << std::setprecision(1) << std::abs(fc[static_cast<std::size_t>(h - 1)] - by_hand)
-              << std::fixed << std::setprecision(4) << "\n";
+  const double mu = fit.mean + fit.intercept / (1.0 - phi);
+
+  std::cout << std::fixed << std::setprecision(4) << "AR(1): phi = " << phi << ", reverts to mu = " << mu << ", last observation = " << last << "\n";
+  std::cout << std::left << std::setw(6) << "step" << std::setw(12) << "forecast" << "mu + phi^h (last - mu)\n";
+  for (int h = 1; h <= 8; ++h)
+    std::cout << std::left << std::setw(6) << h << std::setw(12) << fc[h - 1] << mu + std::pow(phi, h) * (last - mu) << "\n";
+
+  ts::ArimaFit ma_truth;
+  ma_truth.ma = {0.6, 0.4};
+  ma_truth.intercept = 3.0;
+  const Series z = ma_truth.simulate(300, f64, /*seed=*/7);
+  ts::ArimaOptions m;
+  m.ar_order = 0;
+  m.ma_order = 2;
+  const auto mfit = ts::Arima::fit_mle(z, m, f64);
+  const auto mfc = mfit.forecast(5, z, f64).host<double>();
+  std::cout << "\nMA(2) forecasts, steps 1..5:";
+  for (double v : mfc) std::cout << " " << v;
+  std::cout << "\n(level = " << mfit.mean + mfit.intercept << "; steps 3.. equal it)\n";
+}
+```
+
+Output
+
+```text
+AR(1): phi = 0.6792, reverts to mu = 3.1319, last observation = 2.2886
+step  forecast    mu + phi^h (last - mu)
+1     2.5591      2.5591
+2     2.7429      2.7429
+3     2.8677      2.8677
+4     2.9524      2.9524
+5     3.0100      3.0100
+6     3.0491      3.0491
+7     3.0756      3.0756
+8     3.0937      3.0937
+
+MA(2) forecasts, steps 1..5: 2.8186 3.3245 3.0998 3.0998 3.0998
+(level = 3.0998; steps 3.. equal it)
+```
+
+The first block agrees with the closed form to every printed digit: there is nothing more to a stationary AR forecast than a geometric pull back to the mean. In the second block the first two MA forecasts still carry the last two shocks, and from step 3 onward the forecast is exactly the level. Both illustrate the same fact: **the further ahead you forecast, the less the model has to say**, and beyond its memory it says only the mean.
+
+## How uncertain is a forecast?
+
+A point forecast is only half the answer. Writing the model as a moving average of past shocks, `x_t = Σ ψ_j e_{t−j}` with `ψ_0 = 1`, the forecast error `h` steps ahead is a combination of the next `h` shocks, so its variance is `σ² (ψ_0² + … + ψ_{h−1}²)`. A 95% interval is the forecast `±1.96` times the square root of that. The weights `ψ_j` follow from the coefficients by a short recursion, which the program implements; for a differenced model the autoregressive polynomial is multiplied by `(1 − B)` first, and that is what makes the interval of an integrated model keep widening.
+
+The program prints the interval half-widths for a stationary ARMA(1,1) and for a random walk fitted with `diff_order = 1`. Compare how the width behaves as the horizon grows.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+using namespace pluss::tils;
+
+// psi weights of the model whose autoregressive polynomial is multiplied by (1 - B)^d.
+std::vector<double> psi_weights(std::vector<double> ar, const std::vector<double>& ma, int d, int count) {
+  for (int k = 0; k < d; ++k) {
+    std::vector<double> poly(ar.size() + 1, 0.0);
+    poly[0] = 1.0;
+    for (std::size_t i = 0; i < ar.size(); ++i) poly[i + 1] = -ar[i];
+    std::vector<double> prod(poly.size() + 1, 0.0);
+    for (std::size_t i = 0; i < poly.size(); ++i) {
+      prod[i] += poly[i];
+      prod[i + 1] -= poly[i];
+    }
+    ar.assign(prod.size() - 1, 0.0);
+    for (std::size_t i = 1; i < prod.size(); ++i) ar[i - 1] = -prod[i];
+  }
+  std::vector<double> psi(static_cast<std::size_t>(count), 0.0);
+  for (int j = 0; j < count; ++j) {
+    double v = j == 0 ? 1.0 : (static_cast<std::size_t>(j) <= ma.size() ? ma[j - 1] : 0.0);
+    for (int i = 1; i <= j && static_cast<std::size_t>(i) <= ar.size(); ++i) v += ar[i - 1] * psi[j - i];
+    psi[j] = v;
+  }
+  return psi;
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+
+  ts::ArimaFit arma;
+  arma.ar = {0.7};
+  arma.ma = {0.3};
+  const Series x = arma.simulate(400, f64, /*seed=*/10);
+  ts::ArimaOptions o;
+  o.ar_order = 1;
+  o.ma_order = 1;
+  const auto f1 = ts::Arima::fit_mle(x, o, f64);
+
+  ts::ArimaFit noise;
+  const Series walk = noise.simulate(400, f64, /*seed=*/10).cumsum(0);
+  ts::ArimaOptions w;
+  w.ar_order = 0;
+  w.diff_order = 1;
+  const auto f2 = ts::Arima::fit_mle(walk, w, f64);
+
+  out.writeln("95% interval half-width at steps 1, 2, ..., 12");
+  const std::vector<std::pair<const char*, std::pair<const ts::ArimaFit*, int>>> models = {{"ARMA(1,1), stationary", {&f1, 0}}, {"random walk (d = 1)", {&f2, 1}}};
+  for (const auto& [label, model] : models) {
+    const auto psi = psi_weights(model.first->ar, model.first->ma, model.second, 12);
+    std::vector<double> width;
+    double cum = 0.0;
+    for (int h = 0; h < 12; ++h) {
+      cum += psi[h] * psi[h];
+      width.push_back(1.96 * model.first->sigma * std::sqrt(cum));
+    }
+    out.writeln(label, width);
   }
 }
 ```
@@ -70,16 +158,78 @@ int main() {
 Output
 
 ```text
-phi = 0.6506, mean mu = 0.0481, last observation x_n = 0.3901
-
-step    forecast      mu + phi^h (x_n - mu)     difference
-1       0.2706        0.2706                    0.0e+00
-2       0.1929        0.1929                    2.8e-17
-3       0.1423        0.1423                    2.8e-17
-4       0.1094        0.1094                    2.8e-17
-5       0.0880        0.0880                    1.4e-17
-6       0.0741        0.0741                    1.4e-17
-7       0.0650        0.0650                    1.4e-17
-8       0.0591        0.0591                    0.0e+00
+95% interval half-width at steps 1, 2, ..., 12
+ARMA(1,1), stationary [2.03, 2.84, 3.09, 3.18, 3.21, 3.23, 3.23, 3.23, 3.23, 3.23, 3.23, 3.23]
+random walk (d = 1) [2.04, 2.89, 3.54, 4.09, 4.57, 5.01, 5.41, 5.78, 6.13, 6.47, 6.78, 7.08]
 ```
-For an AR(1) the h-step forecast has a closed form, μ + φʰ (xₙ − μ), where μ = mean + intercept/(1 − φ) is the level the series reverts to; the library's forecasts agree with it to rounding. The forecasts decay geometrically toward the mean at the rate φ. A longer horizon says less: the forecast is the mean, and its uncertainty is the variance of the series.
+
+The stationary model's interval widens and then stops: the forecast converges to the mean, and what remains is the unconditional spread of the series, so the half-width levels off near `1.96` times the standard deviation of the process. The random walk's interval keeps growing without limit, in proportion to `√h`, because every future shock moves the level permanently. A forecast interval is therefore a statement about the *model*: if you suspect a unit root, forecasts a year out are far less certain than a stationary fit would claim.
+
+## Do the intervals hold?
+
+A claimed 95% interval is worth something only if about 95% of outcomes fall inside it. This is testable. The program repeats the following 150 times: simulate 160 observations of an AR(1), fit on the first 150, forecast the last 10 and count how many fall inside the interval. The overall fraction is the empirical coverage.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.ar = {0.7};
+  truth.sigma = 1.0;
+
+  const int reps = 150, train = 150, horizon = 10;
+  int inside = 0, total = 0;
+  std::vector<int> by_step(horizon, 0);
+  for (int r = 0; r < reps; ++r) {
+    const auto all = truth.simulate(train + horizon, f64, /*seed=*/1000 + r).host<double>();
+    const Series y = pluss::make_series(std::vector<double>(all.begin(), all.begin() + train), f64);
+    ts::ArimaOptions o;
+    o.ar_order = 1;
+    const auto fit = ts::Arima::fit_mle(y, o, f64);
+    const auto fc = fit.forecast(horizon, y, f64).host<double>();
+    double cum = 0.0, psi = 1.0;
+    for (int h = 1; h <= horizon; ++h) {
+      cum += psi * psi;
+      psi *= fit.ar[0];
+      const double half = 1.96 * fit.sigma * std::sqrt(cum);
+      const bool hit = std::fabs(all[train + h - 1] - fc[h - 1]) <= half;
+      inside += hit;
+      by_step[h - 1] += hit;
+      ++total;
+    }
+  }
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << "overall coverage: " << static_cast<double>(inside) / total << " (nominal 0.950)\n";
+  std::cout << "by step:";
+  for (int h = 0; h < horizon; ++h) std::cout << " " << static_cast<double>(by_step[h]) / reps;
+  std::cout << "\n";
+}
+```
+
+Output
+
+```text
+overall coverage: 0.942 (nominal 0.950)
+by step: 0.967 0.953 0.927 0.933 0.907 0.913 0.947 0.967 0.947 0.960
+```
+
+The overall coverage is 0.942 against the nominal 0.950, and the per-step fractions (0.91 to 0.97) scatter around it as they must, since each is based on only 150 intervals and has a standard error near 0.02. So the intervals can be taken at face value here. A small shortfall is what you should expect, because the formula treats the estimated coefficients as exact: the extra uncertainty from estimating them is ignored, and it matters more for short training samples and near-unit-root models. If you need intervals that are honest in small samples, widen them or simulate (`ArimaFit::simulate`) from the fitted model.
+
+## Decisions and pitfalls
+
+- **Forecast the right object.** For a differenced model `forecast` returns the level of the original series, not the changes.
+- **Distrust long horizons.** Beyond the model's memory the forecast is the mean; add nothing a model of the mean cannot know.
+- **Re-fit as data arrives.** `forecast(h, y)` conditions on the series you pass; to update, pass the longer series (and re-fit if it has changed enough).
+- **Regressors need their future.** With exogenous regressors the forecast needs their values over the forecast steps (`forecast(h, y, x_hist, x_future)`).
+- **Use out-of-sample checks to choose between models**, not in-sample fit: see Chapter 6.
+
+Where next: [Choosing the orders](choosing_the_orders.md) compares candidate models before you fit and forecast with one of them.

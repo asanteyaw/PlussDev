@@ -73,10 +73,10 @@ bool run_ice_coach_checks(std::ostream* err = nullptr) {
   const Series predictions = coach.infer(model, data.x);
   const Series chunked_predictions = coach.infer(model, data.x, /*chunk_size=*/53);
   const auto flat_a =
-      predictions.to(pluss::pCPU, ScalarType::Float64).reshape({predictions.numel()}).to_vec<double>();
+      predictions.to(pluss::pCPU, ScalarType::Float64).reshape({predictions.numel()}).host<double>();
   const auto flat_b = chunked_predictions.to(pluss::pCPU, ScalarType::Float64)
                           .reshape({chunked_predictions.numel()})
-                          .to_vec<double>();
+                          .host<double>();
   if (flat_a.size() != flat_b.size()) {
     if (err) *err << "ice Coach chunked infer() should preserve row count\n";
     return false;

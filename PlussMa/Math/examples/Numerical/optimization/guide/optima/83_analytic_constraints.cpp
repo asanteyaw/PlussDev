@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -17,16 +17,16 @@ pluss::Series row(double v) { return pluss::make_series(std::vector<double>{v}, 
 
 optim::ConstrainedProblem problem(bool analytic, double jacobian_x_scale) {
   optim::ConstrainedProblem prob;
-  prob.objective.autodiff = [](const optim::ParameterPack<optim::Trace>& p) -> optim::Trace {
-    return optim::square(p.at("x")) + optim::square(p.at("y"));
+  prob.objective.autodiff = [](const optim::ParameterPack<pluss::Series>& p) -> pluss::Series {
+    return p.at("x").square() + p.at("y").square();
   };
   // The traced form is always present: it is what the audit compares against.
-  prob.nonlinear.inequality = [](const optim::ParameterPack<optim::Trace>& p) -> optim::Trace {
+  prob.nonlinear.inequality = [](const optim::ParameterPack<pluss::Series>& p) -> pluss::Series {
     return 4.0 - p.at("x") * p.at("y");
   };
   if (analytic) {
     prob.nonlinear.analytic = [jacobian_x_scale](const optim::ParameterPack<pluss::Series>& p) {
-      const double x = p.at("x").item<double>(), y = p.at("y").item<double>();
+      const double x = as_f64(p.at("x")), y = as_f64(p.at("y"));
       optim::NonlinearConstraintEvaluation e;
       e.inequality = pluss::make_series(std::vector<double>{4.0 - x * y}, {1}).to(f64);
       e.inequality_jacobian = optim::ParameterPack<pluss::Series>(
@@ -43,8 +43,8 @@ int main() {
   for (bool analytic : {false, true}) {
     const auto r = optim::optima(problem(analytic, 1.0), pair(1, 3));
     std::cout << (analytic ? "analytic Jacobian: " : "traced constraint:  ") << "exit flag " << static_cast<int>(r.exit_flag)
-              << ", " << r.iteration << " iterations, x = " << std::fixed << std::setprecision(5) << r.params.at("x").item<double>()
-              << ", y = " << r.params.at("y").item<double>() << ", violation " << std::scientific << std::setprecision(1)
+              << ", " << r.iteration << " iterations, x = " << std::fixed << std::setprecision(5) << as_f64(r.params.at("x"))
+              << ", y = " << as_f64(r.params.at("y")) << ", violation " << std::scientific << std::setprecision(1)
               << r.evaluation.max_constraint_violation << "\n";
   }
 

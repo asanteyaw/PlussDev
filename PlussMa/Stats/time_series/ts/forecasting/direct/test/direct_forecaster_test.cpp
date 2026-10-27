@@ -24,10 +24,10 @@ void expect(bool condition, const std::string& message) {
 
 Series make_arx_response(const Series& x, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto x_cpu = x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  const auto x_cpu = x.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>();
   const std::int64_t n = x.sizes()[0];
   const std::int64_t p = x.sizes()[1];
-  const auto noise = pluss::series::randn({n}, cfg, seed).to_vec<double>();
+  const auto noise = pluss::series::randn({n}, cfg, seed).host<double>();
 
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
@@ -63,7 +63,7 @@ void test_fit_predict_closed_loop() {
   expect(prep.sizes().size() == 2 && prep.sizes()[0] == n, "expected prepared predictor rows [n,*]");
   expect(fcast.sizes().size() == 1 && fcast.sizes()[0] == 1, "expected forecast shape [1]");
   expect(mse.sizes().size() == 1 && mse.sizes()[0] == 1, "expected mse shape [1]");
-  expect(mse.to_vec<double>()[0] < 0.03, "expected low in-sample mse for ARX process");
+  expect(mse.host<double>()[0] < 0.03, "expected low in-sample mse for ARX process");
 }
 
 void test_multi_horizon_shape_and_finiteness() {

@@ -29,7 +29,7 @@ void expect(bool c, const std::string &m) {
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
 double rel(double a, double b) { return std::abs(a - b) / (1.0 + std::abs(b)); }
 double max_rel(const Series &got, const std::vector<double> &want) {
-  const auto g = got.contiguous().to_vec<double>();
+  const auto g = got.contiguous().host<double>();
   expect(g.size() == want.size(), "size mismatch");
   double worst = 0.0;
   for (std::size_t i = 0; i < g.size(); ++i)
@@ -47,11 +47,11 @@ int main() {
       expect(max_rel(poly::wlc_radius_of_gyration_squared(big_l, 1.0), ref::wlc_rg2) < 1e-8, "wlc <Rg^2> vs quadrature");
       // limits: rod L^2 and L^2/12; coil 2PL and PL/3
       const Series tiny = vec({1e-6});
-      expect(std::abs(poly::wlc_mean_square_end_to_end(tiny, 1.0).item<double>() / 1e-12 - 1.0) < 1e-6, "rod limit of <R^2>");
-      expect(std::abs(poly::wlc_radius_of_gyration_squared(tiny, 1.0).item<double>() / (1e-12 / 12.0) - 1.0) < 1e-6, "rod limit of <Rg^2>");
+      expect(std::abs(poly::wlc_mean_square_end_to_end(tiny, 1.0).host<double>().front() / 1e-12 - 1.0) < 1e-6, "rod limit of <R^2>");
+      expect(std::abs(poly::wlc_radius_of_gyration_squared(tiny, 1.0).host<double>().front() / (1e-12 / 12.0) - 1.0) < 1e-6, "rod limit of <Rg^2>");
       const Series huge = vec({1e6});
-      expect(std::abs(poly::wlc_mean_square_end_to_end(huge, 1.0).item<double>() / 2e6 - 1.0) < 1e-5, "coil limit of <R^2>");
-      expect(std::abs(poly::wlc_radius_of_gyration_squared(huge, 1.0).item<double>() / (1e6 / 3.0) - 1.0) < 1e-5, "coil limit of <Rg^2>");
+      expect(std::abs(poly::wlc_mean_square_end_to_end(huge, 1.0).host<double>().front() / 2e6 - 1.0) < 1e-5, "coil limit of <R^2>");
+      expect(std::abs(poly::wlc_radius_of_gyration_squared(huge, 1.0).host<double>().front() / (1e6 / 3.0) - 1.0) < 1e-5, "coil limit of <Rg^2>");
     }
     // ---- freely-rotating chain against the brute-force double sum, and its continuum limit (worm-like chain)
     {
@@ -59,18 +59,18 @@ int main() {
       expect(max_rel(poly::freely_rotating_mean_square_end_to_end(n, b, c), ref::frc_r2) < 1e-11, "freely rotating chain vs brute force");
       const double bond = 0.001, persistence = 1.0, contour = 5.0;
       const Series frc = poly::freely_rotating_mean_square_end_to_end(vec({contour / bond}), bond, 1.0 - bond / persistence);
-      const double wlc = poly::wlc_mean_square_end_to_end(vec({contour}), persistence).item<double>();
-      expect(std::abs(frc.item<double>() / wlc - 1.0) < 3e-3, "freely rotating chain approaches the worm-like chain");
+      const double wlc = poly::wlc_mean_square_end_to_end(vec({contour}), persistence).host<double>().front();
+      expect(std::abs(frc.host<double>().front() / wlc - 1.0) < 3e-3, "freely rotating chain approaches the worm-like chain");
     }
     // ---- force-extension
     {
       expect(max_rel(poly::fjc_extension(vec(ref::fjc_a), 1.0, 1.0), ref::fjc_x) < 1e-11, "Langevin function (incl. the small-force series branch)");
-      expect(std::abs(poly::fjc_extension(vec({-0.3}), 1.0, 1.0).item<double>() + poly::fjc_extension(vec({0.3}), 1.0, 1.0).item<double>()) < 1e-15, "odd in the force");
-      expect(std::abs(poly::wlc_force(vec({0.5}), 2.0, 4.0).item<double>() - 2.5) < 1e-13, "Marko-Siggia spot value: f P / kT = 5/4");
+      expect(std::abs(poly::fjc_extension(vec({-0.3}), 1.0, 1.0).host<double>().front() + poly::fjc_extension(vec({0.3}), 1.0, 1.0).host<double>().front()) < 1e-15, "odd in the force");
+      expect(std::abs(poly::wlc_force(vec({0.5}), 2.0, 4.0).host<double>().front() - 2.5) < 1e-13, "Marko-Siggia spot value: f P / kT = 5/4");
       const Series f = vec({0.01, 0.1, 1.0, 5.0, 50.0});
       const Series z = poly::wlc_extension(f, 1.0, 1.0);
       expect(poly::wlc_force(z, 1.0, 1.0).sub(f).abs().max().item<double>() < 1e-9, "wlc_extension inverts wlc_force");
-      const auto zz = z.contiguous().to_vec<double>();
+      const auto zz = z.contiguous().host<double>();
       expect(zz[0] > 0.0 && zz[4] < 1.0 && zz[1] > zz[0] && zz[3] > zz[2], "extension is monotone and bounded by the contour length");
     }
     // ---- distributions
@@ -92,8 +92,8 @@ int main() {
       expect(std::abs(mw.mn.item<double>() - 1.0 / (1.0 - p)) < 1e-9 * (1.0 / (1.0 - p)), "Mn = 1/(1-p)");
       expect(std::abs(mw.mw.item<double>() - (1.0 + p) / (1.0 - p)) < 1e-9 * ((1.0 + p) / (1.0 - p)), "Mw = (1+p)/(1-p)");
       expect(std::abs(mw.dispersity.item<double>() - (1.0 + p)) < 1e-9, "dispersity 1 + p");
-      expect(std::abs(poly::carothers_degree_of_polymerization(vec({0.99}), 1.0).item<double>() - 100.0) < 1e-10, "Carothers X_n at p = 0.99");
-      expect(std::abs(poly::carothers_degree_of_polymerization(vec({0.99}), 0.98).item<double>() - 1.98 / (1.98 - 2 * 0.98 * 0.99)) < 1e-10, "Carothers with stoichiometric imbalance");
+      expect(std::abs(poly::carothers_degree_of_polymerization(vec({0.99}), 1.0).host<double>().front() - 100.0) < 1e-10, "Carothers X_n at p = 0.99");
+      expect(std::abs(poly::carothers_degree_of_polymerization(vec({0.99}), 0.98).host<double>().front() - 1.98 / (1.98 - 2 * 0.98 * 0.99)) < 1e-10, "Carothers with stoichiometric imbalance");
       expect(max_rel(poly::poisson_number_fraction(xv, ref::po_nu[0]), ref::po_n) < 1e-11, "Poisson distribution vs scipy");
       const auto pw = poly::molecular_weights(xv, poly::poisson_number_fraction(xv, ref::po_nu[0]));
       expect(rel(pw.mn.item<double>(), ref::po_avg[0]) < 1e-11 && rel(pw.mw.item<double>(), ref::po_avg[1]) < 1e-11 && rel(pw.mz.item<double>(), ref::po_avg[2]) < 1e-11, "Poisson averages");
@@ -109,7 +109,7 @@ int main() {
       o.atol = 1e-18;
       o.max_steps = 4000000;
       const Series y = stiff::integrate_at(poly::free_radical_rates(k), y0, ref::rp_times, o);
-      const auto got = y.contiguous().to_vec<double>();
+      const auto got = y.contiguous().host<double>();
       double worst = 0.0;
       for (std::size_t t = 1; t < ref::rp_times.size(); ++t)
         for (int c = 0; c < 8; ++c) {
@@ -143,9 +143,9 @@ int main() {
       const Series az = poly::azeotrope(0.5, 0.3, f1);
       expect(std::abs(poly::mayo_lewis(az, 0.5, 0.3).sub(az).abs().max().item<double>()) < 1e-13, "azeotrope: F1 = f1");
       for (std::size_t i = 0; i < ref::sk_f10.size(); ++i) {
-        const double got = poly::skeist_feed_fraction(vec({ref::sk_f10[i]}), ref::sk_r1[i], ref::sk_r2[i], 0.6, 600).item<double>();
+        const double got = poly::skeist_feed_fraction(vec({ref::sk_f10[i]}), ref::sk_r1[i], ref::sk_r2[i], 0.6, 600).host<double>().front();
         expect(rel(got, ref::sk_f1[i]) < 1e-9, "Skeist drift vs DOP853, case " + std::to_string(i));
-        const double conv = poly::meyer_lowry_conversion(vec({ref::sk_f1[i]}), vec({ref::sk_f10[i]}), ref::sk_r1[i], ref::sk_r2[i]).item<double>();
+        const double conv = poly::meyer_lowry_conversion(vec({ref::sk_f1[i]}), vec({ref::sk_f10[i]}), ref::sk_r1[i], ref::sk_r2[i]).host<double>().front();
         expect(std::abs(conv - 0.6) < 1e-9, "Meyer-Lowry closed form reproduces the conversion, case " + std::to_string(i));
       }
     }
@@ -169,12 +169,12 @@ int main() {
       }
       // critical point: spinodal minimum, chi_c = (1/sqrt n1 + 1/sqrt n2)^2 / 2, phi_c = sqrt n1 / (sqrt n1 + sqrt n2)
       const auto crit = poly::fh_critical(vec({1.0}), vec({100.0}));
-      expect(std::abs(crit.chi.item<double>() - 0.605) < 1e-13 && std::abs(crit.phi.item<double>() - 1.0 / 11.0) < 1e-13, "critical point of a polymer solution");
+      expect(std::abs(crit.chi.host<double>().front() - 0.605) < 1e-13 && std::abs(crit.phi.host<double>().front() - 1.0 / 11.0) < 1e-13, "critical point of a polymer solution");
       const Series phi = vec({0.05, 0.0909090909090909, 0.15, 0.3});
       const Series cs = poly::fh_spinodal_chi(phi, 1.0, 100.0);
-      expect(cs.min().item<double>() >= crit.chi.item<double>() - 1e-12, "spinodal lies above the critical chi");
+      expect(cs.min().host<double>().front() >= crit.chi.host<double>().front() - 1e-12, "spinodal lies above the critical chi");
       const auto sp = poly::fh_spinodal_compositions(vec({0.8}), vec({1.0}), vec({100.0}));
-      expect(std::abs(poly::fh_spinodal_chi(sp.low, 1.0, 100.0).item<double>() - 0.8) < 1e-12 && std::abs(poly::fh_spinodal_chi(sp.high, 1.0, 100.0).item<double>() - 0.8) < 1e-12, "spinodal compositions satisfy chi_s(phi) = chi");
+      expect(std::abs(poly::fh_spinodal_chi(sp.low, 1.0, 100.0).host<double>().front() - 0.8) < 1e-12 && std::abs(poly::fh_spinodal_chi(sp.high, 1.0, 100.0).host<double>().front() - 0.8) < 1e-12, "spinodal compositions satisfy chi_s(phi) = chi");
     }
 
     // ---- step-growth kinetics: closed forms against ODE integration of the rate laws
@@ -205,19 +205,19 @@ int main() {
       expect(max_rel(sg::afb_weight_average(vec(ref::afb_alpha), 3.0), ref::afb_xw_f3) < 2e-6, "AB2 weight average vs Smoluchowski kinetics");
       expect(max_rel(sg::afb_weight_average(vec(ref::afb_alpha_f4), 4.0), ref::afb_xw_f4) < 2e-6, "AB3 weight average vs Smoluchowski kinetics");
       expect(std::abs(sg::afb_critical_conversion(3.0, vec({0.0})).item<double>() - 0.5) < 1e-15, "AB2 gel point");
-      expect(sg::afb_weight_average(vec({0.4999}), 3.0).item<double>() > 1e3, "X_w diverges at the gel point");
-      expect(rel(sg::afb_weight_average(vec({0.3}), 2.0).item<double>(), (1.0 + 0.3) / (1.0 - 0.3)) < 1e-14, "f = 2 reduces to the linear (1+a)/(1-a)");
+      expect(sg::afb_weight_average(vec({0.4999}), 3.0).host<double>().front() > 1e3, "X_w diverges at the gel point");
+      expect(rel(sg::afb_weight_average(vec({0.3}), 2.0).host<double>().front(), (1.0 + 0.3) / (1.0 - 0.3)) < 1e-14, "f = 2 reduces to the linear (1+a)/(1-a)");
     }
     // ---- A_f + B_g gelation: critical conversion and sol fractions against Monte Carlo random bonding
     {
       const Series f = vec(ref::gel_f), g = vec(ref::gel_g), r = vec(ref::gel_r), pa = vec(ref::gel_pa);
-      const auto fv = f.to_vec<double>(), gv = g.to_vec<double>();
-      const auto rv = r.to_vec<double>(), pv = pa.to_vec<double>();
+      const auto fv = f.host<double>(), gv = g.host<double>();
+      const auto rv = r.host<double>(), pv = pa.host<double>();
       for (std::size_t i = 0; i < fv.size(); ++i) {
         const auto s = sg::sol_gel(vec({pv[i]}), vec({rv[i]}), fv[i], gv[i]);
-        expect(std::abs(s.sol_fraction.item<double>() - ref::gel_sol_mc[i]) < 8e-3, "sol fraction vs Monte Carlo, case " + std::to_string(i) + ": " + std::to_string(s.sol_fraction.item<double>()) + " vs " + std::to_string(ref::gel_sol_mc[i]));
-        const double pc = sg::critical_conversion(fv[i], gv[i], vec({rv[i]})).item<double>();
-        expect((pv[i] > pc) == (s.sol_fraction.item<double>() < 1.0 - 1e-9), "gel exists exactly beyond the critical conversion");
+        expect(std::abs(s.sol_fraction.host<double>().front() - ref::gel_sol_mc[i]) < 8e-3, "sol fraction vs Monte Carlo, case " + std::to_string(i) + ": " + std::to_string(s.sol_fraction.host<double>().front()) + " vs " + std::to_string(ref::gel_sol_mc[i]));
+        const double pc = sg::critical_conversion(fv[i], gv[i], vec({rv[i]})).host<double>().front();
+        expect((pv[i] > pc) == (s.sol_fraction.host<double>().front() < 1.0 - 1e-9), "gel exists exactly beyond the critical conversion");
       }
       const Series below = vec({0.3, 0.5});
       const auto none = sg::sol_gel(below, vec({1.0, 1.0}), 4.0, 2.0);
@@ -228,33 +228,33 @@ int main() {
       // exact Rouse eigenvalues vs numpy eigvalsh of the connectivity matrix
       for (std::size_t i = 0; i < ref::ro_n.size(); ++i) {
         const auto n = static_cast<std::int64_t>(ref::ro_n[i]);
-        const auto ev = pd::rouse_eigenvalues(n).to_vec<double>();
+        const auto ev = pd::rouse_eigenvalues(n).host<double>();
         for (int q = 0; q < 3; ++q)
           expect(std::abs(ev[static_cast<std::size_t>(q + 1)] - ref::ro_eig[i * 3 + static_cast<std::size_t>(q)]) < 1e-12, "Rouse eigenvalue vs eigvalsh");
       }
       // Doi-Edwards limit tau_p -> zeta N^2 b^2 / (3 pi^2 kT p^2) and eta -> c zeta N^2 b^2 / 36 for large N
       const std::int64_t n = 400;
       const Series tau = pd::rouse_relaxation_times(n, vec({1.0}), 1.0, 1.0);
-      const auto tv = tau.to_vec<double>();
+      const auto tv = tau.host<double>();
       expect(std::abs(tv[0] / (static_cast<double>(n) * n / (3.0 * M_PI * M_PI)) - 1.0) < 1e-3, "tau_1 -> zeta N^2 b^2 / (3 pi^2 kT)");
       expect(std::abs(tv[0] / tv[1] - 4.0) < 1e-2, "tau_p ~ p^-2");
-      expect(std::abs(pd::rouse_viscosity(tau, 1.0, 1.0).item<double>() / (static_cast<double>(n) * n / 36.0) - 1.0) < 2e-3, "Rouse viscosity c zeta N^2 b^2 / 36");
-      expect(std::abs(pd::rouse_diffusion(n, vec({2.0}), 1.0).item<double>() - 1.0 / (2.0 * n)) < 1e-15, "Rouse diffusion kT/(N zeta)");
+      expect(std::abs(pd::rouse_viscosity(tau, 1.0, 1.0).host<double>().front() / (static_cast<double>(n) * n / 36.0) - 1.0) < 2e-3, "Rouse viscosity c zeta N^2 b^2 / 36");
+      expect(std::abs(pd::rouse_diffusion(n, vec({2.0}), 1.0).host<double>().front() - 1.0 / (2.0 * n)) < 1e-15, "Rouse diffusion kT/(N zeta)");
       // G(0) = c kT (N - 1) and monotone decay
       const Series modulus = pd::rouse_modulus(vec({0.0, 1.0, 100.0, 1e6}), tau, 1.0, 1.0);
-      const auto gv = modulus.to_vec<double>();
+      const auto gv = modulus.host<double>();
       expect(std::abs(gv[0] - (n - 1)) < 1e-12 && gv[1] > gv[2] && gv[2] > gv[3] && gv[3] < 1e-6, "Rouse modulus G(0) = c kT (N-1), monotone decay");
       // Zimm eigenvalues and diffusion vs numpy
       for (std::size_t i = 0; i < ref::zi_n.size(); ++i) {
         const auto nb = static_cast<std::int64_t>(ref::zi_n[i]);
-        const auto lam = pd::zimm_eigenvalues(nb, ref::zi_hs[i]).to_vec<double>();
+        const auto lam = pd::zimm_eigenvalues(nb, ref::zi_hs[i]).host<double>();
         for (int q = 0; q < 4; ++q)
           expect(rel(lam[static_cast<std::size_t>(q + 1)], ref::zi_lambda_1_4[i * 4 + static_cast<std::size_t>(q)]) < 1e-9, "Zimm eigenvalue vs numpy eigvals(H A), case " + std::to_string(i));
         expect(rel(pd::zimm_diffusion(nb, ref::zi_hs[i], 1.0, 1.0), ref::zi_dsum[i]) < 1e-12, "Zimm diffusion kT/(N^2 zeta) sum H vs numpy");
       }
       // hydrodynamic interaction speeds the chain up: tau^Z_1 < tau^R_1, and D grows as N^-1/2 instead of N^-1 (large-N scaling)
       const double tz = pd::zimm_relaxation_times(100, 0.15, 1.0, 1.0, 1.0).select(-1, 0).item<double>();
-      const double tr = pd::rouse_relaxation_times(100, vec({1.0}), 1.0, 1.0).select(-1, 0).item<double>();
+      const double tr = pd::rouse_relaxation_times(100, vec({1.0}), 1.0, 1.0).select(-1, 0).host<double>().front();
       expect(tz < tr, "Zimm relaxes faster than Rouse");
       const double d1 = pd::zimm_diffusion(50, 0.25, 1.0, 1.0), d2 = pd::zimm_diffusion(200, 0.25, 1.0, 1.0);
       const double exponent = std::log(d1 / d2) / std::log(4.0);
@@ -291,7 +291,7 @@ int main() {
       for (std::size_t i = 0; i < ref::open_p.size(); ++i) {
         const double keq = ref::open_params[3 * i], c0 = ref::open_params[3 * i + 1], wc = ref::open_params[3 * i + 2];
         const Series dpv = sg::equilibrium_dp_open(vec({keq}), vec({wc}), c0);
-        expect(rel(dpv.item<double>(), ref::open_dp[i]) < 1e-12, "open-system X_n vs the numerical root, case " + std::to_string(i));
+        expect(rel(dpv.host<double>().front(), ref::open_dp[i]) < 1e-12, "open-system X_n vs the numerical root, case " + std::to_string(i));
         // condensate removal fast enough to hold w small: simulate with the rate law and an imposed w by making removal strong: p follows the quasi-steady value
       }
       // the molecular-weight distribution: population balance with random coupling and random scission relaxes to the most probable distribution
@@ -330,7 +330,7 @@ int main() {
         n0[0] = c0;
         const Series y = dyn::simulate(rate, vec(n0), 0.0, 60.0, 3000);
         const double p_eq = std::sqrt(keq) / (1.0 + std::sqrt(keq));
-        const auto nv = y.to_vec<double>();
+        const auto nv = y.host<double>();
         double total = 0.0;
         for (const double v : nv) total += v;
         double worst = 0.0;

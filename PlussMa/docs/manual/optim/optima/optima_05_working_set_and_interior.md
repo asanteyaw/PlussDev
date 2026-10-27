@@ -20,15 +20,8 @@ Two consequences matter in practice. The interior method never lets a bound or a
 
 ## A guided tour: the working-set method
 
-- [Watching the active set](optima_05_working_set_and_interior/watching_the_active_set.md)
-- [Does the active list pay off?](optima_05_working_set_and_interior/does_the_active_list_pay_off.md)
-- [The working-set options](optima_05_working_set_and_interior/the_working_set_options.md)
-
-## A guided tour: the interior method
-
-- [Watching the barrier](optima_05_working_set_and_interior/watching_the_barrier.md)
-- [The barrier schedule](optima_05_working_set_and_interior/the_barrier_schedule.md)
-- [What "interior" buys](optima_05_working_set_and_interior/what_interior_buys.md)
+- [The working-set method](optima_05_working_set_and_interior/the_working_set_method.md)
+- [The interior-point method](optima_05_working_set_and_interior/the_interior_point_method.md)
 
 ## Decisions
 
@@ -54,11 +47,7 @@ Chapter 6 turns to what all three share: the curvature model (BFGS, limited memo
 :maxdepth: 2
 :hidden:
 
-optima_05_working_set_and_interior/watching_the_active_set
-optima_05_working_set_and_interior/does_the_active_list_pay_off
-optima_05_working_set_and_interior/the_working_set_options
-optima_05_working_set_and_interior/watching_the_barrier
-optima_05_working_set_and_interior/the_barrier_schedule
-optima_05_working_set_and_interior/what_interior_buys
+optima_05_working_set_and_interior/the_working_set_method
+optima_05_working_set_and_interior/the_interior_point_method
 ```
 <!-- apiref:toctree:end -->

@@ -53,7 +53,7 @@ auto ct = pluss::kindle::Catalog({
     "ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-31T09:15:30Z"})),
 });
 auto out = ct.tl().epoch();
-std::cout << out.keys("ts").as_series().to_vec<std::int64_t>()[0];
+std::cout << out.keys("ts").as_series().host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -72,7 +72,7 @@ auto ct = pluss::kindle::Catalog({
     "ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-31T09:15:30Z", "2024-02-29T23:45:00Z"})),
 });
 auto out = ct.tl().epoch(pluss::table::TimeUnit::Seconds);
-auto v = out.keys("ts").as_series().to_vec<std::int64_t>();
+auto v = out.keys("ts").as_series().host<std::int64_t>();
 std::cout << v[0] << " " << v[1];
 ```
 

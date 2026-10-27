@@ -40,8 +40,8 @@ auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.notnull();
 auto vals = out.registry(0).fields("id");
-std::cout << std::boolalpha << std::get<pluss::Series>(vals.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(vals.at(1)).to_vec<bool>()[0];
+std::cout << std::boolalpha << std::get<pluss::Series>(vals.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(vals.at(1)).host<bool>()[0];
 ```
 
 ### Output

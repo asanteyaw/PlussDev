@@ -83,8 +83,8 @@ TEST_CASE("CUDA bridge expanded linalg supports non-contiguous and batched layou
   REQUIRE_FALSE(a_cuda_t.is_contiguous());
   REQUIRE(pluss::cuda::supports_inverse_linalg(a_cuda_t));
   require_close_(
-      pluss::subsp::linearalg::inverse(a_cuda_t).to(pluss::pCPU).to_vec<double>(),
-      pluss::subsp::linearalg::inverse(a_cpu_t).to_vec<double>(),
+      pluss::subsp::linearalg::inverse(a_cuda_t).to(pluss::pCPU).host<double>(),
+      pluss::subsp::linearalg::inverse(a_cpu_t).host<double>(),
       1e-8);
 
   std::vector<double> mats;
@@ -109,8 +109,8 @@ TEST_CASE("CUDA bridge expanded linalg supports non-contiguous and batched layou
 
   REQUIRE(pluss::cuda::supports_det_linalg(batch_cuda_nt));
   require_close_(
-      pluss::subsp::linearalg::det(batch_cuda_nt).to(pluss::pCPU).to_vec<double>(),
-      pluss::subsp::linearalg::det(batch_cpu_nt).to_vec<double>(),
+      pluss::subsp::linearalg::det(batch_cuda_nt).to(pluss::pCPU).host<double>(),
+      pluss::subsp::linearalg::det(batch_cpu_nt).host<double>(),
       1e-8);
 }
 
@@ -146,5 +146,5 @@ TEST_CASE("CUDA strict expanded linalg supports fp16-bf16 and non-contiguous QR"
   const auto q = pluss::subsp::linearalg::qr_q(qin_cuda_nt, /*reduced=*/true).to(pluss::pCPU);
   const auto r = pluss::subsp::linearalg::qr_r(qin_cuda_nt, /*reduced=*/true).to(pluss::pCPU);
   const auto recon = q.matmul(r);
-  require_close_(recon.to_vec<double>(), qin_cpu_nt.to_vec<double>(), 5e-6);
+  require_close_(recon.host<double>(), qin_cpu_nt.host<double>(), 5e-6);
 }

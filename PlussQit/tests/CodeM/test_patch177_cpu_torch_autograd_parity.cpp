@@ -251,7 +251,7 @@ TEST_CASE("complex CPU Cholesky reverse matches libtorch",
       const at::Tensor torch_output = at::linalg_cholesky(torch_input, upper);
       torch_output.backward(torch_complex_series(torch_seed_values, {2, 2}));
 
-      require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+      require_complex_close(input.sensitivity().host<std::complex<double>>(),
                             torch_complex_values(torch_input.grad()), 2e-10);
     }
   }
@@ -295,7 +295,7 @@ TEST_CASE("complex CPU reduced QR reverse matches libtorch",
           torch_seed_values,
           std::vector<std::int64_t>(torch_output.sizes().begin(), torch_output.sizes().end())));
 
-      require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+      require_complex_close(input.sensitivity().host<std::complex<double>>(),
                             torch_complex_values(torch_input.grad()), 3e-10);
     }
   }
@@ -340,7 +340,7 @@ TEST_CASE("complex CPU wide QR reverse matches reduced and complete libtorch mod
             torch_seed_values,
             std::vector<std::int64_t>(torch_output.sizes().begin(), torch_output.sizes().end())));
 
-        require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+        require_complex_close(input.sensitivity().host<std::complex<double>>(),
                               torch_complex_values(torch_input.grad()), 4e-10);
       }
     }
@@ -395,7 +395,7 @@ TEST_CASE("complex CPU reduced SVD reverse matches phase-invariant libtorch path
       }
       torch_output.backward(torch_seed);
 
-      require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+      require_complex_close(input.sensitivity().host<std::complex<double>>(),
                             torch_complex_values(torch_input.grad()), 8e-10);
     }
   }
@@ -437,7 +437,7 @@ TEST_CASE("complex CPU SVD reconstruction couples all output cotangents like lib
       torch_reconstruction.sum().backward(torch_complex_series(
           {c10::complex<double>{seed_value.real(), seed_value.imag()}}, {}));
 
-      require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+      require_complex_close(input.sensitivity().host<std::complex<double>>(),
                             torch_complex_values(torch_input.grad()), 1e-9);
     }
   }
@@ -490,7 +490,7 @@ TEST_CASE("complex CPU full SVD ignores null-space cotangents like libtorch",
   const Series null_column = decomposition.u.slice(-1, 2, 3).contiguous();
   null_column.reverse(complex_series({{0.2, 0.4}, {-0.3, 0.8}, {0.7, -0.1}}, {3, 1}));
   require_complex_close(
-      input.sensitivity().to_vec<std::complex<double>>(),
+      input.sensitivity().host<std::complex<double>>(),
       std::vector<std::complex<double>>(6), 1e-12);
 }
 
@@ -515,7 +515,7 @@ TEST_CASE("complex CPU matrix powers and pseudoinverse reverse match libtorch",
       at::Tensor torch_input = torch_complex_series(torch_square_values, {2, 2}, true);
       const at::Tensor torch_output = at::matrix_power(torch_input, exponent);
       torch_output.backward(torch_complex_series(torch_square_seed_values, {2, 2}));
-      require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+      require_complex_close(input.sensitivity().host<std::complex<double>>(),
                             torch_complex_values(torch_input.grad()), 8e-10);
     }
   }
@@ -541,7 +541,7 @@ TEST_CASE("complex CPU matrix powers and pseudoinverse reverse match libtorch",
   at::Tensor torch_input = torch_complex_series(torch_rectangular_values, {3, 2}, true);
   const at::Tensor torch_output = at::linalg_pinv(torch_input, 1e-12, false);
   torch_output.backward(torch_complex_series(torch_pinv_seed_values, {2, 3}));
-  require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+  require_complex_close(input.sensitivity().host<std::complex<double>>(),
                         torch_complex_values(torch_input.grad()), 2e-9);
 }
 
@@ -565,9 +565,9 @@ TEST_CASE("complex CPU matrix exponential reverse matches libtorch block differe
   const at::Tensor torch_output = at::linalg_matrix_exp(torch_input);
   torch_output.backward(torch_complex_series(torch_seed_values, {2, 2}));
 
-  require_complex_close(output.to_vec<std::complex<double>>(),
+  require_complex_close(output.host<std::complex<double>>(),
                         torch_complex_values(torch_output), 2e-11);
-  require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+  require_complex_close(input.sensitivity().host<std::complex<double>>(),
                         torch_complex_values(torch_input.grad()), 3e-10);
 }
 
@@ -594,9 +594,9 @@ TEST_CASE("complex CPU determinant decompositions reverse match libtorch",
     torch_output.backward(torch_complex_series(
         {c10::complex<double>{seed.real(), seed.imag()}}, {}));
 
-    require_complex_close(output.to_vec<std::complex<double>>(),
+    require_complex_close(output.host<std::complex<double>>(),
                           torch_complex_values(torch_output), 2e-11);
-    require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+    require_complex_close(input.sensitivity().host<std::complex<double>>(),
                           torch_complex_values(torch_input.grad()), 3e-10);
   }
 
@@ -617,10 +617,10 @@ TEST_CASE("complex CPU determinant decompositions reverse match libtorch",
     torch_logabs.backward(
         at::tensor(logabs_seed, at::TensorOptions().dtype(at::kDouble)));
 
-    const auto output_values = output.to_vec<std::complex<double>>();
+    const auto output_values = output.host<std::complex<double>>();
     require_complex_close({output_values[0]}, torch_complex_values(torch_sign), 2e-11);
     require_close({output_values[1].real()}, torch_values(torch_logabs), 2e-11);
-    require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+    require_complex_close(input.sensitivity().host<std::complex<double>>(),
                           torch_complex_values(torch_input.grad()), 3e-10);
   }
 }
@@ -643,9 +643,9 @@ TEST_CASE("CPU pow reverse matches libtorch at zero bases and exponents",
   at::Tensor torch_result = torch_base.pow(torch_exponent);
   torch_result.sum().backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result));
-  require_close(base.sensitivity().to_vec<double>(), torch_values(torch_base.grad()));
-  require_close(exponent.sensitivity().to_vec<double>(), torch_values(torch_exponent.grad()));
+  require_close(result.host<double>(), torch_values(torch_result));
+  require_close(base.sensitivity().host<double>(), torch_values(torch_base.grad()));
+  require_close(exponent.sensitivity().host<double>(), torch_values(torch_exponent.grad()));
 }
 
 const std::vector<UnaryCase>& unary_reverse_cases() {
@@ -723,8 +723,8 @@ void check_unary_reverse(const UnaryCase& test, ScalarType st, at::ScalarType at
   const at::Tensor torch_result = test.torch_op(torch_view(torch_leaf));
   torch_result.sum().backward();
 
-  require_close(result.to(ScalarType::Float64).to_vec<double>(), torch_values(torch_result), value_tol);
-  require_close(pluss_leaf.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+  require_close(result.to(ScalarType::Float64).host<double>(), torch_values(torch_result), value_tol);
+  require_close(pluss_leaf.sensitivity().to(ScalarType::Float64).host<double>(),
                 torch_values(torch_leaf.grad()), grad_tol);
 }
 
@@ -767,10 +767,10 @@ void check_unary_reverse_lowp(const UnaryCase& test, ScalarType st, double rel) 
   const Series ref_out = test.pluss_op(ref_leaf);
   ref_out.sum().reverse();
 
-  require_close_rel(lowp_out.to(ScalarType::Float64).to_vec<double>(),
-                    ref_out.to_vec<double>(), rel, rel);
-  require_close_rel(lowp_leaf.sensitivity().to(ScalarType::Float64).to_vec<double>(),
-                    ref_leaf.sensitivity().to_vec<double>(), rel, rel);
+  require_close_rel(lowp_out.to(ScalarType::Float64).host<double>(),
+                    ref_out.host<double>(), rel, rel);
+  require_close_rel(lowp_leaf.sensitivity().to(ScalarType::Float64).host<double>(),
+                    ref_leaf.sensitivity().host<double>(), rel, rel);
 }
 
 TEST_CASE("generated CPU unary reverse rules stay self-consistent in float16 and bfloat16",
@@ -875,9 +875,9 @@ void check_binary_reverse(const BinaryReverseCase& test, ScalarType st, at::Scal
   const at::Tensor torch_result = test.torch_op(view_torch(ta), view_torch(tb));
   torch_result.sum().backward();
 
-  require_close(result.to(ScalarType::Float64).to_vec<double>(), torch_values(torch_result), value_tol);
-  require_close(la.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(ta.grad()), grad_tol);
-  require_close(lb.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tb.grad()), grad_tol);
+  require_close(result.to(ScalarType::Float64).host<double>(), torch_values(torch_result), value_tol);
+  require_close(la.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(ta.grad()), grad_tol);
+  require_close(lb.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(tb.grad()), grad_tol);
 }
 
 TEST_CASE("generated CPU binary reverse rules match libtorch",
@@ -916,9 +916,9 @@ void check_binary_reverse_lowp(const BinaryReverseCase& test, ScalarType st, dou
     lb.tracks_slope_(true);
     const Series out = test.pluss_op(la, lb);
     out.sum().reverse();
-    da = la.sensitivity().to(ScalarType::Float64).to_vec<double>();
-    db = lb.sensitivity().to(ScalarType::Float64).to_vec<double>();
-    return out.to(ScalarType::Float64).to_vec<double>();
+    da = la.sensitivity().to(ScalarType::Float64).host<double>();
+    db = lb.sensitivity().to(ScalarType::Float64).host<double>();
+    return out.to(ScalarType::Float64).host<double>();
   };
   std::vector<double> lowp_ga, lowp_gb, ref_ga, ref_gb;
   const auto lowp_v = run(st, lowp_ga, lowp_gb);
@@ -1036,8 +1036,8 @@ void check_shaped_reverse(const ShapedCase& c, ScalarType st, at::ScalarType at_
   const at::Tensor torch_result = c.torch_op(tv(torch_leaf));
   torch_result.sum().backward();
 
-  require_close(result.to(ScalarType::Float64).to_vec<double>(), torch_values(torch_result), value_tol);
-  require_close(pluss_leaf.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+  require_close(result.to(ScalarType::Float64).host<double>(), torch_values(torch_result), value_tol);
+  require_close(pluss_leaf.sensitivity().to(ScalarType::Float64).host<double>(),
                 torch_values(torch_leaf.grad()), grad_tol);
 }
 
@@ -1141,7 +1141,7 @@ void check_linalg_real_reverse(const LinalgCase& c, ScalarType st, at::ScalarTyp
   at::Tensor tout = c.torch_op(tv(tleaf));
   tout.sum().backward();
 
-  require_close(leaf.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+  require_close(leaf.sensitivity().to(ScalarType::Float64).host<double>(),
                 torch_values(tleaf.grad()), grad_tol);
 }
 
@@ -1200,7 +1200,7 @@ void check_linalg_batched_reverse(const LinalgCase& c, double grad_tol) {
       at::tensor(data, at::TensorOptions().dtype(at::kDouble)).reshape({B, N, N}).set_requires_grad(true);
   c.torch_op(tleaf).sum().backward();
 
-  require_close(leaf.sensitivity().to_vec<double>(), torch_values(tleaf.grad()), grad_tol);
+  require_close(leaf.sensitivity().host<double>(), torch_values(tleaf.grad()), grad_tol);
 }
 
 TEST_CASE("CPU batched linalg reverse matches libtorch", "[autodiff][parity][cpu][torch][linalg][batched]") {
@@ -1234,10 +1234,10 @@ TEST_CASE("CPU batched matmul chain reverse matches libtorch",
   const at::Tensor tout = tx.matmul(tw).add(tb).tanh();
   tout.sum().backward();
 
-  require_close(out.to_vec<double>(), torch_values(tout), 2e-11);
-  require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-10);
-  require_close(w.sensitivity().to_vec<double>(), torch_values(tw.grad()), 2e-10);
-  require_close(b.sensitivity().to_vec<double>(), torch_values(tb.grad()), 2e-10);
+  require_close(out.host<double>(), torch_values(tout), 2e-11);
+  require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-10);
+  require_close(w.sensitivity().host<double>(), torch_values(tw.grad()), 2e-10);
+  require_close(b.sensitivity().host<double>(), torch_values(tb.grad()), 2e-10);
 }
 
 // Multi-axis reduction (`x.sum({1,2}, keepdim)` etc.) -- added to close the gap
@@ -1273,8 +1273,8 @@ TEST_CASE("CPU multi-axis reduction reverse matches libtorch",
                                                         : tx.amin(cfg.dims, cfg.keepdim);
       ty.mul(ty).sum().backward();
 
-      require_close(y.to_vec<double>(), torch_values(ty), 2e-10);
-      require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-9);
+      require_close(y.host<double>(), torch_values(ty), 2e-10);
+      require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-9);
     }
   }
 }
@@ -1342,7 +1342,7 @@ TEST_CASE("CPU fused-activation double-backward matches libtorch",
       x.clear();
       g1.sum().reverse();
       REQUIRE(x.has_sensitivity());
-      const auto got_g2 = x.sensitivity().to_vec<double>();
+      const auto got_g2 = x.sensitivity().host<double>();
 
       at::Tensor tx = at::tensor(xv, at::TensorOptions().dtype(at::kDouble)).set_requires_grad(true);
       at::Tensor ty = c.top(tx);
@@ -1414,9 +1414,9 @@ void check_broadcast_reverse(const BroadcastCase& c,
   const at::Tensor tout = top(ta, tb);
   tout.sum().backward();
 
-  require_close(out.to_vec<double>(), torch_values(tout), tol);
-  require_close(a.sensitivity().to_vec<double>(), torch_values(ta.grad()), tol);
-  require_close(b.sensitivity().to_vec<double>(), torch_values(tb.grad()), tol);
+  require_close(out.host<double>(), torch_values(tout), tol);
+  require_close(a.sensitivity().host<double>(), torch_values(ta.grad()), tol);
+  require_close(b.sensitivity().host<double>(), torch_values(tb.grad()), tol);
 }
 
 TEST_CASE("CPU binary broadcasting reverse matches libtorch across shape combinations",
@@ -1470,7 +1470,7 @@ TEST_CASE("CPU QR reverse matches libtorch in float64 and float32",
         auto [torch_q, torch_r] = at::linalg_qr(torch_input, "reduced");
         (q_path ? torch_q : torch_r).sum().backward();
 
-        require_close(input.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+        require_close(input.sensitivity().to(ScalarType::Float64).host<double>(),
                       torch_values(torch_input.grad()), dt.first == ScalarType::Float64 ? 2e-9 : 3e-3);
       }
     }
@@ -1492,9 +1492,9 @@ TEST_CASE("CPU SVD singular-value reverse matches libtorch in float64 and float3
       auto [torch_u, torch_s, torch_vh] = at::linalg_svd(torch_input, false);
       torch_s.sum().backward();
 
-      require_close(s.to(ScalarType::Float64).to_vec<double>(), torch_values(torch_s),
+      require_close(s.to(ScalarType::Float64).host<double>(), torch_values(torch_s),
                     dt.first == ScalarType::Float64 ? 2e-10 : 3e-4);
-      require_close(input.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+      require_close(input.sensitivity().to(ScalarType::Float64).host<double>(),
                     torch_values(torch_input.grad()), dt.first == ScalarType::Float64 ? 2e-9 : 3e-3);
     }
   }
@@ -1521,10 +1521,10 @@ TEST_CASE("CPU triangular_solve reverse matches libtorch in float64 and float32"
       tx.sum().backward();
 
       const double tol = dt.first == ScalarType::Float64 ? 2e-9 : 3e-3;
-      require_close(x.to(ScalarType::Float64).to_vec<double>(), torch_values(tx), tol);
-      require_close(factor.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+      require_close(x.to(ScalarType::Float64).host<double>(), torch_values(tx), tol);
+      require_close(factor.sensitivity().to(ScalarType::Float64).host<double>(),
                     torch_values(tfactor.grad()), tol);
-      require_close(rhs.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+      require_close(rhs.sensitivity().to(ScalarType::Float64).host<double>(),
                     torch_values(trhs.grad()), tol);
     }
   }
@@ -1563,10 +1563,10 @@ TEST_CASE("CPU layer-norm chain matches libtorch value and reverse",
   const at::Tensor tout = at::layer_norm(tx, {D}, tg, tb, eps);
   tout.sum().backward();
 
-  require_close(out.to_vec<double>(), torch_values(tout), 2e-9);
-  require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-8);
-  require_close(g.sensitivity().to_vec<double>(), torch_values(tg.grad()), 2e-8);
-  require_close(b.sensitivity().to_vec<double>(), torch_values(tb.grad()), 2e-8);
+  require_close(out.host<double>(), torch_values(tout), 2e-9);
+  require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-8);
+  require_close(g.sensitivity().host<double>(), torch_values(tg.grad()), 2e-8);
+  require_close(b.sensitivity().host<double>(), torch_values(tb.grad()), 2e-8);
 }
 
 // The fused layer_norm's weight/bias gradients reduce over EVERY leading
@@ -1597,10 +1597,10 @@ TEST_CASE("CPU batched layer-norm reverse matches libtorch across leading dims",
   const at::Tensor tout = at::layer_norm(tx, {D}, tg, tb, eps);
   tout.mul(tout).sum().backward();
 
-  require_close(out.to_vec<double>(), torch_values(tout), 2e-9);
-  require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-8);
-  require_close(g.sensitivity().to_vec<double>(), torch_values(tg.grad()), 2e-8);
-  require_close(b.sensitivity().to_vec<double>(), torch_values(tb.grad()), 2e-8);
+  require_close(out.host<double>(), torch_values(tout), 2e-9);
+  require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-8);
+  require_close(g.sensitivity().host<double>(), torch_values(tg.grad()), 2e-8);
+  require_close(b.sensitivity().host<double>(), torch_values(tb.grad()), 2e-8);
 }
 
 TEST_CASE("CPU layer-norm double-backward matches libtorch",
@@ -1634,7 +1634,7 @@ TEST_CASE("CPU layer-norm double-backward matches libtorch",
   b.clear();
   gx1.sum().add(gg1.sum()).add(gb1.sum()).reverse();
   REQUIRE(x.has_sensitivity());
-  const auto got_gx2 = x.sensitivity().to_vec<double>();
+  const auto got_gx2 = x.sensitivity().host<double>();
 
   auto opt = at::TensorOptions().dtype(at::kDouble);
   at::Tensor tx = at::tensor(xv, opt).reshape({B, D}).set_requires_grad(true);
@@ -1698,7 +1698,7 @@ TEST_CASE("CPU elu family value/reverse/double-backward matches libtorch",
       x.clear();
       g1.sum().reverse();
       REQUIRE(x.has_sensitivity());
-      const auto got_g2 = x.sensitivity().to_vec<double>();
+      const auto got_g2 = x.sensitivity().host<double>();
 
       at::Tensor tx = at::tensor(xv, at::TensorOptions().dtype(at::kDouble)).set_requires_grad(true);
       at::Tensor ty = c.top(tx);
@@ -1707,8 +1707,8 @@ TEST_CASE("CPU elu family value/reverse/double-backward matches libtorch",
       at::Tensor tg1 = tx.grad();
       REQUIRE(tg1.defined());
 
-      require_close(y.to_vec<double>(), torch_values(ty), 2e-10);
-      require_close(g1.to_vec<double>(), torch_values(tg1), 2e-9);
+      require_close(y.host<double>(), torch_values(ty), 2e-10);
+      require_close(g1.host<double>(), torch_values(tg1), 2e-9);
 
       tx.mutable_grad() = at::Tensor();
       tg1.sum().backward();
@@ -1741,8 +1741,8 @@ TEST_CASE("CPU hardsigmoid value/reverse matches libtorch",
   const at::Tensor ty = at::hardsigmoid(tx);
   ty.sum().backward();
 
-  require_close(y.to_vec<double>(), torch_values(ty), 2e-12);
-  require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-12);
+  require_close(y.host<double>(), torch_values(ty), 2e-12);
+  require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-12);
 }
 
 TEST_CASE("CPU hardswish/mish value/reverse/double-backward matches libtorch",
@@ -1779,7 +1779,7 @@ TEST_CASE("CPU hardswish/mish value/reverse/double-backward matches libtorch",
       x.clear();
       g1.sum().reverse();
       REQUIRE(x.has_sensitivity());
-      const auto got_g2 = x.sensitivity().to_vec<double>();
+      const auto got_g2 = x.sensitivity().host<double>();
 
       at::Tensor tx = at::tensor(xv, at::TensorOptions().dtype(at::kDouble)).set_requires_grad(true);
       at::Tensor ty = c.top(tx);
@@ -1788,8 +1788,8 @@ TEST_CASE("CPU hardswish/mish value/reverse/double-backward matches libtorch",
       at::Tensor tg1 = tx.grad();
       REQUIRE(tg1.defined());
 
-      require_close(y.to_vec<double>(), torch_values(ty), 2e-10);
-      require_close(g1.to_vec<double>(), torch_values(tg1), 2e-9);
+      require_close(y.host<double>(), torch_values(ty), 2e-10);
+      require_close(g1.host<double>(), torch_values(tg1), 2e-9);
 
       tx.mutable_grad() = at::Tensor();
       tg1.sum().backward();
@@ -1816,8 +1816,8 @@ TEST_CASE("CPU threshold value/reverse matches libtorch",
   const at::Tensor ty = at::threshold(tx, 0.0, -1.0);
   ty.sum().backward();
 
-  require_close(y.to_vec<double>(), torch_values(ty), 2e-12);
-  require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-12);
+  require_close(y.host<double>(), torch_values(ty), 2e-12);
+  require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-12);
 }
 
 // rrelu's random branch can't be checked bit-for-bit against libtorch (the
@@ -1843,8 +1843,8 @@ TEST_CASE("CPU rrelu eval mode matches libtorch; training mode is self-consisten
     const at::Tensor ty = at::rrelu(tx, 0.2, 0.8, false);
     ty.sum().backward();
 
-    require_close(y.to_vec<double>(), torch_values(ty), 2e-12);
-    require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-12);
+    require_close(y.host<double>(), torch_values(ty), 2e-12);
+    require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-12);
   }
 
   SECTION("training mode reproduces its own realized per-element slope in backward") {
@@ -1853,9 +1853,9 @@ TEST_CASE("CPU rrelu eval mode matches libtorch; training mode is self-consisten
     const Series y = x.rrelu(0.2, 0.8, true);
     y.sum().reverse();
 
-    const auto xs = x.to_vec<double>();
-    const auto ys = y.to_vec<double>();
-    const auto got_g = x.sensitivity().to_vec<double>();
+    const auto xs = x.host<double>();
+    const auto ys = y.host<double>();
+    const auto got_g = x.sensitivity().host<double>();
     std::vector<double> expected_g(xs.size());
     for (std::size_t i = 0; i < xs.size(); ++i) {
       if (xs[i] > 0.0) {
@@ -1892,8 +1892,8 @@ TEST_CASE("CPU cross-entropy chain matches libtorch value and reverse",
   const at::Tensor tloss = at::cross_entropy_loss(tlogits, ttarget);
   tloss.backward();
 
-  require_close(loss.to_vec<double>(), torch_values(tloss), 2e-11);
-  require_close(logits.sensitivity().to_vec<double>(), torch_values(tlogits.grad()), 2e-10);
+  require_close(loss.host<double>(), torch_values(tloss), 2e-11);
+  require_close(logits.sensitivity().host<double>(), torch_values(tlogits.grad()), 2e-10);
 }
 
 TEST_CASE("CPU embedding lookup matches libtorch value and reverse",
@@ -1914,8 +1914,8 @@ TEST_CASE("CPU embedding lookup matches libtorch value and reverse",
   const at::Tensor tout = at::embedding(ttable, tidx);
   tout.mul(tout).sum().backward();
 
-  require_close(out.to_vec<double>(), torch_values(tout), 2e-11);
-  require_close(table.sensitivity().to_vec<double>(), torch_values(ttable.grad()), 2e-10);
+  require_close(out.host<double>(), torch_values(tout), 2e-11);
+  require_close(table.sensitivity().host<double>(), torch_values(ttable.grad()), 2e-10);
 }
 
 // Composite ops (no primitive-rule entry): their gradient is assembled from
@@ -2039,8 +2039,8 @@ void check_index_family(const IndexCase& c, ScalarType st, at::ScalarType at_st,
   const at::Tensor tout = c.torch_op(ts);
   tout.sum().backward();
 
-  require_close(out.to(ScalarType::Float64).to_vec<double>(), torch_values(tout), value_tol);
-  require_close(s.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+  require_close(out.to(ScalarType::Float64).host<double>(), torch_values(tout), value_tol);
+  require_close(s.sensitivity().to(ScalarType::Float64).host<double>(),
                 torch_values(ts.grad()), grad_tol);
 }
 
@@ -2093,11 +2093,11 @@ TEST_CASE("CPU _addmm_activation matches libtorch value and decomposed reverse",
           use_gelu ? at::gelu(linear, "none") : at::relu(linear);
       decomposed.sum().backward();
 
-      require_close(out.to_vec<double>(), torch_values(fused), 2e-12);
-      require_close(out.to_vec<double>(), torch_values(decomposed), 2e-12);
-      require_close(bias.sensitivity().to_vec<double>(), torch_values(gb.grad()), 2e-11);
-      require_close(m1.sensitivity().to_vec<double>(), torch_values(g1.grad()), 2e-11);
-      require_close(m2.sensitivity().to_vec<double>(), torch_values(g2.grad()), 2e-11);
+      require_close(out.host<double>(), torch_values(fused), 2e-12);
+      require_close(out.host<double>(), torch_values(decomposed), 2e-12);
+      require_close(bias.sensitivity().host<double>(), torch_values(gb.grad()), 2e-11);
+      require_close(m1.sensitivity().host<double>(), torch_values(g1.grad()), 2e-11);
+      require_close(m2.sensitivity().host<double>(), torch_values(g2.grad()), 2e-11);
     }
   }
 }
@@ -2122,8 +2122,8 @@ TEST_CASE("CPU argless nan_to_num reverse matches libtorch across non-finite lan
   at::Tensor torch_result = torch_input.nan_to_num();
   torch_result.sum().backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result), 0.0);
-  require_close(input.sensitivity().to_vec<double>(),
+  require_close(result.host<double>(), torch_values(torch_result), 0.0);
+  require_close(input.sensitivity().host<double>(),
                 torch_values(torch_input.grad()), 2e-12);
 }
 
@@ -2179,9 +2179,9 @@ void check_complex_unary_reverse(const ComplexUnaryCase& test, ScalarType st,
   at::Tensor torch_result = test.torch_op(torch_input);
   torch_result.backward(torch_seed);
 
-  require_complex_close(result.to(ScalarType::Complex128).to_vec<std::complex<double>>(),
+  require_complex_close(result.to(ScalarType::Complex128).host<std::complex<double>>(),
                         torch_complex_values(torch_result), margin);
-  require_complex_close(input.sensitivity().to(ScalarType::Complex128).to_vec<std::complex<double>>(),
+  require_complex_close(input.sensitivity().to(ScalarType::Complex128).host<std::complex<double>>(),
                         torch_complex_values(torch_input.grad()), margin);
 }
 
@@ -2247,10 +2247,10 @@ TEST_CASE("generated complex binary reverse rules conjugate like libtorch",
       at::Tensor torch_result = test.torch_op(torch_lhs, torch_rhs);
       torch_result.backward(torch_seed);
 
-      require_complex_close(result.to_vec<std::complex<double>>(), torch_complex_values(torch_result));
-      require_complex_close(lhs.sensitivity().to_vec<std::complex<double>>(),
+      require_complex_close(result.host<std::complex<double>>(), torch_complex_values(torch_result));
+      require_complex_close(lhs.sensitivity().host<std::complex<double>>(),
                             torch_complex_values(torch_lhs.grad()));
-      require_complex_close(rhs.sensitivity().to_vec<std::complex<double>>(),
+      require_complex_close(rhs.sensitivity().host<std::complex<double>>(),
                             torch_complex_values(torch_rhs.grad()));
     }
   }
@@ -2288,9 +2288,9 @@ TEST_CASE("CPU scatter_reduce reverse matches libtorch for every reduction",
             0, torch_index, torch_source, test.reduce, include_self);
         torch_result.sum().backward();
 
-        require_close(result.to_vec<double>(), torch_values(torch_result));
-        require_close(receiver.sensitivity().to_vec<double>(), torch_values(torch_receiver.grad()));
-        require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+        require_close(result.host<double>(), torch_values(torch_result));
+        require_close(receiver.sensitivity().host<double>(), torch_values(torch_receiver.grad()));
+        require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
       }
     }
   }
@@ -2320,10 +2320,10 @@ TEST_CASE("CPU dense training chain matches libtorch through broadcasting and ma
   at::Tensor torch_result = torch_x.matmul(torch_w).add(torch_b).tanh().square().mean();
   torch_result.backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result));
-  require_close(x.sensitivity().to_vec<double>(), torch_values(torch_x.grad()));
-  require_close(w.sensitivity().to_vec<double>(), torch_values(torch_w.grad()));
-  require_close(b.sensitivity().to_vec<double>(), torch_values(torch_b.grad()));
+  require_close(result.host<double>(), torch_values(torch_result));
+  require_close(x.sensitivity().host<double>(), torch_values(torch_x.grad()));
+  require_close(w.sensitivity().host<double>(), torch_values(torch_w.grad()));
+  require_close(b.sensitivity().host<double>(), torch_values(torch_b.grad()));
 }
 
 TEST_CASE("CPU embedding-style indexing and views match libtorch reverse",
@@ -2353,8 +2353,8 @@ TEST_CASE("CPU embedding-style indexing and views match libtorch reverse",
                                    .sum();
   torch_result.backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result));
-  require_close(table.sensitivity().to_vec<double>(), torch_values(torch_table.grad()));
+  require_close(result.host<double>(), torch_values(torch_result));
+  require_close(table.sensitivity().host<double>(), torch_values(torch_table.grad()));
 }
 
 TEST_CASE("CPU softmax and gather training chain matches libtorch reverse",
@@ -2382,9 +2382,9 @@ TEST_CASE("CPU softmax and gather training chain matches libtorch reverse",
   at::Tensor torch_result = torch_logits.softmax(1).gather(1, torch_gather).mul(torch_weights).sum();
   torch_result.backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result));
-  require_close(logits.sensitivity().to_vec<double>(), torch_values(torch_logits.grad()));
-  require_close(weights.sensitivity().to_vec<double>(), torch_values(torch_weights.grad()));
+  require_close(result.host<double>(), torch_values(torch_result));
+  require_close(logits.sensitivity().host<double>(), torch_values(torch_logits.grad()));
+  require_close(weights.sensitivity().host<double>(), torch_values(torch_weights.grad()));
 }
 
 // A small classification-head chain -- matmul + broadcast-add + tanh + softmax
@@ -2446,12 +2446,12 @@ void check_head_chain(ScalarType st, at::ScalarType at_st, bool strided_x,
   const at::Tensor tloss = tlogits.softmax(1).log().mul(tt).neg().sum();
   tloss.backward();
 
-  require_close(loss.to(ScalarType::Float64).to_vec<double>(), torch_values(tloss), value_tol);
-  require_close(x_leaf.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+  require_close(loss.to(ScalarType::Float64).host<double>(), torch_values(tloss), value_tol);
+  require_close(x_leaf.sensitivity().to(ScalarType::Float64).host<double>(),
                 torch_values(tx_leaf.grad()), grad_tol);
-  require_close(w.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+  require_close(w.sensitivity().to(ScalarType::Float64).host<double>(),
                 torch_values(tw.grad()), grad_tol);
-  require_close(b.sensitivity().to(ScalarType::Float64).to_vec<double>(),
+  require_close(b.sensitivity().to(ScalarType::Float64).host<double>(),
                 torch_values(tb.grad()), grad_tol);
 }
 
@@ -2478,9 +2478,9 @@ TEST_CASE("CPU matmul reverse reaches a transposed (non-contiguous) input leaf",
   const at::Tensor tout = txt.transpose(0, 1).matmul(tw).sum();
   tout.backward();
 
-  require_close(out.to_vec<double>(), torch_values(tout), 2e-12);
-  require_close(xt.sensitivity().to_vec<double>(), torch_values(txt.grad()), 2e-11);
-  require_close(w.sensitivity().to_vec<double>(), torch_values(tw.grad()), 2e-11);
+  require_close(out.host<double>(), torch_values(tout), 2e-12);
+  require_close(xt.sensitivity().host<double>(), torch_values(txt.grad()), 2e-11);
+  require_close(w.sensitivity().host<double>(), torch_values(tw.grad()), 2e-11);
 }
 
 TEST_CASE("CPU stft matches libtorch value and reverse",
@@ -2516,9 +2516,9 @@ TEST_CASE("CPU stft matches libtorch value and reverse",
                                         c.normalized, c.onesided, true);
       tspec.abs().sum().backward();
 
-      require_close(spec.abs().to(ScalarType::Float64).to_vec<double>(),
+      require_close(spec.abs().to(ScalarType::Float64).host<double>(),
                     torch_values(tspec.abs()), 2e-10);
-      require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-9);
+      require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-9);
     }
   }
 }
@@ -2543,8 +2543,8 @@ TEST_CASE("CPU istft round-trips and matches libtorch reverse",
           at::istft(tspec, n_fft, hop, n_fft, std::nullopt, true, normalized, true, T, false);
       trecon.mul(trecon).sum().backward();
 
-      require_close(recon.to_vec<double>(), torch_values(trecon), 2e-9);
-      require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-8);
+      require_close(recon.host<double>(), torch_values(trecon), 2e-9);
+      require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-8);
     }
   }
 }
@@ -2584,8 +2584,8 @@ TEST_CASE("CPU view expansion and activation chain matches libtorch reverse",
   at::Tensor torch_result = at::gelu(at::softplus(torch_view, 1.2, 20.0)).mean();
   torch_result.backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result), 2e-12);
-  require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()), 2e-11);
+  require_close(result.host<double>(), torch_values(torch_result), 2e-12);
+  require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()), 2e-11);
 }
 
 TEST_CASE("CPU reductions and overlapping views match libtorch reverse",
@@ -2607,8 +2607,8 @@ TEST_CASE("CPU reductions and overlapping views match libtorch reverse",
                                 .add(torch_input.unfold(1, 2, 1).square().mean());
   torch_result.backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result), 2e-12);
-  require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()), 2e-11);
+  require_close(result.host<double>(), torch_values(torch_result), 2e-12);
+  require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()), 2e-11);
 }
 
 TEST_CASE("CPU prod reverse matches libtorch including zero lanes",
@@ -2640,8 +2640,8 @@ TEST_CASE("CPU prod reverse matches libtorch including zero lanes",
       at::Tensor torch_result = c.t(torch_input).sum();
       torch_result.backward();
 
-      require_close(result.to_vec<double>(), torch_values(torch_result), 2e-12);
-      require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()), 2e-11);
+      require_close(result.host<double>(), torch_values(torch_result), 2e-12);
+      require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()), 2e-11);
     }
   }
 }
@@ -2671,9 +2671,9 @@ TEST_CASE("CPU minimum and maximum split tie gradients like libtorch",
           : at::minimum(torch_lhs, torch_rhs);
       torch_result.sum().backward();
 
-      require_close(result.to_vec<double>(), torch_values(torch_result));
-      require_close(lhs.sensitivity().to_vec<double>(), torch_values(torch_lhs.grad()));
-      require_close(rhs.sensitivity().to_vec<double>(), torch_values(torch_rhs.grad()));
+      require_close(result.host<double>(), torch_values(torch_result));
+      require_close(lhs.sensitivity().host<double>(), torch_values(torch_lhs.grad()));
+      require_close(rhs.sensitivity().host<double>(), torch_values(torch_rhs.grad()));
     }
   }
 }
@@ -2693,8 +2693,8 @@ TEST_CASE("CPU clamp propagates NaN and keeps inclusive boundary gradients",
   at::Tensor torch_result = torch_input.clamp(-0.5, 0.5);
   torch_result.sum().backward();
 
-  require_close(result.to_vec<double>(), torch_values(torch_result));
-  require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+  require_close(result.host<double>(), torch_values(torch_result));
+  require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
 }
 
 TEST_CASE("CPU fmin and fmax match libtorch tie and NaN gradient routing",
@@ -2720,9 +2720,9 @@ TEST_CASE("CPU fmin and fmax match libtorch tie and NaN gradient routing",
           : at::fmin(torch_lhs, torch_rhs);
       torch_result.sum().backward();
 
-      require_close(result.to_vec<double>(), torch_values(torch_result));
-      require_close(lhs.sensitivity().to_vec<double>(), torch_values(torch_lhs.grad()));
-      require_close(rhs.sensitivity().to_vec<double>(), torch_values(torch_rhs.grad()));
+      require_close(result.host<double>(), torch_values(torch_result));
+      require_close(lhs.sensitivity().host<double>(), torch_values(torch_lhs.grad()));
+      require_close(rhs.sensitivity().host<double>(), torch_values(torch_rhs.grad()));
     }
   }
 }
@@ -2752,9 +2752,9 @@ TEST_CASE("CPU index_reduce extrema ties match libtorch with and without the rec
             torch_base.index_reduce(0, torch_index, torch_source, reduce, include_self);
         torch_output.sum().backward();
 
-        require_close(output.to_vec<double>(), torch_values(torch_output));
-        require_close(base.sensitivity().to_vec<double>(), torch_values(torch_base.grad()));
-        require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+        require_close(output.host<double>(), torch_values(torch_output));
+        require_close(base.sensitivity().host<double>(), torch_values(torch_base.grad()));
+        require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
       }
     }
   }
@@ -2785,9 +2785,9 @@ TEST_CASE("CPU masked scatter routes receiver and source gradients like libtorch
   const at::Tensor torch_output = torch_receiver.masked_scatter(torch_mask, torch_source);
   torch_output.backward(at::tensor(seed_values, options).reshape({2, 3}));
 
-  require_close(output.to_vec<double>(), torch_values(torch_output));
-  require_close(receiver.sensitivity().to_vec<double>(), torch_values(torch_receiver.grad()));
-  require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+  require_close(output.host<double>(), torch_values(torch_output));
+  require_close(receiver.sensitivity().host<double>(), torch_values(torch_receiver.grad()));
+  require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
 }
 
 TEST_CASE("CPU masked select scatters compact cotangents like libtorch",
@@ -2813,8 +2813,8 @@ TEST_CASE("CPU masked select scatters compact cotangents like libtorch",
     const at::Tensor torch_output = torch_input.masked_select(torch_mask);
     torch_output.sum().backward();
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 }
 
@@ -2843,9 +2843,9 @@ TEST_CASE("CPU non-leaf in-place indexed writes preserve reverse graphs like lib
     torch_value.scatter_add_(1, torch_index, torch_source);
     torch_value.backward(at::tensor(seed_values, options).reshape({2, 2}));
 
-    require_close(value.to_vec<double>(), torch_values(torch_value));
-    require_close(leaf.sensitivity().to_vec<double>(), torch_values(torch_leaf.grad()));
-    require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+    require_close(value.host<double>(), torch_values(torch_value));
+    require_close(leaf.sensitivity().host<double>(), torch_values(torch_leaf.grad()));
+    require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
   }
 
   SECTION("scatter_") {
@@ -2865,9 +2865,9 @@ TEST_CASE("CPU non-leaf in-place indexed writes preserve reverse graphs like lib
     torch_value.scatter_(1, torch_index, torch_source);
     torch_value.backward(at::tensor(seed_values, options).reshape({2, 2}));
 
-    require_close(value.to_vec<double>(), torch_values(torch_value));
-    require_close(leaf.sensitivity().to_vec<double>(), torch_values(torch_leaf.grad()));
-    require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+    require_close(value.host<double>(), torch_values(torch_value));
+    require_close(leaf.sensitivity().host<double>(), torch_values(torch_leaf.grad()));
+    require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
   }
 
   SECTION("masked_scatter_") {
@@ -2890,9 +2890,9 @@ TEST_CASE("CPU non-leaf in-place indexed writes preserve reverse graphs like lib
     torch_value.masked_scatter_(torch_mask, torch_source);
     torch_value.backward(at::tensor(seed_values, options).reshape({2, 2}));
 
-    require_close(value.to_vec<double>(), torch_values(torch_value));
-    require_close(leaf.sensitivity().to_vec<double>(), torch_values(torch_leaf.grad()));
-    require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+    require_close(value.host<double>(), torch_values(torch_value));
+    require_close(leaf.sensitivity().host<double>(), torch_values(torch_leaf.grad()));
+    require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
   }
 }
 
@@ -2955,7 +2955,7 @@ TEST_CASE("CPU version counter catches a saved tensor mutated after save like li
     ty.add_(10.0);
     tz.backward(at::tensor(seed, options));
 
-    require_close(x.sensitivity().to_vec<double>(), torch_values(tx.grad()), 2e-12);
+    require_close(x.sensitivity().host<double>(), torch_values(tx.grad()), 2e-12);
   }
 
   SECTION("mutating a genuinely-saved operand still throws (mul, both tracked)") {
@@ -2993,9 +2993,9 @@ TEST_CASE("CPU axis-index writes preserve both reverse paths like libtorch",
     const at::Tensor torch_output = torch_receiver.index_add(0, torch_index, torch_source, 1.7);
     torch_output.backward(at::tensor(seed_values, options));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(receiver.sensitivity().to_vec<double>(), torch_values(torch_receiver.grad()));
-    require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(receiver.sensitivity().host<double>(), torch_values(torch_receiver.grad()));
+    require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
   }
 
   SECTION("index_copy non-leaf in-place") {
@@ -3015,9 +3015,9 @@ TEST_CASE("CPU axis-index writes preserve both reverse paths like libtorch",
     torch_value.index_copy_(0, torch_index, torch_source);
     torch_value.backward(at::tensor(seed_values, options));
 
-    require_close(value.to_vec<double>(), torch_values(torch_value));
-    require_close(leaf.sensitivity().to_vec<double>(), torch_values(torch_leaf.grad()));
-    require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+    require_close(value.host<double>(), torch_values(torch_value));
+    require_close(leaf.sensitivity().host<double>(), torch_values(torch_leaf.grad()));
+    require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
   }
 
   SECTION("index_fill non-leaf in-place") {
@@ -3034,8 +3034,8 @@ TEST_CASE("CPU axis-index writes preserve both reverse paths like libtorch",
     torch_value.index_fill_(0, torch_index, -3.0);
     torch_value.backward(at::tensor(seed_values, options));
 
-    require_close(value.to_vec<double>(), torch_values(torch_value));
-    require_close(leaf.sensitivity().to_vec<double>(), torch_values(torch_leaf.grad()));
+    require_close(value.host<double>(), torch_values(torch_value));
+    require_close(leaf.sensitivity().host<double>(), torch_values(torch_leaf.grad()));
   }
 
   SECTION("index_reduce mean non-leaf in-place") {
@@ -3057,9 +3057,9 @@ TEST_CASE("CPU axis-index writes preserve both reverse paths like libtorch",
     torch_value.index_reduce_(0, torch_index, torch_source, "mean", true);
     torch_value.backward(at::tensor(seed_values, options));
 
-    require_close(value.to_vec<double>(), torch_values(torch_value));
-    require_close(leaf.sensitivity().to_vec<double>(), torch_values(torch_leaf.grad()));
-    require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+    require_close(value.host<double>(), torch_values(torch_value));
+    require_close(leaf.sensitivity().host<double>(), torch_values(torch_leaf.grad()));
+    require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
   }
 }
 
@@ -3089,9 +3089,9 @@ TEST_CASE("CPU index_put replacement and accumulation reverse match libtorch",
           torch_receiver.index_put({torch_index}, torch_source, accumulate);
       torch_output.backward(at::tensor(seed_values, options));
 
-      require_close(output.to_vec<double>(), torch_values(torch_output));
-      require_close(receiver.sensitivity().to_vec<double>(), torch_values(torch_receiver.grad()));
-      require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+      require_close(output.host<double>(), torch_values(torch_output));
+      require_close(receiver.sensitivity().host<double>(), torch_values(torch_receiver.grad()));
+      require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
     }
   }
 
@@ -3113,9 +3113,9 @@ TEST_CASE("CPU index_put replacement and accumulation reverse match libtorch",
     torch_value.index_put_({torch_index}, torch_source, false);
     torch_value.backward(at::tensor(seed_values, options));
 
-    require_close(value.to_vec<double>(), torch_values(torch_value));
-    require_close(leaf.sensitivity().to_vec<double>(), torch_values(torch_leaf.grad()));
-    require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+    require_close(value.host<double>(), torch_values(torch_value));
+    require_close(leaf.sensitivity().host<double>(), torch_values(torch_leaf.grad()));
+    require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
   }
 
   SECTION("tracked leaf in-place write rejects") {
@@ -3149,8 +3149,8 @@ TEST_CASE("CPU as_strided reverse follows libtorch overlap geometry",
     const at::Tensor torch_output = torch_input.as_strided({3, 2}, {1, 1}, 0);
     torch_output.backward(at::tensor(seed_values, options).reshape({3, 2}));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("zero-stride expansion") {
@@ -3165,8 +3165,8 @@ TEST_CASE("CPU as_strided reverse follows libtorch overlap geometry",
     const at::Tensor torch_output = torch_input.as_strided({3, 2}, {0, 1}, 0);
     torch_output.backward(at::tensor(seed_values, options).reshape({3, 2}));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("view of overlapping view") {
@@ -3183,8 +3183,8 @@ TEST_CASE("CPU as_strided reverse follows libtorch overlap geometry",
     const at::Tensor torch_output = torch_expanded.as_strided({2, 2}, {1, 0}, 0);
     torch_output.backward(at::tensor(seed_values, options).reshape({2, 2}));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 }
 
@@ -3211,9 +3211,9 @@ TEST_CASE("CPU as_strided_scatter preserves receiver and source reverse paths",
           torch_receiver.as_strided_scatter(torch_source, {2, 2}, {3, 1}, offset);
       torch_output.backward(at::tensor(seed_values, options));
 
-      require_close(output.to_vec<double>(), torch_values(torch_output));
-      require_close(receiver.sensitivity().to_vec<double>(), torch_values(torch_receiver.grad()));
-      require_close(source.sensitivity().to_vec<double>(), torch_values(torch_source.grad()));
+      require_close(output.host<double>(), torch_values(torch_output));
+      require_close(receiver.sensitivity().host<double>(), torch_values(torch_receiver.grad()));
+      require_close(source.sensitivity().host<double>(), torch_values(torch_source.grad()));
     }
   }
 
@@ -3248,8 +3248,8 @@ TEST_CASE("CPU value selections and finite replacement preserve operation-level 
     const at::Tensor torch_output = std::get<0>(torch_input.topk(2, 1, true, false));
     torch_output.backward(at::tensor(seed_values, options).reshape({2, 2}));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("kthvalue keepdim false") {
@@ -3264,8 +3264,8 @@ TEST_CASE("CPU value selections and finite replacement preserve operation-level 
     const at::Tensor torch_output = std::get<0>(torch_input.kthvalue(2, 1, false));
     torch_output.backward(at::tensor(seed_values, options));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("nan_to_num") {
@@ -3282,8 +3282,8 @@ TEST_CASE("CPU value selections and finite replacement preserve operation-level 
     const at::Tensor torch_output = torch_input.nan_to_num(9.0, 7.0, -7.0);
     torch_output.backward(at::tensor(seed_values, options));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 }
 
@@ -3309,8 +3309,8 @@ TEST_CASE("CPU cumprod reverse matches libtorch across zero topology",
       const at::Tensor torch_output = torch_input.cumprod(1);
       torch_output.backward(at::tensor(seed_values, options).reshape({2, 3}));
 
-      require_close(output.to_vec<double>(), torch_values(torch_output));
-      require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+      require_close(output.host<double>(), torch_values(torch_output));
+      require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
     }
   }
 
@@ -3333,9 +3333,9 @@ TEST_CASE("CPU cumprod reverse matches libtorch across zero topology",
     const at::Tensor torch_output = torch_input.cumprod(0);
     torch_output.backward(torch_complex_series(torch_seed_values_complex, {4}));
 
-    require_complex_close(output.to_vec<std::complex<double>>(),
+    require_complex_close(output.host<std::complex<double>>(),
                           torch_complex_values(torch_output));
-    require_complex_close(input.sensitivity().to_vec<std::complex<double>>(),
+    require_complex_close(input.sensitivity().host<std::complex<double>>(),
                           torch_complex_values(torch_input.grad()));
   }
 }
@@ -3358,8 +3358,8 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
             use_quantile ? torch_input.quantile(0.5) : torch_input.median();
         torch_output.backward(at::tensor(2.0, options));
 
-        require_close(output.to_vec<double>(), torch_values(torch_output));
-        require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+        require_close(output.host<double>(), torch_values(torch_output));
+        require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
       }
     }
   }
@@ -3375,8 +3375,8 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
     const at::Tensor torch_output = torch_input.median();
     torch_output.backward();
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("NaN median and nanmedian") {
@@ -3394,8 +3394,8 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
             ignore_nan ? torch_input.nanmedian() : torch_input.median();
         torch_output.backward();
 
-        require_close(output.to_vec<double>(), torch_values(torch_output));
-        require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+        require_close(output.host<double>(), torch_values(torch_output));
+        require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
       }
     }
   }
@@ -3414,8 +3414,8 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
     const at::Tensor torch_output = std::get<0>(torch_input.nanmedian(1));
     torch_output.backward(at::tensor(seed_values, options));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("axis mode routes to the kernel-selected duplicate") {
@@ -3431,8 +3431,8 @@ TEST_CASE("CPU median and quantile reverse match libtorch selection semantics",
     const at::Tensor torch_output = std::get<0>(torch_input.mode(1));
     torch_output.backward(at::tensor(seed_values, options));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 }
 
@@ -3453,8 +3453,8 @@ TEST_CASE("CPU sequence transforms retain reverse graphs through empty results",
     const at::Tensor torch_output = torch_input.flatten().diff();
     torch_output.backward(at::tensor(seed_values, options));
 
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("empty diff remains connected") {
@@ -3464,7 +3464,7 @@ TEST_CASE("CPU sequence transforms retain reverse graphs through empty results",
 
     at::Tensor torch_input = at::tensor({3.0}, options).set_requires_grad(true);
     torch_input.diff().sum().backward();
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("zero repeat remains connected") {
@@ -3474,7 +3474,7 @@ TEST_CASE("CPU sequence transforms retain reverse graphs through empty results",
 
     at::Tensor torch_input = at::tensor({1.0, 2.0}, options).set_requires_grad(true);
     torch_input.repeat({0}).sum().backward();
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("zero repeat_interleave remains connected") {
@@ -3484,7 +3484,7 @@ TEST_CASE("CPU sequence transforms retain reverse graphs through empty results",
 
     at::Tensor torch_input = at::tensor({1.0, 2.0}, options).set_requires_grad(true);
     torch_input.repeat_interleave(0, 0).sum().backward();
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("unfold uses PyTorch dimension order and accumulates overlap") {
@@ -3501,8 +3501,8 @@ TEST_CASE("CPU sequence transforms retain reverse graphs through empty results",
 
     REQUIRE(std::vector<std::int64_t>(output.sizes().begin(), output.sizes().end()) ==
             torch_output.sizes().vec());
-    require_close(output.to_vec<double>(), torch_values(torch_output));
-    require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+    require_close(output.host<double>(), torch_values(torch_output));
+    require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
   }
 
   SECTION("oversized unfold fails like PyTorch") {
@@ -3536,8 +3536,8 @@ TEST_CASE("CPU NaN population variance retains its operation graph",
   const at::Tensor torch_output = centered.square().sum(1).div(count.squeeze(1));
   torch_output.backward(at::tensor(seed_values, at::TensorOptions().dtype(at::kDouble)));
 
-  require_close(output.to_vec<double>(), torch_values(torch_output));
-  require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+  require_close(output.host<double>(), torch_values(torch_output));
+  require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
 }
 
 TEST_CASE("CPU cumulative extrema route gradients through selected indices",
@@ -3561,8 +3561,8 @@ TEST_CASE("CPU cumulative extrema route gradients through selected indices",
           : std::get<0>(torch_input.cummin(1));
       torch_output.backward(at::tensor(seed_values, options).reshape({2, 3}));
 
-      require_close(output.to_vec<double>(), torch_values(torch_output));
-      require_close(input.sensitivity().to_vec<double>(), torch_values(torch_input.grad()));
+      require_close(output.host<double>(), torch_values(torch_output));
+      require_close(input.sensitivity().host<double>(), torch_values(torch_input.grad()));
     }
   }
 }
@@ -3629,8 +3629,8 @@ TEST_CASE("CPU forward-mode per-dim reductions and structural ops match libtorch
       at::Tensor tt = at::tensor(tv, at::TensorOptions().dtype(at::kDouble)).reshape(shape);
       const auto [torch_value, torch_tangent] = torch_jvp(c.top, tx, tt);
 
-      require_close(value.to_vec<double>(), torch_values(torch_value), 2e-12);
-      require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-12);
+      require_close(value.host<double>(), torch_values(torch_value), 2e-12);
+      require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-12);
     }
   }
 }
@@ -3676,8 +3676,8 @@ TEST_CASE("CPU forward-mode amax/amin/var/std match libtorch jvp",
       at::Tensor tt = at::tensor(tv, at::TensorOptions().dtype(at::kDouble)).reshape(shape);
       const auto [torch_value, torch_tangent] = torch_jvp(c.top, tx, tt);
 
-      require_close(value.to_vec<double>(), torch_values(torch_value), 2e-10);
-      require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-9);
+      require_close(value.host<double>(), torch_values(torch_value), 2e-10);
+      require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-9);
     }
   }
 }
@@ -3716,8 +3716,8 @@ TEST_CASE("CPU forward-mode cumsum/cumprod match libtorch jvp",
       at::Tensor tt = at::tensor(tv, at::TensorOptions().dtype(at::kDouble)).reshape(shape);
       const auto [torch_value, torch_tangent] = torch_jvp(c.top, tx, tt);
 
-      require_close(value.to_vec<double>(), torch_values(torch_value), 2e-10);
-      require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-9);
+      require_close(value.host<double>(), torch_values(torch_value), 2e-10);
+      require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-9);
     }
   }
 }
@@ -3746,8 +3746,8 @@ TEST_CASE("CPU forward-mode index_select/gather match libtorch jvp",
         [&](const DualTrace& z) { return pluss::subsp::math::diff::index_select(z, 0, index); }, x, t);
     const auto [torch_value, torch_tangent] =
         torch_jvp([&](const at::Tensor& z) { return z.index_select(0, tidx); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(torch_value), 2e-12);
-    require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-12);
+    require_close(value.host<double>(), torch_values(torch_value), 2e-12);
+    require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-12);
   }
 
   SECTION("gather dim1") {
@@ -3757,8 +3757,8 @@ TEST_CASE("CPU forward-mode index_select/gather match libtorch jvp",
         [&](const DualTrace& z) { return pluss::subsp::math::diff::gather(z, 1, index); }, x, t);
     const auto [torch_value, torch_tangent] =
         torch_jvp([&](const at::Tensor& z) { return z.gather(1, tidx); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(torch_value), 2e-12);
-    require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-12);
+    require_close(value.host<double>(), torch_values(torch_value), 2e-12);
+    require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-12);
   }
 }
 
@@ -3794,8 +3794,8 @@ TEST_CASE("CPU forward-mode scatter/scatter_add/pile match libtorch jvp",
         [&](const std::vector<at::Tensor>& xs) { return xs[0].scatter(1, t_idx, xs[1]); },
         {t_self, t_src},
         {t_self_tan, t_src_tan});
-    require_close(value.to_vec<double>(), torch_values(torch_value), 2e-12);
-    require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-12);
+    require_close(value.host<double>(), torch_values(torch_value), 2e-12);
+    require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-12);
   }
 
   SECTION("scatter_add dim1") {
@@ -3809,8 +3809,8 @@ TEST_CASE("CPU forward-mode scatter/scatter_add/pile match libtorch jvp",
         [&](const std::vector<at::Tensor>& xs) { return xs[0].scatter_add(1, t_idx, xs[1]); },
         {t_self, t_src},
         {t_self_tan, t_src_tan});
-    require_close(value.to_vec<double>(), torch_values(torch_value), 2e-12);
-    require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-12);
+    require_close(value.host<double>(), torch_values(torch_value), 2e-12);
+    require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-12);
   }
 
   SECTION("pile (torch stack) dim0, 3 inputs") {
@@ -3827,8 +3827,8 @@ TEST_CASE("CPU forward-mode scatter/scatter_add/pile match libtorch jvp",
         [&](const std::vector<at::Tensor>& xs) { return at::stack(xs, 0); },
         {t_self, t_src, t_c},
         {t_self_tan, t_src_tan, t_c_tan});
-    require_close(value.to_vec<double>(), torch_values(torch_value), 2e-12);
-    require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-12);
+    require_close(value.host<double>(), torch_values(torch_value), 2e-12);
+    require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-12);
   }
 }
 
@@ -3878,8 +3878,8 @@ TEST_CASE("CPU forward-mode elu/celu/selu/hardsigmoid/hardswish/mish/threshold m
       at::Tensor tt = at::tensor(tv, at::TensorOptions().dtype(at::kDouble));
       const auto [torch_value, torch_tangent] = torch_jvp(c.top, tx, tt);
 
-      require_close(value.to_vec<double>(), torch_values(torch_value), 2e-10);
-      require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-9);
+      require_close(value.host<double>(), torch_values(torch_value), 2e-10);
+      require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-9);
     }
   }
 }
@@ -3906,17 +3906,17 @@ TEST_CASE("CPU forward-mode rrelu/dropout: eval mode matches libtorch, training 
     at::Tensor tt = at::tensor(tv, at::TensorOptions().dtype(at::kDouble));
     const auto [torch_value, torch_tangent] =
         torch_jvp([](const at::Tensor& z) { return at::rrelu(z, 0.2, 0.8, false); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(torch_value), 2e-12);
-    require_close(tangent.to_vec<double>(), torch_values(torch_tangent), 2e-12);
+    require_close(value.host<double>(), torch_values(torch_value), 2e-12);
+    require_close(tangent.host<double>(), torch_values(torch_tangent), 2e-12);
   }
 
   SECTION("rrelu training mode reproduces its own realized slope") {
     const auto [value, tangent] = jvp(
         [](const DualTrace& z) { return pluss::subsp::math::diff::rrelu(z, 0.2, 0.8, true); }, x, t);
-    const auto xs = x.to_vec<double>();
-    const auto ys = value.to_vec<double>();
-    const auto tv_ = t.to_vec<double>();
-    const auto got_t = tangent.to_vec<double>();
+    const auto xs = x.host<double>();
+    const auto ys = value.host<double>();
+    const auto tv_ = t.host<double>();
+    const auto got_t = tangent.host<double>();
     for (std::size_t i = 0; i < xs.size(); ++i) {
       const double slope = xs[i] > 0.0 ? 1.0 : ys[i] / xs[i];
       REQUIRE(got_t[i] == Approx(slope * tv_[i]).margin(1e-9));
@@ -3926,17 +3926,17 @@ TEST_CASE("CPU forward-mode rrelu/dropout: eval mode matches libtorch, training 
   SECTION("dropout p=0 is the identity, matching libtorch") {
     const auto [value, tangent] = jvp(
         [](const DualTrace& z) { return pluss::subsp::math::diff::dropout(z, 0.0, true); }, x, t);
-    require_close(value.to_vec<double>(), x.to_vec<double>(), 2e-12);
-    require_close(tangent.to_vec<double>(), t.to_vec<double>(), 2e-12);
+    require_close(value.host<double>(), x.host<double>(), 2e-12);
+    require_close(tangent.host<double>(), t.host<double>(), 2e-12);
   }
 
   SECTION("dropout training mode reproduces its own realized scale") {
     const auto [value, tangent] = jvp(
         [](const DualTrace& z) { return pluss::subsp::math::diff::dropout(z, 0.4, true); }, x, t);
-    const auto xs = x.to_vec<double>();
-    const auto ys = value.to_vec<double>();
-    const auto tv_ = t.to_vec<double>();
-    const auto got_t = tangent.to_vec<double>();
+    const auto xs = x.host<double>();
+    const auto ys = value.host<double>();
+    const auto tv_ = t.host<double>();
+    const auto got_t = tangent.host<double>();
     for (std::size_t i = 0; i < xs.size(); ++i) {
       const double scale = ys[i] / xs[i];
       REQUIRE(got_t[i] == Approx(scale * tv_[i]).margin(1e-9));
@@ -3974,8 +3974,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tx = at::tensor(m, opt).reshape({N, N});
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] = torch_jvp([](const at::Tensor& z) { return at::linalg_det(z); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("logdet") {
@@ -3986,8 +3986,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tx = at::tensor(spd, opt).reshape({N, N});
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] = torch_jvp([](const at::Tensor& z) { return at::logdet(z); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("slogdet") {
@@ -4003,8 +4003,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
           return at::stack({sign, logabs}, -1);
         },
         tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("inverse") {
@@ -4015,8 +4015,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tx = at::tensor(m, opt).reshape({N, N});
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] = torch_jvp([](const at::Tensor& z) { return at::linalg_inv(z); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("pinverse") {
@@ -4027,8 +4027,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tx = at::tensor(m, opt).reshape({N, N});
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] = torch_jvp([](const at::Tensor& z) { return at::linalg_pinv(z); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-8);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-7);
+    require_close(value.host<double>(), torch_values(tv), 2e-8);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-7);
   }
 
   SECTION("cholesky") {
@@ -4040,8 +4040,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] =
         torch_jvp([](const at::Tensor& z) { return at::linalg_cholesky(z, false); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("matrix_exp") {
@@ -4053,8 +4053,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] =
         torch_jvp([](const at::Tensor& z) { return at::linalg_matrix_exp(z); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-8);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-7);
+    require_close(value.host<double>(), torch_values(tv), 2e-8);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-7);
   }
 
   SECTION("matrix_power3") {
@@ -4066,8 +4066,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] =
         torch_jvp([](const at::Tensor& z) { return at::linalg_matrix_power(z, 3); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("matrix_power_neg2") {
@@ -4079,8 +4079,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tt = at::tensor(dm, opt).reshape({N, N});
     const auto [tv, tt_out] =
         torch_jvp([](const at::Tensor& z) { return at::linalg_matrix_power(z, -2); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("triangular_solve") {
@@ -4105,8 +4105,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
         [](const std::vector<at::Tensor>& xs) { return at::linalg_solve_triangular(xs[0], xs[1], false); },
         {tfactor, trhs},
         {tdfactor, tdrhs});
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 
   SECTION("qr Q and R (m >= n)") {
@@ -4127,8 +4127,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
               return q_path ? q : r;
             },
             tx, tt);
-        require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-        require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-7);
+        require_close(value.host<double>(), torch_values(tv), 2e-9);
+        require_close(tangent.host<double>(), torch_values(tt_out), 2e-7);
       }
     }
   }
@@ -4144,8 +4144,8 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     at::Tensor tt = at::tensor(dsv, opt).reshape({3, 2});
     const auto [tv, tt_out] = torch_jvp(
         [](const at::Tensor& z) { return std::get<1>(at::linalg_svd(z, false)); }, tx, tt);
-    require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
-    require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
+    require_close(value.host<double>(), torch_values(tv), 2e-9);
+    require_close(tangent.host<double>(), torch_values(tt_out), 2e-8);
   }
 }
 
@@ -4179,10 +4179,10 @@ TEST_CASE("CPU pile/unite reverse matches libtorch in float64 and float32",
       tout.mul(tout).sum().backward();
 
       const double tol = dt.first == ScalarType::Float64 ? 2e-9 : 3e-4;
-      require_close(out.to(ScalarType::Float64).to_vec<double>(), torch_values(tout), tol);
-      require_close(a.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(ta.grad()), tol);
-      require_close(b.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tb.grad()), tol);
-      require_close(c.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tc.grad()), tol);
+      require_close(out.to(ScalarType::Float64).host<double>(), torch_values(tout), tol);
+      require_close(a.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(ta.grad()), tol);
+      require_close(b.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(tb.grad()), tol);
+      require_close(c.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(tc.grad()), tol);
     }
 
     DYNAMIC_SECTION((dt.first == ScalarType::Float64 ? "unite float64" : "unite float32")) {
@@ -4206,10 +4206,10 @@ TEST_CASE("CPU pile/unite reverse matches libtorch in float64 and float32",
       tout.mul(tout).sum().backward();
 
       const double tol = dt.first == ScalarType::Float64 ? 2e-9 : 3e-4;
-      require_close(out.to(ScalarType::Float64).to_vec<double>(), torch_values(tout), tol);
-      require_close(a.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(ta.grad()), tol);
-      require_close(b.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tb.grad()), tol);
-      require_close(c.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tc.grad()), tol);
+      require_close(out.to(ScalarType::Float64).host<double>(), torch_values(tout), tol);
+      require_close(a.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(ta.grad()), tol);
+      require_close(b.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(tb.grad()), tol);
+      require_close(c.sensitivity().to(ScalarType::Float64).host<double>(), torch_values(tc.grad()), tol);
     }
   }
 }
@@ -4247,8 +4247,8 @@ TEST_CASE("CPU hardshrink_backward now forms a reverse-mode node and matches lib
   at::Tensor t_out = at::hardshrink_backward(t_grad_out, t_input, lambd);
   t_out.mul(t_out).sum().backward();
 
-  require_close(out.to_vec<double>(), torch_values(t_out), 2e-12);
-  require_close(grad_out.sensitivity().to_vec<double>(), torch_values(t_grad_out.grad()), 2e-12);
+  require_close(out.host<double>(), torch_values(t_out), 2e-12);
+  require_close(grad_out.sensitivity().host<double>(), torch_values(t_grad_out.grad()), 2e-12);
 }
 
 #endif

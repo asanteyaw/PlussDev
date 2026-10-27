@@ -16,6 +16,8 @@ add_test([=[estimation_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp
 set_tests_properties([=[estimation_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;0;")
 add_test([=[field_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/common/test/field_test")
 set_tests_properties([=[field_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;0;")
+add_test([=[poisson_multigrid_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/common/test/poisson_multigrid_test")
+set_tests_properties([=[poisson_multigrid_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;0;")
 add_test([=[population_balance_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/common/test/population_balance_test")
 set_tests_properties([=[population_balance_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/NatSci/common/test/CMakeLists.txt;0;")
 add_test([=[records_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/NatSci/common/test/records_test")

@@ -299,7 +299,7 @@ StatusOr<FeatureBatch> LexiconMapper::map_tfidf_dense(pluss::msharp::RangeView::
   FeatureBatch base = base_or.move_value();
   const std::int64_t rows = base.sample_count();
   const std::int64_t cols = base.feature_count();
-  std::vector<double> x = base.x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  std::vector<double> x = base.x.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
 
   const double n_docs = static_cast<double>(std::max<std::int64_t>(learned_document_count_, 1));
   std::vector<double> idf(static_cast<std::size_t>(cols), 1.0);

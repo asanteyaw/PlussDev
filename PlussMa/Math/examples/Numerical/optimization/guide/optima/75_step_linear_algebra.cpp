@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 using Block = optim::ParameterPack<pluss::Series>::Block;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -35,8 +35,8 @@ int main() {
     diff[static_cast<std::size_t>((2 * i + 1) * n + i)] = -1.0;
     diff[static_cast<std::size_t>((2 * i + 1) * n + i + 1)] = 1.0;
   }
-  const auto goal = optim::trace(vec(target), false);
-  auto objective = [&](const optim::Trace& x) { return optim::sum(optim::square(x - goal)); };
+  const auto goal = vec(target);
+  auto objective = [&](const pluss::Series& x) { return (x - goal).square().sum(); };
   const auto constraints =
       optim::constraints()
           .ln_ineq(pluss::make_series(diff, {2 * (n - 1), n}).to(f64), vec(cap))

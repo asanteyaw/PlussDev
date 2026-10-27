@@ -30,7 +30,7 @@ bool run_case_(std::ostream* err = nullptr) {
   {
     const Series base = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f}, {4}, mps);
     const Series device_written = base.mul(2.0).reshape({2, 2});
-    const auto transposed = device_written.transpose(0, 1).to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const auto transposed = device_written.transpose(0, 1).to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
     const std::vector<double> expect_transposed{2.0, 6.0, 4.0, 8.0};
     for (std::size_t i = 0; i < expect_transposed.size(); ++i) {
       if (!approx_(transposed[i], expect_transposed[i], 1e-6, 1e-6)) {
@@ -42,7 +42,7 @@ bool run_case_(std::ostream* err = nullptr) {
     const Series row = pluss::make_series(std::vector<float>{0.25f, 0.5f}, {2}, mps).add(1.0);
     const Series row_time = row.unsqueeze(0);
     const Series joined = row_time.unite(std::vector<Series>{row_time}, 0);
-    const auto joined_v = joined.to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const auto joined_v = joined.to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
     const std::vector<double> expect_joined{1.25, 1.5, 1.25, 1.5};
     for (std::size_t i = 0; i < expect_joined.size(); ++i) {
       if (!approx_(joined_v[i], expect_joined[i], 1e-6, 1e-6)) {
@@ -60,7 +60,7 @@ bool run_case_(std::ostream* err = nullptr) {
       if (err) *err << "mps sum sensitivity missing\n";
       return false;
     }
-    const auto gv = v.sensitivity().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto gv = v.sensitivity().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (double g : gv) {
       if (!approx_(g, 1.0, 1e-5, 1e-5)) {
         if (err) *err << "mps sum sensitivity mismatch\n";
@@ -77,7 +77,7 @@ bool run_case_(std::ostream* err = nullptr) {
       if (err) *err << "mps squeeze sensitivity missing\n";
       return false;
     }
-    const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({2}).to_vec<double>();
+    const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({2}).host<double>();
     if (!approx_(gx[0], 1.0, 1e-5, 1e-5) || !approx_(gx[1], 1.0, 1e-5, 1e-5)) {
       if (err) *err << "mps squeeze sensitivity mismatch\n";
       return false;
@@ -96,7 +96,7 @@ bool run_case_(std::ostream* err = nullptr) {
     x.tracks_slope_(true);
     const Series idx = pluss::make_series(std::vector<std::int64_t>{1}, {1}, i64_mps);
     const Series picked = x.index_select(0, idx);
-    const auto picked_cpu = picked.to(pluss::pCPU, ScalarType::Float64).reshape({2}).to_vec<double>();
+    const auto picked_cpu = picked.to(pluss::pCPU, ScalarType::Float64).reshape({2}).host<double>();
     if (!(approx_(picked_cpu[0], 3.0, 1e-6, 1e-6) && approx_(picked_cpu[1], 4.0, 1e-6, 1e-6))) {
       if (err) {
         *err << "mps index_select forward mismatch got=[";
@@ -115,7 +115,7 @@ bool run_case_(std::ostream* err = nullptr) {
       return false;
     }
     {
-      const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({6}).to_vec<double>();
+      const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({6}).host<double>();
       const std::vector<double> expect{0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
       for (std::size_t i = 0; i < expect.size(); ++i) {
         if (!approx_(gx[i], expect[i], 1e-5, 1e-5)) {
@@ -130,7 +130,7 @@ bool run_case_(std::ostream* err = nullptr) {
       if (err) *err << "mps index_select+squeeze sensitivity missing\n";
       return false;
     }
-    const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({6}).to_vec<double>();
+    const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({6}).host<double>();
     const std::vector<double> expect{0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
     for (std::size_t i = 0; i < expect.size(); ++i) {
       if (!approx_(gx[i], expect[i], 1e-5, 1e-5)) {
@@ -168,7 +168,7 @@ bool run_case_(std::ostream* err = nullptr) {
       if (err) *err << "mps select sensitivity missing\n";
       return false;
     }
-    const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const auto gx = x.sensitivity().to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
     const std::vector<double> expect{0.0, 0.0, 1.0, 1.0};
     for (std::size_t i = 0; i < expect.size(); ++i) {
       if (!approx_(gx[i], expect[i], 1e-5, 1e-5)) {
@@ -195,8 +195,8 @@ bool run_case_(std::ostream* err = nullptr) {
       if (err) *err << "mps pile/select sensitivity missing\n";
       return false;
     }
-    const auto ga = a.sensitivity().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto gb = b.sensitivity().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto ga = a.sensitivity().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto gb = b.sensitivity().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (double g : ga) {
       if (!approx_(g, 0.0, 1e-5, 1e-5)) {
         if (err) *err << "mps pile/select first branch mismatch\n";
@@ -274,7 +274,7 @@ bool run_case_(std::ostream* err = nullptr) {
     Series b_cpu = pluss::make_series(std::vector<float>{0.1f, -0.2f}, {2, 1}, cpu);
     b_cpu.tracks_slope_(true);
     x_cpu.matmul(b_cpu).sum().reverse();
-    const auto gb_cpu = b_cpu.sensitivity().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto gb_cpu = b_cpu.sensitivity().reshape({2}).to(pluss::pCPU, ScalarType::Float64).host<double>();
 
     Series x_mps = x_cpu.to(pluss::pMPS, ScalarType::Float32);
     Series b_mps = b_cpu.detach().to(pluss::pMPS, ScalarType::Float32);
@@ -284,7 +284,7 @@ bool run_case_(std::ostream* err = nullptr) {
       if (err) *err << "mps matmul sensitivity missing\n";
       return false;
     }
-    const auto gb_mps = b_mps.sensitivity().reshape({2}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto gb_mps = b_mps.sensitivity().reshape({2}).to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < gb_cpu.size() && i < gb_mps.size(); ++i) {
       if (!approx_(gb_cpu[i], gb_mps[i], 1e-4, 1e-4)) {
         if (err) *err << "mps matmul parity mismatch\n";
@@ -304,11 +304,11 @@ bool run_case_(std::ostream* err = nullptr) {
         {4, 3},
         cpu);
     const Series w_cpu = pluss::make_series(std::vector<float>{0.2f, -0.1f, 0.05f}, {3, 1}, cpu);
-    const auto ref = x_cpu.matmul(w_cpu).to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const auto ref = x_cpu.matmul(w_cpu).to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
 
     const Series x_mps = x_cpu.to(pluss::pMPS, ScalarType::Float32);
     const Series w_mps = w_cpu.to(pluss::pMPS, ScalarType::Float32);
-    const auto got = x_mps.matmul(w_mps).to(pluss::pCPU, ScalarType::Float64).reshape({4}).to_vec<double>();
+    const auto got = x_mps.matmul(w_mps).to(pluss::pCPU, ScalarType::Float64).reshape({4}).host<double>();
     for (std::size_t i = 0; i < ref.size() && i < got.size(); ++i) {
       if (!approx_(ref[i], got[i], 1e-4, 1e-4)) {
         if (err) *err << "mps matmul (n=1,k=3) forward parity mismatch\n";

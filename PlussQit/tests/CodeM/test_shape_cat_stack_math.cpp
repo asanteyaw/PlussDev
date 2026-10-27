@@ -35,14 +35,14 @@ TEST_CASE("expand_like and repeat_like", "[shape]") {
   REQUIRE(expanded.sizes()[1] == 6);
   // std::vector<int> leaves are int32; expand_like and repeat_like keep the dtype.
   REQUIRE(expanded.scalar_type() == ScalarType::Int32);
-  REQUIRE(expanded.to_vec<std::int32_t>() == std::vector<std::int32_t>{7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7});
+  REQUIRE(expanded.host<std::int32_t>() == std::vector<std::int32_t>{7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7});
 
   const auto base = pluss::make_series(std::vector<int>{1, 2, 3}, {3});
   const auto repeated = base.repeat_like(like);
   REQUIRE(repeated.sizes()[0] == 2);
   REQUIRE(repeated.sizes()[1] == 6);
   REQUIRE(repeated.scalar_type() == ScalarType::Int32);
-  REQUIRE(repeated.to_vec<std::int32_t>() ==
+  REQUIRE(repeated.host<std::int32_t>() ==
           std::vector<std::int32_t>{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3});
 
   const auto bad_like = pluss::series::rand({2, 5}, ScalarType::Float32, 11);
@@ -94,11 +94,11 @@ TEST_CASE("unary math + reductions", "[math]") {
 
 TEST_CASE("root rearrangement methods preserve their documented axes", "[shape]") {
   auto table = pluss::make_series({{1, 2, 3}, {4, 5, 6}});
-  REQUIRE(table.flip(0).to_vec<std::int64_t>() == std::vector<std::int64_t>{4, 5, 6, 1, 2, 3});
-  REQUIRE(table.fliplr().to_vec<std::int64_t>() == std::vector<std::int64_t>{3, 2, 1, 6, 5, 4});
-  REQUIRE(table.roll(2).to_vec<std::int64_t>() == std::vector<std::int64_t>{5, 6, 1, 2, 3, 4});
-  REQUIRE(table.roll(-1, 1).to_vec<std::int64_t>() == std::vector<std::int64_t>{2, 3, 1, 5, 6, 4});
-  REQUIRE(table.rot90().to_vec<std::int64_t>() == std::vector<std::int64_t>{3, 6, 2, 5, 1, 4});
+  REQUIRE(table.flip(0).host<std::int64_t>() == std::vector<std::int64_t>{4, 5, 6, 1, 2, 3});
+  REQUIRE(table.fliplr().host<std::int64_t>() == std::vector<std::int64_t>{3, 2, 1, 6, 5, 4});
+  REQUIRE(table.roll(2).host<std::int64_t>() == std::vector<std::int64_t>{5, 6, 1, 2, 3, 4});
+  REQUIRE(table.roll(-1, 1).host<std::int64_t>() == std::vector<std::int64_t>{2, 3, 1, 5, 6, 4});
+  REQUIRE(table.rot90().host<std::int64_t>() == std::vector<std::int64_t>{3, 6, 2, 5, 1, 4});
   REQUIRE_THROWS(table.roll({1, 2}));
 }
 
@@ -144,11 +144,11 @@ TEST_CASE("roll matches an index_select reference across shapes, dims, shifts an
   REQUIRE(transposed.roll(1, 0).equal(roll_reference(transposed, 1, 0)));
   REQUIRE(transposed.roll(-1, 1).equal(roll_reference(transposed, -1, 1)));
   const Series ints = pluss::make_series(std::vector<std::int32_t>{1, 2, 3, 4}, {4});
-  REQUIRE(ints.roll(1, 0).to_vec<std::int32_t>() == std::vector<std::int32_t>{4, 1, 2, 3});
+  REQUIRE(ints.roll(1, 0).host<std::int32_t>() == std::vector<std::int32_t>{4, 1, 2, 3});
   const Series flags = pluss::make_series(std::vector<double>{1, 0, 0}, {3}).to(ScalarType::Bool);
-  REQUIRE(flags.roll(1, 0).to(ScalarType::Float64).to_vec<double>() == std::vector<double>{0, 1, 0});
+  REQUIRE(flags.roll(1, 0).to(ScalarType::Float64).host<double>() == std::vector<double>{0, 1, 0});
   const Series z = pluss::make_series(std::vector<std::complex<double>>{{1, 2}, {3, 4}, {5, 6}}, {3});
-  REQUIRE(z.roll(1, 0).to_vec<std::complex<double>>() ==
+  REQUIRE(z.roll(1, 0).host<std::complex<double>>() ==
           std::vector<std::complex<double>>{{5, 6}, {1, 2}, {3, 4}});
 }
 
@@ -158,5 +158,5 @@ TEST_CASE("roll reverse routes the sensitivity back by the opposite shift", "[sh
   const Series weights = pluss::make_series(std::vector<double>{10, 20, 30, 40, 50}, {5}).to(ScalarType::Float64);
   x.roll(2, 0).mul(weights).sum().reverse();
   // out[j] = x[(j-2) mod 5] => d/dx[i] = weights[(i+2) mod 5]
-  REQUIRE(x.sensitivity().to_vec<double>() == std::vector<double>{30, 40, 50, 10, 20});
+  REQUIRE(x.sensitivity().host<double>() == std::vector<double>{30, 40, 50, 10, 20});
 }

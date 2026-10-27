@@ -90,7 +90,7 @@ int main() {
 
   auto queue = pluss::Queue(pluss::make_series(std::vector<double>{1.5, 2.5, 3.5}));
   std::cout << "let queue = pluss::Queue(...) -> numel=" << queue.series().numel()
-            << ", front=" << queue.series().to_vec<double>(0) << "\n";
+            << ", front=" << queue.series().host<double>().array().data.at(static_cast<std::size_t>(0)) << "\n";
 
   std::cout << "\nDone.\n";
   return 0;

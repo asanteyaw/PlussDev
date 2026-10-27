@@ -171,7 +171,7 @@ struct CompareResult {
     ranks.push_back(i < objective_rank.size() ? objective_rank[i] : 0);
     const auto values = trials[i].cv.mean.values.to(pluss::pCPU, ScalarType::Float64)
                              .reshape({trials[i].cv.mean.values.numel()})
-                             .to_vec<double>();
+                             .host<double>();
     for (std::size_t m = 0; m < metrics.size(); ++m) {
       metric_columns[m].push_back(m < values.size() ? values[m] : std::numeric_limits<double>::quiet_NaN());
     }
@@ -314,7 +314,7 @@ struct Scorer {
 
 [[nodiscard]] inline double scalar_metric_(const MetricReport& report, MetricKind metric) {
   const std::size_t n = std::min(report.requested.size(), static_cast<std::size_t>(report.values.numel()));
-  const auto values = report.values.to(pluss::pCPU, ScalarType::Float64).reshape({report.values.numel()}).to_vec<double>();
+  const auto values = report.values.to(pluss::pCPU, ScalarType::Float64).reshape({report.values.numel()}).host<double>();
   for (std::size_t i = 0; i < n && i < values.size(); ++i) {
     if (report.requested[i] == metric) return values[i];
   }
@@ -578,7 +578,7 @@ struct FoldFramePair_ {
 };
 
 [[nodiscard]] inline std::vector<std::int64_t> split_indices_to_vector_(const Series& indices) {
-  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).to_vec<std::int64_t>();
+  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).host<std::int64_t>();
 }
 
 [[nodiscard]] inline std::vector<FoldFramePair_> materialize_fold_frames_(const pluss::table::DataFrame& frame,

@@ -37,7 +37,7 @@ defaults to `1.0` when omitted entirely (`y.antidiff.trapezoid()`).
 `antidiff` is named for what it reverses: `Series::diff()`, the discrete
 forward difference. Both operate on an already-materialized sequence of
 numbers. It is deliberately not the accessor for integrating an arbitrary
-*function* — that is `pluss::integ::quadra`/`aleatoria`/`Analytica`
+*function* — that is `pluss::subsp::math::integ::quadra`/`aleatoria`/`Analytica`
 (PlussMa), which need to re-invoke a callable at points they choose, not
 read off values a `Series` already holds. See
 [`Series::antidiff`](api/series/antidiff.md) for the full distinction.

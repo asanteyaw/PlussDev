@@ -36,9 +36,9 @@ Example 1. Flag a null and a `NaN` among finite values.
 auto slot = pluss::scribble::Slot({pluss::make_series(1.0), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(std::nan(""))});
 auto out = slot.invalid();
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(2)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(2)).host<bool>()[0];
 ```
 
 ### Output

@@ -91,7 +91,7 @@ std::function<std::pair<Series, ParameterPack<Series>>(const ParameterPack<Serie
       ::pluss::throw_error("optim::fwd_objective: the objective was built for " + std::to_string(N) +
                            " parameters but the problem has " + std::to_string(params.total_numel()));
     }
-    const std::vector<double> x = flatten_values(params).to(pluss::ScalarType::Float64).to(pluss::pCPU).to_vec<double>();
+    const std::vector<double> x = flatten_values(params).to(pluss::ScalarType::Float64).to(pluss::pCPU).host<double>();
     std::array<Fwd<N>, N> p;
     for (int i = 0; i < N; ++i) p[i] = Fwd<N>::variable(x[static_cast<std::size_t>(i)], i);
     const Fwd<N> f = fn(p);

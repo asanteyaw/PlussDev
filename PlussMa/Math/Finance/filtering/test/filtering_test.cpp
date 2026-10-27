@@ -60,7 +60,7 @@ void test_linear_kalman() {
          "kalman data_used shape mismatch");
   expect(std::isfinite(out.loglik), "kalman loglik must be finite");
 
-  const double tail_mean = out.filtered_mean.select(0, t_obs - 1).reshape({1}).item<double>();
+  const double tail_mean = out.filtered_mean.select(0, t_obs - 1).reshape({1}).host<double>().front();
   expect(std::abs(tail_mean - 1.25) < 0.1, "kalman filtered mean should track constant signal");
 }
 
@@ -87,20 +87,20 @@ void test_linear_kalman_missing_and_tol() {
   expect(out.filtered_mean.isfinite().all().item<double>() == 1.0, "kalman missing-data: filtered mean must stay finite");
   expect(std::isfinite(out.loglik), "kalman missing-data: loglik must be finite");
 
-  const double f_missing = out.filtered_mean.select(0, 20).reshape({1}).item<double>();
-  const double p_missing = out.predicted_mean.select(0, 20).reshape({1}).item<double>();
+  const double f_missing = out.filtered_mean.select(0, 20).reshape({1}).host<double>().front();
+  const double p_missing = out.predicted_mean.select(0, 20).reshape({1}).host<double>().front();
   expect(std::abs(f_missing - p_missing) < 1e-10,
          "kalman missing-data: when observation is NaN, filtered state should equal predicted state");
-  const double used_missing = out.data_used.select(0, 20).reshape({1}).item<double>();
+  const double used_missing = out.data_used.select(0, 20).reshape({1}).host<double>().front();
   expect(used_missing == 0.0, "kalman missing-data: data_used must be 0 for NaN channel");
 
   KalmanModel tol_model = model;
   tol_model.info_tol = 1e9;
   const auto out_tol = kalman_filter(pluss::series::full({t_obs}, 3.0, cfg), tol_model, cfg);
-  const double f0 = out_tol.filtered_mean.select(0, 0).reshape({1}).item<double>();
-  const double p0 = out_tol.predicted_mean.select(0, 0).reshape({1}).item<double>();
+  const double f0 = out_tol.filtered_mean.select(0, 0).reshape({1}).host<double>().front();
+  const double p0 = out_tol.predicted_mean.select(0, 0).reshape({1}).host<double>().front();
   expect(std::abs(f0 - p0) < 1e-10, "kalman info_tol: first-step filtered should equal predicted when all info is ignored");
-  const double used0 = out_tol.data_used.select(0, 0).reshape({1}).item<double>();
+  const double used0 = out_tol.data_used.select(0, 0).reshape({1}).host<double>().front();
   expect(used0 == 0.0, "kalman info_tol: data_used must be 0 when info_tol blocks observation");
 }
 

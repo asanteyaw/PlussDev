@@ -94,14 +94,14 @@ void test_cp_vs_nasa() {
     expect(rel < 0.01, "N2 cp/R rel error at T index " + std::to_string(i) +
                            ": " + std::to_string(rel));
   }
-  expect(std::abs(sp::rotational(n2, one(1000.0)).var.item<double>() - 1.0) <
+  expect(std::abs(sp::rotational(n2, one(1000.0)).var.host<double>().front() - 1.0) <
              2e-3,
          "rotational cv/R -> 1");
-  expect(sp::vibrational(n2, one(300.0)).var.item<double>() < 3e-3,
+  expect(sp::vibrational(n2, one(300.0)).var.host<double>().front() < 3e-3,
          "vibration frozen at 300 K");
   const double kt_hc =
       sp::boltzmann() * 1000.0 / (sp::planck() * sp::speed_of_light() * 100.0);
-  const double q = sp::rotational(n2, one(1000.0), 0, 400).q.item<double>();
+  const double q = sp::rotational(n2, one(1000.0), 0, 400).q.host<double>().front();
   // Mulholland expansion q = (kT/sigma hcB)(1 + theta/3T + ...) with B = B_0 =
   // Be - alphae/2
   const double b0 = n2.be - 0.5 * n2.alphae;

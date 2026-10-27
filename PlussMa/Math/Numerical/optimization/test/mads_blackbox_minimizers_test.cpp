@@ -1,3 +1,4 @@
+#include <pluss/tils/aux/scalar_cast_compat.h>
 #include "../mads_blackbox_minimizers.h"
 
 #include <cmath>
@@ -13,13 +14,6 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::pCPU;
 using namespace pluss::subsp::math::optimization;
-
-double as_f64(const Series& x) {
-  if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error("expected scalar Series");
-  }
-  return x.to(pCPU, ScalarType::Float64).item<double>();
-}
 
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {

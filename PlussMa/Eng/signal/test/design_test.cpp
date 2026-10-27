@@ -26,7 +26,7 @@ void expect_complex_close(const pluss::Series &actual,
                           const std::vector<Complex> &expected,
                           double tolerance = 2e-10) {
   const auto values =
-      actual.to(pluss::ScalarType::Complex128).to_vec<Complex>();
+      actual.to(pluss::ScalarType::Complex128).host<Complex>();
   expect(values.size() == expected.size(), "complex result size mismatch");
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     const double scale =
@@ -149,7 +149,7 @@ int main() {
   expect_complex_close(
       eng_signal::freqz(complex_sos.select(0, 0).slice(0, 0, 3),
                         complex_sos.select(0, 0).slice(0, 3, 6), probe),
-      eng_lti::freqresp(complex_system, probe).to_vec<Complex>());
+      eng_lti::freqresp(complex_system, probe).host<Complex>());
 
   const auto unstable = eng_lti::zpk(
       pluss::series::make(std::vector<Complex>{{-1.0, 0.0}}),

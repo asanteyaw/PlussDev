@@ -1,0 +1,65 @@
+# Reading and watching a run
+
+[Back to Septima 1: First Problems](../septima_01_first_problems.md)
+
+A Septima call returns one result object, and learning to read it is the difference between trusting a run and checking it. The result holds the answer (`params`, one `Series` per block, in the order you gave them), the objective at the answer, two different gradient norms (the gradient of the objective alone and the *stationarity* of the constrained problem, which is the number actually compared with the tolerance), the size of the last step, the worst constraint violation, and the cost (iterations and function evaluations).
+
+The page also shows how a run can end: five exit flags, each produced on purpose, so you know what each looks like and what it promises. And it shows the progress hook, a function called after every iteration with a snapshot of the run, which returns `true` to continue and `false` to stop; it is the tool for logging, for stopping at a target, and for watching a long run.
+
+## Program 4: Reading the result
+
+The problem is a bounded fit, `0.5 ((a - 2)^2 + (b - 1)^2)` with `a <= 1.5`, so the bound is active at the answer. The program prints each field of the result.
+
+@@example Numerical/optimization/guide/septima/104_reading_results.cpp@@
+
+In the order you will use them:
+
+- `converged` and `exit_flag` say whether the run met its tests. `message` says why it stopped.
+- `params` is the answer, one `Series` per block, in the order you gave them.
+- `objective_value` is the objective at the answer.
+- `gradient_inf_norm` is the largest component of the gradient of the **objective alone**. Here it is 0.5, not zero: at a constrained optimum the objective still pulls toward the bound.
+- `stationarity` is the largest component of the gradient of the constrained problem, with the components that an active bound blocks removed. It is the number the solver compares with `gradient_tolerance`. Here it is 0, which is why the run converged although `gradient_inf_norm` is 0.5. Without constraints it equals `gradient_inf_norm`.
+- `step_inf_norm` is the size of the last step; `constraint_violation` is the worst violation of a bound, an equality or an inequality.
+- `iteration` and `function_evaluations` are the cost. Without a line search they are equal.
+- `state` (not printed) holds the optimizer's memory and the constraint multipliers (chapter 2).
+
+## Program 5: How a run ends
+
+Each way a run can end, produced on purpose.
+
+@@example Numerical/optimization/guide/septima/105_exit_flags.cpp@@
+
+| Flag | Meaning | In the program |
+|---|---|---|
+| `Converged` | gradient, step and violation are all within tolerance | L-BFGS on a quadratic, in 3 iterations |
+| `MaxIterations` | the budget ran out first | Adam with its defaults, 200 iterations |
+| `Stopped` | the progress hook returned `false` | a hook that stops at iteration 7 |
+| `NoProgress` | the objective and the step stopped changing before the tolerances were met | a learning rate of 1e-18, after 6 iterations |
+| `NonFiniteEvaluation` | the objective or its gradient became NaN or infinite | a step of size 100 into the region where `log` is undefined |
+
+`NoProgress` is declared after `max_no_progress_iterations` (25 by default; the program uses 5) consecutive iterations in which the objective changes by at most `objective_tolerance` and the step is at most `step_tolerance`. Invalid settings do not return a flag: the call throws an error that names the setting, as the last two lines show (a negative learning rate, and a budget of zero iterations).
+
+## Program 6: Watching a run
+
+The progress hook is called after every iteration with a snapshot (iteration, function evaluations, objective, gradient, stationarity, step, violation, message). It returns `true` to keep going and `false` to stop with `Stopped`. This program prints every 150th iteration of an Adam run on the Rosenbrock valley with a learning rate of 0.05 and records when the objective first fell below 0.01.
+
+@@example Numerical/optimization/guide/septima/106_progress_trace.cpp@@
+
+The objective falls from 24.2 to 1.2e-05 over 1500 iterations, with the gradient falling from 216 to 2.5e-03 and the step shrinking as it goes. It first fell below 0.01 at iteration 831, which is the kind of thing a hook can act on: stop at a target value, log to a file, or adjust something outside the solver. A trace like this is also the quickest way to see whether a learning rate is too small (a slow, steady fall, as here), too large (the objective oscillating), or about right.
+
+### A ready-made report
+
+Writing a hook by hand (the previous program) is the way to react to a run, for example to stop it early. To simply watch one, `reports::iter(std::cout, precision, every)` is a hook that prints a line per iteration, or per `every`-th iteration; it is the same `reports::iter` that `optima` uses. It is a small object that can be called with either solver's progress snapshot, so the solver you assign it to decides which one it receives and therefore which columns are printed; no setting is needed. This run uses L-BFGS on the Rosenbrock valley and prints every fifth iteration.
+
+@@example Numerical/optimization/guide/septima/107_iteration_report.cpp@@
+
+The objective falls from 24.2 at the first iteration to 4.5 by iteration 5 and 1.0 by iteration 40, then drops quickly as the iterates reach the floor of the valley: 0.0051 at iteration 70, 5.1e-6 at iteration 75 and 5.5e-11 at iteration 80. After that the objective, the gradient (2.5e-4) and the step (zero) stop changing: the step has shrunk to zero, and the run ends at iteration 102 with the exit flag `NoProgress`, not `Converged`. This is what the report is for: the gradient entry is still 2.5e-4, above the default tolerance, so a run that looks finished by its objective is stopped by lack of progress rather than by the optimality test, and the iteration at which the lines stop changing tells you when.
+
+## Decisions and pitfalls
+
+- **Read `stationarity`, not `gradient_inf_norm`, at a constrained optimum.** The objective's own gradient is not zero where a bound is active; the stationarity removes the components an active bound blocks.
+- **Check the flag.** `Converged` means the gradient, the step and the violation are all within tolerance; `MaxIterations`, `Stopped`, `NoProgress` and `NonFiniteEvaluation` each have a different remedy.
+- **Invalid settings throw, they do not return a flag.** A setting that cannot be right (a negative tolerance) throws an error that names the setting.
+- **A hook can be used to act, not only to look.** It can stop at a target value, log to a file or adjust something outside the solver; keep it cheap, since it runs every iteration.
+
+Where next: [Chapter 2](../septima_02_constraints.md) adds bounds, equalities and inequalities.

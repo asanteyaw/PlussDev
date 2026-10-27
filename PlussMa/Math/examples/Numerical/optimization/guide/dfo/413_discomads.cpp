@@ -16,10 +16,6 @@ namespace dfo = pluss::subsp::math::optimization;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series filled(std::int64_t n, double v) { return pluss::make_series(std::vector<double>(n, v), {n}).to(f64); }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   std::cout << std::left << std::setw(10) << "failing" << std::setw(24) << "method" << std::setw(12) << "minimum" << std::setw(14) << "calls made" << "failed calls\n";
   for (double rate : {0.3, 0.8}) {

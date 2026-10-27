@@ -14,10 +14,6 @@ namespace dfo = pluss::subsp::math::optimization;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series filled(std::int64_t n, double v) { return pluss::make_series(std::vector<double>(n, v), {n}).to(f64); }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   std::cout << std::left << std::setw(40) << "setting" << std::setw(26) << "status" << std::setw(8) << "evals" << std::setw(8) << "total" << "cache hits\n";
   auto run = [](const char* label, dfo::MadsBlackboxAdvancedConfig c, bool free_half) {
@@ -29,7 +25,7 @@ int main() {
       return e;
     };
     const auto o = dfo::mads_blackbox_minimizer(blackbox, vec({4.0, -3.0}), c);
-    std::cout << std::left << std::setw(40) << label << std::setw(26) << name(o.status) << std::setw(8) << o.diagnostics.evaluations
+    std::cout << std::left << std::setw(40) << label << std::setw(26) << dfo::to_string(o.status) << std::setw(8) << o.diagnostics.evaluations
               << std::setw(8) << o.diagnostics.total_evaluations << o.diagnostics.cache_hits << "\n";
   };
   dfo::MadsBlackboxAdvancedConfig base;

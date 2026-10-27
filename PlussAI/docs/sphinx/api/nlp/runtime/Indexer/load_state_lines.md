@@ -125,7 +125,7 @@ int main() {
   nlp::runtime::Indexer restored{};
   restored.load_state_lines(views);
   const auto batch = restored.batch(wf.infer(std::vector<std::string>{"Kofi writes."})).value();
-  const auto ids = batch.token_ids.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template to_vec<std::int64_t>();
+  const auto ids = batch.token_ids.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template host<std::int64_t>();
   std::cout << "Kofi maps to unk = " << (ids[0] == restored.unk_id()) << "\n";
   return 0;
 }

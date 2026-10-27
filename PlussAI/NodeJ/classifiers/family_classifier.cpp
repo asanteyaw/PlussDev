@@ -108,12 +108,12 @@ bool is_phase0_family(ModelFamily family) {
 
 [[nodiscard]] std::vector<double> vec_f64(const Series& x) {
   if (!x.defined()) return {};
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>().array().data;
 }
 
 [[nodiscard]] std::vector<std::int64_t> vec_i64(const Series& x) {
   if (!x.defined()) return {};
-  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();
+  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).host<std::int64_t>().array().data;
 }
 
 [[nodiscard]] Series make_index_series(const std::vector<std::int64_t>& indices, Platform platform) {
@@ -300,8 +300,8 @@ struct DenseFeatureMatrix {
                                          bool distance_weighted) {
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
-  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
-  const auto wv = train_weight.to(pluss::pCPU, ScalarType::Float64).reshape({train_weight.numel()}).contiguous().to_vec<double>();
+  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().host<double>().array().data;
+  const auto wv = train_weight.to(pluss::pCPU, ScalarType::Float64).reshape({train_weight.numel()}).contiguous().host<double>().array().data;
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(k, nt));
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
   constexpr double eps = 1e-12;
@@ -318,8 +318,8 @@ struct DenseFeatureMatrix {
   StatusOr<KNearestResult> knn_or = index.query_k(query_rows, kk);
   if (!knn_or.ok()) return pluss::make_series(out, {nq}, f64_cpu());
   const KNearestResult knn = knn_or.move_value();
-  const auto knn_idx = knn.indices.to(pluss::pCPU, ScalarType::Int64).reshape({knn.indices.numel()}).to_vec<std::int64_t>();
-  const auto knn_d2 = knn.distances2.to(pluss::pCPU, ScalarType::Float64).reshape({knn.distances2.numel()}).to_vec<double>();
+  const auto knn_idx = knn.indices.to(pluss::pCPU, ScalarType::Int64).reshape({knn.indices.numel()}).host<std::int64_t>().array().data;
+  const auto knn_d2 = knn.distances2.to(pluss::pCPU, ScalarType::Float64).reshape({knn.distances2.numel()}).host<double>().array().data;
 
   for (std::int64_t qi = 0; qi < nq; ++qi) {
     std::vector<std::pair<double, std::int64_t>> best{};
@@ -377,10 +377,10 @@ struct DenseFeatureMatrix {
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
   const std::int64_t d = train_rows.sizes()[1];
-  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().to_vec<double>();
-  const auto wv = train_weight.to(pluss::pCPU, ScalarType::Float64).reshape({train_weight.numel()}).contiguous().to_vec<double>();
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto yv = y_train.to(pluss::pCPU, ScalarType::Float64).reshape({y_train.numel()}).contiguous().host<double>().array().data;
+  const auto wv = train_weight.to(pluss::pCPU, ScalarType::Float64).reshape({train_weight.numel()}).contiguous().host<double>().array().data;
   const std::int64_t kk = std::max<std::int64_t>(1, std::min<std::int64_t>(fallback_k, nt));
   const double radius2 = radius * radius;
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
@@ -631,8 +631,8 @@ struct BinaryLabelEncoding {
 
   const Series idx0 = pluss::make_series(std::vector<std::int64_t>{0}, {1}, i64_cpu());
   const Series idx1 = pluss::make_series(std::vector<std::int64_t>{1}, {1}, i64_cpu());
-  const double negative = classes.index({idx0}).reshape({1}).item<double>();
-  const double positive = classes.index({idx1}).reshape({1}).item<double>();
+  const double negative = classes.index({idx0}).reshape({1}).host<double>().front();
+  const double positive = classes.index({idx1}).reshape({1}).host<double>().front();
   const Series y01 = y64.eq(positive).to(ScalarType::Float64);
 
   BinaryLabelEncoding out{};
@@ -678,8 +678,8 @@ struct BinaryLabelEncoding {
   constexpr double eps = 1e-12;
   double prev_loss = std::numeric_limits<double>::infinity();
   for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
-    const double a = params.index_select(0, idx0).reshape({1}).item<double>();
-    const double b = params.index_select(0, idx1).reshape({1}).item<double>();
+    const double a = params.index_select(0, idx0).reshape({1}).host<double>().front();
+    const double b = params.index_select(0, idx1).reshape({1}).host<double>().front();
 
     const Series logits = scores.mul(a).add(b);
     const Series probs = logits.sigmoid();
@@ -787,9 +787,9 @@ struct IsotonicCalibratorState {
   }
 
   const std::int64_t n = scores.numel();
-  const auto xs = scores.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
-  const auto ys = y01.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
-  const auto ws = sample_weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  const auto xs = scores.to(pluss::pCPU, ScalarType::Float64).reshape({n}).host<double>().array().data;
+  const auto ys = y01.to(pluss::pCPU, ScalarType::Float64).reshape({n}).host<double>().array().data;
+  const auto ws = sample_weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).host<double>().array().data;
 
   std::vector<std::int64_t> order(static_cast<std::size_t>(n), 0);
   std::iota(order.begin(), order.end(), static_cast<std::int64_t>(0));
@@ -890,7 +890,7 @@ struct IsotonicCalibratorState {
     return StatusOr<Series>(Status::precondition(std::string(where) + " isotonic calibrator is not initialized."));
   }
   const std::int64_t n = scores.numel();
-  const auto in = scores.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  const auto in = scores.to(pluss::pCPU, ScalarType::Float64).reshape({n}).host<double>().array().data;
   std::vector<double> out{};
   out.reserve(in.size());
 
@@ -1269,10 +1269,10 @@ public:
 
     feature_count_ = matrix.feature_count;
     sample_count_ = matrix.sample_count;
-    x_train_host_ = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-    y_train_host_ = labels.y01.to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
+    x_train_host_ = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+    y_train_host_ = labels.y01.to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().host<double>().array().data;
     sample_weight_host_ =
-        train_weight_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
+        train_weight_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().host<double>().array().data;
 
     nodes_.clear();
     nodes_.reserve(static_cast<std::size_t>(2 * sample_count_ + 1));
@@ -1315,7 +1315,7 @@ public:
 
     std::vector<double> probs{};
     Status pred_status = predict_prob_host_rows(
-        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>(),
+        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data,
         matrix.sample_count,
         matrix.feature_count,
         probs);
@@ -1735,11 +1735,11 @@ public:
     initial_score_ = 0.0;
     gb_newton_leaf_updates_ = false;
     const std::vector<double> x_train_host =
-        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+        matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
     const std::vector<double> y_train_host =
-        labels.y01.reshape({sample_count_}).to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+        labels.y01.reshape({sample_count_}).to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
     std::vector<double> base_sample_weights =
-        train_weight_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().to_vec<double>();
+        train_weight_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({sample_count_}).contiguous().host<double>().array().data;
     double base_weight_sum = std::accumulate(base_sample_weights.begin(), base_sample_weights.end(), 0.0);
     if (!(base_weight_sum > 0.0) || !std::isfinite(base_weight_sum)) {
       return Status::invalid_argument("EnsembleClassifier::learn requires strictly positive resolved sample weights.");
@@ -2029,7 +2029,7 @@ public:
           "EnsembleClassifier::infer_scores currently has a CPU-only implementation. Provide CPU features for ensemble inference."));
     }
 
-    const std::vector<double> x_host = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+    const std::vector<double> x_host = matrix.x_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
     std::vector<double> scores_sum(static_cast<std::size_t>(matrix.sample_count), 0.0);
     if (method_ == EnsembleMethod::GradientBoost) {
       std::fill(scores_sum.begin(), scores_sum.end(), initial_score_);
@@ -2059,7 +2059,7 @@ public:
         StatusOr<Series> pred_or = member.regressor_tree->infer(fb);
         if (!pred_or.ok()) return StatusOr<std::vector<double>>(pred_or.status());
         member_values =
-            pred_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({matrix.sample_count}).contiguous().to_vec<double>();
+            pred_or.value().to(pluss::pCPU, ScalarType::Float64).reshape({matrix.sample_count}).contiguous().host<double>().array().data;
         for (double& value : member_values) {
           value *= member.weight;
         }
@@ -2623,7 +2623,7 @@ private:
   Series b = rhs.to(platform, ScalarType::Float64).reshape({n});
   Series r = b;
   Series p = r;
-  double rs = r.square().sum().reshape({1}).item<double>();
+  double rs = r.square().sum().reshape({1}).host<double>().front();
   if (!std::isfinite(rs)) {
     return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite residual norm."));
   }
@@ -2636,14 +2636,14 @@ private:
   constexpr double eps = 1e-18;
   for (std::int64_t iter = 0; iter < iters; ++iter) {
     const Series ap = a.matmul(p.reshape({n, 1})).reshape({n});
-    const double denom = p.mul(ap).sum().reshape({1}).item<double>();
+    const double denom = p.mul(ap).sum().reshape({1}).host<double>().front();
     if (!std::isfinite(denom) || std::abs(denom) <= eps) {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered unstable CG denominator."));
     }
     const double alpha = rs / denom;
     x = x.add(p.mul(alpha));
     r = r.sub(ap.mul(alpha));
-    const double rs_new = r.square().sum().reshape({1}).item<double>();
+    const double rs_new = r.square().sum().reshape({1}).host<double>().front();
     if (!std::isfinite(rs_new)) {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite CG residual norm."));
     }
@@ -2668,9 +2668,9 @@ private:
   const std::int64_t nq = query_rows.sizes()[0];
   const std::int64_t nt = train_rows.sizes()[0];
   const std::int64_t d = train_rows.sizes()[1];
-  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto av = alpha.to(pluss::pCPU, ScalarType::Float64).reshape({alpha.numel()}).contiguous().to_vec<double>();
+  const auto qv = query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto tv = train_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>().array().data;
+  const auto av = alpha.to(pluss::pCPU, ScalarType::Float64).reshape({alpha.numel()}).contiguous().host<double>().array().data;
   std::vector<double> out(static_cast<std::size_t>(nq), 0.0);
   for (std::int64_t qi = 0; qi < nq; ++qi) {
     const double* qptr = qv.data() + static_cast<std::size_t>(qi * d);
@@ -3422,7 +3422,7 @@ struct LinearPenalty {
     if (!std::isfinite(loss)) {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
     }
-    const double step_inf = delta.abs().max().reshape({1}).item<double>();
+    const double step_inf = delta.abs().max().reshape({1}).host<double>().front();
     if (step_inf <= tolerance || std::abs(prev_loss - loss) <= tolerance) {
       break;
     }
@@ -4059,9 +4059,7 @@ public:
         try {
           if (use_parameter_bounds) {
             const auto fit = optim::septima(
-                [&](const optim::Trace& w) -> optim::Trace {
-                  return optim::sum(w * optim::fixed(grad));
-                },
+                [&](const Series& w) -> Series { return (w * grad).sum(); },
                 weights,
                 septima_solve_options,
                 septima_constraints);
@@ -4126,8 +4124,8 @@ public:
       const Series params = params_or.move_value();
       const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, params.platform());
       const Series idx1 = make_index_series(std::vector<std::int64_t>{1}, params.platform());
-      calibration_a_ = params.index_select(0, idx0).reshape({1}).item<double>();
-      calibration_b_ = params.index_select(0, idx1).reshape({1}).item<double>();
+      calibration_a_ = params.index_select(0, idx0).reshape({1}).host<double>().front();
+      calibration_b_ = params.index_select(0, idx1).reshape({1}).host<double>().front();
       calibrated_scores_ = true;
       calibration_kind_ = CalibrationKind::Platt;
     } else if (options.calibration == ScoreCalibration::Isotonic) {

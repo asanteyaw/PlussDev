@@ -1,0 +1,62 @@
+# Differential evolution in practice
+
+[Back to Derivative-Free Optimization 8: The Differential Evolution Minimisers](../dfo_08_differential_evolution.md)
+
+Differential evolution keeps a **population** of candidate points and improves it by recombination: each member is challenged by a trial point built from the differences of other members, and the better of the two survives. It uses only function values, it covers the whole search region at once, and it is the method of choice when a function has many local minima and you can afford thousands of evaluations. Two standalone minimisers exist: `differential_evolution_minimizer`, the classic scheme, and `differential_evolution_prmm_minimizer`, a self-adapting variant that carries a mutation factor and a crossover rate per member.
+
+The programs cover what a user decides. A direct call shows the global search from a start in a local minimum's basin. The parameters (population size, mutation factor, crossover rate, best-mix) are swept, with the warning that one seed moves the result as much as most rows differ. Seeds and execution modes show reproducibility and the spread across seeds. The initial radius sets where the population starts. Stopping shows the early-stop test. The self-adapting variant is the one to try when you do not know good parameter values.
+
+## Program 1: A direct call
+
+@@example Numerical/optimization/guide/dfo/371_differential_evolution_standalone.cpp@@
+
+The search is global, so it is run in a box. The start (3, 3, 3) lies in a local minimum's basin; the population covers the whole box and finds the global minimum at the origin. The run used its whole evaluation budget: with the early-stop test off (`check_every` 0, the default), only the budgets end a run. Program 5 turns the test on.
+
+## Program 2: The parameters
+
+@@example Numerical/optimization/guide/dfo/372_differential_evolution_knobs.cpp@@
+
+Read this table with care. Each row is one run, and Program 3 shows that the seed alone moves the result by more than most rows differ. What does carry over is how the settings interact with a fixed budget:
+
+- **Population size and generations share the budget.** With 20000 evaluations, 600 members get about 33 generations and 30 members get about 660. On this three-variable problem the small population is the better use of the budget; on a harder problem it would collapse onto a local minimum for lack of diversity. Match the population to the dimension (5 to 10 members per variable is the usual minimum) and make the budget large enough for tens to hundreds of generations.
+- **Mutation factor** scales the steps: too large (1.2) and the population keeps jumping past the minimum, too small and it collapses early.
+- **Crossover rate** controls how many coordinates change per trial. A low rate suits separable functions such as Rastrigin, where each coordinate can be improved on its own; a high one suits functions where variables interact.
+- **`best_mix`** builds mutants around the best member. It speeds convergence when the budget is tight (the 0.7 row is the best here) and raises the risk of collapsing on a local minimum when the function is rugged.
+
+## Program 3: Seeds and execution modes
+
+@@example Numerical/optimization/guide/dfo/373_differential_evolution_seeds_modes.cpp@@
+
+The same seed gives the same result (rows 1 and 4 of each mode agree exactly). Different seeds end at different values, from 0.04 to 1.1 in this run, a spread comparable to the whole of the previous table. For a multimodal function, report the spread over several seeds, or run several and keep the best. The sequential mode updates members one after another in the classic order; it gives a different random path, equally valid. The vectorized mode is the default.
+
+## Program 4: Where the population starts
+
+@@example Numerical/optimization/guide/dfo/376_differential_evolution_initial_radius.cpp@@
+
+On this problem the starting region has no consistent effect, because the population of 200 spreads quickly either way. It matters more for the swarm (next chapter), and it is the only setting that defines the starting region when there are no bounds, so choose it there to cover where you expect the answer.
+
+## Program 5: Stopping
+
+@@example Numerical/optimization/guide/dfo/375_differential_evolution_stopping.cpp@@
+
+With the test off the run uses all 400 generations. With it on (every 10 generations, relative improvement below the tolerance, and the population collapsed to a small spread) the run stops at 160 generations on this unimodal function with the answer already at 1e-26. The test never fires on a population that is still spread out, which protects a multimodal search from stopping on a plateau. Note the statuses: a generation limit reports `ReachedIterationBudget` and an evaluation limit `ReachedEvaluationBudget`.
+
+## Program 6: The self-adapting variant
+
+@@example Numerical/optimization/guide/dfo/374_differential_evolution_prmm.cpp@@
+
+`differential_evolution_prmm_minimizer` carries a mutation factor and a crossover rate per member, re-drawn at random with the probabilities `tau_mutation` and `tau_crossover` and kept in `[mutation_lower, mutation_upper]`. It protects the `elite_count` best members, chooses between two main strategies with `random_main_strategy_probability`, and reduces the population `reduction_passes` times as it converges. Its evaluation budget is `max_evaluations` (default 100000), and it derives its generation limit from that as `max_evaluations / (pmax × population_size)` (`pmax` defaults to 4), so it can end with `ReachedIterationBudget` just short of the evaluation budget, as in the table above.
+
+On the 6-variable function plain differential evolution is far from the minimum after 40000 evaluations (about 15) and the self-adapting variant finds it exactly. When you do not know good values for the parameters, this is the variant to try first, and it is what `Auto` chooses for unbounded problems of medium size.
+
+## Decisions and pitfalls
+
+- **Population size and generations share the budget.** With 20 000 evaluations, 600 members get about 33 generations and 30 members about 660; match the population to the difficulty (several members per variable) and to what you can afford.
+- **Report the spread over seeds, not one run.** On a multimodal function different seeds end at values that differ as much as most parameter rows do; run several and keep the best, or report the spread.
+- **The mutation factor scales the steps.** Too large and the population keeps jumping past the minimum; too small and it collapses early.
+- **A low crossover rate suits separable functions; a high one suits interacting variables.**
+- **`best_mix` speeds convergence when the budget is tight** and raises the risk of collapsing on a local minimum when the function is rugged.
+- **Turn the early-stop test on only when the function is unimodal enough.** With `check_every` 0 (the default), only the budgets end a run; the test never fires on a population that is still spread out, and stops a run at 160 generations instead of 400 when it does.
+- **Try the self-adapting variant when you cannot tune.** It is what `Auto` chooses for unbounded problems of medium size and found the minimum exactly where the plain method was far away.
+
+Where next: [Chapter 9](../dfo_09_particle_swarm.md) describes the other population method.

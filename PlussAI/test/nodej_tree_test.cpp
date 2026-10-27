@@ -76,7 +76,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "tree classifier infer_scores should succeed\n";
       return false;
     }
-    const auto scores = score_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto scores = score_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (scores.size() != 8) {
       if (err) *err << "tree classifier score length mismatch\n";
       return false;
@@ -93,8 +93,8 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "tree classifier infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i], 1e-8)) {
         if (err) *err << "tree classifier should fit this multi-level separable training set\n";
@@ -107,7 +107,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "tree classifier assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.empty() || metrics[0] < 0.99) {
       if (err) *err << "tree classifier default assess metric should be high accuracy\n";
       return false;
@@ -146,7 +146,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "entropy tree classifier infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (double p : pred) {
       if (!approx(p, 1.0, 1e-8)) {
         if (err) *err << "constant-feature tree should predict majority class\n";
@@ -225,8 +225,8 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "tree regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i], 1e-8)) {
         if (err) *err << "tree regressor should fit this step signal\n";
@@ -239,7 +239,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "tree regressor assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() < 3 || metrics[0] > 1e-12 || metrics[2] < 0.999999) {
       if (err) *err << "tree regressor metrics should indicate near-perfect fit\n";
       return false;
@@ -278,7 +278,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "depth-limited tree regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (double v : pred) {
       if (!approx(v, 4.0, 1e-8)) {
         if (err) *err << "depth-0 regressor should output global mean response\n";
@@ -319,7 +319,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "MAE tree regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (double v : pred) {
       if (!approx(v, 4.0, 1e-8)) {
         if (err) *err << "depth-0 MAE regressor should output global median response\n";
@@ -377,7 +377,7 @@ bool run_nodej_tree_checks(std::ostream* err = nullptr) {
       if (err) *err << "stress tree regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (pred.size() != static_cast<std::size_t>(n)) {
       if (err) *err << "stress tree regressor output length mismatch\n";
       return false;

@@ -1,0 +1,57 @@
+# Watching a run
+
+[Back to Optima 2: Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+Everything on the previous pages is available *after* a run. A **progress hook** gives it to you *during* the run, one snapshot per iteration, and it lets you stop the run yourself. A hook is any function from a snapshot to a bool: the snapshot carries the stage (`start`, `iter` or `done`), the current point, the full evaluation (value, gradient, constraint violation) and the work counters, and returning `true` stops the run with the flag `Stopped`.
+
+`reports::trace` and `reports::iter` turn an output stream into a ready-made hook that prints one line per iteration, which is the quickest way to watch a run. Writing your own is a few lines and doubles as a monitor (log the objective, plot the violation, stop when the point is good enough). The last program is about precedence: you can set one hook that applies to whichever algorithm runs, or a hook on one algorithm's own options, and when both are set the specific one wins.
+
+## Program 6: Printing progress
+
+`reports::trace` turns any output stream into a progress hook that prints one line per iteration. `reports::iter` is the short form. `ProgressTracePreset` switches each part of a line on or off.
+
+@@example Numerical/optimization/guide/optima/26_progress_trace.cpp@@
+
+The default trace prints a start line, one line per iteration, and a final line, each with the objective, violation, stationarity, backend parameter, step and message. `reports::iter` drops the start and final lines, the Krylov count and the message, and takes the number of decimals. It also takes an optional third argument, `every`, to print only every n-th iteration. The same `reports::iter` is the progress hook of `septima` too: the hook object can be called with either solver's progress snapshot, and the solver you give it to decides which one it receives. For an `optima` run each line carries the evaluations, objective, violation, stationarity, step and stall category; for a `septima` run each line carries the objective, the largest gradient entry and the largest step entry (see [Reading and watching a run](../../septima/septima_01_first_problems/reading_a_run.md)). The custom preset does the same with four decimals. Notice the two lines that repeat at the end of the first trace: the last iteration is reported once as an iteration and once as `done`.
+
+Read a trace by watching two columns. A run that is working shows `viol` falling to zero and `stationarity` falling at the end. Here both fall by orders of magnitude on every iteration, `viol` from `0.125` to `0.0035` to `3e-06` to zero and `stationarity` from `1` to `0.019` to `0.002` to `2e-06`: the signature of a quadratic-model method closing in on a solution. A trace that instead jumps back up, or stalls, is the signal to look at the stall category.
+
+### One name for two solvers
+
+`reports::iter` is not a plain function value. It returns a small object, `reports::IterReport`, that has one call operator for each solver's progress snapshot:
+
+```cpp
+bool operator()(const OptimaProgressSnapshot&) const;   // evaluations, objective, violation, stationarity, step, stall
+bool operator()(const SeptimaProgressSnapshot&) const;  // objective, largest gradient entry, largest step entry
+```
+
+The two solvers store their hook as a `std::function` over their own snapshot type: `OptimaOptions::progress_hook` takes an `OptimaProgressSnapshot` and `SeptimaSolveOptions::progress_hook` takes a `SeptimaProgressSnapshot`. When the object is assigned to either one, the compiler selects the call operator whose parameter matches that snapshot, so the same `reports::iter(std::cout, 4)` prints optima columns in one place and septima columns in the other. Nothing is decided while the program runs and nothing needs to be configured.
+
+The same trick works for a hook of your own: a generic lambda such as `[](const auto& snapshot) { std::cout << snapshot.iteration << "\n"; return false; }` can be assigned to either solver, because both snapshots have an `iteration` member. A solver whose snapshot the object has no call operator for will not compile, which is the safe failure: the mismatch is reported when you build, not in the middle of a run.
+
+
+## Program 7: Writing your own hook
+
+A hook is any function from a snapshot to a bool. The snapshot carries the stage, the current point, the full evaluation, and the work counters. This program records the objective at every iteration and stops the run as soon as the point is feasible and good enough.
+
+@@example Numerical/optimization/guide/optima/27_custom_hook.cpp@@
+
+The hook sees `start` once, `iter` for each iteration, and `done` once. It returned `true` at iteration 4, the first time the iterate was feasible and below `10.55`. The run ended with `Stopped`, the point it returned is the feasible one, and the `done` snapshot fires even when the hook ends the run. A hook can read `s.params` to log the point, or `s.evaluation.gradient` for the gradient, so it doubles as a monitor.
+
+## Program 8: Which hook runs
+
+You can set one hook on `OptimaOptions::progress_hook` and have it apply to whichever algorithm you choose, or set a hook on one algorithm's own options. When both are set the specific one wins.
+
+@@example Numerical/optimization/guide/optima/31_hook_precedence.cpp@@
+
+With only the general hook set it received all four snapshots. After adding a sequential QP hook, the specific hook received them and the general one received none. Choosing a different algorithm falls back to the general hook, because the sequential QP hook belongs to a method that is not running.
+
+## Decisions and pitfalls
+
+- **Read a trace by two columns.** A working run shows the violation falling to zero and the stationarity falling at the end; a trace that jumps back up, or stalls, is the signal to look at the stall category.
+- **`done` fires even when the hook ends the run.** The final snapshot is delivered once, so code that counts iterations should not count it.
+- **A hook that does heavy work slows every iteration.** Keep it light, or sample (act on every tenth `iter`).
+- **A specific hook replaces the general one.** If a method's own hook is set, the general hook receives nothing for that method; set one or the other, not both, unless you mean it.
+- **Stopping from a hook is a decision about quality.** Stop on a condition you can state (feasible and below a value), and check the flag afterwards: the result is `Stopped`, not `Converged`.
+
+Where next: [Chapter 3](../optima_03_choosing_an_algorithm.md) compares the four algorithms and how to choose between them.

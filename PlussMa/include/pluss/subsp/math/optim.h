@@ -18,6 +18,7 @@
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
+#include <iomanip>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -29,39 +30,21 @@
 
 namespace pluss::subsp::math::optim {
 
+// The tape-recording types are an implementation detail: callbacks are written over plain Series.
+namespace detail {
+using Trace = pluss::subsp::math::diff::Trace;
+using pluss::subsp::math::diff::trace;
+using pluss::subsp::math::diff::fixed;
+}  // namespace detail
+
 // Compatibility re-export: existing callers can continue to use the older
 // optim-facing trace helpers while new derivative-oriented code targets
 // pluss::subsp::math::diff directly.
-using pluss::subsp::math::diff::Trace;
-using pluss::subsp::math::diff::DualTrace;
 using pluss::subsp::math::diff::HvpOptions;
 using GradientAuditOptions = pluss::subsp::math::diff::DerivativeAuditOptions;
 using CurvatureAuditOptions = pluss::subsp::math::diff::DerivativeAuditOptions;
 using GradientAuditReport = pluss::subsp::math::diff::DerivativeAuditReport;
 using CurvatureAuditReport = pluss::subsp::math::diff::DerivativeAuditReport;
-using pluss::subsp::math::diff::trace;
-using pluss::subsp::math::diff::fixed;
-using pluss::subsp::math::diff::add;
-using pluss::subsp::math::diff::sub;
-using pluss::subsp::math::diff::mul;
-using pluss::subsp::math::diff::div;
-using pluss::subsp::math::diff::neg;
-using pluss::subsp::math::diff::pow;
-using pluss::subsp::math::diff::exp;
-using pluss::subsp::math::diff::log;
-using pluss::subsp::math::diff::sqrt;
-using pluss::subsp::math::diff::sin;
-using pluss::subsp::math::diff::cos;
-using pluss::subsp::math::diff::tanh;
-using pluss::subsp::math::diff::square;
-using pluss::subsp::math::diff::rsqrt;
-using pluss::subsp::math::diff::relu;
-using pluss::subsp::math::diff::sigmoid;
-using pluss::subsp::math::diff::softplus;
-using pluss::subsp::math::diff::clamp;
-using pluss::subsp::math::diff::sum;
-using pluss::subsp::math::diff::mean;
-using pluss::subsp::math::diff::matmul;
 using pluss::subsp::math::diff::clear_sensitivities;
 using pluss::subsp::math::diff::grad;
 using pluss::subsp::math::diff::hvp;
@@ -75,6 +58,78 @@ using pluss::subsp::math::diff::nth_diff;
 using pluss::subsp::math::diff::vjp;
 using pluss::subsp::math::diff::value_and_grad;
 
+namespace detail {
+
+// A user callback over plain Series (one array, called "x", or a pack of named blocks) is adapted to the
+// internal tape-recording form the engine differentiates. Callbacks take and return Series only.
+template <class Fn>
+std::function<detail::Trace(const ParameterPack<detail::Trace>&)> trace_pack_callback_(Fn&& fn) {
+  using F = std::decay_t<Fn>;
+  static_assert(!std::invocable<F&, const ParameterPack<detail::Trace>&> || std::invocable<F&, const ParameterPack<Series>&>,
+                "optim: a callback must take a Series or a ParameterPack<Series>");
+  static_assert(!std::invocable<F&, const detail::Trace&> || std::invocable<F&, const Series&>,
+                "optim: a callback must take a Series or a ParameterPack<Series>");
+  if constexpr (std::invocable<F&, const ParameterPack<Series>&>) {
+    return [f = std::forward<Fn>(fn)](const ParameterPack<detail::Trace>& p) -> detail::Trace {
+      std::vector<Series> values;
+      values.reserve(p.size());
+      for (const auto& block : p.blocks()) values.push_back(block.value.value());
+      return detail::Trace(f(p.template rebind<Series>(std::move(values))));
+    };
+  } else {
+    static_assert(std::invocable<F&, const Series&>,
+                  "optim: a callback must take a Series or a ParameterPack<Series>");
+    return [f = std::forward<Fn>(fn)](const ParameterPack<detail::Trace>& p) -> detail::Trace { return detail::Trace(f(p.at("x").value())); };
+  }
+}
+
+}  // namespace detail
+
+// A callback the engine records on a tape: a function over plain Series (one array "x", or a ParameterPack<Series>).
+class TraceCallback : public std::function<detail::Trace(const ParameterPack<detail::Trace>&)> {
+ public:
+  using Base = std::function<detail::Trace(const ParameterPack<detail::Trace>&)>;
+  TraceCallback() = default;
+  TraceCallback(std::nullptr_t) noexcept : Base(nullptr) {}
+  TraceCallback(Base fn) : Base(std::move(fn)) {}
+  template <class Fn>
+  requires(!std::is_same_v<std::decay_t<Fn>, TraceCallback> && !std::is_same_v<std::decay_t<Fn>, Base> &&
+           !std::is_null_pointer_v<std::decay_t<Fn>>)
+  TraceCallback(Fn&& fn) : Base(detail::trace_pack_callback_(std::forward<Fn>(fn))) {}
+};
+
+namespace detail {
+
+template <class Fn>
+std::pair<Series, ParameterPack<Series>> value_and_grad_trace_(Fn&& fn, const ParameterPack<Series>& params) {
+  pluss::subsp::math::diff::DerivativePolicy policy{};
+  policy.warn_on_disconnected = false;
+  policy.keep_graph = false;
+  auto [value, grads] = pluss::subsp::math::diff::value_and_grad(
+      [&](const std::vector<detail::Trace>& xs) -> detail::Trace {
+        return std::forward<Fn>(fn)(params.template rebind<detail::Trace>(xs));
+      },
+      params.values(),
+      policy);
+  return {value, params.template rebind<Series>(std::move(grads))};
+}
+
+template <class Fn>
+std::pair<Series, ParameterPack<Series>> jacrev_trace_(Fn&& fn, const ParameterPack<Series>& params) {
+  pluss::subsp::math::diff::DerivativePolicy policy{};
+  policy.warn_on_disconnected = false;
+  policy.keep_graph = false;
+  auto [value, jacobians] = pluss::subsp::math::diff::jacrev(
+      [&](const std::vector<detail::Trace>& xs) -> detail::Trace {
+        return std::forward<Fn>(fn)(params.template rebind<detail::Trace>(xs));
+      },
+      params.values(),
+      policy);
+  return {value, params.template rebind<Series>(std::move(jacobians))};
+}
+
+}  // namespace detail
+
 template <class Fn>
 std::pair<Series, std::vector<Series>> value_and_sensitivity(Fn&& fn, const std::vector<Series>& params) {
   return pluss::subsp::math::diff::value_and_grad(std::forward<Fn>(fn), params);
@@ -82,21 +137,12 @@ std::pair<Series, std::vector<Series>> value_and_sensitivity(Fn&& fn, const std:
 
 template <class Fn>
 std::pair<Series, ParameterPack<Series>> value_and_grad(Fn&& fn, const ParameterPack<Series>& params) {
-  pluss::subsp::math::diff::DerivativePolicy policy{};
-  policy.warn_on_disconnected = false;
-  policy.keep_graph = false;
-  auto [value, grads] = pluss::subsp::math::diff::value_and_grad(
-      [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(params.template rebind<Trace>(xs));
-      },
-      params.values(),
-      policy);
-  return {value, params.template rebind<Series>(std::move(grads))};
+  return detail::value_and_grad_trace_(detail::trace_pack_callback_(std::forward<Fn>(fn)), params);
 }
 
-inline Trace flatten_values(const ParameterPack<Trace>& params) {
+inline detail::Trace flatten_values(const ParameterPack<detail::Trace>& params) {
   if (params.empty()) {
-    ::pluss::throw_error("optim::flatten_values<Trace>: empty pack");
+    ::pluss::throw_error("optim::flatten_values<detail::Trace>: empty pack");
   }
   std::vector<Series> flat;
   flat.reserve(params.size());
@@ -104,40 +150,14 @@ inline Trace flatten_values(const ParameterPack<Trace>& params) {
     flat.push_back(block.value.value().reshape({block.value.value().numel()}));
   }
   Series out = flat.size() == 1 ? flat.front() : flat.front().unite(std::vector<Series>(flat.begin() + 1, flat.end()), 0);
-  return Trace(out);
+  return detail::Trace(out);
 }
 
-inline DualTrace flatten_values(const ParameterPack<DualTrace>& params) {
-  if (params.empty()) {
-    ::pluss::throw_error("optim::flatten_values<DualTrace>: empty pack");
-  }
-  std::vector<Series> values;
-  std::vector<Series> tangents;
-  values.reserve(params.size());
-  tangents.reserve(params.size());
-  for (const auto& block : params.blocks()) {
-    values.push_back(block.value.value().reshape({block.value.value().numel()}));
-    tangents.push_back(block.value.tangent().reshape({block.value.tangent().numel()}));
-  }
-  Series value = values.size() == 1 ? values.front() : values.front().unite(std::vector<Series>(values.begin() + 1, values.end()), 0);
-  Series tangent =
-      tangents.size() == 1 ? tangents.front() : tangents.front().unite(std::vector<Series>(tangents.begin() + 1, tangents.end()), 0);
-  return DualTrace(value, tangent);
+inline detail::Trace reshape_autodiff_(const detail::Trace& value, const std::vector<std::int64_t>& sizes) {
+  return detail::Trace(value.value().reshape(sizes));
 }
 
-inline Trace reshape_autodiff_(const Trace& value, const std::vector<std::int64_t>& sizes) {
-  return Trace(value.value().reshape(sizes));
-}
-
-inline DualTrace reshape_autodiff_(const DualTrace& value, const std::vector<std::int64_t>& sizes) {
-  return DualTrace(value.value().reshape(sizes), value.tangent().reshape(sizes));
-}
-
-inline Trace constant_autodiff_(const Trace& like, const Series& value) {
-  return pluss::subsp::math::diff::constant_like(like, value.to(like.value().platform()));
-}
-
-inline DualTrace constant_autodiff_(const DualTrace& like, const Series& value) {
+inline detail::Trace constant_autodiff_(const detail::Trace& like, const Series& value) {
   return pluss::subsp::math::diff::constant_like(like, value.to(like.value().platform()));
 }
 
@@ -148,26 +168,14 @@ ParameterPack<Series> grad(Fn&& fn, const ParameterPack<Series>& params) {
 
 template <class Fn>
 std::pair<Series, ParameterPack<Series>> jacrev(Fn&& fn, const ParameterPack<Series>& params) {
-  pluss::subsp::math::diff::DerivativePolicy policy{};
-  policy.warn_on_disconnected = false;
-  policy.keep_graph = false;
-  auto [value, jacobians] = pluss::subsp::math::diff::jacrev(
-      [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(params.template rebind<Trace>(xs));
-      },
-      params.values(),
-      policy);
-  return {value, params.template rebind<Series>(std::move(jacobians))};
+  return detail::jacrev_trace_(detail::trace_pack_callback_(std::forward<Fn>(fn)), params);
 }
 
+// Forward-mode products are available for callbacks written over plain Series: the Jacobian-vector product and
+// the Jacobian come from the reverse-mode Jacobian, and the Hessian-vector product is exact, by reverse over reverse.
 template <class Fn>
 std::pair<Series, ParameterPack<Series>> jacfwd(Fn&& fn, const ParameterPack<Series>& params) {
-  auto [value, jacobians] = pluss::subsp::math::diff::jacfwd(
-      [&](const std::vector<DualTrace>& xs) -> DualTrace {
-        return std::forward<Fn>(fn)(params.template rebind<DualTrace>(xs));
-      },
-      params.values());
-  return {value, params.template rebind<Series>(std::move(jacobians))};
+  return jacrev(std::forward<Fn>(fn), params);
 }
 
 template <class Fn>
@@ -175,51 +183,47 @@ std::pair<Series, Series> jvp(Fn&& fn,
                               const ParameterPack<Series>& params,
                               const ParameterPack<Series>& tangents) {
   return pluss::subsp::math::diff::jvp(
-      [&](const std::vector<DualTrace>& xs) -> DualTrace {
-        return std::forward<Fn>(fn)(params.template rebind<DualTrace>(xs));
+      [&, cb = detail::trace_pack_callback_(std::forward<Fn>(fn))](const std::vector<detail::Trace>& xs) -> detail::Trace {
+        return cb(params.template rebind<detail::Trace>(xs));
       },
       params.values(),
       tangents.values());
 }
+
+namespace detail {
+
+template <class Fn>
+std::pair<Series, ParameterPack<Series>> hvp_trace_(Fn&& fn,
+                                                    const ParameterPack<Series>& params,
+                                                    const ParameterPack<Series>& tangents,
+                                                    const pluss::subsp::math::diff::HvpOptions& opt = {}) {
+  pluss::subsp::math::diff::DerivativePolicy policy{};
+  policy.warn_on_disconnected = false;
+  policy.keep_graph = false;
+  auto raw = pluss::subsp::math::diff::hvp(
+      [&](const std::vector<Trace>& xs) -> Trace { return fn(params.template rebind<Trace>(xs)); },
+      params.values(),
+      tangents.values(),
+      opt,
+      policy);
+  return {raw.first, params.template rebind<Series>(std::move(raw.second))};
+}
+
+}  // namespace detail
 
 template <class Fn>
 std::pair<Series, ParameterPack<Series>> hvp(Fn&& fn,
                                              const ParameterPack<Series>& params,
                                              const ParameterPack<Series>& tangents,
                                              const pluss::subsp::math::diff::HvpOptions& opt = {}) {
-  using FnType = std::decay_t<Fn>;
-  auto params_values = params.values();
-  auto tangent_values = tangents.values();
-
-  std::pair<Series, std::vector<Series>> raw{
-      pluss::series::undefined(), {}};
-  if constexpr (std::is_invocable_v<FnType&, const ParameterPack<DualTrace>&>) {
-    FnType fn_copy(std::forward<Fn>(fn));
-    raw = pluss::subsp::math::diff::hvp(
-        [&](const std::vector<DualTrace>& xs) -> DualTrace {
-          return fn_copy(params.template rebind<DualTrace>(xs));
-        },
-        params_values,
-        tangent_values,
-        opt);
-  } else {
-    raw = pluss::subsp::math::diff::hvp(
-        [&](const std::vector<Trace>& xs) -> Trace {
-          return std::forward<Fn>(fn)(params.template rebind<Trace>(xs));
-        },
-        params_values,
-        tangent_values,
-        opt);
-  }
-  auto& [value, hv] = raw;
-  return {value, params.template rebind<Series>(std::move(hv))};
+  return detail::hvp_trace_(detail::trace_pack_callback_(std::forward<Fn>(fn)), params, tangents, opt);
 }
 
 template <class Fn>
 auto linearize(Fn&& fn, const ParameterPack<Series>& params) {
   auto [value, pushforward] = pluss::subsp::math::diff::linearize(
-      [&](const std::vector<DualTrace>& xs) -> DualTrace {
-        return std::forward<Fn>(fn)(params.template rebind<DualTrace>(xs));
+      [&, cb = detail::trace_pack_callback_(std::forward<Fn>(fn))](const std::vector<detail::Trace>& xs) -> detail::Trace {
+        return cb(params.template rebind<detail::Trace>(xs));
       },
       params.values());
 
@@ -264,25 +268,21 @@ struct NonlinearConstraintEvaluation {
 };
 
 struct ObjectiveDefinition {
-  std::function<Trace(const ParameterPack<Trace>&)> autodiff{};
-  std::function<DualTrace(const ParameterPack<DualTrace>&)> autodiff_dual{};
+  TraceCallback autodiff{};
   std::function<std::pair<Series, ParameterPack<Series>>(const ParameterPack<Series>&)> analytic{};
 
   bool defined() const noexcept {
-    return static_cast<bool>(autodiff) || static_cast<bool>(autodiff_dual) || static_cast<bool>(analytic);
+    return static_cast<bool>(autodiff) || static_cast<bool>(analytic);
   }
 };
 
 struct NonlinearConstraints {
-  std::function<Trace(const ParameterPack<Trace>&)> equality{};
-  std::function<Trace(const ParameterPack<Trace>&)> inequality{};
-  std::function<DualTrace(const ParameterPack<DualTrace>&)> equality_dual{};
-  std::function<DualTrace(const ParameterPack<DualTrace>&)> inequality_dual{};
+  TraceCallback equality{};
+  TraceCallback inequality{};
   std::function<NonlinearConstraintEvaluation(const ParameterPack<Series>&)> analytic{};
 
   bool empty() const noexcept {
     return !static_cast<bool>(equality) && !static_cast<bool>(inequality) &&
-           !static_cast<bool>(equality_dual) && !static_cast<bool>(inequality_dual) &&
            !static_cast<bool>(analytic);
   }
 };
@@ -324,52 +324,8 @@ public:
   ProblemBuilder() = default;
 
   template <class Fn>
-  requires(std::invocable<Fn&, const ParameterPack<Trace>&> &&
-           std::convertible_to<std::invoke_result_t<Fn&, const ParameterPack<Trace>&>, Trace>)
   ProblemBuilder& objective(Fn&& fn) {
-    problem_.objective.autodiff = std::forward<Fn>(fn);
-    return *this;
-  }
-
-  template <class Fn>
-  requires(!std::invocable<Fn&, const ParameterPack<Trace>&> &&
-           std::invocable<Fn&, const Trace&> &&
-           std::convertible_to<std::invoke_result_t<Fn&, const Trace&>, Trace>)
-  ProblemBuilder& objective(Fn&& fn) {
-    problem_.objective.autodiff = [f = std::forward<Fn>(fn)](const ParameterPack<Trace>& p) -> Trace {
-      return f(p.at("x"));
-    };
-    return *this;
-  }
-
-  template <class Fn>
-  requires(!std::invocable<Fn&, const ParameterPack<Trace>&> &&
-           !std::invocable<Fn&, const Trace&> &&
-           std::invocable<Fn&, const Series&> &&
-           std::convertible_to<std::invoke_result_t<Fn&, const Series&>, Trace>)
-  ProblemBuilder& objective(Fn&& fn) {
-    problem_.objective.autodiff = [f = std::forward<Fn>(fn)](const ParameterPack<Trace>& p) -> Trace {
-      return f(p.at("x").value());
-    };
-    return *this;
-  }
-
-  template <class Fn>
-  requires(!std::invocable<Fn&, const ParameterPack<Trace>&> &&
-           !std::invocable<Fn&, const Trace&> &&
-           std::invocable<Fn&, const Series&> &&
-           std::convertible_to<std::invoke_result_t<Fn&, const Series&>, Series> &&
-           !std::convertible_to<std::invoke_result_t<Fn&, const Series&>, Trace>)
-  ProblemBuilder& objective(Fn&& fn) {
-    problem_.objective.autodiff = [f = std::forward<Fn>(fn)](const ParameterPack<Trace>& p) -> Trace {
-      return trace(f(p.at("x").value()));
-    };
-    return *this;
-  }
-
-  template <class Fn>
-  ProblemBuilder& objective_dual(Fn&& fn) {
-    problem_.objective.autodiff_dual = std::forward<Fn>(fn);
+    problem_.objective.autodiff = detail::trace_pack_callback_(std::forward<Fn>(fn));
     return *this;
   }
 
@@ -381,13 +337,13 @@ public:
 
   template <class Fn>
   ProblemBuilder& nonlinear_equality(Fn&& fn) {
-    problem_.nonlinear.equality = std::forward<Fn>(fn);
+    problem_.nonlinear.equality = detail::trace_pack_callback_(std::forward<Fn>(fn));
     return *this;
   }
 
   template <class Fn>
   ProblemBuilder& nonlinear_inequality(Fn&& fn) {
-    problem_.nonlinear.inequality = std::forward<Fn>(fn);
+    problem_.nonlinear.inequality = detail::trace_pack_callback_(std::forward<Fn>(fn));
     return *this;
   }
 
@@ -463,13 +419,13 @@ public:
 
   template <class Fn>
   ObjectiveConstraintsBuilder& nonlinear_equality(Fn&& fn) {
-    constraints_.nonlinear.equality = std::forward<Fn>(fn);
+    constraints_.nonlinear.equality = detail::trace_pack_callback_(std::forward<Fn>(fn));
     return *this;
   }
 
   template <class Fn>
   ObjectiveConstraintsBuilder& nonlinear_inequality(Fn&& fn) {
-    constraints_.nonlinear.inequality = std::forward<Fn>(fn);
+    constraints_.nonlinear.inequality = detail::trace_pack_callback_(std::forward<Fn>(fn));
     return *this;
   }
 
@@ -736,6 +692,18 @@ enum class OptimaProblemScaling : std::uint8_t {
   ObjectiveAndConstraints,
 };
 
+inline std::string_view optima_problem_scaling_name(OptimaProblemScaling value) {
+  switch (value) {
+    case OptimaProblemScaling::None:
+      return "None";
+    case OptimaProblemScaling::InitialPoint:
+      return "InitialPoint";
+    case OptimaProblemScaling::ObjectiveAndConstraints:
+      return "ObjectiveAndConstraints";
+  }
+  return "Unknown";
+}
+
 struct OptimaNormalizationStats {
   double objective_scale{1.0};
   Series equality_row_scale = pluss::series::undefined();
@@ -783,7 +751,7 @@ struct SequentialQPOptions {
   //   Lbfgs         the same update restricted to the last `lbfgs_memory` pairs, rebuilt each iteration,
   //   Exact,
   //   HessianVector the exact Hessian of the Lagrangian from forward-over-reverse products (needs the problem's
-  //                 `autodiff_dual` callbacks; made positive definite by a diagonal shift where it is not),
+  //                 the autodiff callbacks; made positive definite by a diagonal shift where it is not),
   //   Identity      no curvature.
   OptimaHessianApproximation hessian_approximation{OptimaHessianApproximation::Bfgs};
   std::int64_t lbfgs_memory{10};
@@ -964,6 +932,20 @@ enum class OptimaAlgorithm : std::uint8_t {
   InternalProtocol,
 };
 
+inline std::string_view optima_algorithm_name(OptimaAlgorithm value) {
+  switch (value) {
+    case OptimaAlgorithm::MeritMethod:
+      return "MeritMethod";
+    case OptimaAlgorithm::SequentialQP:
+      return "SequentialQP";
+    case OptimaAlgorithm::WorkingSet:
+      return "WorkingSet";
+    case OptimaAlgorithm::InternalProtocol:
+      return "InternalProtocol";
+  }
+  return "Unknown";
+}
+
 enum class OptimaExitFlag : std::int32_t {
   Converged = 1,
   MaxIterations = 0,
@@ -975,6 +957,30 @@ enum class OptimaExitFlag : std::int32_t {
   NoProgress = -6,
   ConstraintStationary = -7,
 };
+
+inline std::string_view optima_exit_flag_name(OptimaExitFlag flag) {
+  switch (flag) {
+    case OptimaExitFlag::Converged:
+      return "Converged";
+    case OptimaExitFlag::MaxIterations:
+      return "MaxIterations";
+    case OptimaExitFlag::Stopped:
+      return "Stopped";
+    case OptimaExitFlag::NoFeasiblePoint:
+      return "NoFeasiblePoint";
+    case OptimaExitFlag::ObjectiveTargetReached:
+      return "ObjectiveTargetReached";
+    case OptimaExitFlag::NonFiniteEvaluation:
+      return "NonFiniteEvaluation";
+    case OptimaExitFlag::InvalidProblem:
+      return "InvalidProblem";
+    case OptimaExitFlag::NoProgress:
+      return "NoProgress";
+    case OptimaExitFlag::ConstraintStationary:
+      return "ConstraintStationary";
+  }
+  return "Unknown";
+}
 
 struct OptimaOutput {
   std::string algorithm{};
@@ -1114,6 +1120,8 @@ inline std::ostream& print_summary(std::ostream& os, const OptimaState& result) 
   return os;
 }
 
+struct SeptimaProgressSnapshot;
+
 namespace reports {
 
 struct ProgressTracePreset {
@@ -1173,9 +1181,30 @@ inline std::function<bool(const OptimaProgressSnapshot&)> iteration_only_trace(s
   return trace(os, preset);
 }
 
-inline std::function<bool(const OptimaProgressSnapshot&)> iter(std::ostream& os,
-                                                               int precision = 6) {
-  return iteration_only_trace(os, precision);
+// One iteration-per-line report that works as the `progress_hook` of both `optima` and `septima`: it can be called
+// with either solver's snapshot. `every` prints only every n-th iteration (the first is always printed).
+class IterReport {
+ public:
+  IterReport(std::ostream& os, int precision, std::int64_t every)
+      : os_(&os), precision_(precision), every_(every), optima_(iteration_only_trace(os, precision)) {}
+
+  bool operator()(const OptimaProgressSnapshot& snapshot) const {
+    if (!selected_(snapshot.iteration)) return false;
+    return optima_(snapshot);
+  }
+  bool operator()(const SeptimaProgressSnapshot& snapshot) const;
+
+ private:
+  bool selected_(std::int64_t iteration) const { return every_ <= 1 || iteration == 1 || iteration % every_ == 0; }
+
+  std::ostream* os_;
+  int precision_;
+  std::int64_t every_;
+  std::function<bool(const OptimaProgressSnapshot&)> optima_;
+};
+
+inline IterReport iter(std::ostream& os, int precision = 6, std::int64_t every = 1) {
+  return IterReport(os, precision, every);
 }
 
 inline std::ostream& compact_summary(std::ostream& os, const OptimaState& result) {
@@ -1559,22 +1588,16 @@ AD dense_matvec_autodiff_(const Series& matrix, const AD& vector) {
   }
   const Series aligned =
       matrix.to(ScalarType::Float64).to(vector.value().platform()).reshape({rows, cols});
-  if constexpr (std::is_same_v<AD, Trace>) {
-    return Trace(aligned.matmul(vector.value().reshape({cols, 1})).reshape({rows}));
-  } else {
-    return DualTrace(
-        aligned.matmul(vector.value().reshape({cols, 1})).reshape({rows}),
-        aligned.matmul(vector.tangent().reshape({cols, 1})).reshape({rows}));
-  }
+  return detail::Trace(aligned.matmul(vector.value().reshape({cols, 1})).reshape({rows}));
 }
 
 inline std::pair<Series, ParameterPack<Series>> objective_autodiff_value_and_grad_(
     const ConstrainedProblem& problem,
     const ParameterPack<Series>& params) {
   if (problem.objective.autodiff) {
-    return value_and_grad(
-        [&](const ParameterPack<Trace>& p) -> Trace {
-          Trace out = problem.objective.autodiff(p);
+    return detail::value_and_grad_trace_(
+        [&](const ParameterPack<detail::Trace>& p) -> detail::Trace {
+          detail::Trace out = problem.objective.autodiff(p);
           if (out.defined() && out.value().numel() != 1) {
             ::pluss::throw_error("optim: the objective must return a single number, but it returned " +
                                  std::to_string(out.value().numel()) +
@@ -1590,11 +1613,8 @@ inline std::pair<Series, ParameterPack<Series>> objective_autodiff_value_and_gra
 
 template <class AD>
 AD call_objective_autodiff_(const ConstrainedProblem& problem, const ParameterPack<AD>& params) {
-  if constexpr (std::is_same_v<AD, Trace>) {
-    if (problem.objective.autodiff) return problem.objective.autodiff(params);
-  } else {
-    if (problem.objective.autodiff_dual) return problem.objective.autodiff_dual(params);
-  }
+  static_assert(std::is_same_v<AD, detail::Trace>);
+  if (problem.objective.autodiff) return problem.objective.autodiff(params);
   ::pluss::throw_error(
       "optim::call_objective_autodiff_: autodiff objective callback is required");
 }
@@ -1602,22 +1622,16 @@ AD call_objective_autodiff_(const ConstrainedProblem& problem, const ParameterPa
 template <class AD>
 std::optional<AD> call_nonlinear_equality_autodiff_(const ConstrainedProblem& problem,
                                                     const ParameterPack<AD>& params) {
-  if constexpr (std::is_same_v<AD, Trace>) {
-    if (problem.nonlinear.equality) return problem.nonlinear.equality(params);
-  } else {
-    if (problem.nonlinear.equality_dual) return problem.nonlinear.equality_dual(params);
-  }
+  static_assert(std::is_same_v<AD, detail::Trace>);
+  if (problem.nonlinear.equality) return problem.nonlinear.equality(params);
   return std::nullopt;
 }
 
 template <class AD>
 std::optional<AD> call_nonlinear_inequality_autodiff_(const ConstrainedProblem& problem,
                                                       const ParameterPack<AD>& params) {
-  if constexpr (std::is_same_v<AD, Trace>) {
-    if (problem.nonlinear.inequality) return problem.nonlinear.inequality(params);
-  } else {
-    if (problem.nonlinear.inequality_dual) return problem.nonlinear.inequality_dual(params);
-  }
+  static_assert(std::is_same_v<AD, detail::Trace>);
+  if (problem.nonlinear.inequality) return problem.nonlinear.inequality(params);
   return std::nullopt;
 }
 
@@ -1633,17 +1647,10 @@ inline bool supports_exact_curvature_(const ConstrainedProblem& problem,
         approximation == OptimaHessianApproximation::HessianVector)) {
     return true;
   }
-  if (!problem.objective.autodiff_dual) return false;
-  if (requires_dual_nonlinear_callbacks_(problem) &&
-      (!problem.nonlinear.equality_dual && !problem.nonlinear.inequality_dual)) {
-    return false;
-  }
-  if (problem.nonlinear.equality && !problem.nonlinear.equality_dual) return false;
-  if (problem.nonlinear.inequality && !problem.nonlinear.inequality_dual) return false;
-  if (problem.nonlinear.analytic &&
-      (!problem.nonlinear.equality_dual || !problem.nonlinear.inequality_dual)) {
-    return false;
-  }
+  // Exact curvature differentiates the callbacks twice, so it needs them written over Series rather than
+  // supplied as values and gradients.
+  if (!problem.objective.autodiff) return false;
+  if (problem.nonlinear.analytic && !(problem.nonlinear.equality && problem.nonlinear.inequality)) return false;
   return true;
 }
 
@@ -1658,13 +1665,6 @@ AD barrier_objective_autodiff_(const ConstrainedProblem& problem,
   using pluss::subsp::math::diff::log;
   using pluss::subsp::math::diff::square;
   using pluss::subsp::math::diff::sum;
-
-  if constexpr (std::is_same_v<AD, DualTrace>) {
-    if (!supports_exact_curvature_(problem, OptimaHessianApproximation::Exact)) {
-      ::pluss::throw_error(
-          "optim::barrier_objective_autodiff_: exact internal-protocol curvature requires objective.autodiff_dual and dual nonlinear callbacks");
-    }
-  }
 
   const double objective_scale = normalization ? normalization->objective_scale : 1.0;
   AD total = call_objective_autodiff_(problem, params) * objective_scale;
@@ -1736,8 +1736,8 @@ inline Series assemble_hessian_from_hvp_(const ConstrainedProblem& problem,
       const Series basis = pluss::subsp::math::diff::detail::flat_basis_like_(
           flatten_values(params).to(ScalarType::Float64).to(platform), i);
       const auto tangent = unflatten_values(params.layout(), basis);
-      auto [_, hv] = hvp(
-          [&](const ParameterPack<DualTrace>& p) -> DualTrace {
+      auto [_, hv] = hvp_trace_(
+          [&](const ParameterPack<detail::Trace>& p) -> detail::Trace {
             return barrier_objective_autodiff_(problem, p, barrier_parameter, equality_penalty, &normalization);
           },
           params,
@@ -1766,13 +1766,6 @@ AD lagrangian_objective_autodiff_(const ConstrainedProblem& problem,
                                   std::int64_t nonlinear_inequality_offset,
                                   const OptimaNormalizationStats& normalization) {
   using pluss::subsp::math::diff::sum;
-
-  if constexpr (std::is_same_v<AD, DualTrace>) {
-    if (!supports_exact_curvature_(problem, OptimaHessianApproximation::Exact)) {
-      ::pluss::throw_error(
-          "optim::lagrangian_objective_autodiff_: exact curvature requires objective.autodiff_dual and dual nonlinear callbacks");
-    }
-  }
 
   AD total = call_objective_autodiff_(problem, params) * normalization.objective_scale;
   if (const auto equality = call_nonlinear_equality_autodiff_(problem, params); equality.has_value()) {
@@ -1822,8 +1815,8 @@ inline Series assemble_lagrangian_hessian_(const ConstrainedProblem& problem,
       const Series basis = pluss::subsp::math::diff::detail::flat_basis_like_(
           flatten_values(params).to(ScalarType::Float64).to(platform), i);
       const auto tangent = unflatten_values(params.layout(), basis);
-      auto [_, hv] = hvp(
-          [&](const ParameterPack<DualTrace>& p) -> DualTrace {
+      auto [_, hv] = hvp_trace_(
+          [&](const ParameterPack<detail::Trace>& p) -> detail::Trace {
             return lagrangian_objective_autodiff_(problem, p, equality_dual, equality_scale, inequality_dual,
                                                   linear_equality_rows, nonlinear_inequality_offset, normalization);
           },
@@ -2032,6 +2025,7 @@ inline double series_dot_(const Series& a, const Series& b) {
   return a.to(ScalarType::Float64)
       .reshape({1, a.numel()})
       .matmul(b.to(ScalarType::Float64).reshape({b.numel(), 1}))
+      .reshape(std::vector<std::int64_t>{})
       .item<double>();
 }
 
@@ -2630,7 +2624,7 @@ inline Series one_hot_jacobian_row_(std::int64_t n,
 // Reads a Series to host doubles in one transfer.
 inline std::vector<double> host_doubles_(const Series& x) {
   if (!x.defined() || x.numel() == 0) return {};
-  return x.to(ScalarType::Float64).to(pluss::codem::Platform::CPU).reshape({x.numel()}).to_vec<double>();
+  return x.to(ScalarType::Float64).to(pluss::codem::Platform::CPU).reshape({x.numel()}).host<double>();
 }
 
 // One constraint row as a Series (and kept as host values for the dense consumers).
@@ -3336,7 +3330,7 @@ inline Series inequality_slack_(const FlatConstraintSystem& system,
 
 inline std::vector<double> series_cpu_vec_(const Series& s) {
   if (!s.defined() || s.numel() == 0) return {};
-  return s.to(ScalarType::Float64).to(pluss::codem::Platform::CPU).reshape({s.numel()}).to_vec<double>();
+  return s.to(ScalarType::Float64).to(pluss::codem::Platform::CPU).reshape({s.numel()}).host<double>();
 }
 
 inline std::int64_t count_nonlinear_rows_(const FlatConstraintSystem& system) {
@@ -4926,6 +4920,8 @@ inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
       auto [value, grad_pack] = problem.objective.analytic(params);
       out.value = std::move(value);
       out.gradient = std::move(grad_pack);
+      // One number is stored as a rank-zero Series whatever shape the callback gave it.
+      if (out.value.defined() && out.value.numel() == 1 && out.value.dim() != 0) out.value = out.value.reshape(std::vector<std::int64_t>{});
     } catch (...) {
       out.status = EvalStatus::InvalidProblem;
       out.message = detail::callback_failure_message_("objective analytic callback");
@@ -4936,6 +4932,8 @@ inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
       auto [value, grad_pack] = detail::objective_autodiff_value_and_grad_(problem, params);
       out.value = std::move(value);
       out.gradient = std::move(grad_pack);
+      // One number is stored as a rank-zero Series whatever shape the callback gave it.
+      if (out.value.defined() && out.value.numel() == 1 && out.value.dim() != 0) out.value = out.value.reshape(std::vector<std::int64_t>{});
     } catch (...) {
       out.status = EvalStatus::InvalidProblem;
       out.message = detail::callback_failure_message_("objective autodiff callback");
@@ -4986,8 +4984,8 @@ inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
   } else {
     if (problem.nonlinear.equality) {
       try {
-        auto [value, jac] = jacrev(
-            [&](const ParameterPack<Trace>& p) -> Trace { return problem.nonlinear.equality(p); },
+        auto [value, jac] = detail::jacrev_trace_(
+            [&](const ParameterPack<detail::Trace>& p) -> detail::Trace { return problem.nonlinear.equality(p); },
             params);
         nonlinear_eval.equality = std::move(value);
         nonlinear_eval.equality_jacobian = std::move(jac);
@@ -5002,8 +5000,8 @@ inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
     }
     if (problem.nonlinear.inequality) {
       try {
-        auto [value, jac] = jacrev(
-            [&](const ParameterPack<Trace>& p) -> Trace { return problem.nonlinear.inequality(p); },
+        auto [value, jac] = detail::jacrev_trace_(
+            [&](const ParameterPack<detail::Trace>& p) -> detail::Trace { return problem.nonlinear.inequality(p); },
             params);
         nonlinear_eval.inequality = std::move(value);
         nonlinear_eval.inequality_jacobian = std::move(jac);
@@ -5152,7 +5150,7 @@ inline DerivativeAuditReport audit_optima_derivatives(
 
   DerivativeAuditReport report;
 
-  if (problem.objective.analytic && (problem.objective.autodiff || problem.objective.autodiff_dual)) {
+  if (problem.objective.analytic && problem.objective.autodiff) {
     auto [analytic_value, analytic_gradient] = problem.objective.analytic(params);
     auto [autodiff_value, autodiff_gradient] = detail::objective_autodiff_value_and_grad_(problem, params);
     const double value_abs_diff = detail::max_abs_diff_series_(analytic_value, autodiff_value);
@@ -5172,8 +5170,8 @@ inline DerivativeAuditReport audit_optima_derivatives(
 
   if (problem.nonlinear.analytic && problem.nonlinear.equality) {
     const auto analytic_eval = problem.nonlinear.analytic(params);
-    auto [autodiff_value, autodiff_jacobian] = jacrev(
-        [&](const ParameterPack<Trace>& p) -> Trace { return problem.nonlinear.equality(p); },
+    auto [autodiff_value, autodiff_jacobian] = detail::jacrev_trace_(
+        [&](const ParameterPack<detail::Trace>& p) -> detail::Trace { return problem.nonlinear.equality(p); },
         params);
     const double value_abs_diff = detail::max_abs_diff_series_(analytic_eval.equality, autodiff_value);
     const double value_rel_diff = detail::max_rel_diff_series_(analytic_eval.equality, autodiff_value);
@@ -5195,8 +5193,8 @@ inline DerivativeAuditReport audit_optima_derivatives(
 
   if (problem.nonlinear.analytic && problem.nonlinear.inequality) {
     const auto analytic_eval = problem.nonlinear.analytic(params);
-    auto [autodiff_value, autodiff_jacobian] = jacrev(
-        [&](const ParameterPack<Trace>& p) -> Trace { return problem.nonlinear.inequality(p); },
+    auto [autodiff_value, autodiff_jacobian] = detail::jacrev_trace_(
+        [&](const ParameterPack<detail::Trace>& p) -> detail::Trace { return problem.nonlinear.inequality(p); },
         params);
     const double value_abs_diff = detail::max_abs_diff_series_(analytic_eval.inequality, autodiff_value);
     const double value_rel_diff = detail::max_rel_diff_series_(analytic_eval.inequality, autodiff_value);
@@ -6101,7 +6099,7 @@ inline SequentialQPState init_sequential_qp_state(const ConstrainedProblem& prob
     state.evaluation.status = EvalStatus::InvalidProblem;
     state.converged = true;
     state.message =
-        "exact curvature requires objective.autodiff_dual and dual nonlinear callbacks (hessian_approximation is Exact "
+        "exact curvature requires an autodiff objective and autodiff nonlinear callbacks (hessian_approximation is Exact "
         "or HessianVector)";
     return state;
   }
@@ -6522,7 +6520,7 @@ inline ElasticQpResult solve_elastic_qp_core_(const std::vector<double>& B,
           try {
             const Series factor = pluss::subsp::math::linalg::cholesky(
                 pluss::make_series(chol, {n, n}).to(ScalarType::Float64), false);
-            std::vector<double> l = factor.to(pluss::codem::Platform::CPU).to_vec<double>();
+            std::vector<double> l = factor.to(pluss::codem::Platform::CPU).host<double>().array().data;
             chol_ok = static_cast<std::int64_t>(l.size()) == n * n;
             for (std::int64_t i = 0; i < n && chol_ok; ++i) {
               const double dgl = l[static_cast<std::size_t>(i * n + i)];
@@ -6561,7 +6559,7 @@ inline ElasticQpResult solve_elastic_qp_core_(const std::vector<double>& B,
         const Series sol = solve_dense_system_series_(pluss::make_series(Md, {n, n}).to(ScalarType::Float64),
                                                        pluss::make_series(rhs_red, {n}).to(ScalarType::Float64),
                                                        ls.regularization, ls.solver, ls.pivot_threshold, ok);
-        if (ok) { x = sol.to(pluss::codem::Platform::CPU).to_vec<double>(); return true; }
+        if (ok) { x = sol.to(pluss::codem::Platform::CPU).host<double>().array().data; return true; }
       }
       x = rhs_red;
       std::vector<double> A = Md;
@@ -6816,7 +6814,7 @@ inline ElasticQpResult solve_elastic_qp_(const std::vector<double>& B,
 
 inline std::vector<double> series_to_doubles_(const Series& s) {
   if (!s.defined() || s.numel() == 0) return {};
-  return s.to(ScalarType::Float64).to(pluss::codem::Platform::CPU).reshape({s.numel()}).to_vec<double>();
+  return s.to(ScalarType::Float64).to(pluss::codem::Platform::CPU).reshape({s.numel()}).host<double>();
 }
 
 inline double l1_violation_(const ProblemEvaluation& e) {
@@ -7959,7 +7957,7 @@ inline InternalProtocolState init_internal_protocol_state(const ConstrainedProbl
     state.evaluation.status = EvalStatus::InvalidProblem;
     state.converged = true;
     state.message =
-        "exact internal-protocol curvature requires objective.autodiff_dual and dual nonlinear callbacks";
+        "exact internal-protocol curvature requires an autodiff objective and autodiff nonlinear callbacks";
     return state;
   }
   std::int64_t eval_count = 0;
@@ -9437,9 +9435,7 @@ inline ConstrainedProblem apply_problem_scaling_(const ConstrainedProblem& probl
   };
   if (sf != 1.0) {
     if (problem.objective.autodiff)
-      out.objective.autodiff = [f = problem.objective.autodiff, sf](const ParameterPack<Trace>& p) { return f(p) * sf; };
-    if (problem.objective.autodiff_dual)
-      out.objective.autodiff_dual = [f = problem.objective.autodiff_dual, sf](const ParameterPack<DualTrace>& p) { return f(p) * sf; };
+      out.objective.autodiff = TraceCallback::Base([f = problem.objective.autodiff, sf](const ParameterPack<detail::Trace>& p) { return f(p) * sf; });
     if (problem.objective.analytic)
       out.objective.analytic = [f = problem.objective.analytic, sf](const ParameterPack<Series>& p) {
         auto [value, grad] = f(p);
@@ -9463,28 +9459,18 @@ inline ConstrainedProblem apply_problem_scaling_(const ConstrainedProblem& probl
   if (scale_eq) {
     const Series w = scale_weights_series_(sc.nonlinear_equality);
     if (problem.nonlinear.equality)
-      out.nonlinear.equality = [f = problem.nonlinear.equality, w](const ParameterPack<Trace>& p) {
-        Trace v = f(p);
+      out.nonlinear.equality = TraceCallback::Base([f = problem.nonlinear.equality, w](const ParameterPack<detail::Trace>& p) {
+        detail::Trace v = f(p);
         return v * constant_autodiff_(v, w.to(v.value().platform()).reshape({v.value().numel()}));
-      };
-    if (problem.nonlinear.equality_dual)
-      out.nonlinear.equality_dual = [f = problem.nonlinear.equality_dual, w](const ParameterPack<DualTrace>& p) {
-        DualTrace v = f(p);
-        return v * constant_autodiff_(v, w.to(v.value().platform()).reshape({v.value().numel()}));
-      };
+      });
   }
   if (scale_ineq) {
     const Series w = scale_weights_series_(sc.nonlinear_inequality);
     if (problem.nonlinear.inequality)
-      out.nonlinear.inequality = [f = problem.nonlinear.inequality, w](const ParameterPack<Trace>& p) {
-        Trace v = f(p);
+      out.nonlinear.inequality = TraceCallback::Base([f = problem.nonlinear.inequality, w](const ParameterPack<detail::Trace>& p) {
+        detail::Trace v = f(p);
         return v * constant_autodiff_(v, w.to(v.value().platform()).reshape({v.value().numel()}));
-      };
-    if (problem.nonlinear.inequality_dual)
-      out.nonlinear.inequality_dual = [f = problem.nonlinear.inequality_dual, w](const ParameterPack<DualTrace>& p) {
-        DualTrace v = f(p);
-        return v * constant_autodiff_(v, w.to(v.value().platform()).reshape({v.value().numel()}));
-      };
+      });
   }
   if ((scale_eq || scale_ineq) && problem.nonlinear.analytic) {
     out.nonlinear.analytic = [f = problem.nonlinear.analytic, we = sc.nonlinear_equality, wi = sc.nonlinear_inequality](
@@ -9631,32 +9617,32 @@ inline OptimaState optima(const ConstrainedProblem& problem,
   return optima(problem, pack_series(initial_params), options);
 }
 
+// Objectives over plain Series: the callback receives the parameters as Series and returns a Series (a single
+// number); the engine differentiates it through the Series tape.
 inline OptimaState optima(
-    std::function<Trace(const ParameterPack<Trace>&)> objective_autodiff,
-    const ParameterPack<Series>& initial_params,
-    const OptimaOptions& options = {},
-    const ObjectiveConstraints& constraints = {}) {
-  ConstrainedProblem problem;
-  problem.objective.autodiff = std::move(objective_autodiff);
-  problem.nonlinear = constraints.nonlinear;
-  problem.linear = constraints.linear;
-  problem.bounds = constraints.bounds;
-  return optima(problem, initial_params, options);
-}
-
-inline OptimaState optima(
-    std::function<Trace(const Trace&)> objective_autodiff,
+    std::function<Series(const Series&)> objective_series,
     const Series& initial_params,
     const OptimaOptions& options = {},
     const ObjectiveConstraints& constraints = {}) {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [f = std::move(objective_autodiff)](const ParameterPack<Trace>& p) -> Trace {
-    return f(p.at("x"));
-  };
+  problem.objective.autodiff = detail::trace_pack_callback_(std::move(objective_series));
   problem.nonlinear = constraints.nonlinear;
   problem.linear = constraints.linear;
   problem.bounds = constraints.bounds;
   return optima(problem, pack_series(initial_params), options);
+}
+
+inline OptimaState optima(
+    std::function<Series(const ParameterPack<Series>&)> objective_series,
+    const ParameterPack<Series>& initial_params,
+    const OptimaOptions& options = {},
+    const ObjectiveConstraints& constraints = {}) {
+  ConstrainedProblem problem;
+  problem.objective.autodiff = detail::trace_pack_callback_(std::move(objective_series));
+  problem.nonlinear = constraints.nonlinear;
+  problem.linear = constraints.linear;
+  problem.bounds = constraints.bounds;
+  return optima(problem, initial_params, options);
 }
 
 inline OptimaState optima(
@@ -9874,7 +9860,7 @@ inline std::vector<Series> adam_step(std::vector<Series> params,
   return params;
 }
 
-using SeptimaObjectiveTraceFn = std::function<Trace(const std::vector<Trace>&)>;
+using SeptimaObjectiveTraceFn = std::function<detail::Trace(const std::vector<detail::Trace>&)>;
 using SeptimaObjectiveSeriesFn = std::function<Series(const std::vector<Series>&)>;
 
 struct SeptimaOptions {
@@ -9939,12 +9925,9 @@ using SeptimaLbfgsOptions = SeptimaOptions::LbfgsOptions;
 
 struct SeptimaConstraints {
   using ResidualFn = std::function<std::vector<Series>(const std::vector<Series>&)>;
-  using TraceResidualFn = std::function<std::vector<Trace>(const std::vector<Trace>&)>;
 
   ResidualFn equalities{};
   ResidualFn inequalities{};
-  TraceResidualFn equalities_trace{};
-  TraceResidualFn inequalities_trace{};
   std::vector<Series> lbs{};
   std::vector<Series> ubs{};
 
@@ -9981,6 +9964,24 @@ enum class SeptimaExitFlag : std::int32_t {
   InvalidProblem = -4,
 };
 
+inline std::string_view septima_exit_flag_name(SeptimaExitFlag value) {
+  switch (value) {
+    case SeptimaExitFlag::Converged:
+      return "Converged";
+    case SeptimaExitFlag::MaxIterations:
+      return "MaxIterations";
+    case SeptimaExitFlag::Stopped:
+      return "Stopped";
+    case SeptimaExitFlag::NoProgress:
+      return "NoProgress";
+    case SeptimaExitFlag::NonFiniteEvaluation:
+      return "NonFiniteEvaluation";
+    case SeptimaExitFlag::InvalidProblem:
+      return "InvalidProblem";
+  }
+  return "Unknown";
+}
+
 struct SeptimaProgressSnapshot {
   std::int64_t iteration{0};
   std::int64_t function_evaluations{0};
@@ -10003,6 +10004,22 @@ struct SeptimaSolveOptions {
   bool stop_on_nonfinite_objective{true};
   std::function<bool(const SeptimaProgressSnapshot&)> progress_hook{};
 };
+
+namespace reports {
+
+inline bool IterReport::operator()(const SeptimaProgressSnapshot& snapshot) const {
+  if (selected_(snapshot.iteration)) {
+    const auto flags = os_->flags();
+    const auto old_precision = os_->precision();
+    *os_ << "iter " << snapshot.iteration << "  objective " << std::scientific << std::setprecision(precision_) << snapshot.objective << "  gradient "
+         << snapshot.gradient_inf_norm << "  step " << snapshot.step_inf_norm << '\n';
+    os_->flags(flags);
+    os_->precision(old_precision);
+  }
+  return true;
+}
+
+}  // namespace reports
 
 struct SeptimaResult {
   std::vector<Series> params{};
@@ -10181,12 +10198,6 @@ inline void septima_validate_constraints_(const std::vector<Series>& params,
     }
   }
 
-  if (!constraints.equalities && constraints.equalities_trace) {
-    ::pluss::throw_error("optim::septima_step_inplace: equalities_trace requires equalities");
-  }
-  if (!constraints.inequalities && constraints.inequalities_trace) {
-    ::pluss::throw_error("optim::septima_step_inplace: inequalities_trace requires inequalities");
-  }
 
   auto check_bound = [&](const std::vector<Series>& bounds, const char* name) {
     for (std::size_t i = 0; i < bounds.size(); ++i) {
@@ -10280,39 +10291,22 @@ inline std::vector<Series> septima_evaluate_residuals_(
   return out;
 }
 
-inline std::vector<Trace> septima_evaluate_trace_residuals_(
-    const std::vector<Trace>& vars,
+inline std::vector<detail::Trace> septima_evaluate_trace_residuals_(
+    const std::vector<detail::Trace>& vars,
     const SeptimaConstraints::ResidualFn& series_fn,
-    const SeptimaConstraints::TraceResidualFn& trace_fn,
     const char* name) {
-  // Prefer the Series residual callback to keep primal/dual paths aligned and avoid
-  // trace-only callback disconnects.
   if (series_fn) {
     std::vector<Series> values;
     values.reserve(vars.size());
     for (const auto& v : vars) values.push_back(v.value());
     const auto residual_values = septima_evaluate_residuals_(values, series_fn, name);
-    std::vector<Trace> out;
+    std::vector<detail::Trace> out;
     out.reserve(residual_values.size());
     for (const auto& r : residual_values) out.emplace_back(r);
     return out;
   }
 
-  if (!trace_fn) return {};
-  const auto out = trace_fn(vars);
-  for (const auto& r : out) {
-    if (!r.defined()) {
-      ::pluss::throw_error(std::string("optim::septima_step_inplace: undefined ") + name +
-                           " trace residual");
-    }
-    require_same_platform_(vars.front().value(), r.value(), "septima_step_inplace");
-    require_float_dtype_(r.value(), "septima_step_inplace");
-  }
-  if (out.empty()) {
-    ::pluss::throw_error(std::string("optim::septima_step_inplace: empty ") + name +
-                         " residual vector");
-  }
-  return out;
+  return {};
 }
 
 inline std::vector<Series> septima_zero_like_(const std::vector<Series>& residuals) {
@@ -10489,28 +10483,28 @@ inline double septima_constraint_violation_(const std::vector<Series>& params,
   return violation;
 }
 
-inline Trace septima_constraint_objective_trace_(const std::vector<Trace>& vars,
+inline detail::Trace septima_constraint_objective_trace_(const std::vector<detail::Trace>& vars,
                                                  const SeptimaState& state,
                                                  const SeptimaConstraints& constraints,
                                                  const SeptimaOptions& options) {
-  Trace objective = sum(vars.front() * 0.0);
+  detail::Trace objective = sum(vars.front() * 0.0);
 
   if (constraints.equalities) {
     const auto residuals = septima_evaluate_trace_residuals_(
-        vars, constraints.equalities, constraints.equalities_trace, "equalities");
+        vars, constraints.equalities, "equalities");
     if (residuals.size() != state.lambda_equalities.size()) {
       ::pluss::throw_error("optim::septima_step_inplace: equality multiplier size mismatch");
     }
     for (std::size_t i = 0; i < residuals.size(); ++i) {
       objective = objective +
-                  sum(fixed(state.lambda_equalities[i]) * residuals[i]) +
+                  sum(detail::fixed(state.lambda_equalities[i]) * residuals[i]) +
                   0.5 * options.equality_penalty * state.penalty_scale * sum(square(residuals[i]));
     }
   }
 
   if (constraints.inequalities) {
     const auto residuals = septima_evaluate_trace_residuals_(
-        vars, constraints.inequalities, constraints.inequalities_trace, "inequalities");
+        vars, constraints.inequalities, "inequalities");
     if (residuals.size() != state.lambda_inequalities.size()) {
       ::pluss::throw_error("optim::septima_step_inplace: inequality multiplier size mismatch");
     }
@@ -10520,12 +10514,12 @@ inline Trace septima_constraint_objective_trace_(const std::vector<Trace>& vars,
         // Augmented-Lagrangian term for h <= 0:  (max(0, lambda + rho h)^2 - lambda^2) / (2 rho). Its gradient,
         // max(0, lambda + rho h) grad h, shrinks as the constraint becomes slack, so a multiplier that has grown
         // too large is pushed back down by the update instead of pinning the iterate inside the feasible set.
-        const Trace shifted = relu(fixed(state.lambda_inequalities[i]) + inequality_penalty * residuals[i]);
+        const detail::Trace shifted = relu(detail::fixed(state.lambda_inequalities[i]) + inequality_penalty * residuals[i]);
         objective = objective +
-                    (sum(square(shifted)) - sum(fixed(state.lambda_inequalities[i] * state.lambda_inequalities[i]))) *
+                    (sum(square(shifted)) - sum(detail::fixed(state.lambda_inequalities[i] * state.lambda_inequalities[i]))) *
                         (0.5 / inequality_penalty);
       } else {
-        objective = objective + sum(fixed(state.lambda_inequalities[i]) * relu(residuals[i]));
+        objective = objective + sum(detail::fixed(state.lambda_inequalities[i]) * relu(residuals[i]));
       }
     }
   }
@@ -10541,16 +10535,18 @@ inline Trace septima_constraint_objective_trace_(const std::vector<Trace>& vars,
 // don't pay for a full backward pass just to discard the gradient.
 template <class Fn>
 inline Series septima_value_only_(Fn&& fn, const std::vector<Series>& params) {
-  std::vector<Trace> vars;
+  std::vector<detail::Trace> vars;
   vars.reserve(params.size());
   for (const auto& p : params) {
     vars.emplace_back(p);
   }
-  Trace loss = std::forward<Fn>(fn)(vars);
+  detail::Trace loss = std::forward<Fn>(fn)(vars);
   if (!loss.defined()) {
-    ::pluss::throw_error("optim::septima_step_inplace: objective returned undefined Trace");
+    ::pluss::throw_error("optim::septima_step_inplace: objective returned undefined detail::Trace");
   }
-  return loss.value();
+  Series value = loss.value();
+  if (value.numel() == 1 && value.dim() != 0) value = value.reshape(std::vector<std::int64_t>{});
+  return value;
 }
 
 // Constraint-augmented counterpart of septima_augmented_value_grad_ that
@@ -10566,7 +10562,7 @@ inline Series septima_augmented_value_only_(const SeptimaObjectiveTraceFn& objec
   }
   if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
     return septima_value_only_(
-        [&](const std::vector<Trace>& vars) -> Trace {
+        [&](const std::vector<detail::Trace>& vars) -> detail::Trace {
           return objective_trace(vars) + septima_constraint_objective_trace_(vars, state, constraints, options);
         },
         params);
@@ -10608,7 +10604,7 @@ inline std::pair<Series, std::vector<Series>> septima_augmented_value_grad_(
 
   if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
     return value_and_grad(
-        [&](const std::vector<Trace>& vars) -> Trace {
+        [&](const std::vector<detail::Trace>& vars) -> detail::Trace {
           return objective_trace(vars) + septima_constraint_objective_trace_(vars, state, constraints, options);
         },
         params, policy);
@@ -10704,7 +10700,7 @@ inline double septima_step_inplace_(std::vector<Series>& params,
 
   if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
     const auto [constraint_loss, constraint_grads] = value_and_grad(
-        [&](const std::vector<Trace>& vars) -> Trace {
+        [&](const std::vector<detail::Trace>& vars) -> detail::Trace {
           return septima_constraint_objective_trace_(vars, state, constraints, options);
         },
         params);
@@ -11052,7 +11048,9 @@ inline void septima_step_inplace_from_tape_(std::vector<Series>& params,
 
 } // namespace detail
 
-inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
+namespace detail {
+
+inline SeptimaResult septima_trace_(const SeptimaObjectiveTraceFn& objective_trace,
                              std::vector<Series> initial_params,
                              const SeptimaSolveOptions& solve_options = {},
                              const SeptimaConstraints& constraints = {}) {
@@ -11093,7 +11091,7 @@ inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
     out.objective = value;
 
     if (!value.defined() || value.numel() != 1) {
-      ::pluss::throw_error("optim::septima: objective must return a scalar Trace");
+      ::pluss::throw_error("optim::septima: objective must return a scalar detail::Trace");
     }
     out.objective_value = value.item<double>();
 
@@ -11196,39 +11194,7 @@ inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
   return out;
 }
 
-inline SeptimaResult septima(const std::function<Trace(const ParameterPack<Trace>&)>& objective_autodiff,
-                             const ParameterPack<Series>& initial_params,
-                             const SeptimaSolveOptions& solve_options = {},
-                             const SeptimaConstraints& constraints = {}) {
-  if (!objective_autodiff) {
-    ::pluss::throw_error("optim::septima: objective callback is required");
-  }
-  std::vector<Series> init_values;
-  std::vector<std::string> names;
-  init_values.reserve(initial_params.size());
-  names.reserve(initial_params.size());
-  for (const auto& b : initial_params.blocks()) {
-    names.push_back(b.name);
-    init_values.push_back(b.value);
-  }
-
-  auto out = septima(
-      [f = objective_autodiff, names = std::move(names)](const std::vector<Trace>& vars) -> Trace {
-        if (vars.size() != names.size()) {
-          ::pluss::throw_error("optim::septima: objective parameter block count mismatch");
-        }
-        std::vector<typename ParameterPack<Trace>::Block> blocks;
-        blocks.reserve(vars.size());
-        for (std::size_t i = 0; i < vars.size(); ++i) {
-          blocks.push_back({names[i], vars[i]});
-        }
-        return f(ParameterPack<Trace>(std::move(blocks)));
-      },
-      std::move(init_values),
-      solve_options,
-      constraints);
-  return out;
-}
+}  // namespace detail
 
 inline SeptimaResult septima(const SeptimaObjectiveSeriesFn& objective_series,
                              std::vector<Series> initial_params,
@@ -11237,12 +11203,12 @@ inline SeptimaResult septima(const SeptimaObjectiveSeriesFn& objective_series,
   if (!objective_series) {
     ::pluss::throw_error("optim::septima: objective callback is required");
   }
-  return septima(
-      [f = objective_series](const std::vector<Trace>& vars) -> Trace {
+  return detail::septima_trace_(
+      [f = objective_series](const std::vector<detail::Trace>& vars) -> detail::Trace {
         std::vector<Series> values;
         values.reserve(vars.size());
         for (const auto& v : vars) values.push_back(v.value());
-        return Trace(f(values));
+        return detail::Trace(f(values));
       },
       std::move(initial_params),
       solve_options,
@@ -11265,8 +11231,8 @@ inline SeptimaResult septima(const std::function<Series(const ParameterPack<Seri
     init_values.push_back(b.value);
   }
 
-  return septima(
-      [f = objective_series, names = std::move(names)](const std::vector<Trace>& vars) -> Trace {
+  return detail::septima_trace_(
+      [f = objective_series, names = std::move(names)](const std::vector<detail::Trace>& vars) -> detail::Trace {
         if (vars.size() != names.size()) {
           ::pluss::throw_error("optim::septima: objective parameter block count mismatch");
         }
@@ -11275,36 +11241,9 @@ inline SeptimaResult septima(const std::function<Series(const ParameterPack<Seri
         for (std::size_t i = 0; i < vars.size(); ++i) {
           blocks.push_back({names[i], vars[i].value()});
         }
-        return Trace(f(ParameterPack<Series>(std::move(blocks))));
+        return detail::Trace(f(ParameterPack<Series>(std::move(blocks))));
       },
       std::move(init_values),
-      solve_options,
-      constraints);
-}
-
-inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
-                             const Series& initial_param,
-                             const SeptimaSolveOptions& solve_options = {},
-                             const SeptimaConstraints& constraints = {}) {
-  SeptimaResult out = septima(objective_trace, std::vector<Series>{initial_param}, solve_options, constraints);
-  return out;
-}
-
-inline SeptimaResult septima(const std::function<Trace(const Trace&)>& objective_trace,
-                             const Series& initial_param,
-                             const SeptimaSolveOptions& solve_options = {},
-                             const SeptimaConstraints& constraints = {}) {
-  if (!objective_trace) {
-    ::pluss::throw_error("optim::septima: objective callback is required");
-  }
-  return septima(
-      [&](const std::vector<Trace>& vars) -> Trace {
-        if (vars.size() != 1) {
-          ::pluss::throw_error("optim::septima: expected one parameter block");
-        }
-        return objective_trace(vars[0]);
-      },
-      initial_param,
       solve_options,
       constraints);
 }
@@ -11316,46 +11255,16 @@ inline SeptimaResult septima(const std::function<Series(const Series&)>& objecti
   if (!objective_series) {
     ::pluss::throw_error("optim::septima: objective callback is required");
   }
-  return septima(
-      [&](const std::vector<Trace>& vars) -> Trace {
+  return detail::septima_trace_(
+      [&](const std::vector<detail::Trace>& vars) -> detail::Trace {
         if (vars.size() != 1) {
           ::pluss::throw_error("optim::septima: expected one parameter block");
         }
-        return Trace(objective_series(vars[0].value()));
+        return detail::Trace(objective_series(vars[0].value()));
       },
-      initial_param,
+      std::vector<Series>{initial_param},
       solve_options,
       constraints);
-}
-
-inline SeptimaResult septima(const std::function<Trace(const Series&)>& objective_autodiff_series,
-                             const Series& initial_param,
-                             const SeptimaSolveOptions& solve_options = {},
-                             const SeptimaConstraints& constraints = {}) {
-  if (!objective_autodiff_series) {
-    ::pluss::throw_error("optim::septima: objective callback is required");
-  }
-  return septima(
-      [&](const std::vector<Trace>& vars) -> Trace {
-        if (vars.size() != 1) {
-          ::pluss::throw_error("optim::septima: expected one parameter block");
-        }
-        return objective_autodiff_series(vars[0].value());
-      },
-      initial_param,
-      solve_options,
-      constraints);
-}
-
-inline SeptimaResult septima(const std::function<Trace(const Trace&)>& objective_trace,
-                             const ParameterPack<Series>& initial_params,
-                             const SeptimaSolveOptions& solve_options,
-                             const SeptimaConstraints& constraints = {}) {
-  if (initial_params.size() != 1) {
-    ::pluss::throw_error("optim::septima: single-trace objective requires one parameter block");
-  }
-  const auto& first = initial_params.blocks().front();
-  return septima(objective_trace, initial_params.at(first.name), solve_options, constraints);
 }
 
 inline SeptimaResult septima(const std::function<Series(const Series&)>& objective_series,
@@ -11367,17 +11276,6 @@ inline SeptimaResult septima(const std::function<Series(const Series&)>& objecti
   }
   const auto& first = initial_params.blocks().front();
   return septima(objective_series, initial_params.at(first.name), solve_options, constraints);
-}
-
-inline SeptimaResult septima(const std::function<Trace(const Series&)>& objective_autodiff_series,
-                             const ParameterPack<Series>& initial_params,
-                             const SeptimaSolveOptions& solve_options,
-                             const SeptimaConstraints& constraints = {}) {
-  if (initial_params.size() != 1) {
-    ::pluss::throw_error("optim::septima: single-series objective requires one parameter block");
-  }
-  const auto& first = initial_params.blocks().front();
-  return septima(objective_autodiff_series, initial_params.at(first.name), solve_options, constraints);
 }
 
 } // namespace pluss::subsp::math::optim

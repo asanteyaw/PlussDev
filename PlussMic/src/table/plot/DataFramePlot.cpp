@@ -201,7 +201,7 @@ pluss::Series slate_to_plot_numeric_series(const Slate& t) {
 
 std::vector<double> slate_to_plot_numeric_values(const Slate& t) {
   auto values = slate_to_plot_numeric_series(t);
-  return values.to_vec<double>();
+  return values.host<double>();
 }
 
 bool series_all_zero_i64(const pluss::Series& s) {

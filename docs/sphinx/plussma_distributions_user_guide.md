@@ -409,8 +409,8 @@ const bool ok_zeta = pdt::supports(dst::Zeta);
 
 ```cpp
 const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-const Series a = pdt::sample(dst::Normal, {0.0, 1.0}, {16}, f64, 123ULL, pluss::rng::Method::Pseudo);
-const Series b = pdt::sample(dst::Normal, {0.0, 1.0}, {16}, f64, 123ULL, pluss::rng::Method::Pseudo);
+const Series a = pdt::sample(dst::Normal, {0.0, 1.0}, {16}, f64, 123ULL, pluss::subsp::stats::rng::Method::Pseudo);
+const Series b = pdt::sample(dst::Normal, {0.0, 1.0}, {16}, f64, 123ULL, pluss::subsp::stats::rng::Method::Pseudo);
 ```
 
 ### Expected output

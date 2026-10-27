@@ -1,4 +1,5 @@
 #include "bessel_k.h"
+#include "pluss/tils/aux/scalar_cast.h"
 #include "distr_fit_common.h"
 
 #include <algorithm>
@@ -31,7 +32,7 @@ std::array<double, 5> gh_params(double lambda, double alpha, double beta, double
 double series_scalar_param_(const Series& param, const char* op, const char* name) {
   PLUSS_CHECK(param.defined(), std::string(op) + ": missing " + name + " Series parameter");
   PLUSS_CHECK(param.numel() == 1, std::string(op) + ": " + name + " Series parameter must be scalar for sampling");
-  return param.to(ScalarType::Float64).item<double>();
+  return pluss::tils::to_scalar<double>(param.to(ScalarType::Float64));
 }
 
 double bessel_i_series_scalar(double order, double x) {
@@ -539,9 +540,9 @@ Series GaussianMixture::cgf(const Series& t) const {
 Series GaussianMixture::cumulant(std::int64_t order) const {
   detail::require_positive_order(order, "GaussianMixture::cumulant");
   require_mixture_shape_compatibility(weights, means, stddevs);
-  const auto probs = normalized_mixture_weights(weights).to_vec<double>();
-  const auto mean_vals = means.to(ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
-  const auto stddev_vals = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
+  const auto probs = normalized_mixture_weights(weights).host<double>();
+  const auto mean_vals = means.to(ScalarType::Float64).reshape({means.numel()}).host<double>();
+  const auto stddev_vals = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).host<double>();
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
   for (std::int64_t n = 1; n <= order; ++n) {
@@ -681,9 +682,9 @@ namespace {
 std::vector<double> gm_theta_(const GaussianMixtureFit& fit) {
   require_mixture_shape_compatibility(fit.weights, fit.means, fit.stddevs);
   const std::size_t k = static_cast<std::size_t>(fit.weights.numel());
-  const auto w = normalized_mixture_weights(fit.weights).to_vec<double>();
-  const auto m = fit.means.to(ScalarType::Float64).reshape({fit.means.numel()}).to_vec<double>();
-  const auto s = fit.stddevs.to(ScalarType::Float64).reshape({fit.stddevs.numel()}).to_vec<double>();
+  const auto w = normalized_mixture_weights(fit.weights).host<double>();
+  const auto m = fit.means.to(ScalarType::Float64).reshape({fit.means.numel()}).host<double>();
+  const auto s = fit.stddevs.to(ScalarType::Float64).reshape({fit.stddevs.numel()}).host<double>();
   std::vector<double> theta;
   theta.reserve(3 * k - 1);
   for (std::size_t i = 0; i + 1 < k; ++i) theta.push_back(std::log(std::max(w[i], 1e-12) / std::max(w[k - 1], 1e-12)));
@@ -795,9 +796,13 @@ GaussianMixtureFit GaussianMixture::MLE(const Series& x) const {
   const auto xvals = fit_data_f64_(x, "GaussianMixture::MLE");
   const std::size_t k = static_cast<std::size_t>(weights.numel());
   PLUSS_CHECK(k > 0, "GaussianMixture::MLE: need at least one component");
-  auto w = normalized_mixture_weights(weights).to_vec<double>();
-  auto m = means.to(ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
-  auto s = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
+  auto w = normalized_mixture_weights(weights).pull<double>();
+  auto m = means.to(ScalarType::Float64)
+               .reshape({means.numel()})
+               .pull<double>();
+  auto s = stddevs.to(ScalarType::Float64)
+               .reshape({stddevs.numel()})
+               .pull<double>();
 
   if (m.size() != k) m.assign(k, 0.0);
   if (s.size() != k) s.assign(k, 1.0);

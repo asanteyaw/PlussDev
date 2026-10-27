@@ -164,10 +164,6 @@ inline pluss::codem::Series standard_normal(std::initializer_list<std::int64_t> 
 
 } // namespace pluss::subsp::stats::rng
 
-namespace pluss {
-namespace rng = ::pluss::subsp::stats::rng;
-}
-
 namespace pluss::ma {
 namespace rng = ::pluss::subsp::stats::rng;
 }

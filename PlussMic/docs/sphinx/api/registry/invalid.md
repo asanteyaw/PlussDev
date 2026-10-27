@@ -52,7 +52,7 @@ auto flags = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < flags.size(); ++i) {
   if (i) std::cout << ", ";
-  std::cout << std::boolalpha << std::get<pluss::Series>(flags.at(i)).to_vec<bool>()[0];
+  std::cout << std::boolalpha << std::get<pluss::Series>(flags.at(i)).host<bool>()[0];
 }
 std::cout << "]";
 ```

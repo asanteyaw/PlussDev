@@ -46,11 +46,11 @@ Series complex_series(const std::vector<Complex>& values, const std::vector<std:
 }
 
 std::vector<Complex> vec_c128(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Complex128).to_vec<Complex>();
+  return x.to(pluss::pCPU, ScalarType::Complex128).host<Complex>();
 }
 
 bool approx_c(Complex a, Complex b, double tol = 1e-6) {
-  return std::abs(a - b) <= tol;
+  return std::abs((a - b)) <= tol;
 }
 
 bool approx_vec_c(const std::vector<Complex>& a, const std::vector<Complex>& b, double tol = 1e-6) {
@@ -228,9 +228,6 @@ bool run_optim_complex_checks(std::ostream* err = nullptr) {
     constraints.equalities = [](const std::vector<Series>& params) {
       return std::vector<Series>{params[0].sum()};
     };
-    constraints.equalities_trace = [](const std::vector<pluss::subsp::math::diff::Trace>& params) {
-      return std::vector<pluss::subsp::math::diff::Trace>{pluss::subsp::math::diff::sum(params[0])};
-    };
     bool threw = false;
     try {
       pluss::nn::optim::Minimax minimax(std::vector<Series*>{&p}, opt, constraints);
@@ -255,14 +252,6 @@ bool run_optim_complex_checks(std::ostream* err = nullptr) {
     constraints.inequalities = [](const std::vector<Series>& params) {
       return std::vector<Series>{params[0].abs2().sum().sub(10.0)};
     };
-    constraints.inequalities_trace = [](const std::vector<pluss::subsp::math::diff::Trace>& params) {
-      // Trace has no `abs2()`; build |x|^2 as abs(x)^2 (real-valued even for
-      // a complex-valued Trace), matching the Series-side `.abs2()` above.
-      using pluss::subsp::math::diff::abs;
-      using pluss::subsp::math::diff::pow;
-      using pluss::subsp::math::diff::sum;
-      return std::vector<pluss::subsp::math::diff::Trace>{sum(pow(abs(params[0]), 2.0)) - 10.0};
-    };
     bool threw = false;
     try {
       pluss::nn::optim::Minimax minimax(std::vector<Series*>{&p}, opt, constraints);
@@ -286,9 +275,6 @@ bool run_optim_complex_checks(std::ostream* err = nullptr) {
     pluss::nn::optim::MinimaxConstraints constraints{};
     constraints.inequalities = [](const std::vector<Series>& params) {
       return std::vector<Series>{params[0].sum()};  // complex-valued residual
-    };
-    constraints.inequalities_trace = [](const std::vector<pluss::subsp::math::diff::Trace>& params) {
-      return std::vector<pluss::subsp::math::diff::Trace>{pluss::subsp::math::diff::sum(params[0])};
     };
     bool threw = false;
     try {

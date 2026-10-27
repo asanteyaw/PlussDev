@@ -183,8 +183,8 @@ Use quasi-random methods for lower-discrepancy sampling patterns.
 
 ```cpp
 const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-const Series n_sobol = pdt::sample(dst::Normal, {0.0, 1.0}, {256}, f64, 123ULL, pluss::rng::Method::Sobol);
-const Series u_torus = pdt::sample(dst::Uniform, {0.0, 1.0}, {256}, f64, 77ULL, pluss::rng::Method::Torus);
+const Series n_sobol = pdt::sample(dst::Normal, {0.0, 1.0}, {256}, f64, 123ULL, pluss::subsp::stats::rng::Method::Sobol);
+const Series u_torus = pdt::sample(dst::Uniform, {0.0, 1.0}, {256}, f64, 77ULL, pluss::subsp::stats::rng::Method::Torus);
 ```
 
 ### Expected output

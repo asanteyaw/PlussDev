@@ -54,9 +54,14 @@ inline void require_square_(const Series& a, const char* op) {
   }
 }
 
+// Row-major flat copy of any-rank real data: host<T>() keeps the rank, a flat vector needs pull<T>() on a rank-one view.
+inline std::vector<double> flat_f64_(const Series& a) {
+  return a.contiguous().reshape({a.numel()}).pull<double>();
+}
+
 inline std::vector<double> to_row_major_f64_(const Series& a) {
   auto cpu = a.to(pluss::pCPU, ScalarType::Float64).contiguous();
-  return cpu.to_vec<double>();
+  return cpu.reshape({cpu.numel()}).pull<double>();
 }
 
 inline bool is_complex_(const Series& a) {
@@ -66,7 +71,7 @@ inline bool is_complex_(const Series& a) {
 
 inline std::vector<std::complex<double>> to_row_major_c128_(const Series& a) {
   auto cpu = a.to(pluss::pCPU, ScalarType::Complex128).contiguous();
-  return cpu.to_vec<std::complex<double>>();
+  return cpu.host<std::complex<double>>().array().data;
 }
 
 inline Series complex_matrix_from_row_major_(
@@ -690,17 +695,17 @@ inline Series cholesky(const Series& a, bool upper = false) {
 
 inline Series logdet(const Series& a) {
   if (detail::is_complex_(a)) {
-    const auto values = det(a).to(ScalarType::Complex128).to_vec<std::complex<double>>();
+    const auto values = det(a).to(ScalarType::Complex128).host<std::complex<double>>();
     return detail::complex_scalar_from_value_(std::log(values.front()), a.scalar_type());
   }
-  auto d = det(a).to_vec<double>();
+  auto d = det(a).host<double>();
   const double v = d.empty() ? 0.0 : d[0];
   return detail::scalar_from_value_(std::log(v));
 }
 
 inline Series slogdet(const Series& a) {
   if (detail::is_complex_(a)) {
-    const auto values = det(a).to(ScalarType::Complex128).to_vec<std::complex<double>>();
+    const auto values = det(a).to(ScalarType::Complex128).host<std::complex<double>>();
     const std::complex<double> value = values.front();
     const double magnitude = std::abs(value);
     const std::complex<double> sign =
@@ -708,7 +713,7 @@ inline Series slogdet(const Series& a) {
     return detail::complex_vector_from_values_(
         {sign, {std::log(magnitude), 0.0}}, a.scalar_type());
   }
-  auto d = det(a).to_vec<double>();
+  auto d = det(a).host<double>();
   const double v = d.empty() ? 0.0 : d[0];
   const double s = (v > 0.0) ? 1.0 : (v < 0.0 ? -1.0 : 0.0);
   return detail::vector_from_values_({s, std::log(std::abs(v))});
@@ -741,9 +746,9 @@ inline Series pinverse(const Series& a, double rcond = 1e-12) {
   const auto m = a.sizes()[0];
   const auto n = a.sizes()[1];
   const auto decomposition = svd(a, /*full_matrices=*/false);
-  const auto u = decomposition.U.to_vec<double>();
-  const auto singular = decomposition.S.to_vec<double>();
-  const auto vh = decomposition.Vh.to_vec<double>();
+  const auto u = detail::flat_f64_(decomposition.U);
+  const auto singular = detail::flat_f64_(decomposition.S);
+  const auto vh = detail::flat_f64_(decomposition.Vh);
   const auto k = std::min(m, n);
   const double largest = singular.empty() ? 0.0 : singular.front();
   const double cutoff = rcond * largest;
@@ -784,8 +789,8 @@ inline Series triangular_solve(const Series& b, const Series& a, bool upper = tr
 #if defined(__APPLE__)
   int ni = static_cast<int>(n);
   int nrhsi = static_cast<int>(nrhs);
-  auto a_col = detail::row_to_col_major_(aa.to_vec<double>(), n, n);
-  auto b_col = detail::row_to_col_major_(bb.to_vec<double>(), n, nrhs);
+  auto a_col = detail::row_to_col_major_(detail::flat_f64_(aa), n, n);
+  auto b_col = detail::row_to_col_major_(detail::flat_f64_(bb), n, nrhs);
   char uplo = upper ? 'U' : 'L';
   char trans = 'N';
   char diag = unitriangular ? 'U' : 'N';
@@ -794,7 +799,7 @@ inline Series triangular_solve(const Series& b, const Series& a, bool upper = tr
   if (info != 0) ::pluss::throw_error("subsp::math::linalg::triangular_solve: LAPACK dtrtrs failed");
   return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
 #else
-  const auto xr = detail::triangular_solve_(bb.to_vec<double>(), aa.to_vec<double>(), n, nrhs, upper, unitriangular);
+  const auto xr = detail::triangular_solve_(detail::flat_f64_(bb), detail::flat_f64_(aa), n, nrhs, upper, unitriangular);
   return detail::matrix_from_row_major_(xr, n, nrhs);
 #endif
 }
@@ -811,8 +816,8 @@ inline Series cholesky_solve(const Series& b, const Series& factor, bool upper =
 #if defined(__APPLE__)
   int ni = static_cast<int>(n);
   int nrhsi = static_cast<int>(nrhs);
-  auto l_col = detail::row_to_col_major_(l.to_vec<double>(), n, n);
-  auto rhs_col = detail::row_to_col_major_(rhs.to_vec<double>(), n, nrhs);
+  auto l_col = detail::row_to_col_major_(detail::flat_f64_(l), n, n);
+  auto rhs_col = detail::row_to_col_major_(detail::flat_f64_(rhs), n, nrhs);
   char uplo = upper ? 'U' : 'L';
   int info = 0;
   dpotrs_(&uplo, &ni, &nrhsi, l_col.data(), &ni, rhs_col.data(), &ni, &info);
@@ -820,8 +825,8 @@ inline Series cholesky_solve(const Series& b, const Series& factor, bool upper =
   return detail::matrix_from_row_major_(detail::col_to_row_major_(rhs_col, n, nrhs), n, nrhs);
 #else
   if (upper) l = l.transpose(0, 1).contiguous();
-  const auto lrow = l.to_vec<double>();
-  auto y = detail::triangular_solve_(rhs.to_vec<double>(), lrow, n, nrhs, /*upper=*/false, /*unitriangular=*/false);
+  const auto lrow = detail::flat_f64_(l);
+  auto y = detail::triangular_solve_(detail::flat_f64_(rhs), lrow, n, nrhs, /*upper=*/false, /*unitriangular=*/false);
   auto x = detail::triangular_solve_(y, lrow, n, nrhs, /*upper=*/true, /*unitriangular=*/false);
   return detail::matrix_from_row_major_(x, n, nrhs);
 #endif
@@ -833,7 +838,7 @@ inline Series cholesky_inverse(const Series& factor, bool upper = false) {
   const auto n = l.sizes()[0];
 #if defined(__APPLE__)
   int ni = static_cast<int>(n);
-  auto l_col = detail::row_to_col_major_(l.to_vec<double>(), n, n);
+  auto l_col = detail::row_to_col_major_(detail::flat_f64_(l), n, n);
   char uplo = upper ? 'U' : 'L';
   int info = 0;
   dpotri_(&uplo, &ni, l_col.data(), &ni, &info);
@@ -854,7 +859,7 @@ inline Series cholesky_inverse(const Series& factor, bool upper = false) {
   return detail::matrix_from_row_major_(detail::col_to_row_major_(l_col, n, n), n, n);
 #else
   if (upper) l = l.transpose(0, 1).contiguous();
-  const auto lr = l.to_vec<double>();
+  const auto lr = detail::flat_f64_(l);
   auto a = detail::matmul_(lr, n, n, detail::transpose_(lr, n, n), n);
   return detail::matrix_from_row_major_(detail::inverse_gauss_(a, n), n, n);
 #endif
@@ -887,9 +892,10 @@ inline Series lu_solve(const Series& b, const Series& lu) {
   int nrhsi = static_cast<int>(nrhs);
   if (complex) {
     auto a_col =
-        detail::row_to_col_major_t_(a.to_vec<std::complex<double>>(), n, n);
-    auto b_col = detail::row_to_col_major_t_(rhs.to_vec<std::complex<double>>(),
-                                             n, nrhs);
+        detail::row_to_col_major_t_(a.host<std::complex<double>>().array().data, n,
+                                    n);
+    auto b_col = detail::row_to_col_major_t_(
+        rhs.host<std::complex<double>>().array().data, n, nrhs);
     std::vector<int> ipiv(static_cast<std::size_t>(n), 0);
     int info = 0;
     zgesv_(&ni, &nrhsi, a_col.data(), &ni, ipiv.data(), b_col.data(), &ni,
@@ -901,8 +907,8 @@ inline Series lu_solve(const Series& b, const Series& lu) {
     return detail::complex_matrix_from_row_major_(
         detail::col_to_row_major_t_(b_col, n, nrhs), n, nrhs, complex_dtype);
   }
-  auto a_col = detail::row_to_col_major_(a.to_vec<double>(), n, n);
-  auto b_col = detail::row_to_col_major_(rhs.to_vec<double>(), n, nrhs);
+  auto a_col = detail::row_to_col_major_(detail::flat_f64_(a), n, n);
+  auto b_col = detail::row_to_col_major_(detail::flat_f64_(rhs), n, nrhs);
   std::vector<int> ipiv(static_cast<std::size_t>(n), 0);
   int info = 0;
   dgesv_(&ni, &nrhsi, a_col.data(), &ni, ipiv.data(), b_col.data(), &ni, &info);
@@ -911,16 +917,16 @@ inline Series lu_solve(const Series& b, const Series& lu) {
   return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
 #else
   if (complex) {
-    const auto rr = rhs.to_vec<std::complex<double>>();
+    const auto rr = rhs.host<std::complex<double>>();
     const auto inv =
-        detail::inverse_gauss_t_(a.to_vec<std::complex<double>>(), n);
+        detail::inverse_gauss_t_(a.host<std::complex<double>>(), n);
     return detail::complex_matrix_from_row_major_(
         detail::matmul_t_(inv, n, n, rr, rhs.sizes()[1]), n, rhs.sizes()[1],
         complex_dtype);
   }
-  const auto rr = rhs.to_vec<double>();
+  const auto rr = detail::flat_f64_(rhs);
   auto inv = inverse(lu);
-  auto invr = inv.to_vec<double>();
+  auto invr = detail::flat_f64_(inv);
   const auto out = detail::matmul_(invr, n, n, rr, rhs.sizes()[1]);
   return detail::matrix_from_row_major_(out, lu.sizes()[0], rhs.sizes()[1]);
 #endif

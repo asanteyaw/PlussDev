@@ -34,7 +34,7 @@ int main() {
   std::cout << "prepared solver: " << solver.variables() << " variables, " << solver.constraints() << " constraints\n";
   const auto reused = solver.solve(q, lower, upper);
 
-  const auto xb = batched.x.to_vec<double>(), xr = reused.x.to_vec<double>(), qv = q.to_vec<double>();
+  const auto xb = batched.x.host<double>(), xr = reused.x.host<double>(), qv = q.host<double>();
   std::cout << std::left << std::setw(16) << "q" << std::setw(24) << "x (batched)" << std::setw(24) << "x (prepared)" << "exact\n";
   std::cout << std::fixed << std::setprecision(4);
   for (int i = 0; i < 4; ++i) {

@@ -3,12 +3,14 @@
 // `relative_improvement_tolerance` (relatively) over the window. The window test can stop a run that is still creeping
 // along a narrow valley; set `check_every` to 0 to rely on the frame alone.
 #include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
+#include <utility>
+#include <vector>
 
 namespace dfo = pluss::subsp::math::optimization;
+using namespace pluss::tils;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
@@ -17,27 +19,25 @@ pluss::Series rosenbrock(const pluss::Series& x) {
   const auto a = x.select(0, 0), b = x.select(0, 1);
   return (b - a * a).square() * 100.0 + (a * -1.0 + 1.0).square();
 }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
-void run(const char* label, dfo::MadsBlackboxConfig c) {
-  const auto o = dfo::orthomads_minimizer(rosenbrock, vec({-1.2, 1.0}), c);
-  std::cout << std::left << std::setw(36) << label << std::setw(26) << name(o.status) << std::scientific << std::setprecision(2) << std::setw(11)
-            << o.minimum << std::defaultfloat << std::setw(8) << o.diagnostics.evaluations << "iterations " << o.diagnostics.iterations << "\n";
-}
-
 int main() {
+  std::vector<std::pair<const char*, dfo::MadsBlackboxConfig>> cases;
   dfo::MadsBlackboxConfig base;
   base.max_iterations = 20000;
   base.max_evaluations = 100000;
-  run("defaults (check_every 10, 1e-8)", base);
+  cases.emplace_back("defaults (check_every 10, 1e-8)", base);
   auto off = base; off.check_every = 0;
-  run("check_every 0 (frame test only)", off);
+  cases.emplace_back("check_every 0 (frame test only)", off);
   auto loose = base; loose.relative_improvement_tolerance = 1e-4;
-  run("relative tolerance 1e-4", loose);
+  cases.emplace_back("relative tolerance 1e-4", loose);
   auto it = base; it.max_iterations = 100;
-  run("max_iterations 100", it);
+  cases.emplace_back("max_iterations 100", it);
   auto ev = base; ev.max_evaluations = 300;
-  run("max_evaluations 300", ev);
+  cases.emplace_back("max_evaluations 300", ev);
+
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2));
+  for (auto [label, c] : cases) {
+    const auto o = dfo::orthomads_minimizer(rosenbrock, vec({-1.2, 1.0}), c);
+    out.writeln(label, dfo::to_string(o.status), o.minimum, "evals", o.diagnostics.evaluations, "iterations", o.diagnostics.iterations);
+  }
 }

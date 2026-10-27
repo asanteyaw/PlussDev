@@ -46,7 +46,7 @@ private:
 };
 
 std::vector<double> vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 bool close_vec(const std::vector<double>& a, const std::vector<double>& b, double atol, double rtol) {

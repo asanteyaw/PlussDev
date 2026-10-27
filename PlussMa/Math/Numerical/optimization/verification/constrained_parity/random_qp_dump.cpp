@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <cmath>
 #include <fstream>
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {(int64_t)v.size()}).to(f64); }
 pluss::Series mat(std::vector<double> v, int64_t r, int64_t c) { return pluss::make_series(v, {r, c}).to(f64); }
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     for (int r = 0; r < mineq; ++r) { double s = 0; for (int j = 0; j < n; ++j) { Ai[r*n+j] = g(rng); s += Ai[r*n+j]*x0[j]; } bi[r] = s + 0.2 + u(rng); }
     optim::ConstrainedProblem p;
     p.objective.analytic = [&](const optim::ParameterPack<pluss::Series>& pk) {
-      auto x = pk.at("x").to_vec<double>();
+      auto x = pk.at("x").host<double>();
       double val = 0; std::vector<double> grad(n, 0.0);
       for (int i = 0; i < n; ++i) { double qx = 0; for (int j = 0; j < n; ++j) qx += Q[i*n+j]*x[j]; val += 0.5*x[i]*qx + c[i]*x[i]; grad[i] = qx + c[i]; }
       return std::pair{pluss::make_series(val).to(f64), optim::pack_series(vec(grad))};
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
       for (double v : c) f << v << " "; f << "\n"; for (double v : start) f << v << " "; f << "\n";
       for (int r = 0; r < meq; ++r) { for (int j = 0; j < n; ++j) f << Ae[r*n+j] << " "; f << "\n"; } for (double v : be) f << v << " "; f << "\n";
       for (int r = 0; r < mineq; ++r) { for (int j = 0; j < n; ++j) f << Ai[r*n+j] << " "; f << "\n"; } for (double v : bi) f << v << " "; f << "\n";
-      if (use_bounds) { auto lo = p.bounds.lower->at("x").to_vec<double>(); auto hi = p.bounds.upper->at("x").to_vec<double>(); for (double v : lo) f << v << " "; f << "\n"; for (double v : hi) f << v << " "; f << "\n"; } }
+      if (use_bounds) { auto lo = p.bounds.lower->at("x").host<double>(); auto hi = p.bounds.upper->at("x").host<double>(); for (double v : lo) f << v << " "; f << "\n"; for (double v : hi) f << v << " "; f << "\n"; } }
     double fref = 0; bool have_ref = false;
     const optim::OptimaAlgorithm algs[4] = {optim::OptimaAlgorithm::SequentialQP, optim::OptimaAlgorithm::InternalProtocol, optim::OptimaAlgorithm::WorkingSet, optim::OptimaAlgorithm::MeritMethod};
     double fv[4]; int flag[4]; double viol[4];

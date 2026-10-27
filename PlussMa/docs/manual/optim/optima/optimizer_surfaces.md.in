@@ -6,9 +6,9 @@ There are two ADAM surfaces in the Pluss stack by design.
 
 Namespace:
 
-- `pluss::optim::adam_state_like(...)`
-- `pluss::optim::adam_step_inplace(...)`
-- `pluss::optim::adam_step(...)`
+- `pluss::subsp::math::optim::adam_state_like(...)`
+- `pluss::subsp::math::optim::adam_step_inplace(...)`
+- `pluss::subsp::math::optim::adam_step(...)`
 
 Intent:
 
@@ -42,5 +42,5 @@ Demo:
 
 Use the namespace to communicate intent clearly:
 
-- choose `pluss::optim::*` for functional/math-level optimization utilities
+- choose `pluss::subsp::math::optim::*` for functional/math-level optimization utilities
 - choose `pluss::nn::optim::*` for neural-module training optimizers

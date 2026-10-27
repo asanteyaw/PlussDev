@@ -49,7 +49,7 @@ above.
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-31T09:15:30Z"}));
 auto out = stream.tl().epoch();
-std::cout << out.as_series().to_vec<std::int64_t>()[0];
+std::cout << out.as_series().host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -64,7 +64,7 @@ expected scale.
 ```cpp
 auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-31T09:15:30Z", "2024-02-29T23:45:00Z"}));
 auto out = stream.tl().epoch(pluss::table::TimeUnit::Seconds);
-auto v = out.as_series().to_vec<std::int64_t>();
+auto v = out.as_series().host<std::int64_t>();
 std::cout << v[0] << " " << v[1];
 ```
 

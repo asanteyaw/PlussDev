@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -22,9 +22,9 @@ optim::ParameterPack<pluss::Series> four(double a, double b, double c, double d)
 
 int main() {
   const auto start = optim::pack_scalars({{"x", scalar(std::cos(0.9))}, {"y", scalar(std::sin(0.9))}});
-  auto f = [](const Pack& p) { return 2.0 * (optim::square(p.at("x")) + optim::square(p.at("y")) - 1.0) - p.at("x"); };
+  auto f = [](const Pack& p) { return 2.0 * (p.at("x").square() + p.at("y").square() - 1.0) - p.at("x"); };
   const auto cons = optim::constraints().nl_eq([](const Pack& p) {
-    return optim::square(p.at("x")) + optim::square(p.at("y")) - 1.0;
+    return p.at("x").square() + p.at("y").square() - 1.0;
   });
   std::cout << std::left << std::setw(30) << "max_second_order_corrections" << std::setw(7) << "iters" << std::setw(7)
             << "evals" << std::setw(12) << "objective" << "x\n";
@@ -35,7 +35,7 @@ int main() {
     const auto r = optim::optima(f, start, o, cons);
     std::cout << std::left << std::setw(30) << k << std::setw(7) << r.iteration << std::setw(7) << r.function_evaluations
               << std::fixed << std::setprecision(6) << std::setw(12) << r.evaluation.value.item<double>()
-              << r.params.at("x").item<double>() << "\n";
+              << as_f64(r.params.at("x")) << "\n";
   }
   return 0;
 }

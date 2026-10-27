@@ -1,0 +1,48 @@
+# The poll, the search step and the mesh
+
+[Back to Derivative-Free Optimization 7: The Pattern Search Minimiser](../dfo_07_pattern_search.md)
+
+Pattern search keeps a **mesh size** and a best point. Each iteration optionally tries a few extra *search* points, then *polls*: it evaluates points at distance `mesh` along a set of directions around the best point, moves to an improving one and grows the mesh, or, if none improves, shrinks the mesh. Because the poll directions positively span the space, a failed poll at a small mesh says that no direction improves the point at that scale: the derivative-free analogue of a zero gradient.
+
+This page opens up the three pieces. The **poll** can use a basis of n+1 or 2n directions, a fixed or a rotating basis, stop at the first improvement or evaluate everything. The **search step** adds points chosen to jump ahead and pays off on smooth functions. The **mesh** has a scale: with bounds, the step of each variable can be scaled by its range, which matters when the variables differ by orders of magnitude.
+
+## Program 1: A direct call
+
+@@example Numerical/optimization/guide/dfo/361_pattern_search_standalone.cpp@@
+
+The default budget is 100 iterations per variable, so this two-variable run stops at 200 iterations with `ReachedIterationBudget` while still improving. A status other than `Converged` is a message, not an error: raise the budget and continue from the returned `minimizer`.
+
+## Program 2: The poll
+
+@@example Numerical/optimization/guide/dfo/362_pattern_search_poll.cpp@@
+
+All rows used the same 200-iteration budget, so compare the minimum reached and the evaluations spent together.
+
+- The **N+1 basis** polls n+1 points instead of 2n: fewer evaluations per iteration, a coarser look around.
+- **Order** matters only when the poll stops at the first improvement. `SuccessFirst` tries the direction that last worked first and is usually best in a curved valley.
+- **Complete poll** evaluates every direction and takes the best, costing more per iteration for a better step.
+- The **coordinate-axis basis** cannot follow the diagonal Rosenbrock valley: it is the worst row by orders of magnitude. The default rotating basis exists for this reason. The coordinate basis is the right choice when the axes themselves are meaningful, for instance when each variable has its own units and coordinate steps make sense.
+
+## Program 3: The search step
+
+@@example Numerical/optimization/guide/dfo/363_pattern_search_search_step.cpp@@
+
+Searching earns its evaluations on smooth functions: along a successful direction `ExpandAlongSuccess` costs almost nothing extra and is two to three orders of magnitude more accurate here at the same budget. The random strategies spend many trials (1732 trials, 52 successes) but converge fully within the budget. Use them when the function has structure the poll cannot see.
+
+## Program 4: The mesh
+
+@@example Numerical/optimization/guide/dfo/364_pattern_search_mesh.cpp@@
+
+The problem has one variable of order 1 and one of order 1000. With bounds supplied, `RangeLog` scales each variable's step by its range, so the poll behaves as if both were of order one, and the run converges accurately. Without scaling, a step suited to one variable is far too small or too large for the other. The initial mesh size matters much less than the scaling: the mesh grows and shrinks by factors of 2 and 0.5, so a poor start is corrected in a few iterations. Gentler factors (1.1 and 0.9) work, but need many more iterations.
+
+Scaling is derived from the bounds. Without bounds there is no range to read, so give the variables comparable scales yourself (divide by a typical size inside the objective) or supply bounds.
+
+## Decisions and pitfalls
+
+- **A non-`Converged` status is a message, not an error.** The default budget is 100 iterations per variable; raise it and continue from the returned `minimizer`.
+- **Use the rotating basis unless the axes are meaningful.** The coordinate basis cannot follow a diagonal valley and is worse by orders of magnitude on Rosenbrock; it is right when each variable has its own units.
+- **Searching earns its evaluations on smooth functions.** `ExpandAlongSuccess` is nearly free and two to three orders of magnitude more accurate at the same budget; random search strategies spend many trials.
+- **Scale the mesh when the variables differ.** `RangeLog` scaling reads the ranges from the bounds; without bounds, divide by a typical size inside the objective.
+- **Compare the minimum and the evaluations together.** A cheaper poll may reach a worse point at the same iteration budget.
+
+Where next: [Constraints, budgets and the cache](constraints_budgets_and_the_cache.md) covers pattern search's main strength.

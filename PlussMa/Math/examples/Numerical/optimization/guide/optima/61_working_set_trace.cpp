@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
@@ -38,7 +38,7 @@ Rows make_rows(int extra) {
   }
   return {pluss::make_series(A, {m, n}).to(f64), pluss::make_series(b, {m}).to(f64)};
 }
-auto objective = [](const optim::Trace& x) { return optim::sum(optim::pow(x - 2.0, 4.0)) + 0.1 * optim::sum(optim::square(x)); };
+auto objective = [](const pluss::Series& x) { return (x - 2.0).pow(4.0).sum() + 0.1 * x.square().sum(); };
 
 int main() {
   const auto rows = make_rows(4);
@@ -56,11 +56,11 @@ int main() {
   const auto r = optim::optima(objective, vec({0, 0, 0, 0, 0, 0}), options, optim::constraints().ln_ineq(rows.A, rows.b));
 
   std::cout << "\nexit flag " << static_cast<int>(r.exit_flag) << ": " << r.message.substr(0, r.message.find('\n')) << "\n";
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
   std::cout << std::fixed << std::setprecision(4) << "x = [";
   for (double v : x) std::cout << " " << v;
   std::cout << " ]\nmultipliers of the 6 inequality rows:";
-  for (double v : r.multipliers.linear_inequalities.to_vec<double>()) std::cout << " " << v;
+  for (double v : r.multipliers.linear_inequalities.host<double>()) std::cout << " " << v;
   std::cout << "\n";
   return 0;
 }

@@ -114,7 +114,7 @@ TEST_CASE("ts arima: seasonal numerics and finite outputs", "[ts][sarima][numeri
   REQUIRE(f.isfinite().all().item<double>() == Approx(1.0));
   REQUIRE(info.isfinite().all().item<double>() == Approx(1.0));
 
-  const auto lv = llobs.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto lv = llobs.to(pluss::pCPU, ScalarType::Float64).host<double>();
   const auto finite_count = static_cast<std::int64_t>(std::count_if(lv.begin(), lv.end(), [](double v) { return std::isfinite(v); }));
   REQUIRE(finite_count > static_cast<std::int64_t>(lv.size() / 2));
 }
@@ -144,7 +144,7 @@ TEST_CASE("ts arima: differencing edge path and crash checks", "[ts][arima][edge
   opt.max_evaluations = 9000;
   const auto fit = Arima::fit_mle(y, opt, cfg);
 
-  const auto lv = fit.loglik_per_obs(y, cfg).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto lv = fit.loglik_per_obs(y, cfg).to(pluss::pCPU, ScalarType::Float64).host<double>();
   REQUIRE(lv.size() == static_cast<std::size_t>(y.numel()));
   const auto it = std::find_if(lv.begin(), lv.end(), [](double v) { return std::isfinite(v); });
   REQUIRE(it != lv.end());
@@ -188,7 +188,7 @@ TEST_CASE("ts arimax: exogenous regression path", "[ts][arimax][accuracy]") {
 
   REQUIRE(fit.beta.size() == 2);
   REQUIRE(std::isfinite(fit.loglik(y, x)));
-  const auto lv = fit.loglik_per_obs(y, x, cfg).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto lv = fit.loglik_per_obs(y, x, cfg).to(pluss::pCPU, ScalarType::Float64).host<double>();
   const auto finite_count = static_cast<std::int64_t>(std::count_if(lv.begin(), lv.end(), [](double v) { return std::isfinite(v); }));
   REQUIRE(finite_count > static_cast<std::int64_t>(lv.size() / 2));
   REQUIRE(fit.infer(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));

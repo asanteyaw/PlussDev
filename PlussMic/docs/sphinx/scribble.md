@@ -21,7 +21,7 @@ auto ids = pluss::scribble::Slot({
 
 ids.push_(pluss::make_series(4, pluss::codem::ScalarType::Int64));
 auto even = ids.filter([](const pluss::scribble::Slot::Value& v) {
-  return std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] % 2 == 0;
+  return std::get<pluss::Series>(v).host<std::int64_t>()[0] % 2 == 0;
 });
 ```
 

@@ -66,7 +66,7 @@ int main() {
       lymph::metrics::compare_series(expected, actual);
 
   std::cout << "abs_error   =";
-  for (const double v : diff.abs_error.to_vec<double>()) std::cout << " " << v;
+  for (const double v : diff.abs_error.host<double>()) std::cout << " " << v;
   std::cout << "\nmax_abs_diff = " << diff.max_abs_diff.item<double>() << "\n";
   std::cout << "mae         = " << diff.mae.item<double>() << "\n";
 
@@ -162,7 +162,7 @@ int main() {
       lymph::metrics::compare_series(pred_a, pred_b);
   std::cout << "identical run: max_abs_diff = " << diff.max_abs_diff.item<double>() << "\n";
   std::cout << "abs_error all zero? " << std::boolalpha
-            << (diff.abs_error.to_vec<double>() == std::vector<double>(10, 0.0)) << "\n";
+            << (diff.abs_error.host<double>() == std::vector<double>(10, 0.0)) << "\n";
 
   return 0;
 }

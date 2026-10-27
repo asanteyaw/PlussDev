@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -15,11 +15,11 @@ optim::ParameterPack<pluss::Series> pair(double x, double y) { return optim::pac
 
 optim::ConstrainedProblem rosenbrock(double sign_of_gy) {
   optim::ConstrainedProblem prob;
-  prob.objective.autodiff = [](const optim::ParameterPack<optim::Trace>& p) -> optim::Trace {
-    return 100.0 * optim::square(p.at("y") - optim::square(p.at("x"))) + optim::square(1.0 - p.at("x"));
+  prob.objective.autodiff = [](const optim::ParameterPack<pluss::Series>& p) -> pluss::Series {
+    return 100.0 * (p.at("y") - p.at("x").square()).square() + (1.0 - p.at("x")).square();
   };
   prob.objective.analytic = [sign_of_gy](const optim::ParameterPack<pluss::Series>& p) {
-    const double x = p.at("x").item<double>(), y = p.at("y").item<double>();
+    const double x = as_f64(p.at("x")), y = as_f64(p.at("y"));
     const double value = 100.0 * (y - x * x) * (y - x * x) + (1.0 - x) * (1.0 - x);
     return std::pair{scalar(value), pair(-400.0 * x * (y - x * x) - 2.0 * (1.0 - x), sign_of_gy * 200.0 * (y - x * x))};
   };

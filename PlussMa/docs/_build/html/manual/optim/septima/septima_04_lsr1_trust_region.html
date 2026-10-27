@@ -13,13 +13,13 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="A first run, and a comparison" href="septima_04_lsr1_trust_region/a_first_run_and_a_comparison.html" />
-    <link rel="prev" title="Precision and complex parameters" href="septima_03_tuning_and_robustness/precision_and_complex_parameters.html" />
+    <link rel="next" title="The L-SR1 trust-region optimizer" href="septima_04_lsr1_trust_region/the_lsr1_optimizer.html" />
+    <link rel="prev" title="Robustness, stopping rules and precision" href="septima_03_tuning_and_robustness/robustness_and_stopping.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -82,7 +82,7 @@
 </tr>
 </tbody>
 </table>
-<p>The call takes a <code class="docutils literal notranslate"><span class="pre">Trace</span></code> objective and a starting <code class="docutils literal notranslate"><span class="pre">Series</span></code>, and returns an <code class="docutils literal notranslate"><span class="pre">Lsr1Result</span></code>:</p>
+<p>The call takes an objective written on <code class="docutils literal notranslate"><span class="pre">Series</span></code> and a starting <code class="docutils literal notranslate"><span class="pre">Series</span></code>, and returns an <code class="docutils literal notranslate"><span class="pre">Lsr1Result</span></code>:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">l_sr1_trust_region</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="n">x0</span><span class="p">);</span><span class="w">          </span><span class="c1">// one Series</span>
 <span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">optim</span><span class="o">::</span><span class="n">l_sr1_trust_region</span><span class="p">(</span><span class="n">objective_of_blocks</span><span class="p">,</span><span class="w"> </span><span class="n">blocks</span><span class="p">);</span><span class="w">  </span><span class="c1">// a list of blocks</span>
 </pre></div>
@@ -91,10 +91,7 @@
 <section id="programs">
 <h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="septima_04_lsr1_trust_region/a_first_run_and_a_comparison.html"><span class="std std-doc">A first run, and a comparison</span></a></p></li>
-<li><p><a class="reference internal" href="septima_04_lsr1_trust_region/saddles.html"><span class="std std-doc">Saddles</span></a></p></li>
-<li><p><a class="reference internal" href="septima_04_lsr1_trust_region/the_settings_that_matter.html"><span class="std std-doc">The settings that matter</span></a></p></li>
-<li><p><a class="reference internal" href="septima_04_lsr1_trust_region/several_blocks_and_a_complex_parameter.html"><span class="std std-doc">Several blocks, and a complex parameter</span></a></p></li>
+<li><p><a class="reference internal" href="septima_04_lsr1_trust_region/the_lsr1_optimizer.html"><span class="std std-doc">The L-SR1 trust-region optimizer</span></a></p></li>
 </ul>
 </section>
 <section id="settings">
@@ -184,7 +181,7 @@
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
@@ -195,6 +192,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

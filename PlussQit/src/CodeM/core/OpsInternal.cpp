@@ -7036,7 +7036,7 @@ Series nonzero(const Series& a) {
 
   const bool scalar_like = (a.dim() == 0) || (a.dim() == 1 && a.numel() == 1);
   if (scalar_like) {
-    const bool present = a.ne(0.0).to(Platform::CPU).to_vec<bool>(0);
+    const bool present = a.ne(0.0).to(Platform::CPU).host<bool>().array().data.at(static_cast<std::size_t>(0));
     const std::array<std::int64_t, 2> out_shape{{present ? 1 : 0, 0}};
     return Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
                          ScalarType::Int64,
@@ -9149,7 +9149,7 @@ bool Series::is_nonzero() const {
   PLUSS_CHECK(defined(), "is_nonzero: undefined Series");
   PLUSS_CHECK(numel() == 1,
               "is_nonzero: expected a Series with exactly one element");
-  return ne(0.0).item<bool>();
+  return ne(0.0).host<bool>().front();
 }
 
 bool Series::is_same_size(const Series& rhs) const noexcept {

@@ -38,8 +38,8 @@ std::vector<float> qr_reconstruct_(const pluss::Series& q, const pluss::Series& 
   const auto r_cpu = r.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous();
   const auto q_sizes = q_cpu.sizes();
   const auto r_sizes = r_cpu.sizes();
-  const auto qv = q_cpu.to_vec<float>();
-  const auto rv = r_cpu.to_vec<float>();
+  const auto qv = q_cpu.host<float>().array().data;
+  const auto rv = r_cpu.host<float>().array().data;
   return matmul_row_major_(qv, q_sizes[0], q_sizes[1], rv, r_sizes[1]);
 }
 
@@ -54,9 +54,9 @@ std::vector<float> svd_reconstruct_reduced_(const pluss::Series& u, const pluss:
   const std::int64_t k = us[1];
   const std::int64_t n = vhs[1];
 
-  auto uv = u_cpu.to_vec<float>();
-  const auto sv = s_cpu.to_vec<float>();
-  const auto vhv = vh_cpu.to_vec<float>();
+  auto uv = u_cpu.host<float>().array().data;
+  const auto sv = s_cpu.host<float>().array().data;
+  const auto vhv = vh_cpu.host<float>().array().data;
 
   for (std::int64_t i = 0; i < m; ++i) {
     for (std::int64_t j = 0; j < k; ++j) {
@@ -94,7 +94,7 @@ TEST_CASE("MPS linalg qr/svd bridge deterministic parity and counters", "[mps][l
           0.5f, -2.0f, 1.0f},
       {4, 3});
   const auto a_mps = a_cpu.to(pluss::pMPS);
-  const auto a_ref = a_cpu.to(pluss::ScalarType::Float32).to_vec<float>();
+  const auto a_ref = a_cpu.to(pluss::ScalarType::Float32).host<float>().array().data;
 
   const auto q_mps = qr_q(a_mps, true);
   const auto r_mps = qr_r(a_mps, true);
@@ -111,7 +111,7 @@ TEST_CASE("MPS linalg qr/svd bridge deterministic parity and counters", "[mps][l
   REQUIRE(u_mps.platform() == pluss::pMPS);
   REQUIRE(s_mps.platform() == pluss::pMPS);
   REQUIRE(vh_mps.platform() == pluss::pMPS);
-  require_close_vec_(s_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>(), s_cpu.to_vec<float>(), 6e-2f);
+  require_close_vec_(s_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>(), s_cpu.host<float>(), 6e-2f);
   require_close_vec_(svd_reconstruct_reduced_(u_mps, s_mps, vh_mps), a_ref, 4e-2f);
   require_close_vec_(svd_reconstruct_reduced_(u_cpu, s_cpu, vh_cpu), a_ref, 7e-3f);
 
@@ -151,7 +151,7 @@ TEST_CASE("MPS linalg qr/svd bridge stress stability", "[mps][linearalg][bridge]
 
     const auto a_cpu = pluss::make_series(data, {m, n});
     const auto a_mps = a_cpu.to(pluss::pMPS);
-    const auto a_ref = a_cpu.to(pluss::ScalarType::Float32).to_vec<float>();
+    const auto a_ref = a_cpu.to(pluss::ScalarType::Float32).host<float>().array().data;
 
     const auto q_mps = qr_q(a_mps, true);
     const auto r_mps = qr_r(a_mps, true);

@@ -25,7 +25,7 @@ int main() {
   const lymph::metrics::MetricReport report =
       lymph::metrics::classification::report(truth, predicted, want);
 
-  const std::vector<double> values = report.values.to_vec<double>();
+  const std::vector<double> values = report.values.host<double>();
   std::cout << "requested x values:\n";
   for (std::size_t i = 0; i < report.requested.size(); ++i) {
     std::cout << "  metric[" << i << "] = " << values[i] << "\n";

@@ -41,7 +41,7 @@ int main() {
         const Series growth = vec(std::vector<double>(static_cast<std::size_t>(bins) + 1, 1.0));
         const auto rhs = [&](const Series &y) { return pb::growth_rhs(y, g, growth, 0.0); };
         const Series out = pb::ssprk3(rhs, vec(n0), 0.0, 2.0, bins * 2);
-        const double err = l2_error(out.to_vec<double>(), ex, g.width(0));
+        const double err = l2_error(out.host<double>(), ex, g.width(0));
         if (prev > 0.0)
           expect(prev / err > 3.0, "growth scheme must converge at second order (error ratio " + std::to_string(prev / err) + ")");
         prev = err;
@@ -66,7 +66,7 @@ int main() {
       const Series growth = vec(ge);
       const auto rhs = [&](const Series &y) { return pb::growth_rhs(y, g, growth, 0.0); };
       const Series out = pb::ssprk3(rhs, vec(n0), 0.0, t, 3000);
-      const double size_err = l2_error(out.to_vec<double>(), ex, g.width(0));
+      const double size_err = l2_error(out.host<double>(), ex, g.width(0));
       expect(size_err < 4e-3, "size-dependent growth vs characteristics, error " + std::to_string(size_err));
     }
     // ---- nucleation with growth: mu_0 = B0 t, mu_1 = G B0 t^2 / 2 (domain large enough that nothing leaves)
@@ -87,7 +87,7 @@ int main() {
       const Series growth = vec(std::vector<double>(static_cast<std::size_t>(g.bins()) + 1, growth_rate));
       const auto rhs = [&](const Series &y) { return pb::growth_rhs(y, g, growth, flux).sub(y.div(tau)); };
       const Series out = pb::ssprk3(rhs, vec(std::vector<double>(static_cast<std::size_t>(g.bins()), 0.0)), 0.0, 12.0 * tau, 6000);
-      const auto n = out.to_vec<double>();
+      const auto n = out.host<double>();
       double worst = 0.0;
       for (std::int64_t i = 0; i < g.bins(); ++i) {
         const double x = g.centers[static_cast<std::size_t>(i)];
@@ -112,7 +112,7 @@ int main() {
         const dyn::RateFn rate = [&](const Series &y) { return pb::aggregation_rhs(y, op, kernel); };
         const double t = 4.0;
         const Series out = dyn::simulate(rate, vec(n0), 0.0, t, 400);
-        const auto n = out.to_vec<double>();
+        const auto n = out.host<double>();
         const double a = t / 2.0;
         double worst = 0.0;
         for (std::int64_t k = 1; k <= 40; ++k)

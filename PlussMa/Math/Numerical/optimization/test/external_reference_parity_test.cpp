@@ -179,7 +179,7 @@ std::tuple<double, double, double, double> nomad_example1_eval(const std::vector
 
 std::vector<double> to_host_f64_vec(const Series& x) {
   const Series cpu = x.to(pCPU, ScalarType::Float64).contiguous();
-  return cpu.to_vec<double>();
+  return cpu.host<double>();
 }
 
 } // namespace
@@ -303,7 +303,7 @@ int main() {
       double pluss_obj = pluss_out.scalarized_minimum;
       if (pluss_out.objective_vector.defined() && pluss_out.objective_vector.numel() >= 1) {
         const std::vector<double> obj_vals =
-            pluss_out.objective_vector.to(pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+            pluss_out.objective_vector.to(pCPU, ScalarType::Float64).contiguous().host<double>();
         if (!obj_vals.empty()) {
           pluss_obj = obj_vals.front();
         }

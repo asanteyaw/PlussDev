@@ -594,14 +594,14 @@ template <class Fn>
        scale](const optim::ParameterPack<Series> &coordinates) mutable {
         const Series flat = optim::flatten_values(coordinates).detach();
         auto [value, gradient] = pluss::subsp::math::diff::value_and_grad(
-            [&](const pluss::subsp::math::diff::Trace &normalized_coordinate) {
+            [&](const Series &normalized_coordinate) -> Series {
               const ParameterSet physical = detail::RecordAccess::parameters(
-                  *model, normalized_coordinate.value().mul(scale));
+                  *model, normalized_coordinate.mul(scale));
               const Series objective = std::invoke(fn, physical).si_value();
               if (objective.numel() != 1)
                 throw std::invalid_argument(
                     "natsci::solve::fit: objective must return one value");
-              return pluss::subsp::math::diff::Trace(objective.reshape({}));
+              return objective.reshape({});
             },
             flat);
         return std::pair{
@@ -620,13 +620,11 @@ template <class Fn>
 
       const auto evaluate = [&](const ConstraintFn &callback) {
         return optim::jacrev(
-            [&](const optim::ParameterPack<pluss::subsp::math::diff::Trace>
-                    &normalized) {
+            [&](const optim::ParameterPack<Series> &normalized) -> Series {
               const ParameterSet physical = detail::RecordAccess::parameters(
-                  *model, optim::flatten_values(normalized).value().mul(scale));
+                  *model, optim::flatten_values(normalized).mul(scale));
               Series residual = callback(physical).si_value();
-              return pluss::subsp::math::diff::Trace(
-                  residual.reshape({residual.numel()}));
+              return residual.reshape({residual.numel()});
             },
             detached);
       };

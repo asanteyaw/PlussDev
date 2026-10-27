@@ -1,0 +1,166 @@
+# apiref_manifest_inferapi.toml -- the `infer` API reference of PlussMa.
+
+[framework.infer_api]
+title = "Inference"
+nav_title = "Inference API"
+nav_prefix = "api/infer/"
+root_page = "api/plussma_infer.html"
+summary = "Hypothesis tests: means, variances, ranks, distributions, groups and tables."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "infer/means_and_variances"
+page = "api/infer/means_and_variances.md"
+title = "means_and_variances"
+maxdepth = 2
+children = ["means_and_variances/ttest", "means_and_variances/ttest_paired", "means_and_variances/ttest2", "means_and_variances/ztest", "means_and_variances/vartest", "means_and_variances/vartest2", "means_and_variances/f_ratio"]
+
+[[family]]
+path = "infer/ranks_and_signs"
+page = "api/infer/ranks_and_signs.md"
+title = "ranks_and_signs"
+maxdepth = 2
+children = ["ranks_and_signs/ranksum", "ranks_and_signs/signrank", "ranks_and_signs/signtest"]
+
+[[family]]
+path = "infer/distributions"
+page = "api/infer/distributions.md"
+title = "distributions"
+maxdepth = 2
+children = ["distributions/kstest", "distributions/kstest2", "distributions/jbtest"]
+
+[[family]]
+path = "infer/groups_and_tables"
+page = "api/infer/groups_and_tables.md"
+title = "groups_and_tables"
+maxdepth = 2
+children = ["groups_and_tables/anova_1w", "groups_and_tables/chisq_gof", "groups_and_tables/chisq_indep"]
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::ttest"
+kind = "function"
+family = "infer/means_and_variances"
+page = "api/infer/means_and_variances/ttest.md"
+summary = "One-sample Student t-test of a mean."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::ttest_paired"
+kind = "function"
+family = "infer/means_and_variances"
+page = "api/infer/means_and_variances/ttest_paired.md"
+summary = "Paired-sample t-test: is the mean difference of matched pairs zero?"
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::ttest2"
+kind = "function"
+family = "infer/means_and_variances"
+page = "api/infer/means_and_variances/ttest2.md"
+summary = "Two-sample t-test for the means of two independent samples, pooled or Welch."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::ztest"
+kind = "function"
+family = "infer/means_and_variances"
+page = "api/infer/means_and_variances/ztest.md"
+summary = "One-sample z-test of a mean when the standard deviation is known."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::vartest"
+kind = "function"
+family = "infer/means_and_variances"
+page = "api/infer/means_and_variances/vartest.md"
+summary = "Chi-squared test of one variance against a stated value."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::vartest2"
+kind = "function"
+family = "infer/means_and_variances"
+page = "api/infer/means_and_variances/vartest2.md"
+summary = "F test for the equality of two variances."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::f_ratio"
+kind = "function"
+family = "infer/means_and_variances"
+page = "api/infer/means_and_variances/f_ratio.md"
+summary = "The F test for two variances, under its other name."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::ranksum"
+kind = "function"
+family = "infer/ranks_and_signs"
+page = "api/infer/ranks_and_signs/ranksum.md"
+summary = "Wilcoxon rank-sum (Mann–Whitney) test for two independent samples."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::signrank"
+kind = "function"
+family = "infer/ranks_and_signs"
+page = "api/infer/ranks_and_signs/signrank.md"
+summary = "Wilcoxon signed-rank test for a median or for paired differences."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::signtest"
+kind = "function"
+family = "infer/ranks_and_signs"
+page = "api/infer/ranks_and_signs/signtest.md"
+summary = "Sign test for a median or for paired differences."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::kstest"
+kind = "function"
+family = "infer/distributions"
+page = "api/infer/distributions/kstest.md"
+summary = "One-sample Kolmogorov–Smirnov test against a completely specified normal distribution."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::kstest2"
+kind = "function"
+family = "infer/distributions"
+page = "api/infer/distributions/kstest2.md"
+summary = "Two-sample Kolmogorov–Smirnov test: do two samples come from the same distribution?"
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::jbtest"
+kind = "function"
+family = "infer/distributions"
+page = "api/infer/distributions/jbtest.md"
+summary = "Jarque–Bera test of normality, from the skewness and kurtosis."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::anova_1w"
+kind = "function"
+family = "infer/groups_and_tables"
+page = "api/infer/groups_and_tables/anova_1w.md"
+summary = "One-way analysis of variance: do several group means agree?"
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::chisq_gof"
+kind = "function"
+family = "infer/groups_and_tables"
+page = "api/infer/groups_and_tables/chisq_gof.md"
+summary = "Chi-squared goodness-of-fit test of observed counts against expected counts."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::subsp::stats::inference::hypothesis::chisq_indep"
+kind = "function"
+family = "infer/groups_and_tables"
+page = "api/infer/groups_and_tables/chisq_indep.md"
+summary = "Chi-squared test of independence for a table of counts."
+overloads = 1

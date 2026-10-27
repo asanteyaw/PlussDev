@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="The smallest problem, and why the defaults are not enough" href="septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no.html" />
+    <link rel="next" title="First problems with Septima" href="septima_01_first_problems/first_problems.html" />
     <link rel="prev" title="Septima: gradient methods with constraints" href="../septima.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -56,7 +56,7 @@
 <td><p>the one call that runs the solver and returns a <code class="docutils literal notranslate"><span class="pre">SeptimaResult</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">objective</span></code></p></td>
-<td><p>a function of the parameters that returns one number, written on <code class="docutils literal notranslate"><span class="pre">Trace</span></code> values (or on plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> values)</p></td>
+<td><p>a function of the parameters that returns one number, written on plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> values</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start</span></code></p></td>
 <td><p>the starting parameters: one <code class="docutils literal notranslate"><span class="pre">Series</span></code>, a list of them, or a named <code class="docutils literal notranslate"><span class="pre">ParameterPack</span></code></p></td>
@@ -78,12 +78,8 @@
 <section id="programs">
 <h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="septima_01_first_problems/the_smallest_problem_and_why_the_defaults_are_no.html"><span class="std std-doc">The smallest problem, and why the defaults are not enough</span></a></p></li>
-<li><p><a class="reference internal" href="septima_01_first_problems/a_curved_valley.html"><span class="std std-doc">A curved valley</span></a></p></li>
-<li><p><a class="reference internal" href="septima_01_first_problems/three_ways_to_hand_over_the_same_objective.html"><span class="std std-doc">Three ways to hand over the same objective</span></a></p></li>
-<li><p><a class="reference internal" href="septima_01_first_problems/reading_the_result.html"><span class="std std-doc">Reading the result</span></a></p></li>
-<li><p><a class="reference internal" href="septima_01_first_problems/how_a_run_ends.html"><span class="std std-doc">How a run ends</span></a></p></li>
-<li><p><a class="reference internal" href="septima_01_first_problems/watching_a_run.html"><span class="std std-doc">Watching a run</span></a></p></li>
+<li><p><a class="reference internal" href="septima_01_first_problems/first_problems.html"><span class="std std-doc">First problems with Septima</span></a></p></li>
+<li><p><a class="reference internal" href="septima_01_first_problems/reading_a_run.html"><span class="std std-doc">Reading and watching a run</span></a></p></li>
 </ul>
 </section>
 <section id="what-to-remember">
@@ -93,7 +89,7 @@
 <li><p>The defaults are not tuned. Adam’s default learning rate (0.001) and budget (200 iterations) will not solve most problems; set the learning rate to the scale of your parameters, or use L-BFGS.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Converged</span></code> needs all three of gradient, step and violation within tolerance. A run that ends with <code class="docutils literal notranslate"><span class="pre">MaxIterations</span></code> or <code class="docutils literal notranslate"><span class="pre">NoProgress</span></code> may still have a good answer: read <code class="docutils literal notranslate"><span class="pre">objective_value</span></code>, <code class="docutils literal notranslate"><span class="pre">stationarity</span></code> and <code class="docutils literal notranslate"><span class="pre">step_inf_norm</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stationarity</span></code> is the measure of optimality; <code class="docutils literal notranslate"><span class="pre">gradient_inf_norm</span></code> is the objective’s gradient alone and is not zero at a constrained optimum.</p></li>
-<li><p>Pass parameters as one block, a list of blocks, or named blocks; write the objective on <code class="docutils literal notranslate"><span class="pre">Trace</span></code> or on <code class="docutils literal notranslate"><span class="pre">Series</span></code>. The result is the same.</p></li>
+<li><p>Pass parameters as one block, a list of blocks, or named blocks; write the objective on <code class="docutils literal notranslate"><span class="pre">Series</span></code>. The result is the same.</p></li>
 <li><p>A progress hook sees every iteration and can stop the run.</p></li>
 </ul>
 <!-- apiref:toctree:start -->
@@ -115,7 +111,7 @@
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
@@ -126,6 +122,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

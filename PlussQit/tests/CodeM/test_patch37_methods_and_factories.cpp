@@ -70,36 +70,36 @@ TEST_CASE("sign_list supports temporary and lvalue usage", "[methods][list]") {
 TEST_CASE("pair reductions return values and indices in one call", "[methods][list]") {
   auto x = pluss::make_series({1.0, 5.0, 2.0, 3.0, 4.0, 6.0}).reshape({2, 3});
   auto out = x.max_pair(1, false);
-  REQUIRE(out.first.to_vec<double>() == std::vector<double>{5.0, 6.0});
-  REQUIRE(out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2});
+  REQUIRE(out.first.host<double>() == std::vector<double>{5.0, 6.0});
+  REQUIRE(out.second.host<std::int64_t>() == std::vector<std::int64_t>{1, 2});
 
   auto idx = x.argmax(1);
-  REQUIRE(idx.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2});
+  REQUIRE(idx.host<std::int64_t>() == std::vector<std::int64_t>{1, 2});
 
   auto min_out = x.min_pair(1, false);
-  REQUIRE(min_out.first.to_vec<double>() == std::vector<double>{1.0, 3.0});
-  REQUIRE(min_out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 0});
+  REQUIRE(min_out.first.host<double>() == std::vector<double>{1.0, 3.0});
+  REQUIRE(min_out.second.host<std::int64_t>() == std::vector<std::int64_t>{0, 0});
 
   auto min_idx = x.argmin(1);
-  REQUIRE(min_idx.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 0});
+  REQUIRE(min_idx.host<std::int64_t>() == std::vector<std::int64_t>{0, 0});
 }
 
 TEST_CASE("sort_pair and topk_pair return values+indices", "[methods][list]") {
   auto x = pluss::make_series({1.0, 5.0, 2.0, 3.0, 4.0, 6.0}).reshape({2, 3});
 
   auto sort_out = x.sort_pair(1, /*descending=*/true, /*stable=*/false);
-  REQUIRE(sort_out.first.to_vec<double>() == std::vector<double>{5.0, 2.0, 1.0, 6.0, 4.0, 3.0});
-  REQUIRE(sort_out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2, 0, 2, 1, 0});
+  REQUIRE(sort_out.first.host<double>() == std::vector<double>{5.0, 2.0, 1.0, 6.0, 4.0, 3.0});
+  REQUIRE(sort_out.second.host<std::int64_t>() == std::vector<std::int64_t>{1, 2, 0, 2, 1, 0});
 
   auto topk_out = x.topk_pair(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
-  REQUIRE(topk_out.first.to_vec<double>() == std::vector<double>{5.0, 2.0, 6.0, 4.0});
-  REQUIRE(topk_out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2, 2, 1});
+  REQUIRE(topk_out.first.host<double>() == std::vector<double>{5.0, 2.0, 6.0, 4.0});
+  REQUIRE(topk_out.second.host<std::int64_t>() == std::vector<std::int64_t>{1, 2, 2, 1});
 
   auto unordered = x.topk_pair(/*k=*/2, /*dim=*/1, /*largest=*/false, /*sorted=*/false);
   REQUIRE(unordered.first.sizes() == std::vector<std::int64_t>{2, 2});
-  const auto unordered_values = unordered.first.to_vec<double>();
-  const auto unordered_indices = unordered.second.to_vec<std::int64_t>();
-  const auto input_values = x.to_vec<double>();
+  const auto unordered_values = unordered.first.host<double>();
+  const auto unordered_indices = unordered.second.host<std::int64_t>();
+  const auto input_values = x.host<double>();
   for (std::int64_t row = 0; row < 2; ++row) {
     for (std::int64_t col = 0; col < 2; ++col) {
       const auto output_offset = row * 2 + col;
@@ -119,17 +119,17 @@ TEST_CASE("extrema pairs keep values, indices, and reverse routing aligned", "[m
   auto maxima = x.max_pair(-1, true);
   REQUIRE(maxima.first.sizes() == std::vector<std::int64_t>{2, 1});
   REQUIRE(maxima.second.sizes() == std::vector<std::int64_t>{2, 1});
-  REQUIRE(maxima.first.to_vec<double>() == std::vector<double>{4.0, 2.0});
-  REQUIRE(maxima.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 0});
+  REQUIRE(maxima.first.host<double>() == std::vector<double>{4.0, 2.0});
+  REQUIRE(maxima.second.host<std::int64_t>() == std::vector<std::int64_t>{0, 0});
 
   maxima.first.sum().reverse();
-  REQUIRE(x.sensitivity().to_vec<double>() ==
+  REQUIRE(x.sensitivity().host<double>() ==
           std::vector<double>{1.0, 0.0, 0.0, 1.0, 0.0, 0.0});
 
   auto minima = x.min_pair(1, false);
   REQUIRE(minima.first.sizes() == std::vector<std::int64_t>{2});
-  REQUIRE(minima.first.to_vec<double>() == std::vector<double>{1.0, -3.0});
-  REQUIRE(minima.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{2, 1});
+  REQUIRE(minima.first.host<double>() == std::vector<double>{1.0, -3.0});
+  REQUIRE(minima.second.host<std::int64_t>() == std::vector<std::int64_t>{2, 1});
 }
 
 TEST_CASE("extrema pairs validate scalar and empty-axis contracts", "[methods][reduction][errors]") {

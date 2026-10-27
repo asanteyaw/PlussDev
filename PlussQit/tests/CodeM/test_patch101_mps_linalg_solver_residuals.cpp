@@ -9,7 +9,7 @@
 namespace {
 
 std::vector<float> to_vec_f32_cpu_(const pluss::Series& x) {
-  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().to_vec<float>();
+  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().host<float>().array().data;
 }
 
 float max_abs_diff_(const std::vector<float>& a, const std::vector<float>& b) {

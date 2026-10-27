@@ -1,6 +1,7 @@
 #!/bin/bash
 # Compiles one PlussBI documentation example into an executable. Usage: verify_example.sh SOURCE.cpp OUTPUT
-# Build paths come from the PlussDev checkout and the BI build tree; edit BUILD and DEV for another machine.
+# Set PLUSSDEV_EXTRA_SRCS to a space-separated list of library .cpp files to compile into the program (for checking a source change
+# before the library is rebuilt). Build paths come from the PlussDev checkout and the BI build tree; edit BUILD and DEV for another machine.
 set -euo pipefail
 SRC="$1"
 OUT="$2"
@@ -25,7 +26,7 @@ DEV="${PLUSSDEV_ROOT:-/Users/yawasante/software/cxx/PlussDev}"
   -O1 -std=c++20 -arch arm64 \
   -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk \
   -mmacosx-version-min=26.6 \
-  -o "$OUT" "$SRC" \
+  -o "$OUT" "$SRC" ${PLUSSDEV_EXTRA_SRCS:-} \
   -Wl,-search_paths_first -Wl,-headerpad_max_install_names \
   -Wl,-rpath,/Users/yawasante/software/miniconda3/envs/cpp_env/lib \
   "$BUILD/libpluss.a" "$BUILD/PlussMic/libPlussMic.a" \

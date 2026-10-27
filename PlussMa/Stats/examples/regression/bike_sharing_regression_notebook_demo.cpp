@@ -141,7 +141,7 @@ int main() {
   //======= Cell Five=======
   // Plot notebook-style distribution/probability diagnostic for the response (QQ plot via flash).
   //======== End Cell Five =====
-  const std::vector<double> y_train_values = y_train.to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+  const std::vector<double> y_train_values = y_train.to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
   auto fig_qq = pluss::pl::studio("cell05_response_qqplot");
   pluss::pl::flash::QqPlotOptions qq_opts;
   qq_opts.show_reference_line = true;
@@ -202,7 +202,7 @@ int main() {
     cv_r2_scores[static_cast<std::size_t>(fold)] = fold_r2;
     cv_mse_scores[static_cast<std::size_t>(fold)] = -fold_mse;
 
-    const auto fold_pred_host = fold_pred.to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+    const auto fold_pred_host = fold_pred.to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
     for (std::size_t j = 0; j < valid_idx.size(); ++j) {
       cv_pred_values[static_cast<std::size_t>(valid_idx[j])] = fold_pred_host[j];
     }

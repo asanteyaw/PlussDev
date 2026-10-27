@@ -131,13 +131,12 @@ bounds themselves).
 
 `bool enable_constraint_autodiff = true`
 : When `true` (the default), the constraint penalty's gradient
-  contribution to the primal step is computed via autodiff over the
-  `_trace` residual callables
-  ([`MinimaxConstraints::equalities_trace`](MinimaxConstraints.md#state)/
-  `inequalities_trace`) every step -- this is what actually *enforces* a
-  constraint against the primal trajectory, not just tracks its
-  violation. `false` disables this: the dual multipliers still update
-  (via the plain, non-`_trace` callables), but nothing pulls the primal
+  contribution to the primal step is computed by differentiating the
+  residual callables
+  ([`MinimaxConstraints::equalities`/`inequalities`](MinimaxConstraints.md#state))
+  every step -- this is what actually *enforces* a constraint against the
+  primal trajectory, not just tracks its violation. `false` disables
+  this: the dual multipliers still update, but nothing pulls the primal
   parameter toward feasibility unless the caller's own supplied gradient
   already accounts for it.
 

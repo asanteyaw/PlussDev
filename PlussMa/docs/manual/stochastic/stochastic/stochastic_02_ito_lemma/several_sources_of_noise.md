@@ -22,8 +22,8 @@ int main() {
   const pluss::Series sigma = pluss::make_series(std::vector<double>{0.3, 0.1, 0.5, 0.2, 0.2, 0.4}, {3, 2}).to(f64);
 
   const auto d = x.calc.diff.ito([](const pluss::Series& s) { return s.mul(s); }, mu, sigma);
-  const auto drift = d.drift.to_vec<double>();
-  const auto diffusion = d.diffusion.to_vec<double>();
+  const auto drift = d.drift.host<double>();
+  const auto diffusion = d.diffusion.host<double>();
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "diffusion has shape [" << d.diffusion.size(0) << ", " << d.diffusion.size(1) << "]\n";
   const std::vector<double> xv = {0.5, 1.0, -0.3}, mv = {0.1, 0.2, -0.1}, sg = {0.3, 0.1, 0.5, 0.2, 0.2, 0.4};

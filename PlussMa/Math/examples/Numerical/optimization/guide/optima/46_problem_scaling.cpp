@@ -10,15 +10,15 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
   auto two = [&](double a, double b) { return optim::pack_scalars({{"a", scalar(a)}, {"b", scalar(b)}}); };
 
   // minimize 1e8 (a - 0.3)^2 + 1e-4 (b - 1250)^2  subject to  1e-6 (a + b - 1250.3) = 0  and  a, b >= 0
   auto objective = [](const Pack& p) {
-    return 1.0e8 * optim::square(p.at("a") - 0.3) + 1.0e-4 * optim::square(p.at("b") - 1250.0);
+    return 1.0e8 * (p.at("a") - 0.3).square() + 1.0e-4 * (p.at("b") - 1250.0).square();
   };
   const auto constraints =
       optim::constraints()

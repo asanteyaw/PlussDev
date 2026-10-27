@@ -28,9 +28,6 @@ int main() {
   constraints.inequalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum().sub(4.0)};
   };
-  constraints.inequalities_trace = [](const std::vector<pluss::subsp::math::diff::Trace>& p) {
-    return std::vector<pluss::subsp::math::diff::Trace>{pluss::subsp::math::diff::sum(p[0]) - 4.0};
-  };
 
   pluss::nn::optim::Minimax minimax({&params}, options, constraints);
   pluss::nn::optim::Minimax minimax_tape({&params_tape}, options, constraints);

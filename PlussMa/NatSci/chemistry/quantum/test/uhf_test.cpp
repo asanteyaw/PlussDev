@@ -135,9 +135,9 @@ void test_one_orbital_reverse() {
              close(result.spin_squared.item<double>(), 0.75, 1e-12),
          "analytic one-orbital UHF value is incorrect");
   result.total_energy.reverse();
-  expect(close(core.sensitivity().item<double>(), 1.0, 1e-10) &&
-             close(overlap.sensitivity().item<double>(), 1.25, 2e-9) &&
-             close(eri.sensitivity().item<double>(), 0.0, 2e-9) &&
+  expect(close(core.sensitivity().host<double>().front(), 1.0, 1e-10) &&
+             close(overlap.sensitivity().host<double>().front(), 1.25, 2e-9) &&
+             close(eri.sensitivity().host<double>().front(), 0.0, 2e-9) &&
              close(nuclear.sensitivity().item<double>(), 1.0, 1e-10),
          "one-orbital UHF reverse sensitivities disagree with the analytic energy");
 }

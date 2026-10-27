@@ -54,7 +54,7 @@ TEST_CASE("index_put_ overlap without accumulate is last-write-wins, matching to
   // Verified against real torch: a.index_put_((i,), v, accumulate=False)
   // on this exact data resolves index 1 to 7 (the later write in the index
   // array), leaving every other position untouched.
-  REQUIRE(out.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 7, 0, 0, 0});
+  REQUIRE(out.host<std::int64_t>() == std::vector<std::int64_t>{0, 7, 0, 0, 0});
 }
 
 TEST_CASE("index_put_ out of bounds throws", "[indexing][fail]") {

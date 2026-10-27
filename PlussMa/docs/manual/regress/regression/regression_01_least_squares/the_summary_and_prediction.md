@@ -27,7 +27,7 @@ int main() {
   options.predictor_names = {"age"};
   const auto fit = reg::ols_fit(vec(ys), column(xs), options);
   reg::print_ols_summary(std::cout, fit);
-  const auto forecast = reg::ols_predict(fit, column({9.0, 10.0})).to_vec<double>();
+  const auto forecast = reg::ols_predict(fit, column({9.0, 10.0})).host<double>();
   std::cout << std::fixed << std::setprecision(4) << "\nprediction at 9 and 10: " << forecast[0] << ", " << forecast[1] << "\n";
 }
 ```

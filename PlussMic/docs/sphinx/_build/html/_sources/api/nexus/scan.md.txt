@@ -141,13 +141,13 @@ this clean fixture.
 ```cpp
 std::cout << scan.features("declared_status").as_note().at(3) << " "
           << scan.features("computed_status").as_note().at(3) << " "
-          << scan.features("left_missing_rows").as_series().to_vec<std::int64_t>()[3] << " "
-          << scan.features("right_missing_rows").as_series().to_vec<std::int64_t>()[3] << " "
-          << scan.features("left_duplicate_rows").as_series().to_vec<std::int64_t>()[3] << " "
-          << scan.features("right_duplicate_rows").as_series().to_vec<std::int64_t>()[3] << " "
-          << scan.features("left_orphans").as_series().to_vec<std::int64_t>()[3] << " "
-          << scan.features("right_orphans").as_series().to_vec<std::int64_t>()[3] << " "
-          << scan.features("confidence").as_series().to_vec<double>()[3];
+          << scan.features("left_missing_rows").as_series().host<std::int64_t>()[3] << " "
+          << scan.features("right_missing_rows").as_series().host<std::int64_t>()[3] << " "
+          << scan.features("left_duplicate_rows").as_series().host<std::int64_t>()[3] << " "
+          << scan.features("right_duplicate_rows").as_series().host<std::int64_t>()[3] << " "
+          << scan.features("left_orphans").as_series().host<std::int64_t>()[3] << " "
+          << scan.features("right_orphans").as_series().host<std::int64_t>()[3] << " "
+          << scan.features("confidence").as_series().host<double>()[3];
 ```
 
 ### Output
@@ -170,7 +170,7 @@ auto broken = nx.apply("account", [](const DataFrame&) {
 
 auto broken_scan = broken.scan();
 std::cout << broken_scan.features("computed_status").as_note().at(3) << " "
-          << broken_scan.features("right_duplicate_rows").as_series().to_vec<std::int64_t>()[3];
+          << broken_scan.features("right_duplicate_rows").as_series().host<std::int64_t>()[3];
 ```
 
 ### Output

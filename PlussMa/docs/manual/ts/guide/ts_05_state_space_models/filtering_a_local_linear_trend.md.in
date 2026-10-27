@@ -2,7 +2,173 @@
 
 [Back to State-Space Models](../ts_05_state_space_models.md)
 
+A state-space model separates what you want to know from what you can see. The *state* is the hidden quantity (the current level of a series, its slope, a seasonal effect) and the *observation* is a noisy view of it. Two equations describe the system:
 
-@@example Stats/time_series/guide/1219_state_space_filter.cpp@@
+> `x_{t+1} = A x_t + B w_t`  (the state moves),  `y_t = C x_t + D v_t`  (what we observe),
 
-The local linear trend model has a level and a slope; the level moves by the slope each step, and both are disturbed by small shocks. Started from an uninformative prior, the filter learns the slope quickly: it is 0.05 after the first observation, 0.15 after three and about 0.3 from then on (the data rise 0.3 per step). The forecast errors shrink from 1.24 (the prior is far from the first value) to values near the observation noise. The scan over the observation noise standard deviation has its peak at 0.3, next to the value 0.289 that generated the data; too small a value makes the filter chase noise (the likelihood falls to −79), too large a value makes it sluggish.
+with `w_t` and `v_t` independent standard normal shocks. In an `SsmModel` the matrices are fields (`transition` is `A`, `state_loading` is `B`, `observation` is `C`, `innovation_loading` is `D`) together with the distribution of the state *before* the first observation (`mean0`, `cov0`). The noise **standard deviations** go into `B` and `D`, so the noise covariances are `B B'` and `D D'`.
+
+The **Kalman filter** is the algorithm that, observation by observation, updates a Gaussian estimate of the state: it predicts the next state, compares the prediction of the observation with what actually arrived, and corrects the state by a fraction of the surprise. That fraction is the **Kalman gain**, and it is large when the model trusts observations (small `D`, or a state that moves a lot) and small when it trusts its own prediction. `Ssm::filter(y, model)` runs it and returns, among other things, the `filtered_states`, the one-step `forecast_obs_error`, the `kalman_gain`, and the exact Gaussian log-likelihood `loglik`.
+
+This page builds two models from the simplest to the one used for trending series, and shows how the noise levels, which you must supply, can be chosen from the data.
+
+## The local level model
+
+The simplest state is a single number, a level that drifts: `x_{t+1} = x_t + σ_w w_t` and `y_t = x_t + σ_v v_t`. How quickly the filtered level follows the data depends only on the ratio of `σ_w` to `σ_v`: if the level moves a lot compared with the observation noise, each observation is informative; if it hardly moves, the filter averages over many. The program fits the model with three ratios to the same 300 simulated observations and prints the steady-state Kalman gain. It then compares the filtered level with an exponentially weighted average `ema(y, α)` using that gain as `α`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series matrix(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(pluss::ScalarType::Float64); }
+
+ts::SsmModel local_level(double level_sd, double obs_sd) {
+  ts::SsmModel m;
+  m.transition = matrix({1}, {1, 1});
+  m.state_loading = matrix({level_sd}, {1, 1});
+  m.observation = matrix({1}, {1, 1});
+  m.innovation_loading = matrix({obs_sd}, {1, 1});
+  m.mean0 = matrix({0}, {1});
+  m.cov0 = matrix({100}, {1, 1});  // a wide prior: we do not know the starting level
+  return m;
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int n = 300;
+  const auto truth = local_level(0.3, 1.0);
+  const Series y = ts::Ssm::simulate(n, truth, 1, f64, /*seed=*/12).observations.reshape({n, 1});
+
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << std::setw(14) << "level sd" << std::setw(12) << "obs sd" << std::setw(14) << "final gain" << std::setw(20) << "max |filtered - ema|" << "\n";
+  for (double level_sd : {0.05, 0.3, 1.0}) {
+    const auto fit = ts::Ssm::filter(y, local_level(level_sd, 1.0));
+    const double gain = fit.kalman_gain.select(0, n - 1).select(0, 0).select(0, 0).item<double>();
+    const Series smoothed = ts::ema(y.reshape({n}), gain);
+    const auto f = fit.filtered_states.select(1, 0).host<double>();
+    const auto e = smoothed.host<double>();
+    double worst = 0.0;
+    for (int t = 100; t < n; ++t) worst = std::max(worst, std::fabs(f[t] - e[t]));
+    std::cout << std::setw(14) << level_sd << std::setw(12) << 1.0 << std::setw(14) << gain << std::setw(20) << worst << "\n";
+  }
+}
+```
+
+The gain rises with the signal-to-noise ratio, from 0.049 for a level that barely moves (level sd 0.05 against an observation sd of 1) through 0.258 to 0.618 for one that moves as much as the noise, and in each case the filtered level is an exponentially weighted average with that gain as the smoothing constant, up to the start-up transient (the comparison starts after the first 100 observations). This is the link to the transforms of [Chapter 1](../ts_01_describing_a_series/the_transforms.md): `ema` with a hand-picked `α` is the steady state of a local-level Kalman filter, and the filter additionally tells you what `α` should be, how uncertain the level is, and what to do with missing values.
+
+## The local linear trend
+
+Trending series need a second state, the slope. The *local linear trend* model has the state `(level, slope)`: the level moves by the slope each step, and both are disturbed by small shocks. `transition = [[1, 1], [0, 1]]` encodes "level ← level + slope; slope ← slope". The program simulates 80 observations of such a series (a slope near 0.3) and starts the filter from an uninformative prior, to show it learning the slope. The column `error` is the one-step forecast error `forecast_obs_error`: the observation minus what the filter expected.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series matrix(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(pluss::ScalarType::Float64); }
+
+ts::SsmModel local_linear_trend(double level_sd, double slope_sd, double obs_sd, double slope0, double slope_var0) {
+  ts::SsmModel m;
+  m.transition = matrix({1, 1, 0, 1}, {2, 2});
+  m.state_loading = matrix({level_sd, 0, 0, slope_sd}, {2, 2});
+  m.observation = matrix({1, 0}, {1, 2});
+  m.innovation_loading = matrix({obs_sd}, {1, 1});
+  m.mean0 = matrix({0, slope0}, {2});
+  m.cov0 = matrix({25, 0, 0, slope_var0}, {2, 2});  // wide prior on the level; the slope's prior variance is chosen by the caller
+  return m;
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int n = 80;
+  const Series y = ts::Ssm::simulate(n, local_linear_trend(0.1, 0.02, 0.5, 0.3, 1e-4), 1, f64, /*seed=*/4).observations.reshape({n, 1});
+
+  const auto fit = ts::Ssm::filter(y, local_linear_trend(0.1, 0.02, 0.5, 0.0, 1.0));  // start from slope 0: the filter has to learn it
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << std::setw(5) << "t" << std::setw(10) << "y" << std::setw(10) << "level" << std::setw(10) << "slope" << std::setw(10) << "error" << "\n";
+  for (int t : {0, 1, 2, 5, 10, 20, 40, 79}) {
+    const auto x = fit.filtered_states.select(0, t).host<double>();
+    std::cout << std::setw(5) << t << std::setw(10) << y.select(0, t).item<double>() << std::setw(10) << x[0] << std::setw(10) << x[1] << std::setw(10)
+              << fit.forecast_obs_error.select(0, t).item<double>() << "\n";
+  }
+  std::cout << "log-likelihood " << fit.loglik << "\n";
+}
+```
+
+Watch the slope column. It starts at the prior (0), is pulled to 0.19 by the first observation and to 0.52 by the sixth (overshooting, because the early observations are few and noisy), then settles in the range 0.2 to 0.3 for the rest of the sample, where the true slope lies: it was 0.3 at the start and drifts by a small random amount (standard deviation 0.02) each step. Each new observation both shifts the level and corrects the slope. The one-step forecast error is 4.99 at the first observation (the filter does not yet know where the series is) and then stays within a few tenths, the size of the observation noise (0.5). This is the practical meaning of the filter: an estimate that is available *as the data arrive*, with no refitting.
+
+## Choosing the noise levels
+
+The filter needs `σ_w`, `σ_slope` and `σ_v`, which are rarely known. The model's exact log-likelihood gives a way to choose them: evaluate `loglik` over candidate values and take the best. The library does not search for you, so the program does it directly over a grid of observation noise and level noise (the slope noise is held at its true value to keep the picture two-dimensional).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series matrix(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(pluss::ScalarType::Float64); }
+
+ts::SsmModel local_linear_trend(double level_sd, double slope_sd, double obs_sd) {
+  ts::SsmModel m;
+  m.transition = matrix({1, 1, 0, 1}, {2, 2});
+  m.state_loading = matrix({level_sd, 0, 0, slope_sd}, {2, 2});
+  m.observation = matrix({1, 0}, {1, 2});
+  m.innovation_loading = matrix({obs_sd}, {1, 1});
+  m.mean0 = matrix({0, 0}, {2});
+  m.cov0 = matrix({25, 0, 0, 1}, {2, 2});
+  return m;
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int n = 200;
+  const Series y = ts::Ssm::simulate(n, local_linear_trend(0.1, 0.02, 0.5), 1, f64, /*seed=*/4).observations.reshape({n, 1});
+
+  const double level_grid[] = {0.01, 0.05, 0.1, 0.2, 0.4};
+  const double obs_grid[] = {0.1, 0.25, 0.5, 0.75, 1.0};
+  std::cout << std::fixed << std::setprecision(2);
+  std::cout << "log-likelihood (rows: observation sd, columns: level sd; slope sd 0.02)\n" << std::setw(10) << "";
+  for (double l : level_grid) std::cout << std::setw(10) << l;
+  std::cout << std::setprecision(1) << "\n";
+  double best = -1e300, best_l = 0, best_o = 0;
+  for (double o : obs_grid) {
+    std::cout << std::setw(10) << std::setprecision(2) << o << std::setprecision(1);
+    for (double l : level_grid) {
+      const double ll = ts::Ssm::filter(y, local_linear_trend(l, 0.02, o)).loglik;
+      std::cout << std::setw(10) << ll;
+      if (ll > best) { best = ll; best_l = l; best_o = o; }
+    }
+    std::cout << "\n";
+  }
+  std::cout << std::setprecision(2) << "\nbest on the grid: level sd " << best_l << ", observation sd " << best_o << " (true 0.10 and 0.50)\n";
+}
+```
+
+The two parameters are not equally well determined. The observation noise is pinned down sharply: at 0.5 (the true value) the log-likelihood is −191, and it falls to −208 at 0.75 and to around −300 and below for 0.25 or less, where the filter chases noise (small values) or lags (large ones). The level noise is hardly identified at all: for values from 0.01 to 0.10 the likelihood is the same to within 0.1, and only values well above the truth (0.2 and 0.4) are visibly worse. The best point on the grid has a level sd of 0.05 against a true 0.10, which is within what the data can tell apart. A small level noise is hard to separate from a smaller slope noise or a slightly different observation noise, so judge a fit by its forecasts and likelihood, not by each parameter. For a finer answer, hand `loglik` to any of the optimisers in the numerical chapters instead of a grid; the surface is smooth.
+
+## Decisions and pitfalls
+
+- **Standard deviations, not variances.** `B` and `D` take standard deviations; the covariances are `B B'` and `D D'`. Mixing them up is the commonest mistake.
+- **A wide `cov0` for an unknown start.** The initial moments describe the state one step *before* the first observation; a small `cov0` forces the filter to believe a wrong starting level.
+- **Check the model with the forecast errors.** If the model is right, the standardised one-step errors are uncorrelated with unit variance; use the tests of [Chapter 1](../ts_01_describing_a_series/white_noise_unit_roots_stationarity.md).
+- **Small noise levels are hard to estimate.** The data may not distinguish a level noise of 0.01 from 0.1; judge a fit by its forecasts and its likelihood, not by one parameter.
+- **Filtered is not smoothed.** The filtered state uses only the past and is what you have in real time; use the smoother to look back ([next page](smoothing_across_a_gap_and_forecasting.md)).
+
+Where next: [Smoothing across a gap, and forecasting](smoothing_across_a_gap_and_forecasting.md) handles missing observations and uses the model to look ahead.

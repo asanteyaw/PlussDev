@@ -181,7 +181,7 @@ inline Lin linearize(const Context &c, const Vec &z) {
   P[2 * n] += h[n];
   P[2 * n + 1] -= h[n];
   const Series out = (*c.g)(column(U, static_cast<std::int64_t>(lanes), c.n), pluss::make_series(P, {static_cast<std::int64_t>(lanes)}).to(pluss::ScalarType::Float64));
-  const Vec f = out.contiguous().to_vec<double>();
+  const Vec f = out.contiguous().host<double>().array().data;
   Lin l;
   l.g.assign(f.begin() + static_cast<std::ptrdiff_t>(2 * n + 2) * static_cast<std::ptrdiff_t>(n) , f.begin() + static_cast<std::ptrdiff_t>(2 * n + 3) * static_cast<std::ptrdiff_t>(n));
   l.jac.assign(n * (n + 1), 0.0);
@@ -295,7 +295,7 @@ inline Spectrum spectrum(const Context &c, const Lin &l) {
   const Series A = pluss::make_series(a, {c.n, c.n}).to(pluss::ScalarType::Float64);
   const Series poly = stability::characteristic_polynomial(A);
   Spectrum s;
-  s.poly = poly.contiguous().to_vec<double>();
+  s.poly = poly.contiguous().host<double>().array().data;
   s.unstable = static_cast<int>(std::lround(stability::routh(poly).unstable.item<double>()));
   Vec x;
   s.det_gu = lu_solve(a, Vec(n, 0.0), n, x, false);
@@ -364,7 +364,7 @@ inline Branch continue_branch(const Residual &g, const Series &u0, double p0, co
   c.w.assign(n + 1, 1.0);
   for (std::size_t i = 0; i < n && i < opt.u_scale.size(); ++i)
     c.w[i] = opt.u_scale[i];
-  Vec z = u0.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  Vec z = u0.to(pluss::ScalarType::Float64).contiguous().host<double>().array().data;
   z.push_back(p0);
 
   // starting point: polish with the corrector, tangent from the sign of `direction` (or the supplied tangent)
@@ -535,7 +535,7 @@ inline std::vector<std::vector<double>> branch_directions(const Residual &g, con
   c.opt.fd_step = 1e-6;
   const auto n = static_cast<std::size_t>(c.n);
   c.w.assign(n + 1, 1.0);
-  Vec z = u0.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  Vec z = u0.to(pluss::ScalarType::Float64).contiguous().host<double>().array().data;
   z.push_back(p0);
   const Lin l = linearize(c, z);
   // null space of J (n x (n+1)): t_known is one vector; the second is the null vector of the bordered system with t_known as border,
@@ -629,7 +629,7 @@ inline std::vector<std::vector<double>> branch_directions(const Residual &g, con
       P[k] = z[n] + h * (sa[k] * a[n] + sb[k] * b[n]);
     }
     const Vec f = (*c.g)(column(U, static_cast<std::int64_t>(K), c.n), pluss::make_series(P, {static_cast<std::int64_t>(K)}).to(pluss::ScalarType::Float64))
-                      .contiguous().to_vec<double>();
+                      .contiguous().host<double>().array().data;
     Vec out(n);
     for (std::size_t i = 0; i < n; ++i)
       out[i] = (f[0 * n + i] - f[1 * n + i] - f[2 * n + i] + f[3 * n + i]) / (4.0 * h * h);

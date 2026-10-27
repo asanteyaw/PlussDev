@@ -1,16 +1,16 @@
 // All three algorithms accept all four curvature models. `Bfgs` and `Lbfgs` build the model from the steps taken;
 // `Exact` and `HessianVector` compute the true Hessian of the Lagrangian (the objective plus the multiplier-weighted
-// constraints) by forward-over-reverse differentiation, which needs the problem's dual-number callbacks: every
-// function is written once, generically, and handed over twice (`autodiff` for gradients, `autodiff_dual` for
-// Hessian-vector products). The problem is the four-variable benchmark with one nonlinear inequality and one nonlinear
-// equality; every cell reaches the same optimum, 17.0140173, and the table shows what each model costs to get there.
-// The last lines show the one refusal that remains: an exact model without dual callbacks.
+// constraints) by differentiating the problem's own functions a second time, so they need no extra callbacks: each
+// function is written once, over plain Series. The problem is the four-variable benchmark with one nonlinear
+// inequality and one nonlinear equality; every cell reaches the same optimum, 17.0140173, and the table shows what
+// each model costs to get there. The last lines show the one refusal that remains: an exact model on an objective
+// given only as a value and a gradient, which cannot be differentiated again.
 #include <pluss/ma.h>
 
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
+namespace optim = pluss::subsp::math::optim;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -18,30 +18,28 @@ optim::ParameterPack<pluss::Series> four(double a, double b, double c, double d)
   return optim::pack_scalars({{"a", scalar(a)}, {"b", scalar(b)}, {"c", scalar(c)}, {"d", scalar(d)}});
 }
 
-// The same text serves both differentiation modes: AD is optim::Trace or optim::DualTrace.
-template <class AD>
-AD objective_of(const optim::ParameterPack<AD>& p) {
+pluss::Series objective_of(const optim::ParameterPack<pluss::Series>& p) {
   return p.at("a") * p.at("d") * (p.at("a") + p.at("b") + p.at("c")) + p.at("c");
 }
-template <class AD>
-AD inequality_of(const optim::ParameterPack<AD>& p) {
+pluss::Series inequality_of(const optim::ParameterPack<pluss::Series>& p) {
   return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d");
 }
-template <class AD>
-AD equality_of(const optim::ParameterPack<AD>& p) {
-  return optim::square(p.at("a")) + optim::square(p.at("b")) + optim::square(p.at("c")) + optim::square(p.at("d")) - 40.0;
+pluss::Series equality_of(const optim::ParameterPack<pluss::Series>& p) {
+  return p.at("a").square() + p.at("b").square() + p.at("c").square() + p.at("d").square() - 40.0;
 }
 
-optim::ConstrainedProblem problem(bool with_dual_callbacks) {
+optim::ConstrainedProblem problem(bool objective_as_series) {
   optim::ConstrainedProblem prob;
-  prob.objective.autodiff = [](const optim::ParameterPack<optim::Trace>& p) { return objective_of<optim::Trace>(p); };
-  prob.nonlinear.inequality = [](const optim::ParameterPack<optim::Trace>& p) { return inequality_of<optim::Trace>(p); };
-  prob.nonlinear.equality = [](const optim::ParameterPack<optim::Trace>& p) { return equality_of<optim::Trace>(p); };
-  if (with_dual_callbacks) {
-    prob.objective.autodiff_dual = [](const optim::ParameterPack<optim::DualTrace>& p) { return objective_of<optim::DualTrace>(p); };
-    prob.nonlinear.inequality_dual = [](const optim::ParameterPack<optim::DualTrace>& p) { return inequality_of<optim::DualTrace>(p); };
-    prob.nonlinear.equality_dual = [](const optim::ParameterPack<optim::DualTrace>& p) { return equality_of<optim::DualTrace>(p); };
+  if (objective_as_series) {
+    prob.objective.autodiff = objective_of;
+  } else {
+    prob.objective.analytic = [](const optim::ParameterPack<pluss::Series>& p) {
+      const double a = as_f64(p.at("a")), b = as_f64(p.at("b")), c = as_f64(p.at("c")), d = as_f64(p.at("d"));
+      return std::pair{scalar(a * d * (a + b + c) + c), four(d * (2 * a + b + c), a * d, a * d + 1.0, a * (a + b + c))};
+    };
   }
+  prob.nonlinear.inequality = inequality_of;
+  prob.nonlinear.equality = equality_of;
   prob.bounds.lower = four(1, 1, 1, 1);
   prob.bounds.upper = four(5, 5, 5, 5);
   return prob;
@@ -83,7 +81,7 @@ int main() {
   exact.algorithm = optim::OptimaAlgorithm::SequentialQP;
   exact.sequential_qp.hessian_approximation = optim::OptimaHessianApproximation::Exact;
   const auto refused = optim::optima(problem(false), four(1, 5, 5, 1), exact);
-  std::cout << "Exact without dual callbacks: exit flag " << static_cast<int>(refused.exit_flag) << "\n"
+  std::cout << "Exact on a value-and-gradient objective: exit flag " << static_cast<int>(refused.exit_flag) << "\n"
             << refused.message.substr(0, refused.message.find(" diagnostic")) << "\n";
   return 0;
 }

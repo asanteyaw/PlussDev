@@ -17,11 +17,7 @@ using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaHessianApproximation;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec(std::int64_t n, double start, double step) {
   std::vector<double> values(static_cast<std::size_t>(n), 0.0);
@@ -37,9 +33,9 @@ TEST_CASE("interior-point can use lbfgs Hessian approximation", "[lbfgs][optim][
   const Series initial_x = make_vec(n, 1.2, 0.02);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    const Trace err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    const Series err = p.at("x") - target;
+    return err.square().sum();
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", pluss::series::zeros({n}, ScalarType::Float64).to(pluss::pCPU)},

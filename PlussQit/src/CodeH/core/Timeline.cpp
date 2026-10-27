@@ -934,7 +934,7 @@ pluss::codem::Series impl_argsort(const Timeline& a) {
 
   const auto valid_mask = impl_isvalid(a)
                               .to(pluss::codem::Platform::CPU)
-                              .to_vec<bool>();
+                              .host<bool>();
 
   std::vector<std::int64_t> valid_idx;
   std::vector<std::int64_t> nat_idx;
@@ -959,7 +959,7 @@ pluss::codem::Series impl_argsort(const Timeline& a) {
     const auto local_order = valid_ticks
         .argsort(/*dim=*/0, /*descending=*/false, /*stable=*/true)
         .to(pluss::codem::Platform::CPU)
-        .to_vec<std::int64_t>();
+        .host<std::int64_t>();
 
     for (const auto li : local_order) {
       out_idx.push_back(valid_idx[static_cast<std::size_t>(li)]);

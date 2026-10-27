@@ -4,66 +4,49 @@
 
 [Back to ARIMA Models](../ts_02_arima_models.md)
 
+A fitted model is a claim: that after accounting for the coefficients, what is left is unpredictable noise. The residuals test the claim. `ArimaFit::infer(y)` returns the one-step prediction errors of the fitted model: each observation minus what the model predicted for it from the past. If the model is adequate they behave like independent draws with constant variance. Structure left in them is information the model failed to use, and each kind of structure points to a different repair:
+
+| What the residuals show | Test | What it means | Repair |
+|---|---|---|---|
+| autocorrelation | Ljung–Box on the residuals | the mean model is too small | add AR or MA terms |
+| autocorrelation of the squares | ARCH-LM on the residuals | the variance is not constant | model the variance (Chapter 3) |
+| a trend or a level shift | plot, unit-root tests | the series is not stationary | difference it |
+
+This page runs the first two checks and shows what a failure looks like.
+
+## The Ljung–Box test with the right degrees of freedom
+
+The Ljung–Box statistic summarises the residual autocorrelations up to a lag; under the null of white noise it follows a χ² distribution. When the series tested is the residual of a model with `k` fitted ARMA coefficients, the effective degrees of freedom are reduced by `k`, which is what `LjungBoxOptions::model_df` is for. The program fits a mean-only model (no AR term) and an AR(1) to a series that really is an AR(1), and tests the residuals of each.
 
 ```cpp
 #include <pluss/ma.h>
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
-#include <vector>
 
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-// A reproducible pseudo-random sequence in (-0.5, 0.5): e_t = frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5, t = 1, 2, ...
-std::vector<double> noise(int n) {
-  std::vector<double> e(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    e[static_cast<std::size_t>(i)] = u - 0.5;
-  }
-  return e;
-}
-// AR(1): x_t = phi x_{t-1} + e_t
-std::vector<double> ar1(int n, double phi) {
-  auto e = noise(n);
-  std::vector<double> x(static_cast<std::size_t>(n));
-  double carry = 0.0;
-  for (int i = 0; i < n; ++i) { carry = phi * carry + e[static_cast<std::size_t>(i)]; x[static_cast<std::size_t>(i)] = carry; }
-  return x;
-}
-std::vector<double> running_sum(const std::vector<double>& e) {
-  std::vector<double> w(e.size());
-  double s = 0.0;
-  for (std::size_t i = 0; i < e.size(); ++i) { s += e[i]; w[i] = s; }
-  return w;
-}
-void print_row(const char* label, const Series& s, int precision = 4) {
-  std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
-  std::cout << "\n";
-}
 int main() {
-  const Series y = vec(ar1(200, 0.7));
-  std::cout << std::left << std::setw(26) << "model" << std::setw(14) << "Q(10)" << std::setw(8) << "df" << std::setw(14) << "p-value" << "residual acf lag 1\n";
-  for (int p = 0; p <= 1; ++p) {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.ar = {0.7};
+  const Series y = truth.simulate(250, f64, /*seed=*/31);
+
+  std::cout << std::left << std::setw(24) << "model" << std::right << std::setw(10) << "Q(10)" << std::setw(6) << "df" << std::setw(12) << "p-value" << std::setw(18) << "residual acf(1)" << "\n";
+  for (int p = 0; p <= 2; ++p) {
     ts::ArimaOptions o;
     o.ar_order = p;
-    const auto fit = ts::Arima::fit_mle(y, o);
-    const Series resid = fit.infer(y);
+    const Series resid = ts::Arima::fit_mle(y, o, f64).infer(y, f64);
     ts::LjungBoxOptions lb;
     lb.lags = {10};
     lb.model_df = p;
     const auto q = ts::ljung_box(resid, lb);
     ts::AcfOptions a;
     a.max_lag = 1;
-    std::cout << std::left << std::setw(26) << (p == 0 ? "mean only (no AR term)" : "AR(1)") << std::fixed << std::setprecision(3) << std::setw(14) << q.stat.to_vec<double>()[0] << std::setw(8) << std::setprecision(0)
-              << q.dof.to_vec<double>()[0] << std::scientific << std::setprecision(2) << std::setw(14) << q.pvalue.to_vec<double>()[0] << std::fixed << std::setprecision(3) << ts::acf(resid, a).to_vec<double>()[1] << "\n";
+    std::cout << std::left << std::setw(24) << (p == 0 ? "mean only" : p == 1 ? "AR(1)" : "AR(2)") << std::right << std::fixed << std::setprecision(3) << std::setw(10)
+              << q.stat.host<double>()[0] << std::setw(6) << static_cast<int>(q.dof.host<double>()[0]) << std::setw(12) << q.pvalue.host<double>()[0] << std::setw(18)
+              << ts::acf(resid, a).host<double>()[1] << "\n";
   }
 }
 ```
@@ -71,8 +54,146 @@ int main() {
 Output
 
 ```text
-model                     Q(10)         df      p-value       residual acf lag 1
-mean only (no AR term)    244.449       10      7.97e-47      0.650
-AR(1)                     11.381        9       2.50e-01      -0.021
+model                        Q(10)    df     p-value   residual acf(1)
+mean only                  212.472    10       0.000             0.675
+AR(1)                       14.165     9       0.117             0.058
+AR(2)                       14.758     8       0.064             0.009
 ```
-The mean-only model leaves the autocorrelation in the residuals (lag-1 autocorrelation 0.65, Ljung–Box p ≈ 10⁻⁴⁷). The AR(1) residuals are uncorrelated (lag-1 autocorrelation −0.02, p = 0.25 on 9 degrees of freedom). Always pass `model_df` equal to the number of ARMA coefficients; without it the test is too lenient.
+
+The mean-only model leaves almost all of the dependence in the residuals (Q = 212 on 10 degrees of freedom, a p-value indistinguishable from zero, and a lag-1 residual autocorrelation of 0.68, the original dependence), so it is rejected. The AR(1) leaves nothing detectable (p = 0.12, lag-1 autocorrelation 0.06). The AR(2) passes too (p = 0.064, closer to the edge), but it is no better than the AR(1): an *adequate* model is not necessarily the right one, and the test cannot tell you not to add a superfluous term. The degrees-of-freedom column shows the correction at work: 10, 9 and 8.
+
+## What a missing term looks like
+
+When the residuals fail, their autocorrelations show *which* term is missing, with the same cut-off logic as in Chapter 1. The program fits only an AR(1) to a series that is really an ARMA(1,1), prints the residual ACF and PACF, then adds the MA term and tests again.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+
+  ts::ArimaFit truth;
+  truth.ar = {0.6};
+  truth.ma = {0.6};
+  const int n = 400;
+  const Series y = truth.simulate(n, f64, /*seed=*/14);
+  out.writeln("white-noise band, +-", 1.96 / std::sqrt(static_cast<double>(n)), PrintOptions{}.fixed(3));
+
+  ts::AcfOptions a;
+  a.max_lag = 6;
+  ts::PacfOptions pa;
+  pa.max_lag = 6;
+  ts::LjungBoxOptions lb;
+  lb.lags = {10};
+
+  ts::ArimaOptions small;
+  small.ar_order = 1;
+  const Series r1 = ts::Arima::fit_mle(y, small, f64).infer(y, f64);
+  lb.model_df = 1;
+  out.writeln("AR(1) fitted to ARMA(1,1) data");
+  out.writeln("  residual acf ", ts::acf(r1, a).host<double>());
+  out.writeln("  residual pacf", ts::pacf(r1, pa).host<double>());
+  out.writeln("  Ljung-Box p-value at lag 10 (df 1)", ts::ljung_box(r1, lb).pvalue.host<double>()[0], PrintOptions{}.fixed(4));
+
+  ts::ArimaOptions right = small;
+  right.ma_order = 1;
+  const Series r2 = ts::Arima::fit_mle(y, right, f64).infer(y, f64);
+  lb.model_df = 2;
+  out.writeln("ARMA(1,1) fitted");
+  out.writeln("  residual acf ", ts::acf(r2, a).host<double>());
+  out.writeln("  residual pacf", ts::pacf(r2, pa).host<double>());
+  out.writeln("  Ljung-Box p-value at lag 10 (df 2)", ts::ljung_box(r2, lb).pvalue.host<double>()[0], PrintOptions{}.fixed(4));
+}
+```
+
+Output
+
+```text
+white-noise band, +- 0.098
+AR(1) fitted to ARMA(1,1) data
+  residual acf  [1.00, 0.29, -0.24, -0.19, -0.07, 0.05, 0.08]
+  residual pacf [1.00, 0.29, -0.36, 0.01, -0.10, 0.06, 0.00]
+  Ljung-Box p-value at lag 10 (df 1) 0.0000
+ARMA(1,1) fitted
+  residual acf  [1.00, 0.01, -0.02, -0.05, 0.01, 0.06, 0.08]
+  residual pacf [1.00, 0.01, -0.02, -0.05, 0.02, 0.06, 0.08]
+  Ljung-Box p-value at lag 10 (df 2) 0.4130
+```
+
+The AR(1)'s residuals are far from white: the autocorrelations 0.29, −0.24 and −0.19 and the partial autocorrelations 0.29 and −0.36 all exceed the band, and the Ljung–Box p-value is essentially zero. A pattern of several significant lags in both functions is the mark of a missing moving-average component, as the cut-off rules of Chapter 1 suggest for a mixed process. After adding the MA term every residual autocorrelation is inside the band and the test passes comfortably (p = 0.41 on 8 degrees of freedom). Using the residual ACF and PACF this way is the standard modelling loop: fit, look at what is left, add the term the pattern suggests, check again.
+
+## Mean adequate, variance not
+
+A model can pass the Ljung–Box test and still be wrong about the *size* of the errors. The last program builds a series whose mean follows an AR(1) but whose errors have GARCH volatility, fits the AR(1) and tests the residuals both ways: the Ljung–Box test on the residuals (is the mean captured?) and the ARCH-LM test (is the variance constant?).
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  // Errors with GARCH(1,1) volatility, filtered through an AR(1) mean.
+  ts::Garch11Fit g;
+  g.omega = 0.2;
+  g.alpha = 0.25;
+  g.beta = 0.65;
+  g.mean = 0.0;
+  const auto shocks = g.simulate(500, f64, /*seed=*/3).host<double>();
+  std::vector<double> y(shocks.size());
+  double prev = 0.0;
+  for (std::size_t t = 0; t < y.size(); ++t) { prev = 0.5 * prev + shocks[t]; y[t] = prev; }
+  const Series series = pluss::make_series(y, f64);
+
+  ts::ArimaOptions o;
+  o.ar_order = 1;
+  const Series resid = ts::Arima::fit_mle(series, o, f64).infer(series, f64);
+
+  ts::LjungBoxOptions lb;
+  lb.lags = {10};
+  lb.model_df = 1;
+  ts::ArchLmOptions al;
+  al.lags = 5;
+  al.demean = false;  // residuals have mean zero by construction
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "Ljung-Box on residuals     p = " << ts::ljung_box(resid, lb).pvalue.host<double>()[0] << "\n";
+  std::cout << "Ljung-Box on squared resid p = " << ts::ljung_box(resid * resid, lb).pvalue.host<double>()[0] << "\n";
+  const auto arch = ts::arch_lm(resid, al);
+  std::cout << "ARCH-LM (5 lags)           p = " << arch.pvalue << (arch.reject ? "  reject constant variance" : "  keep") << "\n";
+}
+```
+
+Output
+
+```text
+Ljung-Box on residuals     p = 0.3693
+Ljung-Box on squared resid p = 0.0000
+ARCH-LM (5 lags)           p = 0.0000  reject constant variance
+```
+
+The mean is adequately captured (the first test passes), yet the squared residuals are strongly autocorrelated and the ARCH-LM test rejects a constant variance. For this series the next model is not a bigger ARIMA but a variance model fitted to the residuals, as in [Chapter 3](../ts_03_volatility_models.md). Forecasts of the *mean* from the AR(1) remain reasonable; what fails is the interval around them, which assumes the same variance at every time.
+
+## Decisions and pitfalls
+
+- **Always set `model_df`.** It is the number of fitted ARMA coefficients; without it the test is too lenient.
+- **A passing test is not a proof.** It says the residuals show no sign of dependence at the lags tested; it has little power against subtle misfit with a short series.
+- **Adequate is not the same as right.** Several models can pass; compare them with the criteria of [the previous page](choosing_the_orders.md) and prefer the smaller.
+- **Test the squares as well.** Independence of the residuals does not imply independence of their sizes.
+- **Plot them.** A residual plot shows level shifts, outliers and changing spread that no single statistic summarises; see Chapter 7.
+
+Where next: [Seasonal models](seasonal_models.md) handles dependence that repeats at a fixed period, which a plain ARMA cannot represent compactly.

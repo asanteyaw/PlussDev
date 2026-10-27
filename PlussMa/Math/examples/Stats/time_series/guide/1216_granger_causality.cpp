@@ -48,10 +48,10 @@ int main() {
     ts::GrangerOptions g;
     g.stat = kind;
     const auto r = fit.granger_test(y, g);
-    const auto cause = r.cause.to_vec<std::int64_t>(), effect = r.effect.to_vec<std::int64_t>();
-    const auto stat = r.stat.to_vec<double>(), p = r.pvalue.to_vec<double>();
-    const auto d1 = r.dof1.to_vec<std::int64_t>(), d2 = r.dof2.to_vec<std::int64_t>();
-    const auto rej = r.reject.to_vec<std::int64_t>();
+    const auto cause = r.cause.host<std::int64_t>(), effect = r.effect.host<std::int64_t>();
+    const auto stat = r.stat.host<double>(), p = r.pvalue.host<double>();
+    const auto d1 = r.dof1.host<std::int64_t>(), d2 = r.dof2.host<std::int64_t>();
+    const auto rej = r.reject.host<std::int64_t>();
     std::cout << (kind == ts::GrangerStat::F ? "F statistic\n" : "chi-squared (Wald) statistic\n");
     for (std::size_t i = 0; i < cause.size(); ++i)
       std::cout << "  series " << cause[i] << " -> series " << effect[i] << "   stat " << std::fixed << std::setprecision(3) << stat[i] << "   p " << std::setprecision(4) << p[i] << "   dof ("

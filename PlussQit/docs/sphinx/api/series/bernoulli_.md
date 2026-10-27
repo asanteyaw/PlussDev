@@ -99,7 +99,7 @@ Example 3. Over a large sample, the fraction of ones converges to `p`.
 pluss::rng_seed(7);
 auto x = pluss::series::empty({200000}, pluss::ScalarType::Float64);
 x.bernoulli_(0.3);
-std::cout << "mean~" << x.mean().to_vec<double>()[0] << "  (p = 0.3)\n";
+std::cout << "mean~" << x.mean().host<double>()[0] << "  (p = 0.3)\n";
 ```
 
 ### Output

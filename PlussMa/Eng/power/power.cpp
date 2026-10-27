@@ -136,6 +136,10 @@ ScalarType complex_dtype(ScalarType dtype) {
                                       : ScalarType::Complex128;
 }
 
+double solve_tolerance(ScalarType dtype, double requested) {
+  return dtype == ScalarType::Float32 ? std::max(requested, 1e-6) : requested;
+}
+
 Series imag_unit(ScalarType dtype, Platform platform) {
   const auto value = dtype == ScalarType::Complex64
                          ? std::complex<double>{0.0, 1.0}
@@ -1111,8 +1115,10 @@ OpfResult opf(const Grid &grid, const GenCost &cost, const Limits &limits,
 
   optim::OptimaOptions solver = optim::presets::sequential_qp();
   solver.sequential_qp.max_iterations = options.max_iterations;
-  solver.sequential_qp.constraint_tolerance = options.constraint_tolerance;
-  solver.sequential_qp.optimality_tolerance = options.optimality_tolerance;
+  solver.sequential_qp.constraint_tolerance =
+      solve_tolerance(grid.dtype_, options.constraint_tolerance);
+  solver.sequential_qp.optimality_tolerance =
+      solve_tolerance(grid.dtype_, options.optimality_tolerance);
   const optim::OptimaState solved =
       optim::optima(problem, optim::pack_series(initial, "x"), solver);
   const auto [va, vm, pg, qg] = unpack(solved.params.at("x"));

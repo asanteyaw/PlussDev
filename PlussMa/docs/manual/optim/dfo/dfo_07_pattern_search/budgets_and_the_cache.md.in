@@ -1,8 +1,0 @@
-# Budgets and the cache
-
-[Back to The Pattern Search Minimiser](../dfo_07_pattern_search.md)
-
-
-@@example Numerical/optimization/guide/dfo/367_pattern_search_budgets_cache.cpp@@
-
-Budgets end the run with their own status. The cache answers repeated points from memory. A rotating basis never revisits a point, so the cache has nothing to save; with fixed coordinate axes the poll repeats points after each mesh refinement, and the cache saved 228 evaluations here. Turn the cache off for objectives that are not deterministic.

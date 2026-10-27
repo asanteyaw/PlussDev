@@ -1,0 +1,48 @@
+# Nelder–Mead in practice
+
+[Back to Derivative-Free Optimization 6: The Nelder–Mead Minimiser](../dfo_06_nelder_mead.md)
+
+Nelder–Mead is the simplest derivative-free method: it carries a set of n+1 points (a triangle in two variables) and repeatedly replaces the worst by reflecting it through the centre of the others, expanding or contracting as the result suggests. It needs no gradient and few evaluations on smooth problems of up to about ten variables, which is why `Auto` chooses it there. This page calls it directly with `nelder_mead_minimizer`, which exposes every setting.
+
+The programs go from the plainest call to the details: a direct call, with the accuracy you can expect; each setting changed on its own (tolerances, starting simplex, coefficients, budget) so the effect of each is visible against the same baseline; forbidden regions, where the objective returns `+infinity` and the simplex moves away; and shapes and dtypes, where the parameter can be a matrix and the objective always receives the shape you gave.
+
+## Program 1: A direct call
+
+@@example Numerical/optimization/guide/dfo/351_nelder_mead_standalone.cpp@@
+
+The accuracy is about 1e-5 in the variables: a function value of 1e-9 and a tolerance of 1e-4 on the simplex size. For more digits, tighten the tolerances (Program 2) or polish with another method (Chapter 5).
+
+## Program 2: The settings, one at a time
+
+@@example Numerical/optimization/guide/dfo/352_nelder_mead_knobs.cpp@@
+
+What the rows show:
+
+- **Tolerances** trade work for accuracy: 1e-8 costs about 60% more evaluations than the default and gains eight orders of magnitude in the objective; 1e-2 saves about a quarter.
+- **Starting simplex.** A large simplex (0.5) explores more and here converged sooner; a tiny one (0.001) must grow before it can move, and took more than the default. Match the simplex to the scale of the problem: if the variables are of order 100, 5% is a step of 5.
+- **Coefficients.** The defaults are the standard choice. Changing them rarely helps; the rows above are worse. Keep expansion above 1, contraction and shrink between 0 and 1.
+- **Budget.** Stopping at 100 evaluations returns the best point seen with `ReachedEvaluationBudget`.
+
+## Program 3: Forbidden regions
+
+An objective can return `+infinity` for a point that is not allowed. The simplex sees a very bad value and moves away.
+
+@@example Numerical/optimization/guide/dfo/353_nelder_mead_forbidden_region.cpp@@
+
+The result is the nearest point of the disc to about three digits. A simplex pressed against a wall stops a little short of the exact optimum, because most of its trial points fall in the forbidden region and are wasted. For a precise answer on a constraint boundary, use pattern search (Chapter 3). NaN and negative infinity are rejected with an error, since they cannot be ordered.
+
+## Program 4: Shapes and dtypes
+
+@@example Numerical/optimization/guide/dfo/354_nelder_mead_shapes_and_dtypes.cpp@@
+
+The shape you give is the shape you get back, and the objective always receives that shape, so matrix-valued parameters need no flattening code of your own.
+
+## Decisions and pitfalls
+
+- **Match the starting simplex to the scale of the problem.** A step that is 5% of the variable is a step of 5 when the variable is of order 100; a tiny simplex must grow before it can move.
+- **Keep the default coefficients.** Changing expansion, contraction or shrink rarely helps; keep expansion above 1 and the others between 0 and 1.
+- **Tolerances trade work for accuracy.** Tightening to 1e-8 costs about 60% more evaluations here and gains eight orders of magnitude in the objective.
+- **A simplex pressed against a wall stops short.** Most of its trial points fall in the forbidden region and are wasted; for a precise answer on a boundary use pattern search. NaN and negative infinity are rejected with an error.
+- **Nelder–Mead can stall on non-smooth functions.** The simplex collapses against a kink while reporting `Converged`; check with an independent method.
+
+Where next: [Chapter 7](../dfo_07_pattern_search.md) describes pattern search, the constrained method.

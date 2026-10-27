@@ -42,7 +42,7 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
     if (err) *err << "scaled_attention shape mismatch\n";
     return false;
   }
-  const auto row_sum = sa_w.sum(-1).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto row_sum = sa_w.sum(-1).to(pluss::pCPU, ScalarType::Float64).host<double>();
   for (double v : row_sum) {
     if (!approx(v, 1.0, 1e-6)) {
       if (err) *err << "scaled_attention softmax row normalization mismatch\n";
@@ -127,8 +127,8 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
     const std::vector<double> expected_weights{
         0.496040284809455, 0.503959715190545, 0.503482444584946, 0.496517555415054,
         0.497843337692265, 0.502156662307735, 0.500530329887016, 0.499469670112984};
-    const auto got_out = mv_out.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto got_weights = mv_w.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto got_out = mv_out.to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto got_weights = mv_w.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < expected_out.size(); ++i) {
       if (!approx(got_out[i], expected_out[i], 1e-9)) {
         if (err) *err << "multihead_attention value regression mismatch (out)\n";

@@ -85,7 +85,7 @@ enough data — but <code class="docutils literal notranslate"><span class="pre"
 number the underlying arithmetic produced, with no indication it’s actually
 meaningless. <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> printing has no concept of
 nullness at all — only the wrapping <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own validity mask does. Check
-<code class="docutils literal notranslate"><span class="pre">result.slate().notnull().as_series().to_vec&lt;bool&gt;()[0]</span></code> before trusting a
+<code class="docutils literal notranslate"><span class="pre">result.slate().notnull().as_series().host&lt;bool&gt;()[0]</span></code> before trusting a
 result from one of those
 methods.</p>
 </div>

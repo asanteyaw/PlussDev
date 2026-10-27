@@ -193,7 +193,7 @@ void clear_plot_outputs(const fs::path& out_dir) {
 std::vector<double> slate_as_numeric(const pluss::table::Slate& slate) {
   switch (slate.kind()) {
     case pluss::table::SlateKind::Series:
-      return slate.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+      return slate.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
     case pluss::table::SlateKind::Timeline: {
       const auto ticks = slate.as_timeline().ticks();
       std::vector<double> values;

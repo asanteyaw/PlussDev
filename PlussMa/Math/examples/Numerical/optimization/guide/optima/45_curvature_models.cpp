@@ -11,8 +11,8 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
   const int n = 6;
@@ -30,10 +30,10 @@ int main() {
   }();
 
   auto objective = [&](const Pack& p) {
-    optim::Trace total = p.at(name(0)) * 0.0;
+    pluss::Series total = p.at(name(0)) * 0.0;
     for (int i = 0; i + 1 < n; ++i) {
-      total = total + 100.0 * optim::square(p.at(name(i + 1)) - optim::square(p.at(name(i)))) +
-              optim::square(1.0 - p.at(name(i)));
+      total = total + 100.0 * (p.at(name(i + 1)) - p.at(name(i)).square()).square() +
+              (1.0 - p.at(name(i))).square();
     }
     return total;
   };

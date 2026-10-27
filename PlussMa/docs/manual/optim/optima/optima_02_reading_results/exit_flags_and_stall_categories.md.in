@@ -1,0 +1,71 @@
+# Exit flags and stall categories
+
+[Back to Optima 2: Reading Results and Watching a Run](../optima_02_reading_results.md)
+
+A solver run can end in many ways and only one of them means "here is your answer". The first thing to learn is to branch on the right thing. Every call returns four independent pieces of information, and this page is about the first two and the diagnosis that goes with them: the **exit flag**, the verdict (one of nine values, and the thing to branch on); `result.converged`, a convenience that is true exactly when the flag is `Converged`; the **stall category**, which names the kind of difficulty behind a stop that was not a success; and a human-readable message that is for logs and must never be branched on.
+
+The programs run all four algorithms on an easy problem to show they share one result type, then trigger each healthy flag and each failure flag on purpose, then each of the ten stall categories. Reading them in order builds the habit that matters most in code that calls a solver: *check the flag before you trust the point*, because the result always holds a point and after a failure it is just wherever the solver ended.
+
+## Program 1: The four algorithms side by side
+
+Choosing an algorithm is the subject of the next chapter. For now, the first program shows that all four share one result type, so every report in this chapter works the same for each. It also shows how little they differ in what they return on an easy problem, and how much in the work they do to get there.
+
+@@example Numerical/optimization/guide/optima/21_four_algorithms.cpp@@
+
+All four agree on the answer, the corner `(1.5, 0.8)`, and all four exit with `Converged`. They differ in effort: the merit method needs two iterations and three evaluations because it handles bounds by projection, while sequential QP and the working-set method need a single iteration, because their first quadratic subproblem already identifies the corner, and the interior method takes five iterations and eight evaluations, since a barrier method approaches a bound from inside. `output.algorithm` carries each method's label.
+
+## Program 2: The flags that mean a healthy run
+
+Four flags describe a run that behaved as designed: it finished, it ran out of its budget, you stopped it, or it reached a target you set. This program triggers each one and prints the flag, the `converged` convenience, and the iteration count.
+
+@@example Numerical/optimization/guide/optima/22_exit_success_and_limits.cpp@@
+
+Only the first run is `converged`. The second spent its single allowed iteration, so the flag is `MaxIterations` and the iterate is not a solution. The third stopped because the hook returned `true` on its second call; `Stopped` always means the caller asked. The fourth ended at iteration zero because the start already satisfied `objective_limit = 100`. A feasible point at or below the limit ends the run at once with `ObjectiveTargetReached`.
+
+## Program 3: The five failure flags
+
+Five flags mean the solver could not deliver. Each is triggered here by a specific condition, and the result still carries the last point reached so you can inspect it.
+
+@@example Numerical/optimization/guide/optima/23_exit_failures.cpp@@
+
+Impossible constraints produce different verdicts depending on their kind and the method. The interior method keeps bounds and linear rows strictly satisfied, so linear rows that contradict a bound (`x0 + x1 <= -1` with `x >= 0`) end the run before it starts with `NoFeasiblePoint`. A nonlinear inequality that no point satisfies, `x0^2 + x1^2 + 1 <= 0`, is different: the interior method gives it a slack variable and can start, so the verdict is `ConstraintStationary` once the violation can no longer be reduced (the gradient of its square vanishes), with the violation staying at `1`. Sequential QP tries to recover from the same inequality and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method for the same reason. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.
+
+## Program 4: The ten stall categories
+
+The exit flag is coarse. The stall category says what went wrong underneath. There are ten, and this program triggers each. The scenario text describes the cause, and the line below it shows the category name and the flag it came with.
+
+@@example Numerical/optimization/guide/optima/24_stall_categories.cpp@@
+
+| Category | What it means |
+|---|---|
+| `none` | The run ended healthily. |
+| `user-stop` | The progress hook asked to stop. |
+| `invalid-callback-contract` | A callback returned the wrong shape or threw. |
+| `nonfinite-callback-region` | A callback returned `NaN` or infinity. |
+| `search-direction-collapse` | The line search could not find an acceptable step. |
+| `boundary-limited` | No step was possible toward a bound or the linearized constraints. |
+| `infeasible-stationary` | The constraint violation is at a stationary point that is still infeasible. |
+| `complementarity-stagnation` | The interior method hit its budget with the barrier complementarity still large against stationarity. |
+| `feasibility-failure` | The feasibility phase could not reduce the violation. |
+| `recovery-failure` | The restoration or recovery step failed. |
+| `iteration-limit` | The iteration budget was spent. |
+
+`boundary-limited` needs an unusual setting to appear: here the interior method's `fraction_to_boundary = 0` forbids any step toward a constraint boundary. It is the category to look for when a run on a boxed problem refuses to move.
+
+## Program 12: Using the answer without checking the flag
+
+The result always holds a point. After a failure that point is just wherever the solver ended. Using it as if it were a solution is the most common mistake in code that calls a solver.
+
+@@example Numerical/optimization/guide/optima/32_pitfall_unchecked_answer.cpp@@
+
+The impossible problem returns the start point, `[0, 0]`, which looks like a perfectly good answer. Only the flag (`-6`) and the violation (`1`) reveal that it is not. Check the flag before reading `params`.
+
+## Decisions and pitfalls
+
+- **Branch on `exit_flag` or `converged`, never on the message.** The wording of the message can change between versions; the flag is the contract.
+- **`converged` is not the same as "the solver stopped".** `MaxIterations`, `Stopped` and `ObjectiveTargetReached` all stop the run and none is `converged`; each tells you something different about whether `params` is usable.
+- **The stall category narrows a failure down; it never changes the verdict.** Use it to decide what to try next (a boxed problem that will not move points at `boundary-limited`; a run that spent its budget at `iteration-limit`).
+- **Impossible constraints get different verdicts from different methods.** The interior method refuses a contradictory linear system outright (`NoFeasiblePoint`) but starts on a nonlinear inequality nobody can satisfy and ends `ConstraintStationary`. Test the verdict on your own problem.
+- **After a failure `params` is a point, not a solution.** Always read the flag and the constraint violation before using it.
+
+Where next: [The report, summaries and multipliers](the_report_summaries_and_multipliers.md) reads every field of the structured output.

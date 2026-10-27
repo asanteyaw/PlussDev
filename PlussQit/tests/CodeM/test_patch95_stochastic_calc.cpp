@@ -22,7 +22,7 @@ Series vec(std::vector<double> v) {
 Series mat(std::vector<double> v, std::int64_t r, std::int64_t c) {
   return pluss::make_series(v, {r, c}).to(ScalarType::Float64);
 }
-double at(const Series& s, std::int64_t i) { return s.to_vec<double>()[static_cast<std::size_t>(i)]; }
+double at(const Series& s, std::int64_t i) { return s.host<double>()[static_cast<std::size_t>(i)]; }
 
 const std::vector<double> kX{0.5, 1.0, -0.3};
 const std::vector<double> kMu{0.1, 0.2, -0.1};
@@ -64,7 +64,7 @@ TEST_CASE("Ito's product rule includes the covariation of the factors", "[stocha
   const std::vector<double> yv{2.0, 1.5, 0.8}, ym{0.05, -0.1, 0.3}, ys{0.2, 0.6, 0.1, 0.3, 0.4, 0.2};
   const SeriesItoState other{vec(yv), vec(ym), mat(ys, 3, 2)};
   const auto d = x.calc.diff.ito_product(mu, sx, other);
-  const auto sxv = sx.to_vec<double>();
+  const auto sxv = sx.host<double>();
   for (std::int64_t i = 0; i < 3; ++i) {
     const double cov = sxv[2 * i] * ys[2 * i] + sxv[2 * i + 1] * ys[2 * i + 1];
     CHECK(at(d.drift, i) == Approx(kX[i] * ym[i] + yv[i] * kMu[i] + cov));  // x dy + y dx + d[x, y]
@@ -81,7 +81,7 @@ TEST_CASE("Ito's quotient rule", "[stochastic][ito]") {
   const Series x = vec(kX), mu = vec(kMu), sx = mat({0.3, 0.1, 0.5, 0.2, 0.2, 0.4}, 3, 2);
   const std::vector<double> yv{2.0, 1.5, 0.8}, ym{0.05, -0.1, 0.3}, ys{0.2, 0.6, 0.1, 0.3, 0.4, 0.2};
   const auto d = x.calc.diff.ito_quotient(mu, sx, SeriesItoState{vec(yv), vec(ym), mat(ys, 3, 2)});
-  const auto sxv = sx.to_vec<double>();
+  const auto sxv = sx.host<double>();
   for (std::int64_t i = 0; i < 3; ++i) {
     const double X = kX[i], Y = yv[i];
     const double cxy = sxv[2 * i] * ys[2 * i] + sxv[2 * i + 1] * ys[2 * i + 1];
@@ -308,7 +308,7 @@ TEST_CASE("Marcus differential: g(X) jumps by g(flow) - g, so the ordinary chain
 TEST_CASE("Marcus integral: Newton-Leibniz holds along a path that jumps", "[stochastic][marcus]") {
   // Brownian steps with two jump steps inserted
   Series w = brownian(60, 3, 1.0, 21);
-  std::vector<double> dwv = w.diff(1, 0).to_vec<double>();
+  std::vector<double> dwv = w.diff(1, 0).host<double>().array().data;
   std::vector<double> mask(60 * 3, 0.0);
   for (int p = 0; p < 3; ++p) {
     dwv[20 * 3 + p] = 0.9 - 0.4 * p;

@@ -19,10 +19,8 @@ All four return a `BlackboxAdvancedOutcome`, and divide the evaluation budget of
 
 ## Programs
 
-- [Cooperative MADS](dfo_12_mads_variants/cooperative_mads.md)
-- [Partial-space decomposition](dfo_12_mads_variants/partial_space_decomposition.md)
-- [Disco MADS](dfo_12_mads_variants/disco_mads.md)
-- [Variable-neighbourhood MADS](dfo_12_mads_variants/variable_neighbourhood_mads.md)
+- [Variants for many variables: cooperative and partial-space MADS](dfo_12_mads_variants/decomposition_variants.md)
+- [Variants for failing evaluations and several basins](dfo_12_mads_variants/failures_and_several_basins.md)
 
 ## Checklist
 
@@ -37,9 +35,7 @@ All four return a `BlackboxAdvancedOutcome`, and divide the evaluation budget of
 :maxdepth: 2
 :hidden:
 
-dfo_12_mads_variants/cooperative_mads
-dfo_12_mads_variants/partial_space_decomposition
-dfo_12_mads_variants/disco_mads
-dfo_12_mads_variants/variable_neighbourhood_mads
+dfo_12_mads_variants/decomposition_variants
+dfo_12_mads_variants/failures_and_several_basins
 ```
 <!-- apiref:toctree:end -->

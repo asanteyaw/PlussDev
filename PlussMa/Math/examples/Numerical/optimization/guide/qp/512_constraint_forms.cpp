@@ -24,19 +24,19 @@ int main() {
   std::cout << std::fixed << std::setprecision(4);
   {
     const auto r = qp::solve(mat({{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}), vec({0, 0, 0}), mat({{1, 1, 1}}), vec({1.0}), vec({1.0}));
-    const auto x = r.x.to_vec<double>();
+    const auto x = r.x.host<double>();
     std::cout << "equality    : " << x[0] << ", " << x[1] << ", " << x[2] << "   converged " << r.converged << "\n";
   }
   {
     // 0.5|x - c|^2 = 0.5 x'x - c'x + const, so q = -c
     const auto r = qp::solve(mat({{1, 0}, {0, 1}}), vec({-1.0, -1.0}), mat({{1, 1}}), vec({4.0}), vec({inf}));
-    const auto x = r.x.to_vec<double>();
+    const auto x = r.x.host<double>();
     std::cout << "one-sided   : " << x[0] << ", " << x[1] << "   converged " << r.converged << "\n";
   }
   {
     const auto p = mat({{4.0, 1.0}, {1.0, 2.0}});
     const auto r = qp::solve(p, vec({1.0, 1.0}), mat({{1, 0}, {0, 1}}), vec({-inf, -inf}), vec({inf, inf}));
-    const auto x = r.x.to_vec<double>();
+    const auto x = r.x.host<double>();
     std::cout << "unconstrained: " << x[0] << ", " << x[1] << "   (exact " << -1.0 / 7.0 << ", " << -3.0 / 7.0 << ")\n";
   }
 }

@@ -1,8 +1,0 @@
-# What counts as an evaluation
-
-[Back to The Black-Box MADS Minimisers](../dfo_11_mads_black_box.md)
-
-
-@@example Numerical/optimization/guide/dfo/404_mads_counting_evaluations.cpp@@
-
-`evaluations` is what `max_evaluations` limits. `total_evaluations` counts every call, and is limited by `max_total_evaluations`. Marking cheap pre-checks with `count_evaluation = false` lets the run do more work per expensive evaluation; the total cap keeps the overall work bounded either way.

@@ -37,7 +37,7 @@ int main() {
   std::cout << A.rows() << " x " << A.columns() << " map with " << A.nnz() << " nonzeros\n";
 
   const Series unit = ones({n});
-  const auto y = A.apply(unit).to_vec<double>();
+  const auto y = A.apply(unit).host<double>();
   std::cout << "A * ones: first " << y[0] << ", middle " << y[n / 2] << ", last " << y[n - 1] << "   (1, 0, 1 for the Laplacian)\n";
 
   krylov::CgOptions o;

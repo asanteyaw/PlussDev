@@ -35,7 +35,7 @@ int main() {
   const double f1_mean =
       plan.score(model, frame, data_options, lymph::MetricKind::F1);
 
-  const std::vector<double> folds = f1_per_fold.to_vec<double>();
+  const std::vector<double> folds = f1_per_fold.host<double>();
   std::cout << "fold count = " << folds.size() << "\n";
   for (std::size_t i = 0; i < folds.size(); ++i) {
     std::cout << "  fold " << i << " f1 = " << folds[i] << "\n";

@@ -26,7 +26,7 @@ void test_deterministic() {
   const Series hw = gen::hardy_weinberg(vec({0.3}).squeeze(0));
   expect(close(at(hw, 0), 0.09, 1e-14) && close(at(hw, 1), 0.42, 1e-14) && close(at(hw, 2), 0.49, 1e-14), "HWE");
   // neutral selection leaves p unchanged
-  expect(close(gen::select(vec({0.3}), gen::Fitness{}).item<double>(), 0.3, 1e-14), "neutral select");
+  expect(close(gen::select(vec({0.3}), gen::Fitness{}).host<double>().front(), 0.3, 1e-14), "neutral select");
   // heterozygote advantage converges to t/(s+t) (here 0.6)
   gen::Fitness w;
   w.aa = 0.8; w.ab = 1.0; w.bb = 0.7;
@@ -34,7 +34,7 @@ void test_deterministic() {
   for (int g = 0; g < 400; ++g)
     p = gen::expected_next(p, w);
   expect(close(at(p, 0), 0.6, 1e-10) && close(at(p, 1), 0.6, 1e-10), "overdominance equilibrium");
-  expect(close(gen::heterozygote_advantage_equilibrium(vec({0.2}), vec({0.3})).item<double>(), 0.6, 1e-14), "equilibrium formula");
+  expect(close(gen::heterozygote_advantage_equilibrium(vec({0.2}), vec({0.3})).host<double>().front(), 0.6, 1e-14), "equilibrium formula");
   // mutation-selection balance, recessive deleterious allele a (aa fitness 1-s),
   // mutation A -> a at rate mu: equilibrium q* ~ sqrt(mu/s) for small mu.
   gen::Fitness rec;
@@ -42,7 +42,7 @@ void test_deterministic() {
   Series freq = vec({0.99}); // frequency of A
   for (int g = 0; g < 6000; ++g)
     freq = gen::expected_next(freq, rec, 1e-4, 0.0);
-  const double q_star = 1.0 - freq.item<double>();
+  const double q_star = 1.0 - freq.host<double>().front();
   expect(std::abs(q_star / std::sqrt(1e-4 / 0.1) - 1.0) < 0.05, "mutation-selection balance q ~ sqrt(mu/s)");
 }
 
@@ -79,7 +79,7 @@ void test_exact_chain() {
   expect(close(neutral.fixation.select(-1, 40).item<double>(), 0.5, 1e-10) && close(neutral.fixation.select(-1, 20).item<double>(), 0.25, 1e-10), "neutral fixation = p0");
   expect(close(neutral.time.select(-1, 40).item<double>(), 108.9504121940426, 1e-9), "neutral time exact");
   expect(std::abs(neutral.time.select(-1, 40).item<double>() / (4.0 * n_pop * std::log(2.0)) - 1.0) < 0.02, "neutral time ~ diffusion");
-  expect(close(gen::kimura_fixation(vec({0.3}), 50.0, 0.0).item<double>(), 0.3, 1e-12), "Kimura s->0");
+  expect(close(gen::kimura_fixation(vec({0.3}), 50.0, 0.0).host<double>().front(), 0.3, 1e-12), "Kimura s->0");
 }
 
 void test_moran() {
@@ -90,8 +90,8 @@ void test_moran() {
   expect(close(a.time.select(-1, 1).item<double>(), 93.08162906668534, 1e-9), "Moran absorption time");
   const Series start = pluss::series::arange(0, n + 1, 1, F64);
   expect(a.fixation.sub(gen::moran_fixation(r, n, start)).abs().max().item<double>() < 1e-12, "chain equals closed form for all starts");
-  expect(close(gen::moran_fixation(r, n, vec({1.0})).item<double>(), (1 - 1 / r) / (1 - std::pow(r, -double(n))), 1e-13), "closed form (1-1/r)/(1-r^-N)");
-  expect(close(gen::moran_fixation(1.0, n, vec({5.0})).item<double>(), 0.25, 1e-14), "neutral Moran i/N");
+  expect(close(gen::moran_fixation(r, n, vec({1.0})).host<double>().front(), (1 - 1 / r) / (1 - std::pow(r, -double(n))), 1e-13), "closed form (1-1/r)/(1-r^-N)");
+  expect(close(gen::moran_fixation(1.0, n, vec({5.0})).host<double>().front(), 0.25, 1e-14), "neutral Moran i/N");
 }
 
 void test_simulation_vs_exact() {

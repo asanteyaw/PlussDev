@@ -1,0 +1,286 @@
+<!-- generated from Cauchy.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Cauchy`
+
+The Cauchy distribution: a symmetric bell-shaped curve with tails so heavy that it has no mean and no variance.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Cauchy, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Cauchy, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Cauchy, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Cauchy, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Cauchy, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The Cauchy distribution is the distribution of the ratio of two independent standard normal variables, and the most extreme member of the Student t family (one degree of freedom). Its density looks like a normal one near the centre but decays only like `1/x²`, so extreme values are common, the average of many draws is no more stable than a single draw, and neither the mean nor the variance exists. `location` is the median and mode, and `scale` is the half-width at half the maximum height.
+
+The kind-based functions take `{}` (location 0, scale 1) or `{location, scale}`. There is no object type for the Cauchy; use the kind-based functions.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `location` | any real | the centre: the median and the mode |
+| `scale` | > 0 | the half-width at half-height; the quartiles lie at location ± scale |
+
+Support: all real numbers.
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above (a shorter list selects the defaults: `{}` is the standard Cauchy, location 0 and scale 1). A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape. 
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`scale` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Cauchy on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({-20.0, -4.0, 0.0, 0.5, 3.0, 20.0}, f64);
+  const std::vector<double> params = {0.5, 2.0};
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Cauchy, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Cauchy, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Cauchy, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -20.00000 -4.00000 0.00000 0.50000 3.00000 20.00000
+pdf: 0.00150 0.02625 0.14979 0.15915 0.06211 0.00166
+cdf: 0.03096 0.13312 0.42202 0.50000 0.78522 0.96747
+logpdf: -6.50191 -3.64000 -1.89850 -1.83788 -2.77886 -6.40288
+```
+
+The density is largest on this grid at x = 0.5, where it is 0.15915; the distribution function runs from 0.03096 at x = -20 to 0.96747 at x = 20, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.15915) = -1.83791 at x = 0.5.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {0.5, 2.0};
+
+  // The three ways to the probability that the variable lies in [-5, 6]:
+  const auto grid = pluss::series::linspace(-5.0, 6.0, 3001, f64);
+  const double area = distr::pdf(dst::Cauchy, grid, params).antidiff(grid).trapezoid().item<double>();
+
+  const auto edges = pluss::make_series({-5.0, 6.0}, f64);
+  const auto c = distr::cdf(dst::Cauchy, edges, params).host<double>();
+
+  const auto draws = distr::sample(dst::Cauchy, params, {200000}, f64, 7ULL);
+  const double fraction = ((draws >= -5.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean().item<double>();
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(6) - cdf(-5): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+integral of the density: 0.77797
+cdf(6) - cdf(-5): 0.77797
+fraction of 200000 draws in range: 0.77753
+```
+
+The integral of the density (0.77797) and the difference of the distribution function (0.77797) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.77753) differs from it by 4.40e-04, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 9.29e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({-6.0, -2.0, 0.0, 2.0, 6.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "scale 0.5:";
+  for (double v : distr::pdf(dst::Cauchy, x, {0.0, 0.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "scale 1  :";
+  for (double v : distr::pdf(dst::Cauchy, x, {0.0, 1.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "scale 3  :";
+  for (double v : distr::pdf(dst::Cauchy, x, {0.0, 3.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: -6.0000 -2.0000 0.0000 2.0000 6.0000
+scale 0.5: 0.0044 0.0374 0.6366 0.0374 0.0044
+scale 1  : 0.0086 0.0637 0.3183 0.0637 0.0086
+scale 3  : 0.0212 0.0735 0.1061 0.0735 0.0212
+```
+
+Read down the rows: `scale 0.5` peaks on this grid at x = 0 (value 0.6366); `scale 1` peaks on this grid at x = 0 (value 0.3183); `scale 3` peaks on this grid at x = 0 (value 0.1061). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 checks the distribution function against its closed form, `1/2 + arctan((x - location)/scale)/pi`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(6);
+  const auto x = pluss::make_series({-20.0, -4.0, 0.0, 0.5, 3.0, 20.0}, f64);
+  const std::vector<double> params = {0.5, 2.0};
+
+  const auto formula = ((x - 0.5) / 2.0).atan() * (1.0 / 3.14159265358979323846) + 0.5;
+  const auto library = distr::cdf(dst::Cauchy, x, params);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "formula:";
+  for (double v : formula.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "distr::cdf:";
+  for (double v : library.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << std::scientific << std::setprecision(2) << "largest difference: " << (formula - library).abs().max().item<double>() << '\n';
+}
+```
+
+Output
+
+```text
+x: -20.000000 -4.000000 0.000000 0.500000 3.000000 20.000000
+formula: 0.030957 0.133125 0.422021 0.500000 0.785223 0.967467
+distr::cdf: 0.030957 0.133125 0.422021 0.500000 0.785223 0.967467
+largest difference: 1.11e-16
+```
+
+The formula and `distr::cdf` agree to 1.11e-16 over the grid, so the library implements exactly the closed form quoted above; the same expression is the quickest way to check a parameterisation before relying on it.
+
+### Example 5
+
+Example 5 confirms that the Cauchy distribution is the Student t distribution with one degree of freedom.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::scientific << std::setprecision(2);
+  const auto x = pluss::make_series({-8.0, -2.0, 0.0, 0.5, 3.0, 9.0}, f64);
+  const std::vector<double> here = {0.5, 2.0};
+  const std::vector<double> there = {1.0, 0.5, 2.0};
+
+  const double dpdf = (distr::pdf(dst::Cauchy, x, here) - distr::pdf(dst::StudentT, x, there)).abs().max().item<double>();
+  const double dcdf = (distr::cdf(dst::Cauchy, x, here) - distr::cdf(dst::StudentT, x, there)).abs().max().item<double>();
+  std::cout << "largest difference in the density: " << dpdf << '\n';
+  std::cout << "largest difference in the distribution function: " << dcdf << '\n';
+}
+```
+
+Output
+
+```text
+largest difference in the density: 2.78e-17
+largest difference in the distribution function: 2.22e-16
+```
+
+The two largest differences are 2.78e-17 for the density and 2.22e-16 for the distribution function over the grid: zero up to rounding, so the two descriptions are the same distribution.
+
+## See Also
+
+- [`StudentT`](../continuous_real_line/StudentT.md)
+- [`Normal`](../continuous_real_line/Normal.md)
+- [`Laplace`](../continuous_real_line/Laplace.md)
+- [`Logistic`](../continuous_real_line/Logistic.md)

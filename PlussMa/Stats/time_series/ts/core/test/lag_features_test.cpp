@@ -16,7 +16,7 @@ using pluss::subsp::stats::ts::build_lag_plan;
 using pluss::subsp::stats::ts::build_lagged_predictors;
 
 std::vector<double> to_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 void expect(bool condition, const std::string& message) {
@@ -46,7 +46,7 @@ void test_plan_shape_and_mask() {
   const auto mask = plan.prepared_predictors_per_horizon.to(pluss::pCPU, ScalarType::Bool);
   const auto mask_sizes = mask.sizes();
   expect(mask_sizes.size() == 2 && mask_sizes[0] == 3 && mask_sizes[1] == 6, "expected prepared mask shape [3,6]");
-  const auto vals = mask.reshape({mask.numel()}).to_vec<std::uint8_t>();
+  const auto vals = mask.reshape({mask.numel()}).host<std::uint8_t>();
   const std::vector<std::uint8_t> expected{
       1, 1, 1, 0, 0, 1,
       1, 1, 1, 0, 1, 0,

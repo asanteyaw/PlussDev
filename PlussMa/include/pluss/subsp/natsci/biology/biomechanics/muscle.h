@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <functional>
+#include <memory>
 
 namespace pluss::subsp::natsci::biology::biomechanics::muscle {
 
@@ -35,6 +36,18 @@ inline Series gaussian_like(const Series &x, double b1, double b2, double b3, do
 inline Series tendon_k(const Coeff &strain_at_one, const Series &like) { return strain_at_one.on(like).reciprocal().mul(std::log(6.0)); }
 } // namespace detail
 
+// Alternative curve family (e.g. the Millard quintic-Bezier curves of millard.h). When Params::curves is set the muscle functions below use it instead of the
+// De Groote-Fregly closed forms; all functions are elementwise on normalised quantities.
+struct Curves final {
+  std::function<Series(const Series &norm_fiber_length)> active;
+  std::function<Series(const Series &norm_fiber_length)> passive;
+  std::function<Series(const Series &norm_fiber_velocity)> force_velocity;
+  std::function<Series(const Series &force_velocity_multiplier)> force_velocity_inverse;
+  std::function<Series(const Series &norm_fiber_velocity)> force_velocity_slope; // optional (d f_v / d v): speeds up the damped velocity solve; bisection is used without it
+  std::function<Series(const Series &norm_tendon_force)> tendon_length_from_force;
+  std::function<Series(const Series &norm_tendon_length)> tendon_stiffness;
+};
+
 struct Params final {
   Coeff max_isometric_force{1000.0};   // F_max [N]
   Coeff optimal_fiber_length{0.1};     // l_opt [m]
@@ -48,6 +61,7 @@ struct Params final {
   Coeff fiber_damping{0.0};            // normalised fiber damping coefficient
   Coeff width_scale{1.0};              // horizontal scale of the active force-length curve
   double activation_smoothing{0.1};    // b of the tanh switch between activation and deactivation
+  std::shared_ptr<const Curves> curves{}; // empty: the closed-form De Groote-Fregly curves
 };
 
 // ---- curves (elementwise over any shape) ----------------------------------------------------------------------------------------
@@ -84,6 +98,41 @@ inline Series tendon_stiffness(const Series &norm_tendon_length, const Coeff &st
   return norm_tendon_length.sub(1.0).mul(kt).exp().mul(kt).mul(0.2);
 }
 
+namespace detail {
+[[nodiscard]] inline Series active(const Params &p, const Series &l) { return p.curves ? p.curves->active(l) : active_force_length(l, p.width_scale); }
+[[nodiscard]] inline Series passive(const Params &p, const Series &l) { return p.curves ? p.curves->passive(l) : passive_force_length(l, p.passive_strain_at_one); }
+[[nodiscard]] inline Series fv(const Params &p, const Series &v) { return p.curves ? p.curves->force_velocity(v) : force_velocity(v); }
+[[nodiscard]] inline Series fv_inverse(const Params &p, const Series &f) { return p.curves ? p.curves->force_velocity_inverse(f) : force_velocity_inverse(f); }
+[[nodiscard]] inline Series fv_slope(const Params &p, const Series &v) {
+  if (p.curves) return p.curves->force_velocity_slope ? p.curves->force_velocity_slope(v) : v.mul(0.0).add(-1.0); // -1: "unknown", the solver then bisects
+  const double d1 = -0.3211346127989808, d2 = -8.149, d3 = -0.374;
+  return v.mul(d2).add(d3).square().add(1.0).sqrt().reciprocal().mul(d1 * d2);
+}
+// Fibre velocity from the force balance  a f_act f_v(v) + beta v = rhs  (normalised forces; beta = fiber damping). beta = 0 is the closed-form inverse; otherwise
+// the left side is strictly increasing in v and is solved on all lanes by Newton inside a bisection bracket [-4, 4].
+[[nodiscard]] inline Series damped_velocity(const Params &p, const Series &rhs, const Series &active_force) {
+  Series v = fv_inverse(p, rhs.div(active_force));
+  const Series beta = p.fiber_damping.on(rhs);
+  if (beta.abs().max().item<double>() == 0.0) return v;
+  Series lo = rhs.mul(0.0).add(-4.0), hi = rhs.mul(0.0).add(4.0);
+  v = v.clamp(-4.0, 4.0);
+  for (int it = 0; it < 60; ++it) {
+    const Series g = active_force.mul(fv(p, v)).add(beta.mul(v)).sub(rhs);
+    if (it % 3 == 2 && g.abs().max().item<double>() < 1e-14 * (1.0 + rhs.abs().max().item<double>())) break;
+    const Series above = g.gt(0.0);
+    hi = above.where(v, hi);
+    lo = above.where(lo, v);
+    const Series slope = active_force.mul(fv_slope(p, v)).add(beta);
+    const Series newton = v.sub(g.div(slope.clamp(1e-12, 1e300)));
+    const Series usable = fv_slope(p, v).ge(0.0).logical_and(newton.gt(lo)).logical_and(newton.lt(hi));
+    v = usable.where(newton, lo.add(hi).mul(0.5));
+  }
+  return v;
+}
+[[nodiscard]] inline Series tendon_length(const Params &p, const Series &f) { return p.curves ? p.curves->tendon_length_from_force(f) : tendon_length_from_force(f, p.tendon_strain_at_one); }
+[[nodiscard]] inline Series tendon_slope(const Params &p, const Series &lt) { return p.curves ? p.curves->tendon_stiffness(lt) : tendon_stiffness(lt, p.tendon_strain_at_one); }
+} // namespace detail
+
 // ---- activation dynamics -------------------------------------------------------------------------------------------------------
 inline Series activation_rate(const Series &activation, const Series &excitation, const Params &p) {
   const Series z = activation.mul(1.5).add(0.5);
@@ -104,7 +153,7 @@ struct Geometry final {
 inline Geometry geometry(const Series &mtu_length, const Series &norm_tendon_force, const Params &p) {
   Geometry g;
   const Series lts = p.tendon_slack_length.on(mtu_length), lopt = p.optimal_fiber_length.on(mtu_length);
-  g.tendon_length = tendon_length_from_force(norm_tendon_force, p.tendon_strain_at_one).mul(lts);
+  g.tendon_length = detail::tendon_length(p, norm_tendon_force).mul(lts);
   const Series along = mtu_length.sub(g.tendon_length);
   const Series width = lopt.mul(p.pennation_at_optimal.on(mtu_length).sin());
   g.fiber_length = along.square().add(width.square()).sqrt();
@@ -114,8 +163,8 @@ inline Geometry geometry(const Series &mtu_length, const Series &norm_tendon_for
 }
 // normalised fiber force (total, along the fiber) at the given activation, normalised fiber length and normalised fiber velocity
 inline Series fiber_force(const Series &activation, const Series &norm_fiber_length, const Series &norm_fiber_velocity, const Params &p) {
-  return activation.mul(active_force_length(norm_fiber_length, p.width_scale)).mul(force_velocity(norm_fiber_velocity))
-      .add(passive_force_length(norm_fiber_length, p.passive_strain_at_one)).add(norm_fiber_velocity.mul(p.fiber_damping.on(activation)));
+  return activation.mul(detail::active(p, norm_fiber_length)).mul(detail::fv(p, norm_fiber_velocity))
+      .add(detail::passive(p, norm_fiber_length)).add(norm_fiber_velocity.mul(p.fiber_damping.on(activation)));
 }
 
 // Isometric (zero fiber velocity) equilibrium of fiber and tendon at a given muscle-tendon length: the normalised tendon force f in [0, 5] that
@@ -154,13 +203,11 @@ inline Equilibrium isometric_equilibrium(const Series &activation, const Series 
 // Returns [..., 2]. Needs a > 0 (the fiber velocity is recovered by dividing by the active force).
 inline Series state_rate(const Series &activation, const Series &norm_tendon_force, const Series &excitation, const Series &mtu_length, const Series &mtu_velocity, const Params &p) {
   const Geometry g = geometry(mtu_length, norm_tendon_force, p);
-  const Series fv = norm_tendon_force.div(g.cos_pennation).sub(passive_force_length(g.norm_fiber_length, p.passive_strain_at_one))
-                        .div(activation.mul(active_force_length(g.norm_fiber_length, p.width_scale)));
-  const Series v_fiber_norm = force_velocity_inverse(fv);
+  const Series v_fiber_norm = detail::damped_velocity(p, norm_tendon_force.div(g.cos_pennation).sub(detail::passive(p, g.norm_fiber_length)), activation.mul(detail::active(p, g.norm_fiber_length)));
   const Series v_fiber = v_fiber_norm.mul(p.max_contraction_velocity.on(activation)).mul(p.optimal_fiber_length.on(activation));
   const Series v_tendon = mtu_velocity.sub(v_fiber.div(g.cos_pennation));
   const Series v_tendon_norm = v_tendon.div(p.tendon_slack_length.on(activation));
-  const Series dtendon = v_tendon_norm.mul(tendon_stiffness(tendon_length_from_force(norm_tendon_force, p.tendon_strain_at_one), p.tendon_strain_at_one));
+  const Series dtendon = v_tendon_norm.mul(detail::tendon_slope(p, detail::tendon_length(p, norm_tendon_force)));
   return activation_rate(activation, excitation, p).unsqueeze(-1).unite(std::vector<Series>{dtendon.unsqueeze(-1)}, activation.dim());
 }
 

@@ -8,19 +8,19 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  using Pack = optim::ParameterPack<optim::Trace>;
+  using Pack = optim::ParameterPack<pluss::Series>;
 
-  const auto t = optim::trace(vec({0.0, 1.0, 2.0, 3.0, 4.0}), false);
-  const auto y = optim::trace(vec({1.1, 2.9, 5.2, 7.1, 8.8}), false);
+  const auto t = vec({0.0, 1.0, 2.0, 3.0, 4.0});
+  const auto y = vec({1.1, 2.9, 5.2, 7.1, 8.8});
 
   auto sum_squared_error = [&](const Pack& p) {
     const auto prediction = p.at("slope") * t + p.at("intercept");
-    return optim::sum(optim::square(prediction - y));
+    return (prediction - y).square().sum();
   };
 
   const auto start = optim::pack_scalars({{"slope", pluss::make_series(0.0).to(f64)},
@@ -28,8 +28,8 @@ int main() {
   const auto result = optim::optima(sum_squared_error, start);
 
   std::cout << std::fixed << std::setprecision(4);
-  std::cout << "slope     = " << result.params.at("slope").item<double>() << "\n";
-  std::cout << "intercept = " << result.params.at("intercept").item<double>() << "\n";
+  std::cout << "slope     = " << as_f64(result.params.at("slope")) << "\n";
+  std::cout << "intercept = " << as_f64(result.params.at("intercept")) << "\n";
   std::cout << "blocks returned: " << result.params.size() << "\n";
   return 0;
 }

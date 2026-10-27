@@ -16,13 +16,6 @@ pluss::Series scalar_like(const pluss::Series& x, double v) {
   return pluss::make_series(v, config_like(x));
 }
 
-double as_f64(const pluss::Series& x) {
-  if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error("expected scalar Series");
-  }
-  return x.to(pluss::pCPU, pluss::ScalarType::Float64).item<double>();
-}
-
 pluss::Series ackley(const pluss::Series& x) {
   const pluss::Series sq_mean = x.square().mean();
   const pluss::Series cos_mean = x.mul(2.0 * 3.14159265358979323846).cos().mean();
@@ -33,32 +26,6 @@ pluss::Series ackley(const pluss::Series& x) {
   const pluss::Series t2 = cos_mean.exp();
 
   return twenty.add(e).sub(t1).sub(t2);
-}
-
-std::string to_string(pluss::subsp::math::optimization::PopulationSolverStatus s) {
-  using pluss::subsp::math::optimization::PopulationSolverStatus;
-  switch (s) {
-    case PopulationSolverStatus::Converged:
-      return "Converged";
-    case PopulationSolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case PopulationSolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
-  }
-  return "Unknown";
-}
-
-std::string to_string(pluss::subsp::math::optimization::BlackboxSolverStatus s) {
-  using pluss::subsp::math::optimization::BlackboxSolverStatus;
-  switch (s) {
-    case BlackboxSolverStatus::Converged:
-      return "Converged";
-    case BlackboxSolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case BlackboxSolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
-  }
-  return "Unknown";
 }
 
 void print_outcome(

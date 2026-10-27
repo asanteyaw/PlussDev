@@ -20,7 +20,7 @@ void expect(bool c, const std::string &m) {
 Series mat(const std::vector<double> &v, std::vector<std::int64_t> s) { return pluss::make_series(v, s).to(F64); }
 Series vec(const std::vector<double> &v) { return mat(v, {static_cast<std::int64_t>(v.size())}); }
 double max_abs(const Series &a, const std::vector<double> &b) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch " + std::to_string(av.size()) + " vs " + std::to_string(b.size()));
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -61,12 +61,12 @@ int main() {
     // static equilibrium of a hanging chain: zero torque at q = (-pi/2, 0, 0) with the weight on the base only
     {
       const Series qs = vec({-M_PI / 2.0, 0.0, 0.0}), z = vec({0.0, 0.0, 0.0});
-      const auto tau = ch::inverse_dynamics(c, qs, z, z).contiguous().to_vec<double>();
+      const auto tau = ch::inverse_dynamics(c, qs, z, z).contiguous().host<double>();
       for (double x : tau)
         expect(std::abs(x) < 1e-12, "a vertically hanging chain needs no joint torque");
       // a horizontal chain: the shoulder torque balances the total moment of the weights about the base
       const Series horiz = vec({0.0, 0.0, 0.0});
-      const auto t2 = ch::inverse_dynamics(c, horiz, z, z).contiguous().to_vec<double>();
+      const auto t2 = ch::inverse_dynamics(c, horiz, z, z).contiguous().host<double>();
       double moment = 0.0, cum = 0.0;
       for (int i = 0; i < 3; ++i) { moment += ref::m[static_cast<std::size_t>(i)] * 9.80665 * (cum + ref::c[static_cast<std::size_t>(i)]); cum += ref::l[static_cast<std::size_t>(i)]; }
       expect(std::abs(t2[0] - moment) < 1e-10, "shoulder torque of the horizontal chain = sum m g x_com");

@@ -1,0 +1,249 @@
+<!-- generated from Geometric.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Geometric`
+
+The geometric distribution: the number of independent trials needed to obtain the first success.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Geometric, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Geometric, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Geometric, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Geometric, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Geometric, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The geometric distribution is the number of independent trials, each succeeding with probability `p`, up to and including the first success: the number of rolls until the first six, the number of attempts until a connection succeeds. It is the discrete analogue of the exponential distribution and shares its lack of memory. Its mean is `1/p` and its variance `(1 - p)/p²`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `p` | 0 < p <= 1 | the probability of success on each trial |
+
+Support: the integers 1, 2, 3, ....
+
+The object form of this family, with the same functions as methods, is on its own page: [`distr::Geometric`](../object_based/Geometric.md).
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. The mass function is zero at a value that is not a possible count.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape.
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`p` must lie in (0, 1]).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Geometric on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0, 5.0, 10.0}, f64);
+  const std::vector<double> params = {0.3};
+
+  std::cout << "x:";
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pmf:";
+  for (double v : distr::pdf(dst::Geometric, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Geometric, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpmf:";
+  for (double v : distr::logpdf(dst::Geometric, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0 1 2 3 5 10
+pmf: 0.00000 0.30000 0.21000 0.14700 0.07203 0.01211
+cdf: 0.00000 0.30000 0.51000 0.65700 0.83193 0.97175
+logpmf: -inf -1.20397 -1.56065 -1.91732 -2.63067 -4.41405
+```
+
+The mass is largest on this grid at x = 1, where it is 0.3; the distribution function runs from 0 at x = 0 to 0.97175 at x = 10, and it is the running total of the mass. `logpdf` is the logarithm of the mass, for example log(0.3) = -1.20397 at x = 1; where the density is zero (outside the support) the logarithm is `-inf`.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {0.3};
+
+  // The three ways to the probability that the variable lies in [1, 6]:
+  const auto grid = pluss::series::linspace(1.0, 6.0, 6, f64).round();
+  const double mass_sum = as_f64(distr::pdf(dst::Geometric, grid, params).sum());
+
+  const auto edges = pluss::make_series({0.0, 6.0}, f64);
+  const auto c = distr::cdf(dst::Geometric, edges, params).pull<double>();
+
+  const auto draws = distr::sample(dst::Geometric, params, {200000}, f64, 7ULL);
+  const double fraction = as_f64(((draws >= 1.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean());
+
+  std::cout << "sum of the masses at 1..6: " << mass_sum << '\n';
+  std::cout << "cdf(6) - cdf(0): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+sum of the masses at 1..6: 0.88235
+cdf(6) - cdf(0): 0.88235
+fraction of 200000 draws in range: 0.88191
+```
+
+The sum of the masses (0.88235) and the difference of the distribution function (0.88235) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.88191) differs from it by 4.40e-04, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 7.20e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 6.0, 10.0}, f64);
+
+  std::cout << "x:";
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "p 0.1:";
+  for (double v : distr::pdf(dst::Geometric, x, {0.1}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "p 0.3:";
+  for (double v : distr::pdf(dst::Geometric, x, {0.3}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "p 0.7:";
+  for (double v : distr::pdf(dst::Geometric, x, {0.7}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 1 2 3 4 6 10
+p 0.1: 0.1000 0.0900 0.0810 0.0729 0.0590 0.0387
+p 0.3: 0.3000 0.2100 0.1470 0.1029 0.0504 0.0121
+p 0.7: 0.7000 0.2100 0.0630 0.0189 0.0017 0.0000
+```
+
+Read down the rows: `p 0.1` peaks on this grid at x = 1 (value 0.1); `p 0.3` peaks on this grid at x = 1 (value 0.3); `p 0.7` peaks on this grid at x = 1 (value 0.7). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 checks the distribution function against its closed form, `1 - (1 - p)^k` for `k = 1, 2, ...`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(6);
+  const auto x = pluss::make_series({1.0, 2.0, 3.0, 5.0, 10.0}, f64);
+  const std::vector<double> params = {0.3};
+
+  const auto formula = 1.0 - (x * 0.0 + 0.7).pow(x);
+  const auto library = distr::cdf(dst::Geometric, x, params);
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "formula:";
+  for (double v : formula.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "distr::cdf:";
+  for (double v : library.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << std::scientific << std::setprecision(2) << "largest difference: " << as_f64((formula - library).abs().max()) << '\n';
+}
+```
+
+Output
+
+```text
+x: 1.000000 2.000000 3.000000 5.000000 10.000000
+formula: 0.300000 0.510000 0.657000 0.831930 0.971752
+distr::cdf: 0.300000 0.510000 0.657000 0.831930 0.971752
+largest difference: 1.11e-16
+```
+
+The formula and `distr::cdf` agree to 1.11e-16 over the grid, so the library implements exactly the closed form quoted above; the same expression is the quickest way to check a parameterisation before relying on it.
+
+## See Also
+
+- [`NegativeBinomial`](../discrete/NegativeBinomial.md)
+- [`Exponential`](../continuous_positive/Exponential.md)
+- [`Binomial`](../discrete/Binomial.md)
+- [`Poisson`](../discrete/Poisson.md)
+- [`distr::Geometric`](../object_based/Geometric.md) -- the object form

@@ -175,7 +175,7 @@ namespace {
 std::vector<double> one_pass(pluss::loader::DataLoader& loader) {
   std::vector<double> order;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).to_vec<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).pull<double>();
     order.insert(order.end(), values.begin(), values.end());
   }
   return order;
@@ -255,7 +255,7 @@ void print_values(const std::vector<double>& values) {
 std::vector<double> visited(pluss::loader::DataLoader& loader) {
   std::vector<double> out;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).to_vec<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).pull<double>();
     out.insert(out.end(), values.begin(), values.end());
   }
   return out;
@@ -440,15 +440,15 @@ int main() {
   // The three splits partition the input: every row appears exactly once.
   std::vector<double> all;
   for (const auto* part : {&split.train_fields[0], &split.val_fields[0], &split.test_fields[0]}) {
-    const auto v = part->reshape({part->numel()}).to_vec<double>();
+    const auto v = part->reshape({part->numel()}).host<double>();
     all.insert(all.end(), v.begin(), v.end());
   }
   std::sort(all.begin(), all.end());
   std::cout << "partition covers all rows once: " << (all == values) << '\n';
 
   // Fields stay aligned: y was built as ten times x, so every train row keeps that relation.
-  const auto train_x = split.train_fields[0].reshape({split.train_fields[0].numel()}).to_vec<double>();
-  const auto train_y = split.train_fields[1].reshape({split.train_fields[1].numel()}).to_vec<double>();
+  const auto train_x = split.train_fields[0].reshape({split.train_fields[0].numel()}).pull<double>();
+  const auto train_y = split.train_fields[1].reshape({split.train_fields[1].numel()}).pull<double>();
   bool aligned = train_x.size() == train_y.size();
   for (std::size_t i = 0; aligned && i < train_x.size(); ++i) aligned = train_y[i] == 10.0 * train_x[i];
   std::cout << "fields stay aligned: " << aligned << '\n';
@@ -456,7 +456,7 @@ int main() {
   // The same seed gives the same split.
   const loader::DataSplit again = loader::split_fields({x, y}, options);
   std::cout << "same seed, same split: "
-            << (again.train_fields[0].reshape({again.train_fields[0].numel()}).to_vec<double>() == train_x) << '\n';
+            << (again.train_fields[0].reshape({again.train_fields[0].numel()}).pull<double>() == train_x) << '\n';
 }
 ```
 
@@ -518,14 +518,14 @@ int main() {
   std::cout << "batches: " << prefetched.batch_count() << '\n';
   bool identical = reference.batch_count() == prefetched.batch_count();
   for (std::size_t i = 0; identical && i < reference.batch_count(); ++i) {
-    identical = reference.batch_at(i).x().to_vec<double>() == prefetched.batch_at(i).x().to_vec<double>();
+    identical = reference.batch_at(i).x().host<double>() == prefetched.batch_at(i).x().host<double>();
   }
   std::cout << "same batches in order: " << identical << '\n';
 
   // Iterating the prefetching loader yields the same order too.
   std::vector<double> streamed;
   for (auto batch : prefetched) {
-    const auto v = batch.x().reshape({batch.x().numel()}).to_vec<double>();
+    const auto v = batch.x().reshape({batch.x().numel()}).pull<double>();
     streamed.insert(streamed.end(), v.begin(), v.end());
   }
   std::cout << "streamed order matches: " << (streamed == values) << '\n';
@@ -660,7 +660,7 @@ int main() {
   std::cout << "converted batches float64: "
             << (converted.batch_at(0).x().scalar_type() == pluss::ScalarType::Float64) << '\n';
   std::cout << "values survive conversion: "
-            << (converted.batch_at(1).x().to_vec<double>() == std::vector<double>{2.5, 3.5}) << '\n';
+            << (converted.batch_at(1).x().host<double>() == std::vector<double>{2.5, 3.5}) << '\n';
 }
 ```
 

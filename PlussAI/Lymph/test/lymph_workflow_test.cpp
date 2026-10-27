@@ -27,7 +27,7 @@ Config f64() {
 }
 
 std::vector<double> as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 ModelSpec linear_spec() {
@@ -150,7 +150,7 @@ bool run_workflow_checks(std::ostream* err) {
   }
 
   const MetricReport report = deployed.assess(raw, xy_data_options());
-  const double r2 = report.r2.item<double>();
+  const double r2 = report.r2.host<double>().front();
   if (r2 < 0.999) {
     if (err) *err << "Workflow::assess should score close to R2=1 on noiseless linear data, got " << r2 << "\n";
     return false;

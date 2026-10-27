@@ -1,0 +1,51 @@
+# Mesh adaptive direct search in practice
+
+[Back to Derivative-Free Optimization 10: Mesh Adaptive Direct Search](../dfo_10_mesh_adaptive_search.md)
+
+Mesh adaptive direct search (MADS) is a pattern search whose poll directions keep changing, so that over a run they point in every direction rather than only along the axes. It handles rough, non-smooth and discontinuous functions, and its stopping rule is tied to a quantity you can reason about: the *frame size*, the size of the poll. The two scalar entry points, with different poll-direction schemes (`mesh_adaptive_direct_search` and an OrthoMADS variant), are covered here; Chapter 11 covers the black-box interface with failures, constraints and several objectives.
+
+The programs move from a direct call to the settings. The two poll schemes are compared on a curved valley and a non-smooth function. The mesh and the frame are varied (starting scale, refinement speed, the tolerance that ends the run, opportunistic polling). The search step is shown to help on a function with several basins, and the stopping tests (the frame test and the improvement-window test) are shown separately.
+
+## Program 1: A direct call
+
+@@example Numerical/optimization/guide/dfo/391_mads_standalone.cpp@@
+
+The default budget is 500 evaluations per variable, so this two-variable run stops after 1000 evaluations with `ReachedEvaluationBudget`, still some way from the minimum. Read the final frame size: when it is much larger than `mesh_tolerance`, the run was cut off, not finished. Raise `max_evaluations` (Program 2 does) and continue.
+
+## Program 2: The two poll schemes
+
+@@example Numerical/optimization/guide/dfo/392_mads_poll_schemes.cpp@@
+
+Both schemes follow the curved Rosenbrock valley to about 1e-15 within the iteration limit, and both solve the non-smooth sum of absolute values exactly, where a simplex stalls (Chapter 2). The two are interchangeable in practice; the differences you see are the random path. `mesh_adaptive_direct_search_minimizer` with `LtMadsRandom2N` is exactly `ltmads_minimizer`.
+
+## Program 3: The mesh and the frame
+
+@@example Numerical/optimization/guide/dfo/393_mads_mesh_and_frame.cpp@@
+
+- The **starting scale** hardly matters: the frame grows or shrinks by factors of 2 and 0.5 until it fits.
+- **Refinement speed** matters. Shrinking gently (0.8) polls many times at nearly the same scale and costs several times the evaluations; shrinking quickly (0.25) is cheaper.
+- **`mesh_tolerance`** is the accuracy you ask for. With the window test off, it alone ends the run, and tightening it from 1e-3 to 1e-12 costs about two and a half times the evaluations.
+- **Opportunistic off** evaluates the whole poll every time and takes the best point: more evaluations per iteration.
+
+## Program 4: The search step and bounds
+
+@@example Numerical/optimization/guide/dfo/394_mads_search_and_bounds.cpp@@
+
+Without a search step the method creeps from its start into the nearest local minimum (value 0.995) on every seed. The search step tries points across the frame, so it sometimes lands in a better basin: with 8 points one seed in three finds the global minimum, with 32 two in three. The price is evaluations, roughly three times as many for 8 points and ten times for 32. Use it when a local minimum is not good enough and the budget allows. With bounds, every trial point stays inside the box.
+
+## Program 5: Stopping
+
+@@example Numerical/optimization/guide/dfo/395_mads_stopping.cpp@@
+
+By default both the improvement-window test and the frame test must hold, so the window test can only delay a stop, never cause one early. Switching it off (`check_every` 0) lets the frame alone end the run: here it stops after 8822 evaluations instead of 19280, at a value of 2e-11 instead of 9e-23. So the window test is what buys the last digits of accuracy on a function whose minimum value is 0, at roughly twice the cost. A looser relative tolerance sits between the two, and budgets end the run with their own status.
+
+## Decisions and pitfalls
+
+- **Read the final frame size.** When it is much larger than `mesh_tolerance`, the run was cut off, not finished; the default budget (500 evaluations per variable) ends a run well short of the minimum, so raise `max_evaluations` and continue.
+- **The poll schemes are interchangeable in practice.** The differences you see are the random path.
+- **Refine quickly.** Shrinking the frame gently (0.8) polls many times at nearly the same scale and costs several times the evaluations of shrinking quickly (0.25); the starting scale hardly matters.
+- **`mesh_tolerance` is the accuracy you ask for.** Tightening it from 1e-3 to 1e-12 costs about two and a half times the evaluations.
+- **Add a search step when there are several basins.** Without it MADS creeps into the nearest local minimum on every seed; with 32 search points two seeds in three found the global one, at a price in evaluations.
+- **The window test only delays a stop.** By default both tests must hold; switching it off (`check_every` 0) lets the frame alone end the run, here after 8822 evaluations instead of 19280.
+
+Where next: [Chapter 11](../dfo_11_mads_black_box.md) uses MADS as a black-box minimiser.

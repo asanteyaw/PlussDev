@@ -9,29 +9,10 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-
-const char* algorithm_name(optim::OptimaAlgorithm a) {
-  switch (a) {
-    case optim::OptimaAlgorithm::MeritMethod: return "MeritMethod";
-    case optim::OptimaAlgorithm::SequentialQP: return "SequentialQP";
-    case optim::OptimaAlgorithm::WorkingSet: return "WorkingSet";
-    case optim::OptimaAlgorithm::InternalProtocol: return "InternalProtocol";
-  }
-  return "?";
-}
-
-const char* scaling_name(optim::OptimaProblemScaling s) {
-  switch (s) {
-    case optim::OptimaProblemScaling::None: return "None";
-    case optim::OptimaProblemScaling::InitialPoint: return "InitialPoint";
-    case optim::OptimaProblemScaling::ObjectiveAndConstraints: return "ObjectiveAndConstraints";
-  }
-  return "?";
-}
+namespace optim = pluss::subsp::math::optim;
 
 int main() {
-  using Pack = optim::ParameterPack<optim::Trace>;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
   auto four = [&](double a, double b, double c, double d) {
@@ -44,8 +25,8 @@ int main() {
       optim::constraints()
           .nl_ineq([](const Pack& p) { return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d"); })
           .nl_eq([](const Pack& p) {
-            return optim::square(p.at("a")) + optim::square(p.at("b")) + optim::square(p.at("c")) +
-                   optim::square(p.at("d")) - 40.0;
+            return p.at("a").square() + p.at("b").square() + p.at("c").square() +
+                   p.at("d").square() - 40.0;
           })
           .lbs(four(1, 1, 1, 1))
           .ubs(four(5, 5, 5, 5));
@@ -66,9 +47,9 @@ int main() {
     const auto ctol = interior ? o.internal_protocol.constraint_tolerance : o.sequential_qp.constraint_tolerance;
     const auto otol = interior ? o.internal_protocol.optimality_tolerance : o.sequential_qp.optimality_tolerance;
     const auto scaling = interior ? o.internal_protocol.problem_scaling : o.sequential_qp.problem_scaling;
-    std::cout << std::left << std::setw(28) << p.label << std::setw(18) << algorithm_name(o.algorithm)
+    std::cout << std::left << std::setw(28) << p.label << std::setw(18) << optim::optima_algorithm_name(o.algorithm)
               << std::setw(12) << iters << std::setw(16) << ctol << std::setw(13) << otol
-              << scaling_name(scaling) << "\n";
+              << optim::optima_problem_scaling_name(scaling) << "\n";
   }
 
   std::cout << "\nrunning each on the same problem\n";

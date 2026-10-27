@@ -598,7 +598,7 @@ StatusOr<double> cross_score(const ModelSpec& spec,
   Series scores = scores_or.move_value();
   scores = scores.reshape({scores.numel()});
   if (scores.numel() <= 0) return StatusOr<double>(Status::internal("cross_score received an empty fold score vector."));
-  const double mean = scores.mean().reshape({1}).item<double>();
+  const double mean = scores.mean().reshape({1}).host<double>().front();
   if (!std::isfinite(mean)) return StatusOr<double>(Status::numerical_failure("cross_score produced a non-finite value."));
   return StatusOr<double>(mean);
 }

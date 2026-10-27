@@ -27,7 +27,7 @@ std::string Slate::to_string(const display::DisplayOptions& options) const {
 std::string Slate::info_string() const {
   std::int64_t non_null = size();
   if (has_validity_mask()) {
-    const auto valid = validity_mask()->to_vec<bool>();
+    const auto valid = validity_mask()->host<bool>();
     non_null = static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
   }
   const auto null_count = size() - non_null;

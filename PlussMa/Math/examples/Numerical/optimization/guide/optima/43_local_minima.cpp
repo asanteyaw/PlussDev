@@ -9,14 +9,14 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
   auto one = [&](double x) { return optim::pack_scalars({{"x", scalar(x)}}); };
 
   auto objective = [](const Pack& p) {
-    return optim::square(optim::square(p.at("x")) - 1.0) + 0.3 * p.at("x");
+    return (p.at("x").square() - 1.0).square() + 0.3 * p.at("x");
   };
   const auto box = optim::constraints().lbs(one(-2.0)).ubs(one(2.0));
 
@@ -38,7 +38,7 @@ int main() {
       optim::OptimaOptions options;
       options.algorithm = row.algorithm;
       const auto r = optim::optima(objective, one(s), options, box);
-      std::cout << std::right << std::setw(9) << r.params.at("x").item<double>();
+      std::cout << std::right << std::setw(9) << as_f64(r.params.at("x"));
       if (r.converged) ++converged;
     }
     std::cout << "\n";

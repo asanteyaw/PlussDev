@@ -95,9 +95,9 @@ void test_fitzhugh_nagumo() {
   };
   const auto lower = roots::bisect([&](const Series &i) { return unstable_at(i).neg().add(0.5); }, vec({0.0}), vec({0.8}), {50});
   const auto upper = roots::bisect([&](const Series &i) { return unstable_at(i).sub(0.5); }, vec({0.8}), vec({2.5}), {50});
-  expect(std::abs(lower.root.item<double>() - at(hopf, 0)) < 1e-6, "lower FHN Hopf current (0.3313) located by bisection on the stability count");
-  expect(std::abs(upper.root.item<double>() - at(hopf, 1)) < 1e-6, "upper FHN Hopf current (1.4187)");
-  expect(unstable_at(vec({0.0})).item<double>() == 0.0 && unstable_at(vec({0.5})).item<double>() == 2.0 && unstable_at(vec({2.0})).item<double>() == 0.0, "stable, oscillatory (unstable pair), stable again");
+  expect(std::abs(lower.root.host<double>().front() - at(hopf, 0)) < 1e-6, "lower FHN Hopf current (0.3313) located by bisection on the stability count");
+  expect(std::abs(upper.root.host<double>().front() - at(hopf, 1)) < 1e-6, "upper FHN Hopf current (1.4187)");
+  expect(unstable_at(vec({0.0})).host<double>().front() == 0.0 && unstable_at(vec({0.5})).host<double>().front() == 2.0 && unstable_at(vec({2.0})).host<double>().front() == 0.0, "stable, oscillatory (unstable pair), stable again");
   // limit-cycle period at I = 0.5 from upward zero crossings of v
   const Series s0 = vec({-1.0, 1.0});
   const auto settle = dyn::simulate([&](const Series &s) { return neu::fitzhugh_nagumo_rate(s, 0.5); }, s0, 0.0, 300.0, 15000);

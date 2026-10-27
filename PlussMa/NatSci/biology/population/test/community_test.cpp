@@ -26,7 +26,7 @@ int main() {
     // ---- spectral abscissa vs numpy eigvals on 30 sparse random matrices (batched in one call)
     {
       const Series m = mat(ref::rand_mats, {30, 9, 9});
-      const auto got = cm::spectral_abscissa(m).contiguous().to_vec<double>();
+      const auto got = cm::spectral_abscissa(m).contiguous().host<double>();
       for (std::size_t i = 0; i < 30; ++i)
         expect(std::abs(got[i] - ref::rand_abscissa[i]) < 1e-6, "spectral abscissa " + std::to_string(i) + ": " + std::to_string(got[i]) + " vs " + std::to_string(ref::rand_abscissa[i]));
     }
@@ -35,7 +35,7 @@ int main() {
       const std::int64_t s = 200;
       for (const double tau : {0.0, -2.0 / M_PI, 2.0 / M_PI}) {
         const Series a = cm::random_community(s, 6, 0.1, 1.0, tau, 1.0, 41);
-        const auto ab = cm::spectral_abscissa(a).contiguous().to_vec<double>();
+        const auto ab = cm::spectral_abscissa(a).contiguous().host<double>();
         double mean = 0.0;
         for (double v : ab)
           mean += v / 6.0;
@@ -55,7 +55,7 @@ int main() {
     // ---- Lotka-Volterra invasion growth rates
     {
       const Series inv = cm::invasion_growth_rate(vec(ref::glv_r), mat(ref::glv_A, {6, 6}), vec({1, 1, 0, 1, 1, 0}));
-      const auto v = inv.contiguous().to_vec<double>();
+      const auto v = inv.contiguous().host<double>();
       for (std::size_t i = 0; i < 6; ++i)
         expect(std::abs(v[i] - ref::glv_invasion[i]) < 1e-12, "invasion growth rate of species " + std::to_string(i));
       expect(std::abs(v[0]) < 1e-12 && std::abs(v[1]) < 1e-12 && std::abs(v[3]) < 1e-12 && std::abs(v[4]) < 1e-12, "residents have zero growth at their equilibrium");
@@ -65,7 +65,7 @@ int main() {
       const double d = ref::chem[0], s0 = ref::chem[1];
       const Series mu = mat({ref::chem[2], ref::chem[3], ref::chem[4]}, {3}), kh = mat({ref::chem[5], ref::chem[6], ref::chem[7]}, {3}), mo = mat({ref::chem[8], ref::chem[9], ref::chem[10]}, {3}), q = mat({ref::chem[11], ref::chem[12], ref::chem[13]}, {3});
       const Series rs = cm::r_star(mu, kh, mo);
-      const auto rv = rs.contiguous().to_vec<double>();
+      const auto rv = rs.contiguous().host<double>();
       for (std::size_t i = 0; i < 3; ++i)
         expect(std::abs(rv[i] - ref::chem_rstar[i]) < 1e-14, "R* of species " + std::to_string(i));
       std::size_t best = 0;
@@ -77,7 +77,7 @@ int main() {
       const auto rate = [&](const Series &y) { return cm::chemostat_rate(y, d, s0, mu, kh, mo, q); };
       const Series y0 = vec({5.0, 1.0, 1.0, 1.0});
       const Series y = pluss::subsp::natsci::common::dynamics::simulate(rate, y0, 0.0, 600.0, 60000);
-      const auto yv = y.contiguous().to_vec<double>();
+      const auto yv = y.contiguous().host<double>();
       expect(std::abs(yv[0] - rv[best]) < 1e-6, "resource settles at the best competitor's R*: " + std::to_string(yv[0]) + " vs " + std::to_string(rv[best]));
       for (std::size_t i = 0; i < 3; ++i) {
         if (i == best)
@@ -98,25 +98,25 @@ int main() {
         const double sa = ref::ad[5 * c], sk = ref::ad[5 * c + 1];
         const auto f = fitness(sa, sk);
         const auto d = cm::second_derivatives(f, vec({0.0}));
-        expect(std::abs(d.fyy.item<double>() - ref::ad[5 * c + 2]) < 1e-5 * (1.0 + std::abs(ref::ad[5 * c + 2])), "f_yy = 1/sa^2 - 1/sk^2 (sympy), case " + std::to_string(c));
-        expect(std::abs(d.fxy.item<double>() - ref::ad[5 * c + 3]) < 1e-5 * (1.0 + std::abs(ref::ad[5 * c + 3])), "f_xy = -1/sa^2 (sympy), case " + std::to_string(c));
-        expect(std::abs(cm::selection_gradient(f, vec({0.7})).item<double>() - ref::ad[5 * c + 4]) < 1e-7, "selection gradient at x = 0.7 vs sympy");
+        expect(std::abs(d.fyy.host<double>().front() - ref::ad[5 * c + 2]) < 1e-5 * (1.0 + std::abs(ref::ad[5 * c + 2])), "f_yy = 1/sa^2 - 1/sk^2 (sympy), case " + std::to_string(c));
+        expect(std::abs(d.fxy.host<double>().front() - ref::ad[5 * c + 3]) < 1e-5 * (1.0 + std::abs(ref::ad[5 * c + 3])), "f_xy = -1/sa^2 (sympy), case " + std::to_string(c));
+        expect(std::abs(cm::selection_gradient(f, vec({0.7})).host<double>().front() - ref::ad[5 * c + 4]) < 1e-7, "selection gradient at x = 0.7 vs sympy");
         const auto cl = cm::classify(f, vec({0.0}));
-        expect(cl.convergence_stable.item<bool>(), "the singular point x* = 0 is always convergence stable");
+        expect(cl.convergence_stable.host<bool>().front(), "the singular point x* = 0 is always convergence stable");
         if (std::abs(sa - sk) > 1e-3) {
-          expect(cl.branching.item<bool>() == (sa < sk), "evolutionary branching iff sigma_alpha < sigma_K, case " + std::to_string(c));
-          expect(cl.css.item<bool>() == (sa > sk), "continuously stable strategy iff sigma_alpha > sigma_K, case " + std::to_string(c));
+          expect(cl.branching.host<bool>().front() == (sa < sk), "evolutionary branching iff sigma_alpha < sigma_K, case " + std::to_string(c));
+          expect(cl.css.host<bool>().front() == (sa > sk), "continuously stable strategy iff sigma_alpha > sigma_K, case " + std::to_string(c));
         }
       }
       const auto f = fitness(0.5, 1.0);
-      const double xs = cm::singular_strategy(f, vec({0.4})).item<double>();
+      const double xs = cm::singular_strategy(f, vec({0.4})).host<double>().front();
       expect(std::abs(xs) < 1e-7, "Newton finds the singular strategy x* = 0: " + std::to_string(xs));
       // canonical equation dx/dt = df/dy |_{y = x} = -x / sigma_K^2 (arXiv:1005.3862 eq. 10) integrated by RK4 from the generic pipeline
       const double sk = 1.3;
       const auto g = fitness(0.5, sk);
       const auto rate = [&](const Series &x) { return cm::selection_gradient(g, x); };
       const Series xt = pluss::subsp::natsci::common::dynamics::simulate(rate, vec({1.0, -0.6}), 0.0, 2.0, 400);
-      const auto xv = xt.contiguous().to_vec<double>();
+      const auto xv = xt.contiguous().host<double>();
       const double decay = std::exp(-2.0 / (sk * sk));
       expect(std::abs(xv[0] - decay) < 1e-6 && std::abs(xv[1] + 0.6 * decay) < 1e-6, "canonical equation flow x(t) = x0 exp(-t / sigma_K^2): " + std::to_string(xv[0]) + " vs " + std::to_string(decay));
     }

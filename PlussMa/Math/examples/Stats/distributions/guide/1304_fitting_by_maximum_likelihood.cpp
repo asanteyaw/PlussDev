@@ -16,7 +16,7 @@ using pluss::Series;
 
 void row(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right;
-  for (double v : s.reshape({s.numel()}).to_vec<double>()) std::cout << std::setw(11) << v;
+  for (double v : s.reshape({s.numel()}).host<double>()) std::cout << std::setw(11) << v;
   std::cout << "\n";
 }
 int main() {

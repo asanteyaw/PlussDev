@@ -21,7 +21,7 @@ using pluss::subsp::stats::ts::PacfOptions;
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).host<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = phi * y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];
@@ -37,7 +37,7 @@ TEST_CASE("ts diagnostics: constant series is stable", "[ts][diagnostics][edge]"
 
   AcfOptions aopt;
   aopt.max_lag = 12;
-  const auto a = pluss::subsp::stats::ts::acf(y, aopt, cfg).to_vec<double>();
+  const auto a = pluss::subsp::stats::ts::acf(y, aopt, cfg).host<double>();
   REQUIRE(a.size() == 13);
   REQUIRE(a[0] == Approx(1.0));
   REQUIRE(std::all_of(a.begin() + 1, a.end(), [](double v) { return std::abs(v) <= 1e-12; }));
@@ -78,8 +78,25 @@ TEST_CASE("ts diagnostics: ljung-box distinguishes correlated process", "[ts][di
   const auto lb_wn = pluss::subsp::stats::ts::ljung_box(wn, opt, cfg);
   const auto lb_ar = pluss::subsp::stats::ts::ljung_box(ar, opt, cfg);
 
-  REQUIRE(lb_wn.pvalue.item<double>() > 1e-3);
-  REQUIRE(lb_ar.pvalue.item<double>() < 1e-10);
+  REQUIRE(lb_wn.pvalue.host<double>().front() > 1e-3);
+  REQUIRE(lb_ar.pvalue.host<double>().front() < 1e-10);
+}
+
+TEST_CASE("ts diagnostics: ljung-box propagates NaN instead of reporting a zero statistic", "[ts][diagnostics][ljungbox][nan]") {
+  const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  std::vector<double> v = pluss::series::randn({200}, cfg, 20260901ULL).host<double>();
+  v[0] = std::nan("");  // e.g. the residual a differenced model does not have
+
+  LjungBoxOptions opt;
+  opt.lags = {5, 10};
+  const auto r = pluss::subsp::stats::ts::ljung_box(pluss::make_series(v, {200}, cfg), opt, cfg);
+  const auto q = r.stat.host<double>();
+  const auto p = r.pvalue.host<double>();
+  REQUIRE(q.size() == 2);
+  for (std::size_t i = 0; i < q.size(); ++i) {
+    REQUIRE(std::isnan(q[i]));
+    REQUIRE(std::isnan(p[i]));
+  }
 }
 
 TEST_CASE("ts diagnostics: stress and crash checks", "[ts][diagnostics][stress][crash]") {
@@ -129,8 +146,8 @@ TEST_CASE("ljung-box p-values stay accurate far in the tail", "[ts][ljung_box]")
   ts::LjungBoxOptions options;
   options.lags = {5, 10};
   const auto lb = ts::ljung_box(pluss::make_series(x, {200}).to(pluss::ScalarType::Float64), options);
-  const auto stat = lb.stat.to_vec<double>();
-  const auto p = lb.pvalue.to_vec<double>();
+  const auto stat = lb.stat.host<double>();
+  const auto p = lb.pvalue.host<double>();
   // a p-value computed as 1 - cdf would be exactly 0 here
   REQUIRE(stat[0] == Catch::Approx(200.155711).epsilon(1e-6));
   REQUIRE(p[0] == Catch::Approx(2.6308937e-41).epsilon(1e-5));

@@ -34,9 +34,9 @@ Example 1. Flag which values are present.
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)});
 auto out = slot.notnull();
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(2)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(2)).host<bool>()[0];
 ```
 
 ### Output

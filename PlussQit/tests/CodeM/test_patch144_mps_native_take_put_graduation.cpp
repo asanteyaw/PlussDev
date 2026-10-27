@@ -76,7 +76,7 @@ TEST_CASE("MPS native take survives strict no-fallback policy", "[mps][take][nat
   const auto idx_mps = idx_cpu.to(pluss::pMPS);
   const auto got = x_mps.take(idx_mps);
   REQUIRE(got.platform() == pluss::pMPS);
-  require_close_(got.to(pluss::pCPU).to_vec<float>(), x_cpu.take(idx_cpu).to_vec<float>());
+  require_close_(got.to(pluss::pCPU).host<float>().array().data, x_cpu.take(idx_cpu).host<float>().array().data);
 }
 
 TEST_CASE("MPS native put survives strict no-fallback policy", "[mps][put][native][strict]") {
@@ -96,7 +96,7 @@ TEST_CASE("MPS native put survives strict no-fallback policy", "[mps][put][nativ
   base_cpu = (base_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
   base_mps = (base_mps.*put_fn)(idx_cpu.to(pluss::pMPS), src_cpu.to(pluss::pMPS), /*accumulate=*/false);
   REQUIRE(base_mps.platform() == pluss::pMPS);
-  require_close_(base_mps.to(pluss::pCPU).to_vec<float>(), base_cpu.to_vec<float>());
+  require_close_(base_mps.to(pluss::pCPU).host<float>(), base_cpu.host<float>());
 }
 
 TEST_CASE("MPS native take supports float16 work lane under strict policy", "[mps][take][native][strict][fp16]") {
@@ -110,10 +110,10 @@ TEST_CASE("MPS native take supports float16 work lane under strict policy", "[mp
   const auto x_cpu_f32 = pluss::make_series(std::vector<float>{0.5f, -1.25f, 3.75f, 2.5f}, {4});
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{3, 0, 2}, {3});
   const auto x_cpu = x_cpu_f32.to(pluss::ScalarType::Float16);
-  const auto want = x_cpu.take(idx_cpu).to(pluss::ScalarType::Float32).to_vec<float>();
+  const auto want = x_cpu.take(idx_cpu).to(pluss::ScalarType::Float32).host<float>();
 
   const auto got =
-      x_cpu.to(pluss::pMPS).take(idx_cpu.to(pluss::pMPS)).to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>();
+      x_cpu.to(pluss::pMPS).take(idx_cpu.to(pluss::pMPS)).to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>();
   require_close_(got, want, 2e-2f);
 }
 
@@ -145,8 +145,13 @@ TEST_CASE("MPS native take supports int16 lane under strict policy", "[mps][take
   const auto x_cpu = pluss::make_series(std::vector<std::int16_t>{7, -2, 5, -9, 11}, {5});
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{4, 1, 3, 0}, {2, 2});
 
-  const auto want = x_cpu.take(idx_cpu).to_vec<std::int16_t>();
-  const auto got = x_cpu.to(pluss::pMPS).take(idx_cpu.to(pluss::pMPS)).to(pluss::pCPU).to_vec<std::int16_t>();
+  const auto want = x_cpu.take(idx_cpu).host<std::int16_t>().array().data;
+  const auto got = x_cpu.to(pluss::pMPS)
+                       .take(idx_cpu.to(pluss::pMPS))
+                       .to(pluss::pCPU)
+                       .host<std::int16_t>()
+                       .array()
+                       .data;
   require_equal_(got, want);
 }
 
@@ -167,7 +172,7 @@ TEST_CASE("MPS native put supports uint8 lane under strict policy", "[mps][put][
   base_cpu = (base_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
   base_mps = (base_mps.*put_fn)(idx_cpu.to(pluss::pMPS), src_cpu.to(pluss::pMPS), /*accumulate=*/false);
   REQUIRE(base_mps.platform() == pluss::pMPS);
-  require_equal_(base_mps.to(pluss::pCPU).to_vec<std::uint8_t>(), base_cpu.to_vec<std::uint8_t>());
+  require_equal_(base_mps.to(pluss::pCPU).pull<std::uint8_t>(), base_cpu.pull<std::uint8_t>());
 }
 
 TEST_CASE("MPS strict put rejects unsupported accumulate lane when fallback is disabled", "[mps][put][native][strict][policy]") {

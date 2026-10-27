@@ -8,7 +8,7 @@
 
 double sum_of(const pluss::Series& slice) {
   double total = 0.0;
-  for (double v : slice.to_vec<double>()) total += v;
+  for (double v : slice.host<double>()) total += v;
   return total;
 }
 

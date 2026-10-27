@@ -46,7 +46,7 @@ Stream Stream::gather(const std::vector<std::int64_t>& source, std::int64_t shif
 
   // Combine with whatever nullness the taken values already carry.
   if (detail::has_validity_mask(out)) {
-    const auto existing = detail::validity_mask(out)->to_vec<bool>();
+    const auto existing = detail::validity_mask(out)->host<bool>();
     for (std::size_t p = 0; p < present.size(); ++p) {
       if (!existing[p]) present[p] = 0.0;
     }

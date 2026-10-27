@@ -23,7 +23,7 @@ Series table(std::vector<double> v, std::int64_t rows, std::int64_t cols) { retu
 int main() {
   const std::vector<double> xs{1, 2, 3, 4, 5, 6, 7, 8}, ys{2.1, 3.9, 6.2, 7.8, 10.1, 12.2, 13.8, 16.1};
   const auto fit = reg::ols_fit(vec(ys), column(xs));
-  const auto b = fit.coefficients.to_vec<double>();
+  const auto b = fit.coefficients.host<double>();
   double mx = 0, my = 0;
   for (std::size_t i = 0; i < xs.size(); ++i) { mx += xs[i] / 8; my += ys[i] / 8; }
   double sxx = 0, sxy = 0;
@@ -31,11 +31,11 @@ int main() {
   std::cout << std::fixed << std::setprecision(6);
   std::cout << "coefficients       : " << b[0] << " (intercept), " << b[1] << " (slope)\n";
   std::cout << "by hand            : " << my - sxy / sxx * mx << ", " << sxy / sxx << "\n";
-  const auto se = fit.std_errors.to_vec<double>(), t = fit.t_values.to_vec<double>(), p = fit.p_values.to_vec<double>();
+  const auto se = fit.std_errors.host<double>(), t = fit.t_values.host<double>(), p = fit.p_values.host<double>();
   std::cout << "std errors         : " << se[0] << ", " << se[1] << "\n";
   std::cout << "t values           : " << t[0] << ", " << t[1] << "\n";
   std::cout << std::scientific << std::setprecision(3) << "p values           : " << p[0] << ", " << p[1] << "\n";
-  const auto ci = fit.conf_int.to_vec<double>();
+  const auto ci = fit.conf_int.host<double>();
   std::cout << std::fixed << std::setprecision(6) << "95% intervals      : [" << ci[0] << ", " << ci[1] << "], [" << ci[2] << ", " << ci[3] << "]\n";
   std::cout << "R-squared          : " << fit.rsquared << "  (adjusted " << fit.adj_rsquared << ")\n";
   std::cout << "residual std dev   : " << fit.rmse << "  on " << fit.df_resid << " degrees of freedom\n";

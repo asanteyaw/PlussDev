@@ -24,11 +24,7 @@ All live in `pluss::subsp::math::roots`. `f` is a `std::function<Series(const Se
 
 ## Programs
 
-- [A first root](roots_01_solving_equations/a_first_root.md)
-- [Many equations at once](roots_01_solving_equations/many_equations_at_once.md)
-- [The methods compared](roots_01_solving_equations/the_methods_compared.md)
-- [Tolerances, check cadence and brackets](roots_01_solving_equations/tolerances_check_cadence_and_brackets.md)
-- [A fourth-order solver and the derivative of the root](roots_01_solving_equations/a_fourth_order_solver_and_the_derivative_of_the.md)
+- [Solving equations](roots_01_solving_equations/solving_equations.md)
 
 ## Checklist
 
@@ -43,10 +39,6 @@ All live in `pluss::subsp::math::roots`. `f` is a `std::function<Series(const Se
 :maxdepth: 2
 :hidden:
 
-roots_01_solving_equations/a_first_root
-roots_01_solving_equations/many_equations_at_once
-roots_01_solving_equations/the_methods_compared
-roots_01_solving_equations/tolerances_check_cadence_and_brackets
-roots_01_solving_equations/a_fourth_order_solver_and_the_derivative_of_the
+roots_01_solving_equations/solving_equations
 ```
 <!-- apiref:toctree:end -->

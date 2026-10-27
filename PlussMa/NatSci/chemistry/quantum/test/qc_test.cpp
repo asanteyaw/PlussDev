@@ -202,10 +202,10 @@ void test_one_orbital_reverse() {
              result.gradient_rms.item<double>() == 0.0,
          "one-orbital RHF energy or empty-virtual gradient is incorrect");
   result.total_energy.reverse();
-  expect(close(core.sensitivity().item<double>(), 2.0, 1e-10) &&
-             close(eri.sensitivity().item<double>(), 1.0, 1e-10) &&
+  expect(close(core.sensitivity().host<double>().front(), 2.0, 1e-10) &&
+             close(eri.sensitivity().host<double>().front(), 1.0, 1e-10) &&
              close(nuclear.sensitivity().item<double>(), 1.0, 1e-10) &&
-             close(overlap.sensitivity().item<double>(), 1.1, 2e-9),
+             close(overlap.sensitivity().host<double>().front(), 1.1, 2e-9),
          "RHF reverse sensitivities disagree with the analytic solution");
 }
 

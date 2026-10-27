@@ -21,7 +21,7 @@ Series mat(const std::vector<double>& v, std::int64_t r, std::int64_t c, const p
 }
 
 void print_vec(const char* key, const Series& x) {
-  const auto v = x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto v = x.to(pluss::pCPU, ScalarType::Float64).host<double>();
   std::cout << key << '=';
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (i) {

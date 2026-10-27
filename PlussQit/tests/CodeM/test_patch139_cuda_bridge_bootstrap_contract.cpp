@@ -71,7 +71,7 @@ TEST_CASE("CUDA bridge-backed Series transfer contract", "[cuda][bridge][runtime
   const auto x_cuda = x_cpu.to(pluss::pCUDA);
   REQUIRE(x_cuda.platform() == pluss::pCUDA);
   const auto roundtrip = x_cuda.to(pluss::pCPU);
-  require_close_(roundtrip.to_vec<float>(), x_cpu.to_vec<float>());
+  require_close_(roundtrip.host<float>(), x_cpu.host<float>());
 }
 
 TEST_CASE("CUDA bridge enables selection fallback when strict native is off", "[cuda][bridge][selection]") {
@@ -90,12 +90,12 @@ TEST_CASE("CUDA bridge enables selection fallback when strict native is off", "[
   const auto sort_cpu = x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false);
   const auto sort_cuda = x_cuda.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false);
   REQUIRE(sort_cuda.platform() == pluss::pCUDA);
-  require_close_(sort_cuda.to(pluss::pCPU).to_vec<float>(), sort_cpu.to_vec<float>());
+  require_close_(sort_cuda.to(pluss::pCPU).host<float>(), sort_cpu.host<float>());
 
   const auto topk_cpu = x_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
   const auto topk_cuda = x_cuda.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
   REQUIRE(topk_cuda.platform() == pluss::pCUDA);
-  require_close_(topk_cuda.to(pluss::pCPU).to_vec<float>(), topk_cpu.to_vec<float>());
+  require_close_(topk_cuda.to(pluss::pCPU).host<float>(), topk_cpu.host<float>());
 }
 
 TEST_CASE("CUDA bridge enables linalg fallback when strict native is off", "[cuda][bridge][linalg]") {
@@ -113,12 +113,12 @@ TEST_CASE("CUDA bridge enables linalg fallback when strict native is off", "[cud
   const auto det_cpu = pluss::subsp::linearalg::det(a_cpu);
   const auto det_cuda = pluss::subsp::linearalg::det(a_cuda);
   REQUIRE(det_cuda.platform() == pluss::pCUDA);
-  require_close_(det_cuda.to(pluss::pCPU).to_vec<float>(), det_cpu.to_vec<float>());
+  require_close_(det_cuda.to(pluss::pCPU).host<float>(), det_cpu.host<float>());
 
   const auto inv_cpu = pluss::subsp::linearalg::inverse(a_cpu);
   const auto inv_cuda = pluss::subsp::linearalg::inverse(a_cuda);
   REQUIRE(inv_cuda.platform() == pluss::pCUDA);
-  require_close_(inv_cuda.to(pluss::pCPU).to_vec<float>(), inv_cpu.to_vec<float>(), 2e-3f);
+  require_close_(inv_cuda.to(pluss::pCPU).host<float>(), inv_cpu.host<float>(), 2e-3f);
 }
 
 TEST_CASE("CUDA strict native linalg executes supported native route", "[cuda][bridge][policy]") {
@@ -137,5 +137,5 @@ TEST_CASE("CUDA strict native linalg executes supported native route", "[cuda][b
   const auto det_cpu = pluss::subsp::linearalg::det(a_cpu);
   const auto det_cuda = pluss::subsp::linearalg::det(a_cuda);
   REQUIRE(det_cuda.platform() == pluss::pCUDA);
-  require_close_(det_cuda.to(pluss::pCPU).to_vec<float>(), det_cpu.to_vec<float>(), 2e-3f);
+  require_close_(det_cuda.to(pluss::pCPU).host<float>(), det_cpu.host<float>(), 2e-3f);
 }

@@ -1,0 +1,35 @@
+# Several objectives and constraint policies
+
+[Back to Derivative-Free Optimization 4: Black Boxes](../dfo_04_black_boxes.md)
+
+Black boxes often return more than one number. When they return several *objectives*, the solver minimises one scalar built from them with weights you give, and also keeps the **Pareto set**: the evaluated points that no other evaluated point beats on every objective. Changing the weights slides the answer along the trade-off between the objectives, exactly as the formula says. The Pareto archive is a by-product of the search, not a computed front: it covers the points the search happened to visit.
+
+When a black box returns constraint values, the **constraint-handling policy** says what to do with a point that violates them: `Ignore` (report the values, do not use them), `ExtremeBarrier` (discard any violating point: safe, but it can never cross infeasible ground) or `ProgressiveBarrier` (accept a violating point at a penalty). The penalty's size, relative to how strongly the objective pulls toward the infeasible side, decides whether the second and third give the same answer.
+
+## Program 3: Two objectives
+
+The black box returns a vector of objectives. The solver minimises one scalar built from them and also keeps the Pareto set, the points that no other evaluated point beats on every objective. The weights state how much each objective matters.
+
+@@example Numerical/optimization/guide/dfo/333_two_objectives.cpp@@
+
+The weights slide the answer along the trade-off between the two objectives, exactly as the formula says. `result.pareto_points` and `result.pareto_objectives` hold the non-dominated points (as rows) and their objective vectors. They are an archive of the search, not a computed front: they cover the region the search visited, which is densest near the chosen compromise. To map a whole front, run several weightings and gather their archives.
+
+## Program 4: Constraint handling
+
+@@example Numerical/optimization/guide/dfo/334_constraint_handling.cpp@@
+
+- `Ignore` reports the constraint values but does not use them. The answer is the unconstrained minimum and the violation is large.
+- `ExtremeBarrier` discards any point that violates a constraint. Safe and simple, but it can never cross infeasible ground.
+- `ProgressiveBarrier` accepts a violating point at a penalty. With the default 100, which outweighs the objective's pull toward the infeasible side (about 3.7 per unit of violation at the optimum), the answer is the same as with the extreme barrier. With a penalty of 1 the objective wins and the search settles outside the feasible set. The penalty is a modelling choice: keep it above the objective's steepest slope across the boundary.
+
+Check feasibility yourself after a black-box solve: `max_constraint_violation` is filled by pattern search only, so evaluate the constraints at `minimizer`.
+
+## Decisions and pitfalls
+
+- **The weights state how much each objective matters.** Different weights give different answers on the trade-off; report the weights with the answer.
+- **The Pareto archive covers visited points only.** It is a record of the search, not the true front; to map the front, run with several weightings.
+- **Pick the constraint policy deliberately.** `Ignore` returns the unconstrained minimum; the barrier policies differ in whether they can cross infeasible ground.
+- **A progressive-barrier penalty must outweigh the objective's pull.** With a penalty of 1 the objective wins and the answer is violating; with the default 100 it matches the extreme barrier.
+- **Check feasibility yourself after a black-box solve.** `max_constraint_violation` is filled by pattern search only; evaluate the constraints at `minimizer`.
+
+Where next: [Chapter 5](../dfo_05_worked_problems.md) works through a fit and the checks that verify an answer.

@@ -6,21 +6,17 @@
 #include <cstdint>
 #include <vector>
 
+
 namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::make_series;
-using pluss::subsp::math::optim::clamp;
+using pluss::subsp::math::diff::clamp;
 using pluss::subsp::math::optim::ConstrainedProblem;
 using pluss::subsp::math::optim::EvalStatus;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::evaluate_problem;
-using pluss::subsp::math::optim::exp;
-using pluss::subsp::math::optim::log;
-using pluss::subsp::math::optim::sigmoid;
-using pluss::subsp::math::optim::trace;
 
 struct Garch11Params {
   Series omega{pluss::series::undefined()};
@@ -91,25 +87,25 @@ TEST_CASE("optima garch objective produces nonzero autodiff gradient through Par
   const Series x0 = encode_guess(omega_guess, alpha_guess, beta_guess);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [returns](const ParameterPack<Trace>& p) -> Trace {
-    const Trace omega = exp(p.at("log_omega"));
-    const Trace s1 = sigmoid(p.at("logit_alpha"));
-    const Trace s2 = sigmoid(p.at("logit_beta"));
-    const Trace alpha = 0.999 * s1;
-    const Trace beta = 0.999 * (1.0 - s1) * s2;
+  problem.objective.autodiff = [returns](const ParameterPack<Series>& p) -> Series {
+    const Series omega = p.at("log_omega").exp();
+    const Series s1 = p.at("logit_alpha").sigmoid();
+    const Series s2 = p.at("logit_beta").sigmoid();
+    const Series alpha = 0.999 * s1;
+    const Series beta = 0.999 * (1.0 - s1) * s2;
 
-    Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-    Trace nll = trace(scalar(0.0, scalar_config_like(returns)), false);
+    Series variance = omega / (1.0 - alpha - beta).clamp(1e-8, 1e8);
+    Series nll = (scalar(0.0, scalar_config_like(returns)));
 
     const std::int64_t n = returns.numel();
     for (std::int64_t t = 0; t < n; ++t) {
       if (t > 0) {
-        const Trace prev = trace(returns.select(0, t - 1), false);
+        const Series prev = returns.select(0, t - 1);
         variance = omega + alpha * prev * prev + beta * variance;
       }
-      const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-      const Trace r = trace(returns.select(0, t), false);
-      nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+      const Series var_clamped = variance.clamp(1e-12, 1e12);
+      const Series r = returns.select(0, t);
+      nll = nll + 0.5 * (var_clamped.log() + (r * r) / var_clamped);
     }
     return nll;
   };
@@ -123,10 +119,10 @@ TEST_CASE("optima garch objective produces nonzero autodiff gradient through Par
   const auto eval = evaluate_problem(problem, params);
 
   REQUIRE(eval.status == EvalStatus::Ok);
-  REQUIRE(eval.value.item<double>() > 0.0);
-  REQUIRE(eval.gradient.at("log_omega").abs().item<double>() > 1e-8);
-  REQUIRE(eval.gradient.at("logit_alpha").abs().item<double>() > 1e-8);
-  REQUIRE(eval.gradient.at("logit_beta").abs().item<double>() > 1e-8);
+  REQUIRE(as_f64(eval.value) > 0.0);
+  REQUIRE(as_f64(eval.gradient.at("log_omega").abs()) > 1e-8);
+  REQUIRE(as_f64(eval.gradient.at("logit_alpha").abs()) > 1e-8);
+  REQUIRE(as_f64(eval.gradient.at("logit_beta").abs()) > 1e-8);
 }
 
 TEST_CASE("optima garch objective produces nonzero gradient through single-trace objective callback",
@@ -142,24 +138,24 @@ TEST_CASE("optima garch objective produces nonzero gradient through single-trace
   const Series x0 = encode_guess(omega_guess, alpha_guess, beta_guess);
 
   ConstrainedProblem problem = pluss::subsp::math::optim::problem()
-                                   .objective([returns](const ParameterPack<Trace>& p) -> Trace {
-                                     const Trace omega = exp(p.at("log_omega"));
-                                     const Trace s1 = sigmoid(p.at("logit_alpha"));
-                                     const Trace s2 = sigmoid(p.at("logit_beta"));
-                                     const Trace alpha = 0.999 * s1;
-                                     const Trace beta = 0.999 * (1.0 - s1) * s2;
+                                   .objective([returns](const ParameterPack<Series>& p) -> Series {
+                                     const Series omega = p.at("log_omega").exp();
+                                     const Series s1 = p.at("logit_alpha").sigmoid();
+                                     const Series s2 = p.at("logit_beta").sigmoid();
+                                     const Series alpha = 0.999 * s1;
+                                     const Series beta = 0.999 * (1.0 - s1) * s2;
 
-                                     Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-                                     Trace nll = trace(scalar(0.0, scalar_config_like(returns)), false);
+                                     Series variance = omega / (1.0 - alpha - beta).clamp(1e-8, 1e8);
+                                     Series nll = (scalar(0.0, scalar_config_like(returns)));
                                      const std::int64_t n = returns.numel();
                                      for (std::int64_t t = 0; t < n; ++t) {
                                        if (t > 0) {
-                                         const Trace prev = trace(returns.select(0, t - 1), false);
+                                         const Series prev = returns.select(0, t - 1);
                                          variance = omega + alpha * prev * prev + beta * variance;
                                        }
-                                       const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-                                       const Trace r = trace(returns.select(0, t), false);
-                                       nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+                                       const Series var_clamped = variance.clamp(1e-12, 1e12);
+                                       const Series r = returns.select(0, t);
+                                       nll = nll + 0.5 * (var_clamped.log() + (r * r) / var_clamped);
                                      }
                                      return nll;
                                    })
@@ -174,8 +170,8 @@ TEST_CASE("optima garch objective produces nonzero gradient through single-trace
   const auto eval = evaluate_problem(problem, params);
 
   REQUIRE(eval.status == EvalStatus::Ok);
-  REQUIRE(eval.value.item<double>() > 0.0);
-  REQUIRE(eval.gradient.at("log_omega").abs().item<double>() > 1e-8);
-  REQUIRE(eval.gradient.at("logit_alpha").abs().item<double>() > 1e-8);
-  REQUIRE(eval.gradient.at("logit_beta").abs().item<double>() > 1e-8);
+  REQUIRE(as_f64(eval.value) > 0.0);
+  REQUIRE(as_f64(eval.gradient.at("log_omega").abs()) > 1e-8);
+  REQUIRE(as_f64(eval.gradient.at("logit_alpha").abs()) > 1e-8);
+  REQUIRE(as_f64(eval.gradient.at("logit_beta").abs()) > 1e-8);
 }

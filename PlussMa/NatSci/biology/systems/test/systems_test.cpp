@@ -27,13 +27,13 @@ bool close(double a, double b, double tol) { return std::abs(a - b) <= tol * std
 
 void test_kinetics() {
   const Series s = vec({2.0});
-  expect(close(kin::michaelis_menten(s, 3.0, 1.0).item<double>(), 2.0, 1e-14), "MM");
-  expect(close(kin::michaelis_constant(vec({1.0}), vec({0.5}), vec({2.0})).item<double>(), 0.75, 1e-14), "Km");
-  expect(close(kin::hill_activation(s, 4.0, 2.0, 3.0).item<double>(), 2.0, 1e-14), "hill act half");
-  expect(close(kin::hill_repression(s, 4.0, 2.0, 3.0).item<double>(), 2.0, 1e-14), "hill rep half");
-  expect(close(kin::hill_activation(s, 1.0, 1.0, 2.0).item<double>() +
-                   kin::hill_repression(s, 1.0, 1.0, 2.0).item<double>(), 1.0, 1e-14), "hill complement");
-  expect(close(kin::competitive_inhibition(s, vec({1.0}), 3.0, 1.0, 0.5).item<double>(), 6.0 / 5.0, 1e-14), "competitive");
+  expect(close(kin::michaelis_menten(s, 3.0, 1.0).host<double>().front(), 2.0, 1e-14), "MM");
+  expect(close(kin::michaelis_constant(vec({1.0}), vec({0.5}), vec({2.0})).host<double>().front(), 0.75, 1e-14), "Km");
+  expect(close(kin::hill_activation(s, 4.0, 2.0, 3.0).host<double>().front(), 2.0, 1e-14), "hill act half");
+  expect(close(kin::hill_repression(s, 4.0, 2.0, 3.0).host<double>().front(), 2.0, 1e-14), "hill rep half");
+  expect(close(kin::hill_activation(s, 1.0, 1.0, 2.0).host<double>().front() +
+                   kin::hill_repression(s, 1.0, 1.0, 2.0).host<double>().front(), 1.0, 1e-14), "hill complement");
+  expect(close(kin::competitive_inhibition(s, vec({1.0}), 3.0, 1.0, 0.5).host<double>().front(), 6.0 / 5.0, 1e-14), "competitive");
 }
 
 // species (S, E, ES, P); S+E->ES, ES->S+E, ES->E+P
@@ -130,7 +130,7 @@ void test_mass_action_ssa() {
   expect(r.state.sum(-1, false).sub(10.0).abs().max().item<double>() == 0.0, "SSA conserves A+B");
   // dimer propensity combinatorics: 2A -> D with c=1, A=5 -> C(5,2)=10
   const auto d = net::make(mat({{-2, 1}}), mat({{2, 0}}));
-  expect(close(net::propensity(d, mat({{5.0, 0.0}}), vec({1.0})).item<double>(), 10.0, 1e-12), "dimer propensity");
+  expect(close(net::propensity(d, mat({{5.0, 0.0}}), vec({1.0})).host<double>().front(), 10.0, 1e-12), "dimer propensity");
 }
 
 void test_validation() {

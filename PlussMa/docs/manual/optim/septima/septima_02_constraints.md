@@ -30,10 +30,7 @@ Because the penalty and the multiplier step set themselves, the settings rarely 
 
 ## Programs
 
-- [Bounds](septima_02_constraints/bounds.md)
-- [An equality constraint](septima_02_constraints/an_equality_constraint.md)
-- [An inequality constraint](septima_02_constraints/an_inequality_constraint.md)
-- [The same problem in both solvers](septima_02_constraints/the_same_problem_in_both_solvers.md)
+- [Bounds, equalities and inequalities](septima_02_constraints/bounds_equalities_and_inequalities.md)
 
 ## Settings you will use
 
@@ -63,9 +60,6 @@ The multipliers are in `result.state.lambda_equalities` and `result.state.lambda
 :maxdepth: 2
 :hidden:
 
-septima_02_constraints/bounds
-septima_02_constraints/an_equality_constraint
-septima_02_constraints/an_inequality_constraint
-septima_02_constraints/the_same_problem_in_both_solvers
+septima_02_constraints/bounds_equalities_and_inequalities
 ```
 <!-- apiref:toctree:end -->

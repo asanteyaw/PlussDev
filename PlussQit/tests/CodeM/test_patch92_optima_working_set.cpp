@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+
 namespace {
 
 using Catch::Approx;
@@ -20,20 +21,12 @@ using pluss::subsp::math::optim::OptimaLinearSystemStructure;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::OptimaProblemScaling;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::WorkingSetOptions;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::solve_working_set;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series scalar(double v) {
   return make_series(v).to(ScalarType::Float64);
-}
-
-double as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
 }
 
 std::string var_name(std::int64_t i) {
@@ -68,12 +61,12 @@ ConstrainedProblem make_problem(std::int64_t n,
                                 const std::vector<double>& target,
                                 double difference_cap) {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target, n](const ParameterPack<Trace>& p) -> Trace {
-    Trace value = trace(scalar(0.0), false);
+  problem.objective.autodiff = [target, n](const ParameterPack<Series>& p) -> Series {
+    Series value = scalar(0.0);
     for (std::int64_t i = 0; i < n; ++i) {
-      const Trace xi = p.at(var_name(i));
-      value = value + square(xi - target[static_cast<std::size_t>(i)]);
-      if (i > 0) value = value + 0.15 * square(xi - p.at(var_name(i - 1)));
+      const Series xi = p.at(var_name(i));
+      value = value + (xi - target[static_cast<std::size_t>(i)]).square();
+      if (i > 0) value = value + 0.15 * (xi - p.at(var_name(i - 1))).square();
     }
     return value;
   };
@@ -137,7 +130,7 @@ TEST_CASE("working set converges on a structured sparse family", "[optim][workin
   const auto result = solve_working_set(problem, initial, options);
 
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-6);
-  REQUIRE(result.evaluation.value.item<double>() == Approx(0.0028).margin(1e-3));
+  REQUIRE(as_f64(result.evaluation.value) == Approx(0.0028).margin(1e-3));
   REQUIRE(max_abs_error(result.params, target) <= 1e-2);
   REQUIRE(result.best_feasible.has_value());
 }

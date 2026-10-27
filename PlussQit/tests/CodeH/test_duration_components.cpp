@@ -36,19 +36,19 @@ TEST_CASE("Duration components use normalized floor decomposition",
       0,
   });
 
-  REQUIRE(value.days().to_vec<std::int64_t>() ==
+  REQUIRE(value.days().host<std::int64_t>() ==
           std::vector<std::int64_t>{1, -1, -1, -1, 0});
-  REQUIRE(value.hours().to_vec<std::int64_t>() ==
+  REQUIRE(value.hours().host<std::int64_t>() ==
           std::vector<std::int64_t>{2, 23, 23, 0, 0});
-  REQUIRE(value.minutes().to_vec<std::int64_t>() ==
+  REQUIRE(value.minutes().host<std::int64_t>() ==
           std::vector<std::int64_t>{3, 59, 0, 0, 0});
-  REQUIRE(value.seconds().to_vec<std::int64_t>() ==
+  REQUIRE(value.seconds().host<std::int64_t>() ==
           std::vector<std::int64_t>{4, 59, 0, 0, 0});
-  REQUIRE(value.milliseconds().to_vec<std::int64_t>() ==
+  REQUIRE(value.milliseconds().host<std::int64_t>() ==
           std::vector<std::int64_t>{5, 999, 0, 0, 0});
-  REQUIRE(value.microseconds().to_vec<std::int64_t>() ==
+  REQUIRE(value.microseconds().host<std::int64_t>() ==
           std::vector<std::int64_t>{6, 999, 0, 0, 0});
-  REQUIRE(value.nanoseconds().to_vec<std::int64_t>() ==
+  REQUIRE(value.nanoseconds().host<std::int64_t>() ==
           std::vector<std::int64_t>{7, 999, 0, 0, 0});
 }
 
@@ -73,8 +73,8 @@ TEST_CASE("Duration components preserve shape and NaT lane identity",
   check_shape(value.microseconds());
   check_shape(value.nanoseconds());
 
-  REQUIRE(value.days().to_vec<std::int64_t>()[1] == pluss::Duration::kNaT);
-  REQUIRE(value.nanoseconds().to_vec<std::int64_t>()[1] == pluss::Duration::kNaT);
+  REQUIRE(value.days().host<std::int64_t>()[1] == pluss::Duration::kNaT);
+  REQUIRE(value.nanoseconds().host<std::int64_t>()[1] == pluss::Duration::kNaT);
 }
 
 TEST_CASE("Duration components preserve zero-element shape",

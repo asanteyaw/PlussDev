@@ -68,7 +68,7 @@ struct DenseRows {
 
   Series rows = batch.x.to(pluss::pCPU, ScalarType::Float64).contiguous();
   if (batch.layout == ObservationLayout::Columns) rows = rows.transpose(0, 1).contiguous();
-  out.x = rows.to_vec<double>();
+  out.x = rows.host<double>();
   if (static_cast<std::int64_t>(out.x.size()) != out.samples * out.features) {
     return StatusOr<DenseRows>(Status::shape_mismatch(std::string(where) + " encountered inconsistent feature shape."));
   }

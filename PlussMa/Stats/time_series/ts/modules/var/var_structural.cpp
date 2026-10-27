@@ -64,7 +64,7 @@ Series as_matrix_(const Series& x, const char* name) {
 }
 
 double scalar_(const Series& x) {
-  return x.to(ScalarType::Float64).reshape({1}).item<double>();
+  return x.to(ScalarType::Float64).reshape({1}).host<double>().front();
 }
 
 double clamp01_(double p) {
@@ -87,11 +87,11 @@ ModelDims validate_model_dims_(const VarFit& fit, const char* op_name) {
   const std::int64_t k = ar_sizes[1];
   const std::int64_t m = fit.beta.defined() ? as_matrix_(fit.beta, op_name).sizes()[0] : 0;
 
-  PLUSS_CHECK(fit.constant.defined(), std::string("subsp::stats::ts::") + op_name + ": constant is undefined");
-  PLUSS_CHECK(fit.trend.defined(), std::string("subsp::stats::ts::") + op_name + ": trend is undefined");
-  PLUSS_CHECK(fit.constant.numel() == k,
+  PLUSS_CHECK(!fit.include_intercept || fit.constant.defined(), std::string("subsp::stats::ts::") + op_name + ": constant is undefined");
+  PLUSS_CHECK(!fit.include_trend || fit.trend.defined(), std::string("subsp::stats::ts::") + op_name + ": trend is undefined");
+  PLUSS_CHECK(!fit.constant.defined() || fit.constant.numel() == k,
               std::string("subsp::stats::ts::") + op_name + ": constant size must match number of series");
-  PLUSS_CHECK(fit.trend.numel() == k,
+  PLUSS_CHECK(!fit.trend.defined() || fit.trend.numel() == k,
               std::string("subsp::stats::ts::") + op_name + ": trend size must match number of series");
 
   if (m > 0) {
@@ -208,7 +208,7 @@ VarDesign build_design_(const VarFit& fit,
 
 double chisq_cdf_(double value, std::int64_t dof, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{value}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).host<double>().front());
 }
 
 double chisq_quantile_(double prob, std::int64_t dof, Config cfg) {

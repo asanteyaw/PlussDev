@@ -361,6 +361,48 @@ incompressible_test/fast:
 .PHONY : incompressible_test/fast
 
 # Convenience name for target.
+PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/rule
+.PHONY : PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/rule
+
+# Convenience name for target.
+les_test: PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/rule
+.PHONY : les_test
+
+# fast build rule for target.
+les_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/build
+.PHONY : les_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/rule
+.PHONY : PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/rule
+
+# Convenience name for target.
+multigrid_projection_test: PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/rule
+.PHONY : multigrid_projection_test
+
+# fast build rule for target.
+multigrid_projection_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/build
+.PHONY : multigrid_projection_test/fast
+
+# Convenience name for target.
+PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/rule
+.PHONY : PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/rule
+
+# Convenience name for target.
+spectral_poisson_test: PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/rule
+.PHONY : spectral_poisson_test
+
+# fast build rule for target.
+spectral_poisson_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/build
+.PHONY : spectral_poisson_test/fast
+
+# Convenience name for target.
 PlussMa/NatSci/physics/fluids/test/CMakeFiles/time_step_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/NatSci/physics/fluids/test/CMakeFiles/time_step_test.dir/rule
 .PHONY : PlussMa/NatSci/physics/fluids/test/CMakeFiles/time_step_test.dir/rule
@@ -676,6 +718,78 @@ incompressible_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/incompressible_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/incompressible_test.dir/incompressible_test.cpp.s
 .PHONY : incompressible_test.cpp.s
 
+les_test.o: les_test.cpp.o
+.PHONY : les_test.o
+
+# target to build an object file
+les_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/les_test.cpp.o
+.PHONY : les_test.cpp.o
+
+les_test.i: les_test.cpp.i
+.PHONY : les_test.i
+
+# target to preprocess a source file
+les_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/les_test.cpp.i
+.PHONY : les_test.cpp.i
+
+les_test.s: les_test.cpp.s
+.PHONY : les_test.s
+
+# target to generate assembly for a file
+les_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/les_test.dir/les_test.cpp.s
+.PHONY : les_test.cpp.s
+
+multigrid_projection_test.o: multigrid_projection_test.cpp.o
+.PHONY : multigrid_projection_test.o
+
+# target to build an object file
+multigrid_projection_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/multigrid_projection_test.cpp.o
+.PHONY : multigrid_projection_test.cpp.o
+
+multigrid_projection_test.i: multigrid_projection_test.cpp.i
+.PHONY : multigrid_projection_test.i
+
+# target to preprocess a source file
+multigrid_projection_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/multigrid_projection_test.cpp.i
+.PHONY : multigrid_projection_test.cpp.i
+
+multigrid_projection_test.s: multigrid_projection_test.cpp.s
+.PHONY : multigrid_projection_test.s
+
+# target to generate assembly for a file
+multigrid_projection_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/multigrid_projection_test.dir/multigrid_projection_test.cpp.s
+.PHONY : multigrid_projection_test.cpp.s
+
+spectral_poisson_test.o: spectral_poisson_test.cpp.o
+.PHONY : spectral_poisson_test.o
+
+# target to build an object file
+spectral_poisson_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/spectral_poisson_test.cpp.o
+.PHONY : spectral_poisson_test.cpp.o
+
+spectral_poisson_test.i: spectral_poisson_test.cpp.i
+.PHONY : spectral_poisson_test.i
+
+# target to preprocess a source file
+spectral_poisson_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/spectral_poisson_test.cpp.i
+.PHONY : spectral_poisson_test.cpp.i
+
+spectral_poisson_test.s: spectral_poisson_test.cpp.s
+.PHONY : spectral_poisson_test.s
+
+# target to generate assembly for a file
+spectral_poisson_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/build.make PlussMa/NatSci/physics/fluids/test/CMakeFiles/spectral_poisson_test.dir/spectral_poisson_test.cpp.s
+.PHONY : spectral_poisson_test.cpp.s
+
 time_step_test.o: time_step_test.cpp.o
 .PHONY : time_step_test.o
 
@@ -751,6 +865,9 @@ help:
 	@echo "... flow_boundary_test"
 	@echo "... flow_forms_test"
 	@echo "... incompressible_test"
+	@echo "... les_test"
+	@echo "... multigrid_projection_test"
+	@echo "... spectral_poisson_test"
 	@echo "... time_step_test"
 	@echo "... validation_test"
 	@echo "... bounded_step_test.o"
@@ -789,6 +906,15 @@ help:
 	@echo "... incompressible_test.o"
 	@echo "... incompressible_test.i"
 	@echo "... incompressible_test.s"
+	@echo "... les_test.o"
+	@echo "... les_test.i"
+	@echo "... les_test.s"
+	@echo "... multigrid_projection_test.o"
+	@echo "... multigrid_projection_test.i"
+	@echo "... multigrid_projection_test.s"
+	@echo "... spectral_poisson_test.o"
+	@echo "... spectral_poisson_test.i"
+	@echo "... spectral_poisson_test.s"
 	@echo "... time_step_test.o"
 	@echo "... time_step_test.i"
 	@echo "... time_step_test.s"

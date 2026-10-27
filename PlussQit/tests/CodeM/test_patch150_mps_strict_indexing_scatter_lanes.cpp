@@ -107,8 +107,8 @@ TEST_CASE("MPS strict gather/scatter supports high-rank safe dtype lanes", "[mps
   const auto gather_out_mps = gather_in_cpu.to(pluss::pMPS).gather(2, gather_idx_cpu.to(pluss::pMPS));
   REQUIRE(gather_out_mps.platform() == pluss::pMPS);
   require_close_(
-      gather_out_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>(),
-      gather_out_cpu.to(pluss::ScalarType::Float32).to_vec<float>(),
+      gather_out_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>().array().data,
+      gather_out_cpu.to(pluss::ScalarType::Float32).host<float>().array().data,
       "gather");
 
   // Gather lane: int32 index should stay strict-native via MPS cast lane (no CPU fallback).
@@ -117,8 +117,8 @@ TEST_CASE("MPS strict gather/scatter supports high-rank safe dtype lanes", "[mps
   const auto gather_out_i32_mps = gather_in_cpu.to(pluss::pMPS).gather(2, gather_idx_i32_cpu.to(pluss::pMPS));
   REQUIRE(gather_out_i32_mps.platform() == pluss::pMPS);
   require_close_(
-      gather_out_i32_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>(),
-      gather_out_i32_cpu.to(pluss::ScalarType::Float32).to_vec<float>(),
+      gather_out_i32_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32).host<float>().array().data,
+      gather_out_i32_cpu.to(pluss::ScalarType::Float32).host<float>().array().data,
       "gather_i32_index");
 
   // Gather lane: int64 input + int64 index (used by packed-sequence length permutations).
@@ -133,8 +133,8 @@ TEST_CASE("MPS strict gather/scatter supports high-rank safe dtype lanes", "[mps
       gather_i64_in_cpu.to(pluss::pMPS).gather(1, gather_i64_idx_cpu.to(pluss::pMPS));
   REQUIRE(gather_i64_out_mps.platform() == pluss::pMPS);
   require_equal_(
-      gather_i64_out_mps.to(pluss::pCPU).to_vec<std::int64_t>(),
-      gather_i64_out_cpu.to_vec<std::int64_t>());
+      gather_i64_out_mps.to(pluss::pCPU).host<std::int64_t>().array().data,
+      gather_i64_out_cpu.host<std::int64_t>().array().data);
 
   // Scatter lane: int16 exact-roundtrip lane on rank-3 tensor.
   const auto scatter_base_cpu = pluss::Series::zeros({2, 3, 4}, pluss::ScalarType::Int16);
@@ -155,8 +155,8 @@ TEST_CASE("MPS strict gather/scatter supports high-rank safe dtype lanes", "[mps
       scatter_base_cpu.to(pluss::pMPS).scatter(2, scatter_idx_cpu.to(pluss::pMPS), scatter_src_cpu.to(pluss::pMPS));
   REQUIRE(scatter_out_mps.platform() == pluss::pMPS);
   require_equal_(
-      scatter_out_mps.to(pluss::pCPU).to_vec<std::int16_t>(),
-      scatter_out_cpu.to_vec<std::int16_t>());
+      scatter_out_mps.to(pluss::pCPU).host<std::int16_t>().array().data,
+      scatter_out_cpu.host<std::int16_t>().array().data);
 
 }
 
@@ -173,8 +173,8 @@ TEST_CASE("MPS strict gather/scatter rejects unsupported non-exact lane", "[mps]
   const auto x_c64_cpu = pluss::make_series(
       std::vector<pluss::codem::Complex64>{{1.0f, 2.0f}, {3.0f, -4.0f}, {-5.0f, 6.0f}, {7.0f, 8.0f}},
       {4});
-  const auto got_c64 = x_c64_cpu.to(pluss::pMPS).gather(0, idx).to(pluss::pCPU).to_vec<pluss::codem::Complex64>();
-  require_complex64_close_(got_c64, x_c64_cpu.to_vec<pluss::codem::Complex64>());
+  const auto got_c64 = x_c64_cpu.to(pluss::pMPS).gather(0, idx).to(pluss::pCPU).host<pluss::codem::Complex64>();
+  require_complex64_close_(got_c64, x_c64_cpu.host<pluss::codem::Complex64>());
 
   // UInt64 is intentionally outside the currently supported gather native lane.
   const auto x_u64 = pluss::make_series(std::vector<std::uint64_t>{1, 2, 3, 4}, {4}).to(pluss::pMPS);

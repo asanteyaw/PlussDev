@@ -40,8 +40,8 @@ auto axel = pluss::scribble::Axel({r0});
 
 auto out = axel.fields({"ts"}).tl().year();
 auto ts = out.registry(0).fields("ts");
-std::cout << std::get<pluss::Series>(ts.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(ts.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(ts.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(ts.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

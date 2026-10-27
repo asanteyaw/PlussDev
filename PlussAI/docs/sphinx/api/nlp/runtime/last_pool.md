@@ -90,8 +90,8 @@ int main() {
   nlp::runtime::EmbeddingTable embedding{nlp::runtime::EmbeddingOptions{.width = 2}};
   embedding.reset(static_cast<std::int64_t>(indexer.vocabulary().size()), indexer.pad_id());
   const pluss::Series encoded = embedding.forward(batch);
-  const auto last = nlp::runtime::last_pool(encoded, batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto mean = nlp::runtime::mean_pool(encoded, batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto last = nlp::runtime::last_pool(encoded, batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto mean = nlp::runtime::mean_pool(encoded, batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "same for one element = " << (last == mean) << "\n";
   return 0;
 }
@@ -123,7 +123,7 @@ int main() {
   nlp::runtime::Indexer indexer{};
   indexer.learn(docs);
   const nlp::runtime::SequenceBatch batch = indexer.batch(docs).value();
-  const auto lengths = batch.lengths.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template to_vec<std::int64_t>();
+  const auto lengths = batch.lengths.to(pluss::pCPU, pluss::ScalarType::Int64).contiguous().template host<std::int64_t>();
   std::cout << "row 1 real length = " << lengths[1] << ", padded length = " << batch.max_length << "\n";
   return 0;
 }

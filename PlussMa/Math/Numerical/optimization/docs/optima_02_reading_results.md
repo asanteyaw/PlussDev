@@ -38,9 +38,6 @@ Only the first row is a success. `ObjectiveTargetReached` is a success you asked
 Choosing an algorithm is the subject of the next chapter. For now, the first program shows that all four share one result type, so every report in this chapter works the same for each. It also shows how little they differ in what they return on an easy problem, and how much in the work they do to get there.
 
 ```cpp
-// The same constrained problem solved by each of the four algorithms. They share the result type,
-// so the answer, the work done and the stopping message can be compared directly.
-// Problem: minimize (x0 - 2)^2 + (x1 - 1)^2 subject to x0 <= 1.5 and x1 <= 0.8.
 #include <pluss/ma.h>
 
 #include <iomanip>
@@ -49,13 +46,13 @@ Choosing an algorithm is the subject of the next chapter. For now, the first pro
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  const auto target = optim::trace(vec({2.0, 1.0}), false);
-  auto objective = [&](const optim::Trace& x) { return optim::sum(optim::square(x - target)); };
+  const auto target = vec({2.0, 1.0});
+  auto objective = [&](const pluss::Series& x) { return (x - target).square().sum(); };
   const auto constraints = optim::constraints().ubs(vec({1.5, 0.8}));
 
   const std::vector<std::pair<std::string, optim::OptimaAlgorithm>> algorithms = {
@@ -69,7 +66,7 @@ int main() {
     optim::OptimaOptions options;
     options.algorithm = algorithm;
     const auto r = optim::optima(objective, vec({0.5, 0.5}), options, constraints);
-    const auto x = r.params.at("x").to_vec<double>();
+    const auto x = r.params.at("x").host<double>();
     std::cout << std::left << std::setw(17) << name << std::setw(24) << ("label=" + r.output.algorithm) << std::right
               << "x=[" << x[0] << ", " << x[1] << "]  flag=" << std::setw(2) << static_cast<int>(r.exit_flag)
               << "  iterations=" << std::setw(3) << r.iteration << "  evaluations=" << std::setw(3)
@@ -79,7 +76,7 @@ int main() {
 }
 ```
 
-### Output
+Output
 
 ```text
 MeritMethod      label=merit-method      x=[1.5000, 0.8000]  flag= 1  iterations=  2  evaluations=  3
@@ -96,77 +93,61 @@ All four agree on the answer, the corner `(1.5, 0.8)`, and all four exit with `C
 Four flags describe a run that behaved as designed: it finished, it ran out of its budget, you stopped it, or it reached a target you set. This program triggers each one and prints the flag, the `converged` convenience, and the iteration count.
 
 ```cpp
-// The exit flag says why the solver stopped. This program triggers the four flags that mean the run
-// was healthy: it finished (Converged), it ran out of iterations (MaxIterations), the caller's hook
-// asked it to stop (Stopped), or it reached an objective value the caller said was good enough
-// (ObjectiveTargetReached).
 #include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
 
-#include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
-namespace optim = pluss::optim;
-
-std::string flag_name(optim::OptimaExitFlag flag) {
-  switch (flag) {
-    case optim::OptimaExitFlag::Converged: return "Converged";
-    case optim::OptimaExitFlag::MaxIterations: return "MaxIterations";
-    case optim::OptimaExitFlag::Stopped: return "Stopped";
-    case optim::OptimaExitFlag::NoFeasiblePoint: return "NoFeasiblePoint";
-    case optim::OptimaExitFlag::ObjectiveTargetReached: return "ObjectiveTargetReached";
-    case optim::OptimaExitFlag::NonFiniteEvaluation: return "NonFiniteEvaluation";
-    case optim::OptimaExitFlag::InvalidProblem: return "InvalidProblem";
-    case optim::OptimaExitFlag::NoProgress: return "NoProgress";
-    case optim::OptimaExitFlag::ConstraintStationary: return "ConstraintStationary";
-  }
-  return "?";
-}
-
-void report(const std::string& label, const optim::OptimaState& r) {
-  std::cout << label << ": " << flag_name(r.exit_flag) << " (" << static_cast<int>(r.exit_flag)
-            << "), converged=" << std::boolalpha << r.converged << ", iterations=" << r.iteration << "\n";
-}
+namespace optim = pluss::subsp::math::optim;
+using namespace pluss::tils;
 
 int main() {
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
-  using Pack = optim::ParameterPack<optim::Trace>;
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
+
+  std::vector<std::pair<std::string, optim::OptimaState>> runs;
 
   // Converged: the usual outcome.
-  report("finished normally", optim::optima(objective, vec({0.0, 0.0})));
+  runs.emplace_back("finished normally", optim::optima(objective, vec({0.0, 0.0})));
 
   // MaxIterations: the iteration budget is spent before the tolerances are met.
   optim::OptimaOptions few;
   few.sequential_qp.max_iterations = 1;
-  report("one iteration allowed", optim::optima(objective, vec({0.0, 0.0}), few, disc));
+  runs.emplace_back("one iteration allowed", optim::optima(objective, vec({0.0, 0.0}), few, disc));
 
   // Stopped: the progress hook returned true, asking for an orderly stop.
   optim::OptimaOptions stop_early;
   int calls = 0;
   stop_early.progress_hook = [&](const optim::OptimaProgressSnapshot&) { return ++calls >= 2; };
-  report("hook asked to stop", optim::optima(objective, vec({0.0, 0.0}), stop_early));
+  runs.emplace_back("hook asked to stop", optim::optima(objective, vec({0.0, 0.0}), stop_early));
 
   // ObjectiveTargetReached: a feasible point at or below objective_limit ends the run at once.
   optim::OptimaOptions good_enough;
   good_enough.sequential_qp.objective_limit = 100.0;
-  report("objective limit 100", optim::optima(objective, vec({0.0, 0.0}), good_enough));
+  runs.emplace_back("objective limit 100", optim::optima(objective, vec({0.0, 0.0}), good_enough));
+
+  OutputEngine out;
+  for (const auto& [label, r] : runs)
+    out.writeln(label + ":", optim::optima_exit_flag_name(r.exit_flag), "code", static_cast<int>(r.exit_flag), "converged", r.converged ? "true" : "false", "iterations", r.iteration);
   return 0;
 }
 ```
 
-### Output
+Output
 
 ```text
-finished normally: Converged (1), converged=true, iterations=1
-one iteration allowed: MaxIterations (0), converged=false, iterations=1
-hook asked to stop: Stopped (-1), converged=false, iterations=1
-objective limit 100: ObjectiveTargetReached (-3), converged=false, iterations=0
+finished normally: Converged code 1 converged true iterations 1
+one iteration allowed: MaxIterations code 0 converged false iterations 1
+hook asked to stop: Stopped code -1 converged false iterations 1
+objective limit 100: ObjectiveTargetReached code -3 converged false iterations 0
 ```
 Only the first run is `converged`. The second spent its single allowed iteration, so the flag is `MaxIterations` and the iterate is not a solution. The third stopped because the hook returned `true` on its second call; `Stopped` always means the caller asked. The fourth ended at iteration zero because the start already satisfied `objective_limit = 100`. A feasible point at or below the limit ends the run at once with `ObjectiveTargetReached`.
 
@@ -175,48 +156,29 @@ Only the first run is `converged`. The second spent its single allowed iteration
 Five flags mean the solver could not deliver. Each is triggered here by a specific condition, and the result still carries the last point reached so you can inspect it.
 
 ```cpp
-// The flags that mean the solver could not deliver a solution. Each comes with the program
-// state that triggers it, and the result still carries the last point reached.
 #include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
 
-#include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
-
-std::string flag_name(optim::OptimaExitFlag flag) {
-  switch (flag) {
-    case optim::OptimaExitFlag::Converged: return "Converged";
-    case optim::OptimaExitFlag::MaxIterations: return "MaxIterations";
-    case optim::OptimaExitFlag::Stopped: return "Stopped";
-    case optim::OptimaExitFlag::NoFeasiblePoint: return "NoFeasiblePoint";
-    case optim::OptimaExitFlag::ObjectiveTargetReached: return "ObjectiveTargetReached";
-    case optim::OptimaExitFlag::NonFiniteEvaluation: return "NonFiniteEvaluation";
-    case optim::OptimaExitFlag::InvalidProblem: return "InvalidProblem";
-    case optim::OptimaExitFlag::NoProgress: return "NoProgress";
-    case optim::OptimaExitFlag::ConstraintStationary: return "ConstraintStationary";
-  }
-  return "?";
-}
-
-void report(const std::string& label, const optim::OptimaState& r) {
-  std::cout << label << ": " << flag_name(r.exit_flag) << " (" << static_cast<int>(r.exit_flag)
-            << "), max violation " << r.evaluation.max_constraint_violation << "\n";
-}
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using namespace pluss::tils;
 
 int main() {
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  std::vector<std::pair<std::string, optim::OptimaState>> runs;
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   // No point satisfies x0^2 + x1^2 + 1 <= 0, and none satisfies x0^2 + x1^2 + 1 = 0.
   const auto impossible_inequality = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) + 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() + 1.0; });
   const auto impossible_equality = optim::constraints().nl_eq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) + 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() + 1.0; });
 
   // NoFeasiblePoint: the interior method keeps bounds and linear rows strictly satisfied, so it first looks for
   // a point inside them. Here x0 + x1 <= -1 contradicts x >= 0, and it finds none.
@@ -225,36 +187,39 @@ int main() {
   const auto impossible_linear = optim::constraints()
                                      .lbs(vec({0.0, 0.0}))
                                      .ln_ineq(pluss::make_series(std::vector<double>{1.0, 1.0}, {1, 2}).to(f64), vec({-1.0}));
-  report("interior method, impossible linear rows", optim::optima(objective, vec({1.0, 1.0}), interior, impossible_linear));
+  runs.emplace_back("interior method, impossible linear rows", optim::optima(objective, vec({1.0, 1.0}), interior, impossible_linear));
 
   // ConstraintStationary also covers a nonlinear inequality that no point satisfies.
-  report("interior method, impossible inequality", optim::optima(objective, vec({0.0, 0.0}), interior, impossible_inequality));
+  runs.emplace_back("interior method, impossible inequality", optim::optima(objective, vec({0.0, 0.0}), interior, impossible_inequality));
 
   // NoProgress: the recovery step could not reduce the violation, so the run gave up.
-  report("sequential QP, impossible inequality", optim::optima(objective, vec({0.0, 0.0}), {}, impossible_inequality));
+  runs.emplace_back("sequential QP, impossible inequality", optim::optima(objective, vec({0.0, 0.0}), {}, impossible_inequality));
 
   // ConstraintStationary: the violation stopped decreasing at a point that is still infeasible.
-  report("interior method, impossible equality", optim::optima(objective, vec({1.0, 1.0}), interior, impossible_equality));
+  runs.emplace_back("interior method, impossible equality", optim::optima(objective, vec({1.0, 1.0}), interior, impossible_equality));
 
   // NonFiniteEvaluation: the objective is not a number at the start (log of a negative value).
-  report("log of a negative start",
-         optim::optima([](const optim::Trace& x) { return optim::sum(optim::log(x)); }, vec({-1.0, 1.0})));
+  runs.emplace_back("log of a negative start",
+         optim::optima([](const pluss::Series& x) { return x.log().sum(); }, vec({-1.0, 1.0})));
 
   // InvalidProblem: the objective returned two values instead of one.
-  report("objective returns a vector", optim::optima([](const optim::Trace& x) { return optim::square(x); }, vec({1.0, 1.0})));
+  runs.emplace_back("objective returns a vector", optim::optima([](const pluss::Series& x) { return x.square(); }, vec({1.0, 1.0})));
+
+  OutputEngine out;
+  for (const auto& [label, r] : runs) out.writeln(label + ":", optim::optima_exit_flag_name(r.exit_flag), "code", static_cast<int>(r.exit_flag), "max violation", r.evaluation.max_constraint_violation);
   return 0;
 }
 ```
 
-### Output
+Output
 
 ```text
-interior method, impossible linear rows: NoFeasiblePoint (-2), max violation 1
-interior method, impossible inequality: ConstraintStationary (-7), max violation 1
-sequential QP, impossible inequality: NoProgress (-6), max violation 1
-interior method, impossible equality: ConstraintStationary (-7), max violation 1
-log of a negative start: NonFiniteEvaluation (-4), max violation 0
-objective returns a vector: InvalidProblem (-5), max violation 0
+interior method, impossible linear rows: NoFeasiblePoint code -2 max violation 1
+interior method, impossible inequality: ConstraintStationary code -7 max violation 1
+sequential QP, impossible inequality: NoProgress code -6 max violation 1
+interior method, impossible equality: ConstraintStationary code -7 max violation 1
+log of a negative start: NonFiniteEvaluation code -4 max violation 0
+objective returns a vector: InvalidProblem code -5 max violation 0
 ```
 Impossible constraints produce different verdicts depending on their kind and the method. The interior method keeps bounds and linear rows strictly satisfied, so linear rows that contradict a bound (`x0 + x1 <= -1` with `x >= 0`) end the run before it starts with `NoFeasiblePoint`. A nonlinear inequality that no point satisfies, `x0^2 + x1^2 + 1 <= 0`, is different: the interior method gives it a slack variable and can start, so the verdict is `ConstraintStationary` once the violation can no longer be reduced (the gradient of its square vanishes), with the violation staying at `1`. Sequential QP tries to recover from the same inequality and fails, returning `NoProgress`. The impossible equality returns `ConstraintStationary` from the interior method for the same reason. A `log` of a negative start gives `NonFiniteEvaluation`, and an objective that returns a vector gives `InvalidProblem` with no exception thrown.
 
@@ -263,105 +228,106 @@ Impossible constraints produce different verdicts depending on their kind and th
 The exit flag is coarse. The stall category says what went wrong underneath. There are ten, and this program triggers each. The scenario text describes the cause, and the line below it shows the category name and the flag it came with.
 
 ```cpp
-// Beyond the exit flag, every result carries a stall category that says what kind of difficulty ended
-// the run. This program triggers each of the ten categories and prints its name, the exit flag, and the
-// measure the solver recorded. A healthy run reports "none".
 #include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
 
-#include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
-
-void report(const std::string& scenario, const optim::OptimaState& r) {
-  std::cout << scenario << "\n    stall=" << optim::optima_stall_category_name(r.output.stall_category)
-            << "  flag=" << static_cast<int>(r.exit_flag) << "\n";
-}
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using namespace pluss::tils;
 
 int main() {
+  std::vector<std::pair<std::string, optim::OptimaState>> runs;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
   const auto impossible_inequality = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) + 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() + 1.0; });
   const auto impossible_equality = optim::constraints().nl_eq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) + 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() + 1.0; });
 
   optim::OptimaOptions interior;
   interior.algorithm = optim::OptimaAlgorithm::InternalProtocol;
 
-  report("a normal solve", optim::optima(objective, vec({0.0, 0.0})));
+  runs.emplace_back("a normal solve", optim::optima(objective, vec({0.0, 0.0})));
 
   optim::OptimaOptions hook;
   hook.progress_hook = [](const optim::OptimaProgressSnapshot&) { return true; };
-  report("the progress hook asks to stop", optim::optima(objective, vec({0.0, 0.0}), hook));
+  runs.emplace_back("the progress hook asks to stop", optim::optima(objective, vec({0.0, 0.0}), hook));
 
-  report("the objective returns a vector",
-         optim::optima([](const optim::Trace& x) { return optim::square(x); }, vec({1.0, 1.0})));
+  runs.emplace_back("the objective returns a vector",
+         optim::optima([](const pluss::Series& x) { return x.square(); }, vec({1.0, 1.0})));
 
-  report("the objective is not finite at the start",
-         optim::optima([](const optim::Trace& x) { return optim::sum(optim::log(x)); }, vec({-1.0, 1.0})));
+  runs.emplace_back("the objective is not finite at the start",
+         optim::optima([](const pluss::Series& x) { return x.log().sum(); }, vec({-1.0, 1.0})));
 
   optim::OptimaOptions merit;
   merit.algorithm = optim::OptimaAlgorithm::MeritMethod;
-  report("merit method on an impossible inequality", optim::optima(objective, vec({0.0, 0.0}), merit, impossible_inequality));
+  runs.emplace_back("merit method on an impossible inequality", optim::optima(objective, vec({0.0, 0.0}), merit, impossible_inequality));
 
   optim::OptimaOptions no_step = interior;
   no_step.internal_protocol.fraction_to_boundary = 0.0;
-  report("no step is allowed toward the boundary", optim::optima(objective, vec({0.0, 0.0}), no_step, disc));
+  runs.emplace_back("no step is allowed toward the boundary", optim::optima(objective, vec({0.0, 0.0}), no_step, disc));
 
-  report("sequential QP cannot restore feasibility", optim::optima(objective, vec({0.0, 0.0}), {}, impossible_inequality));
+  runs.emplace_back("sequential QP cannot restore feasibility", optim::optima(objective, vec({0.0, 0.0}), {}, impossible_inequality));
 
-  report("interior method stalls on an infeasible equality",
+  runs.emplace_back("interior method stalls on an infeasible equality",
          optim::optima(objective, vec({1.0, 1.0}), interior, impossible_equality));
 
   optim::OptimaOptions phase = interior;
   phase.internal_protocol.enable_feasibility_phase = true;
-  report("feasibility phase cannot reduce the violation", optim::optima(objective, vec({1.0, 1.0}), phase, impossible_equality));
+  runs.emplace_back("feasibility phase cannot reduce the violation", optim::optima(objective, vec({1.0, 1.0}), phase, impossible_equality));
 
   optim::OptimaOptions short_run = interior;
   short_run.internal_protocol.max_iterations = 2;
-  report("interior method stops with barrier complementarity unresolved",
+  runs.emplace_back("interior method stops with barrier complementarity unresolved",
          optim::optima(objective, vec({0.1, 0.1}), short_run, disc));
 
   optim::OptimaOptions one_iteration;
   one_iteration.sequential_qp.max_iterations = 1;
-  report("the iteration budget is spent", optim::optima(objective, vec({0.0, 0.0}), one_iteration, disc));
+  runs.emplace_back("the iteration budget is spent", optim::optima(objective, vec({0.0, 0.0}), one_iteration, disc));
+
+  OutputEngine out;
+  for (const auto& [scenario, r] : runs) {
+    out.writeln(scenario);
+    out.writeln("    stall =", optim::optima_stall_category_name(r.output.stall_category), " flag =", static_cast<int>(r.exit_flag));
+  }
   return 0;
 }
 ```
 
-### Output
+Output
 
 ```text
 a normal solve
-    stall=none  flag=1
+    stall = none  flag = 1
 the progress hook asks to stop
-    stall=user-stop  flag=-1
+    stall = user-stop  flag = -1
 the objective returns a vector
-    stall=invalid-callback-contract  flag=-5
+    stall = invalid-callback-contract  flag = -5
 the objective is not finite at the start
-    stall=nonfinite-callback-region  flag=-4
+    stall = nonfinite-callback-region  flag = -4
 merit method on an impossible inequality
-    stall=search-direction-collapse  flag=-6
+    stall = search-direction-collapse  flag = -6
 no step is allowed toward the boundary
-    stall=boundary-limited  flag=-6
+    stall = boundary-limited  flag = -6
 sequential QP cannot restore feasibility
-    stall=recovery-failure  flag=-6
+    stall = recovery-failure  flag = -6
 interior method stalls on an infeasible equality
-    stall=infeasible-stationary  flag=-7
+    stall = infeasible-stationary  flag = -7
 feasibility phase cannot reduce the violation
-    stall=feasibility-failure  flag=-6
+    stall = feasibility-failure  flag = -6
 interior method stops with barrier complementarity unresolved
-    stall=complementarity-stagnation  flag=0
+    stall = complementarity-stagnation  flag = 0
 the iteration budget is spent
-    stall=iteration-limit  flag=0
+    stall = iteration-limit  flag = 0
 ```
 | Category | What it means |
 |---|---|
@@ -384,9 +350,6 @@ the iteration budget is spent
 `result.output` is the structured report. This program prints each field of one solve so you can match it against the table below.
 
 ```cpp
-// OptimaOutput is the structured report inside every result. This program prints every field of
-// one solve so each can be matched to the table in the text. The problem is a disc-constrained fit
-// solved by sequential QP.
 #include <pluss/ma.h>
 
 #include <iomanip>
@@ -394,15 +357,15 @@ the iteration budget is spent
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
 
   const auto r = optim::optima(objective, vec({0.0, 0.0}), {}, disc);
   const auto& o = r.output;
@@ -433,7 +396,7 @@ int main() {
 }
 ```
 
-### Output
+Output
 
 ```text
 algorithm                             sqp
@@ -483,24 +446,21 @@ The solve is a success: `first_order_optimality` is `1e-8`, so the returned poin
 `reports::trace` turns any output stream into a progress hook that prints one line per iteration. `reports::iter` is the short form. `ProgressTracePreset` switches each part of a line on or off.
 
 ```cpp
-// reports::trace turns any stream into a progress hook that prints one line per iteration, so a run
-// can be watched as it happens. reports::iter is the short form: iterations only, no start or
-// final line, no message. ProgressTracePreset switches individual parts on and off.
 #include <pluss/ma.h>
 
 #include <iostream>
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
 
   std::cout << "-- reports::trace, default preset --\n";
   optim::OptimaOptions full;
@@ -526,7 +486,7 @@ int main() {
 }
 ```
 
-### Output
+Output
 
 ```text
 -- reports::trace, default preset --
@@ -559,10 +519,6 @@ Read a trace by watching two columns. A run that is working shows `viol` falling
 A hook is any function from a snapshot to a bool. The snapshot carries the stage, the current point, the full evaluation, and the work counters. This program records the objective at every iteration and stops the run as soon as the point is feasible and good enough.
 
 ```cpp
-// A progress hook is any function from a snapshot to a bool. It sees the stage (start, each
-// iteration, done), the current point, the evaluation there, and the work counters. Returning true
-// asks the solver to stop at the next opportunity. This hook records the objective history and stops
-// the run as soon as the point is feasible and the objective is below 10.55.
 #include <pluss/ma.h>
 
 #include <iostream>
@@ -570,15 +526,15 @@ A hook is any function from a snapshot to a bool. The snapshot carries the stage
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
 
   std::vector<double> history;
   optim::OptimaOptions options;
@@ -593,13 +549,13 @@ int main() {
   const auto r = optim::optima(objective, vec({0.0, 0.0}), options, disc);
   std::cout << "recorded " << history.size() << " iteration values\n";
   std::cout << "exit flag " << static_cast<int>(r.exit_flag) << ", stopped at iteration " << r.iteration << "\n";
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
   std::cout << "returned point [" << x[0] << ", " << x[1] << "]\n";
   return 0;
 }
 ```
 
-### Output
+Output
 
 ```text
 start  iteration 0  objective 18  violation 0
@@ -619,21 +575,18 @@ The hook sees `start` once, `iter` for each iteration, and `done` once. It retur
 You can set one hook on `OptimaOptions::progress_hook` and have it apply to whichever algorithm you choose, or set a hook on one algorithm's own options. When both are set the specific one wins.
 
 ```cpp
-// A hook can be set once for any algorithm on OptimaOptions::progress_hook, or on one algorithm's own
-// option block. The algorithm-specific hook wins when both are set; the general one fills in when the
-// algorithm's own is empty. Counting calls shows which hook ran.
 #include <pluss/ma.h>
 
 #include <iostream>
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
 
   int general = 0, specific = 0;
   optim::OptimaOptions options;
@@ -654,7 +607,7 @@ int main() {
 }
 ```
 
-### Output
+Output
 
 ```text
 general hook only:      general=4 specific=0
@@ -670,26 +623,21 @@ With only the general hook set it received all four snapshots. After adding a se
 A run that ends without converging may have visited a better point than its last. The solver keeps the best feasible point it saw. `result.best_feasible` holds it and `output.best_feasible_*` summarizes it. `returned_best_feasible` tells you whether the answer in `params` is the checkpoint or the final iterate.
 
 ```cpp
-// When a run ends without converging, the last iterate is not always the best point it saw. The solver
-// keeps the best feasible point it found; result.best_feasible holds it, and output.best_feasible_*
-// report its value, violation and stationarity. returned_best_feasible tells you whether the answer in
-// result.params is that checkpoint. Here sequential QP is stopped after three iterations, while its
-// iterate is still a hair infeasible.
 #include <pluss/ma.h>
 
 #include <iostream>
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
 
   optim::OptimaOptions options;
   options.sequential_qp.max_iterations = 3;
@@ -702,7 +650,7 @@ int main() {
   std::cout << "best feasible available: " << r.output.best_feasible_available << "\n";
   std::cout << "answer is the checkpoint: " << r.output.returned_best_feasible << "\n";
   if (r.best_feasible) {
-    const auto x = r.best_feasible->params.at("x").to_vec<double>();
+    const auto x = r.best_feasible->params.at("x").host<double>();
     std::cout << "checkpoint point [" << x[0] << ", " << x[1] << "]\n";
     std::cout << "checkpoint objective " << r.best_feasible->value.item<double>() << ", violation "
               << r.best_feasible->max_constraint_violation << "\n";
@@ -713,7 +661,7 @@ int main() {
 }
 ```
 
-### Output
+Output
 
 ```text
 exit flag 0, converged false
@@ -731,9 +679,6 @@ Sequential QP was stopped after three iterations, so the flag is `MaxIterations`
 A Lagrange multiplier measures how hard a constraint pushes on the answer. For an inequality it is the first-order price: relaxing the limit by one unit lowers the objective by about that amount. The result carries six multiplier groups, one per constraint family. This program uses three problems whose multipliers can be worked out by hand and checks each.
 
 ```cpp
-// Lagrange multipliers measure how hard each constraint pushes on the answer. A positive inequality
-// multiplier is the first-order price of the constraint: relaxing its limit by one unit lowers the
-// objective by about that much. Three problems with known multipliers, one per constraint family. A family the problem does not use has an empty multiplier Series; an inactive constraint has multiplier zero.
 #include <pluss/ma.h>
 
 #include <iomanip>
@@ -741,19 +686,19 @@ A Lagrange multiplier measures how hard a constraint pushes on the answer. For a
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   std::cout << std::fixed << std::setprecision(4);
 
   // Bounds x <= (2, 2.5): the gradient at the answer is (-2, -1), so the upper multipliers are (2, 1).
   const auto bounded = optim::optima(objective, vec({0.0, 0.0}), {}, optim::constraints().ubs(vec({2.0, 2.5})));
-  const auto upper = bounded.multipliers.upper_bounds.to_vec<double>();
-  const auto lower = bounded.multipliers.lower_bounds.to_vec<double>();
+  const auto upper = bounded.multipliers.upper_bounds.host<double>();
+  const auto lower = bounded.multipliers.lower_bounds.host<double>();
   std::cout << "bounds:            upper = [" << upper[0] << ", " << upper[1] << "] (expected 2, 1); lower multipliers: "
             << lower.size() << " (no lower bound set)\n";
 
@@ -761,20 +706,20 @@ int main() {
   const auto linear = optim::optima(
       objective, vec({0.0, 0.0}), {},
       optim::constraints().ln_ineq(pluss::make_series(std::vector<double>{1, 1}, {1, 2}).to(f64), vec({4.0})));
-  std::cout << "linear inequality: " << linear.multipliers.linear_inequalities.to_vec<double>()[0]
+  std::cout << "linear inequality: " << linear.multipliers.linear_inequalities.host<double>()[0]
             << " (expected 2)\n";
 
   // x0^2 + x1^2 = 1: at (1,1)/sqrt(2) the gradient is -(3 - 0.7071) * (2, 2); the row is 2*(0.7071, 0.7071).
   const auto nonlinear = optim::optima(
       objective, vec({1.0, 0.0}), {},
-      optim::constraints().nl_eq([](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; }));
-  std::cout << "nonlinear equality: " << nonlinear.multipliers.nonlinear_equalities.to_vec<double>()[0]
+      optim::constraints().nl_eq([](const Pack& p) { return p.at("x").square().sum() - 1.0; }));
+  std::cout << "nonlinear equality: " << nonlinear.multipliers.nonlinear_equalities.host<double>()[0]
             << " (expected 3.2426)\n";
   return 0;
 }
 ```
 
-### Output
+Output
 
 ```text
 bounds:            upper = [2.0000, 1.0000] (expected 2, 1); lower multipliers: 0 (no lower bound set)
@@ -788,20 +733,18 @@ The bound problem has gradient `(-2, -1)` at its answer, so the upper multiplier
 Two ready-made reports describe a finished run. `compact_summary` (also reachable as `print_summary`) is one line for logs. `detailed_summary` is one field per line.
 
 ```cpp
-// Three ready-made reports for a finished run. compact_summary (and print_summary, its alias) is one
-// line for logs. detailed_summary is one field per line for a terminal.
 #include <pluss/ma.h>
 
 #include <iostream>
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  const auto r = optim::optima([](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); },
+  const auto r = optim::optima([](const pluss::Series& x) { return (x - 3.0).square().sum(); },
                                vec({0.0, 0.0}), {}, optim::constraints().ubs(vec({2.0, 2.5})));
 
   std::cout << "-- compact_summary --\n";
@@ -814,7 +757,7 @@ int main() {
 }
 ```
 
-### Output
+Output
 
 ```text
 -- compact_summary --
@@ -854,30 +797,26 @@ Both print the same facts. The compact form is the one to put in a log line; the
 The result always holds a point. After a failure that point is just wherever the solver ended. Using it as if it were a solution is the most common mistake in code that calls a solver.
 
 ```cpp
-// Pitfall: every result carries an answer, even when the solver failed. After an impossible problem
-// the answer is just the last point reached. Reading result.params without checking the exit flag
-// treats a failure as a solution. Check exit_flag (or converged) first, and use the best feasible
-// checkpoint only when output.best_feasible_available says one exists.
 #include <pluss/ma.h>
 
 #include <iostream>
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   // x0^2 + x1^2 <= -1 has no solution.
   const auto impossible = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) + 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() + 1.0; });
 
   const auto r = optim::optima(objective, vec({0.0, 0.0}), {}, impossible);
 
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
   std::cout << "unchecked answer: [" << x[0] << ", " << x[1] << "]  (looks like a result)\n";
   std::cout << "converged: " << std::boolalpha << r.converged << ", exit flag " << static_cast<int>(r.exit_flag)
             << ", violation " << r.evaluation.max_constraint_violation << "\n";
@@ -889,7 +828,7 @@ int main() {
 }
 ```
 
-### Output
+Output
 
 ```text
 unchecked answer: [0, 0]  (looks like a result)

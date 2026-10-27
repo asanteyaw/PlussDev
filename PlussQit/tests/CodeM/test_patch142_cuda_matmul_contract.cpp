@@ -116,7 +116,7 @@ TEST_CASE("CUDA bridge enables matmul fallback when strict native is off", "[cud
 
   const auto got = a_cuda.matmul(b_cuda);
   REQUIRE(got.platform() == pluss::pCUDA);
-  require_close_(got.to(pluss::pCPU).to_vec<float>(), a_cpu.matmul(b_cpu).to_vec<float>());
+  require_close_(got.to(pluss::pCPU).host<float>(), a_cpu.matmul(b_cpu).host<float>());
 }
 
 TEST_CASE("CUDA strict native matmul executes supported native route", "[cuda][bridge][policy][matmul]") {
@@ -136,5 +136,5 @@ TEST_CASE("CUDA strict native matmul executes supported native route", "[cuda][b
   const auto b_cuda = b_cpu.to(pluss::pCUDA);
   const auto got = a_cuda.matmul(b_cuda);
   REQUIRE(got.platform() == pluss::pCUDA);
-  require_close_(got.to(pluss::pCPU).to_vec<float>(), a_cpu.matmul(b_cpu).to_vec<float>());
+  require_close_(got.to(pluss::pCPU).host<float>(), a_cpu.matmul(b_cpu).host<float>());
 }

@@ -43,8 +43,8 @@ auto rg = pluss::scribble::Registry({
 auto out = rg.fields({"code"}).nt().fullmatch("[A-Z]{2}-[0-9]{3}");
 auto code = out.fields("code");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(code.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(code.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(code.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(code.at(1)).host<bool>()[0];
 ```
 
 ### Output

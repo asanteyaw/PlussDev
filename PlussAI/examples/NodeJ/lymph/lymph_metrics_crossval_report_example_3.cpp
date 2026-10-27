@@ -34,8 +34,8 @@ int main() {
       lymph::selection::cross().folds(4).seed(20260901ULL)
           .run(lymph::models::linear_regression(), frame, data_options, {}, assess);
 
-  const std::vector<double> means = report.mean.values.to_vec<double>();
-  const std::vector<double> stdevs = report.stdev.values.to_vec<double>();
+  const std::vector<double> means = report.mean.values.host<double>();
+  const std::vector<double> stdevs = report.stdev.values.host<double>();
   for (std::size_t i = 0; i < report.report.metrics.size(); ++i) {
     std::cout << "metric[" << i << "] mean=" << means[i]
               << " stdev=" << stdevs[i] << "\n";

@@ -18,7 +18,7 @@ All library/runtime code must use the centralized Pluss error system.
 ### Optimizer Surface Doctrine
 Keep functional and OOP optimizers explicitly separated by namespace and purpose so users can infer intent from code.
 
-- `pluss::optim::*` is the functional math optimization surface (for example `adam_step_inplace(...)`).
+- `pluss::subsp::math::optim::*` is the functional math optimization surface (for example `adam_step_inplace(...)`).
 - `pluss::nn::optim::*` is the OOP DL training optimizer surface (for example `pluss::nn::optim::Adam`).
 - Do not blur naming between these two surfaces in docs or demos.
 

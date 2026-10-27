@@ -58,11 +58,11 @@ inline void require_scalar(const Series &value, const char *operation,
 template <DimensionType OutputDimension, DimensionType InputDimension,
           class Fn>
 [[nodiscard]] auto scalar_trace_callback(Fn &fn, const char *operation) {
-  return [&fn, operation](const math_diff::Trace &input) {
+  return [&fn, operation](const Series &input) -> Series {
     auto output =
-        invoke_quantity<OutputDimension, InputDimension>(fn, input.value());
+        invoke_quantity<OutputDimension, InputDimension>(fn, input);
     require_scalar(output.si_value(), operation, "callback output");
-    return math_diff::Trace(output.si_value());
+    return output.si_value();
   };
 }
 

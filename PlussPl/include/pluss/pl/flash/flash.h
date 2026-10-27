@@ -154,7 +154,7 @@ template <std::ranges::input_range Range>
 }
 
 [[nodiscard]] inline std::vector<double> to_f64_vector(const Series& values) {
-  return values.to(ScalarType::Float64).to_vec<double>();
+  return values.to(ScalarType::Float64).host<double>().array().data;
 }
 
 [[nodiscard]] inline Series flatten_f64(const Series& values) {
@@ -752,7 +752,7 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
   if (scalar.numel() == 0) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  return scalar.item<double>();
+  return scalar.host<double>().front();
 }
 
 [[nodiscard]] inline double z_for_confidence_level(double level) {
@@ -827,7 +827,7 @@ inline void downsample_columns(
   const auto step = std::max<std::int64_t>(1, (nrows + max_points - 1) / max_points);
   const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
   if (labels != nullptr) {
-    const auto sampled_idx = idx.to_vec<std::int64_t>();
+    const auto sampled_idx = idx.host<std::int64_t>().array().data;
     std::vector<std::string> sampled_labels;
     sampled_labels.reserve(sampled_idx.size());
     std::transform(
@@ -892,7 +892,7 @@ inline void downsample_columns(
   const Series feature_major = feature_axis_is_columns
                                    ? matrix.transpose(0, 1).contiguous().to(ScalarType::Float64)
                                    : matrix.contiguous().to(ScalarType::Float64);
-  const auto flat = feature_major.reshape({feature_count * case_count}).to_vec<double>();
+  const auto flat = feature_major.reshape({feature_count * case_count}).host<double>().array().data;
 
   std::vector<Series> columns;
   columns.reserve(static_cast<std::size_t>(feature_count));
@@ -929,7 +929,7 @@ inline void downsample_columns(
 [[nodiscard]] inline std::vector<double> row_major_values(
     pluss::msharp::RangeView::Series columns,
     std::int64_t rows) {
-  return matrix_from_columns(columns, rows).to(ScalarType::Float64).to_vec<double>();
+  return matrix_from_columns(columns, rows).to(ScalarType::Float64).host<double>().array().data;
 }
 
 [[nodiscard]] inline Series andrews_basis(const std::vector<double>& t_values, std::int64_t ncols) {
@@ -1108,7 +1108,7 @@ struct FieldmapGrid {
     return out;
   }
 
-  std::vector<double> curr = out.to_vec<double>();
+  std::vector<double> curr = out.host<double>().array().data;
   std::vector<double> next(curr.size(), 0.0);
   constexpr std::array<double, 9> k{
       1.0, 2.0, 1.0,
@@ -1178,7 +1178,7 @@ struct FieldmapGrid {
 
   const std::vector<double> x = to_f64_vector(sx);
   const std::vector<double> y = to_f64_vector(sy);
-  const std::vector<double> flat = sz.to_vec<double>();
+  const std::vector<double> flat = sz.host<double>().array().data;
 
   std::vector<double> row_sum(static_cast<std::size_t>(rows), 0.0);
   std::vector<double> row_cnt(static_cast<std::size_t>(rows), 0.0);
@@ -1546,7 +1546,7 @@ namespace detail {
       continue;
     }
     const auto parsed = ::pluss::make_timeline(std::vector<std::string>{normalized[i]});
-    ticks[i] = parsed.epoch_nanos().to(Platform::CPU).to_vec<std::int64_t>()[0];
+    ticks[i] = parsed.epoch_nanos().to(Platform::CPU).host<std::int64_t>()[0];
   }
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(ticks.size())};
   return ::pluss::codeh::ops_internal::timeline_from_epoch_nanos(ticks, shape);
@@ -4460,9 +4460,9 @@ namespace detail {
     const Series& x,
     const Series& y,
     const Series& z) {
-  const auto xs = x.to_vec<double>();
-  const auto ys = y.to_vec<double>();
-  const auto zs = z.to_vec<double>();
+  const auto xs = x.host<double>().array().data;
+  const auto ys = y.host<double>().array().data;
+  const auto zs = z.host<double>().array().data;
   const auto n = static_cast<std::int64_t>(xs.size());
   const auto g = std::clamp<std::int64_t>(
       static_cast<std::int64_t>(std::ceil(std::sqrt(static_cast<double>(std::max<std::int64_t>(1, n))))),
@@ -5018,7 +5018,7 @@ inline Studio& andrews_curves(
   const auto basis = detail::andrews_basis(t_values, ncols);
   const auto values_matrix = detail::matrix_from_columns(prepared, plotted_rows);
   const auto curve_matrix = values_matrix.matmul(basis).to(ScalarType::Float64).contiguous();
-  const auto flat_curves = curve_matrix.to_vec<double>();
+  const auto flat_curves = curve_matrix.host<double>().array().data;
   const auto point_count = static_cast<std::size_t>(t_values.size());
 
   auto& pane = studio.pane2();
@@ -5067,7 +5067,7 @@ inline Studio& andrews_curves(
   const auto basis = detail::andrews_basis(t_values, ncols);
   const auto values_matrix = detail::matrix_from_columns(prepared, plotted_rows);
   const auto curve_matrix = values_matrix.matmul(basis).to(ScalarType::Float64).contiguous();
-  const auto flat_curves = curve_matrix.to_vec<double>();
+  const auto flat_curves = curve_matrix.host<double>().array().data;
   const auto point_count = static_cast<std::size_t>(t_values.size());
   std::unordered_map<std::string, std::size_t> color_index;
   std::vector<std::string> ordered_classes;

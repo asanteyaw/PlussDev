@@ -38,8 +38,8 @@ auto rg = pluss::scribble::Registry({
 
 auto out = rg.fields({"ts"}).tl().weekday();
 auto ts = out.fields("ts");
-std::cout << std::get<pluss::Series>(ts.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(ts.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(ts.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(ts.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

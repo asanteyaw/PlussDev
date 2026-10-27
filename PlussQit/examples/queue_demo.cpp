@@ -13,8 +13,8 @@ int main() {
   // Keep demo portable across machines without MPS runtime.
   pluss::Type qs = pluss::make_series({-1.0, 2.0, -3.0});
   std::cout << "Type: " << qs << "\n";
-  std::cout << "Type.as_series()[1]: " << qs.as_series().to_vec<double>()[1] << "\n";
-  std::cout << "Type.series().log()[0]: " << qs.series().log().to_vec<double>()[0] << "\n";
+  std::cout << "Type.as_series()[1]: " << qs.as_series().host<double>()[1] << "\n";
+  std::cout << "Type.series().log()[0]: " << qs.series().log().host<double>()[0] << "\n";
   const auto qs_chain = qs.invoke({"abs", "log", "mean"});
   const auto qs_b = qs.series().abs().log().mean();
   const pluss::Type qk = qs.series().abs().log().mean(); // if you want the chain result as a Type directly
@@ -31,7 +31,7 @@ int main() {
   std::cout << "Dispensed item: " << qs_item << "\n";
   std::cout << "Dispensed item dtype: " << qs_b.item().dtype() << "\n";
   std::cout << "Type kind after abs: " << qs_abs.kind_name() << "\n";
-  const auto abs_vals = qs_abs.as<pluss::Series>().to_vec<double>();
+  const auto abs_vals = qs_abs.as<pluss::Series>().host<double>();
   std::cout << "abs values: [" << abs_vals[0] << ", " << abs_vals[1] << ", " << abs_vals[2] << "]\n\n";
 
   pluss::Type qn = pluss::make_note({"Alpha", "Beta"});
@@ -43,10 +43,10 @@ int main() {
   std::cout << "lower note[0]: " << qn_lower.as<pluss::Note>().at(0) << "\n\n";
 
   pluss::Type qt = pluss::timeline::make("2024-01-15T10:11:12Z");
-  std::cout << "Type.timeline().hour(): " << qt.timeline().hour().to_vec<std::int32_t>(0) << "\n";
+  std::cout << "Type.timeline().hour(): " << qt.timeline().hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) << "\n";
   auto qt_year = qt.invoke("year");
   std::cout << "Type Timeline->year kind: " << qt_year.kind_name() << "\n";
-  std::cout << "year: " << qt_year.as<pluss::Series>().to_vec<std::int32_t>(0) << "\n\n";
+  std::cout << "year: " << qt_year.as<pluss::Series>().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) << "\n\n";
 
   pluss::Type qt1d = pluss::timeline::make({
       "2024-01-15T10:11:12Z",
@@ -83,12 +83,12 @@ int main() {
   auto day_floor = pluss::dispense_as<pluss::Timeline>(
       t, &pluss::Timeline::floor, floor_args);
   std::cout << "dispense(Timeline,&Timeline::floor,args{...})->hour: "
-            << day_floor.hour().to_vec<std::int32_t>(0) << "\n";
+            << day_floor.hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) << "\n";
 
   auto year_series = pluss::dispense_as<pluss::Series>(
       t, &pluss::Timeline::year, pluss::args{});
   std::cout << "dispense(Timeline,&Timeline::year,args{}) value="
-            << year_series.to_vec<std::int32_t>(0) << "\n";
+            << year_series.host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) << "\n";
 
   std::cout << "\nDone.\n";
   return 0;

@@ -45,7 +45,7 @@ Locus shop() {
 void heading(std::string_view title) { std::cout << "== " << title << " ==\n"; }
 
 void print_numbers(const Catalog& catalog, std::string_view key) {
-  const auto values = catalog.get(key)->as_series().to_vec<double>();
+  const auto values = catalog.get(key)->as_series().host<double>();
   std::cout << key << "=[";
   for (std::size_t i = 0; i < values.size(); ++i) {
     if (i != 0) std::cout << ", ";

@@ -17,7 +17,7 @@ const auto f64 = pluss::ScalarType::Float64;
 Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 void row(const char* label, const Series& s) {
   std::cout << std::left << std::setw(30) << label << std::right;
-  for (double v : s.to_vec<double>()) std::cout << std::setw(10) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(10) << v;
   std::cout << "\n";
 }
 int main() {
@@ -39,10 +39,10 @@ int main() {
   // The density integrates to the cdf: trapezoid of the density of a fine grid against cdf(2) - cdf(0.5) of the Weibull.
   std::vector<double> grid;
   for (int i = 0; i <= 3000; ++i) grid.push_back(0.5 + 1.5 * i / 3000.0);
-  const auto dens = distr::pdf(dst::Weibull, vec(grid), {1.7, 2.1}).to_vec<double>();
+  const auto dens = distr::pdf(dst::Weibull, vec(grid), {1.7, 2.1}).host<double>();
   double area = 0.0;
   for (std::size_t i = 1; i < grid.size(); ++i) area += 0.5 * (dens[i] + dens[i - 1]) * (grid[i] - grid[i - 1]);
-  const auto c = distr::cdf(dst::Weibull, vec({0.5, 2.0}), {1.7, 2.1}).to_vec<double>();
+  const auto c = distr::cdf(dst::Weibull, vec({0.5, 2.0}), {1.7, 2.1}).host<double>();
   std::cout << "\nintegral of the Weibull density over [0.5, 2] " << area << "   cdf(2) - cdf(0.5) " << c[1] - c[0] << "\n";
 
   // Samples by kind.

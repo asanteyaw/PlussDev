@@ -98,7 +98,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear classifier infer_scores should succeed after learn\n";
     return false;
   }
-  const auto score_vec = cls_scores.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto score_vec = cls_scores.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(score_vec[0] < 0.0 && score_vec[1] < 0.0 && score_vec[2] > 0.0 && score_vec[3] > 0.0)) {
     if (err) *err << "linear classifier scores should separate classes by sign\n";
     return false;
@@ -109,7 +109,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear classifier infer should succeed after learn\n";
     return false;
   }
-  const auto pred_vec = cls_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto pred_vec = cls_pred.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(approx(pred_vec[0], 0.0) && approx(pred_vec[1], 0.0) && approx(pred_vec[2], 1.0) && approx(pred_vec[3], 1.0))) {
     if (err) *err << "linear classifier predictions should match separable training labels\n";
     return false;
@@ -120,7 +120,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear classifier assess should succeed\n";
     return false;
   }
-  const auto cls_metric_vec = cls_metrics.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto cls_metric_vec = cls_metrics.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (cls_metric_vec.empty() || cls_metric_vec[0] < 0.99) {
     if (err) *err << "linear classifier default assess metric (accuracy) should be near perfect\n";
     return false;
@@ -151,7 +151,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear hinge classifier infer should succeed\n";
     return false;
   }
-  const auto hinge_pred_vec = cls_hinge_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto hinge_pred_vec = cls_hinge_pred.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(approx(hinge_pred_vec[0], 0.0) && approx(hinge_pred_vec[1], 0.0)
         && approx(hinge_pred_vec[2], 1.0) && approx(hinge_pred_vec[3], 1.0))) {
     if (err) *err << "linear hinge classifier predictions should match separable training labels\n";
@@ -162,7 +162,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear hinge classifier assess should succeed\n";
     return false;
   }
-  const auto cls_hinge_metric_vec = cls_hinge_metrics.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto cls_hinge_metric_vec = cls_hinge_metrics.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (cls_hinge_metric_vec.empty() || cls_hinge_metric_vec[0] < 0.99) {
     if (err) *err << "linear hinge classifier default assess metric (accuracy) should be near perfect\n";
     return false;
@@ -193,7 +193,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear logistic L1 classifier infer should succeed\n";
     return false;
   }
-  const auto cls_l1_pred_vec = cls_l1_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto cls_l1_pred_vec = cls_l1_pred.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(approx(cls_l1_pred_vec[0], 0.0) && approx(cls_l1_pred_vec[1], 0.0)
         && approx(cls_l1_pred_vec[2], 1.0) && approx(cls_l1_pred_vec[3], 1.0))) {
     if (err) *err << "linear logistic L1 classifier predictions should match separable training labels\n";
@@ -235,7 +235,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "tree regressor infer should succeed after learn\n";
     return false;
   }
-  const auto reg_tree_vec = reg_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto reg_tree_vec = reg_pred.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (reg_tree_vec.size() != 4 || !std::isfinite(reg_tree_vec[0]) || !std::isfinite(reg_tree_vec[3])) {
     if (err) *err << "tree regressor predictions should be finite with expected length\n";
     return false;
@@ -266,7 +266,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear regressor infer should succeed\n";
     return false;
   }
-  const auto reg_vec = linear_reg_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto reg_vec = linear_reg_pred.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(approx(reg_vec[0], -5.0, 1e-3) && approx(reg_vec[3], 5.0, 1e-3))) {
     if (err) *err << "linear regressor predictions should match training signal\n";
     return false;
@@ -276,7 +276,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear regressor assess should succeed\n";
     return false;
   }
-  const auto reg_metric_vec = linear_reg_metrics.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto reg_metric_vec = linear_reg_metrics.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (reg_metric_vec.size() < 3 || reg_metric_vec[0] > 1e-6 || reg_metric_vec[2] < 0.9999) {
     if (err) *err << "linear regressor default metrics should show near-perfect fit\n";
     return false;
@@ -308,7 +308,7 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     if (err) *err << "linear elastic regressor infer should succeed\n";
     return false;
   }
-  const auto reg_elastic_vec = linear_reg_elastic_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto reg_elastic_vec = linear_reg_elastic_pred.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
   if (!(approx(reg_elastic_vec[0], -5.0, 2e-2) && approx(reg_elastic_vec[3], 5.0, 2e-2))) {
     if (err) *err << "linear elastic regressor predictions should stay close to training signal\n";
     return false;

@@ -47,8 +47,8 @@ auto rg = pluss::scribble::Registry({
 auto out = rg.fields({"ts"}).tl().leap();
 auto ts = out.fields("ts");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(ts.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(ts.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(ts.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(ts.at(1)).host<bool>()[0];
 ```
 
 ### Output
@@ -68,8 +68,8 @@ auto rg = pluss::scribble::Registry({
 auto out = rg.fields({"ts"}).tl().leap();
 auto ts = out.fields("ts");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(ts.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(ts.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(ts.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(ts.at(1)).host<bool>()[0];
 ```
 
 ### Output

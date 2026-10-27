@@ -1,8 +1,0 @@
-# A direct call
-
-[Back to Mesh Adaptive Direct Search](../dfo_10_mesh_adaptive_search.md)
-
-
-@@example Numerical/optimization/guide/dfo/391_mads_standalone.cpp@@
-
-The default budget is 500 evaluations per variable, so this two-variable run stops after 1000 evaluations with `ReachedEvaluationBudget`, still some way from the minimum. Read the final frame size: when it is much larger than `mesh_tolerance`, the run was cut off, not finished. Raise `max_evaluations` (Program 2 does) and continue.

@@ -164,7 +164,7 @@ Slate fill_missing_for_alignment_(const Slate& source,
     return source;
   }
 
-  auto valid = detail::validity_mask(source)->to_vec<bool>();
+  auto valid = detail::validity_mask(source)->host<bool>();
   if (std::all_of(valid.begin(), valid.end(), [](bool v) { return v; })) {
     return detail::clear_validity_mask(source);
   }

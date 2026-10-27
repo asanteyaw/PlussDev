@@ -1,0 +1,43 @@
+# Large sparse models
+
+[Back to Linear Programming 4: Large Sparse Models](../linprog_04_large_sparse_models.md)
+
+The dense solver of the earlier chapters keeps every entry of the constraint matrix, which is the right design for many small related programs. A large real model is different: a transportation network, a production plan across plants and weeks, a supply chain with thousands of products. Most of its coefficients are zero, because each constraint mentions only a few variables. The sparse solver stores and factorises only the non-zeros.
+
+The page shows the three things you do with such a model. You **build** one (a transportation problem with 12 variables and 24 non-zeros), you **read** one (an MPS file, the standard exchange format, with its names, senses and bounds), and you **let presolve simplify it** before the solver sees it: a row with one variable becomes a bound, a variable with equal bounds is substituted out, an empty row is dropped, a row the bounds already guarantee is dropped. Presolve returns the same solution, faster.
+
+## Program 1: A transportation model
+
+Three warehouses ship to four shops. Every warehouse ships out exactly its stock, and every shop receives exactly its demand, so the model has 12 variables, 7 equality rows and 24 non-zeros: each shipment appears in one warehouse row and one shop row.
+
+@@example Numerical/optimization/guide/lp/214_sparse_model.cpp@@
+
+The cheapest plan costs 830. It ships 5 from warehouse 0 to shop 1 and 25 to shop 2, 20 from warehouse 1 to shop 0 and 5 to shop 2, and 20 and 25 from warehouse 2 to shops 1 and 3. Every shipment is a whole number, which is a property of transportation models: the constraint matrix is such that the optimal corners are integral, so there is no need for an integer program. The dense solver given the same data finds the same cost, 830.
+
+The prices of the rows are `6, 9, 9` for the warehouses and `0, 0, 4, -4` for the shops. Read them with one caution: because the total stock equals the total demand, one row is redundant, and the prices are determined only up to adding a constant to every warehouse price and subtracting it from every shop price. The *differences* are the meaningful part. Shops 2 and 3 (numbering from 0) are priced 4 and -4; raising the demand of shop 2 by one unit while lowering the demand of shop 3 by one raises the cost by 4 - (-4) = 8, which re-solving with the demands shifted confirms.
+
+## Program 2: A model from an MPS file
+
+Models usually arrive as MPS files. `read_mps` reads fixed or free format, with objective senses, ranges, bounds, and integer markers.
+
+@@example Numerical/optimization/guide/lp/215_mps_file.cpp@@
+
+The file is held in a string here and read through a stream; `read_mps_file(path)` reads from disk. The model has 3 rows, 2 columns and 6 non-zeros, and the names from the file come back with it. The file asks to *maximize*, and the reader returns the negated minimization with `negated_objective` set, so the program flips the sign back: the profit is 800, at 25 chairs (at their upper bound) and 10 tables. You can check it by hand: the 25 chairs use 75 of the 120 machine hours and 50 of the 100 labour hours, and the labour limit then allows 10 tables.
+
+## Program 3: What presolve removes
+
+Presolve simplifies the model before the solver sees it. It turns a row with one variable into a bound, substitutes out a variable whose bounds are equal, drops an empty row, and drops a row that the bounds already guarantee. The program builds a model with each of these hidden in it.
+
+@@example Numerical/optimization/guide/lp/216_presolve.cpp@@
+
+`lp::presolve` removes 3 of the 4 rows and 1 of the 5 columns, in 2 passes: the singleton row `x2 <= 4`, the empty row, the redundant row `x0 + x1 <= 100`, and the fixed column `x3 = 1`. The solution with presolve on and off is the same, objective 9 at `(5, 0, 0, 1, 0)`, and it is reported in the numbering of the original model, with all five columns, even though the solver worked on a model with one row. Leave presolve on. Turn it off only to diagnose a surprising result: if the answer changes, report it.
+
+## Decisions and pitfalls
+
+- **Transportation models have whole-number solutions.** The constraint matrix has a property that makes the optimum integral without asking.
+- **Prices are determined up to a constant on a redundant model.** When total stock equals total demand, one row is redundant, so the dual values are unique only up to adding a constant to the warehouse prices and subtracting it from the shop prices.
+- **An MPS file that asks to maximise comes back negated.** The reader returns the minimisation with a flag; read the sense before interpreting the objective.
+- **Sparse variables are non-negative by default.** The dense solver's are free; check the bounds when moving a model between them.
+- **Leave presolve on.** It changes the size of the problem and not the answer; turn it off only to debug.
+
+Where next: [Integer programming](../../milp.md) adds whole-number decisions.

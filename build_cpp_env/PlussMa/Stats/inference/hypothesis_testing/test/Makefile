@@ -207,6 +207,20 @@ gof_hypothesis_test/fast:
 .PHONY : gof_hypothesis_test/fast
 
 # Convenience name for target.
+PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/rule
+.PHONY : PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/rule
+
+# Convenience name for target.
+inference_reference_values_test: PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/rule
+.PHONY : inference_reference_values_test
+
+# fast build rule for target.
+inference_reference_values_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/build
+.PHONY : inference_reference_values_test/fast
+
+# Convenience name for target.
 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/rule
 .PHONY : PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/nonparametric_hypothesis_test.dir/rule
@@ -271,6 +285,30 @@ gof/gof_hypothesis_test.s: gof/gof_hypothesis_test.cpp.s
 gof/gof_hypothesis_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/gof_hypothesis_test.dir/gof/gof_hypothesis_test.cpp.s
 .PHONY : gof/gof_hypothesis_test.cpp.s
+
+nonparametric/inference_reference_values_test.o: nonparametric/inference_reference_values_test.cpp.o
+.PHONY : nonparametric/inference_reference_values_test.o
+
+# target to build an object file
+nonparametric/inference_reference_values_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/nonparametric/inference_reference_values_test.cpp.o
+.PHONY : nonparametric/inference_reference_values_test.cpp.o
+
+nonparametric/inference_reference_values_test.i: nonparametric/inference_reference_values_test.cpp.i
+.PHONY : nonparametric/inference_reference_values_test.i
+
+# target to preprocess a source file
+nonparametric/inference_reference_values_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/nonparametric/inference_reference_values_test.cpp.i
+.PHONY : nonparametric/inference_reference_values_test.cpp.i
+
+nonparametric/inference_reference_values_test.s: nonparametric/inference_reference_values_test.cpp.s
+.PHONY : nonparametric/inference_reference_values_test.s
+
+# target to generate assembly for a file
+nonparametric/inference_reference_values_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/build.make PlussMa/Stats/inference/hypothesis_testing/test/CMakeFiles/inference_reference_values_test.dir/nonparametric/inference_reference_values_test.cpp.s
+.PHONY : nonparametric/inference_reference_values_test.cpp.s
 
 nonparametric/nonparametric_hypothesis_test.o: nonparametric/nonparametric_hypothesis_test.cpp.o
 .PHONY : nonparametric/nonparametric_hypothesis_test.o
@@ -360,12 +398,16 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... gof_hypothesis_test"
+	@echo "... inference_reference_values_test"
 	@echo "... nonparametric_hypothesis_test"
 	@echo "... parametric_hypothesis_test"
 	@echo "... ts_hypothesis_bridge_test"
 	@echo "... gof/gof_hypothesis_test.o"
 	@echo "... gof/gof_hypothesis_test.i"
 	@echo "... gof/gof_hypothesis_test.s"
+	@echo "... nonparametric/inference_reference_values_test.o"
+	@echo "... nonparametric/inference_reference_values_test.i"
+	@echo "... nonparametric/inference_reference_values_test.s"
 	@echo "... nonparametric/nonparametric_hypothesis_test.o"
 	@echo "... nonparametric/nonparametric_hypothesis_test.i"
 	@echo "... nonparametric/nonparametric_hypothesis_test.s"

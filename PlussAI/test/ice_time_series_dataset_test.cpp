@@ -143,7 +143,7 @@ bool run_basic_windowing_checks(std::ostream* err = nullptr) {
   // window of group 0 must equal that group's base level (-1.0) exactly --
   // it's a per-group constant, unaffected by which window within the group
   // was sampled.
-  const auto static_flat = batch.static_inputs.to(pluss::pCPU, ScalarType::Float64).reshape({batch.static_inputs.numel()}).to_vec<double>();
+  const auto static_flat = batch.static_inputs.to(pluss::pCPU, ScalarType::Float64).reshape({batch.static_inputs.numel()}).host<double>();
   bool group0_base_ok = true;
   for (std::int64_t w = 0; w < windows_per_group; ++w) {
     const double base_value = static_flat[static_cast<std::size_t>(w * 2 + 1)]; // slot 1 == "base"
@@ -162,10 +162,10 @@ bool run_basic_windowing_checks(std::ostream* err = nullptr) {
   // most likely to have a subtle bug) wouldn't necessarily change any
   // shape or window count.
   const auto encoder_position =
-      batch.encoder_inputs.narrow_copy(2, 0, 1).to(pluss::pCPU, ScalarType::Float64).reshape({expected_size, kEncoderLength}).to_vec<double>();
+      batch.encoder_inputs.narrow_copy(2, 0, 1).to(pluss::pCPU, ScalarType::Float64).reshape({expected_size, kEncoderLength}).host<double>();
   const auto decoder_position =
-      batch.decoder_inputs.narrow_copy(2, 0, 1).to(pluss::pCPU, ScalarType::Float64).reshape({expected_size, kDecoderLength}).to_vec<double>();
-  const auto target_flat = batch.target.to(pluss::pCPU, ScalarType::Float64).reshape({expected_size, kDecoderLength}).to_vec<double>();
+      batch.decoder_inputs.narrow_copy(2, 0, 1).to(pluss::pCPU, ScalarType::Float64).reshape({expected_size, kDecoderLength}).host<double>();
+  const auto target_flat = batch.target.to(pluss::pCPU, ScalarType::Float64).reshape({expected_size, kDecoderLength}).host<double>();
 
   for (std::int64_t s = 0; s < kEncoderLength; ++s) {
     const double expected = static_cast<double>(s) / 19.0;
@@ -308,7 +308,7 @@ bool run_categorical_vocabulary_checks(std::ostream* err = nullptr) {
   const auto static_flat = held_out_dataset.batch()
                                 .static_inputs.to(pluss::pCPU, ScalarType::Float64)
                                 .reshape({held_out_dataset.batch().static_inputs.numel()})
-                                .to_vec<double>();
+                                .host<double>();
   const double unknown_code = static_cast<double>(vocab.categories.size() - 1);
   bool all_unknown = true;
   for (std::size_t w = 0; w < static_cast<std::size_t>(held_out_dataset.size()); ++w) {

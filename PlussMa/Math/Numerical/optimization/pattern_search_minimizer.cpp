@@ -83,7 +83,7 @@ double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
     ::pluss::throw_error(std::string(op) + ": expected scalar Series");
   }
-  return x.to(ScalarType::Float64).item<double>();
+  return x.to(ScalarType::Float64).host<double>().front();
 }
 
 std::vector<double> flatten_real_series(
@@ -97,7 +97,7 @@ std::vector<double> flatten_real_series(
     ::pluss::throw_error(std::string(op) + ": " + name + " must be real");
   }
   const Series flat = x.reshape({x.numel()}).to(pluss::pCPU, ScalarType::Float64);
-  return flat.to_vec<double>();
+  return flat.host<double>();
 }
 
 NonlinearSnapshot evaluate_nonlinear_snapshot(
@@ -297,8 +297,8 @@ BoundsPack prepare_bounds(
   bounds.enabled = true;
   bounds.lower = flat_lower;
   bounds.upper = flat_upper;
-  bounds.lower_host = flat_lower.to(ScalarType::Float64).to_vec<double>();
-  bounds.upper_host = flat_upper.to(ScalarType::Float64).to_vec<double>();
+  bounds.lower_host = flat_lower.to(ScalarType::Float64).host<double>();
+  bounds.upper_host = flat_upper.to(ScalarType::Float64).host<double>();
   return bounds;
 }
 
@@ -339,8 +339,8 @@ LinearConstraints prepare_linear_constraints(
     }
     out.has_ineq = m > 0;
     out.n_ineq = m;
-    out.a_ineq = cfg.linear_ineq_matrix.reshape({m * n}).to(ScalarType::Float64).to_vec<double>();
-    out.b_ineq = rhs.to_vec<double>();
+    out.a_ineq = cfg.linear_ineq_matrix.reshape({m * n}).to(ScalarType::Float64).host<double>();
+    out.b_ineq = rhs.host<double>();
   }
 
   const bool has_eq_matrix = cfg.linear_eq_matrix.defined();
@@ -359,8 +359,8 @@ LinearConstraints prepare_linear_constraints(
     }
     out.has_eq = m > 0;
     out.n_eq = m;
-    out.a_eq = cfg.linear_eq_matrix.reshape({m * n}).to(ScalarType::Float64).to_vec<double>();
-    out.b_eq = rhs.to_vec<double>();
+    out.a_eq = cfg.linear_eq_matrix.reshape({m * n}).to(ScalarType::Float64).host<double>();
+    out.b_eq = rhs.host<double>();
   }
 
   return out;
@@ -446,7 +446,7 @@ double max_inequality_violation(const Series& ineq) {
     return std::numeric_limits<double>::infinity();
   }
   double max_v = 0.0;
-  for (const double v : ineq.to(ScalarType::Float64).reshape({ineq.numel()}).to_vec<double>()) {
+  for (const double v : ineq.to(ScalarType::Float64).reshape({ineq.numel()}).host<double>()) {
     if (!std::isfinite(v)) {
       return std::numeric_limits<double>::infinity();
     }
@@ -463,7 +463,7 @@ double max_equality_violation(const Series& eq) {
     return std::numeric_limits<double>::infinity();
   }
   double max_v = 0.0;
-  for (const double v : eq.to(ScalarType::Float64).reshape({eq.numel()}).to_vec<double>()) {
+  for (const double v : eq.to(ScalarType::Float64).reshape({eq.numel()}).host<double>()) {
     if (!std::isfinite(v)) {
       return std::numeric_limits<double>::infinity();
     }
@@ -1675,7 +1675,7 @@ PSOutcome pattern_search_minimizer(
       const std::vector<double> x_outer = inner_out.minimizer
           .reshape({inner_out.minimizer.numel()})
           .to(ScalarType::Float64)
-          .to_vec<double>();
+          .host<double>();
       const bool primal_ok = cv <= config.constraint_tolerance;
       const bool step_small = !prev_outer_x.empty() &&
           (l2_norm_diff(x_outer, prev_outer_x) <=
@@ -1748,7 +1748,7 @@ PSOutcome pattern_search_minimizer(
   double mesh = std::min(config.initial_mesh_size, config.max_mesh_size);
   double penalty = config.initial_penalty;
 
-  std::vector<double> incumbent = setup.flat_initial.to(ScalarType::Float64).to_vec<double>();
+  std::vector<double> incumbent = setup.flat_initial.to(ScalarType::Float64).host<double>();
   project_to_bounds(&incumbent, bounds);
   restore_linear_feasibility(&incumbent, linear, bounds, config.constraint_tolerance);
 

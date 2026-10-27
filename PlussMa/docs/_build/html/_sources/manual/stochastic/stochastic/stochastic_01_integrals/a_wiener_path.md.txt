@@ -26,13 +26,13 @@ int main() {
   for (const std::int64_t steps : {10, 100, 1000, 10000}) {
     const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, steps, /*seed=*/2024);
     const pluss::Series qv = path.w.antidiff().quadratic_variation(0);
-    const auto v = qv.to_vec<double>();
+    const auto v = qv.host<double>();
     std::cout << std::setw(5) << steps << "   " << v[0] << "   " << v[1] << "   " << v[2] << "\n";
   }
 
   const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, 1000, /*seed=*/2024);
   std::cout << "\nsamples per path: " << path.w.size(0) << " (steps + 1), batch shape [" << path.w.size(1) << "]\n";
-  std::cout << "first sample is the start: " << path.w.select(0, 0).to_vec<double>()[0] << "\n";
+  std::cout << "first sample is the start: " << path.w.select(0, 0).host<double>()[0] << "\n";
   return 0;
 }
 ```

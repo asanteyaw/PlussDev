@@ -2,50 +2,33 @@
 
 # Optima 7: Derivatives
 
-Every algorithm in this guide follows gradients. The objective's gradient says which way is downhill, the constraints' Jacobians say how the constraints move, and the exact curvature models need second derivatives. This chapter is about where those derivatives come from. After it you can supply them in the form that suits your function, check a hand-written derivative before it costs you a wrong answer, call the derivative tools on their own, count what each choice costs, and choose forward mode for the long loops where a tape is a burden.
+Every algorithm in this guide follows gradients. The objective's gradient says which way is downhill, the constraints' Jacobians say how the constraints move, and the exact curvature models need second derivatives. This chapter is about where those derivatives come from. After it you can supply them in the form that suits your function, check a hand-written derivative before it costs you a wrong answer, call the derivative tools on their own, count what each choice costs, and choose `fwd_objective` for the long loops where a tape is a burden.
 
 Every program is complete and its output is the output of that program.
 
 ## The mental model
 
-You write the function; the library supplies the derivative, or you supply it yourself. There are four ways to hand over an objective, and the constraints have the same choices.
+You write the function; the library supplies the derivative, or you supply it yourself. There are three ways to hand over an objective, and the constraints have the same choices.
 
 | Form | You write | The derivative comes from | Use it when |
 |---|---|---|---|
-| `autodiff` | the function, on `Trace` values | reverse mode, recorded on a tape | the default: any function, any number of variables |
-| `autodiff_dual` | the same function, on `DualTrace` values | forward-over-reverse (Hessian-vector products) | you want exact curvature (chapter 6) |
+| `autodiff` | the function, on `Series` values | reverse mode, recorded on a tape; differentiated again for exact curvature | the default: any function, any number of variables |
 | `analytic` | the value and the gradient | you | the derivative is simple, or already known |
 | `fwd_objective` | the function, on `Fwd<N>` values | forward mode in plain doubles | a long scalar loop with few parameters |
 
-`autodiff` and `autodiff_dual` are the same function written once, as a template over the number type, and handed over twice. `analytic` and `fwd_objective` fill the same slot, `objective.analytic`; when `analytic` is set it takes precedence over `autodiff` for the gradient.
+The exact curvature models of chapter 6 differentiate the `autodiff` function a second time, so the one function serves both gradients and curvature. `analytic` and `fwd_objective` fill the same slot, `objective.analytic`; when `analytic` is set it takes precedence over `autodiff` for the gradient.
 
 All of these describe the function and its derivative at a point. None of them changes what the algorithm does with them, so a correct derivative in any form gives the same run.
 
 ## Supplying derivatives
 
-- [The same problem, three ways](optima_07_derivatives/the_same_problem_three_ways.md)
-
-## Checking a derivative
-
-- [The audit](optima_07_derivatives/the_audit.md)
-- [Analytic constraints and their audit](optima_07_derivatives/analytic_constraints_and_their_audit.md)
-
-## The derivative tools
-
-- [Gradients, Jacobians and products on their own](optima_07_derivatives/gradients_jacobians_and_products_on_their_own.md)
-
-## What it costs
-
-- [Counting the calls](optima_07_derivatives/counting_the_calls.md)
-
-## Long loops
-
-- [Long loops without a tape](optima_07_derivatives/long_loops_without_a_tape.md)
+- [Automatic, analytic and audited derivatives](optima_07_derivatives/automatic_analytic_and_audited_derivatives.md)
+- [Derivative tools, call counts and long loops](optima_07_derivatives/derivative_tools_and_costs.md)
 
 ## What to remember
 
-- Four forms hand over an objective: `autodiff`, `autodiff_dual`, `analytic`, `fwd_objective`. The algorithms do not care which; the same derivative gives the same run.
-- Write `autodiff` and `autodiff_dual` once, as a template over the number type.
+- Three forms hand over an objective: `autodiff`, `analytic`, `fwd_objective`. The algorithms do not care which; the same derivative gives the same run.
+- Write `autodiff` once, on plain `Series`; exact curvature needs no second callback.
 - Audit every hand-written derivative with `audit_optima_derivatives`. A wrong gradient does not fail loudly: it shows up as `NoProgress`.
 - An analytic constraint returns Jacobian blocks of shape `[constraints, block size]`, and may leave a residual kind it does not have undefined.
 - `grad`, `jacrev`, `jacfwd`, `jvp` and `hvp` are available on their own.
@@ -57,11 +40,7 @@ All of these describe the function and its derivative at a point. None of them c
 :maxdepth: 2
 :hidden:
 
-optima_07_derivatives/the_same_problem_three_ways
-optima_07_derivatives/the_audit
-optima_07_derivatives/analytic_constraints_and_their_audit
-optima_07_derivatives/gradients_jacobians_and_products_on_their_own
-optima_07_derivatives/counting_the_calls
-optima_07_derivatives/long_loops_without_a_tape
+optima_07_derivatives/automatic_analytic_and_audited_derivatives
+optima_07_derivatives/derivative_tools_and_costs
 ```
 <!-- apiref:toctree:end -->

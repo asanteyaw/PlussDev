@@ -1,8 +1,0 @@
-# A first root
-
-[Back to Root Finding: Solving Equations](../roots_01_solving_equations.md)
-
-
-@@example Numerical/optimization/guide/roots/501_first_root.cpp@@
-
-No tolerance was set, so all 100 bisection steps ran; the residual of 3.6e-15 is the rounding floor of the function near the root. With a tolerance the same answer takes far fewer steps (Program 4).

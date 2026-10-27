@@ -4,6 +4,18 @@
 
 [Back to ARIMA Models](../ts_02_arima_models.md)
 
+Before an ARIMA model can be fitted you must say how many autoregressive terms (`p`), moving-average terms (`q`) and differences (`d`) it has. Two sources of evidence help. The ACF and PACF of [Chapter 1](../ts_01_describing_a_series/acf_and_pacf.md) *propose* orders from the shape of the dependence, and the unit-root tests choose `d`. Information criteria then *compare* the candidate models by how well they fit, after charging each model for the parameters it uses. This page covers the comparison, and tests how reliable it is.
+
+A model with more parameters always fits the sample at least as well: the maximised log-likelihood never decreases when a term is added. Choosing the largest likelihood therefore always picks the largest model, and the largest model fits the noise. An information criterion subtracts a penalty for each parameter:
+
+- Akaike's criterion, `AIC = −2 loglik + 2k`, penalises each parameter by 2,
+- Schwarz's criterion, `BIC = −2 loglik + k log n`, penalises each by `log n`, which is heavier once `n` exceeds about 8.
+
+Smaller is better for both. `k` counts every estimated parameter (here `p + q` plus the mean and the innovation variance, which are the same for all candidates, so they do not affect the comparison). `ArimaFit::loglik(y)` supplies the likelihood of each fitted candidate.
+
+## A grid of candidates
+
+The program fits every ARMA(p, q) with `p` and `q` from 0 to 2 to 200 observations of an AR(1) and prints the criteria, marking the winner of each.
 
 ```cpp
 #include <pluss/ma.h>
@@ -11,80 +23,141 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
-#include <vector>
 
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-// A reproducible pseudo-random sequence in (-0.5, 0.5): e_t = frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5, t = 1, 2, ...
-std::vector<double> noise(int n) {
-  std::vector<double> e(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    e[static_cast<std::size_t>(i)] = u - 0.5;
-  }
-  return e;
-}
-// AR(1): x_t = phi x_{t-1} + e_t
-std::vector<double> ar1(int n, double phi) {
-  auto e = noise(n);
-  std::vector<double> x(static_cast<std::size_t>(n));
-  double carry = 0.0;
-  for (int i = 0; i < n; ++i) { carry = phi * carry + e[static_cast<std::size_t>(i)]; x[static_cast<std::size_t>(i)] = carry; }
-  return x;
-}
-std::vector<double> running_sum(const std::vector<double>& e) {
-  std::vector<double> w(e.size());
-  double s = 0.0;
-  for (std::size_t i = 0; i < e.size(); ++i) { s += e[i]; w[i] = s; }
-  return w;
-}
-void print_row(const char* label, const Series& s, int precision = 4) {
-  std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
-  std::cout << "\n";
-}
 int main() {
-  const Series y = vec(ar1(200, 0.7));
-  const double n = 200.0;
-  std::cout << std::left << std::setw(6) << "p" << std::setw(6) << "q" << std::setw(12) << "loglik" << std::setw(10) << "AIC" << "BIC\n";
-  double best_aic = 1e300, best_bic = 1e300;
-  int a_p = 0, a_q = 0, b_p = 0, b_q = 0;
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::ArimaFit truth;
+  truth.ar = {0.7};
+  const int n = 200;
+  const Series y = truth.simulate(n, f64, /*seed=*/16);
+
+  struct Row { int p, q; double ll, aic, bic; };
+  Row rows[9];
+  int idx = 0;
   for (int p = 0; p <= 2; ++p) {
     for (int q = 0; q <= 2; ++q) {
       ts::ArimaOptions o;
       o.ar_order = p;
       o.ma_order = q;
-      const auto fit = ts::Arima::fit_mle(y, o);
+      const auto fit = ts::Arima::fit_mle(y, o, f64);
       const double ll = fit.loglik(y), k = p + q + 2.0;
-      const double aic = -2.0 * ll + 2.0 * k, bic = -2.0 * ll + k * std::log(n);
-      std::cout << std::left << std::setw(6) << p << std::setw(6) << q << std::fixed << std::setprecision(3) << std::setw(12) << ll << std::setprecision(2) << std::setw(10) << aic << bic << "\n";
-      if (aic < best_aic) { best_aic = aic; a_p = p; a_q = q; }
-      if (bic < best_bic) { best_bic = bic; b_p = p; b_q = q; }
+      rows[idx++] = {p, q, ll, -2.0 * ll + 2.0 * k, -2.0 * ll + k * std::log(static_cast<double>(n))};
     }
   }
-  std::cout << "\nlowest AIC: (" << a_p << ", " << a_q << "), lowest BIC: (" << b_p << ", " << b_q << ")\n";
+  int best_aic = 0, best_bic = 0;
+  for (int i = 1; i < 9; ++i) {
+    if (rows[i].aic < rows[best_aic].aic) best_aic = i;
+    if (rows[i].bic < rows[best_bic].bic) best_bic = i;
+  }
+  std::cout << std::left << std::setw(4) << "p" << std::setw(4) << "q" << std::setw(11) << "loglik" << std::setw(10) << "AIC" << std::setw(10) << "BIC" << "\n";
+  for (int i = 0; i < 9; ++i) {
+    std::cout << std::left << std::setw(4) << rows[i].p << std::setw(4) << rows[i].q << std::fixed << std::setprecision(3) << std::setw(11) << rows[i].ll
+              << std::setprecision(2) << std::setw(10) << rows[i].aic << std::setw(10) << rows[i].bic << (i == best_aic ? " <- AIC" : "") << (i == best_bic ? " <- BIC" : "") << "\n";
+  }
 }
 ```
 
 Output
 
 ```text
-p     q     loglik      AIC       BIC
-0     0     -87.431     178.86    185.46
-0     1     -45.337     96.67     106.57
-0     2     -40.114     88.23     101.42
-1     0     -32.347     70.69     80.59
-1     1     -32.040     72.08     85.27
-1     2     -28.368     66.74     83.23
-2     0     -32.214     72.43     85.62
-2     1     -31.330     72.66     89.15
-2     2     -28.039     68.08     87.87
-
-lowest AIC: (1, 2), lowest BIC: (1, 0)
+p   q   loglik     AIC       BIC       
+0   0   -331.978   667.96    674.55    
+0   1   -291.867   589.73    599.63    
+0   2   -283.054   574.11    587.30    
+1   0   -283.760   573.52    583.42     <- BIC
+1   1   -281.978   571.96    585.15     <- AIC
+1   2   -281.916   573.83    590.32    
+2   0   -282.007   572.01    585.21    
+2   1   -281.954   573.91    590.40    
+2   2   -281.716   575.43    595.22    
 ```
-The two criteria need not agree. Here Akaike's picks ARMA(1, 2) and Schwarz's picks AR(1), the model that generated the series. Akaike's criterion penalises each parameter by 2 and tends to choose larger models; Schwarz's penalty of log n is heavier and favours the true order as the sample grows. When they disagree, prefer the smaller model unless the residual checks of Program 4 say otherwise.
+
+Read the likelihood column first. It falls steeply from white noise (−332) to the first useful term (−284 for the AR(1)), which is the real signal. Adding an MA(1) to the AR(1) raises it by 1.8, just over the penalty of 1 that Akaike's criterion charges (the AIC changes by `−2 × 1.8 + 2 = −1.6`), so Akaike's criterion picks the ARMA(1,1) by a margin of 1.6, while Schwarz's criterion, whose penalty for one more parameter is `log 200 = 5.3`, keeps the AR(1), the model that generated the data. Every term beyond that adds less than 0.1. This is the usual picture: the criteria agree on the first terms and disagree where the likelihood gain is marginal. A 1.6-point difference is not a decision, and the usual advice is to prefer the smaller model unless the residual checks ([Checking the residuals](checking_the_residuals.md)) say it is not enough.
+
+## How often does the criterion pick the right model?
+
+One sample cannot tell you how reliable a criterion is, but a simulation can: generate many series from a known model, apply the procedure to each and count. The program draws 30 series from each of three true models (an AR(1), an AR(2) and an MA(1)), fits the same nine candidates to each, and reports how often each criterion recovers the true orders exactly. Two sample sizes show how the answer changes with data.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+struct Pick { int p, q; };
+
+// The (p, q) with the smallest AIC and the one with the smallest BIC; each candidate is fitted once.
+std::pair<Pick, Pick> choose(const Series& y, int n, const pluss::Config& cfg) {
+  Pick best_aic{0, 0}, best_bic{0, 0};
+  double min_aic = 1e300, min_bic = 1e300;
+  for (int p = 0; p <= 2; ++p) {
+    for (int q = 0; q <= 2; ++q) {
+      ts::ArimaOptions o;
+      o.ar_order = p;
+      o.ma_order = q;
+      const double ll = ts::Arima::fit_mle(y, o, cfg).loglik(y), k = p + q + 2.0;
+      const double aic = -2.0 * ll + 2.0 * k, bic = -2.0 * ll + k * std::log(static_cast<double>(n));
+      if (aic < min_aic) { min_aic = aic; best_aic = {p, q}; }
+      if (bic < min_bic) { min_bic = bic; best_bic = {p, q}; }
+    }
+  }
+  return {best_aic, best_bic};
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  struct Case { const char* name; std::vector<double> ar, ma; int p, q; };
+  const Case cases[] = {{"AR(1) 0.7", {0.7}, {}, 1, 0}, {"AR(2) 0.5, 0.3", {0.5, 0.3}, {}, 2, 0}, {"MA(1) 0.6", {}, {0.6}, 0, 1}};
+
+  const int reps = 30;
+  std::cout << std::left << std::setw(16) << "true model" << std::right << std::setw(6) << "n" << std::setw(12) << "AIC right" << std::setw(12) << "BIC right" << "\n";
+  for (const auto& c : cases) {
+    for (int n : {100, 400}) {
+      ts::ArimaFit truth;
+      truth.ar = c.ar;
+      truth.ma = c.ma;
+      int aic_ok = 0, bic_ok = 0;
+      for (int r = 0; r < reps; ++r) {
+        const Series y = truth.simulate(n, f64, /*seed=*/500 + r);
+        const auto [a, b] = choose(y, n, f64);
+        aic_ok += (a.p == c.p && a.q == c.q);
+        bic_ok += (b.p == c.p && b.q == c.q);
+      }
+      std::cout << std::left << std::setw(16) << c.name << std::right << std::setw(6) << n << std::fixed << std::setprecision(2) << std::setw(12)
+                << static_cast<double>(aic_ok) / reps << std::setw(12) << static_cast<double>(bic_ok) / reps << "\n";
+    }
+  }
+}
+```
+
+Output
+
+```text
+true model           n   AIC right   BIC right
+AR(1) 0.7          100        0.70        0.90
+AR(1) 0.7          400        0.67        0.97
+AR(2) 0.5, 0.3     100        0.37        0.43
+AR(2) 0.5, 0.3     400        0.70        0.90
+MA(1) 0.6          100        0.50        0.77
+MA(1) 0.6          400        0.77        0.93
+```
+
+With 30 replications each fraction carries an error of up to about 0.09, so read the pattern, not the second digit. Schwarz's criterion recovers the exact orders more often at both sample sizes (for example 0.90 against 0.70 for the AR(1) with 100 observations), and its rate rises with the sample (0.90 to 0.97) because its penalty grows with `log n` and eventually rules out any extra term. Akaike's criterion does not improve in the same way for the AR(1) (0.70, then 0.67): it keeps a roughly constant tendency to add a term, so it cannot reach certainty, although it loses less when the truth is complicated and the sample is short. For every model and sample size the success rate is below 1, and for the AR(2) at 100 observations neither criterion gets it right even half the time: **a criterion ranks candidates, it does not identify the truth**, so combine it with the residual checks and with knowledge about the data.
+
+## Decisions and pitfalls
+
+- **Choose `d` first.** Likelihoods are comparable only across models fitted to the *same* series, so decide the amount of differencing from the unit-root tests ([Chapter 1](../ts_01_describing_a_series/white_noise_unit_roots_stationarity.md)) before comparing `p` and `q`. Never compare the criteria of models with different `diff_order`.
+- **Keep the grid small and meaningful.** Searching a large grid raises the chance that a spurious model wins; let the ACF and PACF limit it.
+- **Close competitors are a tie.** A difference of a point or two in the criterion is not a decision; take the simpler model.
+- **Check the winner.** A model chosen by a criterion can still leave structure in the residuals.
+
+Where next: [Checking the residuals](checking_the_residuals.md) tests whether the chosen model has captured the dependence.

@@ -40,7 +40,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n) {
@@ -75,7 +75,7 @@ int main() {
   const Series y = pluss::make_series(trending(40), {40, 1}, f64);
   const auto fit = ts::Ssm::filter(y, trend_model(0.2, 0.05, 0.3));
   for (int t : {0, 5, 20, 39}) {
-    const auto x = fit.filtered_states.select(0, t).to_vec<double>();
+    const auto x = fit.filtered_states.select(0, t).host<double>();
     std::cout << std::fixed << std::setprecision(3) << "t = " << t << "  level " << x[0] << "  slope " << x[1] << "\n";
   }
   std::cout << "log-likelihood " << fit.loglik << "\n";

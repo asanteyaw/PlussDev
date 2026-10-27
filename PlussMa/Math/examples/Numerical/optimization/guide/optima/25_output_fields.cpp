@@ -8,15 +8,15 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  auto objective = [](const optim::Trace& x) { return optim::sum(optim::square(x - 3.0)); };
+  auto objective = [](const pluss::Series& x) { return (x - 3.0).square().sum(); };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
 
   const auto r = optim::optima(objective, vec({0.0, 0.0}), {}, disc);
   const auto& o = r.output;

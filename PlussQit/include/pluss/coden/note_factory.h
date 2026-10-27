@@ -1480,7 +1480,7 @@ inline pluss::Note select_note_impl(std::string_view where,
     const bool cond_scalar = select_scalar_like(cond);
     const bool choice_scalar = select_scalar_like(choice);
     const auto choice_flat = choice.vector();
-    const auto mask_flat = cond.reshape({cond.numel()}).to_vec<bool>();
+    const auto mask_flat = cond.reshape({cond.numel()}).host<bool>();
 
     for (std::int64_t linear = 0; linear < target_numel; ++linear) {
       const bool take_choice = mask_flat[cond_scalar ? 0 : static_cast<std::size_t>(linear)];

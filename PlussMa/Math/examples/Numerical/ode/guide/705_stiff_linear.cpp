@@ -32,7 +32,7 @@ int main() {
   const auto explicit_r = ode::fluxa(rhs, vec({1.0, 1.0}), 0.0, 1.0, {}, eo);
 
   auto show = [](const char* label, const ode::OdeResult& r) {
-    const auto y = r.y_final.to_vec<double>();
+    const auto y = r.y_final.host<double>();
     std::cout << std::left << std::setw(26) << label << std::setw(10) << r.steps << std::setw(12) << r.rejected_steps << std::scientific << std::setprecision(2)
               << std::abs(y[1] - std::exp(-1.0)) << "\n";
   };

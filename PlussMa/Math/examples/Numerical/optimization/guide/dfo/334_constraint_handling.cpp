@@ -36,7 +36,7 @@ int main() {
     o.mads.constraint_handling = m.h;
     o.mads.progressive_barrier_penalty = m.penalty;
     const auto r = dfo::DFO::solve(p, o);
-    const auto x = r.minimizer.to_vec<double>();
+    const auto x = r.minimizer.host<double>();
     const double violation = std::max(0.0, x[0] * x[0] + x[1] * x[1] - 1.0);
     std::cout << std::left << std::setw(20) << m.name << std::fixed << std::setprecision(4) << std::setw(12) << r.minimum
               << std::scientific << std::setprecision(1) << std::setw(14) << violation << std::defaultfloat

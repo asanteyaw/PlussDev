@@ -43,9 +43,9 @@ inline bool subset(const std::vector<std::uint64_t> &a, const std::vector<std::u
 inline Series elementary_modes(const Network &net, double tolerance = 1e-9, std::size_t max_modes = 2'000'000) {
   validate(net);
   const std::int64_t m = net.stoichiometry.size(0), r = net.stoichiometry.size(1);
-  const auto s_host = net.stoichiometry.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
-  const auto lo = net.lower.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
-  const auto hi = net.upper.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  const auto s_host = net.stoichiometry.to(pluss::ScalarType::Float64).contiguous().host<double>();
+  const auto lo = net.lower.to(pluss::ScalarType::Float64).contiguous().host<double>();
+  const auto hi = net.upper.to(pluss::ScalarType::Float64).contiguous().host<double>();
   dynamics::require(net.lower.dim() == 1, "elementary_modes: bounds must be [r]");
   // split: columns of the irreversible network and their origin (reaction, sign)
   std::vector<std::int64_t> origin;
@@ -266,8 +266,8 @@ inline Sample sample_fluxes(const Network &net, std::int64_t chains, std::int64_
   dynamics::require(options.bound_cap > 0.0 && options.infinity_threshold > 0.0, "sample_fluxes: bound_cap and infinity_threshold must be positive");
   const std::int64_t m = net.stoichiometry.size(0), r = net.stoichiometry.size(1);
   const Config cfg = Config{}.with_dtype(pluss::ScalarType::Float64);
-  auto lo = net.lower.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
-  auto hi = net.upper.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  auto lo = net.lower.to(pluss::ScalarType::Float64).contiguous().host<double>();
+  auto hi = net.upper.to(pluss::ScalarType::Float64).contiguous().host<double>();
   std::int64_t truncated = 0;
   for (std::int64_t j = 0; j < r; ++j) { // sentinels and infinities -> +-bound_cap
     auto &l = lo[static_cast<std::size_t>(j)];
@@ -278,10 +278,10 @@ inline Sample sample_fluxes(const Network &net, std::int64_t chains, std::int64_
   }
   // reactions the network itself pins (blocked or implied equalities): one batched flux-variability solve on the truncated bounds
   Network capped = net;
-  capped.lower = pluss::make_series(lo, {r}).to(pluss::ScalarType::Float64);
-  capped.upper = pluss::make_series(hi, {r}).to(pluss::ScalarType::Float64);
+  capped.lower = pluss::make_series(std::vector<double>(lo.begin(), lo.end()), {r}).to(pluss::ScalarType::Float64);
+  capped.upper = pluss::make_series(std::vector<double>(hi.begin(), hi.end()), {r}).to(pluss::ScalarType::Float64);
   const auto fva = flux_variability(capped, pluss::series::zeros({r}, cfg), 0.0);
-  const auto fmin = fva.minimum.contiguous().to_vec<double>(), fmax = fva.maximum.contiguous().to_vec<double>();
+  const auto fmin = fva.minimum.contiguous().host<double>(), fmax = fva.maximum.contiguous().host<double>();
   std::vector<std::int64_t> fixed;
   std::vector<double> fixed_value(static_cast<std::size_t>(r), 0.0);
   for (std::int64_t j = 0; j < r; ++j) {
@@ -299,7 +299,7 @@ inline Sample sample_fluxes(const Network &net, std::int64_t chains, std::int64_
   c[static_cast<std::size_t>(r)] = -1.0;
   p.c = pluss::make_series(c, {r + 1}).to(pluss::ScalarType::Float64);
   std::vector<double> aeq(static_cast<std::size_t>((m + nf) * (r + 1)), 0.0), beq(static_cast<std::size_t>(m + nf), 0.0);
-  const auto s_host = net.stoichiometry.to(pluss::ScalarType::Float64).contiguous().to_vec<double>();
+  const auto s_host = net.stoichiometry.to(pluss::ScalarType::Float64).contiguous().host<double>();
   for (std::int64_t i = 0; i < m; ++i)
     for (std::int64_t j = 0; j < r; ++j) aeq[static_cast<std::size_t>(i * (r + 1) + j)] = s_host[static_cast<std::size_t>(i * r + j)];
   for (std::int64_t k = 0; k < nf; ++k) { aeq[static_cast<std::size_t>((m + k) * (r + 1) + fixed[static_cast<std::size_t>(k)])] = 1.0; beq[static_cast<std::size_t>(m + k)] = fixed_value[static_cast<std::size_t>(fixed[static_cast<std::size_t>(k)])]; }
@@ -334,13 +334,13 @@ inline Sample sample_fluxes(const Network &net, std::int64_t chains, std::int64_
     for (std::int64_t j = 0; j < r; ++j) a[static_cast<std::size_t>(i * r + j)] = s_host[static_cast<std::size_t>(i * r + j)];
   for (std::int64_t k = 0; k < nf; ++k) a[static_cast<std::size_t>((m + k) * r + fixed[static_cast<std::size_t>(k)])] = 1.0;
   const auto dec = pluss::subsp::linearalg::svd(pluss::make_series(a, {m + nf, r}).to(pluss::ScalarType::Float64), true);
-  const auto sv = dec.s.contiguous().to_vec<double>();
+  const auto sv = dec.s.contiguous().host<double>();
   std::int64_t rank = 0;
   for (double s : sv) if (s > 1e-9 * std::max(1.0, sv.empty() ? 1.0 : sv.front())) ++rank;
   const std::int64_t d = r - rank;
   dynamics::require(d >= 1, "sample_fluxes: the feasible set is a single point");
   const Series basis = dec.vh.slice(0, rank, r, 1);                       // [d, r] orthonormal rows spanning the nullspace
-  const Series lo_s = pluss::make_series(lo, {r}).to(pluss::ScalarType::Float64), hi_s = pluss::make_series(hi, {r}).to(pluss::ScalarType::Float64);
+  const Series lo_s = pluss::make_series(std::vector<double>(lo.begin(), lo.end()), {r}).to(pluss::ScalarType::Float64), hi_s = pluss::make_series(std::vector<double>(hi.begin(), hi.end()), {r}).to(pluss::ScalarType::Float64);
   const double big = 1e30;
   const Series lo_c = lo_s.clamp(-big, big), hi_c = hi_s.clamp(-big, big);
   Series v = v0.unsqueeze(0).expand({chains, r});

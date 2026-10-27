@@ -84,7 +84,7 @@ bool run_schedule_checks(std::ostream* err = nullptr) {
   const Series x = pluss::make_series(std::vector<double>{1.0, -1.0, 0.2, 0.7}, {2, 2}, cfg);
   const Series y0 = model->forward(x);
   const Series y1 = model.run<Series>(x);
-  if (!approx_vec(y0.to_vec<double>(), y1.to_vec<double>())) {
+  if (!approx_vec(y0.host<double>().array().data, y1.host<double>().array().data)) {
     if (err) *err << "forward/run mismatch\n";
     return false;
   }

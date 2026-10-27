@@ -1,0 +1,257 @@
+# `distr::Distribution` object
+
+One object for every family of `dst::Kind`: it holds the kind and parameters and offers density, distribution, random draws, a cumulant generating function, cumulants and maximum-likelihood fitting through one uniform surface. It covers all fifty-seven kind-based families, including those that also provide dedicated typed wrappers.
+
+## Signature
+
+```cpp
+distr::Distribution(dst::Kind kind, std::vector<double> params = {});
+distr::Distribution(dst::Kind kind, std::vector<pluss::Series> params);   // a different distribution at every point
+pluss::Series distr::Distribution::pdf(const pluss::Series& x) const;
+pluss::Series distr::Distribution::logpdf(const pluss::Series& x) const;
+pluss::Series distr::Distribution::cdf(const pluss::Series& x) const;
+pluss::Series distr::Distribution::logcdf(const pluss::Series& x) const;
+pluss::Series distr::Distribution::sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+pluss::Series distr::Distribution::sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+pluss::Series distr::Distribution::cgf(const pluss::Series& t) const;
+pluss::Series distr::Distribution::cumulant(std::int64_t order) const;
+distr::DistributionFit distr::Distribution::MLE(const pluss::Series& x, std::vector<double> start = {}) const;
+bool distr::Distribution::is_discrete() const noexcept;
+```
+
+## What It Does
+
+`distr::Distribution{dst::Gompertz, {0.8, 2.0}}` is the Gompertz distribution with those parameters, in the order its family page gives. The object works for every value of `dst::Kind`, including the families that have no class of their own; the [object based distributions](../object_based.md) that do have one (`distr::Normal`, `distr::Gamma`, ...) are separate and unchanged. `GaussianMixture` is not a kind, so it has its own object.
+
+- `pdf`, `logpdf`, `cdf`, `logcdf`, `sample` and `sample_like` call the kind-based functions, so they give exactly the numbers `distr::pdf(kind, x, params)` and the others give, and exactly the draws the family's own object gives.
+- `cgf(t)` and `cumulant(order)` are computed by numerical integration of the density over the distribution (a sum over the integers for a discrete family), not from a formula. They agree with the exact methods of the hand-written objects to about eight digits. The orders 1 to 6 are available. When the moment does not exist (the Cauchy distribution has no mean) or the tails are too heavy for the integration to settle, the call throws instead of returning a truncated number.
+- A check of every kind with the parameters on its family page, comparing the first two cumulants with the mean and variance of 400,000 draws, agrees for fifty of the fifty-seven. The other seven are refused for a reason that belongs to the distribution: the Alpha and Cauchy distributions have no mean, the Pareto, Lomax and Burr distributions with those parameters have a mean but no variance, and the Zeta and Yule distributions have tails so heavy that summing them needs more than four million terms. Pareto, Lomax, Burr, Zeta and Yule have dedicated objects ([`distr::Pareto`](Pareto.md), [`distr::Lomax`](Lomax.md), [`distr::Burr`](Burr.md), [`distr::Zeta`](Zeta.md), [`distr::Yule`](Yule.md)) whose cumulants are exact wherever they exist.
+- `MLE(x, start)` maximizes the log-likelihood by the Nelder-Mead method from `start` (the object's own parameters when `start` is empty), and returns a `DistributionFit` with the estimates, the log-likelihood, a covariance from the numerical Hessian, and standard errors and confidence intervals. Parameters that the family rejects count as an infinitely bad likelihood, so the search stays inside the valid region.
+- A constructor taking a `Series` for each parameter makes an object that stands for a different distribution at every point; only the four evaluation methods exist in that form.
+
+## Parameters
+
+`dst::Kind kind`
+: The family. The parameters of each family are listed on its page in the kind-based reference.
+
+`std::vector<double> params`
+: The parameters of the family, in the order its page gives.
+
+`std::vector<pluss::Series> params`
+: One `Series` for each parameter, all of one length (or one element each to broadcast).
+
+`const pluss::Series& x`
+: The points at which to evaluate, or the observed values to fit; the result has the same shape.
+
+`const pluss::Series& t`
+: The points at which to evaluate the cumulant generating function.
+
+`std::int64_t order`
+: The order of the cumulant, 1 to 6.
+
+`std::initializer_list<std::int64_t> sizes`, `pluss::Config cfg`, `std::uint64_t seed`
+: The shape and dtype of the draws and the seed of the stream; the same seed always gives the same draws.
+
+`std::vector<double> start`
+: The starting parameters of the fit.
+
+## Returns
+
+The evaluation methods return a `Series` of the shape of their argument, `sample` and `sample_like` the drawn `Series`, and `cumulant` a one-element `Series`. `MLE` returns a `DistributionFit` with the fields `kind`, `params`, `loglik`, `converged` and `iterations`, the covariance `vcov` (empty when the observed information is not positive definite at the estimate), and the methods `model()`, `stderr()` and `confint(level)`.
+
+## Errors
+
+- A parameter list the family rejects is refused when a method is called.
+- `cumulant`, `cgf`, `sample`, `sample_like` and `MLE` throw for an object whose parameters are Series.
+- `cumulant` throws for an order outside 1 to 6, and, with `cgf`, when the moment does not exist or the integration does not settle.
+- A discrete family whose tail needs more than four million terms (Zeta, Yule at heavy parameters) is refused by `cumulant` and `cgf`.
+- `MLE` throws when the starting parameters give a non-finite likelihood.
+
+## Methods
+
+- `pdf` -- the density (mass function) at each point.
+- `logpdf` -- the logarithm of the density.
+- `cdf` -- the distribution function.
+- `logcdf` -- the logarithm of the distribution function.
+- `sample` -- random draws of a given shape.
+- `sample_like` -- random draws with the shape and dtype of an existing Series.
+- `cgf` -- the cumulant generating function, by numerical integration.
+- `cumulant` -- the cumulant of a given order, by numerical integration.
+- `MLE` -- the maximum-likelihood fit with standard errors and intervals.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 uses a family that has no class of its own, the Gompertz distribution, through `distr::Distribution`: the density, the distribution function and the log-density on a grid, the first two cumulants, and a check of the cumulants against the mean and variance of a large sample.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const distr::Distribution d(dst::Gompertz, {0.8, 2.0});
+  const auto x = pluss::make_series({0.0, 0.25, 0.5, 1.0, 1.5, 2.5}, f64);
+
+  std::cout << "pdf:";
+  for (double v : d.pdf(x).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : d.cdf(x).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : d.logpdf(x).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+
+  const auto draws = d.sample({200000}, f64, 5ULL);
+  const double m = as_f64(draws.mean());
+  const double v = as_f64(((draws - m) * (draws - m)).mean());
+  std::cout << "cumulant(1), the mean: " << as_f64(d.cumulant(1)) << "   mean of 200000 draws: " << m << '\n';
+  std::cout << "cumulant(2), the variance: " << as_f64(d.cumulant(2)) << "   variance of the draws: " << v << '\n';
+}
+```
+
+### Example 2
+
+Example 2 compares the generic object with the hand-written one for the normal distribution: the densities are identical, and the cumulants and the cumulant generating function, which the generic object computes by integration, agree with the exact ones to about eight digits.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::scientific << std::setprecision(2);
+
+  const distr::Distribution generic(dst::Normal, {0.5, 1.5});
+  const distr::Normal exact{0.5, 1.5};
+  const auto x = pluss::make_series({-1.0, 0.0, 0.5, 2.0, 4.0}, f64);
+  const auto t = pluss::make_series({-0.3, 0.2, 0.7}, f64);
+
+  std::cout << "largest density difference: " << as_f64((generic.pdf(x) - exact.pdf(x)).abs().max()) << '\n';
+  std::cout << "largest cgf difference: " << as_f64((generic.cgf(t) - exact.cgf(t)).abs().max()) << '\n';
+  std::cout << std::fixed << std::setprecision(8);
+  for (int order = 1; order <= 4; ++order)
+    std::cout << "cumulant " << order << ": " << as_f64(generic.cumulant(order)) << " against " << as_f64(exact.cumulant(order)) << '\n';
+}
+```
+
+### Example 3
+
+Example 3 shows what the numerical moments do when a moment does not exist: the Cauchy distribution has no mean, and `cumulant` throws instead of returning a number that depends on where the integral was cut off. The density and the draws of the same object work as usual.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iostream>
+#include <string>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const distr::Distribution d(dst::Cauchy, {0.0, 1.0});
+
+  std::cout << "density at 0: " << as_f64(d.pdf(pluss::make_series(0.0, f64))) << '\n';
+  std::cout << "median of 1001 draws: " << as_f64(d.sample({1001}, f64, 3ULL).median()) << '\n';
+  try {
+    (void)d.cumulant(1);
+  } catch (const std::exception& e) {
+    const std::string message(e.what());
+    std::cout << "cumulant(1): " << message.substr(0, message.find(',')) << '\n';
+  }
+}
+```
+
+### Example 4
+
+Example 4 gives the object a `Series` for each parameter: one object stands for a different normal distribution at every point, and its density agrees with the single-distribution objects built one point at a time.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(6);
+
+  const auto mean = pluss::make_series({0.0, 1.0, 2.0}, f64);
+  const auto stddev = pluss::make_series({1.0, 2.0, 0.5}, f64);
+  const auto points = pluss::make_series({0.3, 0.3, 0.3}, f64);
+
+  const distr::Distribution many(dst::Normal, std::vector<pluss::Series>{mean, stddev});
+  std::cout << "one object:";
+  for (double v : many.pdf(points).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+
+  const double means[3] = {0.0, 1.0, 2.0}, sds[3] = {1.0, 2.0, 0.5};
+  std::cout << "one at a time:";
+  for (int i = 0; i < 3; ++i) {
+    const distr::Distribution one(dst::Normal, {means[i], sds[i]});
+    std::cout << ' ' << as_f64(one.pdf(pluss::make_series({0.3}, f64)));
+  }
+  std::cout << '\n';
+}
+```
+
+### Example 5
+
+Example 5 fits a family that has no hand-written fit, the Gompertz distribution, to 4000 draws by maximum likelihood from a rough starting point, and reads the estimates, their standard errors, the 95% intervals and the log-likelihood.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+
+  const auto x = distr::Distribution(dst::Gompertz, {0.8, 2.0}).sample({4000}, f64, 9ULL);
+  const auto fit = distr::Distribution(dst::Gompertz).MLE(x, {0.5, 1.5});
+
+  const auto se = fit.stderr();
+  const auto ci = fit.confint(0.95);
+  std::cout << "b: " << fit.params[0] << "  stderr " << se[0] << "  95% [" << ci[0].first << ", " << ci[0].second << "]\n";
+  std::cout << "c: " << fit.params[1] << "  stderr " << se[1] << "  95% [" << ci[1].first << ", " << ci[1].second << "]\n";
+  std::cout << "loglik: " << fit.loglik << "   converged: " << std::boolalpha << fit.converged << '\n';
+}
+```
+
+## Changelog
+
+- **0.1** -- one object for every `dst::Kind`: evaluation and sampling through the kind-based functions, numerical `cgf`, `cumulant` and `MLE`.
+
+## See Also
+
+- [`distr::Normal` object](Normal.md) -- a hand-written object, with exact cumulants and a fit.
+- [`distr::Gamma` object](Gamma.md)

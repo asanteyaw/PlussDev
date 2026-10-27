@@ -536,7 +536,7 @@ business.calendar.region = "CA-AB";
 business.calendar.holidays = {
     pluss::make_timeline("2024-01-03T00:00:00Z")
         .epoch_days()
-        .to_vec<std::int64_t>(0)};
+        .host<std::int64_t>().array().data.at(static_cast<std::size_t>(0))};
 
 auto business_days = start.tl().span(end, business);
 ```

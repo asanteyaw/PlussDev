@@ -103,8 +103,8 @@ void test_bs_mc_series_lane() {
 
   const auto out_mc = obj::price(inst, mdl, mkt, mc, cfg);
   const auto out_an = obj::price(inst, mdl, mkt, obj::pricer::Analytic{.with_greeks = false}, cfg);
-  const double mc_px = out_mc.price.reshape({1}).item<double>();
-  const double an_px = out_an.price.reshape({1}).item<double>();
+  const double mc_px = out_mc.price.reshape({1}).host<double>().front();
+  const double an_px = out_an.price.reshape({1}).host<double>().front();
 
   expect(std::isfinite(mc_px), "object bs mc: price must be finite");
   expect(std::abs(mc_px - an_px) < 0.08, "object bs mc: must be close to analytic price");
@@ -139,8 +139,8 @@ void test_heston_object_finite() {
   mc.options.seed = 5;
   const auto out_mc = obj::price(inst, mdl, mkt, mc, cfg);
 
-  expect(std::isfinite(out_fft.price.reshape({1}).item<double>()), "object heston fft: price must be finite");
-  expect(std::isfinite(out_mc.price.reshape({1}).item<double>()), "object heston mc: price must be finite");
+  expect(std::isfinite(out_fft.price.reshape({1}).host<double>().front()), "object heston fft: price must be finite");
+  expect(std::isfinite(out_mc.price.reshape({1}).host<double>().front()), "object heston mc: price must be finite");
 }
 
 void test_bates_fft_object_finite() {
@@ -168,7 +168,7 @@ void test_bates_fft_object_finite() {
   };
 
   const auto out_fft = obj::price(inst, mdl, mkt, obj::pricer::Fft{}, cfg);
-  expect(std::isfinite(out_fft.price.reshape({1}).item<double>()), "object bates fft: price must be finite");
+  expect(std::isfinite(out_fft.price.reshape({1}).host<double>().front()), "object bates fft: price must be finite");
 }
 
 void test_sabr_object_finite() {
@@ -204,8 +204,8 @@ void test_sabr_object_finite() {
   mc.options.seed = 7;
   const auto out_mc = obj::price(inst, mdl, mkt, mc, cfg);
 
-  expect(std::isfinite(out_an.price.reshape({1}).item<double>()), "object sabr analytic: price must be finite");
-  expect(std::isfinite(out_mc.price.reshape({1}).item<double>()), "object sabr mc: price must be finite");
+  expect(std::isfinite(out_an.price.reshape({1}).host<double>().front()), "object sabr analytic: price must be finite");
+  expect(std::isfinite(out_mc.price.reshape({1}).host<double>().front()), "object sabr mc: price must be finite");
 }
 
 void test_models_vectorized_overloads() {

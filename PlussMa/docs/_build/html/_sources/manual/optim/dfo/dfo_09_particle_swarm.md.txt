@@ -40,10 +40,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(objective, initial, Particle
 
 ## Programs
 
-- [A direct call](dfo_09_particle_swarm/a_direct_call.md)
-- [The parameters](dfo_09_particle_swarm/the_parameters.md)
-- [The differential-evolution variant](dfo_09_particle_swarm/the_differential_evolution_variant.md)
-- [Stopping and execution modes](dfo_09_particle_swarm/stopping_and_execution_modes.md)
+- [Particle swarm in practice](dfo_09_particle_swarm/particle_swarm_in_practice.md)
 
 ## Checklist
 
@@ -59,9 +56,6 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(objective, initial, Particle
 :maxdepth: 2
 :hidden:
 
-dfo_09_particle_swarm/a_direct_call
-dfo_09_particle_swarm/the_parameters
-dfo_09_particle_swarm/the_differential_evolution_variant
-dfo_09_particle_swarm/stopping_and_execution_modes
+dfo_09_particle_swarm/particle_swarm_in_practice
 ```
 <!-- apiref:toctree:end -->

@@ -39,7 +39,7 @@ TEST_CASE("stft covers real, complex, packed, batch, and reverse contracts",
   const auto complex_spectrum = complex.stft(
       4, 4, 4, pluss::series::undefined(), false, "constant", false, false, true);
   REQUIRE(complex_spectrum.sizes() == std::vector<std::int64_t>{4, 1});
-  REQUIRE(complex_spectrum.to_vec<Complex>()[0] == Complex{10.0, 0.0});
+  REQUIRE(complex_spectrum.host<Complex>()[0] == Complex{10.0, 0.0});
 
   signal.tracks_slope_(true);
   signal.stft(4, 2, 4, pluss::series::undefined(), true,
@@ -61,7 +61,7 @@ TEST_CASE("sum_to_size reverses broadcasting and remains differentiable",
                .reshape({2, 3, 4});
   const auto reduced = x.sum_to_size({1, 3, 1});
   REQUIRE(reduced.sizes() == std::vector<std::int64_t>{1, 3, 1});
-  REQUIRE(reduced.to_vec<double>() == std::vector<double>{68.0, 100.0, 132.0});
+  REQUIRE(reduced.host<double>() == std::vector<double>{68.0, 100.0, 132.0});
   REQUIRE(x.sum_to_size({}).item<double>() == Approx(300.0));
   REQUIRE(x.sum_to_size({2, 3, 4}).allclose(x));
 
@@ -77,20 +77,20 @@ TEST_CASE("sum_to_size reverses broadcasting and remains differentiable",
 TEST_CASE("threshold preserves exact branch and in-place contracts",
           "[series][threshold][threshold_][final-teachings]") {
   auto x = pluss::make_series({-1.0, 0.0, 0.5, 1.0});
-  REQUIRE(x.threshold(0.5, -9.0).to_vec<double>() ==
+  REQUIRE(x.threshold(0.5, -9.0).host<double>() ==
           std::vector<double>{-9.0, -9.0, -9.0, 1.0});
-  REQUIRE(pluss::make_series({-1, 0, 1}).threshold(-0.5, 9.5).to_vec<std::int64_t>() ==
+  REQUIRE(pluss::make_series({-1, 0, 1}).threshold(-0.5, 9.5).host<std::int64_t>() ==
           std::vector<std::int64_t>{9, 0, 1});
 
   auto changed = x.clone();
   auto* address = &changed;
   auto& returned = changed.threshold_(0.0, 7.0);
   REQUIRE(&returned == address);
-  REQUIRE(changed.to_vec<double>() == std::vector<double>{7.0, 7.0, 0.5, 1.0});
+  REQUIRE(changed.host<double>() == std::vector<double>{7.0, 7.0, 0.5, 1.0});
 
   x.tracks_slope_(true);
   x.threshold(0.5, -9.0).sum().reverse();
-  REQUIRE(x.sensitivity().to_vec<double>() ==
+  REQUIRE(x.sensitivity().host<double>() ==
           std::vector<double>{0.0, 0.0, 0.0, 1.0});
 
   REQUIRE_THROWS(pluss::make_series({true, false}).threshold(0.0, 1.0));
@@ -126,19 +126,19 @@ TEST_CASE("unwrap applies modular correction per selected axis",
   auto phase = pluss::make_series({0.0, 1.0, 2.0, 4.0, -2.0, 0.0});
   const auto expected = std::vector<double>{0.0, 1.0, 2.0, 4.0,
                                             -2.0 + 2.0 * pi, 2.0 * pi};
-  const auto actual = phase.unwrap().to_vec<double>();
+  const auto actual = phase.unwrap().host<double>();
   for (std::size_t i = 0; i < actual.size(); ++i)
     REQUIRE(actual[i] == Approx(expected[i]).margin(1e-12));
   REQUIRE(phase.unwrap(0.5).allclose(phase.unwrap(pi), 1e-12, 1e-12));
 
-  const auto multi = pluss::make_series({0.0, 13.0, -13.0}).unwrap().to_vec<double>();
+  const auto multi = pluss::make_series({0.0, 13.0, -13.0}).unwrap().host<double>();
   REQUIRE(multi[1] == Approx(13.0 - 4.0 * pi).margin(1e-12));
   REQUIRE(multi[2] == Approx(-13.0 + 4.0 * pi).margin(1e-12));
 
   const auto matrix = pluss::make_series({{0.0, 4.0}, {0.0, -4.0}}).unwrap(pi, 0);
   REQUIRE(matrix.sizes() == std::vector<std::int64_t>{2, 2});
-  REQUIRE(matrix.to_vec<double>()[2] == Approx(0.0));
-  REQUIRE(matrix.to_vec<double>()[3] == Approx(2.0 * pi - 4.0).margin(1e-12));
+  REQUIRE(matrix.host<double>()[2] == Approx(0.0));
+  REQUIRE(matrix.host<double>()[3] == Approx(2.0 * pi - 4.0).margin(1e-12));
 
   phase.tracks_slope_(true);
   phase.unwrap().sum().reverse();

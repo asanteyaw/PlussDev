@@ -48,7 +48,7 @@ bool run_module_snapshot_checks(std::ostream* err = nullptr) {
   layer->weight() = pluss::series::zeros(layer->weight().sizes(), cfg);
   layer->bias() = pluss::series::zeros(layer->bias().sizes(), cfg);
   const Series y_mutated = layer->forward(x);
-  if (approx_vec(y_before.to_vec<double>(), y_mutated.to_vec<double>())) {
+  if (approx_vec(y_before.host<double>().array().data, y_mutated.host<double>().array().data)) {
     if (err) *err << "mutation should change model output\n";
     return false;
   }
@@ -59,7 +59,7 @@ bool run_module_snapshot_checks(std::ostream* err = nullptr) {
     return false;
   }
   const Series y_after = layer->forward(x);
-  if (!approx_vec(y_before.to_vec<double>(), y_after.to_vec<double>())) {
+  if (!approx_vec(y_before.host<double>().array().data, y_after.host<double>().array().data)) {
     if (err) *err << "snapshot restore should recover exact forward output\n";
     return false;
   }

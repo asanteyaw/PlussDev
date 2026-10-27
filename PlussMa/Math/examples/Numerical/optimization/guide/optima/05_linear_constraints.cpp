@@ -8,7 +8,7 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
@@ -18,14 +18,14 @@ int main() {
   };
 
   const auto target = vec({2.0, 2.0, 2.0});
-  auto objective = [&](const optim::Trace& x) { return optim::sum(optim::square(x - optim::trace(target, false))); };
+  auto objective = [&](const pluss::Series& x) { return (x - target).square().sum(); };
 
   const auto constraints = optim::constraints()
                                .ln_eq(mat({1, 1, 1}, 1, 3), vec({3.0}))
                                .ln_ineq(mat({1, -1, 0}, 1, 3), vec({-0.5}));
   const auto result = optim::optima(objective, vec({0.0, 0.0, 0.0}), {}, constraints);
 
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "x = [" << x[0] << ", " << x[1] << ", " << x[2] << "]\n";
   std::cout << "sum = " << x[0] + x[1] + x[2] << " (equality target 3)\n";

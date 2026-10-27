@@ -4,7 +4,7 @@
 
 The tests of Chapter 1 assume normal data. This chapter covers tests that do not: rank and sign tests for locations, tests of a whole distribution, and tests for several groups and for tables of counts. It also explains when a p-value is exact and when it is a large-sample approximation.
 
-Every program is complete and its output is the output of that program. The cup data of Chapter 1 are used again.
+Every program is complete and its output is the output of that program. The cup data of Chapter 1 are used again, with simulated samples where a simulation is the clearest way to show how a test behaves.
 
 ## Exact and approximate p-values
 
@@ -16,7 +16,7 @@ A rank statistic takes only finitely many values, so its distribution under the 
 | `Exact` | always exact |
 | `Approximate` | always the large-sample approximation |
 
-The `Auto` thresholds: `signrank` is exact for at most 15 nonzero differences; `ranksum` when the smaller sample has fewer than 10 observations and the two together fewer than 20; the one-sample `kstest` up to 140 observations; `kstest2` when the product of the two sample sizes is below 10 000. Exact p-values use the actual ranks, ties included (tied observations share their average rank, and the exact distribution is of those ranks). The approximation uses a continuity correction and a tie adjustment. `reject` is always `pvalue < alpha`.
+The `Auto` thresholds: `signrank` is exact for at most 15 nonzero differences; `ranksum` when the smaller sample has fewer than 10 observations and the two together fewer than 20; the one-sample `kstest` up to 140 observations; `kstest2` when the product of the two sample sizes is below 10 000. Exact p-values use the actual ranks, ties included (tied observations share their average rank, and the exact distribution is of those ranks). The `ranksum` approximation uses a continuity correction and a tie adjustment; the `signrank` approximation uses the tie adjustment and no continuity correction. `reject` is always `pvalue < alpha`.
 
 ## Programs
 

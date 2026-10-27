@@ -35,8 +35,8 @@ month.
 auto slot = pluss::scribble::Slot({pluss::make_timeline("2024-01-31T09:15:30Z"), pluss::make_timeline("2024-02-29T23:45:00Z")});
 auto out = slot.tl().month_end();
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<bool>()[0];
 ```
 
 ### Output

@@ -225,7 +225,7 @@ nodej::StatusOr<std::vector<std::vector<double>>> ContextualEmbedder::encode(con
   const auto content_len = batch.max_length - 2;
   const Series content = encoded.narrow_copy(1, 1, content_len).reshape({content_len, options_.width});
   const auto flat =
-      content.to(pluss::pCPU, ScalarType::Float64).reshape({content_len * options_.width}).to_vec<double>();
+      content.to(pluss::pCPU, ScalarType::Float64).reshape({content_len * options_.width}).host<double>();
 
   Result out(static_cast<std::size_t>(content_len));
   for (std::int64_t i = 0; i < content_len; ++i) {
@@ -352,7 +352,7 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
   const auto prompt_length = prompt_batch.max_length;
   auto sequence = prompt_batch.token_ids.to(pluss::pCPU, ScalarType::Int64)
                       .reshape({prompt_length})
-                      .to_vec<std::int64_t>();
+                      .pull<std::int64_t>();
   sequence.pop_back();
 
   const auto width = options_.width;
@@ -382,11 +382,13 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
     if (options.greedy) {
       next_id = logits.argmax(0).to(pluss::pCPU, ScalarType::Int64).item<std::int64_t>();
     } else {
-      const auto flat_logits = logits.to(pluss::pCPU, ScalarType::Float64).reshape({vocab_size}).to_vec<double>();
+      const auto flat_logits = logits.to(pluss::pCPU, ScalarType::Float64)
+                                   .reshape({vocab_size})
+                                   .pull<double>();
       const auto probs = next_token_probs(flat_logits, options.top_k);
       const Series sampled = pluss::series::multinomial(std::span<const double>(probs), 1, /*replacement=*/true, sample_seed);
       ++sample_seed;
-      next_id = sampled.to(pluss::pCPU, ScalarType::Int64).item<std::int64_t>();
+      next_id = sampled.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>().front();
     }
 
     if (next_id == eos_id) break;
@@ -440,9 +442,9 @@ void ContextualEmbedder::save(std::string_view filepath) const {
   }
 
   const auto output_weight_flat =
-      impl_->output_weight.to(pluss::pCPU, ScalarType::Float64).reshape({impl_->output_weight.numel()}).to_vec<double>();
+      impl_->output_weight.to(pluss::pCPU, ScalarType::Float64).reshape({impl_->output_weight.numel()}).host<double>();
   const auto output_bias_flat =
-      impl_->output_bias.to(pluss::pCPU, ScalarType::Float64).reshape({impl_->output_bias.numel()}).to_vec<double>();
+      impl_->output_bias.to(pluss::pCPU, ScalarType::Float64).reshape({impl_->output_bias.numel()}).host<double>();
   body << "output_weight=" << detail::join_doubles_line(output_weight_flat) << "\n";
   body << "output_bias=" << detail::join_doubles_line(output_bias_flat) << "\n";
 
@@ -451,7 +453,7 @@ void ContextualEmbedder::save(std::string_view filepath) const {
   for (std::size_t i = 0; i < params.size(); ++i) {
     const auto shape_view = params[i]->sizes();
     const std::vector<double> shape_as_double(shape_view.begin(), shape_view.end());
-    const auto flat = params[i]->to(pluss::pCPU, ScalarType::Float64).reshape({params[i]->numel()}).to_vec<double>();
+    const auto flat = params[i]->to(pluss::pCPU, ScalarType::Float64).reshape({params[i]->numel()}).host<double>();
     body << "encoder_param_" << i << "_shape=" << detail::join_doubles_line(shape_as_double) << "\n";
     body << "encoder_param_" << i << "=" << detail::join_doubles_line(flat) << "\n";
   }

@@ -2,6 +2,7 @@
 
 #include "CodeM/compat/Invoke.h"
 #include "pluss/codem/codem.h"
+#include "pluss/codem/series_factory.h"
 #include "pluss/subsp/linearalg/linearalg_fwd.h"
 
 #include <array>

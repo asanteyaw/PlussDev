@@ -84,7 +84,7 @@ int main() {
       pluss::series_options().with_tracks_slope(true).with_retain_sensitivity(true));
   std::cout << "\n[factory autodiff options]\n";
   std::cout << "is_leaf=" << traced.is_leaf()
-            << ", retains_grad=" << traced.retains_grad().to_vec<bool>(0)
+            << ", retains_grad=" << traced.retains_grad().host<bool>().array().data.at(static_cast<std::size_t>(0))
             << ", values=" << traced << "\n";
 
   return 0;

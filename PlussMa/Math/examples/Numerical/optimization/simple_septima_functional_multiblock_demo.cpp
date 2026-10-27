@@ -9,7 +9,6 @@ int main() {
   using pluss::Config;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::subsp::math::diff::Trace;
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -20,7 +19,7 @@ int main() {
   const Series wt = pluss::make_series(std::vector<double>{2.0, 1.0}, {2}, cfg);
   const Series bt = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
 
-  pluss::optim::SeptimaSolveOptions opts{};
+  pluss::subsp::math::optim::SeptimaSolveOptions opts{};
   opts.max_iterations = 200;
   opts.gradient_tolerance = 1e-8;
   opts.constraint_tolerance = 1e-8;
@@ -30,23 +29,15 @@ int main() {
   opts.step.equality_penalty = 8.0;
   opts.step.inequality_penalty = 8.0;
 
-  pluss::optim::SeptimaConstraints c{};
+  pluss::subsp::math::optim::SeptimaConstraints c{};
   c.equalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].sum() + x[1] - 2.0}; };
-  c.equalities_trace = [](const std::vector<Trace>& x) {
-    return std::vector<Trace>{pluss::subsp::math::diff::sum(x[0]) + x[1] - 2.0};
-  };
   c.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].square().sum() - 5.0}; };
-  c.inequalities_trace = [](const std::vector<Trace>& x) {
-    return std::vector<Trace>{pluss::subsp::math::diff::sum(pluss::subsp::math::diff::square(x[0])) - 5.0};
-  };
   c.lbs = {pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg), pluss::series::undefined()};
 
-  const auto fit = pluss::optim::septima(
-      [&](const std::vector<Trace>& x) -> Trace {
-        return (pluss::subsp::math::diff::sum(
-                    pluss::subsp::math::diff::square(x[0] - pluss::subsp::math::diff::fixed(wt))) +
-                pluss::subsp::math::diff::sum(
-                    pluss::subsp::math::diff::square(x[1] - pluss::subsp::math::diff::fixed(bt)))) *
+  const auto fit = pluss::subsp::math::optim::septima(
+      [&](const std::vector<Series>& x) -> Series {
+        return (((x[0] - wt).square()).sum() +
+                ((x[1] - bt).square()).sum()) *
                0.5;
       },
       p,
@@ -55,6 +46,6 @@ int main() {
 
   std::cout << "fit w=[" << fit.params[0].select(0, 0).item<double>() << ", "
             << fit.params[0].select(0, 1).item<double>()
-            << "] b=" << fit.params[1].item<double>() << '\n';
+            << "] b=" << as_f64(fit.params[1]) << '\n';
   return 0;
 }

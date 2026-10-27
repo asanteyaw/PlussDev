@@ -25,13 +25,13 @@ int main() {
   const auto r = lp::solve(p);
 
   std::cout << std::fixed << std::setprecision(4);
-  const auto x = r.x.to_vec<double>();
+  const auto x = r.x.host<double>();
   std::cout << "status          " << static_cast<int>(r.status.item<double>()) << "   (0 = Optimal)\n";
   std::cout << "x               " << x[0] << ", " << x[1] << ", " << x[2] << "\n";
   std::cout << "objective       " << r.objective.item<double>() << "   (the optimum of c . x)\n";
   std::cout << "dual_objective  " << r.dual_objective.item<double>() << "   (equals the objective at an optimum: the certificate)\n";
-  std::cout << "dual_eq         " << r.dual_eq.to_vec<double>()[0] << "   (change of the optimum per unit of the equality's right-hand side)\n";
-  std::cout << "dual_ub         " << r.dual_ub.to_vec<double>()[0] << "   (the same for the inequality; zero or negative for a minimization)\n";
+  std::cout << "dual_eq         " << r.dual_eq.host<double>()[0] << "   (change of the optimum per unit of the equality's right-hand side)\n";
+  std::cout << "dual_ub         " << r.dual_ub.host<double>()[0] << "   (the same for the inequality; zero or negative for a minimization)\n";
   std::cout << "iterations      " << r.iterations << "\n";
   std::cout << "the ray and the Farkas multipliers are meaningful only for an unbounded or an infeasible program (next program)\n";
   return 0;

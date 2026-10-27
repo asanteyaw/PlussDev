@@ -51,7 +51,7 @@ struct MdfResult final {
 };
 
 namespace detail {
-inline std::vector<double> host(const Series &s) { return s.to(pluss::ScalarType::Float64).contiguous().to_vec<double>(); }
+inline std::vector<double> host(const Series &s) { return s.to(pluss::ScalarType::Float64).contiguous().host<double>().array().data; }
 } // namespace detail
 
 inline MdfResult max_min_driving_force(const Pathway &p) {

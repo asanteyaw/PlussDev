@@ -53,8 +53,8 @@ Example 1. Default call: literal, case-sensitive substring search.
 auto slot = pluss::scribble::Slot({pluss::make_note("Accra"), pluss::make_note("accra north")});
 auto out = slot.nt().has("Ac");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<bool>()[0];
 ```
 
 ### Output
@@ -71,8 +71,8 @@ pluss::table::TextOptions opts;
 opts.case_sensitive = false;
 auto out = slot.nt().has("AC", opts);
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(out.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(out.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<bool>()[0];
 ```
 
 ### Output

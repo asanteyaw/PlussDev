@@ -50,7 +50,7 @@ auto rg = pluss::scribble::Registry({
 
 auto out = rg.set("id", pluss::scribble::Slot({pluss::make_series(99)}));
 auto ids = out.fields("id");
-std::cout << "[" << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0] << "] nfields=" << out.nfields();
+std::cout << "[" << std::get<pluss::Series>(ids.at(0)).host<std::int64_t>()[0] << "] nfields=" << out.nfields();
 ```
 
 ### Output
@@ -86,11 +86,11 @@ auto rg = pluss::scribble::Registry({
 });
 
 auto doubled = rg.fields("population").transform([](const pluss::scribble::Slot::Value& v) -> pluss::scribble::Slot::Value {
-  return pluss::make_series(std::get<pluss::Series>(v).to_vec<std::int64_t>()[0] * 2);
+  return pluss::make_series(std::get<pluss::Series>(v).host<std::int64_t>()[0] * 2);
 });
 auto out = rg.set("population", doubled);
 auto pop = out.fields("population");
-std::cout << std::get<pluss::Series>(pop.at(0)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(pop.at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output

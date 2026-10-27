@@ -26,7 +26,7 @@ TEST_CASE("parallel contiguous copy preserves expanded int64 broadcast lanes", "
           .contiguous();
 
   const Series flat = expanded.reshape({expanded.numel()});
-  const auto values = flat.to_vec<std::int64_t>();
+  const auto values = flat.host<std::int64_t>();
   REQUIRE(values.size() == static_cast<std::size_t>(expanded.numel()));
   for (std::size_t i = 0; i < values.size(); ++i) {
     REQUIRE(values[i] == 7);

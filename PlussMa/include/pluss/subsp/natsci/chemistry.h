@@ -1,13 +1,16 @@
 #pragma once
 
+#include "pluss/subsp/natsci/chemistry/crystallization.h"
 #include "pluss/subsp/natsci/chemistry/equilibrium.h"
 #include "pluss/subsp/natsci/chemistry/ideal_gas.h"
 #include "pluss/subsp/natsci/chemistry/kinetics.h"
 #include "pluss/subsp/natsci/chemistry/polymer_dynamics.h"
 #include "pluss/subsp/natsci/chemistry/polymers.h"
 #include "pluss/subsp/natsci/chemistry/quantum.h"
+#include "pluss/subsp/natsci/chemistry/rate_theory.h"
 #include "pluss/subsp/natsci/chemistry/reactor.h"
 #include "pluss/subsp/natsci/chemistry/spectroscopy.h"
+#include "pluss/subsp/natsci/chemistry/surface.h"
 #include "pluss/subsp/natsci/chemistry/step_growth.h"
 #include "pluss/subsp/natsci/chemistry/thermo.h"
 #include "pluss/subsp/natsci/chemistry/transport.h"

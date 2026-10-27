@@ -55,7 +55,7 @@ JaggedColumn load_jagged_column(const Stream& stream) {
   col.size = static_cast<std::int64_t>(col.values.size());
   col.valid.assign(col.values.size(), 1);
   if (pluss::kindle::detail::has_validity_mask(stream)) {
-    const auto mask = pluss::kindle::detail::validity_mask(stream)->to_vec<bool>();
+    const auto mask = pluss::kindle::detail::validity_mask(stream)->host<bool>();
     for (std::size_t j = 0; j < mask.size() && j < col.valid.size(); ++j) col.valid[j] = mask[j] ? 1 : 0;
   }
   for (std::size_t j = 0; j < col.values.size(); ++j) {

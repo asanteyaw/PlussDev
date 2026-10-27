@@ -72,7 +72,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       if (err) *err << "neighbor classifier infer_scores should succeed\n";
       return false;
     }
-    const auto scores = score_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto scores = score_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (!(scores.front() < 0.2 && scores.back() > 0.8)) {
       if (err) *err << "neighbor classifier scores should reflect neighborhood class density\n";
       return false;
@@ -83,8 +83,8 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       if (err) *err << "neighbor classifier infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (pred.size() != truth.size()) {
       if (err) *err << "neighbor classifier predictions should match label length\n";
       return false;
@@ -101,7 +101,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       if (err) *err << "neighbor classifier assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.empty() || metrics[0] < 0.99) {
       if (err) *err << "neighbor classifier default assess metric should be high accuracy\n";
       return false;
@@ -134,7 +134,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       if (err) *err << "radius neighbor classifier infer should succeed\n";
       return false;
     }
-    const auto rpred = rpred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto rpred = rpred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < rpred.size(); ++i) {
       if (!approx(rpred[i], truth[i])) {
         if (err) *err << "radius neighbor classifier should fit training labels with fallback\n";
@@ -149,7 +149,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
         .distance_weighted = true,
         .standardize = true,
     }).learn(batch);
-    const auto lymph_radius_pred = lymph_radius_cls.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto lymph_radius_pred = lymph_radius_cls.infer(features).to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < lymph_radius_pred.size(); ++i) {
       if (!approx(lymph_radius_pred[i], truth[i])) {
         if (err) *err << "lymph radius_neighbors_classifier should train and infer through NodeJ radius mode\n";
@@ -201,8 +201,8 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       if (err) *err << "neighbor regressor infer should succeed\n";
       return false;
     }
-    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto pred = pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
+    const auto truth = y.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < pred.size(); ++i) {
       if (!approx(pred[i], truth[i], 1e-8)) {
         if (err) *err << "neighbor regressor with k=1 should reproduce training targets\n";
@@ -215,7 +215,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       if (err) *err << "neighbor regressor assess should succeed\n";
       return false;
     }
-    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (metrics.size() < 3 || metrics[0] > 1e-12 || metrics[2] < 0.999999) {
       if (err) *err << "neighbor regressor default metrics should indicate perfect fit for k=1\n";
       return false;
@@ -248,7 +248,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       if (err) *err << "radius neighbor regressor infer should succeed\n";
       return false;
     }
-    const auto rreg_pred = rreg_pred_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto rreg_pred = rreg_pred_or.value().to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < rreg_pred.size(); ++i) {
       if (!approx(rreg_pred[i], truth[i], 1e-8)) {
         if (err) *err << "radius neighbor regressor should fit training targets with fallback\n";
@@ -263,7 +263,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
         .distance_weighted = false,
         .standardize = true,
     }).learn(batch);
-    const auto lymph_radius_reg_pred = lymph_radius_reg.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto lymph_radius_reg_pred = lymph_radius_reg.infer(features).to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < lymph_radius_reg_pred.size(); ++i) {
       if (!approx(lymph_radius_reg_pred[i], truth[i], 1e-8)) {
         if (err) *err << "lymph radius_neighbors_regressor should train and infer through NodeJ radius mode\n";

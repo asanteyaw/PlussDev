@@ -259,7 +259,7 @@ BenchResult run_workload(WorkloadKind kind,
     out.last = fn(x0, a, b, inner_iters);
     const auto tr1 = std::chrono::steady_clock::now();
     out.round_ms.push_back(std::chrono::duration<double, std::milli>(tr1 - tr0).count());
-    out.checksum += out.last.to_vec<float>(0);
+    out.checksum += out.last.host<float>().array().data.at(static_cast<std::size_t>(0));
   }
   const auto t1 = std::chrono::steady_clock::now();
   out.millis = std::chrono::duration<double, std::milli>(t1 - t0).count();

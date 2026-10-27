@@ -25,7 +25,7 @@ int main() {
     p.b_ub = vec({1, -3});
     p.lower = vec({0, 0});
     const auto r = lp::solve(p);
-    const auto y = r.farkas.to_vec<double>();  // one multiplier per inequality row
+    const auto y = r.farkas.host<double>();  // one multiplier per inequality row
     const double g0 = y[0] * 1 + y[1] * -1, g1 = y[0] * 1 + y[1] * -1;  // g = A' y
     const double b_dot_y = y[0] * 1 + y[1] * -3;
     // with x >= 0 and no upper bound, g . x is largest at x = 0 if every component of g is <= 0
@@ -41,7 +41,7 @@ int main() {
     p.b_ub = vec({1});
     p.lower = vec({0, 0});
     const auto r = lp::solve(p);
-    const auto d = r.ray.to_vec<double>();
+    const auto d = r.ray.host<double>();
     const double along_row = 0.0 * d[0] + 1.0 * d[1];  // A d must be <= 0
     const double cost_change = -1.0 * d[0] + 0.0 * d[1];  // c . d must be < 0
     std::cout << "unbounded program: ray d = (" << d[0] << ", " << d[1] << ")\n";

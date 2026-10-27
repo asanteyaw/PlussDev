@@ -15,9 +15,7 @@ The choice rests on four questions about the problem, in this order.
 
 ## Programs
 
-- [A model fitted to data](septima_05_choosing_and_worked_problems/a_model_fitted_to_data.md)
-- [Constrained least squares, checked against Optima](septima_05_choosing_and_worked_problems/constrained_least_squares_checked_against_optima.md)
-- [One function, every solver](septima_05_choosing_and_worked_problems/one_function_every_solver.md)
+- [Choosing a solver on worked problems](septima_05_choosing_and_worked_problems/choosing_a_solver.md)
 
 ## Choosing
 
@@ -35,7 +33,7 @@ The choice rests on four questions about the problem, in this order.
 
 ## A routine for a new problem
 
-1. Write the objective on `Trace`. If it has an undefined region, add bounds that keep the iterates inside it (chapter 3).
+1. Write the objective on `Series`. If it has an undefined region, add bounds that keep the iterates inside it (chapter 3).
 2. If it has nonlinear constraints that must hold accurately, use Optima and stop here.
 3. Otherwise try L-BFGS first, then L-SR1 if you need more accuracy or suspect a saddle, then Adam with a tuned learning rate if the others misbehave.
 4. Read the result by `objective_value`, `stationarity`, `step_inf_norm` and `constraint_violation`, not by the exit flag alone.

@@ -124,26 +124,6 @@ pluss::Series garch11_negloglik(const pluss::Series& returns, const Garch11Param
   return nll;
 }
 
-double as_f64(const pluss::Series& x) {
-  if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error("expected scalar Series");
-  }
-  return x.to(pluss::pCPU, pluss::ScalarType::Float64).item<double>();
-}
-
-std::string to_string(pluss::subsp::math::optimization::PopulationSolverStatus status) {
-  using pluss::subsp::math::optimization::PopulationSolverStatus;
-  switch (status) {
-    case PopulationSolverStatus::Converged:
-      return "Converged";
-    case PopulationSolverStatus::ReachedIterationBudget:
-      return "ReachedIterationBudget";
-    case PopulationSolverStatus::ReachedEvaluationBudget:
-      return "ReachedEvaluationBudget";
-  }
-  return "Unknown";
-}
-
 void print_report(
     const std::string& name,
     const pluss::subsp::math::optimization::PopulationSolverOutcome& out,

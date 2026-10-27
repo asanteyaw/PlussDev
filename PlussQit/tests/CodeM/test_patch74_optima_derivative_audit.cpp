@@ -17,9 +17,6 @@ using pluss::subsp::math::optim::DerivativeAuditOptions;
 using pluss::subsp::math::optim::NonlinearConstraintEvaluation;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::audit_optima_derivatives;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64);
@@ -28,12 +25,12 @@ Series make_vec2(double x0, double x1) {
 ConstrainedProblem make_consistent_problem() {
   ConstrainedProblem problem;
   const Series target = make_vec2(1.0, -0.5);
-  problem.objective.autodiff = [target](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
   problem.objective.analytic = [](const ParameterPack<Series>& p) {
-    const auto x = p.at("x").to_vec<double>();
+    const auto x = p.at("x").host<double>();
     return std::pair{
         make_series((x[0] - 1.0) * (x[0] - 1.0) + (x[1] + 0.5) * (x[1] + 0.5))
             .to(ScalarType::Float64),
@@ -41,12 +38,12 @@ ConstrainedProblem make_consistent_problem() {
             {"x", make_vec2(2.0 * (x[0] - 1.0), 2.0 * (x[1] + 0.5))},
         })};
   };
-  problem.nonlinear.inequality = [](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x")) - 1.0;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.0;
   };
   problem.nonlinear.analytic = [](const ParameterPack<Series>& p) {
     NonlinearConstraintEvaluation eval;
-    const auto x = p.at("x").to_vec<double>();
+    const auto x = p.at("x").host<double>();
     eval.equality = pluss::series::empty({0}, ScalarType::Float64);
     eval.inequality = make_series(x[0] + x[1] - 1.0).reshape({1}).to(ScalarType::Float64);
     eval.equality_jacobian = ParameterPack<Series>({
@@ -63,7 +60,7 @@ ConstrainedProblem make_consistent_problem() {
 ConstrainedProblem make_inconsistent_problem() {
   auto problem = make_consistent_problem();
   problem.objective.analytic = [](const ParameterPack<Series>& p) {
-    const auto x = p.at("x").to_vec<double>();
+    const auto x = p.at("x").host<double>();
     return std::pair{
         make_series((x[0] - 1.0) * (x[0] - 1.0) + (x[1] + 0.5) * (x[1] + 0.5))
             .to(ScalarType::Float64),

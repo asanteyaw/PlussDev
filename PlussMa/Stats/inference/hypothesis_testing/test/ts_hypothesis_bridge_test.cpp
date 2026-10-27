@@ -20,7 +20,7 @@ void expect(bool condition, const std::string& message) {
 
 Series make_random_walk(std::int64_t n, std::uint64_t seed) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto eps = pluss::series::randn({n}, cfg, seed).to_vec<double>();
+  const auto eps = pluss::series::randn({n}, cfg, seed).host<double>();
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
   for (std::int64_t t = 1; t < n; ++t) {
     y[static_cast<std::size_t>(t)] = y[static_cast<std::size_t>(t - 1)] + eps[static_cast<std::size_t>(t)];

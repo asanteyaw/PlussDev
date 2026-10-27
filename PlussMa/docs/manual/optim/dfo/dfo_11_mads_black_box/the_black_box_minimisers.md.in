@@ -1,0 +1,47 @@
+# The black-box MADS minimisers
+
+[Back to Derivative-Free Optimization 11: The Black-Box MADS Minimisers](../dfo_11_mads_black_box.md)
+
+Chapter 4 used the black-box interface through the facade. Called directly, `mads_blackbox_minimizer`, `orthomads_blackbox_minimizer` and `ltmads_blackbox_minimizer` expose every setting: how several objectives are combined, how violations are priced, what counts against the budget, the cache, the surrogate and the Pareto archive. This page covers the settings that are specific to the black-box form.
+
+The programs follow the life of a multi-objective black-box run. A direct call returns the objectives at the minimiser, the scalar the solver minimised and the archive. **Scalarisation** chooses how several objectives become one number: the weighted sum can reach only the ends of a non-convex trade-off, where Chebyshev finds the balanced compromise. The **surrogate** is a cheap model that reorders each poll without replacing an evaluation. **What counts as an evaluation** separates cheap pre-checks from expensive calls. And the **Pareto archive** is a bounded record of the non-dominated points the search met.
+
+## Program 1: A direct call
+
+@@example Numerical/optimization/guide/dfo/401_mads_blackbox_standalone.cpp@@
+
+Both objectives are read back at the minimiser, along with the scalar the solver minimised. The constraint is inactive here (the compromise sits at `x0 = 0`, inside `x0 <= 0.5`). The archive holds the non-dominated points the search met, as rows.
+
+## Program 2: Weighted sum or Chebyshev
+
+@@example Numerical/optimization/guide/dfo/402_mads_scalarization.cpp@@
+
+On a non-convex front the weighted sum can only reach an end of the trade-off, here the end at `x = 1`, and Chebyshev finds the balanced compromise at `x = 0.618`. When the front is convex both rules reach interior points and the weighted sum is cheaper. Choose Chebyshev when you want a particular balance or suspect the trade-off is not convex.
+
+## Program 3: The surrogate
+
+@@example Numerical/optimization/guide/dfo/403_mads_surrogate.cpp@@
+
+The model never replaces an evaluation, so the answer is as reliable as without it; it only reorders each poll. On this smooth function it saves a tenth to a fifth of the evaluations, more in higher dimension, where polls are longer. The saving is bounded by construction: ordering can only shorten the part of a poll that comes after the first improving point, and an unsuccessful poll must still evaluate every candidate, so no model can remove those evaluations. On a rough function the ordering helps less. It is worth trying when each evaluation is expensive and the function is reasonably smooth.
+
+## Program 4: What counts as an evaluation
+
+@@example Numerical/optimization/guide/dfo/404_mads_counting_evaluations.cpp@@
+
+`evaluations` is what `max_evaluations` limits. `total_evaluations` counts every call, and is limited by `max_total_evaluations`. Marking cheap pre-checks with `count_evaluation = false` lets the run do more work per expensive evaluation; the total cap keeps the overall work bounded either way.
+
+## Program 5: The Pareto archive
+
+@@example Numerical/optimization/guide/dfo/405_mads_pareto_archive.cpp@@
+
+The archive is a record of the search, not a computed front: it holds non-dominated points among those evaluated. With a tight limit it drops the most crowded entries, so a small archive still spans the front. To trace a front, solve with several weightings and merge the archives.
+
+## Decisions and pitfalls
+
+- **Use Chebyshev for a non-convex front.** The weighted sum reaches only an end of the trade-off; on a convex front both rules reach interior points and the weighted sum is cheaper.
+- **The surrogate never replaces an evaluation.** The answer is as reliable as without it; it only reorders each poll, saving a tenth to a fifth of the evaluations on a smooth function (more in higher dimension).
+- **Mark cheap pre-checks with `count_evaluation = false`.** `evaluations` is what `max_evaluations` limits; `total_evaluations` counts every call and is limited by `max_total_evaluations`, which keeps the overall work bounded.
+- **The archive is a record, not a front.** To trace a front, solve with several weightings and merge the archives; with a tight limit the archive drops the most crowded entries so it still spans the front.
+- **Read both objectives at the minimiser, not only the scalar.** The scalar depends on your weights; the vector is the trade-off.
+
+Where next: [Chapter 12](../dfo_12_mads_variants.md) covers the specialised variants.

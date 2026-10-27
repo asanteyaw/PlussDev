@@ -37,10 +37,10 @@ int main() {
   auto t = pluss::timeline::make("2024-01-15T10:11:12Z");
   auto t_floor = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));
   std::cout << "Timeline floor(\"D\") hour: "
-            << t_floor.hour().to_vec<std::int32_t>(0) << "\n";
+            << t_floor.hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) << "\n";
 
   auto t_year = pluss::dispense(t, &pluss::codeh::Timeline::year, std::make_tuple());
-  std::cout << "Timeline year: " << t_year.to_vec<std::int32_t>(0) << "\n";
+  std::cout << "Timeline year: " << t_year.host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) << "\n";
 
   auto s1 = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3});
   auto s2 = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3});
@@ -49,7 +49,7 @@ int main() {
       s1,
       &pluss::Series::pile,
       std::make_tuple(std::vector<pluss::Series>{s2, s3}, std::int64_t{1}));
-  const auto piled_vals = piled.to_vec<double>();
+  const auto piled_vals = piled.host<double>();
   std::cout << "Series pile({s2,s3}, dim=1) dim=" << piled.dim()
             << ", shape=[" << piled.sizes()[0] << ", " << piled.sizes()[1] << "]"
             << ", first row=[" << piled_vals[0] << ", " << piled_vals[1] << ", " << piled_vals[2] << "]\n";

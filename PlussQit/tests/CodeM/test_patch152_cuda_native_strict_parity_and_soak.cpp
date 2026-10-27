@@ -104,20 +104,20 @@ TEST_CASE("CUDA strict native parity covers expanded family matrix", "[cuda][par
     const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
     require_close_(
-        x_cuda.matmul(y_cuda).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.matmul(y_cpu).to_vec<float>());
+        x_cuda.matmul(y_cuda).to(pluss::pCPU).host<float>(),
+        x_cpu.matmul(y_cpu).host<float>());
 
     require_close_(
-        x_cuda.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>());
+        x_cuda.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).host<float>(),
+        x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).host<float>());
 
     require_close_(
-        x_cuda.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to_vec<float>());
+        x_cuda.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).host<float>(),
+        x_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).host<float>());
 
     require_equal_(
-        x_cuda.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-        x_cpu.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to_vec<std::int64_t>());
+        x_cuda.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).host<std::int64_t>(),
+        x_cpu.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).host<std::int64_t>());
 
     const auto flat_cpu = x_cpu.reshape({x_cpu.numel()});
     const auto flat_cuda = x_cuda.reshape({x_cuda.numel()});
@@ -125,8 +125,8 @@ TEST_CASE("CUDA strict native parity covers expanded family matrix", "[cuda][par
     const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
 
     require_close_(
-        flat_cuda.take(idx_cuda).to(pluss::pCPU).to_vec<float>(),
-        flat_cpu.take(idx_cpu).to_vec<float>());
+        flat_cuda.take(idx_cuda).to(pluss::pCPU).host<float>(),
+        flat_cpu.take(idx_cpu).host<float>());
 
     auto put_cpu = pluss::Series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
     auto put_cuda = put_cpu.to(pluss::pCUDA);
@@ -135,45 +135,45 @@ TEST_CASE("CUDA strict native parity covers expanded family matrix", "[cuda][par
     auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
     put_cpu = (put_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
     put_cuda = (put_cuda.*put_fn)(idx_cuda, src_cuda, /*accumulate=*/false);
-    require_close_(put_cuda.to(pluss::pCPU).to_vec<float>(), put_cpu.to_vec<float>());
+    require_close_(put_cuda.to(pluss::pCPU).host<float>(), put_cpu.host<float>());
 
     const auto gather_idx_cpu =
         pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 3, 3, 2, 1, 0, 1, 1, 2, 0}, {3, 4});
     const auto gather_idx_cuda = gather_idx_cpu.to(pluss::pCUDA);
 
     require_close_(
-        x_cuda.gather(1, gather_idx_cuda).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.gather(1, gather_idx_cpu).to_vec<float>());
+        x_cuda.gather(1, gather_idx_cuda).to(pluss::pCPU).host<float>(),
+        x_cpu.gather(1, gather_idx_cpu).host<float>());
 
     const auto scatter_base_cpu = pluss::Series::zeros({3, 4}, pluss::ScalarType::Float32);
     const auto scatter_base_cuda = scatter_base_cpu.to(pluss::pCUDA);
 
     require_close_(
-        scatter_base_cuda.scatter(1, gather_idx_cuda, x_cuda).to(pluss::pCPU).to_vec<float>(),
-        scatter_base_cpu.scatter(1, gather_idx_cpu, x_cpu).to_vec<float>());
+        scatter_base_cuda.scatter(1, gather_idx_cuda, x_cuda).to(pluss::pCPU).host<float>(),
+        scatter_base_cpu.scatter(1, gather_idx_cpu, x_cpu).host<float>());
 
     require_close_(
-        scatter_base_cuda.scatter_add(1, gather_idx_cuda, x_cuda).to(pluss::pCPU).to_vec<float>(),
-        scatter_base_cpu.scatter_add(1, gather_idx_cpu, x_cpu).to_vec<float>());
+        scatter_base_cuda.scatter_add(1, gather_idx_cuda, x_cuda).to(pluss::pCPU).host<float>(),
+        scatter_base_cpu.scatter_add(1, gather_idx_cpu, x_cpu).host<float>());
     require_close_(
-        x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+        x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+        x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).host<float>());
     require_close_(
-        x_cuda.softmax(1).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.softmax(1).to_vec<float>());
+        x_cuda.softmax(1).to(pluss::pCPU).host<float>(),
+        x_cpu.softmax(1).host<float>());
 
     const float shift = 0.05f * static_cast<float>(rep);
     const auto a_cpu = pluss::make_series(std::vector<float>{4.f + shift, 1.f, 1.f, 3.f + shift}, {2, 2});
     const auto a_cuda = a_cpu.to(pluss::pCUDA);
 
     require_close_(
-        pluss::subsp::linearalg::det(a_cuda).to(pluss::pCPU).to_vec<float>(),
-        pluss::subsp::linearalg::det(a_cpu).to_vec<float>(),
+        pluss::subsp::linearalg::det(a_cuda).to(pluss::pCPU).host<float>(),
+        pluss::subsp::linearalg::det(a_cpu).host<float>(),
         2e-3f);
 
     require_close_(
-        pluss::subsp::linearalg::inverse(a_cuda).to(pluss::pCPU).to_vec<float>(),
-        pluss::subsp::linearalg::inverse(a_cpu).to_vec<float>(),
+        pluss::subsp::linearalg::inverse(a_cuda).to(pluss::pCPU).host<float>(),
+        pluss::subsp::linearalg::inverse(a_cpu).host<float>(),
         4e-3f);
   }
 }
@@ -218,32 +218,32 @@ TEST_CASE("CUDA strict native soak loop remains stable", "[cuda][parity][native]
     const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
     require_close_(
-        x_cuda.matmul(y_cuda).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.matmul(y_cpu).to_vec<float>(),
+        x_cuda.matmul(y_cuda).to(pluss::pCPU).host<float>(),
+        x_cpu.matmul(y_cpu).host<float>(),
         3e-4f);
 
     require_close_(
-        x_cuda.sort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.sort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to_vec<float>(),
+        x_cuda.sort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).host<float>(),
+        x_cpu.sort(/*dim=*/1, /*descending=*/true, /*stable=*/false).host<float>(),
         3e-4f);
     require_close_(
-        x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+        x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>(),
+        x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).host<float>(),
         3e-4f);
 
     const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{2, 0, 1}, {3});
     const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
     require_close_(
-        x_cuda.reshape({x_cuda.numel()}).take(idx_cuda).to(pluss::pCPU).to_vec<float>(),
-        x_cpu.reshape({x_cpu.numel()}).take(idx_cpu).to_vec<float>(),
+        x_cuda.reshape({x_cuda.numel()}).take(idx_cuda).to(pluss::pCPU).host<float>(),
+        x_cpu.reshape({x_cpu.numel()}).take(idx_cpu).host<float>(),
         3e-4f);
 
     const float eps = 0.02f * static_cast<float>(rep % 10);
     const auto a_cpu = pluss::make_series(std::vector<float>{3.5f + eps, 0.5f, 0.5f, 2.25f + eps}, {2, 2});
     const auto a_cuda = a_cpu.to(pluss::pCUDA);
     require_close_(
-        pluss::subsp::linearalg::det(a_cuda).to(pluss::pCPU).to_vec<float>(),
-        pluss::subsp::linearalg::det(a_cpu).to_vec<float>(),
+        pluss::subsp::linearalg::det(a_cuda).to(pluss::pCPU).host<float>(),
+        pluss::subsp::linearalg::det(a_cpu).host<float>(),
         4e-3f);
   }
 }

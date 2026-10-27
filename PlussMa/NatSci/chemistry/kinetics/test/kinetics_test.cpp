@@ -157,7 +157,7 @@ void test_detailed_balance() {
   // forward and reverse fluxes must cancel, which exercises k_r = k_f / Kc.
   const Series t = vec({1300.0});
   const Series kc = m.equilibrium_constants(t);
-  const double kc21 = kc.select(-1, 20).item<double>();
+  const double kc21 = kc.select(-1, 20).host<double>().front();
   std::vector<double> conc(10, 1.0);
   conc[static_cast<std::size_t>(idx(m, "OH"))] = 2.0e-3;
   conc[static_cast<std::size_t>(idx(m, "H2"))] = 0.7;
@@ -166,8 +166,8 @@ void test_detailed_balance() {
       kc21 * 2.0e-3 * 0.7 / 3.0e-3; // Kc = [H][H2O]/([OH][H2])
   const Series c = pluss::make_series(conc, {1, 10}).to(F64);
   const auto q = m.rates_of_progress(t, c);
-  expect(std::abs(q.forward.select(-1, 20).item<double>() /
-                      q.reverse.select(-1, 20).item<double>() -
+  expect(std::abs(q.forward.select(-1, 20).host<double>().front() /
+                      q.reverse.select(-1, 20).host<double>().front() -
                   1.0) < 1e-10,
          "forward = reverse at Kc");
   // irreversible reactions have no reverse flux
@@ -210,7 +210,7 @@ void test_reactor() {
       times.push_back(2.2 * ig_ref[i] * k / samples);
     const Series path = rea::trajectory(m, y0, times, true, opt);
     const Series temps = path.select(-1, 0); // [samples+1, 1]
-    const double ig = rea::max_slope_time(times, temps).item<double>();
+    const double ig = rea::max_slope_time(times, temps).host<double>().front();
     expect(std::abs(ig / ig_ref[i] - 1.0) < 0.015,
            "ignition delay vs independent implementation at T0 = " +
                std::to_string(t0s[i]));
@@ -243,12 +243,12 @@ void test_reactor() {
       rea::make_state(vec({1100.0}), pluss::make_series(conc, {1, 10}).to(F64));
   const auto end = rea::integrate(m, y0, 5e-3, true, opt);
   expect(end.converged, "reactor integration converged");
-  expect(std::abs(end.y.select(-1, 0).item<double>() -
+  expect(std::abs(end.y.select(-1, 0).host<double>().front() -
                   kinetics_reference::final_T[1]) < 1.0,
          "final temperature vs independent implementation");
   for (const char *name : {"H2O", "H2", "O2", "OH"}) {
     const auto k = static_cast<std::int64_t>(idx(m, name));
-    expect(std::abs(end.y.select(-1, 1 + k).item<double>() /
+    expect(std::abs(end.y.select(-1, 1 + k).host<double>().front() /
                         kinetics_reference::final_conc_1100_si[k] -
                     1.0) < 0.01,
            std::string("final concentration vs independent implementation: ") +
@@ -256,7 +256,7 @@ void test_reactor() {
   }
   // isothermal variant keeps T fixed
   const auto iso = rea::integrate(m, y0, 2e-4, false, opt);
-  expect(std::abs(iso.y.select(-1, 0).item<double>() - 1100.0) < 1e-9,
+  expect(std::abs(iso.y.select(-1, 0).host<double>().front() - 1100.0) < 1e-9,
          "isothermal reactor holds temperature");
 }
 

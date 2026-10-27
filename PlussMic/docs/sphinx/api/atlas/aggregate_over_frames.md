@@ -46,7 +46,7 @@ auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note(
 auto total = atlas.aggregate_over_frames([](const std::vector<pluss::table::DataFrame>& dfs) {
   double sum = 0.0;
   for (const auto& df : dfs) {
-    auto s = df.features("sales").sum().as_series().to_vec<double>();
+    auto s = df.features("sales").sum().as_series().host<double>();
     sum += s[0];
   }
   return pluss::table::DataFrame({

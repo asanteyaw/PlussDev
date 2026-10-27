@@ -15,23 +15,12 @@ const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series mat(std::vector<double> v, std::int64_t rows, std::int64_t cols) { return pluss::make_series(v, {rows, cols}).to(f64); }
 
-const char* name_of(lp::Status status) {
-  switch (status) {
-    case lp::Status::Optimal: return "Optimal";
-    case lp::Status::PrimalInfeasible: return "PrimalInfeasible";
-    case lp::Status::Unbounded: return "Unbounded";
-    case lp::Status::IterationLimit: return "IterationLimit";
-    case lp::Status::NearOptimal: return "NearOptimal";
-  }
-  return "?";
-}
-
 int main() {
   const double inf = std::numeric_limits<double>::infinity();
   const auto run = [&](const char* what, const lp::Problem& p, const lp::Options& o = {}) {
     const auto r = lp::solve(p, o);
     const auto status = static_cast<lp::Status>(static_cast<int>(r.status.item<double>()));
-    std::cout << std::left << std::setw(44) << what << std::setw(18) << name_of(status) << "success: " << std::boolalpha << lp::success(status) << "\n";
+    std::cout << std::left << std::setw(44) << what << std::setw(18) << lp::to_string(status) << "success: " << std::boolalpha << lp::success(status) << "\n";
     return r;
   };
 
@@ -48,7 +37,7 @@ int main() {
   infeasible.b_ub = vec({1, -3});
   infeasible.lower = vec({0, 0});
   const auto r_infeasible = run("x0 + x1 <= 1 and x0 + x1 >= 3", infeasible);
-  const auto farkas = r_infeasible.farkas.to_vec<double>();
+  const auto farkas = r_infeasible.farkas.host<double>();
   std::cout << "    Farkas multipliers (y for each row): " << std::fixed << std::setprecision(3) << farkas[0] << ", " << farkas[1] << "\n";
 
   lp::Problem unbounded;  // minimize -x0 with x0 free to grow
@@ -58,7 +47,7 @@ int main() {
   unbounded.lower = vec({0, 0});
   unbounded.upper = vec({inf, inf});
   const auto r_unbounded = run("minimize -x0 with x0 unrestricted above", unbounded);
-  const auto ray = r_unbounded.ray.to_vec<double>();
+  const auto ray = r_unbounded.ray.host<double>();
   std::cout << "    a ray along which the objective falls: (" << std::fixed << std::setprecision(3) << ray[0] << ", " << ray[1] << ")\n";
 
   lp::Options tiny;

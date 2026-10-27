@@ -21,7 +21,7 @@ int main() {
   std::cout << std::fixed << std::setprecision(6);
   std::cout << "continuous drift  " << d.drift.item<double>() << "  (mu / x = " << 0.1 << ")\n";
   std::cout << "diffusion         " << d.diffusion.item<double>() << "  (sigma / x = " << 0.3 << ")\n";
-  const auto js = d.jump_sizes.to_vec<double>();
+  const auto js = d.jump_sizes.host<double>();
   std::cout << "jump sizes of log X: " << js[0] << ", " << js[1] << "  (the atoms 0.4 and -0.7)\n";
   return 0;
 }

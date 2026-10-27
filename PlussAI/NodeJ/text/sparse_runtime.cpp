@@ -41,7 +41,7 @@ namespace {
 }
 
 [[nodiscard]] std::vector<double> series_f64(const Series& y) {
-  return y.to(pluss::pCPU, ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  return y.to(pluss::pCPU, ScalarType::Float64).reshape({y.numel()}).host<double>().array().data;
 }
 
 [[nodiscard]] double sparse_row_linear_score(const SparseCsrMatrix& csr,
@@ -211,7 +211,7 @@ namespace {
 }
 
 [[nodiscard]] std::vector<std::int64_t> series_i64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();
+  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).host<std::int64_t>().array().data;
 }
 
 [[nodiscard]] SparseCsrMatrix csr_slice_rows(const SparseCsrMatrix& src,
@@ -307,9 +307,9 @@ StatusOr<SparseCsrMatrix> sparse_triplet_to_csr(const SparseTripletMatrix& spars
     return StatusOr<SparseCsrMatrix>(Status::shape_mismatch("sparse_triplet_to_csr index/value sizes must match."));
   }
 
-  const auto rows = sparse.row_indices.to(pluss::pCPU, ScalarType::Int64).reshape({nnz}).to_vec<std::int64_t>();
-  const auto cols = sparse.column_indices.to(pluss::pCPU, ScalarType::Int64).reshape({nnz}).to_vec<std::int64_t>();
-  const auto vals = sparse.values.to(pluss::pCPU, ScalarType::Float64).reshape({nnz}).to_vec<double>();
+  const auto rows = sparse.row_indices.to(pluss::pCPU, ScalarType::Int64).reshape({nnz}).host<std::int64_t>().array().data;
+  const auto cols = sparse.column_indices.to(pluss::pCPU, ScalarType::Int64).reshape({nnz}).host<std::int64_t>().array().data;
+  const auto vals = sparse.values.to(pluss::pCPU, ScalarType::Float64).reshape({nnz}).host<double>().array().data;
   for (std::int64_t i = 0; i < nnz; ++i) {
     if (rows[static_cast<std::size_t>(i)] < 0 || rows[static_cast<std::size_t>(i)] >= sparse.rows
         || cols[static_cast<std::size_t>(i)] < 0 || cols[static_cast<std::size_t>(i)] >= sparse.cols) {
@@ -542,11 +542,11 @@ StatusOr<std::vector<Series>> SparseLinearBinaryClassifier::dump_state() const {
 
 Status SparseLinearBinaryClassifier::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 2) return Status::invalid_argument("SparseLinearBinaryClassifier::load_state expects 2 tensors.");
-  const std::vector<double> meta = state[0].to(pluss::pCPU, ScalarType::Float64).reshape({state[0].numel()}).to_vec<double>();
+  const std::vector<double> meta = state[0].to(pluss::pCPU, ScalarType::Float64).reshape({state[0].numel()}).host<double>().array().data;
   if (meta.size() < 2) return Status::invalid_argument("SparseLinearBinaryClassifier::load_state invalid metadata.");
   trained_ = meta[0] > 0.5;
   feature_count_ = static_cast<std::int64_t>(meta[1]);
-  weights_ = state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).to_vec<double>();
+  weights_ = state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).host<double>().array().data;
   if (static_cast<std::int64_t>(weights_.size()) != feature_count_ + 1) {
     return Status::shape_mismatch("SparseLinearBinaryClassifier::load_state coefficient size mismatch.");
   }
@@ -707,11 +707,11 @@ StatusOr<std::vector<Series>> SparseLinearRegressor::dump_state() const {
 
 Status SparseLinearRegressor::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 2) return Status::invalid_argument("SparseLinearRegressor::load_state expects 2 tensors.");
-  const std::vector<double> meta = state[0].to(pluss::pCPU, ScalarType::Float64).reshape({state[0].numel()}).to_vec<double>();
+  const std::vector<double> meta = state[0].to(pluss::pCPU, ScalarType::Float64).reshape({state[0].numel()}).host<double>().array().data;
   if (meta.size() < 2) return Status::invalid_argument("SparseLinearRegressor::load_state invalid metadata.");
   trained_ = meta[0] > 0.5;
   feature_count_ = static_cast<std::int64_t>(meta[1]);
-  weights_ = state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).to_vec<double>();
+  weights_ = state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).host<double>().array().data;
   if (static_cast<std::int64_t>(weights_.size()) != feature_count_ + 1) {
     return Status::shape_mismatch("SparseLinearRegressor::load_state coefficient size mismatch.");
   }
@@ -979,12 +979,12 @@ StatusOr<std::vector<Series>> SparseLinearMultiClassifier::dump_state() const {
 
 Status SparseLinearMultiClassifier::load_state(pluss::msharp::RangeView::Series state) {
   if (state.size() < 3) return Status::invalid_argument("SparseLinearMultiClassifier::load_state expects 3 tensors.");
-  const std::vector<double> meta = state[0].to(pluss::pCPU, ScalarType::Float64).reshape({state[0].numel()}).to_vec<double>();
+  const std::vector<double> meta = state[0].to(pluss::pCPU, ScalarType::Float64).reshape({state[0].numel()}).host<double>().array().data;
   if (meta.size() < 2) return Status::invalid_argument("SparseLinearMultiClassifier::load_state invalid metadata.");
   trained_ = meta[0] > 0.5;
   feature_count_ = static_cast<std::int64_t>(meta[1]);
-  class_values_ = state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).to_vec<double>();
-  weights_ = state[2].to(pluss::pCPU, ScalarType::Float64).reshape({state[2].numel()}).to_vec<double>();
+  class_values_ = state[1].to(pluss::pCPU, ScalarType::Float64).reshape({state[1].numel()}).host<double>().array().data;
+  weights_ = state[2].to(pluss::pCPU, ScalarType::Float64).reshape({state[2].numel()}).host<double>().array().data;
   const std::int64_t stride = feature_count_ + 1;
   if (class_values_.size() < 2) {
     return Status::shape_mismatch("SparseLinearMultiClassifier::load_state requires at least two classes.");
@@ -1084,8 +1084,8 @@ StatusOr<SparseCrossReport> cross_assess_sparse_impl(const SparseTripletMatrix& 
     SparseFoldReport fold{};
     fold.metrics = test_metrics_or.move_value().to(ScalarType::Float64).reshape({static_cast<std::int64_t>(report.metrics.size())});
     fold.train_metrics = train_metrics_or.move_value().to(ScalarType::Float64).reshape({static_cast<std::int64_t>(report.metrics.size())});
-    const std::vector<double> test_vec = fold.metrics.to(pluss::pCPU, ScalarType::Float64).reshape({static_cast<std::int64_t>(report.metrics.size())}).to_vec<double>();
-    const std::vector<double> train_vec = fold.train_metrics.to(pluss::pCPU, ScalarType::Float64).reshape({static_cast<std::int64_t>(report.metrics.size())}).to_vec<double>();
+    const std::vector<double> test_vec = fold.metrics.to(pluss::pCPU, ScalarType::Float64).reshape({static_cast<std::int64_t>(report.metrics.size())}).host<double>().array().data;
+    const std::vector<double> train_vec = fold.train_metrics.to(pluss::pCPU, ScalarType::Float64).reshape({static_cast<std::int64_t>(report.metrics.size())}).host<double>().array().data;
     test_metric_values.insert(test_metric_values.end(), test_vec.begin(), test_vec.end());
     train_metric_values.insert(train_metric_values.end(), train_vec.begin(), train_vec.end());
     fold.train_indices = split_fold.train_indices;
@@ -1216,10 +1216,10 @@ void populate_sparse_tune_ledger(SparseTuneReport& report) {
     if (!trial.status.ok() || metric_count == 0) continue;
     const std::vector<double> mean_vec = trial.assess.mean_metrics.to(pluss::pCPU, ScalarType::Float64)
                                              .reshape({static_cast<std::int64_t>(metric_count)})
-                                             .to_vec<double>();
+                                             .host<double>().array().data;
     const std::vector<double> std_vec = trial.assess.std_metrics.to(pluss::pCPU, ScalarType::Float64)
                                             .reshape({static_cast<std::int64_t>(metric_count)})
-                                            .to_vec<double>();
+                                            .host<double>().array().data;
     for (std::size_t m = 0; m < metric_count; ++m) {
       mean_test[i * metric_count + m] = mean_vec[m];
       std_test[i * metric_count + m] = std_vec[m];
@@ -1227,7 +1227,7 @@ void populate_sparse_tune_ledger(SparseTuneReport& report) {
     for (std::size_t f = 0; f < trial.assess.folds.size(); ++f) {
       const std::vector<double> fold_vec = trial.assess.folds[f].metrics.to(pluss::pCPU, ScalarType::Float64)
                                                .reshape({static_cast<std::int64_t>(metric_count)})
-                                               .to_vec<double>();
+                                               .host<double>().array().data;
       for (std::size_t m = 0; m < metric_count; ++m) {
         split_test[i * (max_folds * metric_count) + f * metric_count + m] = fold_vec[m];
       }
@@ -1324,7 +1324,7 @@ StatusOr<SparseTuneReport> sweep_sparse_impl(pluss::msharp::RangeView::Of<Linear
       continue;
     }
     const std::vector<double> mean_metrics =
-        trial.assess.mean_metrics.to(pluss::pCPU, ScalarType::Float64).reshape({trial.assess.mean_metrics.numel()}).to_vec<double>();
+        trial.assess.mean_metrics.to(pluss::pCPU, ScalarType::Float64).reshape({trial.assess.mean_metrics.numel()}).host<double>().array().data;
     trial.objective = mean_metrics[static_cast<std::size_t>(metric_index)];
     report.trials.push_back(std::move(trial));
 

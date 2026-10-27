@@ -83,19 +83,19 @@ TEST_CASE("CUDA native lane expansion covers dim/layout/dtype widening", "[cuda]
   const auto sel_cuda = sel_cpu.to(pluss::pCUDA);
   const auto sort0_cpu = sel_cpu.sort(/*dim=*/0, /*descending=*/false, /*stable=*/true);
   const auto sort0_cuda = sel_cuda.sort(/*dim=*/0, /*descending=*/false, /*stable=*/true);
-  require_equal_(sort0_cuda.to(pluss::pCPU).to_vec<std::int64_t>(), sort0_cpu.to_vec<std::int64_t>());
+  require_equal_(sort0_cuda.to(pluss::pCPU).host<std::int64_t>(), sort0_cpu.host<std::int64_t>());
 
   require_equal_(
-      sel_cuda.sum(/*dim=*/0, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-      sel_cpu.sum(/*dim=*/0, /*keepdim=*/false).to_vec<std::int64_t>());
+      sel_cuda.sum(/*dim=*/0, /*keepdim=*/false).to(pluss::pCPU).host<std::int64_t>(),
+      sel_cpu.sum(/*dim=*/0, /*keepdim=*/false).host<std::int64_t>());
 
   const auto topk_cpu = sel_cpu.topk(/*k=*/2, /*dim=*/0, /*largest=*/true, /*sorted=*/false);
   const auto topk_cuda = sel_cuda.topk(/*k=*/2, /*dim=*/0, /*largest=*/true, /*sorted=*/false);
-  require_equal_(topk_cuda.to(pluss::pCPU).to_vec<std::int64_t>(), topk_cpu.to_vec<std::int64_t>());
+  require_equal_(topk_cuda.to(pluss::pCPU).host<std::int64_t>(), topk_cpu.host<std::int64_t>());
 
   const auto argsort_cpu = sel_cpu.argsort(/*dim=*/0, /*descending=*/false, /*stable=*/true);
   const auto argsort_cuda = sel_cuda.argsort(/*dim=*/0, /*descending=*/false, /*stable=*/true);
-  require_equal_(argsort_cuda.to(pluss::pCPU).to_vec<std::int64_t>(), argsort_cpu.to_vec<std::int64_t>());
+  require_equal_(argsort_cuda.to(pluss::pCPU).host<std::int64_t>(), argsort_cpu.host<std::int64_t>());
 
   // Matmul: float64 + non-contiguous lane.
   const auto a_base_cpu = pluss::make_series(
@@ -109,15 +109,15 @@ TEST_CASE("CUDA native lane expansion covers dim/layout/dtype widening", "[cuda]
   const auto a_cuda = a_cpu.to(pluss::pCUDA);
   const auto b_cuda = b_cpu.to(pluss::pCUDA);
   require_close_(
-      a_cuda.matmul(b_cuda).to(pluss::pCPU).to_vec<double>(),
-      a_cpu.matmul(b_cpu).to_vec<double>());
+      a_cuda.matmul(b_cuda).to(pluss::pCPU).host<double>(),
+      a_cpu.matmul(b_cpu).host<double>());
 
   // Indexing: non-contiguous take lane.
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{0, 5, 8, 3}, {4});
   const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
   require_close_(
-      a_cuda.take(idx_cuda).to(pluss::pCPU).to_vec<double>(),
-      a_cpu.take(idx_cpu).to_vec<double>());
+      a_cuda.take(idx_cuda).to(pluss::pCPU).host<double>(),
+      a_cpu.take(idx_cpu).host<double>());
 
   // Scatter/gather: float64 + broadcast src lane.
   const auto self_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float64);
@@ -128,22 +128,22 @@ TEST_CASE("CUDA native lane expansion covers dim/layout/dtype widening", "[cuda]
   const auto src_cuda = src_cpu.to(pluss::pCUDA);
 
   require_close_(
-      self_cuda.scatter(1, idx2_cuda, src_cuda).to(pluss::pCPU).to_vec<double>(),
-      self_cpu.scatter(1, idx2_cpu, src_cpu).to_vec<double>());
+      self_cuda.scatter(1, idx2_cuda, src_cuda).to(pluss::pCPU).host<double>(),
+      self_cpu.scatter(1, idx2_cpu, src_cpu).host<double>());
 
   const auto input_cpu = pluss::make_series(std::vector<double>{3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {2, 3});
   const auto input_cuda = input_cpu.to(pluss::pCUDA);
   require_close_(
-      input_cuda.gather(1, idx2_cuda).to(pluss::pCPU).to_vec<double>(),
-      input_cpu.gather(1, idx2_cpu).to_vec<double>());
+      input_cuda.gather(1, idx2_cuda).to(pluss::pCPU).host<double>(),
+      input_cpu.gather(1, idx2_cpu).host<double>());
 
   require_close_(
-      a_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<double>(),
-      a_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<double>());
+      a_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<double>(),
+      a_cpu.sum(/*dim=*/1, /*keepdim=*/false).host<double>());
   require_close_(
-      a_cuda.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<double>(),
-      a_cpu.mean(/*dim=*/1, /*keepdim=*/false).to_vec<double>());
+      a_cuda.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<double>(),
+      a_cpu.mean(/*dim=*/1, /*keepdim=*/false).host<double>());
   require_equal_(
-      a_cuda.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-      a_cpu.argmax(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>());
+      a_cuda.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int64_t>(),
+      a_cpu.argmax(/*dim=*/1, /*keepdim=*/false).host<std::int64_t>());
 }

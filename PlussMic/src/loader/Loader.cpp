@@ -1713,7 +1713,7 @@ std::vector<bool> slate_validity(const pluss::table::Slate& slate) {
   if (!pluss::table::detail::has_validity_mask(slate)) {
     return std::vector<bool>(n, true);
   }
-  auto valid = pluss::table::detail::validity_mask(slate)->to_vec<bool>();
+  auto valid = pluss::table::detail::validity_mask(slate)->host<bool>();
   PLUSS_CHECK(valid.size() == n, "loader::save_parquet: slate validity mask size mismatch");
   return valid;
 }
@@ -1751,7 +1751,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
 
   switch (series.scalar_type()) {
     case pluss::codem::ScalarType::Bool: {
-      const auto values = series.to_vec<bool>();
+      const auto values = series.host<bool>();
       arrow::BooleanBuilder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1760,7 +1760,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "Bool");
     }
     case pluss::codem::ScalarType::Int8: {
-      const auto values = series.to_vec<std::int8_t>();
+      const auto values = series.host<std::int8_t>();
       arrow::Int8Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1769,7 +1769,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "Int8");
     }
     case pluss::codem::ScalarType::Int16: {
-      const auto values = series.to_vec<std::int16_t>();
+      const auto values = series.host<std::int16_t>();
       arrow::Int16Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1778,7 +1778,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "Int16");
     }
     case pluss::codem::ScalarType::Int32: {
-      const auto values = series.to_vec<std::int32_t>();
+      const auto values = series.host<std::int32_t>();
       arrow::Int32Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1787,7 +1787,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "Int32");
     }
     case pluss::codem::ScalarType::Int64: {
-      const auto values = series.to_vec<std::int64_t>();
+      const auto values = series.host<std::int64_t>();
       arrow::Int64Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1796,7 +1796,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "Int64");
     }
     case pluss::codem::ScalarType::UInt8: {
-      const auto values = series.to_vec<std::uint8_t>();
+      const auto values = series.host<std::uint8_t>();
       arrow::UInt8Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1805,7 +1805,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "UInt8");
     }
     case pluss::codem::ScalarType::UInt16: {
-      const auto values = series.to_vec<std::uint16_t>();
+      const auto values = series.host<std::uint16_t>();
       arrow::UInt16Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1814,7 +1814,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "UInt16");
     }
     case pluss::codem::ScalarType::UInt32: {
-      const auto values = series.to_vec<std::uint32_t>();
+      const auto values = series.host<std::uint32_t>();
       arrow::UInt32Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1823,7 +1823,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "UInt32");
     }
     case pluss::codem::ScalarType::UInt64: {
-      const auto values = series.to_vec<std::uint64_t>();
+      const auto values = series.host<std::uint64_t>();
       arrow::UInt64Builder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1834,7 +1834,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
     case pluss::codem::ScalarType::Float16:
     case pluss::codem::ScalarType::BFloat16:
     case pluss::codem::ScalarType::Float32: {
-      const auto values = series.to(pluss::codem::ScalarType::Float32).to_vec<float>();
+      const auto values = series.to(pluss::codem::ScalarType::Float32).host<float>();
       arrow::FloatBuilder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -1843,7 +1843,7 @@ std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Sl
       return finish_or_throw(builder, "Float32");
     }
     case pluss::codem::ScalarType::Float64: {
-      const auto values = series.to_vec<double>();
+      const auto values = series.host<double>();
       arrow::DoubleBuilder builder;
       for (std::size_t i = 0; i < n; ++i) {
         auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
@@ -2895,7 +2895,7 @@ void save_json(const pluss::table::DataFrame& frame,
   std::vector<std::optional<pluss::Note>> note_cache(columns.size());
   for (std::size_t j = 0; j < columns.size(); ++j) {
     if (pluss::table::detail::has_validity_mask(columns[j])) {
-      valid_masks[j] = pluss::table::detail::validity_mask(columns[j])->to_vec<bool>();
+      valid_masks[j] = pluss::table::detail::validity_mask(columns[j])->host<bool>();
     }
     if (columns[j].kind() != pluss::table::SlateKind::Series) {
       note_cache[j] = columns[j].cast().note().as_note();

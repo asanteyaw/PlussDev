@@ -32,7 +32,7 @@ Example 1. Average three values.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 auto out = slot.mean();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<double>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<double>()[0];
 ```
 
 ### Output

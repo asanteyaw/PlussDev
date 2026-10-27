@@ -213,7 +213,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -249,12 +249,12 @@ int main() {
   const Series irf = fit.irf(io);
   std::cout << std::fixed << std::setprecision(4);
   for (int s = 0; s < 4; ++s) {
-    const auto v = irf.select(0, s).to_vec<double>();
+    const auto v = irf.select(0, s).host<double>();
     std::cout << "step " << s << "  shock 0 -> (" << v[0] << ", " << v[1] << ")   shock 1 -> (" << v[2] << ", " << v[3] << ")\n";
   }
   ts::FevdOptions fo;
   fo.horizon = 4;
-  const auto f = fit.fevd(fo).select(0, 3).to_vec<double>();
+  const auto f = fit.fevd(fo).select(0, 3).host<double>();
   std::cout << "variance of series 0 at step 4 due to shock 0: " << f[0] << ", shock 1: " << f[2] << "\n";
 }
 ```
@@ -278,7 +278,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -315,8 +315,8 @@ int main() {
     ts::GrangerOptions g;
     g.stat = kind;
     const auto r = fit.granger_test(y, g);
-    const auto cause = r.cause.to_vec<std::int64_t>(), effect = r.effect.to_vec<std::int64_t>();
-    const auto stat = r.stat.to_vec<double>(), p = r.pvalue.to_vec<double>();
+    const auto cause = r.cause.host<std::int64_t>(), effect = r.effect.host<std::int64_t>();
+    const auto stat = r.stat.host<double>(), p = r.pvalue.host<double>();
     for (std::size_t i = 0; i < cause.size(); ++i)
       std::cout << (kind == ts::GrangerStat::F ? "F    " : "Wald ") << "series " << cause[i] << " -> " << effect[i] << "  statistic " << std::fixed << std::setprecision(3) << stat[i] << "  p " << p[i] << "\n";
   }
@@ -342,7 +342,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {

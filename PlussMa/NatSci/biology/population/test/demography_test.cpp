@@ -21,7 +21,7 @@ void expect(bool c, const std::string &m) {
 Series mat(const std::vector<double> &v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(F64); }
 Series vec(const std::vector<double> &v) { return mat(v, {static_cast<std::int64_t>(v.size())}); }
 double rel_diff(const Series &a, const std::vector<double> &b) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch");
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -66,7 +66,7 @@ int main() {
     // ---- batched lanes: several matrices in one call agree with one-at-a-time
     {
       const Series stack = mat([] { std::vector<double> v = ref::m1_A; v.insert(v.end(), ref::m1_A.begin(), ref::m1_A.end()); for (double &x : v) x *= 1.0; return v; }(), {2, 3, 3});
-      const auto d = dg::damping_ratio(stack).contiguous().to_vec<double>();
+      const auto d = dg::damping_ratio(stack).contiguous().host<double>();
       expect(std::abs(d[0] - d[1]) < 1e-12 && std::abs(d[0] - ref::m1_damping_exact[0]) < 1e-8, "lane-batched damping ratio");
     }
     // ---- LTRE
@@ -90,7 +90,7 @@ int main() {
       const Series grad = dg::lambda_gradient(build, theta);
       std::vector<double> fd;
       for (std::int64_t p = 0; p < 4; ++p) {
-        std::vector<double> up = theta.to_vec<double>(), dn = up;
+        std::vector<double> up = theta.host<double>(), dn = up;
         const double h = 1e-6 * up[static_cast<std::size_t>(p)];
         up[static_cast<std::size_t>(p)] += h;
         dn[static_cast<std::size_t>(p)] -= h;
@@ -204,7 +204,7 @@ int main() {
         exact[static_cast<std::size_t>(t)] = absorbed;
       }
       // the truncated upper boundary only affects paths that first climb 4 levels: negligible bias for 20 steps (checked by tolerance)
-      const auto qv = q.contiguous().to_vec<double>();
+      const auto qv = q.contiguous().host<double>();
       double worst = 0.0;
       for (std::size_t t = 0; t < qv.size(); ++t)
         worst = std::max(worst, std::abs(qv[t] - exact[t]));

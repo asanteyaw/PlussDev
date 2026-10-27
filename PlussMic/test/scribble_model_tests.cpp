@@ -104,21 +104,21 @@ std::int64_t to_i64(const Slot::Value& v) {
   expect(is_series(v), "expected Series value");
   const auto& s = std::get<pluss::Series>(v);
   expect(s.numel() == 1, "expected scalar Series");
-  return s.to(pluss::codem::ScalarType::Int64).to_vec<std::int64_t>()[0];
+  return s.to(pluss::codem::ScalarType::Int64).host<std::int64_t>()[0];
 }
 
 double to_f64(const Slot::Value& v) {
   expect(is_series(v), "expected Series value");
   const auto& s = std::get<pluss::Series>(v);
   expect(s.numel() == 1, "expected scalar Series");
-  return s.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0];
+  return s.to(pluss::codem::ScalarType::Float64).host<double>()[0];
 }
 
 bool to_bool(const Slot::Value& v) {
   expect(is_series(v), "expected Series value");
   const auto& s = std::get<pluss::Series>(v);
   expect(s.numel() == 1, "expected scalar Series");
-  return s.to_vec<bool>()[0];
+  return s.host<bool>()[0];
 }
 
 std::string to_string_value(const Slot::Value& v) {

@@ -24,7 +24,7 @@ Config f64() {
 }
 
 std::vector<double> as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 ModelSpec linear_spec() {
@@ -61,7 +61,7 @@ bool run_target_transform_checks(std::ostream* err) {
   models::Model plain(linear_spec());
   plain.learn_(x_frame, y_series);
   const MetricReport plain_report = plain.assess(x_frame, y_series);
-  const double plain_r2 = plain_report.r2.item<double>();
+  const double plain_r2 = plain_report.r2.host<double>().front();
 
   // 2) The same model family, chained with .target_transform(transform::
   // log1p()), should fit (in original y units) far better on this data.
@@ -95,7 +95,7 @@ bool run_target_transform_checks(std::ostream* err) {
   }
 
   const MetricReport wrapped_report = wrapped.assess(x_frame, y_series);
-  const double wrapped_r2 = wrapped_report.r2.item<double>();
+  const double wrapped_r2 = wrapped_report.r2.host<double>().front();
   if (wrapped_r2 < 0.999) {
     if (err) *err << "Model::assess should score close to R2=1 in original y units, got "
                   << wrapped_r2 << "\n";

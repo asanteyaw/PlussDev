@@ -76,13 +76,13 @@ Series real_series(const std::vector<double> &values,
 }
 
 double scalar_f64(const Series &x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).host<double>().front();
 }
 
 std::vector<double> vec_f64(const Series &x) {
   return x.to(pluss::pCPU, ScalarType::Float64)
       .reshape({x.numel()})
-      .to_vec<double>();
+      .host<double>();
 }
 
 } // namespace

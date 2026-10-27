@@ -1,8 +1,0 @@
-# Many equations at once
-
-[Back to Root Finding: Solving Equations](../roots_01_solving_equations.md)
-
-
-@@example Numerical/optimization/guide/roots/502_batched_roots.cpp@@
-
-One call, six different cubics, one set of array operations per iteration. The loop stops when the *slowest* lane is done, so every lane gets the same iteration count. This is the form to use for a sweep or a calibration of many instruments; there is no per-lane host loop to pay for.

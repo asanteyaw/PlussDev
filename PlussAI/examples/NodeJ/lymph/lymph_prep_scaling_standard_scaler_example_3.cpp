@@ -24,8 +24,8 @@ int main() {
   scaler.features({"amount", "ratio"}).learn(train);
   const lymph::prep::StandardScalerSummary s = scaler.summary();
 
-  const auto mean  = s.mean.to(pluss::pCPU, ScalarType::Float64).reshape({s.mean.numel()}).to_vec<double>();
-  const auto scale = s.scale.to(pluss::pCPU, ScalarType::Float64).reshape({s.scale.numel()}).to_vec<double>();
+  const auto mean  = s.mean.to(pluss::pCPU, ScalarType::Float64).reshape({s.mean.numel()}).host<double>();
+  const auto scale = s.scale.to(pluss::pCPU, ScalarType::Float64).reshape({s.scale.numel()}).host<double>();
   for (std::size_t i = 0; i < s.feature_names.size(); ++i) {
     std::cout << s.feature_names[i] << ": mean=" << mean[i] << " scale=" << scale[i] << "\n";
   }

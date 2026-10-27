@@ -57,7 +57,7 @@ void test_repressilator_grid() {
   const Series one = vec({216.0}), a0 = vec({0.216}), be = vec({0.2}), nn = vec({2.0});
   const Series ps = roots::illinois([&](const Series &p) { return p.sub(one.div(p.pow(nn).add(1.0))).sub(a0); }, one.mul(0.0).add(1e-12), one.mul(0.0).add(1e4), {400, 0.0, 1e-13, 8}).root;
   const auto paper = stab::local_stability([&](const Series &s) { return gene::repressilator_rate(s, 216.0, 0.216, 0.2, 2.0); }, ps.unsqueeze(-1).mul(pluss::series::ones({6}, F64)));
-  expect(paper.unstable.item<double>() >= 2.0, "paper parameters: unstable steady state (Hopf pair)");
+  expect(paper.unstable.host<double>().front() >= 2.0, "paper parameters: unstable steady state (Hopf pair)");
 }
 
 // Rosenzweig-MacArthur paradox of enrichment: the coexistence point loses stability at

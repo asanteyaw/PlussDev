@@ -32,7 +32,7 @@ Example 1. Append in place; the same handle grows.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)});
 slot.push_(pluss::make_series(99));
-std::cout << "size=" << slot.size() << " last=" << std::get<pluss::Series>(slot.at(3)).to_vec<std::int64_t>()[0];
+std::cout << "size=" << slot.size() << " last=" << std::get<pluss::Series>(slot.at(3)).host<std::int64_t>()[0];
 ```
 
 ### Output

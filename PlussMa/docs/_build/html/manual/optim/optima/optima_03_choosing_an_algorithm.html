@@ -13,13 +13,13 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="The same problem, four algorithms" href="optima_03_choosing_an_algorithm/the_same_problem_four_algorithms.html" />
-    <link rel="prev" title="Using the answer without checking the flag" href="optima_02_reading_results/using_the_answer_without_checking_the_flag.html" />
+    <link rel="next" title="Four algorithms on one problem" href="optima_03_choosing_an_algorithm/four_algorithms_on_one_problem.html" />
+    <link rel="prev" title="Watching a run" href="optima_02_reading_results/watching_a_run.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -81,15 +81,9 @@
 <section id="a-guided-tour">
 <h2>A guided tour<a class="headerlink" href="#a-guided-tour" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/the_same_problem_four_algorithms.html"><span class="std std-doc">The same problem, four algorithms</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/what_happens_to_the_constraints_on_the_way.html"><span class="std std-doc">What happens to the constraints on the way</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/where_you_start_decides_where_you_end.html"><span class="std std-doc">Where you start decides where you end</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/when_the_objective_is_not_a_number.html"><span class="std std-doc">When the objective is not a number</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/the_curvature_model.html"><span class="std std-doc">The curvature model</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/badly_scaled_problems.html"><span class="std std-doc">Badly scaled problems</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/the_options_that_decide_the_outcome.html"><span class="std std-doc">The options that decide the outcome</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/growing_the_problem.html"><span class="std std-doc">Growing the problem</span></a></p></li>
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/the_ready_made_option_sets.html"><span class="std std-doc">The ready-made option sets</span></a></p></li>
+<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/four_algorithms_on_one_problem.html"><span class="std std-doc">Four algorithms on one problem</span></a></p></li>
+<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/curvature_scaling_and_size.html"><span class="std std-doc">Curvature, scaling and size</span></a></p></li>
+<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/options_and_presets.html"><span class="std std-doc">Options and presets</span></a></p></li>
 </ul>
 </section>
 <section id="decisions">
@@ -127,9 +121,6 @@
 </section>
 <section id="pitfalls">
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="optima_03_choosing_an_algorithm/setting_an_option_on_the_wrong_struct.html"><span class="std std-doc">Setting an option on the wrong struct</span></a></p></li>
-</ul>
 <section id="treating-converged-as-optimal">
 <h3>Treating <code class="docutils literal notranslate"><span class="pre">Converged</span></code> as <code class="docutils literal notranslate"><span class="pre">Optimal</span></code><a class="headerlink" href="#treating-converged-as-optimal" title="Link to this heading">¶</a></h3>
 <p>Programs 1, 3 and 7 each show a run that exits with flag <code class="docutils literal notranslate"><span class="pre">1</span></code> at a point that is not the best one found by the others. The flag certifies the first-order conditions at the returned point, nothing more. If the answer matters, solve from more than one start or with more than one algorithm and compare the objective values.</p>
@@ -157,7 +148,7 @@
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
@@ -168,6 +159,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

@@ -193,6 +193,34 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/rule
+.PHONY : PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/rule
+
+# Convenience name for target.
+distr_generic_test: PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/rule
+.PHONY : distr_generic_test
+
+# fast build rule for target.
+distr_generic_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/build
+.PHONY : distr_generic_test/fast
+
+# Convenience name for target.
+PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/rule
+.PHONY : PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/rule
+
+# Convenience name for target.
+distr_heavy_test: PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/rule
+.PHONY : distr_heavy_test
+
+# fast build rule for target.
+distr_heavy_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/build
+.PHONY : distr_heavy_test/fast
+
+# Convenience name for target.
 PlussMa/Stats/distributions/test/CMakeFiles/distr_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/distributions/test/CMakeFiles/distr_test.dir/rule
 .PHONY : PlussMa/Stats/distributions/test/CMakeFiles/distr_test.dir/rule
@@ -219,6 +247,54 @@ distr_objects_catch2: PlussMa/Stats/distributions/test/CMakeFiles/distr_objects_
 distr_objects_catch2/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_objects_catch2.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_objects_catch2.dir/build
 .PHONY : distr_objects_catch2/fast
+
+distr_generic_test.o: distr_generic_test.cpp.o
+.PHONY : distr_generic_test.o
+
+# target to build an object file
+distr_generic_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/distr_generic_test.cpp.o
+.PHONY : distr_generic_test.cpp.o
+
+distr_generic_test.i: distr_generic_test.cpp.i
+.PHONY : distr_generic_test.i
+
+# target to preprocess a source file
+distr_generic_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/distr_generic_test.cpp.i
+.PHONY : distr_generic_test.cpp.i
+
+distr_generic_test.s: distr_generic_test.cpp.s
+.PHONY : distr_generic_test.s
+
+# target to generate assembly for a file
+distr_generic_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_generic_test.dir/distr_generic_test.cpp.s
+.PHONY : distr_generic_test.cpp.s
+
+distr_heavy_test.o: distr_heavy_test.cpp.o
+.PHONY : distr_heavy_test.o
+
+# target to build an object file
+distr_heavy_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/distr_heavy_test.cpp.o
+.PHONY : distr_heavy_test.cpp.o
+
+distr_heavy_test.i: distr_heavy_test.cpp.i
+.PHONY : distr_heavy_test.i
+
+# target to preprocess a source file
+distr_heavy_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/distr_heavy_test.cpp.i
+.PHONY : distr_heavy_test.cpp.i
+
+distr_heavy_test.s: distr_heavy_test.cpp.s
+.PHONY : distr_heavy_test.s
+
+# target to generate assembly for a file
+distr_heavy_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/build.make PlussMa/Stats/distributions/test/CMakeFiles/distr_heavy_test.dir/distr_heavy_test.cpp.s
+.PHONY : distr_heavy_test.cpp.s
 
 distr_objects_catch2.o: distr_objects_catch2.cpp.o
 .PHONY : distr_objects_catch2.o
@@ -283,8 +359,16 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... distr_generic_test"
+	@echo "... distr_heavy_test"
 	@echo "... distr_objects_catch2"
 	@echo "... distr_test"
+	@echo "... distr_generic_test.o"
+	@echo "... distr_generic_test.i"
+	@echo "... distr_generic_test.s"
+	@echo "... distr_heavy_test.o"
+	@echo "... distr_heavy_test.i"
+	@echo "... distr_heavy_test.s"
 	@echo "... distr_objects_catch2.o"
 	@echo "... distr_objects_catch2.i"
 	@echo "... distr_objects_catch2.s"

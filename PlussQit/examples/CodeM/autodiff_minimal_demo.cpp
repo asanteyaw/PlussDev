@@ -4,21 +4,20 @@
 
 int main() {
   using pluss::ScalarType;
-  using pluss::subsp::math::diff::Trace;
-  using pluss::subsp::math::diff::trace;
   using pluss::subsp::math::diff::value_and_grad;
 
   const auto x = pluss::make_series(1.25).to(ScalarType::Float64);
 
-  auto tracked_x = trace(x, true);
+  auto tracked_x = x;
+  tracked_x.tracks_slope_(true);
   auto tracked_y = tracked_x * tracked_x * tracked_x - 2.0 * (tracked_x * tracked_x) + tracked_x;
   tracked_y.reverse();
 
-  std::cout << "reverse value: " << tracked_y.value().item<double>() << "\n";
+  std::cout << "reverse value: " << tracked_y.item<double>() << "\n";
   std::cout << "reverse grad : " << tracked_x.sensitivity().item<double>() << "\n";
 
   const auto [value, grad] = value_and_grad(
-      [](const Trace& z) -> Trace {
+      [](const pluss::Series& z) -> pluss::Series {
         return z * z * z - 2.0 * (z * z) + z;
       },
       x);

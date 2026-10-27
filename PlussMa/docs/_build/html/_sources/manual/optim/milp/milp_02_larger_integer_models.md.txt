@@ -29,8 +29,7 @@ A dense `milp::Problem` is solved with the sparse engine by `lp::solve_sparse(pr
 
 ## Programs
 
-- [Where to open warehouses](milp_02_larger_integer_models/where_to_open_warehouses.md)
-- [A weekly staff schedule](milp_02_larger_integer_models/a_weekly_staff_schedule.md)
+- [Larger integer models](milp_02_larger_integer_models/larger_integer_models.md)
 
 ## A routine for an integer program
 
@@ -53,7 +52,6 @@ A dense `milp::Problem` is solved with the sparse engine by `lp::solve_sparse(pr
 :maxdepth: 2
 :hidden:
 
-milp_02_larger_integer_models/where_to_open_warehouses
-milp_02_larger_integer_models/a_weekly_staff_schedule
+milp_02_larger_integer_models/larger_integer_models
 ```
 <!-- apiref:toctree:end -->

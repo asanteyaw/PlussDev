@@ -41,7 +41,7 @@ int main() {
     krylov::ExpOptions o;
     o.max_iterations = size;
     const auto r = krylov::exp_action(laplacian, vec(spike), {-1}, -t, o);
-    const auto y = r.value.to_vec<double>();
+    const auto y = r.value.host<double>();
     double worst = 0.0;
     for (std::int64_t j = 0; j < n; ++j) worst = std::max(worst, std::abs(y[j] - exact[j]));
     std::cout << std::left << std::setw(12) << size << std::setw(12) << r.converged.item<bool>() << std::scientific << std::setprecision(1) << std::setw(18) << r.residual_estimate.item<double>() << worst << "\n";

@@ -53,8 +53,8 @@ auto localized = rg.fields({"ts"}).tl().localize(options);
 
 auto before = rg.fields({"ts"}).tl().epoch(pluss::table::TimeUnit::Seconds);
 auto after = localized.fields({"ts"}).tl().epoch(pluss::table::TimeUnit::Seconds);
-std::cout << "epoch before: " << std::get<pluss::Series>(before.fields("ts").at(0)).to_vec<std::int64_t>()[0] << "\n";
-std::cout << "epoch after: " << std::get<pluss::Series>(after.fields("ts").at(0)).to_vec<std::int64_t>()[0] << "\n";
+std::cout << "epoch before: " << std::get<pluss::Series>(before.fields("ts").at(0)).host<std::int64_t>()[0] << "\n";
+std::cout << "epoch after: " << std::get<pluss::Series>(after.fields("ts").at(0)).host<std::int64_t>()[0] << "\n";
 
 auto fmted = localized.fields("ts").tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << "displayed: " << std::get<pluss::Note>(fmted.at(0)).at(0);

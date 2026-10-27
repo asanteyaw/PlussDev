@@ -1,0 +1,36 @@
+# Larger integer models
+
+[Back to Integer Programming 2: Larger Models and Worked Problems](../milp_02_larger_integer_models.md)
+
+Real integer models are bigger, mix whole and continuous variables, and benefit from a stronger search. The sparse **branch-and-cut** solver adds *cuts* (extra constraints that remove fractional points without removing whole ones), presolve and heuristics to the branching, and often finishes at the root where the dense branch-and-bound needs dozens or hundreds of nodes. This page uses it on two complete problems, with the dense engine alongside for comparison.
+
+The first is **facility location**: choose which of four sites to open (each with a fixed cost and a capacity) and how to ship to six customers, at least total cost. The open-or-closed decision is a 0/1 variable and shipments are continuous. The second is a **weekly staff schedule**: each employee works five consecutive days then has two off, and the number needed each day is known; how many should start on each day? Both are verified independently of the solver: by enumerating the integer part and solving the linear part exactly.
+
+## Program 1: Where to open warehouses
+
+Four sites could be opened, each with a fixed cost and a capacity. Six customers need known amounts, and shipping costs a given amount per unit from each site to each customer. Choose which sites to open and how to ship, at least total cost. Each site's open or closed decision is a 0/1 variable `y`; the shipments `x` are continuous; and a row per site says that what it ships out is at most its capacity times `y`, which forces a closed site to ship nothing. This mix of a few integer variables and many continuous ones is typical.
+
+@@example Numerical/optimization/guide/lp/217_facility_location.cpp@@
+
+Both engines find the cost 376 with sites 1 and 2 open: the dense branch-and-bound in 21 nodes, the sparse branch-and-cut in 5. The last line is the independent check. With four sites there are only 15 non-empty sets of sites to open; for each, the program fixes the `y` values and solves the remaining shipping problem as a plain linear program, and takes the best. It also finds 376 with sites 1 and 2. Three separate routes to the same number is as good a verification as an integer program allows.
+
+This is the general way to verify a mixed model whose integer part is small: enumerate the integer part, and solve the linear part exactly.
+
+## Program 2: A weekly staff schedule
+
+Each employee works five consecutive days and then has two days off, and a shift can start on any day of the week. The number of people needed each day is known: 17, 13, 15, 19, 14, 16 and 11 from Monday to Sunday. How many should start on each day so that every day is covered, with the fewest employees? The starts are non-negative integers, and day `d` is covered by everyone who started in the five days ending at `d`.
+
+@@example Numerical/optimization/guide/lp/218_staff_schedule.cpp@@
+
+Both engines find that **23** employees are needed. The dense search takes 103 nodes; the sparse solver reports 0 nodes, meaning its presolve, cuts and heuristics finished at the root. The table checks the plan day by day: starts of 1, 5, 1, 8, 0, 2 and 6, and every day has at least the people it needs. Tuesday has 14 for a need of 13, Thursday 21 for 19, Friday 15 for 14 and Sunday 17 for 11, so there is slack, which is normal: the five-day pattern cannot match the daily needs exactly.
+
+The final lines prove the answer optimal without either solver. If 22 employees could cover the week, then some assignment of exactly 22 would, because an extra employee never hurts. There are 376,740 ways to split 22 employees over the seven start days, and the program tries all of them: none covers the week. So 23 is optimal. Counting arguments like this one are not available for most models, but where they are, they are the strongest check.
+
+## Decisions and pitfalls
+
+- **Verify a mixed model by enumerating its integer part.** With four sites there are 15 non-empty sets to open; for each, solve the linear part exactly and compare.
+- **The sparse solver can finish at the root.** Presolve, cuts and heuristics may leave 0 nodes to explore where the dense search needs 100.
+- **A tight bound is a proof.** The staff schedule is proved optimal without either solver by showing no assignment of 22 employees covers the week.
+- **Model with the smallest integer part you can.** Every 0/1 variable multiplies the search; formulate cuts and bounds tightly.
+
+Where next: That completes integer programming. [Root finding](../../roots.md) is next.

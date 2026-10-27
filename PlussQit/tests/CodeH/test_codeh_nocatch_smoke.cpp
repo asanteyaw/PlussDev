@@ -56,21 +56,21 @@ void test_generated_timeline_surface() {
 
   const Timeline t = pluss::timeline::make("2026-02-15T13:04:05Z");
   expect_true(t.defined(), "moment scalar is defined");
-  expect_true(t.year().to_vec<std::int32_t>(0) == 2026, "year() generated method");
-  expect_true(t.month().to_vec<std::int32_t>(0) == 2, "month() generated method");
-  expect_true(t.day().to_vec<std::int32_t>(0) == 15, "day() generated method");
-  expect_true(t.hour().to_vec<std::int32_t>(0) == 13, "hour() generated method");
-  expect_true(t.minute().to_vec<std::int32_t>(0) == 4, "minute() generated method");
-  expect_true(t.second().to_vec<std::int32_t>(0) == 5, "second() generated method");
+  expect_true(t.year().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2026, "year() generated method");
+  expect_true(t.month().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2, "month() generated method");
+  expect_true(t.day().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 15, "day() generated method");
+  expect_true(t.hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 13, "hour() generated method");
+  expect_true(t.minute().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 4, "minute() generated method");
+  expect_true(t.second().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 5, "second() generated method");
 
   const auto iso = t.isoformat();
   expect_true(iso.find("2026-02-15T13:04:05") != std::string::npos,
               "isoformat contains expected timestamp");
 
   const auto d = t.floor("D");
-  expect_true(d.hour().to_vec<std::int32_t>(0) == 0, "floor(D) zeros hour");
-  expect_true(d.minute().to_vec<std::int32_t>(0) == 0, "floor(D) zeros minute");
-  expect_true(d.second().to_vec<std::int32_t>(0) == 0, "floor(D) zeros second");
+  expect_true(d.hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 0, "floor(D) zeros hour");
+  expect_true(d.minute().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 0, "floor(D) zeros minute");
+  expect_true(d.second().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 0, "floor(D) zeros second");
 
   const auto plus2s = t.add_nanos(2'000'000'000LL);
   expect_true(t.seconds_between(plus2s) == 2,
@@ -131,24 +131,24 @@ void test_timeline_local_field_replacement() {
                            .set_second(0);
   expect_true(changed.dim() == 2 && changed.sizes() == base.sizes(),
               "set_* preserves rank and shape");
-  expect_eq_vec(changed.year().to_vec<std::int32_t>(), {2030, 2030, 2030, 2030},
+  expect_eq_vec(changed.year().host<std::int32_t>(), {2030, 2030, 2030, 2030},
                 "set_year applies elementwise");
-  expect_eq_vec(changed.month().to_vec<std::int32_t>(), {2, 2, 2, 2},
+  expect_eq_vec(changed.month().host<std::int32_t>(), {2, 2, 2, 2},
                 "set_month applies elementwise");
-  expect_eq_vec(changed.day().to_vec<std::int32_t>(), {1, 1, 1, 1},
+  expect_eq_vec(changed.day().host<std::int32_t>(), {1, 1, 1, 1},
                 "set_day applies elementwise");
-  expect_eq_vec(changed.hour().to_vec<std::int32_t>(), {6, 6, 6, 6},
+  expect_eq_vec(changed.hour().host<std::int32_t>(), {6, 6, 6, 6},
                 "set_hour applies elementwise");
-  expect_eq_vec(changed.minute().to_vec<std::int32_t>(), {15, 15, 15, 15},
+  expect_eq_vec(changed.minute().host<std::int32_t>(), {15, 15, 15, 15},
                 "set_minute applies elementwise");
-  expect_eq_vec(changed.second().to_vec<std::int32_t>(), {0, 0, 0, 0},
+  expect_eq_vec(changed.second().host<std::int32_t>(), {0, 0, 0, 0},
                 "set_second applies elementwise");
-  expect_eq_vec(changed.nanosecond().to_vec<std::int32_t>(),
+  expect_eq_vec(changed.nanosecond().host<std::int32_t>(),
                 {123456789, 4, 900000000, 1},
                 "set_* preserves fractional nanoseconds");
 
   const auto with_nat = pluss::timeline::make({"2024-01-01T00:00:00Z", ""});
-  expect_true(with_nat.set_hour(8).isnat().to_vec<bool>(1),
+  expect_true(with_nat.set_hour(8).isnat().host<bool>().array().data.at(static_cast<std::size_t>(1)),
               "set_* propagates NaT");
 
   expect_throw([] {
@@ -187,7 +187,7 @@ void test_timeline_local_field_replacement() {
           freed = true;
           std::free(p);
         });
-    expect_eq_vec(strided.set_year(2030).year().to_vec<std::int32_t>(), {2030, 2030},
+    expect_eq_vec(strided.set_year(2030).year().host<std::int32_t>(), {2030, 2030},
                   "set_year follows logical strided positions");
   }
   expect_true(freed, "strided replacement source deleter called");
@@ -289,18 +289,18 @@ void test_dataframe_datetime_tranche() {
 
   const Timeline ymd = Timeline::from_ymd(years, months, days, "UTC");
   expect_true(ymd.numel() == 3, "from_ymd builds 1D timeline");
-  expect_eq_vec(ymd.year().to_vec<std::int32_t>(), {2024, 2024, 2024},
+  expect_eq_vec(ymd.year().host<std::int32_t>(), {2024, 2024, 2024},
                 "from_ymd year fields");
-  expect_eq_vec(ymd.day().to_vec<std::int32_t>(), {2, 3, 4},
+  expect_eq_vec(ymd.day().host<std::int32_t>(), {2, 3, 4},
                 "from_ymd day fields");
 
   const Timeline ymdhms =
       Timeline::from_ymdhms(years, months, days, hours, mins, secs, "UTC");
-  expect_eq_vec(ymdhms.hour().to_vec<std::int32_t>(), {10, 11, 12},
+  expect_eq_vec(ymdhms.hour().host<std::int32_t>(), {10, 11, 12},
                 "from_ymdhms hour fields");
-  expect_eq_vec(ymdhms.minute().to_vec<std::int32_t>(), {5, 6, 7},
+  expect_eq_vec(ymdhms.minute().host<std::int32_t>(), {5, 6, 7},
                 "from_ymdhms minute fields");
-  expect_eq_vec(ymdhms.second().to_vec<std::int32_t>(), {8, 9, 10},
+  expect_eq_vec(ymdhms.second().host<std::int32_t>(), {8, 9, 10},
                 "from_ymdhms second fields");
 
   const auto epoch_s = ymdhms.epoch_seconds();
@@ -336,7 +336,7 @@ void test_factory_rank_and_printing() {
       {"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"},
   });
   expect_true(t2.dim() == 2, "moment 2D rank");
-  expect_eq_vec(t2.day().to_vec<std::int32_t>(), std::vector<std::int32_t>{1, 1, 2, 2},
+  expect_eq_vec(t2.day().host<std::int32_t>(), std::vector<std::int32_t>{1, 1, 2, 2},
                 "moment 2D flatten order");
 
   const auto t3 = pluss::timeline::make({
@@ -358,7 +358,7 @@ void test_factory_rank_and_printing() {
   const std::vector<std::int64_t> lvalue_shape{2, 2};
   const auto t_lvalue = pluss::timeline::make(lvalue_flat, lvalue_shape);
   expect_true(t_lvalue.dim() == 2, "make_timeline lvalue flat+shape rank");
-  expect_true(t_lvalue.month().to_vec<std::int32_t>(0) == 2, "make_timeline lvalue parse");
+  expect_true(t_lvalue.month().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2, "make_timeline lvalue parse");
 
   const std::vector<std::int64_t> epoch_flat{
       0, 1'000'000'000LL, 2'000'000'000LL, 3'000'000'000LL,
@@ -404,12 +404,12 @@ void test_factory_rank_and_printing() {
 
   const auto t_date = pluss::timeline::date({"2024-06-10", "2024-06-11"});
   expect_true(t_date.dim() == 1 && t_date.numel() == 2, "timeline::date rank");
-  expect_eq_vec(t_date.hour().to_vec<std::int32_t>(), std::vector<std::int32_t>{0, 0},
+  expect_eq_vec(t_date.hour().host<std::int32_t>(), std::vector<std::int32_t>{0, 0},
                 "timeline::date zeros time-of-day");
 
   const auto t_time = pluss::timeline::time({"09:30:00", "17:45:30"});
   expect_true(t_time.dim() == 1 && t_time.numel() == 2, "timeline::time rank");
-  expect_eq_vec(t_time.hour().to_vec<std::int32_t>(), std::vector<std::int32_t>{9, 17},
+  expect_eq_vec(t_time.hour().host<std::int32_t>(), std::vector<std::int32_t>{9, 17},
                 "timeline::time preserves time component");
 
   const auto t_rep = pluss::timeline::full(
@@ -418,7 +418,7 @@ void test_factory_rank_and_printing() {
   expect_true(t_rep.dim() == 2 && t_rep_sizes.size() == 2 &&
                   t_rep_sizes[0] == 2 && t_rep_sizes[1] == 2,
               "timeline::rep copies requested shape");
-  expect_eq_vec(t_rep.day().to_vec<std::int32_t>(),
+  expect_eq_vec(t_rep.day().host<std::int32_t>(),
                 std::vector<std::int32_t>{5, 5, 5, 5},
                 "timeline::rep repeats same instant");
 
@@ -435,14 +435,14 @@ void test_factory_rank_and_printing() {
   const auto t_arange_dates = pluss::timeline::arange(
       "2024-06-01", "2024-06-03", 1, true);
   expect_true(t_arange_dates.numel() == 3, "timeline::arange date count");
-  expect_eq_vec(t_arange_dates.day().to_vec<std::int32_t>(),
+  expect_eq_vec(t_arange_dates.day().host<std::int32_t>(),
                 std::vector<std::int32_t>{1, 2, 3},
                 "timeline::arange date default uses days");
 
   const auto t_arange_times = pluss::timeline::arange(
       "09:00:00", "09:00:03", 1, true);
   expect_true(t_arange_times.numel() == 4, "timeline::arange time count");
-  expect_eq_vec(t_arange_times.second().to_vec<std::int32_t>(),
+  expect_eq_vec(t_arange_times.second().host<std::int32_t>(),
                 std::vector<std::int32_t>{0, 1, 2, 3},
                 "timeline::arange time default uses seconds");
 
@@ -452,7 +452,7 @@ void test_factory_rank_and_printing() {
       pluss::duration::hours(2),
       true);
   expect_true(t_arange_dt.numel() == 4, "timeline::arange datetime count");
-  expect_eq_vec(t_arange_dt.hour().to_vec<std::int32_t>(),
+  expect_eq_vec(t_arange_dt.hour().host<std::int32_t>(),
                 std::vector<std::int32_t>{0, 2, 4, 6},
                 "timeline::arange datetime uses explicit Duration step");
 
@@ -545,12 +545,12 @@ void test_generated_timeline_index_family() {
 
   const auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4});
   const auto rs = idx.resample_agg(values, "H", "sum", 1);
-  expect_eq_vec(rs.to_vec<double>(), std::vector<double>{3.0, 7.0},
+  expect_eq_vec(rs.host<double>(), std::vector<double>{3.0, 7.0},
                 "generated resample_agg(sum)");
 
   const auto window = pluss::duration::hours(1);
   const auto roll = idx.rolling_agg(values, window, "sum");
-  expect_eq_vec(roll.to_vec<double>(), std::vector<double>{1.0, 3.0, 6.0, 9.0},
+  expect_eq_vec(roll.host<double>(), std::vector<double>{1.0, 3.0, 6.0, 9.0},
                 "generated rolling_agg(sum)");
 
   const auto sorted = idx.sort();
@@ -567,7 +567,7 @@ void test_generated_timeline_index_family() {
       {5});
   const auto t_nat = pluss::timeline::from_epoch(ticks_with_nat);
   expect_eq_vec(
-      t_nat.argsort().to_vec<std::int64_t>(),
+      t_nat.argsort().host<std::int64_t>(),
       std::vector<std::int64_t>{2, 4, 0, 1, 3},
       "Timeline argsort keeps NaT last and preserves NaT stability");
   expect_eq_vec(
@@ -606,20 +606,20 @@ void test_3d_non_generated_timeline_support() {
   expect_true(y.dim() == 3 && mo.dim() == 3 && d.dim() == 3 &&
               h.dim() == 3 && mi.dim() == 3 && s.dim() == 3,
               "set_* keep 3D rank");
-  expect_true(y.year().to_vec<std::int32_t>(0) == 2030, "set_year(3D)");
-  expect_true(mo.month().to_vec<std::int32_t>(0) == 12, "set_month(3D)");
-  expect_true(d.day().to_vec<std::int32_t>(0) == 15, "set_day(3D)");
-  expect_true(h.hour().to_vec<std::int32_t>(0) == 7, "set_hour(3D)");
-  expect_true(mi.minute().to_vec<std::int32_t>(0) == 8, "set_minute(3D)");
-  expect_true(s.second().to_vec<std::int32_t>(0) == 9, "set_second(3D)");
+  expect_true(y.year().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2030, "set_year(3D)");
+  expect_true(mo.month().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 12, "set_month(3D)");
+  expect_true(d.day().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 15, "set_day(3D)");
+  expect_true(h.hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 7, "set_hour(3D)");
+  expect_true(mi.minute().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 8, "set_minute(3D)");
+  expect_true(s.second().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 9, "set_second(3D)");
 
   const auto y_period = t3.period_start("year");
   const auto m_period = t3.period_start("month");
   expect_true(y_period.dim() == 3 && m_period.dim() == 3, "period_start keeps 3D rank");
-  expect_true(y_period.month().to_vec<std::int32_t>(0) == 1 &&
-              y_period.day().to_vec<std::int32_t>(0) == 1,
+  expect_true(y_period.month().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 1 &&
+              y_period.day().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 1,
               "period_start(year) normalized components");
-  expect_true(m_period.day().to_vec<std::int32_t>(0) == 1, "period_start(month) normalized day");
+  expect_true(m_period.day().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 1, "period_start(month) normalized day");
 
   const auto t3_plus = t3.add_seconds(1);
   expect_true((t3 < t3_plus).all().item<bool>(), "operator< supports 3D");
@@ -633,8 +633,8 @@ void test_3d_non_generated_timeline_support() {
   expect_true((t3 == t3).all().item<bool>(), "operator== is elementwise");
 
   const auto with_nat = pluss::timeline::make({"", "2024-01-01T00:00:00Z"});
-  expect_true((with_nat != with_nat).to_vec<bool>(0), "NaT is unequal to itself");
-  expect_true(!(with_nat < with_nat).to_vec<bool>(0), "NaT is unordered");
+  expect_true((with_nat != with_nat).host<bool>().array().data.at(static_cast<std::size_t>(0)), "NaT is unequal to itself");
+  expect_true(!(with_nat < with_nat).host<bool>().array().data.at(static_cast<std::size_t>(0)), "NaT is unordered");
 
 }
 
@@ -642,17 +642,17 @@ void test_queue_dynamic_dispatch() {
   std::cout << "[RUN] codeh:queue_dynamic_dispatch\n";
 
   pluss::Type qt = pluss::timeline::make("2024-01-15T10:11:12Z");
-  expect_true(qt.as_timeline().year().to_vec<std::int32_t>(0) == 2024,
+  expect_true(qt.as_timeline().year().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2024,
               "Type.as_timeline() exposes Timeline surface");
 
   const auto qf = qt.invoke("floor", {"D"});
   expect_true(qf.kind() == pluss::Type::Kind::Timeline, "Type floor returns Timeline");
-  expect_true(qf.as<pluss::codeh::Timeline>().hour().to_vec<std::int32_t>(0) == 0,
+  expect_true(qf.as<pluss::codeh::Timeline>().hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 0,
               "Type floor(D) zeroes hour");
 
   const auto qy = qt.invoke("year");
   expect_true(qy.kind() == pluss::Type::Kind::Series, "Type year returns Series");
-  expect_true(qy.as<pluss::Series>().to_vec<std::int32_t>(0) == 2024,
+  expect_true(qy.as<pluss::Series>().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2024,
               "Type year value");
 
   const auto qn = qt.invoke("strftime", {"%Y-%m-%d"});
@@ -683,16 +683,16 @@ void test_dynamic_dispense_utility() {
 
   auto t = pluss::timeline::make("2024-01-15T10:11:12Z");
   const auto floor_d = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));
-  expect_true(floor_d.hour().to_vec<std::int32_t>(0) == 0,
+  expect_true(floor_d.hour().host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 0,
               "dispense(Timeline,&Timeline::floor)");
 
   const auto year_series = pluss::dispense(t, &pluss::codeh::Timeline::year, std::make_tuple());
-  expect_true(year_series.to_vec<std::int32_t>(0) == 2024,
+  expect_true(year_series.host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2024,
               "dispense(Timeline,&Timeline::year)");
 
   const std::any any_year = pluss::dispense(t, &pluss::codeh::Timeline::year, pluss::args{});
   const auto& any_year_series = std::any_cast<const pluss::Series&>(any_year);
-  expect_true(any_year_series.to_vec<std::int32_t>(0) == 2024,
+  expect_true(any_year_series.host<std::int32_t>().array().data.at(static_cast<std::size_t>(0)) == 2024,
               "dispense(any Timeline::year) value");
 
   const std::any any_lower = pluss::dispense(n, &pluss::Note::lower, pluss::args{});

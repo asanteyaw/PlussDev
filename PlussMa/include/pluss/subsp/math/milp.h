@@ -30,6 +30,20 @@ namespace pluss::subsp::math::milp {
 
 enum class Status : int { Optimal = 0, Infeasible = 1, Unbounded = 2, NodeLimit = 3 };
 
+inline const char* to_string(Status value) {
+  switch (value) {
+    case Status::Optimal:
+      return "Optimal";
+    case Status::Infeasible:
+      return "Infeasible";
+    case Status::Unbounded:
+      return "Unbounded";
+    case Status::NodeLimit:
+      return "NodeLimit";
+  }
+  return "Unknown";
+}
+
 struct Options final {
   linprog::Options lp{};
   int max_nodes = 200000;
@@ -74,13 +88,13 @@ inline Result solve(const Problem &p, const Options &opt = {}) {
   const double inf = std::numeric_limits<double>::infinity();
   if (!p.integer.defined() || p.integer.numel() != n)
     throw std::invalid_argument("milp: `integer` must have one entry per variable");
-  const std::vector<double> is_int = p.integer.to(dt).to_vec<double>();
-  const std::vector<double> c_host = c0.to_vec<double>();
+  const std::vector<double> is_int = linprog::detail::flat_host_(p.integer.to(dt));
+  const std::vector<double> c_host = linprog::detail::flat_host_(c0);
   std::vector<double> lo(static_cast<std::size_t>(n), -inf), hi(static_cast<std::size_t>(n), inf);
   if (p.lp.lower)
-    lo = p.lp.lower->to(dt).to_vec<double>();
+    lo = linprog::detail::flat_host_(p.lp.lower->to(dt));
   if (p.lp.upper)
-    hi = p.lp.upper->to(dt).to_vec<double>();
+    hi = linprog::detail::flat_host_(p.lp.upper->to(dt));
   for (std::int64_t j = 0; j < n; ++j) { // sentinel infinities (<= -1e20, >= 1e20) are real infinities, as in linprog.h
     if (lo[static_cast<std::size_t>(j)] <= -1e20) lo[static_cast<std::size_t>(j)] = -inf;
     if (hi[static_cast<std::size_t>(j)] >= 1e20) hi[static_cast<std::size_t>(j)] = inf;
@@ -150,9 +164,9 @@ inline Result solve(const Problem &p, const Options &opt = {}) {
       q.lower = q_lower;
       q.upper = q_upper;
       const auto sol = linprog::solve(q, lpo);
-      status = sol.status.to_vec<double>();
-      obj = sol.objective.to_vec<double>();
-      xs = sol.x.to_vec<double>();
+      status = linprog::detail::flat_host_(sol.status);
+      obj = linprog::detail::flat_host_(sol.objective);
+      xs = linprog::detail::flat_host_(sol.x);
       x_lanes = sol.x;
       // Soundness: a node LP the interior-point method could not finish must never be pruned as if it were infeasible.
       // Re-solve such nodes exactly (cold simplex) before using their result.
@@ -173,7 +187,7 @@ inline Result solve(const Problem &p, const Options &opt = {}) {
         const auto fix = linprog::solve(fq, exact);
         status[static_cast<std::size_t>(l)] = fix.status.item<double>();
         obj[static_cast<std::size_t>(l)] = fix.objective.item<double>();
-        const auto xl = fix.x.to_vec<double>();
+        const auto xl = fix.x.host<double>();
         std::copy(xl.begin(), xl.end(), xs.begin() + l * n);
         patched = true;
       }
@@ -200,7 +214,7 @@ inline Result solve(const Problem &p, const Options &opt = {}) {
         const auto sol = linprog::solve(q, lpo);
         status[static_cast<std::size_t>(l)] = sol.status.item<double>();
         obj[static_cast<std::size_t>(l)] = sol.objective.item<double>();
-        const auto xl = sol.x.to_vec<double>();
+        const auto xl = sol.x.host<double>();
         std::copy(xl.begin(), xl.end(), xs.begin() + l * n);
         if (!sol.basis.empty()) {
           node_basis[static_cast<std::size_t>(l)] = sol.basis[0];
@@ -240,7 +254,7 @@ inline Result solve(const Problem &p, const Options &opt = {}) {
         feas = feas.logical_and(r.abs().le(1e-6).all(-1));
       }
       const Series val = xr.mul(c0).sum(-1, false);
-      const auto fh = feas.to(dt).to_vec<double>(), vh = val.to_vec<double>(), xh = xr.to_vec<double>();
+      const auto fh = feas.to(dt).host<double>(), vh = val.host<double>(), xh = xr.host<double>();
       for (std::int64_t l = 0; l < B; ++l)
         if (fh[static_cast<std::size_t>(l)] > 0.5 && vh[static_cast<std::size_t>(l)] < incumbent) {
           incumbent = vh[static_cast<std::size_t>(l)];

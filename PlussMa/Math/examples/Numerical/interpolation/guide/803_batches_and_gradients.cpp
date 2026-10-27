@@ -19,7 +19,7 @@ int main() {
   const Series curves = pluss::make_series(std::vector<double>{0, 1, 4, 9, 0, 2, 4, 6, 1, 1, 1, 1}, {3, 4}).to(f64);
   const auto q = vec({0.5, 2.25});
   const auto r = interp::linear(x, curves, q);
-  const auto v = r.to_vec<double>();
+  const auto v = r.host<double>();
   std::cout << "shape [" << r.size(0) << ", " << r.size(1) << "]\n";
   for (int i = 0; i < 3; ++i) std::cout << "curve " << i << ": " << v[2 * i] << ", " << v[2 * i + 1] << "\n";
 
@@ -30,6 +30,6 @@ int main() {
   Series tracked = pluss::make_series(std::vector<double>{0, 1, 4, 9}, {4}).to(f64);
   tracked.tracks_slope_(true);
   interp::linear(x, tracked, pluss::make_series(2.25).to(f64)).reverse();
-  const auto g = tracked.sensitivity().to_vec<double>();
+  const auto g = tracked.sensitivity().host<double>();
   std::cout << "d value(2.25) / d samples: " << g[0] << " " << g[1] << " " << g[2] << " " << g[3] << "   (weights 0.75 and 0.25 on the samples at 2 and 3)\n";
 }

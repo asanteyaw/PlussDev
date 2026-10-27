@@ -18,7 +18,7 @@ const auto f64 = pluss::ScalarType::Float64;
 Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 void row(const char* label, const Series& s) {
   std::cout << std::left << std::setw(12) << label << std::right;
-  for (double v : s.reshape({s.numel()}).to_vec<double>()) std::cout << std::setw(10) << v;
+  for (double v : s.reshape({s.numel()}).host<double>()) std::cout << std::setw(10) << v;
   std::cout << "\n";
 }
 int main() {
@@ -41,7 +41,7 @@ int main() {
   const auto fit = distr::GaussianMixture{vec({0.5, 0.5}), vec({-1.0, 1.0}), vec({1.0, 1.0})}.MLE(x);
   std::cout << "\nstandard errors of (w1, w2, m1, m2, s1, s2)\n";
   row("  stderr", fit.stderr(x));
-  const auto ci = fit.confint(x).to_vec<double>();
+  const auto ci = fit.confint(x).host<double>();
   std::cout << "  95% interval of the first mean   " << ci[4] << "  to  " << ci[5] << "\n";
 
   // One normal against two: the likelihood gain pays for the three extra parameters.

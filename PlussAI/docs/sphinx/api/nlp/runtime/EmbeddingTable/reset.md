@@ -91,7 +91,7 @@ int main() {
   const nlp::runtime::SequenceBatch batch = indexer.batch(wf.infer(std::vector<std::string>{"Ada reads.", "Kofi."})).value();
   nlp::runtime::EmbeddingTable table{nlp::runtime::EmbeddingOptions{.width = 4}};
   table.reset(static_cast<std::int64_t>(indexer.vocabulary().size()), indexer.pad_id());
-  const auto weights = table.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto weights = table.weights().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   double pad_sum = 0.0;
   for (std::int64_t col = 0; col < 4; ++col) pad_sum += weights[static_cast<std::size_t>(indexer.pad_id() * 4 + col)];
   std::cout << "pad row sum = " << pad_sum << "\n";

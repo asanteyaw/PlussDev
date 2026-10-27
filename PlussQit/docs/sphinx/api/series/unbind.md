@@ -54,7 +54,7 @@ auto rows = m.unbind(0);
 std::cout << "pieces=" << rows.size() << "\n";
 for (std::size_t i = 0; i < rows.size(); ++i) {
   std::cout << "[" << i << "] rank=" << rows[i].dim() << " -> ";
-  for (double v : rows[i].to_vec<double>()) std::cout << v << " ";
+  for (double v : rows[i].host<double>()) std::cout << v << " ";
   std::cout << "\n";
 }
 ```

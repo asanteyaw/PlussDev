@@ -163,7 +163,7 @@ std::vector<pluss::ai::rnn::NetWeight> to_cuda_weights(const std::vector<pluss::
 }
 
 std::vector<float> as_f32_vec(const pluss::Series& s) {
-  return s.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
+  return s.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>();
 }
 
 bool run_rigorous_cudnn_rnn_parity(std::ostream* err = nullptr) {

@@ -84,7 +84,7 @@ double dot(const std::vector<double>& a, const std::vector<double>& b) {
 }
 
 double sum_of(const Series& y) {
-  const auto v = y.to(ScalarType::Float64).to_vec<double>();
+  const auto v = y.to(ScalarType::Float64).host<double>();
   double s = 0.0;
   for (double x : v) s += x;
   return s;
@@ -108,7 +108,7 @@ double fd_directional(const std::function<Series(const Series&)>& op,
 // only because identity's gradient (all ones) is trivially self-consistent.
 bool bit_identical(const Series& y, const std::vector<double>& input) {
   if (static_cast<std::size_t>(y.numel()) != input.size()) return false;
-  const auto yv = y.to(ScalarType::Float64).to_vec<double>();
+  const auto yv = y.to(ScalarType::Float64).host<double>();
   if (yv.size() != input.size()) return false;
   for (std::size_t i = 0; i < yv.size(); ++i) {
     const double a = yv[i], b = input[i];
@@ -138,7 +138,7 @@ void U(const std::string& name, const std::vector<double>& input,
     }
     y.sum().reverse();
     if (!x.has_sensitivity()) { res.status = Status::NO_SENS; g_reg[name] = res; return; }
-    const auto g = x.sensitivity().to(ScalarType::Float64).to_vec<double>();
+    const auto g = x.sensitivity().to(ScalarType::Float64).host<double>();
     const auto v = tangent(input.size(), 0x51ED);
     const double analytic = dot(g, v);
     const double numeric = fd_directional(op, input, v);
@@ -164,7 +164,7 @@ void B(const std::string& name, const std::vector<double>& la, const std::vector
       y.sum().reverse();
       Series& tracked = (side == 0) ? a : b;
       if (!tracked.has_sensitivity()) { res.status = Status::NO_SENS; g_reg[tag] = res; continue; }
-      const auto g = tracked.sensitivity().to(ScalarType::Float64).to_vec<double>();
+      const auto g = tracked.sensitivity().to(ScalarType::Float64).host<double>();
       const auto& base = (side == 0) ? la : lb;
       const auto v = tangent(base.size(), 0x51ED + side);
       const double analytic = dot(g, v);
@@ -444,7 +444,7 @@ TEST_CASE("autodiff sweep: second order", "[autodiff-sweep]") {
     x.clear();
     g.sum().reverse();
     REQUIRE(x.has_sensitivity());
-    const auto got = x.sensitivity().to(ScalarType::Float64).to_vec<double>();
+    const auto got = x.sensitivity().to(ScalarType::Float64).host<double>();
     for (std::size_t i = 0; i < got.size(); ++i) {
       INFO(name << " element " << i << " x=" << in[i]);
       REQUIRE(got[i] == Catch::Approx(d2(in[i])).margin(1e-8).epsilon(1e-9));
@@ -494,7 +494,7 @@ TEST_CASE("autodiff sweep: empty shapes", "[autodiff-sweep]") {
     y.sum().reverse();  // sum() folds an empty reduction result to a 0 scalar
     REQUIRE(x.has_sensitivity());
     REQUIRE(x.sensitivity().numel() == 0);
-    const auto g = x.sensitivity().to_vec<double>();  // must be readable, not garbage
+    const auto g = x.sensitivity().host<double>();  // must be readable, not garbage
     REQUIRE(g.empty());
   };
 

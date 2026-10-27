@@ -9,17 +9,17 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
-using Pack = optim::ParameterPack<Trace>;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
+using Pack = optim::ParameterPack<pluss::Series>;
 using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 Series scalar(double v) { return pluss::make_series(v).to(f64); }
 
 int main() {
-  std::function<Trace(const Pack&)> objective = [](const Pack& p) {
-    return optim::square(p.at("a")) + 2.0 * optim::square(p.at("b")) + 3.0 * optim::square(p.at("c")) - 4.0 * p.at("a");
+  std::function<pluss::Series(const Pack&)> objective = [](const Pack& p) {
+    return p.at("a").square() + 2.0 * p.at("b").square() + 3.0 * p.at("c").square() - 4.0 * p.at("a");
   };
   const auto start = optim::pack_scalars({{"a", scalar(0.5)}, {"b", scalar(0.5)}, {"c", scalar(0.5)}});
 
@@ -39,10 +39,10 @@ int main() {
           .ln_eq(pluss::make_series(std::vector<double>{0, 1, 1}, {1, 3}).to(f64), pluss::make_series(std::vector<double>{1.0}, {1}).to(f64))
           .ln_ineq(pluss::make_series(std::vector<double>{1, 1, 1}, {1, 3}).to(f64), pluss::make_series(std::vector<double>{2.5}, {1}).to(f64))
           .nl_eq([](const Pack& p) { return p.at("a") * p.at("b") - 0.3; })
-          .nl_ineq([](const Pack& p) { return optim::square(p.at("c")) - 0.6; });
+          .nl_ineq([](const Pack& p) { return p.at("c").square() - 0.6; });
   const auto o = optim::optima(objective, start, {}, optima_constraints);
   row("Optima", "converged", o.function_evaluations, o.evaluation.value.item<double>(), o.evaluation.max_constraint_violation,
-      o.params.at("a").item<double>(), o.params.at("b").item<double>(), o.params.at("c").item<double>());
+      as_f64(o.params.at("a")), as_f64(o.params.at("b")), as_f64(o.params.at("c")));
 
   // Septima: the same requirements as bounds and residual functions over the list of blocks.
   optim::SeptimaConstraints c;
@@ -65,13 +65,13 @@ int main() {
   adam.step_tolerance = 1e-6;
   adam.step.adam.learning_rate = 0.02;
   const auto a = optim::septima(objective, start, adam, c);
-  row("Septima, Adam", name(a), a.function_evaluations, a.objective_value, a.constraint_violation, a.params[0].item<double>(), a.params[1].item<double>(),
-      a.params[2].item<double>());
+  row("Septima, Adam", name(a), a.function_evaluations, a.objective_value, a.constraint_violation, as_f64(a.params[0]), as_f64(a.params[1]),
+      as_f64(a.params[2]));
 
   optim::SeptimaSolveOptions lbfgs = adam;
   lbfgs.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
   const auto l = optim::septima(objective, start, lbfgs, c);
-  row("Septima, L-BFGS", name(l), l.function_evaluations, l.objective_value, l.constraint_violation, l.params[0].item<double>(), l.params[1].item<double>(),
-      l.params[2].item<double>());
+  row("Septima, L-BFGS", name(l), l.function_evaluations, l.objective_value, l.constraint_violation, as_f64(l.params[0]), as_f64(l.params[1]),
+      as_f64(l.params[2]));
   return 0;
 }

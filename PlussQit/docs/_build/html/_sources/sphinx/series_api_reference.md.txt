@@ -66,6 +66,8 @@ The current handwritten shape and slice/indexing cluster now covers:
 - torch interop: `tensor` (the reverse of
   [`pluss::series::from_torch`](api/series_factory/from_torch.md))
 - transport and materialization core: `clone`, `contiguous`, `to`
+- native extraction boundaries: rank-zero `item`, rank-one `pull`, and
+  rank-aware `host`
 - rounding and numeric-state helpers: `ceil`, `floor`, `round`, `trunc`,
   `isnan`, `isinf`, `isfinite`, `invalid`, `invalid_index`, `nan_to_num`
 - elementwise arithmetic core: `add`, `sub`, `mul`, `div`, `pow`
@@ -326,6 +328,7 @@ api/series/heaviside
 api/series/hilbert
 api/series/histc
 api/series/histogram
+api/series/host
 api/series/hsplit
 api/series/hypot
 api/series/i0
@@ -449,6 +452,7 @@ api/series/pow
 api/series/prelu
 api/series/prime
 api/series/prod
+api/series/pull
 api/series/put_
 api/series/quantile
 api/series/rad2deg

@@ -22,8 +22,10 @@ using pluss::Series;
 
 Config float_cfg() { return Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU); }
 
-std::vector<double> to_vec(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+std::vector<double> pull_flat(const Series& x) {
+  return x.to(pluss::pCPU, ScalarType::Float64)
+      .reshape({x.numel()})
+      .pull<double>();
 }
 
 bool run_elu_checks(std::ostream* err = nullptr) {
@@ -31,7 +33,7 @@ bool run_elu_checks(std::ostream* err = nullptr) {
   const Series x = pluss::make_series(std::vector<float>{-2.0F, -0.5F, 0.0F, 1.0F, 3.0F}, {5}, cfg);
   pluss::nn::Elu elu{};
   const Series y = elu->forward(x);
-  const auto values = to_vec(y);
+  const auto values = pull_flat(y);
 
   const std::vector<double> expected = {
       std::exp(-2.0) - 1.0, // x <= 0: exp(x) - 1
@@ -52,7 +54,7 @@ bool run_elu_checks(std::ostream* err = nullptr) {
   xg.tracks_slope_(true);
   const Series yg = elu->forward(xg);
   yg.sum().reverse();
-  const auto grad = to_vec(xg.sensitivity());
+  const auto grad = pull_flat(xg.sensitivity());
   const std::vector<double> expected_grad = {std::exp(-2.0), std::exp(-0.5), 1.0, 1.0, 1.0};
   for (std::size_t i = 0; i < expected_grad.size(); ++i) {
     if (std::abs(grad[i] - expected_grad[i]) > 1e-4) {
@@ -72,8 +74,8 @@ bool run_layernorm_checks(std::ostream* err = nullptr) {
   const Series x = pluss::make_series(
       std::vector<float>{1.0F, 2.0F, 3.0F, 4.0F, -1.0F, 0.0F, 5.0F, 10.0F}, {2, 4}, cfg);
   const Series y = norm->forward(x);
-  const auto row_mean = to_vec(y.mean(-1));
-  const auto row_var = to_vec(y.var(-1, false));
+  const auto row_mean = pull_flat(y.mean(-1));
+  const auto row_var = pull_flat(y.var(-1, false));
   for (std::size_t row = 0; row < row_mean.size(); ++row) {
     if (std::abs(row_mean[row]) > 1e-3) {
       if (err) *err << "LayerNorm row " << row << " mean should be ~0, got " << row_mean[row] << "\n";
@@ -89,7 +91,7 @@ bool run_layernorm_checks(std::ostream* err = nullptr) {
   norm->weight().copy_(pluss::make_series(std::vector<float>{2.0F, 2.0F, 2.0F, 2.0F}, {4}, cfg));
   norm->bias().copy_(pluss::make_series(std::vector<float>{1.0F, 1.0F, 1.0F, 1.0F}, {4}, cfg));
   const Series y2 = norm->forward(x);
-  const auto row_mean2 = to_vec(y2.mean(-1));
+  const auto row_mean2 = pull_flat(y2.mean(-1));
   for (const double m : row_mean2) {
     // mean of (2*normalized + 1) == 2*0 + 1 == 1.
     if (std::abs(m - 1.0) > 1e-2) {
@@ -140,7 +142,7 @@ bool run_copy_init_then_use_gradient_check(std::ostream* err = nullptr) {
     if (err) *err << "copy_-then-use check: w.sensitivity() undefined\n";
     return false;
   }
-  const auto grad = to_vec(w.sensitivity());
+  const auto grad = pull_flat(w.sensitivity());
   const std::vector<double> expected = {1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1};
   for (std::size_t i = 0; i < expected.size(); ++i) {
     if (std::abs(grad[i] - expected[i]) > 1e-9) {
@@ -167,8 +169,8 @@ bool run_embedding_checks(std::ostream* err = nullptr) {
     if (err) *err << "Embedding forward() should return [numel(index), hidden_size]\n";
     return false;
   }
-  const auto looked_up_flat = to_vec(looked_up);
-  const auto weight_flat = to_vec(embedding->weight());
+  const auto looked_up_flat = pull_flat(looked_up);
+  const auto weight_flat = pull_flat(embedding->weight());
   for (std::int64_t row = 0; row < 3; ++row) {
     const std::int64_t src_row = (row == 0) ? 0 : (row == 1 ? 2 : 4);
     for (std::int64_t col = 0; col < kHiddenSize; ++col) {
@@ -187,7 +189,7 @@ bool run_embedding_checks(std::ostream* err = nullptr) {
   embedding->weight().clear();
   const Series out = embedding->forward(index);
   out.sum().reverse();
-  const auto grad = to_vec(embedding->weight().sensitivity());
+  const auto grad = pull_flat(embedding->weight().sensitivity());
   for (std::int64_t row = 0; row < kCardinality; ++row) {
     const bool touched = (row == 0 || row == 2 || row == 4);
     double row_grad_sum = 0.0;

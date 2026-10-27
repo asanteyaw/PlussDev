@@ -47,7 +47,7 @@ LabeledBatch make_batch() {
 }
 
 void print_vec(const Series& v) {
-  const auto vals = v.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto vals = v.to(pluss::pCPU, ScalarType::Float64).host<double>();
   for (std::size_t i = 0; i < vals.size(); ++i) {
     std::cout << vals[i] << (i + 1 == vals.size() ? '\n' : ' ');
   }

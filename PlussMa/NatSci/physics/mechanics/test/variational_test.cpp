@@ -110,8 +110,8 @@ void test_symplectic_step_and_reverse_time() {
          "separable kinetic gradient is incorrect");
   const auto next = mechanics::symplectic_step(
       initial, step, harmonic_potential, harmonic_kinetic);
-  const double next_q = next.coordinate().si_value().item<double>();
-  const double next_p = next.momentum().si_value().item<double>();
+  const double next_q = next.coordinate().si_value().host<double>().front();
+  const double next_p = next.momentum().si_value().host<double>().front();
   expect(close(next_q, 0.995),
          "symplectic position update is incorrect: " + std::to_string(next_q));
   expect(close(next_p, -0.09975),
@@ -120,7 +120,7 @@ void test_symplectic_step_and_reverse_time() {
   next.coordinate().si_value().sum().reverse();
   expect(q.has_sensitivity(),
          "symplectic step severed the outer reverse graph");
-  expect(close(q.sensitivity().item<double>(), 0.995, 1e-7),
+  expect(close(q.sensitivity().host<double>().front(), 0.995, 1e-7),
          "symplectic step returned the wrong coordinate sensitivity");
 
   const auto restored = mechanics::symplectic_step(

@@ -1,8 +1,0 @@
-# The constraint forms
-
-[Back to Quadratic Programming](../qp_01_quadratic_programs.md)
-
-
-@@example Numerical/optimization/guide/qp/512_constraint_forms.cpp@@
-
-An equality, a one-sided bound and an unconstrained problem all use the same call; only the rows and the bounds differ.

@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+
 namespace {
 
 using Catch::Approx;
@@ -21,7 +22,7 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::make_series;
 namespace optim = pluss::subsp::math::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+using Pack = optim::ParameterPack<Series>;
 
 Series vec(std::vector<double> v) {
   return make_series(v, {static_cast<std::int64_t>(v.size())}).to(ScalarType::Float64);
@@ -40,7 +41,7 @@ optim::ParameterPack<Series> scalars(std::vector<std::pair<std::string, double>>
 }
 
 auto distance_to(const Series& target) {
-  return [target](const optim::Trace& x) { return optim::sum(optim::square(x - optim::trace(target, false))); };
+  return [target](const Series& x) { return ((x - target).square()).sum(); };
 }
 
 optim::OptimaOptions interior() {
@@ -54,7 +55,7 @@ optim::OptimaOptions interior() {
 TEST_CASE("interior method meets a linear equality to tolerance", "[optim][optima][interior][exact]") {
   const auto constraints = optim::constraints().ln_eq(row({1, 1}), vec({2.0}));
   const auto r = optim::optima(distance_to(vec({2.0, 1.0})), vec({0.5, 0.5}), interior(), constraints);
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
 
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(x[0] + x[1] == Approx(2.0).margin(1e-9));
@@ -66,19 +67,19 @@ TEST_CASE("interior method meets a linear equality to tolerance", "[optim][optim
 TEST_CASE("interior method converges with an active linear inequality", "[optim][optima][interior][exact]") {
   const auto constraints = optim::constraints().ln_ineq(row({1, 1}), vec({2.0}));
   const auto r = optim::optima(distance_to(vec({2.0, 1.0})), vec({0.5, 0.5}), interior(), constraints);
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
 
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(x[0] == Approx(1.5).margin(1e-5));
   REQUIRE(x[1] == Approx(0.5).margin(1e-5));
   REQUIRE(r.iteration <= 20);
-  REQUIRE(r.multipliers.linear_inequalities.to_vec<double>()[0] == Approx(1.0).margin(1e-4));
+  REQUIRE(r.multipliers.linear_inequalities.host<double>()[0] == Approx(1.0).margin(1e-4));
 }
 
 TEST_CASE("interior method accepts a start exactly on a bound", "[optim][optima][interior][exact]") {
   const auto constraints = optim::constraints().lbs(vec({0.0, 0.0})).ubs(vec({1.5, 0.8}));
   const auto r = optim::optima(distance_to(vec({2.0, 1.0})), vec({0.0, 0.0}), interior(), constraints);
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
 
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(x[0] == Approx(1.5).margin(1e-4));
@@ -91,7 +92,7 @@ TEST_CASE("interior method finds a strictly feasible region from an infeasible s
   const Series A = make_series(std::vector<double>{1, 0, 0, 1, -1, -1}, {3, 2}).to(ScalarType::Float64);
   const auto constraints = optim::constraints().ln_ineq(A, vec({1.0, 1.0, 0.0}));
   const auto r = optim::optima(distance_to(vec({3.0, 3.0})), vec({5.0, 5.0}), interior(), constraints);
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
 
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(x[0] == Approx(1.0).margin(1e-4));
@@ -103,17 +104,17 @@ TEST_CASE("nonlinear equality is solved exactly by the interior method",
   // min (1 - a)^2  s.t.  b = a^2, from a start on the wrong side. The solution is a = b = 1. The block b does
   // not appear in the objective, so its constraint derivative must survive every step.
   optim::ConstrainedProblem problem;
-  problem.objective.autodiff = [](const Pack& p) { return optim::square(1.0 - p.at("a")); };
+  problem.objective.autodiff = [](const Pack& p) { return (1.0 - p.at("a")).square(); };
   problem.nonlinear.equality = [](const Pack& p) {
-    return 10.0 * (p.at("b") - optim::square(p.at("a")));
+    return 10.0 * (p.at("b") - p.at("a").square());
   };
   for (const auto algorithm : {optim::OptimaAlgorithm::InternalProtocol}) {
     optim::OptimaOptions options;
     options.algorithm = algorithm;
     const auto r = optim::optima(problem, scalars({{"a", -1.2}, {"b", 1.0}}), options);
     REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
-    REQUIRE(r.params.at("a").item<double>() == Approx(1.0).margin(1e-5));
-    REQUIRE(r.params.at("b").item<double>() == Approx(1.0).margin(1e-5));
+    REQUIRE(as_f64(r.params.at("a")) == Approx(1.0).margin(1e-5));
+    REQUIRE(as_f64(r.params.at("b")) == Approx(1.0).margin(1e-5));
     REQUIRE(r.evaluation.max_constraint_violation <= 1e-6);
   }
 }
@@ -122,9 +123,9 @@ TEST_CASE("constraint derivatives do not depend on how the point was built", "[o
   // A point built as x + step carries history from that arithmetic; the derivative with respect to a
   // block the objective ignores must still come out right.
   optim::ConstrainedProblem problem;
-  problem.objective.autodiff = [](const Pack& p) { return optim::square(1.0 - p.at("a")); };
+  problem.objective.autodiff = [](const Pack& p) { return (1.0 - p.at("a")).square(); };
   problem.nonlinear.equality = [](const Pack& p) {
-    return 10.0 * (p.at("b") - optim::square(p.at("a")));
+    return 10.0 * (p.at("b") - p.at("a").square());
   };
   const auto base = scalars({{"a", -0.5}, {"b", 0.2}});
   const auto first = optim::evaluate_problem(problem, base);
@@ -132,8 +133,8 @@ TEST_CASE("constraint derivatives do not depend on how the point was built", "[o
   const auto moved = optim::unflatten_values(base.layout(), optim::flatten_values(base).add(step));
   const auto second = optim::evaluate_problem(problem, moved);
 
-  REQUIRE(second.equality_jacobian.at("a").to_vec<double>()[0] == Approx(-20.0 * moved.at("a").item<double>()));
-  REQUIRE(second.equality_jacobian.at("b").to_vec<double>()[0] == Approx(10.0));
+  REQUIRE(second.equality_jacobian.at("a").host<double>()[0] == Approx(-20.0 * as_f64(moved.at("a"))));
+  REQUIRE(second.equality_jacobian.at("b").host<double>()[0] == Approx(10.0));
 }
 
 TEST_CASE("sequential QP meets linear constraints to machine precision", "[optim][optima][exact]") {
@@ -141,7 +142,7 @@ TEST_CASE("sequential QP meets linear constraints to machine precision", "[optim
   // The nearest feasible point is (1, 0, 0).
   const auto constraints = optim::constraints().ln_eq(row({1, 1, 1}), vec({1.0})).lbs(vec({0, 0, 0})).ubs(vec({1, 1, 1}));
   const auto r = optim::optima(distance_to(vec({3.0, 1.0, 0.0})), vec({0.4, 0.3, 0.3}), {}, constraints);
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
 
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(x[0] + x[1] + x[2] == Approx(1.0).margin(1e-9));
@@ -154,7 +155,7 @@ TEST_CASE("converged reports success, not termination", "[optim][optima][contrac
   optim::OptimaOptions limited;
   limited.sequential_qp.max_iterations = 1;
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return (p.at("x").square()).sum() - 1.0; });
   const auto stopped = optim::optima(distance_to(vec({3.0, 3.0})), vec({0.0, 0.0}), limited, disc);
   REQUIRE(stopped.exit_flag == optim::OptimaExitFlag::MaxIterations);
   REQUIRE_FALSE(stopped.converged);
@@ -166,11 +167,11 @@ TEST_CASE("converged reports success, not termination", "[optim][optima][contrac
 
 TEST_CASE("optima reports invalid input before it starts", "[optim][optima][contract]") {
   const auto wrong_blocks = optim::constraints().lbs(vec({0.0, 0.0}));
-  auto objective = [](const Pack& p) { return optim::square(p.at("a")) + optim::square(p.at("b")); };
+  auto objective = [](const Pack& p) { return p.at("a").square() + p.at("b").square(); };
   REQUIRE_THROWS_WITH(optim::optima(objective, scalars({{"a", 1.0}, {"b", 1.0}}), {}, wrong_blocks),
                       Catch::Matchers::ContainsSubstring("same named blocks and shapes"));
 
-  const auto r = optim::optima([](const optim::Trace& x) { return optim::square(x); }, vec({1.0, 1.0}));
+  const auto r = optim::optima([](const Series& x) { return x.square(); }, vec({1.0, 1.0}));
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::InvalidProblem);
   REQUIRE_FALSE(r.converged);
   REQUIRE_THAT(r.message, Catch::Matchers::ContainsSubstring("single number"));
@@ -178,7 +179,7 @@ TEST_CASE("optima reports invalid input before it starts", "[optim][optima][cont
 
 TEST_CASE("reported first-order optimality matches the returned point", "[optim][optima][contract]") {
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return (p.at("x").square()).sum() - 1.0; });
   const auto r = optim::optima(distance_to(vec({3.0, 3.0})), vec({0.0, 0.0}), {}, disc);
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(r.output.first_order_optimality <= 1e-5);
@@ -191,7 +192,7 @@ TEST_CASE("merit method (augmented Lagrangian) solves equality, inequality and b
 
   const auto linear = optim::constraints().ln_eq(row({1, 1, 1}), vec({1.0})).lbs(vec({0, 0, 0})).ubs(vec({1, 1, 1}));
   const auto r = optim::optima(distance_to(vec({3.0, 1.0, 0.0})), vec({0.4, 0.3, 0.3}), options, linear);
-  const auto x = r.params.at("x").to_vec<double>();
+  const auto x = r.params.at("x").host<double>();
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(x[0] + x[1] + x[2] == Approx(1.0).margin(1e-6));
   REQUIRE(x[0] == Approx(1.0).margin(1e-4));
@@ -199,13 +200,13 @@ TEST_CASE("merit method (augmented Lagrangian) solves equality, inequality and b
   REQUIRE(x[2] == Approx(0.0).margin(1e-4));
 
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::sum(optim::square(p.at("x"))) - 1.0; });
+      [](const Pack& p) { return p.at("x").square().sum() - 1.0; });
   const auto d = optim::optima(distance_to(vec({1.0, 2.0})), vec({0.0, 0.0}), options, disc);
-  const auto y = d.params.at("x").to_vec<double>();
+  const auto y = d.params.at("x").host<double>();
   REQUIRE(d.exit_flag == optim::OptimaExitFlag::Converged);
   REQUIRE(y[0] == Approx(1.0 / std::sqrt(5.0)).margin(1e-4));
   REQUIRE(y[1] == Approx(2.0 / std::sqrt(5.0)).margin(1e-4));
-  REQUIRE(d.multipliers.nonlinear_inequalities.to_vec<double>()[0] > 0.0);
+  REQUIRE(d.multipliers.nonlinear_inequalities.host<double>()[0] > 0.0);
 }
 
 TEST_CASE("every constrained algorithm reaches the same answer on a convex problem", "[optim][optima][exact]") {
@@ -215,7 +216,7 @@ TEST_CASE("every constrained algorithm reaches the same answer on a convex probl
     optim::OptimaOptions options;
     options.algorithm = algorithm;
     const auto r = optim::optima(distance_to(vec({2.0, 1.0})), vec({0.5, 0.5}), options, constraints);
-    const auto x = r.params.at("x").to_vec<double>();
+    const auto x = r.params.at("x").host<double>();
     INFO("algorithm " << static_cast<int>(algorithm));
     REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
     REQUIRE(x[0] == Approx(1.5).margin(1e-4));
@@ -236,7 +237,7 @@ TEST_CASE("infinite bounds mean unbounded for every constrained algorithm", "[op
     options.algorithm = algorithm;
     INFO("algorithm " << static_cast<int>(algorithm));
     const auto r = optim::optima(distance_to(vec({2.0, 1.0})), vec({3.0, 3.0}), options, constraints);
-    const auto x = r.params.at("x").to_vec<double>();
+    const auto x = r.params.at("x").host<double>();
     REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
     REQUIRE(x[0] == Approx(2.5).margin(1e-5));
     REQUIRE(x[1] == Approx(1.5).margin(1e-5));
@@ -248,7 +249,7 @@ TEST_CASE("every algorithm backs off an infinite objective wall and converges", 
   optim::ConstrainedProblem problem;
   problem.objective.analytic = [](const optim::ParameterPack<Series>& p)
       -> std::pair<Series, optim::ParameterPack<Series>> {
-    const double v = p.at("x").item<double>();
+    const double v = as_f64(p.at("x"));
     const double inf = std::numeric_limits<double>::infinity();
     if (!(v > 2.5)) {
       return {make_series(inf).to(ScalarType::Float64),
@@ -264,7 +265,7 @@ TEST_CASE("every algorithm backs off an infinite objective wall and converges", 
     INFO("algorithm " << static_cast<int>(algorithm));
     const auto r = optim::optima(problem, scalars({{"x", 4.0}}), options);
     REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
-    REQUIRE(r.params.at("x").item<double>() == Approx(3.0).margin(1e-5));
+    REQUIRE(as_f64(r.params.at("x")) == Approx(3.0).margin(1e-5));
   }
 }
 
@@ -272,14 +273,14 @@ TEST_CASE("independent nonlinear slacks keep the interior method from crawling o
           "[optim][optima][interior][exact]") {
   // minimize x0*x3*(x0+x1+x2) + x2  s.t.  x0*x1*x2*x3 >= 25,  sum x^2 = 40,  1 <= x <= 5, started on the
   // boundary of the product constraint and on two bounds; the optimum is 17.0140172891.
-  const auto f = [](const optim::ParameterPack<optim::Trace>& p) {
+  const auto f = [](const optim::ParameterPack<Series>& p) {
     return p.at("a") * p.at("d") * (p.at("a") + p.at("b") + p.at("c")) + p.at("c");
   };
   const auto constraints =
       optim::constraints()
-          .nl_ineq([](const optim::ParameterPack<optim::Trace>& p) { return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d"); })
-          .nl_eq([](const optim::ParameterPack<optim::Trace>& p) {
-            return optim::square(p.at("a")) + optim::square(p.at("b")) + optim::square(p.at("c")) + optim::square(p.at("d")) - 40.0;
+          .nl_ineq([](const optim::ParameterPack<Series>& p) { return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d"); })
+          .nl_eq([](const optim::ParameterPack<Series>& p) {
+            return p.at("a").square() + p.at("b").square() + p.at("c").square() + p.at("d").square() - 40.0;
           })
           .lbs(scalars({{"a", 1}, {"b", 1}, {"c", 1}, {"d", 1}}))
           .ubs(scalars({{"a", 5}, {"b", 5}, {"c", 5}, {"d", 5}}));
@@ -296,11 +297,11 @@ TEST_CASE("independent nonlinear slacks keep the interior method from crawling o
 }
 
 TEST_CASE("without independent slacks every iterate satisfies the nonlinear inequality", "[optim][optima][interior][exact]") {
-  const auto f = [](const optim::ParameterPack<optim::Trace>& p) {
-    return optim::square(p.at("a") - 3.0) + optim::square(p.at("b") - 3.0);
+  const auto f = [](const optim::ParameterPack<Series>& p) {
+    return (p.at("a") - 3.0).square() + (p.at("b") - 3.0).square();
   };
-  const auto disc = optim::constraints().nl_ineq([](const optim::ParameterPack<optim::Trace>& p) {
-    return optim::square(p.at("a")) + optim::square(p.at("b")) - 2.0;
+  const auto disc = optim::constraints().nl_ineq([](const optim::ParameterPack<Series>& p) {
+    return p.at("a").square() + p.at("b").square() - 2.0;
   });
   optim::OptimaOptions options = interior();
   options.internal_protocol.independent_nonlinear_slacks = false;
@@ -390,11 +391,11 @@ TEST_CASE("every algorithm solves a problem written in extreme units, and multip
           "[optim][optima][scaling]") {
   for (double K : {1e-6, 1e6, 1e9}) {
     auto objective = [K](const Pack& p) {
-      return K * optim::square(p.at("a") - 1.0) + (1.0 / K) * optim::square(p.at("b") - 1500.0) + K * 0.01 * p.at("a");
+      return K * (p.at("a") - 1.0).square() + (1.0 / K) * (p.at("b") - 1500.0).square() + K * 0.01 * p.at("a");
     };
     const auto constraints =
         optim::constraints()
-            .nl_eq([K](const Pack& p) { return K * (optim::square(p.at("a")) + optim::square(p.at("b") * 0.001) - 3.0); })
+            .nl_eq([K](const Pack& p) { return K * (p.at("a").square() + (p.at("b") * 0.001).square() - 3.0); })
             .nl_ineq([K](const Pack& p) { return (p.at("b") - 1400.0) / K; });
     for (auto algorithm : {optim::OptimaAlgorithm::SequentialQP, optim::OptimaAlgorithm::WorkingSet,
                            optim::OptimaAlgorithm::InternalProtocol}) {
@@ -407,17 +408,17 @@ TEST_CASE("every algorithm solves a problem written in extreme units, and multip
       INFO("K = " << K << ", algorithm " << static_cast<int>(algorithm));
       REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
       // The solution a ~ 1.0198, b = 1400 (the inequality binds) in natural units.
-      REQUIRE(r.params.at("a").item<double>() == Approx(1.0198).margin(2e-3));
-      REQUIRE(r.params.at("b").item<double>() == Approx(1400.0).margin(1.0));
+      REQUIRE(as_f64(r.params.at("a")) == Approx(1.0198).margin(2e-3));
+      REQUIRE(as_f64(r.params.at("b")) == Approx(1400.0).margin(1.0));
     }
   }
 
   // d f / d x = 2 K (x - 3) = -2 K at x = 2, so the multiplier of x <= 2 is 2 K in the caller's units.
   const double K = 1e6;
-  auto objective = [K](const optim::Trace& x) { return K * optim::sum(optim::square(x - 3.0)); };
+  auto objective = [K](const Series& x) { return K * (x - 3.0).square().sum(); };
   const auto r = optim::optima(objective, vec({0.0}), {}, optim::constraints().ln_ineq(row({1.0}), vec({2.0})));
   REQUIRE(r.exit_flag == optim::OptimaExitFlag::Converged);
-  REQUIRE(r.multipliers.linear_inequalities.to_vec<double>()[0] == Approx(2.0 * K).epsilon(1e-3));
+  REQUIRE(r.multipliers.linear_inequalities.host<double>()[0] == Approx(2.0 * K).epsilon(1e-3));
   REQUIRE(r.evaluation.value.item<double>() == Approx(K).epsilon(1e-6));
 }
 

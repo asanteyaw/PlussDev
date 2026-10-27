@@ -168,22 +168,22 @@ std::string case_label_from_axis(const Slate& axis, std::int64_t row) {
       const auto& s = axis.as_series();
       switch (s.scalar_type()) {
         case pluss::codem::ScalarType::Bool:
-          return s.to_vec<bool>()[static_cast<std::size_t>(row)] ? "true" : "false";
+          return s.host<bool>()[static_cast<std::size_t>(row)] ? "true" : "false";
         case pluss::codem::ScalarType::Int8:
         case pluss::codem::ScalarType::Int16:
         case pluss::codem::ScalarType::Int32:
         case pluss::codem::ScalarType::Int64:
-          return fmt::format("{}", s.to_vec<std::int64_t>()[static_cast<std::size_t>(row)]);
+          return fmt::format("{}", s.host<std::int64_t>()[static_cast<std::size_t>(row)]);
         case pluss::codem::ScalarType::UInt8:
         case pluss::codem::ScalarType::UInt16:
         case pluss::codem::ScalarType::UInt32:
         case pluss::codem::ScalarType::UInt64:
-          return fmt::format("{}", s.to_vec<std::uint64_t>()[static_cast<std::size_t>(row)]);
+          return fmt::format("{}", s.host<std::uint64_t>()[static_cast<std::size_t>(row)]);
         case pluss::codem::ScalarType::Float16:
         case pluss::codem::ScalarType::BFloat16:
         case pluss::codem::ScalarType::Float32:
         case pluss::codem::ScalarType::Float64: {
-          const auto value = s.to_vec<double>()[static_cast<std::size_t>(row)];
+          const auto value = s.host<double>()[static_cast<std::size_t>(row)];
           if (std::isfinite(value) && std::floor(value) == value) {
             return fmt::format("{:.0f}", value);
           }

@@ -63,10 +63,10 @@ void test_bateman_and_macro() {
   const double tr = km.select(0, 0).select(0, 0).item<double>() + km.select(0, 1).select(0, 1).item<double>();
   const double det = km.select(0, 0).select(0, 0).item<double>() * km.select(0, 1).select(0, 1).item<double>() -
                      km.select(0, 0).select(0, 1).item<double>() * km.select(0, 1).select(0, 0).item<double>();
-  expect(std::abs(m.alpha.item<double>() + m.beta.item<double>() + tr) < 1e-12 &&
-             std::abs(m.alpha.item<double>() * m.beta.item<double>() - det) < 1e-12,
+  expect(std::abs(m.alpha.host<double>().front() + m.beta.host<double>().front() + tr) < 1e-12 &&
+             std::abs(m.alpha.host<double>().front() * m.beta.host<double>().front() - det) < 1e-12,
          "macro constants vs tr/det of K");
-  expect(m.alpha.item<double>() > m.beta.item<double>(), "alpha > beta");
+  expect(m.alpha.host<double>().front() > m.beta.host<double>().front(), "alpha > beta");
 }
 
 void test_autodiff_through_expm() {

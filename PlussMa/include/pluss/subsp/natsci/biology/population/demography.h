@@ -262,7 +262,7 @@ inline StochasticGrowth simulate_growth(const Environment &env, std::int64_t ste
   }
   StochasticGrowth out;
   out.per_replicate = total.div(static_cast<double>(steps));
-  const auto v = out.per_replicate.contiguous().to_vec<double>();
+  const auto v = out.per_replicate.contiguous().host<double>();
   double mu = 0.0, ss = 0.0;
   for (double x : v)
     mu += x;

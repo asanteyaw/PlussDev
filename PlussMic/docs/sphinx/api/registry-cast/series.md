@@ -44,8 +44,8 @@ auto rg = pluss::scribble::Registry({
 
 auto out = rg.fields({"id"}).cast().series();
 auto ids = out.fields("id");
-std::cout << std::get<pluss::Series>(ids.at(0)).to_vec<std::int64_t>()[0] << " ";
-std::cout << std::get<pluss::Series>(ids.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(ids.at(0)).host<std::int64_t>()[0] << " ";
+std::cout << std::get<pluss::Series>(ids.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

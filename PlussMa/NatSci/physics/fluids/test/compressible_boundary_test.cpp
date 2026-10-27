@@ -364,7 +364,7 @@ void test_characteristic_inlet_contracts() {
   const double recovered_pressure =
       gas::boundary_detail::plane_pressure(recovered, 0, {}).item<double>();
   expect(std::abs(recovered.rho.item<double>() - rho) < 2e-11 &&
-             std::abs(recovered.mom.div(recovered.rho).item<double>() - speed) <
+             std::abs(recovered.mom.div(recovered.rho).host<double>().front() - speed) <
                  2e-10 &&
              std::abs(recovered_pressure - pressure) < 2e-7,
          "total-condition inlet did not recover the ideal-gas reference "
@@ -381,7 +381,7 @@ void test_characteristic_inlet_contracts() {
       gas::boundary_detail::exterior(inside, grid, flow, {});
   expect(
       std::abs(flow_recovered.rho.item<double>() - rho) < 2e-13 &&
-          std::abs(flow_recovered.mom.div(flow_recovered.rho).item<double>() -
+          std::abs(flow_recovered.mom.div(flow_recovered.rho).host<double>().front() -
                    speed) < 2e-13 &&
           std::abs(gas::boundary_detail::plane_pressure(flow_recovered, 0, {})
                        .item<double>() -
@@ -708,7 +708,7 @@ void test_characteristic_far_field_and_outlet() {
   const Series exterior_pressure =
       gas::boundary_detail::plane_pressure(exterior, 0, {});
   const double exterior_rho = exterior.rho.item<double>();
-  const double exterior_u = exterior.mom.div(exterior.rho).item<double>();
+  const double exterior_u = exterior.mom.div(exterior.rho).host<double>().front();
   const double exterior_p = exterior_pressure.item<double>();
   const double exterior_c = std::sqrt(gamma * exterior_p / exterior_rho);
   const double inside_plus = 0.2 + 2.0 * std::sqrt(gamma) / (gamma - 1.0);
@@ -738,7 +738,7 @@ void test_characteristic_far_field_and_outlet() {
   const auto sup_in =
       gas::boundary_detail::exterior(sup_in_plane, grid, far_rule, {});
   expect(std::abs(sup_in.rho.item<double>() - 0.8) < 1e-14 &&
-             std::abs(sup_in.mom.item<double>() - (-0.04)) < 1e-14 &&
+             std::abs(sup_in.mom.host<double>().front() - (-0.04)) < 1e-14 &&
              std::abs(gas::boundary_detail::plane_pressure(sup_in, 0, {})
                           .item<double>() -
                       0.7) < 1e-14,
@@ -750,7 +750,7 @@ void test_characteristic_far_field_and_outlet() {
   const auto outlet =
       gas::boundary_detail::exterior(inside, grid, outlet_rule, {});
   const double outlet_rho = outlet.rho.item<double>();
-  const double outlet_u = outlet.mom.div(outlet.rho).item<double>();
+  const double outlet_u = outlet.mom.div(outlet.rho).host<double>().front();
   const double outlet_p =
       gas::boundary_detail::plane_pressure(outlet, 0, {}).item<double>();
   const double outlet_c = std::sqrt(gamma * outlet_p / outlet_rho);

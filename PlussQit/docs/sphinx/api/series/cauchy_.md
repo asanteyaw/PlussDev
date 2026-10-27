@@ -90,8 +90,8 @@ converge** to the location, but the **median does**.
 pluss::rng_seed(7);
 auto x = pluss::series::empty({200000}, pluss::ScalarType::Float64);
 x.cauchy_(2.0, 0.5);
-std::cout << "sample mean~"   << x.mean().to_vec<double>()[0]
-          << "  sample median~" << x.median().to_vec<double>()[0]
+std::cout << "sample mean~"   << x.mean().host<double>()[0]
+          << "  sample median~" << x.median().host<double>()[0]
           << "  (location = 2)\n";
 ```
 

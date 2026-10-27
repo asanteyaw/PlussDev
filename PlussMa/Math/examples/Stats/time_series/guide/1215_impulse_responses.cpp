@@ -41,7 +41,7 @@ Series linked_pair(int n) {
 }
 void show(const char* title, const Series& r) {
   std::cout << title << "\n";
-  const auto v = r.to_vec<double>();
+  const auto v = r.host<double>();
   for (std::int64_t s = 0; s < r.sizes()[0]; ++s)
     std::cout << "  step " << s << "   shock 0: " << std::setw(8) << v[static_cast<std::size_t>(4 * s)] << std::setw(8) << v[static_cast<std::size_t>(4 * s + 1)] << "   shock 1: " << std::setw(8)
               << v[static_cast<std::size_t>(4 * s + 2)] << std::setw(8) << v[static_cast<std::size_t>(4 * s + 3)] << "\n";

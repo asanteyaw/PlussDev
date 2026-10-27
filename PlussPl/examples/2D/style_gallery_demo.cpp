@@ -59,7 +59,7 @@ int main() {
 
   auto& ecdf = gallery.pane2("ecdfplot / rugplot");
   ecdf.place(0, 3).grid(pl::GridStyle::Major).caption("cumulative + rug");
-  auto sorted = y.to_vec<double>();
+  auto sorted = y.host<double>();
   std::sort(sorted.begin(), sorted.end());
   std::vector<double> cdf(sorted.size(), 0.0);
   for (std::size_t i = 0; i < sorted.size(); ++i) {

@@ -164,7 +164,7 @@ bool run_procedure_phase2_checks(std::ostream* err = nullptr) {
 
   const ai::ProcedureResult result = proc.run({ai::procedure::input("x", x)});
   const pluss::Series y = result.get<pluss::Series>("plus");
-  const std::vector<double> values = y.to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+  const std::vector<double> values = y.to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
   if (values.size() != 3 || values[0] != 3.0 || values[1] != 5.0 || values[2] != 7.0) {
     if (err) *err << "Procedure Phase 2 should run Series callables through vectorized Series ops\n";
     return false;
@@ -174,7 +174,7 @@ bool run_procedure_phase2_checks(std::ostream* err = nullptr) {
     return false;
   }
   const std::vector<double> stored =
-      result.get<pluss::Series>("store").to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+      result.get<pluss::Series>("store").to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
   if (stored != values) {
     if (err) *err << "Procedure sink should preserve the upstream artifact value under the sink step name\n";
     return false;

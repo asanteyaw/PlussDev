@@ -55,7 +55,7 @@ struct SeriesCompareReport {
 }
 
 [[nodiscard]] inline double max_abs_diff(const Series& lhs, const Series& rhs) {
-  return compare_series(lhs, rhs).max_abs_diff.item<double>();
+  return compare_series(lhs, rhs).max_abs_diff.host<double>().front();
 }
 
 struct LinearParameters {
@@ -500,8 +500,8 @@ namespace regression {
   mean_values.reserve(mean.requested.size());
   stdev_values.reserve(mean.requested.size());
 
-  const auto mean_vec = mean.values.to(pluss::pCPU, ScalarType::Float64).reshape({mean.values.numel()}).to_vec<double>();
-  const auto stdev_vec = stdev.values.to(pluss::pCPU, ScalarType::Float64).reshape({stdev.values.numel()}).to_vec<double>();
+  const auto mean_vec = mean.values.to(pluss::pCPU, ScalarType::Float64).reshape({mean.values.numel()}).host<double>();
+  const auto stdev_vec = stdev.values.to(pluss::pCPU, ScalarType::Float64).reshape({stdev.values.numel()}).host<double>();
   for (std::size_t i = 0; i < mean.requested.size(); ++i) {
     metric_names.push_back(metric_kind_name_(mean.requested[i]));
     mean_values.push_back(mean_vec[i]);

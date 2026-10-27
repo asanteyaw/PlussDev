@@ -35,7 +35,7 @@ int main() {
   const auto market_price = fft.price(inst, p0, mkt, fin::pricer::RiskSpec::PriceOnly, cfg).price.mul(1.015);
   const auto objective = [&](const fin::model::Heston& p) {
     const auto px = fft.price(inst, p, mkt, fin::pricer::RiskSpec::PriceOnly, cfg).price;
-    return pluss::mse(px, market_price);
+    return pluss::losses::mse(px, market_price);
   };
 
   std::cout << "market_price=" << market_price << "\n";

@@ -61,8 +61,8 @@ auto localized = ct.tl().localize(options);
 
 auto before = ct.tl().epoch(pluss::table::TimeUnit::Seconds);
 auto after = localized.tl().epoch(pluss::table::TimeUnit::Seconds);
-std::cout << "epoch before: " << before.keys("ts").as_series().to_vec<std::int64_t>()[0] << "\n";
-std::cout << "epoch after: " << after.keys("ts").as_series().to_vec<std::int64_t>()[0] << "\n";
+std::cout << "epoch before: " << before.keys("ts").as_series().host<std::int64_t>()[0] << "\n";
+std::cout << "epoch after: " << after.keys("ts").as_series().host<std::int64_t>()[0] << "\n";
 
 auto fmted = localized.tl().fmt("%Y-%m-%d %H:%M:%S");
 std::cout << "displayed: " << fmted.keys("ts").as_note().at(0);

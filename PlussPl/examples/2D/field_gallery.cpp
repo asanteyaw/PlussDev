@@ -158,9 +158,9 @@ int main() {
   auto base_a = frame.mul(0.55).sin().add(1.35);
   auto base_b = frame.mul(0.35).cos().mul(0.8).add(1.0);
   auto base_c = frame.mul(0.22).sin().mul(0.55).add(0.65);
-  const auto host_a = base_a.to(pluss::ScalarType::Float64).to_vec<double>();
-  const auto host_b = base_b.to(pluss::ScalarType::Float64).to_vec<double>();
-  const auto host_c = base_c.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto host_a = base_a.to(pluss::ScalarType::Float64).host<double>();
+  const auto host_b = base_b.to(pluss::ScalarType::Float64).host<double>();
+  const auto host_c = base_c.to(pluss::ScalarType::Float64).host<double>();
   std::vector<double> canopy_values;
   canopy_values.reserve(host_a.size() * 3U);
   for (std::size_t i = 0; i < host_a.size(); ++i) {

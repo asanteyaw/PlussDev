@@ -46,8 +46,8 @@ int main() {
           .random_state = 42,
       });
 
-  auto test_idx = split.test_indices.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-  auto train_idx = split.train_indices.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  auto test_idx = split.test_indices.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  auto train_idx = split.train_indices.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
   auto test_idx_sorted = test_idx;
   std::sort(test_idx_sorted.begin(), test_idx_sorted.end());
 
@@ -71,7 +71,7 @@ int main() {
   std::cout << "\n";
 
   auto train_df = housing.take(train_idx);
-  auto null_rows = train_df.isnull().any().as_series().to(pluss::pCPU, ScalarType::Bool).to_vec<bool>();
+  auto null_rows = train_df.isnull().any().as_series().to(pluss::pCPU, ScalarType::Bool).host<bool>();
   std::vector<std::int64_t> null_pos{};
   std::vector<std::int64_t> null_orig_idx{};
   for (std::size_t i = 0; i < null_rows.size() && null_pos.size() < 5; ++i) {
@@ -91,7 +91,7 @@ int main() {
   std::cout << "\n";
 
   auto corr_ranked = train_df.corr().arrange({"median_house_value"}, false).features({"median_house_value"});
-  auto corr_vals = corr_ranked.features("median_house_value").as_series().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  auto corr_vals = corr_ranked.features("median_house_value").as_series().to(pluss::pCPU, ScalarType::Float64).host<double>();
   std::cout << "CORR_MHV_DESC";
   for (std::size_t i = 0; i < corr_vals.size(); ++i) {
     std::cout << (i == 0 ? ' ' : ',') << corr_vals[i];
@@ -111,8 +111,8 @@ int main() {
   auto labels_slate = isolator.learn_infer(train_df.feataxis().series());
   auto scores_slate = isolator.score_samples(train_df.feataxis().series());
 
-  auto labels = labels_slate.as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-  auto scores = scores_slate.as_series().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  auto labels = labels_slate.as_series().to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
+  auto scores = scores_slate.as_series().to(pluss::pCPU, ScalarType::Float64).host<double>();
 
   std::int64_t inliers = 0;
   std::int64_t outliers = 0;

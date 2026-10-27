@@ -33,7 +33,7 @@ int main() {
   o.max_iterations = 400;
   o.relative_tolerance = 1e-10;
   const auto r = krylov::cg(laplacian, b, {-1}, o);
-  const auto x = r.solution.to_vec<double>();
+  const auto x = r.solution.host<double>();
   double worst = 0.0;
   for (std::int64_t i = 1; i <= n; ++i) worst = std::max(worst, std::abs(x[i - 1] - 0.5 * i * (n + 1 - i)));
   std::cout << "iterations        : " << r.iterations << " (the system has " << n << " unknowns)\n";

@@ -42,7 +42,7 @@ lymph::LabeledBatch tiny_labeled_batch() {
 
 bool close_vec(const Series& values, const std::vector<double>& want, double tol = 1e-6) {
   const std::vector<double> got =
-      values.to(pluss::pCPU, ScalarType::Float64).reshape({values.numel()}).to_vec<double>();
+      values.to(pluss::pCPU, ScalarType::Float64).reshape({values.numel()}).host<double>();
   if (got.size() != want.size()) return false;
   for (std::size_t i = 0; i < got.size(); ++i) {
     if (std::abs(got[i] - want[i]) > tol) return false;

@@ -142,10 +142,10 @@ int main() {
     return 1;
   }
 
-  const auto close_vec = close_scaled.to_vec<float>();
-  const auto ret_vec = ret_scaled.to_vec<float>();
-  const auto range_vec = range_scaled.to_vec<float>();
-  const auto vol_vec = vol_scaled.to_vec<float>();
+  const auto close_vec = close_scaled.host<float>();
+  const auto ret_vec = ret_scaled.host<float>();
+  const auto range_vec = range_scaled.host<float>();
+  const auto vol_vec = vol_scaled.host<float>();
 
   const std::size_t samples = static_cast<std::size_t>(n);
   const std::size_t lb = static_cast<std::size_t>(lookback);
@@ -248,8 +248,8 @@ int main() {
     dir_correct += direction_match.sum().to(pluss::pCPU, ScalarType::Float64).item<double>();
 
     if (preview_pred.size() < 5) {
-      const auto pred_vec = pred_price.reshape({bs}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-      const auto actual_vec = actual_price.reshape({bs}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      const auto pred_vec = pred_price.reshape({bs}).to(pluss::pCPU, ScalarType::Float64).host<double>();
+      const auto actual_vec = actual_price.reshape({bs}).to(pluss::pCPU, ScalarType::Float64).host<double>();
       for (std::size_t i = 0; i < pred_vec.size() && preview_pred.size() < 5; ++i) {
         preview_pred.push_back(pred_vec[i]);
         preview_actual.push_back(actual_vec[i]);

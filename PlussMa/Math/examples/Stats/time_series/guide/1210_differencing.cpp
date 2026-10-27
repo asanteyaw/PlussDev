@@ -41,7 +41,7 @@ std::vector<double> running_sum(const std::vector<double>& e) {
 }
 void print_row(const char* label, const Series& s, int precision = 4) {
   std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
+  for (double v : s.host<double>()) std::cout << " " << std::setw(8) << v;
   std::cout << "\n";
 }
 int main() {
@@ -60,7 +60,7 @@ int main() {
   o.ma_order = 1;
   const auto fit = ts::Arima::fit_mle(y, o);
   std::cout << "ARIMA(0,1,1): ma = " << fit.ma[0] << ", sigma = " << fit.sigma << " (the generating noise has standard deviation " << std::sqrt(1.0 / 12.0) << ")\n";
-  const auto fc = fit.forecast(5, y).to_vec<double>();
+  const auto fc = fit.forecast(5, y).host<double>();
   std::cout << "last value " << walk.back() << "; forecasts of the level:";
   for (double v : fc) std::cout << " " << v;
   std::cout << "\n";

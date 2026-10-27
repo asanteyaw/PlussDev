@@ -25,7 +25,7 @@ int main() {
   ode::OdeEventOptions e;
   e.direction = ode::OdeEventDirection::Falling;
   const auto r = ode::fluxa_until(fall, ground, vec({10.0, 0.0}), 0.0, 5.0, {}, o, e);
-  const auto y = r.y_final.to_vec<double>();
+  const auto y = r.y_final.host<double>();
   std::cout << std::fixed << std::setprecision(6);
   std::cout << "triggered : " << r.triggered << "\n";
   std::cout << "t         : " << r.t_final << "   (exact " << std::sqrt(2.0 * 10.0 / 9.81) << ")\n";

@@ -58,7 +58,7 @@ void require_close_(const std::vector<float>& got, const std::vector<float>& wan
 }
 
 std::vector<float> to_vec_f32_cpu_(const pluss::Series& x) {
-  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().to_vec<float>();
+  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().host<float>().array().data;
 }
 
 pluss::Series make_spd_batch_(std::int64_t batch, std::int64_t n) {

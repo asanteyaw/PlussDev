@@ -1,0 +1,40 @@
+# Derivative tools, call counts and long loops
+
+[Back to Optima 7: Derivatives](../optima_07_derivatives.md)
+
+The machinery that the algorithms use is available directly: `grad` and `value_and_grad` for a scalar function, `jacrev` and `jacfwd` for the Jacobian of a vector function, `jvp` for a derivative along a direction, and `hvp` for the exact Hessian times a direction without forming the Hessian. They work on the same parameter packs as the solver, so they are useful for sensitivity analysis and for checking your own work.
+
+The page then asks what each way of supplying derivatives *costs*. Counting the calls into your own functions shows what an exact Hessian adds on top of a BFGS run, and a long recurrence (a state-space filter, a volatility model) shows when the tape becomes the wrong tool: it records every operation and grows with the loop, where `fwd_objective` carries a fixed number of partial derivatives and allocates nothing.
+
+## Program 4: Gradients, Jacobians and products on their own
+
+The machinery that the algorithms use is available directly on the same parameter packs: `grad` and `value_and_grad` for a scalar function, `jacrev` and `jacfwd` for the Jacobian of a vector function, `jvp` for a derivative along a direction, and `hvp` for the exact Hessian times a direction without ever forming the Hessian. Every function is written once, on plain `Series`. The program evaluates each at a point and compares it with the formula worked out by hand.
+
+@@example Numerical/optimization/guide/optima/84_derivative_tools.cpp@@
+
+All five agree with the formulas to better than 1e-12. `jacrev` and `jacfwd` return the same Jacobian: it is built with one pass per output, which suits functions with few outputs and many inputs, such as a loss. `hvp` differentiates the reverse-mode gradient a second time, so it is exact and needs no second form of the function: one product gives one column of the Hessian, so the Hessian of a function of `n` variables costs `n` products. The Jacobian of a vector function comes back as one block per parameter, each of shape `[outputs, block size]`, which is the shape the analytic constraints of Program 3 return.
+
+## Program 5: Counting the calls
+
+Each way of supplying derivatives costs a different number of calls into your own functions. The four-variable benchmark is solved by sequential QP with the BFGS model and a traced gradient, with the BFGS model and a hand-written gradient, and with the exact Hessian. Every call into the objective callbacks is counted.
+
+@@example Numerical/optimization/guide/optima/85_callback_counts.cpp@@
+
+With BFGS the run takes 4 iterations and 6 calls to the objective, whether the gradient is traced or written by hand; the hand-written one appears in the `analytic` column instead, with the same count and the same answer. The exact model reaches the same optimum in 5 iterations and 31 traced calls: 7 for the gradients plus 24 for the Hessian-vector products. That is 6 Hessians of 4 variables each: a Hessian is assembled from one Hessian-vector product per variable, and each one runs your function again. The extra calls grow with the problem as `n` per iteration, which is the cost of exactness (chapter 6); a function whose evaluation is cheap, or whose curvature is learned slowly by the quasi-Newton models, can repay it. A function whose evaluation is expensive is better served by BFGS or the limited-memory model.
+
+## Program 6: Long loops without a tape
+
+Some objectives are a loop of a few scalar operations repeated thousands of times: a state-space filter, a volatility model, a recursion over a time series. Reverse mode records every operation of the loop on a tape, so the tape grows with the length of the loop. `Fwd<N>` carries the value and the `N` partial derivatives in plain doubles instead: no tape and no allocation. The program fits a GARCH(1,1) model, three parameters, to 2000 simulated returns, with the log-likelihood written once as a template and used with both number types.
+
+@@example Numerical/optimization/guide/optima/86_long_recurrence.cpp@@
+
+Both modes give the same fit: 11 iterations, an objective of 0.433348, parameters (0.0340, 0.0807, 0.8835). The choice is therefore about how the derivative is computed, not about the answer. Forward mode does `N` derivative updates for every operation of the plain function, so it suits a small `N` (up to a few dozen); with hundreds of parameters, use `autodiff`, whose work does not grow with `N` in that way. Which is quicker for your function depends on its length, on `N` and on your machine, so measure both before committing.
+
+## Decisions and pitfalls
+
+- **One function, every derivative.** `hvp`, `jvp` and the exact curvature models differentiate the same `Series` function; there is no second form to write.
+- **An exact Hessian costs extra calls.** It reaches the same optimum in a similar number of iterations but adds calls to your function (24 here for 6 Hessians of 4 variables); on a small problem BFGS is cheaper.
+- **`fwd_objective` for long loops with few parameters.** It does `N` derivative updates per operation, so it suits `N` up to a few dozen; with hundreds of parameters use reverse mode.
+- **The answer does not depend on the mode.** Both modes gave the same fit in the loop example; the choice is about memory and time.
+
+Where next: [Chapter 8](../optima_08_worked_problems.md) puts everything together on five worked problems.

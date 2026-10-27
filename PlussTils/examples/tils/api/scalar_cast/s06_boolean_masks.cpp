@@ -13,7 +13,7 @@ int main() {
 
   std::cout << "mask dtype is bool: " << (mask.dtype().scalar == pluss::ScalarType::Bool) << '\n';
   std::cout << "mask values:";
-  for (bool b : mask.to_vec<bool>()) std::cout << ' ' << b;
+  for (bool b : mask.host<bool>()) std::cout << ' ' << b;
   std::cout << '\n';
   return 0;
 }

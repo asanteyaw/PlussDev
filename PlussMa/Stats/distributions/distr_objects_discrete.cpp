@@ -1,4 +1,5 @@
 #include "distr_fit_common.h"
+#include "pluss/tils/aux/scalar_cast.h"
 
 #include <algorithm>
 #include <array>
@@ -36,7 +37,7 @@ std::array<double, 2> negbinom_params(double r, double p) {
 double series_scalar_param_(const Series& param, const char* op, const char* name) {
   PLUSS_CHECK(param.defined(), std::string(op) + ": missing " + name + " Series parameter");
   PLUSS_CHECK(param.numel() == 1, std::string(op) + ": " + name + " Series parameter must be scalar for sampling");
-  return param.to(ScalarType::Float64).item<double>();
+  return pluss::tils::to_scalar<double>(param.to(ScalarType::Float64));
 }
 
 Series bernoulli_log_mgf_kernel(const Series& t, double p) {
@@ -355,7 +356,7 @@ Series BernoulliFit::observed_inf(const Series& x) const {
 }
 
 Series BernoulliFit::vcov(const Series& x) const {
-  const double info = fisher_inf(x).item<double>();
+  const double info = pluss::tils::to_scalar<double>(fisher_inf(x));
   PLUSS_CHECK(info > 0.0, "BernoulliFit::vcov: fisher_inf must be > 0");
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
@@ -366,7 +367,7 @@ Series BernoulliFit::stderr(const Series& x) const {
 
 Series BernoulliFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "BernoulliFit::confint");
-  const double se = stderr(x).item<double>();
+  const double se = pluss::tils::to_scalar<double>(stderr(x));
   const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -511,7 +512,7 @@ Series BinomialFit::observed_inf(const Series& x) const {
 }
 
 Series BinomialFit::vcov(const Series& x) const {
-  const double info = fisher_inf(x).item<double>();
+  const double info = pluss::tils::to_scalar<double>(fisher_inf(x));
   PLUSS_CHECK(info > 0.0, "BinomialFit::vcov: fisher_inf must be > 0");
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
@@ -522,7 +523,7 @@ Series BinomialFit::stderr(const Series& x) const {
 
 Series BinomialFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "BinomialFit::confint");
-  const double se = stderr(x).item<double>();
+  const double se = pluss::tils::to_scalar<double>(stderr(x));
   const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -643,7 +644,7 @@ Series PoissonFit::observed_inf(const Series& x) const {
 }
 
 Series PoissonFit::vcov(const Series& x) const {
-  const double info = fisher_inf(x).item<double>();
+  const double info = pluss::tils::to_scalar<double>(fisher_inf(x));
   PLUSS_CHECK(info > 0.0, "PoissonFit::vcov: fisher_inf must be > 0");
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
@@ -654,7 +655,7 @@ Series PoissonFit::stderr(const Series& x) const {
 
 Series PoissonFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "PoissonFit::confint");
-  const double se = stderr(x).item<double>();
+  const double se = pluss::tils::to_scalar<double>(stderr(x));
   const std::array<double, 2> ci = {std::max(0.0, lambda - z * se), lambda + z * se};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -793,7 +794,7 @@ Series GeometricFit::observed_inf(const Series& x) const {
 }
 
 Series GeometricFit::vcov(const Series& x) const {
-  const double info = fisher_inf(x).item<double>();
+  const double info = pluss::tils::to_scalar<double>(fisher_inf(x));
   PLUSS_CHECK(info > 0.0, "GeometricFit::vcov: fisher_inf must be > 0");
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
@@ -804,7 +805,7 @@ Series GeometricFit::stderr(const Series& x) const {
 
 Series GeometricFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "GeometricFit::confint");
-  const double se = stderr(x).item<double>();
+  const double se = pluss::tils::to_scalar<double>(stderr(x));
   const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},

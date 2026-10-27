@@ -112,7 +112,7 @@ std::string kind_name(StreamKind kind) {
 
 std::string slate_value_at(const pluss::table::Slate& slate, std::int64_t row, std::int64_t max_width) {
   if (pluss::table::detail::has_validity_mask(slate)) {
-    const auto valid = pluss::table::detail::validity_mask(slate)->to_vec<bool>();
+    const auto valid = pluss::table::detail::validity_mask(slate)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return "NA";
     }

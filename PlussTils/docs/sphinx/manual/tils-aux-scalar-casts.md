@@ -108,7 +108,7 @@ int main() {
 
   std::cout << "integer column is int64: " << (ints.dtype().scalar == pluss::ScalarType::Int64) << '\n';
   std::cout << "values:";
-  for (auto v : ints.to_vec<std::int64_t>()) std::cout << ' ' << v;
+  for (auto v : ints.host<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   return 0;
 }
@@ -215,7 +215,7 @@ int main() {
 
   std::cout << "mask dtype is bool: " << (mask.dtype().scalar == pluss::ScalarType::Bool) << '\n';
   std::cout << "mask values:";
-  for (bool b : mask.to_vec<bool>()) std::cout << ' ' << b;
+  for (bool b : mask.host<bool>()) std::cout << ' ' << b;
   std::cout << '\n';
   return 0;
 }
@@ -289,7 +289,7 @@ int main() {
   const auto whole = pluss::tils::as_i64(shifted, cfg);
 
   std::int64_t sum = 0;
-  for (std::int64_t v : whole.to_vec<std::int64_t>()) sum += v;
+  for (std::int64_t v : whole.host<std::int64_t>()) sum += v;
   const auto count = pluss::make_series(std::vector<std::int64_t>{static_cast<std::int64_t>(whole.numel())}, {}, cfg);
 
   std::cout << "readings: " << pluss::tils::as_i64(count) << '\n';

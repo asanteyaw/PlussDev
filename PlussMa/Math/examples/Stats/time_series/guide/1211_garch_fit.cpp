@@ -44,8 +44,8 @@ int main() {
   std::cout << "alpha + beta " << fit.alpha + fit.beta << "   unconditional variance " << fit.unconditional_var() << "\nlog-likelihood " << std::setprecision(2)
             << fit.loglik(y) << "\n\n";
   std::cout << std::setprecision(4) << "forecast of the variance, by horizon\n";
-  const auto f = fit.forecast(100, y).to_vec<double>();
+  const auto f = fit.forecast(100, y).host<double>();
   for (int h : {1, 2, 5, 10, 20, 50, 100}) std::cout << "  h = " << std::setw(3) << h << "   " << f[static_cast<std::size_t>(h - 1)] << "\n";
-  const auto v = fit.infer(y).to_vec<double>();
+  const auto v = fit.infer(y).host<double>();
   std::cout << "last fitted conditional variance " << v.back() << "\n";
 }

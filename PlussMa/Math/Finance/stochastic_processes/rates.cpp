@@ -204,8 +204,8 @@ Series cir_transition_step_(const Series& rt,
   PLUSS_CHECK(std::isfinite(degree) && degree > 0.0,
               "subsp::math::finance::rates::cir_transition_step_: invalid degree");
 
-  const std::vector<double> r_vec = r_safe.reshape({paths}).to(cpu_cfg.platform, cpu_cfg.dtype).to_vec<double>();
-  const std::vector<double> z_vec = z.reshape({paths}).to(cpu_cfg.platform, cpu_cfg.dtype).to_vec<double>();
+  const std::vector<double> r_vec = r_safe.reshape({paths}).to(cpu_cfg.platform, cpu_cfg.dtype).host<double>();
+  const std::vector<double> z_vec = z.reshape({paths}).to(cpu_cfg.platform, cpu_cfg.dtype).host<double>();
 
   std::vector<double> out(static_cast<std::size_t>(paths), p.rate_floor);
   std::mt19937_64 rng(seed ^ (0xD1B54A32D192ED03ULL + static_cast<std::uint64_t>(t_step + 1) * 0x9E3779B97F4A7C15ULL));

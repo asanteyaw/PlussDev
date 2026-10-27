@@ -117,11 +117,11 @@ energy_gradient(Fn &fn, const Series &input, const Series &time,
                 const VariationalOptions &options, const char *operation) {
   Series displayed = pluss::series::undefined();
   auto [value, gradients] = math_diff::value_and_grad(
-      [&](const std::vector<math_diff::Trace> &variables) {
+      [&](const std::vector<Series> &variables) -> Series {
         const auto result = invoke_single_energy<Fn, InputDimension>(
-            fn, variables.front().value(), time);
+            fn, variables.front(), time);
         displayed = result.si_value();
-        return math_diff::Trace(displayed.sum());
+        return displayed.sum();
       },
       std::vector<Series>{input}, derivative_policy(options));
   (void)value;
@@ -151,12 +151,12 @@ hamiltonian(Fn &&fn, const PhaseState<CoordinateDimension> &state,
   Series displayed = pluss::series::undefined();
 
   auto [total, gradients] = hamiltonian_detail::math_diff::value_and_grad(
-      [&](const std::vector<hamiltonian_detail::math_diff::Trace> &variables) {
+      [&](const std::vector<Series> &variables) -> Series {
         const auto value =
             hamiltonian_detail::invoke_energy<FnType, CoordinateDimension>(
-                fn_copy, variables[0].value(), variables[1].value(), t);
+                fn_copy, variables[0], variables[1], t);
         displayed = value.si_value();
-        return hamiltonian_detail::math_diff::Trace(displayed.sum());
+        return displayed.sum();
       },
       std::vector<Series>{q, p},
       hamiltonian_detail::derivative_policy(options));

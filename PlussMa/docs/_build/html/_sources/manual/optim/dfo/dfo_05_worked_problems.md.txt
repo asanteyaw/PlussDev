@@ -8,8 +8,7 @@ Every program is complete and its output is the output of that program.
 
 ## Programs
 
-- [Fitting a curve](dfo_05_worked_problems/fitting_a_curve.md)
-- [Verifying an answer](dfo_05_worked_problems/verifying_an_answer.md)
+- [A fitted curve, and how to check an answer](dfo_05_worked_problems/a_fit_and_how_to_check_it.md)
 
 ## A short guide to the whole section
 
@@ -25,7 +24,6 @@ Every program is complete and its output is the output of that program.
 :maxdepth: 2
 :hidden:
 
-dfo_05_worked_problems/fitting_a_curve
-dfo_05_worked_problems/verifying_an_answer
+dfo_05_worked_problems/a_fit_and_how_to_check_it
 ```
 <!-- apiref:toctree:end -->

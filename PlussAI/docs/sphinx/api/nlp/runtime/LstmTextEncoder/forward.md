@@ -96,7 +96,7 @@ int main() {
   nlp::runtime::EmbeddingTable table{nlp::runtime::EmbeddingOptions{.width = 4}};
   table.reset(static_cast<std::int64_t>(indexer.vocabulary().size()), indexer.pad_id());
   nlp::runtime::LstmTextEncoder encoder{pluss::nn::LSTMOptions{.input_size = 4, .hidden_size = 3, .batch_first = true}};
-  const auto values = encoder.forward(table.forward(batch), batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = encoder.forward(table.forward(batch), batch).to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   const std::size_t padded = static_cast<std::size_t>((1 * batch.max_length + 1) * 3);
   std::cout << "padded output first value = " << values[padded] << "\n";
   return 0;

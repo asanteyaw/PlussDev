@@ -25,7 +25,7 @@ pluss::scribble::Slot Stream::scribbelize() const {
   const auto n = size();
   const auto has_validity = pluss::kindle::detail::has_validity_mask(*this);
   const auto valid = has_validity
-                         ? pluss::kindle::detail::validity_mask(*this)->to_vec<bool>()
+                         ? pluss::kindle::detail::validity_mask(*this)->host<bool>()
                          : std::vector<bool>{};
   std::vector<pluss::scribble::Slot::Value> out;
   out.reserve(static_cast<std::size_t>(n));
@@ -34,7 +34,7 @@ pluss::scribble::Slot Stream::scribbelize() const {
     case pluss::kindle::StreamKind::Series: {
       const auto s = as_series();
       if (s.scalar_type() == pluss::codem::ScalarType::Bool) {
-        const auto x = s.to_vec<bool>();
+        const auto x = s.host<bool>();
         for (std::int64_t i = 0; i < n; ++i) {
           if (has_validity && !valid[static_cast<std::size_t>(i)]) {
             out.emplace_back(std::monostate{});
@@ -45,7 +45,7 @@ pluss::scribble::Slot Stream::scribbelize() const {
           }
         }
       } else if (s.scalar_type() == pluss::codem::ScalarType::Int64) {
-        const auto x = s.to_vec<std::int64_t>();
+        const auto x = s.host<std::int64_t>();
         for (std::int64_t i = 0; i < n; ++i) {
           if (has_validity && !valid[static_cast<std::size_t>(i)]) {
             out.emplace_back(std::monostate{});
@@ -54,7 +54,7 @@ pluss::scribble::Slot Stream::scribbelize() const {
           }
         }
       } else {
-        const auto x = s.to(pluss::codem::ScalarType::Float64).to_vec<double>();
+        const auto x = s.to(pluss::codem::ScalarType::Float64).host<double>();
         for (std::int64_t i = 0; i < n; ++i) {
           if (has_validity && !valid[static_cast<std::size_t>(i)]) {
             out.emplace_back(std::monostate{});
@@ -308,7 +308,7 @@ std::string Stream::to_json() const {
     case StreamKind::Series: {
       const auto& s = as_series();
       if (s.scalar_type() == pluss::codem::ScalarType::Bool) {
-        const auto values = s.to_vec<bool>();
+        const auto values = s.host<bool>();
         for (std::size_t i = 0; i < values.size(); ++i) {
           if (i == 0) oss << "\n";
           oss << "    " << (values[i] ? "true" : "false");
@@ -316,7 +316,7 @@ std::string Stream::to_json() const {
           oss << "\n";
         }
       } else if (s.scalar_type() == pluss::codem::ScalarType::Int64) {
-        const auto values = s.to_vec<std::int64_t>();
+        const auto values = s.host<std::int64_t>();
         for (std::size_t i = 0; i < values.size(); ++i) {
           if (i == 0) oss << "\n";
           oss << "    " << values[i];
@@ -324,7 +324,7 @@ std::string Stream::to_json() const {
           oss << "\n";
         }
       } else {
-        const auto values = s.to(pluss::codem::ScalarType::Float64).to_vec<double>();
+        const auto values = s.to(pluss::codem::ScalarType::Float64).host<double>();
         for (std::size_t i = 0; i < values.size(); ++i) {
           if (i == 0) oss << "\n";
           oss << "    " << values[i];
@@ -370,7 +370,7 @@ std::string Stream::to_json() const {
   oss << "]";
 
   if (detail::has_validity_mask(*this)) {
-    const auto valid = detail::validity_mask(*this)->to_vec<bool>();
+    const auto valid = detail::validity_mask(*this)->host<bool>();
     oss << ",\n";
     oss << "  \"validity\": [";
     for (std::size_t i = 0; i < valid.size(); ++i) {

@@ -106,10 +106,10 @@ namespace {
   return rows;
 }
 
-[[nodiscard]] std::vector<double> series_row_to_vec(const Series& row) {
+[[nodiscard]] std::vector<double> pull_series_row(const Series& row) {
   return row.to(pluss::pCPU, pluss::ScalarType::Float64)
       .reshape({row.numel()})
-      .to_vec<double>();
+      .pull<double>();
 }
 
 } // namespace
@@ -271,7 +271,7 @@ std::vector<std::vector<std::vector<double>>> encode_docs(
   const auto embedded = state.table.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64);
   const auto lengths = batch.lengths.to(pluss::pCPU, pluss::ScalarType::Float64)
                            .reshape({batch.batch_size})
-                           .to_vec<double>();
+                           .host<double>();
 
   std::vector<std::vector<std::vector<double>>> out;
   out.reserve(static_cast<std::size_t>(batch.batch_size));
@@ -282,7 +282,7 @@ std::vector<std::vector<std::vector<double>>> encode_docs(
     std::vector<std::vector<double>> rows;
     rows.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, len)));
     for (std::int64_t t = 0; t < len; ++t) {
-      rows.push_back(series_row_to_vec(matrix.select(0, t)));
+      rows.push_back(pull_series_row(matrix.select(0, t)));
     }
     out.push_back(contextualize(std::move(rows), state.head));
   }

@@ -13,7 +13,7 @@ int main() {
 
   std::cout << "integer column is int64: " << (ints.dtype().scalar == pluss::ScalarType::Int64) << '\n';
   std::cout << "values:";
-  for (auto v : ints.to_vec<std::int64_t>()) std::cout << ' ' << v;
+  for (auto v : ints.host<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   return 0;
 }

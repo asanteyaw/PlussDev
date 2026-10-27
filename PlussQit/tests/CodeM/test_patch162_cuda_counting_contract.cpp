@@ -125,14 +125,14 @@ TEST_CASE("CUDA bridge enables counting fallback when strict native is off", "[c
   const auto float_cuda = float_cpu.to(pluss::pCUDA);
 
   require_equal_i64_(
-      int_cuda.unique(true).to(pluss::pCPU).to_vec<std::int64_t>(),
-      int_cpu.unique(true).to_vec<std::int64_t>());
+      int_cuda.unique(true).to(pluss::pCPU).host<std::int64_t>(),
+      int_cpu.unique(true).host<std::int64_t>());
   require_equal_i64_(
-      int_cuda.bincount(/*minlength=*/7).to(pluss::pCPU).to_vec<std::int64_t>(),
-      int_cpu.bincount(/*minlength=*/7).to_vec<std::int64_t>());
+      int_cuda.bincount(/*minlength=*/7).to(pluss::pCPU).host<std::int64_t>(),
+      int_cpu.bincount(/*minlength=*/7).host<std::int64_t>());
   require_equal_i64_(
-      float_cuda.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).to(pluss::pCPU).to_vec<std::int64_t>(),
-      float_cpu.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).to_vec<std::int64_t>());
+      float_cuda.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).to(pluss::pCPU).host<std::int64_t>(),
+      float_cpu.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).host<std::int64_t>());
 }
 
 TEST_CASE("CUDA strict native counting executes supported route and rejects unsupported lanes", "[cuda][bridge][policy][counting]") {
@@ -156,14 +156,14 @@ TEST_CASE("CUDA strict native counting executes supported route and rejects unsu
   REQUIRE(pluss::cuda::supports_histc_counting(float_cuda, 4));
 
   require_equal_i64_(
-      int_cuda.unique(true).to(pluss::pCPU).to_vec<std::int64_t>(),
-      int_cpu.unique(true).to_vec<std::int64_t>());
+      int_cuda.unique(true).to(pluss::pCPU).host<std::int64_t>(),
+      int_cpu.unique(true).host<std::int64_t>());
   require_equal_i64_(
-      int_cuda.bincount(/*minlength=*/6).to(pluss::pCPU).to_vec<std::int64_t>(),
-      int_cpu.bincount(/*minlength=*/6).to_vec<std::int64_t>());
+      int_cuda.bincount(/*minlength=*/6).to(pluss::pCPU).host<std::int64_t>(),
+      int_cpu.bincount(/*minlength=*/6).host<std::int64_t>());
   require_equal_i64_(
-      float_cuda.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).to(pluss::pCPU).to_vec<std::int64_t>(),
-      float_cpu.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).to_vec<std::int64_t>());
+      float_cuda.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).to(pluss::pCPU).host<std::int64_t>(),
+      float_cpu.histc(/*bins=*/4, /*min=*/0.0, /*max=*/4.0).host<std::int64_t>());
 
   const auto half_cuda = float_cpu.to(pluss::ScalarType::Float16).to(pluss::pCUDA);
   REQUIRE_FALSE(pluss::cuda::supports_unique_counting(half_cuda, true));

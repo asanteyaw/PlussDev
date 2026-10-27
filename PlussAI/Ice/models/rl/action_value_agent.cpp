@@ -552,7 +552,7 @@ std::int64_t ActionValueAgent::act(const Series& observation,
     return action_dist(rng);
   }
   const Series q = predict(row);
-  return q.argmax(1).to(pluss::pCPU, ScalarType::Int64).item<std::int64_t>();
+  return q.argmax(1).to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>().front();
 }
 
 ActionValueReport ActionValueAgent::assess(const ActionValueBatch& batch,

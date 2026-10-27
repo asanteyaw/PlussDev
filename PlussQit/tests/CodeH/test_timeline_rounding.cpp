@@ -50,8 +50,8 @@ TEST_CASE("Timeline date and time preserve shape absence and local fields",
   const auto clocks = pluss::timeline::make({
       "2024-07-15T18:34:56.123456789Z", "",
   }).tz_convert("America/Edmonton");
-  REQUIRE(clocks.time().isnat().to_vec<bool>() == std::vector<bool>{false, true});
-  REQUIRE(clocks.date().isnat().to_vec<bool>() == std::vector<bool>{false, true});
+  REQUIRE(clocks.time().isnat().host<bool>() == std::vector<bool>{false, true});
+  REQUIRE(clocks.date().isnat().host<bool>() == std::vector<bool>{false, true});
   REQUIRE_THROWS(clocks.floor("week"));
 }
 
@@ -71,9 +71,9 @@ TEST_CASE("timeline date and time factories project existing Timelines",
   REQUIRE(times.sizes().vec() == std::vector<std::int64_t>{2, 2});
   REQUIRE(dates.tz() == schedule.tz());
   REQUIRE(times.tz() == schedule.tz());
-  REQUIRE(dates.isnat().to_vec<bool>() ==
+  REQUIRE(dates.isnat().host<bool>() ==
           std::vector<bool>{false, false, false, true});
-  REQUIRE(times.isnat().to_vec<bool>() ==
+  REQUIRE(times.isnat().host<bool>() ==
           std::vector<bool>{false, false, false, true});
 
   REQUIRE(pluss::timeline::date(dates).ticks() == dates.ticks());

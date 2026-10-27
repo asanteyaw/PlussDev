@@ -16,9 +16,6 @@ using pluss::subsp::math::optim::ConstrainedProblem;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::SequentialQPOptions;
 using pluss::subsp::math::optim::solve_sequential_qp;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64);
@@ -28,12 +25,12 @@ ConstrainedProblem make_problem() {
   const Series target = make_vec2(1.0, 2.0);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -55,7 +52,7 @@ TEST_CASE("phase2 sequential qp reaches the active constrained solution", "[opti
   options.optimality_tolerance = 1e-5;
 
   const auto result = solve_sequential_qp(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.function_evaluations >= 1);
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);

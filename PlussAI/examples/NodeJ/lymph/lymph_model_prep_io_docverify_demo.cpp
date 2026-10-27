@@ -23,7 +23,7 @@ std::string join_i64(const std::vector<std::int64_t>& values) {
 std::vector<double> to_host_values(const pluss::Series& values) {
   return values.to(pluss::pCPU, pluss::ScalarType::Float64)
       .reshape({values.numel()})
-      .to_vec<double>();
+      .host<double>();
 }
 
 bool same_values(const pluss::Series& left, const pluss::Series& right) {

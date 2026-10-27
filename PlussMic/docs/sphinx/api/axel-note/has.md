@@ -77,8 +77,8 @@ auto axel = pluss::scribble::Axel({r0});
 auto out = axel.fields({"city"}).nt().has("Ac");
 auto city = out.registry(0).fields("city");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(city.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(city.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(city.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(city.at(1)).host<bool>()[0];
 ```
 
 ### Output
@@ -101,8 +101,8 @@ opts.case_sensitive = false;
 auto out = axel.fields({"city"}).nt().has("AC", opts);
 auto city = out.registry(0).fields("city");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(city.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(city.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(city.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(city.at(1)).host<bool>()[0];
 ```
 
 ### Output
@@ -124,8 +124,8 @@ opts.regex = true;
 auto out = axel.fields({"code"}).nt().has(R"(\d+)", opts);
 auto code = out.registry(0).fields("code");
 std::cout << std::boolalpha
-          << std::get<pluss::Series>(code.at(0)).to_vec<bool>()[0] << " "
-          << std::get<pluss::Series>(code.at(1)).to_vec<bool>()[0];
+          << std::get<pluss::Series>(code.at(0)).host<bool>()[0] << " "
+          << std::get<pluss::Series>(code.at(1)).host<bool>()[0];
 ```
 
 ### Output

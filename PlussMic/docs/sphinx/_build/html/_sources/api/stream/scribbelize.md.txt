@@ -67,7 +67,7 @@ auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
 auto slot = stream.scribbelize();
 std::cout << slot.size() << "\n";
 std::cout << std::get<pluss::Series>(slot.at(0)).numel() << "\n";
-std::cout << std::get<pluss::Series>(slot.at(0)).to_vec<double>()[0] << "\n";
+std::cout << std::get<pluss::Series>(slot.at(0)).host<double>()[0] << "\n";
 ```
 
 ### Output
@@ -152,7 +152,7 @@ Stream::scribbelize: stream undefined
   `scribbelize()` itself is always internally kind-consistent, since every value came
   from the same source stream's single `StreamKind`.
 - `Bool`-typed `Series` streams are explicitly special-cased ahead of the general
-  numeric path — see the conversion table above — since `to_vec<bool>()`/`Bool` series
+  numeric path — see the conversion table above — since `host<bool>()`/`Bool` series
   construction need their own code path distinct from the other scalar types.
 
 ## See Also

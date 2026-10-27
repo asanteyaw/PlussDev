@@ -28,8 +28,8 @@ void expect(bool condition, const std::string& message) {
 
 Series make_arx_response(const Series& x, std::uint64_t seed, double noise_scale) {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const auto xv = x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
-  const auto eps = pluss::series::randn({x.sizes()[0]}, cfg, seed).to_vec<double>();
+  const auto xv = x.to(pluss::pCPU, ScalarType::Float64).contiguous().host<double>();
+  const auto eps = pluss::series::randn({x.sizes()[0]}, cfg, seed).host<double>();
   const std::int64_t n = x.sizes()[0];
   const std::int64_t p = x.sizes()[1];
   std::vector<double> y(static_cast<std::size_t>(n), 0.0);
@@ -75,7 +75,7 @@ void test_cvpredict_and_losses() {
   expect(ind_loss.sizes().size() == 2 && ind_loss.sizes()[0] == 4 && ind_loss.sizes()[1] == 3,
          "expected individual loss shape [4,3]");
 
-  const auto avg_vals = avg_loss.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto avg_vals = avg_loss.to(pluss::pCPU, ScalarType::Float64).host<double>();
   expect(std::all_of(avg_vals.begin(), avg_vals.end(), [](double v) { return std::isfinite(v) && v >= 0.0; }),
          "expected non-negative finite average loss values");
 }
@@ -103,7 +103,7 @@ void test_overlap_and_missing_rows_behavior() {
   const auto cv = DirectCVForecaster::fit(x, y, part, opts, cfg);
   const Series pred = cv.cvpredict(x, y, cfg);
   const Series avg_mae = cv.cvloss(x, y, CVLossMode::Average, RegressionLoss::MAE, cfg);
-  const auto pred_vals = pred.to(pluss::pCPU, ScalarType::Float64).reshape({pred.numel()}).to_vec<double>();
+  const auto pred_vals = pred.to(pluss::pCPU, ScalarType::Float64).reshape({pred.numel()}).host<double>();
   const auto finite_count =
       static_cast<std::int64_t>(std::count_if(pred_vals.begin(), pred_vals.end(), [](double v) { return std::isfinite(v); }));
   expect(finite_count > 0, "expected finite predicted entries");

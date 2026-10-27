@@ -463,7 +463,7 @@ std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
 
 std::string slate_scalar_string_at(const Slate& t, std::int64_t row) {
   if (detail::has_validity_mask(t)) {
-    const auto valid = detail::validity_mask(t)->to_vec<bool>();
+    const auto valid = detail::validity_mask(t)->host<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return "NULL";
     }
@@ -614,7 +614,7 @@ std::int64_t non_null_count(const Slate& t) {
   if (!detail::has_validity_mask(t)) {
     return t.size();
   }
-  const auto valid = detail::validity_mask(t)->to_vec<bool>();
+  const auto valid = detail::validity_mask(t)->host<bool>();
   return static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
 }
 
@@ -623,7 +623,7 @@ std::int64_t distinct_non_null_count(const Slate& t) {
   seen.reserve(static_cast<std::size_t>(t.size()));
   std::optional<std::vector<bool>> valid;
   if (detail::has_validity_mask(t)) {
-    valid = detail::validity_mask(t)->to_vec<bool>();
+    valid = detail::validity_mask(t)->host<bool>();
   }
   for (std::int64_t i = 0; i < t.size(); ++i) {
     if (valid.has_value() && !(*valid)[static_cast<std::size_t>(i)]) {
@@ -1051,7 +1051,7 @@ bool row_valid_for_slate(const Slate& t, std::int64_t row) {
   if (!detail::has_validity_mask(t)) {
     return true;
   }
-  const auto valid = detail::validity_mask(t)->to_vec<bool>();
+  const auto valid = detail::validity_mask(t)->host<bool>();
   return valid[static_cast<std::size_t>(row)];
 }
 
@@ -1109,7 +1109,7 @@ bool evaluate_query_compare(
 
     if (rhs.kind == QueryLiteral::Kind::Bool) {
       if (t.as_series().scalar_type() == pluss::codem::ScalarType::Bool) {
-        const auto lhs_bool = t.as_series().to_vec<bool>(row);
+        const auto lhs_bool = t.as_series().host<bool>().array().data.at(static_cast<std::size_t>(row));
         return compare_numbers(lhs_bool ? 1.0 : 0.0, rhs.boolean ? 1.0 : 0.0, op);
       }
       double lhs_num = 0.0;
@@ -1833,7 +1833,7 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
       PLUSS_FAIL("DataFrame::math(Slate): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
   }
   aligned = fill_numeric_missing_for_alignment_(aligned, options);
-  const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   for (std::size_t i = 0; i < cols.size(); ++i) {
     if (!detail::valid_at(aligned, static_cast<std::int64_t>(i))) {
       columns.emplace_back(
@@ -2028,7 +2028,7 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
       PLUSS_FAIL("DataFrame::compare(Slate): AlignBy::Both is only valid for DataFrame-to-DataFrame alignment");
   }
   aligned = fill_numeric_missing_for_alignment_(aligned, options);
-  const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto values = aligned.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   for (std::size_t i = 0; i < cols.size(); ++i) {
     if (!detail::valid_at(aligned, static_cast<std::int64_t>(i))) {
       columns.emplace_back(
@@ -2167,7 +2167,7 @@ std::vector<std::int64_t> arrange_order_on_indices_(
     indices = ordered_key.arrange(it->ascending, it->nulls_last)
                   .label().values()
                   .as_series()
-                  .to_vec<std::int64_t>();
+                  .host<std::int64_t>();
   }
   return indices;
 }

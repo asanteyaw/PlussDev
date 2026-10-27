@@ -17,11 +17,7 @@ using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::OptimaProblemScaling;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64).to(pluss::pCPU);
@@ -30,9 +26,9 @@ Series make_vec2(double x0, double x1) {
 ConstrainedProblem make_scaled_quadratic_problem() {
   const Series target = make_vec2(1000.0, 1.0e-3);
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    const Trace err = p.at("x") - trace(target, false);
-    return sum(square(err * trace(make_vec2(1.0, 1000.0), false)));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    const Series err = p.at("x") - target;
+    return ((err * make_vec2(1.0, 1000.0)).square()).sum();
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},

@@ -139,7 +139,7 @@ for (std::int64_t i = 0; i < deduced.ncases(); ++i) {
             << deduced.features("left").as_note().at(idx) << " "
             << deduced.features("right").as_note().at(idx) << " "
             << deduced.features("left_key").as_note().at(idx) << " "
-            << deduced.features("confidence").as_series().to_vec<double>()[idx] << " "
+            << deduced.features("confidence").as_series().host<double>()[idx] << " "
             << deduced.features("basis").as_note().at(idx) << "\n";
 }
 ```

@@ -1,0 +1,64 @@
+<!-- generated from continuous_positive.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# distr continuous, positive
+
+Families for positive quantities: lifetimes, waiting times, sizes, amplitudes and the distributions of test statistics. Each page documents one family: the parameters, the support, how to evaluate the density and the distribution function, how to draw samples, and, for the families that have one, the object form and the maximum-likelihood fit.
+
+## The Surface
+
+| Family | What it is |
+|---|---|
+| [`Alpha`](continuous_positive/Alpha.md) | The alpha distribution: a positively skewed distribution on the positive axis whose density is a normal density in the reciprocal of the variable. |
+| [`Burr`](continuous_positive/Burr.md) | The Burr (type III) distribution: a flexible heavy-tailed distribution on the positive axis with two shape parameters. |
+| [`Chi`](continuous_positive/Chi.md) | The chi distribution: the distribution of the length of a vector of independent standard normal variables. |
+| [`ChiSquare`](continuous_positive/ChiSquare.md) | The chi-squared distribution: the distribution of a sum of squared independent standard normal variables. |
+| [`ChiSquareNoncentral`](continuous_positive/ChiSquareNoncentral.md) | The noncentral chi-squared distribution: the distribution of a sum of squared independent normal variables whose means are not zero. |
+| [`Erlang`](continuous_positive/Erlang.md) | The Erlang distribution: the waiting time until the k-th event of a Poisson process, a gamma distribution with an integer shape. |
+| [`Exponential`](continuous_positive/Exponential.md) | The exponential distribution: the waiting time between independent events that occur at a constant rate. |
+| [`F`](continuous_positive/F.md) | The F distribution: the distribution of a ratio of two independent chi-squared variables, each divided by its degrees of freedom. |
+| [`FNoncentral`](continuous_positive/FNoncentral.md) | The noncentral F distribution: the distribution of the F statistic when the numerator has a noncentral chi-squared distribution. |
+| [`Gamma`](continuous_positive/Gamma.md) | The gamma distribution: a flexible family on the positive axis, the sum of exponential waiting times and the parent of the chi-squared family. |
+| [`Gig`](continuous_positive/Gig.md) | The generalised inverse Gaussian distribution: a three-parameter family on the positive axis that contains the inverse Gaussian, the gamma and the inverse gamma distributions. |
+| [`Gompertz`](continuous_positive/Gompertz.md) | The Gompertz distribution: the distribution of adult lifetimes, with a hazard rate that grows exponentially with age. |
+| [`InverseGaussian`](continuous_positive/InverseGaussian.md) | The inverse Gaussian distribution: the distribution of the first time a Brownian motion with positive drift reaches a fixed level. |
+| [`Lognormal`](continuous_positive/Lognormal.md) | The lognormal distribution: the distribution of a variable whose logarithm is normal, the standard model of multiplicative growth. |
+| [`Lomax`](continuous_positive/Lomax.md) | The Lomax (Pareto type II) distribution: a power-law distribution that starts at zero, the standard heavy-tailed model of lifetimes and claim sizes. |
+| [`Maxwell`](continuous_positive/Maxwell.md) | The Maxwell distribution: the length of a three-dimensional vector of independent zero-mean normal variables, the speed of a gas molecule. |
+| [`Nakagami`](continuous_positive/Nakagami.md) | The Nakagami distribution: a flexible model of the amplitude of a fading signal, with a shape parameter that covers more and less severe fading than the Rayleigh case. |
+| [`Pareto`](continuous_positive/Pareto.md) | The Pareto distribution: the power-law distribution of sizes above a minimum, the standard model of wealth, city sizes and insurance losses. |
+| [`Planck`](continuous_positive/Planck.md) | The Planck distribution: a density proportional to `x^a/(exp(b x) - 1)`, the shape of black-body radiation. |
+| [`Rayleigh`](continuous_positive/Rayleigh.md) | The Rayleigh distribution: the length of a two-dimensional vector whose components are independent zero-mean normals. |
+| [`Rice`](continuous_positive/Rice.md) | The Rice distribution: the length of a two-dimensional vector whose mean is offset from the origin and whose components have independent normal noise. |
+| [`Wald`](continuous_positive/Wald.md) | The Wald distribution: the inverse Gaussian distribution with mean 1. |
+| [`Weibull`](continuous_positive/Weibull.md) | The Weibull distribution: the standard model of lifetimes and failure times, with a hazard that can fall, stay constant or rise. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+continuous_positive/Alpha
+continuous_positive/Burr
+continuous_positive/Chi
+continuous_positive/ChiSquare
+continuous_positive/ChiSquareNoncentral
+continuous_positive/Erlang
+continuous_positive/Exponential
+continuous_positive/F
+continuous_positive/FNoncentral
+continuous_positive/Gamma
+continuous_positive/Gig
+continuous_positive/Gompertz
+continuous_positive/InverseGaussian
+continuous_positive/Lognormal
+continuous_positive/Lomax
+continuous_positive/Maxwell
+continuous_positive/Nakagami
+continuous_positive/Pareto
+continuous_positive/Planck
+continuous_positive/Rayleigh
+continuous_positive/Rice
+continuous_positive/Wald
+continuous_positive/Weibull
+```
+<!-- apiref:toctree:end -->

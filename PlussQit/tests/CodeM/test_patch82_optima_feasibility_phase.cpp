@@ -17,10 +17,7 @@ using pluss::subsp::math::optim::ConstrainedProblem;
 using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64).to(pluss::pCPU);
@@ -31,11 +28,11 @@ Series make_vec2(double x0, double x1) {
 TEST_CASE("interior-point feasibility phase improves an infeasible start",
           "[feasibility][optim][optima][interior-point]") {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
-    return sum(p.at("x") * p.at("x"));
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) {
+    return (p.at("x") * p.at("x")).sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
-    return 1.0 - sum(p.at("x"));
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return 1.0 - p.at("x").sum();
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -53,7 +50,7 @@ TEST_CASE("interior-point feasibility phase improves an infeasible start",
   options.internal_protocol.optimality_tolerance = 1e-6;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
   const bool mentioned_feasibility =
       result.message.find("feasibility") != std::string::npos ||
       result.output.detail_message.find("feasibility") != std::string::npos;

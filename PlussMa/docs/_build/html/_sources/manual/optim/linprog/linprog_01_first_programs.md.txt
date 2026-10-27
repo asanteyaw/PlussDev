@@ -32,11 +32,8 @@ There are two methods, chosen with `options.method`. **Interior point** (the def
 
 ## Programs
 
-- [A first linear program](linprog_01_first_programs/a_first_linear_program.md)
-- [The shapes a requirement can take](linprog_01_first_programs/the_shapes_a_requirement_can_take.md)
-- [Reading the result](linprog_01_first_programs/reading_the_result.md)
-- [How a solve ends](linprog_01_first_programs/how_a_solve_ends.md)
-- [The default bounds](linprog_01_first_programs/the_default_bounds.md)
+- [Stating a linear program](linprog_01_first_programs/stating_a_linear_program.md)
+- [Reading a result and how a solve ends](linprog_01_first_programs/results_and_endings.md)
 
 ## What to remember
 
@@ -51,10 +48,7 @@ There are two methods, chosen with `options.method`. **Interior point** (the def
 :maxdepth: 2
 :hidden:
 
-linprog_01_first_programs/a_first_linear_program
-linprog_01_first_programs/the_shapes_a_requirement_can_take
-linprog_01_first_programs/reading_the_result
-linprog_01_first_programs/how_a_solve_ends
-linprog_01_first_programs/the_default_bounds
+linprog_01_first_programs/stating_a_linear_program
+linprog_01_first_programs/results_and_endings
 ```
 <!-- apiref:toctree:end -->

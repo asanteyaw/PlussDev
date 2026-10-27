@@ -6,10 +6,10 @@
 #include <iostream>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto start = pluss::make_series(std::vector<double>{1.0, 1.0}, {2}).to(pluss::ScalarType::Float64);
 
-  const auto result = optim::optima([](const optim::Trace& x) { return optim::square(x); }, start);
+  const auto result = optim::optima([](const pluss::Series& x) { return x.square(); }, start);
 
   std::cout << "exit flag: " << static_cast<int>(result.exit_flag) << "\n";
   std::cout << "converged: " << std::boolalpha << result.converged << "\n";

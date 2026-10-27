@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
@@ -37,7 +37,7 @@ Rows make_rows(int extra) {
   }
   return {pluss::make_series(A, {m, n}).to(f64), pluss::make_series(b, {m}).to(f64)};
 }
-auto objective = [](const optim::Trace& x) { return optim::sum(optim::pow(x - 2.0, 4.0)) + 0.1 * optim::sum(optim::square(x)); };
+auto objective = [](const pluss::Series& x) { return (x - 2.0).pow(4.0).sum() + 0.1 * x.square().sum(); };
 
 int main() {
   const std::pair<const char*, optim::OptimaAlgorithm> algs[] = {

@@ -4,6 +4,16 @@
 
 [Back to State-Space Models](../ts_05_state_space_models.md)
 
+Real series have holes: a sensor was off, a market was closed, a survey was skipped. A state-space model handles them without any special treatment. You mark a missing observation as `NaN` rather than dropping it, so the time index stays intact; the filter skips the correction step at that time (the entry of `data_used` is 0) and its uncertainty about the state grows until data return. Two further operations make use of the model's honesty about what it knows:
+
+- **Smoothing.** `Ssm::smooth(y, model)` returns, besides the filter's output, the *smoothed* states, which condition on **all** observations, past and future. Inside a gap the smoother interpolates between the data on both sides, so it is more accurate than the filter, which can only extrapolate from the past. The price is that it needs the whole sample and cannot be used in real time.
+- **Forecasting.** `Ssm::forecast(h, y, model)` runs the filter over the history and carries the state forward `h` steps, returning the forecast observations and states with their covariances. `Ssm::forecast(h, model)` forecasts from the model's initial state alone.
+
+All three programs use a local linear trend (a level and a slope) with the noise levels `level sd 0.2`, `slope sd 0.05` and `observation sd 0.5`, and simulated data whose true state is known, so the accuracy of each method can be measured.
+
+## Filter and smoother across a gap
+
+The program simulates 60 observations of a trending series, deletes five (times 25 to 29) and runs both the filter and the smoother. It prints, around the gap, whether the observation was used, the filtered and smoothed level, the smoother's standard deviation, and the true level (available because the data are simulated).
 
 ```cpp
 #include <pluss/ma.h>
@@ -12,86 +22,202 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <vector>
 
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series matrix(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(f64); }
-// A reproducible pseudo-random sequence in (-0.5, 0.5): e_t = frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5, t = 1, 2, ...
-std::vector<double> noise(int n) {
-  std::vector<double> e(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    e[static_cast<std::size_t>(i)] = u - 0.5;
-  }
-  return e;
-}
-// A noisy upward trend: y_t = 1 + 0.3 t + 1.0 e_t, t = 0 ... n - 1.
-std::vector<double> trending(int n) {
-  const auto e = noise(n);
-  std::vector<double> y(static_cast<std::size_t>(n));
-  for (int t = 0; t < n; ++t) y[static_cast<std::size_t>(t)] = 1.0 + 0.3 * t + e[static_cast<std::size_t>(t)];
-  return y;
-}
-// Local linear trend: the state is (level, slope); level_{t+1} = level_t + slope_t + level_sd w1, slope_{t+1} = slope_t + slope_sd w2, and y_t = level_t + obs_sd v.
+Series matrix(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(pluss::ScalarType::Float64); }
+
 ts::SsmModel local_linear_trend(double level_sd, double slope_sd, double obs_sd) {
   ts::SsmModel m;
   m.transition = matrix({1, 1, 0, 1}, {2, 2});
   m.state_loading = matrix({level_sd, 0, 0, slope_sd}, {2, 2});
   m.observation = matrix({1, 0}, {1, 2});
   m.innovation_loading = matrix({obs_sd}, {1, 1});
-  m.mean0 = matrix({0, 0}, {2});
-  m.cov0 = matrix({25, 0, 0, 1}, {2, 2});
+  m.mean0 = matrix({0, 0.3}, {2});
+  m.cov0 = matrix({1, 0, 0, 0.01}, {2, 2});
   return m;
 }
+
 int main() {
-  const int n = 40;
-  auto data = trending(n);
-  for (int t = 15; t < 20; ++t) data[static_cast<std::size_t>(t)] = std::numeric_limits<double>::quiet_NaN();
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto model = local_linear_trend(0.2, 0.05, 0.5);
+  const int n = 60;
+  const auto sim = ts::Ssm::simulate(n, model, 1, f64, /*seed=*/8);
+  auto data = sim.observations.reshape({n}).pull<double>();
+  const auto truth_level = sim.states.select(1, 0).reshape({n}).pull<double>();
+  for (int t = 25; t < 30; ++t) data[t] = std::numeric_limits<double>::quiet_NaN();
   const Series y = matrix(data, {n, 1});
-  const auto model = local_linear_trend(0.2, 0.05, 0.3);
+
   const auto s = ts::Ssm::smooth(y, model);
-  std::cout << std::fixed << std::setprecision(3) << "around the gap (t = 15 ... 19 missing; true level 1 + 0.3 t)\n";
-  std::cout << std::setw(4) << "t" << std::setw(8) << "used" << std::setw(11) << "filtered" << std::setw(11) << "smoothed" << std::setw(14) << "smoothed sd" << std::setw(8) << "truth" << "\n";
-  for (int t = 12; t < 23; ++t) {
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << std::setw(4) << "t" << std::setw(7) << "used" << std::setw(11) << "filtered" << std::setw(11) << "smoothed" << std::setw(13) << "smoothed sd" << std::setw(9) << "truth" << "\n";
+  for (int t = 22; t < 33; ++t) {
     const double used = s.filter.data_used.select(0, t).item<double>();
     const double sd = std::sqrt(s.smoothed_states_cov.select(0, t).select(0, 0).select(0, 0).item<double>());
-    std::cout << std::setw(4) << t << std::setw(8) << (used > 0 ? "yes" : "no") << std::setw(11) << s.filter.filtered_states.select(0, t).select(0, 0).item<double>() << std::setw(11)
-              << s.smoothed_states.select(0, t).select(0, 0).item<double>() << std::setw(14) << sd << std::setw(8) << 1.0 + 0.3 * t << "\n";
+    std::cout << std::setw(4) << t << std::setw(7) << (used > 0 ? "yes" : "no") << std::setw(11) << s.filter.filtered_states.select(0, t).select(0, 0).item<double>() << std::setw(11)
+              << s.smoothed_states.select(0, t).select(0, 0).item<double>() << std::setw(13) << sd << std::setw(9) << truth_level[t] << "\n";
   }
-  const auto f = ts::Ssm::forecast(5, y, model);
-  std::cout << "\nforecast of the next five observations (truth 1 + 0.3 t)\n";
-  for (int h = 0; h < 5; ++h)
-    std::cout << "  t = " << n + h << "   " << std::setw(7) << f.observations.select(0, h).item<double>() << "  +/- " << std::setw(6)
-              << 1.96 * std::sqrt(f.observations_cov.select(0, h).select(0, 0).select(0, 0).item<double>()) << "   truth " << std::setw(6) << 1.0 + 0.3 * (n + h) << "\n";
 }
 ```
 
 Output
 
 ```text
-around the gap (t = 15 ... 19 missing; true level 1 + 0.3 t)
-   t    used   filtered   smoothed   smoothed sd   truth
-  12     yes      4.551      4.622         0.174   4.600
-  13     yes      5.078      4.980         0.180   4.900
-  14     yes      5.196      5.215         0.202   5.200
-  15      no      5.489      5.528         0.267   5.500
-  16      no      5.783      5.842         0.302   5.800
-  17      no      6.076      6.155         0.313   6.100
-  18      no      6.369      6.468         0.302   6.400
-  19      no      6.663      6.779         0.267   6.700
-  20     yes      7.320      7.087         0.202   7.000
-  21     yes      7.140      7.275         0.180   7.300
-  22     yes      7.593      7.658         0.174   7.600
-
-forecast of the next five observations (truth 1 + 0.3 t)
-  t = 40    13.116  +/-  0.909   truth 13.000
-  t = 41    13.439  +/-  1.105   truth 13.300
-  t = 42    13.762  +/-  1.321   truth 13.600
-  t = 43    14.085  +/-  1.557   truth 13.900
-  t = 44    14.408  +/-  1.809   truth 14.200
+   t   used   filtered   smoothed  smoothed sd    truth
+  22    yes      2.735      2.939        0.240    3.023
+  23    yes      3.006      3.094        0.251    3.482
+  24    yes      2.954      3.230        0.275    3.371
+  25     no      2.984      3.452        0.321    3.420
+  26     no      3.013      3.694        0.348    3.975
+  27     no      3.042      3.953        0.356    4.168
+  28     no      3.072      4.226        0.348    4.256
+  29     no      3.101      4.512        0.321    4.511
+  30    yes      4.632      4.807        0.275    4.717
+  31    yes      4.959      5.089        0.251    4.892
+  32    yes      5.503      5.382        0.240    5.070
 ```
-Five observations are missing (`used` is "no"). Inside the gap the filtered level simply extrapolates the trend, while the smoothed level also uses the data after the gap and ends up closer to the truth (6.779 against 6.663 at time 19, truth 6.700). The smoothed standard deviation rises in the middle of the gap (0.31) and returns to 0.17 where data are dense: the smoother reports honestly how little it knows where data are missing. The forecast carries the trend forward with intervals that widen with the horizon, because both the level and the slope are uncertain.
+
+Inside the gap the filtered level simply extrapolates the trend it had learned before the gap, which was almost flat (about 0.03 per step), so it stays near 3.0 while the true level climbs to 4.5. The smoothed level uses the observations at 30 and beyond: it reaches 4.51 at time 29 against a truth of 4.51, and is within 0.5 of the truth throughout the gap. The smoothed standard deviation is the honest part: it is 0.24 where data are dense and rises to 0.36 in the middle of the gap, reporting that nothing was measured there. Outside the gap the filtered and smoothed values are close, because the data constrain them both.
+
+## How much better is the smoother?
+
+One gap proves little. The program repeats the experiment on 200 independent series, with the same five-observation gap, and measures the root mean squared error of the filtered and smoothed level against the true level, inside the gap and elsewhere.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series matrix(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(pluss::ScalarType::Float64); }
+
+ts::SsmModel local_linear_trend(double level_sd, double slope_sd, double obs_sd) {
+  ts::SsmModel m;
+  m.transition = matrix({1, 1, 0, 1}, {2, 2});
+  m.state_loading = matrix({level_sd, 0, 0, slope_sd}, {2, 2});
+  m.observation = matrix({1, 0}, {1, 2});
+  m.innovation_loading = matrix({obs_sd}, {1, 1});
+  m.mean0 = matrix({0, 0.3}, {2});
+  m.cov0 = matrix({1, 0, 0, 0.01}, {2, 2});
+  return m;
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto model = local_linear_trend(0.2, 0.05, 0.5);
+  const int n = 60, reps = 200;
+  double se_f_gap = 0, se_s_gap = 0, se_f_out = 0, se_s_out = 0;
+  int n_gap = 0, n_out = 0;
+  for (int r = 0; r < reps; ++r) {
+    const auto sim = ts::Ssm::simulate(n, model, 1, f64, /*seed=*/100 + r);
+    auto data = sim.observations.reshape({n}).pull<double>();
+    const auto truth = sim.states.select(1, 0).reshape({n}).pull<double>();
+    for (int t = 25; t < 30; ++t) data[t] = std::numeric_limits<double>::quiet_NaN();
+    const auto s = ts::Ssm::smooth(matrix(data, {n, 1}), model);
+    const auto filt = s.filter.filtered_states.select(1, 0).host<double>();
+    const auto smooth = s.smoothed_states.select(1, 0).host<double>();
+    for (int t = 0; t < n; ++t) {
+      const double ef = filt[t] - truth[t], es = smooth[t] - truth[t];
+      if (t >= 25 && t < 30) { se_f_gap += ef * ef; se_s_gap += es * es; ++n_gap; }
+      else { se_f_out += ef * ef; se_s_out += es * es; ++n_out; }
+    }
+  }
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << std::left << std::setw(18) << "RMSE of the level" << std::right << std::setw(12) << "filtered" << std::setw(12) << "smoothed" << "\n";
+  std::cout << std::left << std::setw(18) << "inside the gap" << std::right << std::setw(12) << std::sqrt(se_f_gap / n_gap) << std::setw(12) << std::sqrt(se_s_gap / n_gap) << "\n";
+  std::cout << std::left << std::setw(18) << "elsewhere" << std::right << std::setw(12) << std::sqrt(se_f_out / n_out) << std::setw(12) << std::sqrt(se_s_out / n_out) << "\n";
+}
+```
+
+Output
+
+```text
+RMSE of the level     filtered    smoothed
+inside the gap           0.664       0.316
+elsewhere                0.323       0.216
+```
+
+The smoother roughly halves the error inside the gap (0.316 against 0.664) and also reduces it elsewhere (0.216 against 0.323, about a third), because even observed points are better estimated with the future in view. The filter's error inside the gap is the cost of having to extrapolate; the smoother's is the cost of interpolating, which is smaller. This is why smoothing is the right tool for cleaning a historical series (filling gaps, estimating a trend after the fact), and filtering the right one for decisions that must be made as the data arrive.
+
+## Forecasting with intervals
+
+`forecast(h, y, model)` returns the forecast observations and, for each step, their variance (`observations_cov`). That variance includes the uncertainty about the *current* state and the new shocks that will arrive, which is why the intervals widen with the horizon: the trend's slope is itself uncertain, and a small slope error compounds over many steps. The program forecasts ten steps ahead from the end of 50 observations and then checks how often the 95% interval contains the outcome, over 400 simulated series.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+Series matrix(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::make_series(v, shape).to(pluss::ScalarType::Float64); }
+
+ts::SsmModel local_linear_trend(double level_sd, double slope_sd, double obs_sd) {
+  ts::SsmModel m;
+  m.transition = matrix({1, 1, 0, 1}, {2, 2});
+  m.state_loading = matrix({level_sd, 0, 0, slope_sd}, {2, 2});
+  m.observation = matrix({1, 0}, {1, 2});
+  m.innovation_loading = matrix({obs_sd}, {1, 1});
+  m.mean0 = matrix({0, 0.3}, {2});
+  m.cov0 = matrix({1, 0, 0, 0.01}, {2, 2});
+  return m;
+}
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto model = local_linear_trend(0.2, 0.05, 0.5);
+  const int train = 50, horizon = 10, reps = 400;
+
+  int inside[10] = {0};
+  double width[10] = {0};
+  for (int r = 0; r < reps; ++r) {
+    const auto sim = ts::Ssm::simulate(train + horizon, model, 1, f64, /*seed=*/500 + r);
+    const auto all = sim.observations.reshape({train + horizon}).pull<double>();
+    const Series y = matrix(std::vector<double>(all.begin(), all.begin() + train), {train, 1});
+    const auto f = ts::Ssm::forecast(horizon, y, model);
+    for (int h = 0; h < horizon; ++h) {
+      const double mean = f.observations.select(0, h).item<double>();
+      const double half = 1.96 * std::sqrt(f.observations_cov.select(0, h).select(0, 0).select(0, 0).item<double>());
+      inside[h] += std::fabs(all[train + h] - mean) <= half;
+      width[h] += half;
+    }
+  }
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << std::setw(8) << "step" << std::setw(18) << "mean half-width" << std::setw(14) << "coverage" << "\n";
+  for (int h : {0, 1, 2, 4, 6, 9})
+    std::cout << std::setw(8) << h + 1 << std::setw(18) << width[h] / reps << std::setw(14) << static_cast<double>(inside[h]) / reps << "\n";
+}
+```
+
+Output
+
+```text
+    step   mean half-width      coverage
+       1             1.322         0.960
+       2             1.493         0.930
+       3             1.689         0.950
+       5             2.149         0.973
+       7             2.683         0.968
+      10             3.595         0.963
+```
+
+The half-width grows with the horizon, from 1.3 at step 1 to 3.6 at step 10: the first-step interval is dominated by the observation noise, and by step ten the uncertainty of the slope has accumulated. Coverage is between 0.93 and 0.97 at every step (each fraction rests on 400 series, so it has a standard error of about 0.01 to 0.013), consistent with the nominal 0.95. This holds *because the model supplied to the forecast is the model that generated the data*; repeat the check with your own estimated noise levels, since an interval from a misspecified model can be very wrong at long horizons.
+
+## Decisions and pitfalls
+
+- **Mark gaps as `NaN`, never drop rows.** Dropping an observation silently changes the spacing of the data; `NaN` keeps the clock right.
+- **Use the smoother for the past, the filter for the present.** The filtered state is what you could have known at the time; the smoothed state is the best look back.
+- **Long gaps widen the uncertainty a lot.** Read the smoothed standard deviation, not only the smoothed level.
+- **Forecast intervals include state uncertainty.** That is why a trend model's intervals fan out; a model with a fixed slope would claim more certainty than it has.
+- **The intervals are only as good as the model.** Check calibration on held-out data when the noise levels are estimated.
+
+Where next: [Simulation as a check](simulation_as_a_check.md) uses the model to generate data, which tests both the model and the code that uses it.

@@ -70,12 +70,16 @@ PUBLIC_PREFIXES = [
   "pluss::subsp::natsci",
   "pluss::subsp::eng",
   "pluss::subsp::math::qp",
+  "pluss::subsp::math::bezier",
+  "pluss::subsp::math::multigrid",
 ].freeze
 
 PUBLIC_PATHS = [
   "PlussMa/include/pluss/subsp/natsci/",
   "PlussMa/include/pluss/subsp/eng/",
   "PlussMa/include/pluss/subsp/math/qp.h",
+  "PlussMa/include/pluss/subsp/math/bezier.h",
+  "PlussMa/include/pluss/subsp/math/multigrid.h",
 ].freeze
 
 def namespace_of(item)
@@ -201,13 +205,15 @@ family_for = lambda do |name|
   if name.start_with?("pluss::subsp::natsci")
     tail = name.delete_prefix("pluss::subsp::natsci").sub(/^::/, "")
     first = tail.split("::").first
-    ["NatSci", first ? "pluss::natsci::#{first}" : "pluss::natsci"]
+    ["NatSci", first ? "pluss::subsp::natsci::#{first}" : "pluss::subsp::natsci"]
   elsif name.start_with?("pluss::subsp::eng")
     tail = name.delete_prefix("pluss::subsp::eng").sub(/^::/, "")
     first = tail.split("::").first
-    ["Engineering", first ? "pluss::eng::#{first}" : "pluss::eng"]
-  else
+    ["Engineering", first ? "pluss::subsp::eng::#{first}" : "pluss::subsp::eng"]
+  elsif name.start_with?("pluss::subsp::math::qp")
     ["Engineering shared owner", "pluss::subsp::math::qp"]
+  else
+    ["Shared math owners", name.split("::")[0, 4].join("::")]
   end
 end
 
@@ -226,8 +232,7 @@ functions.each_value do |function|
 end
 
 display_name = lambda do |name|
-  name.sub("pluss::subsp::natsci", "pluss::natsci")
-      .sub("pluss::subsp::eng", "pluss::eng")
+  name
 end
 
 # every front door must be a declared public call (a typo or a symbol later hidden/removed fails the run instead of misleading the docs)
@@ -251,14 +256,15 @@ lines << "## Canonical entry points"
 lines << ""
 lines << "| Area | Canonical public spelling | Installed umbrella |"
 lines << "| --- | --- | --- |"
-lines << "| Natural Sciences | `pluss::natsci::*` | `<pluss/ma/natsci.h>` |"
-lines << "| Engineering | `pluss::eng::*` | `<pluss/ma/eng.h>` |"
+lines << "| Natural Sciences | `pluss::subsp::natsci::*` | `<pluss/ma/natsci.h>` |"
+lines << "| Engineering | `pluss::subsp::eng::*` | `<pluss/ma/eng.h>` |"
 lines << "| Dense QP shared by Engineering MPC | `pluss::subsp::math::qp::*` | `<pluss/subsp/math/qp.h>` |"
+lines << "| Structured-grid multigrid shared by NatSci fluids | `pluss::subsp::math::multigrid::*` | `<pluss/subsp/math/multigrid.h>` |"
 lines << ""
 lines << "Neither area currently defines a root accessor object. If a later tranche adds one, its owning type, accessor name, accessor type, and every intended accessor method must appear in this file before documentation is written."
 lines << ""
 
-["NatSci", "Engineering", "Engineering shared owner"].each do |section|
+["NatSci", "Engineering", "Engineering shared owner", "Shared math owners"].each do |section|
   selected = families.select { |(name, _), _| name == section }
   next if selected.empty?
   lines << "## #{section}"
@@ -327,7 +333,7 @@ end
 
 lines << "## Maintenance rule"
 lines << ""
-lines << "Every NatSci or Engineering implementation tranche must regenerate this file after its public headers compile. Documentation authors should use the canonical spelling shown here, never a `pluss::subsp::*` implementation spelling where a public alias exists, and should not infer public status from a source symbol or a friend declaration. Intent is recorded in `PlussMa/tools/public_intent.yaml`: a header added by a tranche must list its internal helpers and its front doors there in the same change, and `Internal by intent` above names what stays out of prose."
+lines << "Every NatSci or Engineering implementation tranche must regenerate this file after its public headers compile. Documentation authors should use the canonical `pluss::subsp::*` spelling shown here and should not infer public status from a source symbol or a friend declaration. Intent is recorded in `PlussMa/tools/public_intent.yaml`: a header added by a tranche must list its internal helpers and its front doors there in the same change, and `Internal by intent` above names what stays out of prose."
 lines << ""
 
 OUTPUT.write(lines.join("\n"))

@@ -57,7 +57,7 @@ int main() {
       const int st = static_cast<int>(r.status);
       expect(st == cs.status, tag + ": status " + std::to_string(st) + " expected " + std::to_string(cs.status));
       if (st == 0) {
-        const auto x = r.x.to_vec<double>();
+        const auto x = r.x.host<double>();
         for (int i = 0; i < cs.mi; ++i)
           expect(dot(&cs.ai[static_cast<std::size_t>(i * n)], x, n) <= cs.bi[static_cast<std::size_t>(i)] + 1e-5, tag + ": inequality violated");
         for (int i = 0; i < cs.me; ++i)

@@ -50,7 +50,7 @@ enough data — but `.to_dbl()`/`.to_int()`/`.to_str()` still hand back whatever
 number the underlying arithmetic produced, with no indication it's actually
 meaningless. `Series`/`Note`/`Timeline`/`TimeIndex` printing has no concept of
 nullness at all — only the wrapping `Slate`'s own validity mask does. Check
-`result.slate().notnull().as_series().to_vec<bool>()[0]` before trusting a
+`result.slate().notnull().as_series().host<bool>()[0]` before trusting a
 result from one of those
 methods.
 ```

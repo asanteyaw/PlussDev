@@ -14,12 +14,12 @@ int main() {
   const Series target = make_vec2(1.0, 2.0);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) -> Series {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) -> Series {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -38,7 +38,7 @@ int main() {
   options.optimality_tolerance = 1e-5;
 
   const auto result = solve_internal_protocol(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   std::cout << "iterations=" << result.iteration
             << " f_evals=" << result.function_evaluations
@@ -50,7 +50,7 @@ int main() {
             << " barrier_grad=" << result.barrier_gradient_norm << '\n';
 
   if (result.best_feasible.has_value()) {
-    const auto best_x = result.best_feasible->params.at("x").to_vec<double>();
+    const auto best_x = result.best_feasible->params.at("x").host<double>();
     std::cout << "best_feasible=[" << best_x[0] << ", " << best_x[1] << "]"
               << " value=" << result.best_feasible->value.item<double>() << '\n';
   }

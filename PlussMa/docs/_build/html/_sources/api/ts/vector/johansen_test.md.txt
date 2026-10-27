@@ -54,7 +54,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -88,7 +88,7 @@ int main() {
     ts::JohansenOptions options;
     options.statistic = statistic;
     const auto r = ts::johansen_test(y, options);
-    const auto s = r.stat.to_vec<double>(), c = r.critical.to_vec<double>(), p = r.pvalue.to_vec<double>();
+    const auto s = r.stat.host<double>(), c = r.critical.host<double>(), p = r.pvalue.host<double>();
     std::cout << (statistic == ts::JohansenStat::Trace ? "trace statistic\n" : "maximum-eigenvalue statistic\n");
     for (std::size_t i = 0; i < s.size(); ++i)
       std::cout << "  rank <= " << i << "  statistic " << std::fixed << std::setprecision(2) << s[i] << "  5% critical " << c[i] << "  p " << std::setprecision(4) << p[i] << "\n";
@@ -130,7 +130,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -166,7 +166,7 @@ int main() {
     options.include_trend = spec == 2;
     const auto r = ts::johansen_test(y, options);
     std::cout << "spec " << spec << "  5% critical values for rank <= 0, 1, 2: ";
-    for (double c : r.critical.to_vec<double>()) std::cout << std::fixed << std::setprecision(2) << c << " ";
+    for (double c : r.critical.host<double>()) std::cout << std::fixed << std::setprecision(2) << c << " ";
     std::cout << " selected rank " << r.selected_rank << "\n";
   }
 }

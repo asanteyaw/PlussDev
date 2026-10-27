@@ -1,0 +1,14 @@
+# infer: ranks and signs
+
+Tests that use ranks or signs: the rank-sum, signed-rank and sign tests. Each page documents one function: its signature, what it computes, the parameters, the fields of the result, the errors, and examples with their output.
+
+## The Surface
+
+| Function | What it does |
+|---|---|
+| [`ranksum`](ranks_and_signs/ranksum.md) | Wilcoxon rank-sum (Mann–Whitney) test for two independent samples. |
+| [`signrank`](ranks_and_signs/signrank.md) | Wilcoxon signed-rank test for a median or for paired differences. |
+| [`signtest`](ranks_and_signs/signtest.md) | Sign test for a median or for paired differences. |
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

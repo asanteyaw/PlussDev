@@ -38,7 +38,7 @@ const auto result = optima(problem, x0, options);
 
 The public parameter surface is always `ParameterPack<Series>`. Derivatives come from either:
 
-- autodiff callbacks over `ParameterPack<Trace>`
+- autodiff callbacks over `ParameterPack<Series>`
 - user-supplied analytic callbacks
 
 Autodiff/analytic are the derivative paths in `Optima`.

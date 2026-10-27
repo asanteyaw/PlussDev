@@ -27,8 +27,8 @@ int main() {
   const lymph::prep::TransformerSummary s = scaler.summary();
   std::cout << "feature_names: " << s.feature_names[0] << "\n";
   std::cout << "state tensors: " << s.state.size() << "\n";
-  std::cout << "learned min = " << s.state[1].to_vec<double>()[0] << "\n";
-  std::cout << "learned max = " << s.state[2].to_vec<double>()[0] << "\n";
+  std::cout << "learned min = " << s.state[1].host<double>()[0] << "\n";
+  std::cout << "learned max = " << s.state[2].host<double>()[0] << "\n";
 
   return 0;
 }

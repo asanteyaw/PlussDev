@@ -30,8 +30,8 @@ int main() {
   std::cout << "run A: train=" << a.train_set.ncases() << " test=" << a.test_set.ncases() << "\n";
   std::cout << "run B: train=" << b.train_set.ncases() << " test=" << b.test_set.ncases() << "\n";
   std::cout << "same seed -> identical test labels: "
-            << (a.test_set.features("target").as_series().to_vec<double>()
-                == b.test_set.features("target").as_series().to_vec<double>()
+            << (a.test_set.features("target").as_series().host<double>()
+                == b.test_set.features("target").as_series().host<double>()
                 ? "yes" : "no")
             << "\n";
 

@@ -4,10 +4,130 @@
 
 [Back to Volatility Models](../ts_03_volatility_models.md)
 
+A GARCH model lets the variance of the next observation depend on the recent past. Write the series as `y_t = mean + e_t` and let `h_t` be the variance of `e_t` given everything before time `t`. The GARCH(1, 1) model says
+
+> `h_t = ω + α e²_{t−1} + β h_{t−1}`.
+
+Three numbers describe the whole variance process. `ω` is a floor, `α` measures how strongly yesterday's *surprise* (the squared shock) feeds into today's variance, and `β` measures how long the variance remembers itself. After a large shock `e²` the variance jumps by `α` times it and then decays at rate `β`; so a large `α` gives spiky volatility and a large `β` gives volatility that lingers. The sum `α + β`, the **persistence**, controls how quickly volatility returns to its long-run level `ω / (1 − α − β)`, the unconditional variance, and it must be below 1 for that level to exist.
+
+`Garch11::fit_mle(y)` estimates the mean (the sample mean, removed first), `ω`, `α` and `β` by maximising the Gaussian likelihood. The constraints `ω > 0`, `α, β ≥ 0` and `α + β < 1` are built into the search, so the result is always a valid, stationary model. Orders other than (1, 1) are available through `Garch::fit_mle` with `GarchOptions::arch_order` and `garch_order`.
+
+## Estimating the parameters
+
+The program simulates 1000 returns from a GARCH(1,1) with `ω = 0.05`, `α = 0.15`, `β = 0.75`, fits the model and prints the estimates beside the truth, together with the derived quantities and the log-likelihood.
 
 ```cpp
 #include <pluss/ma.h>
 
+#include <iomanip>
+#include <iostream>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::Garch11Fit truth;
+  truth.mean = 0.0;
+  truth.omega = 0.05;
+  truth.alpha = 0.15;
+  truth.beta = 0.75;
+  const Series y = truth.simulate(1000, f64, /*seed=*/2);
+
+  const auto fit = ts::Garch11::fit_mle(y, {}, f64);
+  std::cout << std::fixed << std::setprecision(4);
+  std::cout << "mean   " << fit.mean << "\n";
+  std::cout << "omega  " << fit.omega << "   (true 0.0500)\n";
+  std::cout << "alpha  " << fit.alpha << "   (true 0.1500)\n";
+  std::cout << "beta   " << fit.beta << "   (true 0.7500)\n";
+  std::cout << "alpha + beta   " << fit.alpha + fit.beta << "   (true 0.9000)\n";
+  std::cout << "unconditional variance " << fit.unconditional_var() << "   (true 0.5000)\n";
+  std::cout << "log-likelihood " << std::setprecision(2) << fit.loglik(y) << "\n";
+}
+```
+
+Output
+
+```text
+mean   -0.0043
+omega  0.0910   (true 0.0500)
+alpha  0.1543   (true 0.1500)
+beta   0.6580   (true 0.7500)
+alpha + beta   0.8122   (true 0.9000)
+unconditional variance 0.4848   (true 0.5000)
+log-likelihood -1025.74
+```
+
+This sample illustrates the point. The estimates of `ω` (0.091 against 0.050) and `β` (0.658 against 0.750) are well off, in opposite directions, yet the unconditional variance (0.485 against 0.500) is almost exactly right. Read the persistence and the unconditional variance before the individual coefficients: they drive the forecasts, and they are determined more accurately than `ω`, `α` and `β` separately. The reason is a weakly identified direction in the likelihood: increasing `ω` while lowering `β` produces nearly the same variance process, so a sample can fit almost equally well with quite different pairs. The next program shows how large the estimation error is across samples.
+
+## How precisely are they estimated?
+
+A single fit cannot show estimation error, but repetition can. The program fits the same model to 30 independent samples of 1000 observations and reports the mean and spread of each estimate, and of `α + β` and the unconditional variance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <utility>
+#include <vector>
+
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  ts::Garch11Fit truth;
+  truth.mean = 0.0;
+  truth.omega = 0.05;
+  truth.alpha = 0.15;
+  truth.beta = 0.75;
+
+  std::vector<double> om, al, be, pe, uv;
+  for (int r = 0; r < 30; ++r) {
+    const Series y = truth.simulate(1000, f64, /*seed=*/100 + r);
+    const auto fit = ts::Garch11::fit_mle(y, {}, f64);
+    om.push_back(fit.omega);
+    al.push_back(fit.alpha);
+    be.push_back(fit.beta);
+    pe.push_back(fit.alpha + fit.beta);
+    uv.push_back(fit.unconditional_var());
+  }
+
+  const std::vector<std::pair<const char*, std::vector<double>>> estimates = {{"omega", om}, {"alpha", al}, {"beta", be}, {"alpha + beta", pe}, {"uncond. var.", uv}};
+  const std::vector<double> true_values = {0.05, 0.15, 0.75, 0.90, 0.50};
+  out.writeln("over 30 simulated series of 1000 observations");
+  for (std::size_t i = 0; i < estimates.size(); ++i) {
+    const Series v = pluss::make_series(estimates[i].second, f64);
+    out.writeln(estimates[i].first, "true", true_values[i], "mean of estimates", v.mean().item<double>(), "std dev", v.std().item<double>());
+  }
+}
+```
+
+Output
+
+```text
+over 30 simulated series of 1000 observations
+omega true 0.0500 mean of estimates 0.0542 std dev 0.0166
+alpha true 0.1500 mean of estimates 0.1454 std dev 0.0298
+beta true 0.7500 mean of estimates 0.7402 std dev 0.0503
+alpha + beta true 0.9000 mean of estimates 0.8857 std dev 0.0352
+uncond. var. true 0.5000 mean of estimates 0.4781 std dev 0.0466
+```
+
+Compare the spreads relative to the values. `ω` is the least precise (a standard deviation of 0.017 on 0.054, about 30%), `α` is next (0.030 on 0.145, about 20%), then `β` (0.050 on 0.740, about 7%) and the persistence `α + β` (0.035 on 0.886, about 4%). The averages are close to the truth, so the estimator is not biased in any way that matters at this sample size, but any single fit can sit a standard deviation or two away on any coefficient, as the first program did. In practice: report and forecast with the persistence and the unconditional variance, and do not read much into a single coefficient.
+
+## Forecasting the variance
+
+`forecast(h, y)` returns the expected variance `1, 2, …, h` steps ahead. For a GARCH(1,1) the forecast reverts to the unconditional variance geometrically at the persistence rate: `E[h_{t+k}] = V + (α + β)^{k−1} (h_{t+1} − V)`, where `V` is the unconditional variance and `h_{t+1}` is the one-step forecast. The program shows the forecast from a *calm* starting point and from a *turbulent* one, by truncating the sample at two different dates, and checks the first against the closed form.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -16,64 +136,58 @@
 namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-// Reproducible shocks with unit variance: z_t = (frac(sin(12.9898 t + 78.233) * 43758.5453) - 0.5) * sqrt(12), t = 1, 2, ...
-std::vector<double> shocks(int n) {
-  std::vector<double> z(static_cast<std::size_t>(n));
-  for (int i = 0; i < n; ++i) {
-    double u = std::sin(12.9898 * (i + 1.0) + 78.233) * 43758.5453;
-    u -= std::floor(u);
-    z[static_cast<std::size_t>(i)] = (u - 0.5) * std::sqrt(12.0);
-  }
-  return z;
-}
-// GARCH(1,1) returns: h_t = 0.05 + 0.15 r_{t-1}^2 + 0.75 h_{t-1}, r_t = sqrt(h_t) z_t.
-std::vector<double> garch_returns(int n) {
-  const auto z = shocks(n);
-  std::vector<double> r(static_cast<std::size_t>(n));
-  double h = 0.5, prev = 0.0;
-  for (int t = 0; t < n; ++t) {
-    h = 0.05 + 0.15 * prev * prev + 0.75 * h;
-    r[static_cast<std::size_t>(t)] = std::sqrt(h) * z[static_cast<std::size_t>(t)];
-    prev = r[static_cast<std::size_t>(t)];
-  }
-  return r;
-}
 int main() {
-  const Series y = vec(garch_returns(1000));
-  const auto fit = ts::Garch11::fit_mle(y);
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  ts::Garch11Fit truth;
+  truth.mean = 0.0;
+  truth.omega = 0.05;
+  truth.alpha = 0.15;
+  truth.beta = 0.75;
+  const Series y = truth.simulate(1000, f64, /*seed=*/2);
+  const auto fit = ts::Garch11::fit_mle(y, {}, f64);
+
+  // Find the calmest and the most turbulent fitted conditional variance in the sample.
+  const auto h = fit.infer(y, f64).host<double>();
+  const auto all = y.host<double>();
+  const std::size_t calm = std::min_element(h.begin() + 50, h.end()) - h.begin();
+  const std::size_t wild = std::max_element(h.begin() + 50, h.end()) - h.begin();
+
   std::cout << std::fixed << std::setprecision(4);
-  std::cout << "mean   " << fit.mean << "\nomega  " << fit.omega << "   (true 0.0500)\nalpha  " << fit.alpha << "   (true 0.1500)\nbeta   " << fit.beta
-            << "   (true 0.7500)\n";
-  std::cout << "alpha + beta " << fit.alpha + fit.beta << "   unconditional variance " << fit.unconditional_var() << "\nlog-likelihood " << std::setprecision(2)
-            << fit.loglik(y) << "\n\n";
-  std::cout << std::setprecision(4) << "forecast of the variance, by horizon\n";
-  const auto f = fit.forecast(100, y).to_vec<double>();
-  for (int h : {1, 2, 5, 10, 20, 50, 100}) std::cout << "  h = " << std::setw(3) << h << "   " << f[static_cast<std::size_t>(h - 1)] << "\n";
-  const auto v = fit.infer(y).to_vec<double>();
-  std::cout << "last fitted conditional variance " << v.back() << "\n";
+  std::cout << "unconditional variance " << fit.unconditional_var() << ", persistence " << fit.alpha + fit.beta << "\n\n";
+  std::cout << std::left << std::setw(8) << "step" << std::setw(22) << "from the calmest date" << std::setw(24) << "from the wildest date" << "closed form (calm)\n";
+  const auto fc = fit.forecast(60, pluss::make_series(std::vector<double>(all.begin(), all.begin() + calm + 1), f64), f64).host<double>();
+  const auto fw = fit.forecast(60, pluss::make_series(std::vector<double>(all.begin(), all.begin() + wild + 1), f64), f64).host<double>();
+  const double V = fit.unconditional_var(), p = fit.alpha + fit.beta;
+  for (int k : {1, 2, 5, 10, 20, 40, 60}) {
+    const double closed = V + std::pow(p, k - 1) * (fc[0] - V);
+    std::cout << std::left << std::setw(8) << k << std::setw(22) << fc[k - 1] << std::setw(24) << fw[k - 1] << closed << "\n";
+  }
 }
 ```
 
 Output
 
 ```text
-mean   0.0215
-omega  0.0893   (true 0.0500)
-alpha  0.1434   (true 0.1500)
-beta   0.6733   (true 0.7500)
-alpha + beta 0.8166   unconditional variance 0.4870
-log-likelihood -1047.15
+unconditional variance 0.4848, persistence 0.8122
 
-forecast of the variance, by horizon
-  h =   1   0.3767
-  h =   2   0.3969
-  h =   5   0.4379
-  h =  10   0.4692
-  h =  20   0.4847
-  h =  50   0.4870
-  h = 100   0.4870
-last fitted conditional variance 0.3725
+step    from the calmest date from the wildest date   closed form (calm)
+1       0.3489                1.8479                  0.3489
+2       0.3744                1.5919                  0.3744
+5       0.4256                1.0780                  0.4256
+10      0.4639                0.6945                  0.4639
+20      0.4822                0.5110                  0.4822
+40      0.4847                0.4852                  0.4847
+60      0.4848                0.4848                  0.4848
 ```
-The estimates of `α` (0.143) and `β` (0.673) are close to their true values 0.15 and 0.75. The constant `ω` (0.089 against 0.05) is estimated with the least precision: a larger `ω` with a smaller `β` produces nearly the same variance process, which is the usual weakly identified direction of a GARCH likelihood. The persistence `α + β` is 0.82, so the forecasts climb from the current low variance (0.377) to the unconditional level 0.487 within about 50 steps and stay there.
+
+From the calm date (a one-step variance of 0.35) the forecast climbs towards the unconditional variance, 0.485; from the turbulent date (1.85) it falls towards it; both are within 0.001 of it by step 40, and the closed form reproduces the library's forecast to every printed digit. The half-life of a variance shock, `ln 0.5 / ln(α + β)` periods (about 3.3 at the fitted persistence of 0.81, and 6.6 at the true 0.9), is the practical meaning of the persistence: it is how long a volatility burst matters. Note that the forecast is of the *variance* of the returns, not of the returns themselves; combined with a mean model it gives the interval around a forecast that changes with the market's state.
+
+## Decisions and pitfalls
+
+- **Test first.** Fit a variance model only if the ARCH-LM test finds clustering ([Chapter 1](../ts_01_describing_a_series/volatility_clustering.md)).
+- **Judge by persistence and unconditional variance.** They are better determined than `ω`, `α` and `β` separately.
+- **Persistence near 1 is a warning.** The unconditional variance `ω / (1 − α − β)` becomes huge and unstable and forecasts revert very slowly; this often signals structural breaks in the sample.
+- **The mean is removed first.** `demean` takes the sample mean out and holds it fixed; set it to false when `y` already has a zero mean (for instance a residual series).
+- **Check the fit.** A fitted GARCH is only useful if the standardised residuals no longer show clustering: see [Checking the fit](checking_the_fit.md).
+
+Where next: [Asymmetric responses](asymmetric_responses.md) allows bad news to move volatility more than good news.

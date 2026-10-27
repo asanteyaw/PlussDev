@@ -50,9 +50,9 @@ Example 1. Fill a numeric slot's null with `99.0`.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::scribble::Slot::Value{std::monostate{}}, pluss::make_series(3)});
 auto out = slot.fillnull(99.0);
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.at(2)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(2)).host<std::int64_t>()[0];
 ```
 
 ### Output

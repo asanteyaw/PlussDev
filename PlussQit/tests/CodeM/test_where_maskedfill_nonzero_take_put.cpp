@@ -93,29 +93,29 @@ TEST_CASE("invalid mask and flat invalid_index", "[indexing][numeric-state]") {
 
   auto mask = values.invalid();
   REQUIRE(mask.scalar_type() == ScalarType::Bool);
-  REQUIRE(mask.to_vec<std::uint8_t>() == std::vector<std::uint8_t>{0, 1, 0, 1, 1, 0});
+  REQUIRE(mask.host<std::uint8_t>() == std::vector<std::uint8_t>{0, 1, 0, 1, 1, 0});
 
   auto idx = values.invalid_index();
   REQUIRE(idx.scalar_type() == ScalarType::Int64);
   REQUIRE(idx.sizes() == std::vector<std::int64_t>{3});
-  REQUIRE(idx.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 3, 4});
+  REQUIRE(idx.host<std::int64_t>() == std::vector<std::int64_t>{1, 3, 4});
 
   auto picked = values.take(idx);
   REQUIRE(picked.sizes() == std::vector<std::int64_t>{3});
-  REQUIRE(picked.isnan().to_vec<std::uint8_t>() == std::vector<std::uint8_t>{1, 0, 0});
-  REQUIRE(picked.isinf().to_vec<std::uint8_t>() == std::vector<std::uint8_t>{0, 1, 1});
+  REQUIRE(picked.isnan().host<std::uint8_t>() == std::vector<std::uint8_t>{1, 0, 0});
+  REQUIRE(picked.isinf().host<std::uint8_t>() == std::vector<std::uint8_t>{0, 1, 1});
 
   auto constant_repaired = values.clone();
   constant_repaired.where_(constant_repaired.invalid(), -99.0);
-  REQUIRE(constant_repaired.to_vec<double>() ==
+  REQUIRE(constant_repaired.host<double>() ==
           std::vector<double>{1.0, -99.0, 2.0, -99.0, -99.0, 5.0});
 
   auto array_repaired = values.clone();
   array_repaired.put_(array_repaired.invalid_index(), pluss::make_series({70.0, 80.0, 90.0}));
-  REQUIRE(array_repaired.to_vec<double>() ==
+  REQUIRE(array_repaired.host<double>() ==
           std::vector<double>{1.0, 70.0, 2.0, 80.0, 90.0, 5.0});
 
   auto ints = pluss::make_series({1, 2, 3}, ScalarType::Int64);
-  REQUIRE(ints.invalid().to_vec<std::uint8_t>() == std::vector<std::uint8_t>{0, 0, 0});
+  REQUIRE(ints.invalid().host<std::uint8_t>() == std::vector<std::uint8_t>{0, 0, 0});
   REQUIRE(ints.invalid_index().sizes() == std::vector<std::int64_t>{0});
 }

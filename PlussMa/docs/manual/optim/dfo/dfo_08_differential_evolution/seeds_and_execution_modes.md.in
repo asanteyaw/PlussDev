@@ -1,8 +1,0 @@
-# Seeds and execution modes
-
-[Back to The Differential Evolution Minimisers](../dfo_08_differential_evolution.md)
-
-
-@@example Numerical/optimization/guide/dfo/373_differential_evolution_seeds_modes.cpp@@
-
-The same seed gives the same result (rows 1 and 4 of each mode agree exactly). Different seeds end at different values, from 0.04 to 1.1 in this run, a spread comparable to the whole of the previous table. For a multimodal function, report the spread over several seeds, or run several and keep the best. The sequential mode updates members one after another in the classic order; it gives a different random path, equally valid. The vectorized mode is the default.

@@ -61,9 +61,9 @@ auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0, 5.0});
 auto parts = x.chunk(3);
 std::cout << "pieces=" << parts.size() << "\n";
 for (std::size_t i = 0; i < parts.size(); ++i) {
-  std::cout << "[" << i << "] " << parts[i].to_vec<double>().size()
+  std::cout << "[" << i << "] " << parts[i].host<double>().size()
             << " elems: ";
-  for (double v : parts[i].to_vec<double>()) std::cout << v << " ";
+  for (double v : parts[i].host<double>()) std::cout << v << " ";
   std::cout << "\n";
 }
 ```

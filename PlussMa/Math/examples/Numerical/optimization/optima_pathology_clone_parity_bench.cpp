@@ -20,12 +20,8 @@ using pluss::subsp::math::optim::OptimaExitFlag;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::OptimaStallCategory;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::optima_stall_category_name;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 struct PathologyRow {
   std::string case_name{};
@@ -104,8 +100,8 @@ ConstrainedProblem make_nonfinite_region_problem() {
 
 ConstrainedProblem make_boundary_limited_problem() {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
-    return square(p.at("x") + 1.0);
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) {
+    return (p.at("x") + 1.0).square();
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", scalar(0.0)},
@@ -115,8 +111,8 @@ ConstrainedProblem make_boundary_limited_problem() {
 
 ConstrainedProblem make_simple_quadratic_problem() {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
-    return square(p.at("x") - 1.0);
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) {
+    return (p.at("x") - 1.0).square();
   };
   return problem;
 }
@@ -136,7 +132,7 @@ ConstrainedProblem make_recovery_failure_problem() {
         make_series((x - 0.25) * (x - 0.25)).to(ScalarType::Float64),
         ParameterPack<Series>({{"x", scalar(2.0 * (x - 0.25))}})};
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
     return p.at("x") - 0.2;
   };
   return problem;
@@ -144,10 +140,10 @@ ConstrainedProblem make_recovery_failure_problem() {
 
 ConstrainedProblem make_feasibility_phase_problem() {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) {
-    return square(p.at("x") * 0.0);
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) {
+    return (p.at("x") * 0.0).square();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
     return p.at("x") - 0.1;
   };
   problem.bounds.lower = ParameterPack<Series>({
@@ -159,12 +155,12 @@ ConstrainedProblem make_feasibility_phase_problem() {
 ConstrainedProblem make_complementarity_probe_problem() {
   ConstrainedProblem problem;
   const Series target = make_vec2(1.0, 2.0);
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},

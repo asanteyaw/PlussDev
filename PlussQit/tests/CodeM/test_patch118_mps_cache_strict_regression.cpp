@@ -68,8 +68,8 @@ std::vector<float> qr_reconstruct_(const pluss::Series& q, const pluss::Series& 
   const auto r_cpu = r.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous();
   const auto q_sizes = q_cpu.sizes();
   const auto r_sizes = r_cpu.sizes();
-  const auto qv = q_cpu.to_vec<float>();
-  const auto rv = r_cpu.to_vec<float>();
+  const auto qv = q_cpu.host<float>().array().data;
+  const auto rv = r_cpu.host<float>().array().data;
   return matmul_row_major_(qv, q_sizes[0], q_sizes[1], rv, r_sizes[1]);
 }
 
@@ -84,9 +84,9 @@ std::vector<float> svd_reconstruct_reduced_(const pluss::Series& u, const pluss:
   const std::int64_t k = us[1];
   const std::int64_t n = vhs[1];
 
-  auto uv = u_cpu.to_vec<float>();
-  const auto sv = s_cpu.to_vec<float>();
-  const auto vhv = vh_cpu.to_vec<float>();
+  auto uv = u_cpu.host<float>().array().data;
+  const auto sv = s_cpu.host<float>().array().data;
+  const auto vhv = vh_cpu.host<float>().array().data;
 
   for (std::int64_t i = 0; i < m; ++i) {
     for (std::int64_t j = 0; j < k; ++j) {
@@ -124,8 +124,8 @@ TEST_CASE("MPS argsort survives strict fallback policy roundtrip", "[mps][sort][
 
     const auto argsort_mps = x_mps.argsort(dim, descending, /*stable=*/false);
     REQUIRE(argsort_mps.platform() == pluss::pMPS);
-    const auto got = argsort_mps.to(pluss::pCPU).to_vec<std::int64_t>();
-    const auto want = x_cpu.argsort(dim, descending, /*stable=*/false).to_vec<std::int64_t>();
+    const auto got = argsort_mps.to(pluss::pCPU).host<std::int64_t>().array().data;
+    const auto want = x_cpu.argsort(dim, descending, /*stable=*/false).host<std::int64_t>().array().data;
     REQUIRE(got == want);
   }
 }
@@ -155,7 +155,7 @@ TEST_CASE("MPS bridge split decomposition stays coherent across repeated calls",
 
     const auto a_cpu = pluss::make_series(data, {m, n});
     const auto a_mps = a_cpu.to(pluss::pMPS);
-    const auto a_ref = a_cpu.to(pluss::ScalarType::Float32).to_vec<float>();
+    const auto a_ref = a_cpu.to(pluss::ScalarType::Float32).host<float>().array().data;
 
     const auto q1 = qr_q(a_mps, true);
     const auto r1 = qr_r(a_mps, true);

@@ -1,0 +1,47 @@
+# Choosing a solver on worked problems
+
+[Back to Septima 5: Choosing a Solver, and Worked Problems](../septima_05_choosing_and_worked_problems.md)
+
+Which solver should you use? This page answers with three problems, each chosen because it favours a different answer. A **model fitted to data** (logistic regression with a small penalty) is convex and smooth, so every optimiser must find the same answer; the comparison is cost. **Constrained least squares** (non-negative weights that sum to one, matching a target) is a quadratic program, which Optima solves exactly as the reference; here the question is how close Septima's bound projection and augmented Lagrangian get. And the **chained Rosenbrock function** with no constraints is solved by Optima and all three first-order methods, to read off what each is best at.
+
+The conclusion of the third table is the practical rule: fewest evaluations, Optima; most accurate, L-SR1; simplest and cheapest per iteration, L-BFGS if a gradient of 1e-4 is good enough; Adam when nothing else works or when the gradient is noisy.
+
+## Program 1: A model fitted to data
+
+Two hundred points in the plane are labelled by which side of a line they fall on, with one label in ten flipped. The model is logistic regression with a small L2 penalty. The data are a `Series` held fixed inside the objective; the parameters are a weight column and a bias; the loss is a few lines of `Series` arithmetic.
+
+@@example Numerical/optimization/guide/septima/141_logistic_regression.cpp@@
+
+The problem is convex, so every optimizer must find the same answer, and they do: the three fits agree to 2.3e-05, with a loss of 0.557757, weights `(0.7150, -0.4648)` and a bias of -0.0354. The weights are in the ratio 1.54 to -1, close to the 1.5 to -1 of the line that generated the labels, and the model classifies 82.5% of the points correctly, which is about as good as it can do when one label in ten is wrong.
+
+The cost is where they differ. L-SR1 converges in 7 iterations and 8 evaluations, L-BFGS in 33 (and ends with `NoProgress`, having reached the limit of its tolerances), Adam in 190. For a smooth model fitted to a modest amount of data, with all the data in the objective at once, a curvature method is the right choice. Adam's strength is elsewhere: it needs only a gradient and tolerates a gradient that is noisy, which a curvature method does not.
+
+## Program 2: Constrained least squares, checked against Optima
+
+Choose non-negative weights that sum to 1 so that a weighted mix of five series matches a target. The data are built from the weights `(0.5, 0, 0.3, 0, 0.2)` plus a little noise, so the right answer has two weights at zero, which are active bounds. Optima solves it as a quadratic program. Septima uses its bound projection for the non-negativity and an equality residual for the sum.
+
+@@example Numerical/optimization/guide/septima/142_simplex_weights.cpp@@
+
+The two solvers agree: the weights are `0.5017, 0.0011, 0.2985, 0.0000, 0.1987` in both, they sum to 1.00000, and the objective is 0.00031. Septima reports `Converged` after 319 iterations with an equality violation of 6.8e-08, using the default constraint schedule. Optima needs 15 evaluations to Septima's 319.
+
+This is a problem where Septima's constraint handling is at its best: the objective is convex, the equality is linear, and the rest is bounds. Chapter 2, Program 4, is the harder case, with nonlinear equalities and inequalities and a non-convex problem; Septima reaches the same solution as Optima there too, in 242 evaluations with L-BFGS where Optima needs 6.
+
+## Program 3: One function, every solver
+
+The ten-variable chained Rosenbrock function, with no constraints, solved by Optima and by the three first-order methods.
+
+@@example Numerical/optimization/guide/septima/143_all_solvers.cpp@@
+
+Optima converges in 72 iterations and 80 evaluations to an objective of 3.6e-09. L-SR1 converges in 119 iterations and 286 evaluations to 9.2e-20 with a gradient of 1.1e-08, a far more accurate answer, at more work. L-BFGS stops with `NoProgress` after 124 iterations at 3.3e-10 and a gradient of 2.5e-04. Adam converges after 4388 iterations to 2.1e-17.
+
+Read the table by what you need. Fewest evaluations: Optima. Most accurate: L-SR1. Fewest evaluations per iteration and simplest: L-BFGS, if a gradient of 1e-4 is good enough. Adam: when nothing else works or when the gradient is noisy.
+
+## Decisions and pitfalls
+
+- **Use a curvature method for a smooth model on all the data at once.** L-SR1 needed 7 iterations and L-BFGS 33 where Adam needed 190 on the logistic regression.
+- **Adam's strength is noisy gradients and huge parameter sets.** When the loss is computed from mini-batches or the problem is badly scaled, it is the right tool; for a smooth deterministic fit it is not.
+- **Check a constrained fit against a reference.** On a quadratic program, Optima gives the exact answer in 15 evaluations; Septima agrees (weights to four digits) in 319 evaluations with a violation of 7e-8.
+- **Septima is at its best when the objective is convex, the equality is linear and the rest is bounds.** For a few nonlinear constraints that must hold to high precision, use Optima.
+- **Compare solutions, not only flags.** Several solvers can report convergence at different accuracy; the objective and the gradient at the answer are the real comparison.
+
+Where next: That completes the Septima chapters. The linear-programming chapters begin with [First programs](../../linprog.md).

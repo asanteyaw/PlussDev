@@ -51,7 +51,7 @@ auto ids = out.fields("id");
 std::cout << "[";
 for (std::int64_t i = 0; i < ids.size(); ++i) {
   if (i) std::cout << ", ";
-  std::cout << std::get<pluss::Series>(ids.at(i)).to_vec<std::int64_t>()[0];
+  std::cout << std::get<pluss::Series>(ids.at(i)).host<std::int64_t>()[0];
 }
 std::cout << "]";
 ```

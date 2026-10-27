@@ -1,8 +1,0 @@
-# A fourth-order solver and the derivative of the root
-
-[Back to Root Finding: Solving Equations](../roots_01_solving_equations.md)
-
-
-@@example Numerical/optimization/guide/roots/505_householder_and_sensitivity.cpp@@
-
-`householder` converges in four steps here. It also keeps the dependence of the root on any Series the function captured: marking the parameter with `tracks_slope_(true)` and calling `reverse()` on the root gives d(root)/dp from the implicit function theorem, whatever the starting guess. The root is rebuilt from the final evaluation, so the history of the iterations is not stored.

@@ -15,8 +15,8 @@
 #include <string>
 #include <vector>
 
-namespace optim = pluss::optim;
-using Pack = optim::ParameterPack<optim::Trace>;
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
 using Block = optim::ParameterPack<pluss::Series>::Block;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
@@ -42,11 +42,11 @@ int main() {
       std::cout << std::left << std::setw(8) << k.str() << std::setw(18) << a.label;
       for (const auto& m : modes) {
         auto f = [K](const Pack& p) {
-          return K * optim::square(p.at("a") - 1.0) + (1.0 / K) * optim::square(p.at("b") - 1500.0) + K * 0.01 * p.at("a");
+          return K * (p.at("a") - 1.0).square() + (1.0 / K) * (p.at("b") - 1500.0).square() + K * 0.01 * p.at("a");
         };
         const auto cons =
             optim::constraints()
-                .nl_eq([K](const Pack& p) { return K * (optim::square(p.at("a")) + optim::square(p.at("b") * 0.001) - 3.0); })
+                .nl_eq([K](const Pack& p) { return K * (p.at("a").square() + (p.at("b") * 0.001).square() - 3.0); })
                 .nl_ineq([K](const Pack& p) { return (p.at("b") - 1400.0) / K; });
         optim::OptimaOptions o;
         o.algorithm = a.alg;

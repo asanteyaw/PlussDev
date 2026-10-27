@@ -20,9 +20,6 @@ using pluss::subsp::math::optim::OptimaProblemScaling;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::evaluate_problem;
 using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 
 Series make_vec2(double x0, double x1) {
   return make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64);
@@ -47,15 +44,15 @@ ConstrainedProblem make_mixed_nonlinear_problem() {
   const Series equality_weights = make_vec2(1.0, -1.0);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.equality = [equality_weights](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x") * trace(equality_weights, false));
+  problem.nonlinear.equality = [equality_weights](const ParameterPack<Series>& p) {
+    return (p.at("x") * equality_weights).sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x")) - 1.0;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.0;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -67,12 +64,12 @@ ConstrainedProblem make_bound_active_problem() {
   const Series target = make_vec2(-1.0, 2.0);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -89,9 +86,9 @@ ConstrainedProblem make_ill_conditioned_problem() {
 
   ConstrainedProblem problem;
   problem.objective.autodiff = [target, objective_scale](
-                                   const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    const auto err = (p.at("x") - trace(target, false)) * trace(objective_scale, false);
-    return sum(square(err));
+                                   const ParameterPack<Series>& p) {
+    const auto err = (p.at("x") - target) * objective_scale;
+    return err.square().sum();
   };
   problem.linear.Aineq = make_series(std::vector<double>{1e1, 1e-1}, {1, 2}).to(ScalarType::Float64);
   problem.linear.bineq = make_series(std::vector<double>{2.0}, {1}).to(ScalarType::Float64);
@@ -114,7 +111,7 @@ TEST_CASE("optima handles infeasible mixed nonlinear starts across sqp and inter
        std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InternalProtocol}) {
     auto options = make_options(algorithm);
     const auto result = optima(problem, initial, options);
-    const auto x = result.params.at("x").to_vec<double>();
+    const auto x = result.params.at("x").host<double>();
 
     REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
     REQUIRE(x[0] == Approx(0.2).margin(8e-2));
@@ -133,7 +130,7 @@ TEST_CASE("optima handles active bounds and active inequalities across sqp and i
        std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InternalProtocol}) {
     auto options = make_options(algorithm);
     const auto result = optima(problem, initial, options);
-    const auto x = result.params.at("x").to_vec<double>();
+    const auto x = result.params.at("x").host<double>();
 
     REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
     REQUIRE(result.output.active_multiplier_count > 0);

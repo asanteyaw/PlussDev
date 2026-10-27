@@ -9,13 +9,13 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
   auto vec = [&](std::vector<double> v) {
     return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64);
   };
-  const auto target = optim::trace(vec({2.0, 1.0}), false);
-  auto objective = [&](const optim::Trace& x) { return optim::sum(optim::square(x - target)); };
+  const auto target = vec({2.0, 1.0});
+  auto objective = [&](const pluss::Series& x) { return (x - target).square().sum(); };
   const auto constraints = optim::constraints().ubs(vec({1.5, 0.8}));
 
   const std::vector<std::pair<std::string, optim::OptimaAlgorithm>> algorithms = {
@@ -29,7 +29,7 @@ int main() {
     optim::OptimaOptions options;
     options.algorithm = algorithm;
     const auto r = optim::optima(objective, vec({0.5, 0.5}), options, constraints);
-    const auto x = r.params.at("x").to_vec<double>();
+    const auto x = r.params.at("x").host<double>();
     std::cout << std::left << std::setw(17) << name << std::setw(24) << ("label=" + r.output.algorithm) << std::right
               << "x=[" << x[0] << ", " << x[1] << "]  flag=" << std::setw(2) << static_cast<int>(r.exit_flag)
               << "  iterations=" << std::setw(3) << r.iteration << "  evaluations=" << std::setw(3)

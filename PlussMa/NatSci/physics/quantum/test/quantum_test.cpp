@@ -138,7 +138,7 @@ void test_tensor_and_partial_trace() {
   const auto scalar = quantum::partial_trace(bell_density, {});
   expect(scalar.spaces() == std::vector<std::int64_t>{1} &&
              scalar.value().sizes() == std::vector<std::int64_t>({1, 1}) &&
-             close(scalar.value().item<double>(), 1.0),
+             close(scalar.value().host<double>().front(), 1.0),
          "tracing every subsystem did not produce the trivial density space");
 
   const auto z = quantum::op(pluss::make_series({{1.0, 0.0}, {0.0, -1.0}}));

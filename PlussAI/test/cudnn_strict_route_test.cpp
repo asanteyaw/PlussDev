@@ -91,8 +91,8 @@ bool run_cudnn_strict_route_checks(std::ostream* err = nullptr) {
       {1, 1},
       {1, 1},
       2);
-  if (max_abs_diff_(y_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    y_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 8e-3) {
+  if (max_abs_diff_(y_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    y_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 8e-3) {
     if (err) *err << "strict conv route parity exceeded tolerance\n";
     return false;
   }
@@ -108,13 +108,13 @@ bool run_cudnn_strict_route_checks(std::ostream* err = nullptr) {
       k.to(pluss::pCUDA),
       v.to(pluss::pCUDA),
       mask.to(pluss::pCUDA));
-  if (max_abs_diff_(out_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    out_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 8e-3) {
+  if (max_abs_diff_(out_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    out_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 8e-3) {
     if (err) *err << "strict attention output parity exceeded tolerance\n";
     return false;
   }
-  if (max_abs_diff_(w_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>(),
-                    w_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>()) > 8e-3) {
+  if (max_abs_diff_(w_cpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>(),
+                    w_gpu.to(pluss::pCPU, pluss::ScalarType::Float32).host<float>()) > 8e-3) {
     if (err) *err << "strict attention weights parity exceeded tolerance\n";
     return false;
   }

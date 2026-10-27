@@ -1,8 +1,0 @@
-# A direct call
-
-[Back to The Differential Evolution Minimisers](../dfo_08_differential_evolution.md)
-
-
-@@example Numerical/optimization/guide/dfo/371_differential_evolution_standalone.cpp@@
-
-The search is global, so it is run in a box. The start (3, 3, 3) lies in a local minimum's basin; the population covers the whole box and finds the global minimum at the origin. The run used its whole evaluation budget: with the early-stop test off (`check_every` 0, the default), only the budgets end a run. Program 5 turns the test on.

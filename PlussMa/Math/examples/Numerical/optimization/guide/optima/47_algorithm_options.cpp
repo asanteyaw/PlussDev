@@ -12,8 +12,8 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
   auto four = [&](double a, double b, double c, double d) {
@@ -26,8 +26,8 @@ int main() {
       optim::constraints()
           .nl_ineq([](const Pack& p) { return 25.0 - p.at("a") * p.at("b") * p.at("c") * p.at("d"); })
           .nl_eq([](const Pack& p) {
-            return optim::square(p.at("a")) + optim::square(p.at("b")) + optim::square(p.at("c")) +
-                   optim::square(p.at("d")) - 40.0;
+            return p.at("a").square() + p.at("b").square() + p.at("c").square() +
+                   p.at("d").square() - 40.0;
           })
           .lbs(four(1, 1, 1, 1))
           .ubs(four(5, 5, 5, 5));

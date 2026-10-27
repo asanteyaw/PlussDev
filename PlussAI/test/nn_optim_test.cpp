@@ -28,7 +28,7 @@ double scalar_f64(const Series& x) {
 }
 
 std::vector<double> vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).host<double>();
 }
 
 bool approx(double a, double b, double tol = 1e-6) {
@@ -466,12 +466,14 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     pluss::nn::optim::Adam tx_manual(std::vector<Series*>{&p_manual}, opt);
     for (int i = 0; i < 12; ++i) {
       (void)tx_closure.step([&]() -> Series {
-        auto tracked = pluss::subsp::math::diff::trace(p_closure, true);
-        return tracked.value().sub(target).square().mul(0.5);
+        auto tracked = p_closure;
+        tracked.tracks_slope_(true);
+        return tracked.sub(target).square().mul(0.5);
       });
 
-      auto tracked = pluss::subsp::math::diff::trace(p_manual, true);
-      const Series loss = tracked.value().sub(target).square().mul(0.5);
+      auto tracked = p_manual;
+      tracked.tracks_slope_(true);
+      const Series loss = tracked.sub(target).square().mul(0.5);
       tx_manual.clear();
       loss.reverse();
       tx_manual.step();
@@ -568,10 +570,12 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     stage = "adam coverage diagnostics";
     Series a = pluss::make_series(2.0, cfg);
     Series b = pluss::make_series(-1.0, cfg);
-    auto ta = pluss::subsp::math::diff::trace(a, true);
-    auto tb = pluss::subsp::math::diff::trace(b, true);
+    auto ta = a;
+    ta.tracks_slope_(true);
+    auto tb = b;
+    tb.tracks_slope_(true);
     (void)tb;
-    const Series loss = ta.value().square();
+    const Series loss = ta.square();
     pluss::nn::optim::Adam cov_opt(std::vector<Series*>{&a, &b}, adam_opt);
     pluss::nn::optim::StepDiagnosticsOptions diag{};
     diag.minimum_tracked_coverage = 1.0;
@@ -1142,9 +1146,6 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   minimax_constraints.inequalities = [](const std::vector<Series>& p) {
     return std::vector<Series>{p[0].sum().sub(4.0)};
   };
-  minimax_constraints.inequalities_trace = [](const std::vector<pluss::subsp::math::diff::Trace>& p) {
-    return std::vector<pluss::subsp::math::diff::Trace>{pluss::subsp::math::diff::sum(p[0]) - 4.0};
-  };
 
   pluss::nn::optim::Minimax minimax({&minimax_param}, minimax_opt, minimax_constraints);
   for (int i = 0; i < 120; ++i) {
@@ -1158,10 +1159,13 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
 
   stage = "minimax tape";
   Series minimax_tape_param = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
-  pluss::nn::optim::Minimax minimax_tape({&minimax_tape_param}, minimax_opt, minimax_constraints);
+  // The tape stages differentiate the plain Series constraint directly: no Trace twin is given.
+  auto minimax_constraints_series = minimax_constraints;
+  pluss::nn::optim::Minimax minimax_tape({&minimax_tape_param}, minimax_opt, minimax_constraints_series);
   for (int i = 0; i < 120; ++i) {
-    auto tx = pluss::subsp::math::diff::trace(minimax_tape_param, true);
-    const Series loss = tx.value().sub(minimax_target).square().sum().mul(0.5);
+    auto tx = minimax_tape_param;
+    tx.tracks_slope_(true);
+    const Series loss = tx.sub(minimax_target).square().sum().mul(0.5);
     tx.clear();
     loss.reverse();
     minimax_tape.step();
@@ -1177,10 +1181,11 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   Series minimax_tape_staged_param = pluss::make_series(std::vector<float>{2.0, -1.0}, {2}, cfg);
   pluss::nn::optim::Minimax minimax_tape_staged({&minimax_tape_staged_param}, minimax_opt, minimax_constraints);
   for (int i = 0; i < 120; ++i) {
-    auto tx = pluss::subsp::math::diff::trace(minimax_tape_staged_param, true);
-    Series staged = pluss::series::zeros_like(tx.value());
-    staged.select(0, 0).copy_(tx.value().select(0, 0));
-    staged.select(0, 1).copy_(tx.value().select(0, 1));
+    auto tx = minimax_tape_staged_param;
+    tx.tracks_slope_(true);
+    Series staged = pluss::series::zeros_like(tx);
+    staged.select(0, 0).copy_(tx.select(0, 0));
+    staged.select(0, 1).copy_(tx.select(0, 1));
     const Series loss = staged.sub(minimax_target).square().sum().mul(0.5);
     tx.clear();
     loss.reverse();
@@ -1290,8 +1295,9 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
 
   stage = "tape sensitivity pull";
   Series tape_param = pluss::make_series(2.0, cfg);
-  auto tracked = pluss::subsp::math::diff::trace(tape_param, true);
-  const Series tape_loss = tracked.value().square();
+  auto tracked = tape_param;
+  tracked.tracks_slope_(true);
+  const Series tape_loss = tracked.square();
   tracked.clear();
   tape_loss.reverse();
   pluss::nn::optim::SGDOptions tape_opt{};
@@ -1309,8 +1315,9 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
 
   stage = "optimizer update leaf safety";
   Series leaf_param = pluss::make_series(1.5, cfg);
-  auto leaf_tracked = pluss::subsp::math::diff::trace(leaf_param, true);
-  const Series leaf_loss = leaf_tracked.value().square().mul(0.5);
+  auto leaf_tracked = leaf_param;
+  leaf_tracked.tracks_slope_(true);
+  const Series leaf_loss = leaf_tracked.square().mul(0.5);
   pluss::nn::optim::SGDOptions leaf_opt{};
   leaf_opt.learning_rate = 0.1;
   pluss::nn::optim::SGD leaf_sgd(std::vector<Series*>{&leaf_param}, leaf_opt);

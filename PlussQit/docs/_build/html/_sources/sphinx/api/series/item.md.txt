@@ -15,16 +15,16 @@ Scalar Series::item() const
 
 ## Crossing Into A C++ Scalar
 
-`item()` extracts the sole logical element of a `Series`. It is the deliberate
+`item()` extracts the value of a rank-zero `Series`. It is the deliberate
 boundary between array computation and ordinary C++ control flow: use it when
 a result must become a loop condition, log value, test assertion, configuration
 number, or argument to an API that accepts a native scalar rather than a
 `Series`.
 
-The precondition is about element count, not rank. A rank-zero scalar and a
-one-element vector, matrix, or higher-rank view are all valid. Any receiver with
-zero elements or more than one element is rejected; `item()` never guesses
-which lane was intended.
+The precondition is deliberately about rank, not merely element count. Shape
+`[]` is a scalar and may be extracted. Shapes `[1]`, `[1,1]`, and higher-rank
+singletons remain arrays and are rejected. Use [`pull()`](pull.md) for a 1-D
+Series or [`host()`](host.md) for a rank-aware host representation.
 
 The typed overload, `item<T>()`, converts the value to the requested C++ type.
 The untyped overload preserves the Series dtype in a tagged `pluss::Scalar`,
@@ -68,21 +68,30 @@ Spell the destination type explicitly when downstream C++ code requires an
 exact type. Numeric conversion follows the same representability constraints
 as the corresponding host materialization.
 
-### 2. A one-element vector is valid
+### 2. Scalar rank, not `numel()`, controls the contract
 
 ```cpp
 const auto singleton = pluss::make_series({42.0});
-std::cout << singleton.item<double>() << '\n';
+std::cout << "dim=" << singleton.dim()
+          << " values=" << singleton.pull<double>().front() << '\n';
+
+try {
+  (void)singleton.item<double>();
+} catch (const std::exception& error) {
+  std::cout << error.what() << '\n';
+}
 ```
 
 #### Output
 
 ```text
-42
+dim=1 values=42
+Series::item<T>(): expected a rank-zero Series
 ```
 
-The vector has shape `[1]`, not `[]`, but its `numel()` is one. `item()` does
-not require a rank-zero receiver.
+The one-element vector is intentionally not collapsed into a scalar. This
+keeps rank visible at the C++ boundary and prevents accidental acceptance of a
+mis-shaped result.
 
 ### 3. Preserve runtime dtype with the tagged overload
 
@@ -152,7 +161,7 @@ try {
 #### Output
 
 ```text
-Series::item<T>: expected tensor with exactly one element
+Series::item<T>(): expected a rank-zero Series
 ```
 
 Reduce or select explicitly before extraction. The failure protects code from
@@ -160,7 +169,9 @@ silently reading only the first lane of a larger result.
 
 ## See Also
 
-- [`numel()`](numel.md) reports whether the one-element precondition holds.
+- [`dim()`](dim.md) reports whether the receiver is rank zero.
+- [`pull()`](pull.md) exports a rank-one Series as `std::vector<T>`.
+- [`host()`](host.md) exports any rank without collapsing its structure.
 - [`select()`](select.md) chooses one lane while remaining inside Series.
 - [`tensor()`](tensor.md) provides the external tensor interoperability
   boundary in enabled builds.

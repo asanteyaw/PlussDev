@@ -252,7 +252,7 @@ ai::Step ice_outline_step() {
 }
 
 std::vector<double> as_vec(const Series& values) {
-  return values.to(pluss::pCPU, ScalarType::Float64).reshape({values.numel()}).to_vec<double>();
+  return values.to(pluss::pCPU, ScalarType::Float64).reshape({values.numel()}).host<double>();
 }
 
 bool equal_series_file(const std::filesystem::path& lhs, const std::filesystem::path& rhs) {

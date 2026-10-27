@@ -27,7 +27,8 @@ double as_f64_scalar(const Series& x) {
 }
 
 std::vector<double> as_f64_vec(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const Series cpu = x.to(pluss::pCPU, ScalarType::Float64);
+  return cpu.reshape({cpu.numel()}).pull<double>();
 }
 
 std::vector<std::int64_t> as_shape_vec(const Series& x) {
@@ -771,9 +772,9 @@ TEST_CASE("maximum likelihood fits reach the exact optimum", "[distr][mle][refer
   REQUIRE(gfit.shape == Catch::Approx(2.791118015).epsilon(1e-8));
   REQUIRE(gfit.scale == Catch::Approx(0.798962992).epsilon(1e-8));
   REQUIRE(gfit.loglik(g).item<double>() == Catch::Approx(-15.772395065).epsilon(1e-9));
-  const auto gse = gfit.stderr(g).to_vec<double>();
+  const auto gse = gfit.stderr(g).host<double>();
   REQUIRE(gse[2] == 0.0);  // the location is held fixed
-  const auto gv = gfit.vcov(g).to_vec<double>();
+  const auto gv = gfit.vcov(g).host<double>();
   REQUIRE(gv[1] != 0.0);   // the shape and the scale are correlated: the full covariance, not only its diagonal
 
   const auto b = series({0.10, 0.22, 0.35, 0.41, 0.57, 0.68, 0.81, 0.30, 0.62, 0.45});
@@ -788,7 +789,7 @@ TEST_CASE("maximum likelihood fits reach the exact optimum", "[distr][mle][refer
 
   // Laplace: the location has the standard error scale / sqrt(n), not a placeholder
   const auto lfit = Laplace{0.0, 1.0}.MLE(g);
-  REQUIRE(lfit.stderr(g).to_vec<double>()[0] == Catch::Approx(lfit.scale / std::sqrt(10.0)).epsilon(1e-12));
+  REQUIRE(lfit.stderr(g).host<double>()[0] == Catch::Approx(lfit.scale / std::sqrt(10.0)).epsilon(1e-12));
 
   // Gaussian mixture: EM converges to the same optimum from different starts
   std::vector<double> mix;
@@ -803,7 +804,7 @@ TEST_CASE("maximum likelihood fits reach the exact optimum", "[distr][mle][refer
   const auto fit_b = GaussianMixture{w0, series({-3.0, 3.0}), s0}.MLE(xs);
   REQUIRE(fit_a.loglik(xs).item<double>() == Catch::Approx(-85.76929012).epsilon(1e-9));
   REQUIRE(fit_b.loglik(xs).item<double>() == Catch::Approx(-85.76929012).epsilon(1e-9));
-  REQUIRE(fit_a.weights.to_vec<double>()[0] == Catch::Approx(0.33334178).epsilon(1e-6));
+  REQUIRE(fit_a.weights.host<double>()[0] == Catch::Approx(0.33334178).epsilon(1e-6));
 }
 
 TEST_CASE("generalised hyperbolic and NIG densities are accurate", "[distr][bessel][reference]") {
@@ -811,10 +812,127 @@ TEST_CASE("generalised hyperbolic and NIG densities are accurate", "[distr][bess
   const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const auto x = pluss::make_series(std::vector<double>{-2.5, -1.0, 0.4, 3.0}, {4}, f64);
   // exact values (arbitrary precision) of the NIG(alpha 2, beta 0.5, mu 0.1, delta 1.2) density
-  const auto p = Nig{2.0, 0.5, 0.1, 1.2}.pdf(x).to_vec<double>();
+  const auto p = Nig{2.0, 0.5, 0.1, 1.2}.pdf(x).host<double>();
   const std::vector<double> expected{0.00134548612717506, 0.08192507289386157, 0.5594923065755876, 0.01053281724362568};
   for (std::size_t i = 0; i < 4; ++i) REQUIRE(p[i] == Catch::Approx(expected[i]).epsilon(1e-9));
   // the Gh with lambda = -1/2 is the NIG: they agree to rounding
-  const auto q = Gh{-0.5, 2.0, 0.5, 0.1, 1.2}.pdf(x).to_vec<double>();
+  const auto q = Gh{-0.5, 2.0, 0.5, 0.1, 1.2}.pdf(x).host<double>();
   for (std::size_t i = 0; i < 4; ++i) REQUIRE(q[i] == Catch::Approx(p[i]).epsilon(1e-10));
+}
+
+// Every family: the density (mass) integrated (summed) over a range equals the difference of the distribution function at its ends,
+// and the fraction of draws that fall in the range matches it. This pins pdf, cdf and the sampler against each other.
+TEST_CASE("distr: pdf, cdf and the sampler agree for every kind", "[distr][kinds][consistency]") {
+    const auto f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  struct Case { dst::Kind kind; std::vector<double> params; double a, b; bool discrete; };
+  const std::vector<Case> cases = {
+      {dst::Uniform, {1.0, 3.0}, 1.5, 2.5, false},
+      {dst::Beta, {2.5, 4.0}, 0.1, 0.7, false},
+      {dst::Bradford, {2.0}, 0.1, 0.9, false},
+      {dst::Triangular, {0.0, 1.0, 4.0}, 0.5, 3.0, false},
+      {dst::NormalTrunc, {-1.0, 2.0, 0.0, 1.0}, -0.5, 1.5, false},
+      {dst::Arcsin, {}, 0.1, 0.9, false},
+      {dst::Anglit, {}, -0.6, 0.6, false},
+      {dst::Cosine, {}, -2.5, 2.5, false},
+      {dst::HalfCosine, {}, -2.5, 2.5, false},
+      {dst::Quadratic, {}, -0.8, 0.8, false},
+      {dst::UShape, {}, -0.8, 0.8, false},
+      {dst::Semicircle, {0.0, 1.0}, -0.8, 0.8, false},
+      {dst::VonMises, {0.5, 2.0}, -1.5, 2.5, false},
+      {dst::Bernoulli, {0.3}, 0.0, 1.0, true},
+      {dst::Binomial, {12.0, 0.35}, 2.0, 6.0, true},
+      {dst::Geometric, {0.3}, 1.0, 6.0, true},
+      {dst::NegativeBinomial, {3.5, 0.4}, 1.0, 10.0, true},
+      {dst::Hypergeometric, {50.0, 20.0, 10.0}, 1.0, 8.0, true},
+      {dst::Skellam, {2.0, 1.5}, -3.0, 6.0, true},
+      {dst::Bessel, {1.0, 4.0}, 0.0, 8.0, true},
+      {dst::Yule, {3.0}, 1.0, 10.0, true},
+      {dst::Zeta, {3.5}, 1.0, 10.0, true},
+      {dst::Rademacher, {}, -1.0, 1.0, true},
+      {dst::Normal, {1.5, 2.0}, -0.5, 4.0, false},
+      {dst::Weibull, {1.7, 2.1}, 0.5, 2.0, false},
+      {dst::Poisson, {3.2}, 0.0, 6.0, true},
+      {dst::Gamma, {0.0, 1.3, 2.5}, 1.0, 6.0, false},
+      {dst::Lognormal, {0.0, 0.5}, 0.5, 3.0, false},
+      {dst::Exponential, {0.7}, 0.5, 3.0, false},
+      {dst::ChiSquare, {5.0}, 1.0, 9.0, false},
+      {dst::ChiSquareNoncentral, {2.0, 4.0}, 1.0, 12.0, false},
+      {dst::Chi, {3.0}, 0.5, 3.0, false},
+      {dst::F, {5.0, 10.0}, 0.5, 4.0, false},
+      {dst::FNoncentral, {2.0, 5.0, 10.0}, 0.5, 5.0, false},
+      {dst::Rayleigh, {1.5}, 0.5, 4.0, false},
+      {dst::Maxwell, {1.2}, 0.5, 4.0, false},
+      {dst::Rice, {2.0, 1.0}, 0.5, 4.5, false},
+      {dst::Nakagami, {2.0, 1.5}, 0.3, 2.5, false},
+      {dst::InverseGaussian, {1.0, 2.0}, 0.3, 2.5, false},
+      {dst::Wald, {2.0}, 0.3, 2.5, false},
+      {dst::Gig, {1.0, 2.0, 3.0}, 0.2, 3.0, false},
+      {dst::Pareto, {1.0, 3.0}, 1.0, 6.0, false},
+      {dst::Lomax, {1.5, 3.0}, 0.5, 6.0, false},
+      {dst::Burr, {2.0, 3.0}, 0.4, 3.0, false},
+      {dst::Gompertz, {0.8, 2.0}, 0.2, 2.0, false},
+      {dst::Erlang, {1.5, 3.0}, 1.0, 8.0, false},
+      {dst::Alpha, {2.0, 1.0}, 0.2, 6.0, false},
+      {dst::Planck, {2.0, 1.0}, 0.3, 6.0, false},
+      {dst::Cauchy, {0.5, 2.0}, -5.0, 6.0, false},
+      {dst::Laplace, {1.0, 1.5}, -1.0, 4.0, false},
+      {dst::Logistic, {0.5, 1.2}, -2.0, 4.0, false},
+      {dst::StudentT, {5.0, 0.0, 1.0}, -3.0, 3.0, false},
+      {dst::ExtremeValue, {0.0, 1.0}, -1.0, 5.0, false},
+      {dst::HyperbolicSecant, {0.0, 1.0}, -3.0, 4.0, false},
+      {dst::TukeyLambda, {0.14}, -3.0, 3.0, false},
+      {dst::Nig, {1.5, -0.4, 0.1, 0.8}, -3.0, 3.0, false},
+      {dst::Gh, {1.0, 1.5, -0.4, 0.1, 0.8}, -3.0, 3.0, false},
+  };
+  for (const auto& c : cases) {
+    INFO("kind index " << static_cast<int>(c.kind));
+    double integral = 0.0, between = 0.0;
+    if (c.discrete) {
+      const auto n = static_cast<std::int64_t>(c.b - c.a + 1.0);
+      const auto grid = pluss::series::linspace(c.a, c.b, n, f64).round();
+      integral = pdf(c.kind, grid, c.params).sum().item<double>();
+      const auto edges = pluss::make_series({c.a - 1.0, c.b}, f64);
+      const auto cd = cdf(c.kind, edges, c.params).host<double>();
+      between = cd[1] - cd[0];
+    } else {
+      const auto grid = pluss::series::linspace(c.a, c.b, 4001, f64);
+      integral = pdf(c.kind, grid, c.params).antidiff(grid).trapezoid().item<double>();
+      const auto edges = pluss::make_series({c.a, c.b}, f64);
+      const auto cd = cdf(c.kind, edges, c.params).host<double>();
+      between = cd[1] - cd[0];
+    }
+    REQUIRE(integral == Catch::Approx(between).margin(2e-4));
+    const auto draws = sample(c.kind, c.params, {200000}, f64, 7ULL);
+    const double fraction = ((draws >= c.a).to(ScalarType::Float64) * (draws <= c.b).to(ScalarType::Float64)).mean().item<double>();
+    const double se = std::sqrt(std::max(between * (1.0 - between), 1e-9) / 200000.0);
+    REQUIRE(std::abs(fraction - between) < 5.0 * se + 1e-4);
+  }
+}
+
+TEST_CASE("distr: Yule cdf has the closed form 1 - 2/((k+1)(k+2)) for p = 3", "[distr][yule]") {
+    const auto f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const auto k = pluss::make_series({1.0, 2.0, 3.0, 10.0}, f64);
+  const auto c = cdf(dst::Yule, k, {3.0}).host<double>();
+  const double ks[] = {1.0, 2.0, 3.0, 10.0};
+  for (int i = 0; i < 4; ++i) REQUIRE(c[i] == Catch::Approx(1.0 - 2.0 / ((ks[i] + 1.0) * (ks[i] + 2.0))).margin(1e-12));
+}
+
+TEST_CASE("distr: the anglit density is cos(2x) on its support and integrates to one", "[distr][anglit]") {
+    const auto f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const auto x = pluss::make_series({-0.7, -0.2, 0.0, 0.5}, f64);
+  const auto d = pdf(dst::Anglit, x, {}).host<double>();
+  const double xs[] = {-0.7, -0.2, 0.0, 0.5};
+  for (int i = 0; i < 4; ++i) REQUIRE(d[i] == Catch::Approx(std::cos(2.0 * xs[i])).margin(1e-12));
+}
+
+TEST_CASE("distr: generalised hyperbolic sampler matches the exact mean and variance", "[distr][gh][sample]") {
+    const auto f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  for (double lambda : {-1.0, 1.0, 3.0}) {
+    const Gh d{lambda, 1.5, -0.4, 0.1, 0.8};
+    const auto s = d.sample({400000}, f64, 5ULL);
+    const double m = s.mean().item<double>();
+    const double v = ((s - m) * (s - m)).mean().item<double>();
+    REQUIRE(m == Catch::Approx(d.cumulant(1).item<double>()).margin(0.02));
+    REQUIRE(v == Catch::Approx(d.cumulant(2).item<double>()).epsilon(0.03));
+  }
 }

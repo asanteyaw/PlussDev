@@ -10,16 +10,16 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
-using Pack = optim::ParameterPack<Trace>;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
+using Pack = optim::ParameterPack<pluss::Series>;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series scalar(double v) { return pluss::make_series(v).to(f64); }
 
 int main() {
-  std::function<Trace(const Pack&)> rosenbrock = [](const Pack& p) {
-    return 100.0 * optim::square(p.at("y") - optim::square(p.at("x"))) + optim::square(1.0 - p.at("x"));
+  std::function<pluss::Series(const Pack&)> rosenbrock = [](const Pack& p) {
+    return 100.0 * (p.at("y") - p.at("x").square()).square() + (1.0 - p.at("x")).square();
   };
   std::cout << std::left << std::setw(12) << "precision" << std::setw(14) << "exit" << std::setw(8) << "iters" << std::setw(12) << "objective" << "x, y\n";
   for (const auto dtype : {f64, pluss::ScalarType::Float32}) {
@@ -30,14 +30,14 @@ int main() {
     const auto r = optim::septima(rosenbrock, start, options);
     std::cout << std::left << std::setw(12) << (dtype == f64 ? "Float64" : "Float32") << std::setw(14) << (r.converged ? "Converged" : "NoProgress") << std::setw(8)
               << r.iteration << std::scientific << std::setprecision(1) << std::setw(12) << r.objective_value << std::fixed << std::setprecision(5)
-              << r.params[0].item<double>() << ", " << r.params[1].item<double>() << "\n";
+              << as_f64(r.params[0]) << ", " << as_f64(r.params[1]) << "\n";
   }
 
   using C = std::complex<double>;
   const auto target = pluss::make_series(std::vector<C>{{1.0, 2.0}}, {1});
-  auto distance = [&](const Trace& z) -> Trace {
-    const Trace difference = z - optim::fixed(target);
-    return optim::sum(pluss::subsp::math::diff::pow(pluss::subsp::math::diff::abs(difference), 2.0));
+  auto distance = [&](const pluss::Series& z) -> pluss::Series {
+    const pluss::Series difference = z - target;
+    return difference.abs().pow(2.0).sum();
   };
   std::cout << "\ncomplex parameter, minimize |z - (1 + 2i)|^2 from z = 0\n";
   for (const bool lbfgs : {false, true}) {
@@ -48,7 +48,7 @@ int main() {
     options.step.adam.learning_rate = 0.1;
     if (lbfgs) options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
     const auto r = optim::septima(distance, pluss::make_series(std::vector<C>{{0.0, 0.0}}, {1}), options);
-    const C z = r.params[0].to_vec<C>()[0];
+    const C z = r.params[0].host<C>()[0];
     std::cout << "  " << std::left << std::setw(8) << (lbfgs ? "L-BFGS" : "Adam") << (r.converged ? "Converged" : "not converged") << "  iterations " << std::setw(5) << r.iteration
               << "z = " << std::fixed << std::setprecision(4) << z.real() << " + " << z.imag() << "i\n";
   }

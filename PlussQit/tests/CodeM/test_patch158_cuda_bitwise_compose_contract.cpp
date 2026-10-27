@@ -43,8 +43,8 @@ private:
   std::optional<std::string> old_;
 };
 
-template <class T>
-void require_equal_(const std::vector<T>& got, const std::vector<T>& want) {
+template <class Got, class Want>
+void require_equal_(const Got& got, const Want& want) {
   REQUIRE(got.size() == want.size());
   for (std::size_t i = 0; i < got.size(); ++i) {
     REQUIRE(got[i] == want[i]);
@@ -118,14 +118,14 @@ TEST_CASE("CUDA bridge enables bitwise fallback when strict native is off", "[cu
   const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
   require_equal_(
-      x_cuda.bitwise_and(y_cuda).to(pluss::pCPU).to_vec<std::int32_t>(),
-      x_cpu.bitwise_and(y_cpu).to_vec<std::int32_t>());
+      x_cuda.bitwise_and(y_cuda).to(pluss::pCPU).host<std::int32_t>(),
+      x_cpu.bitwise_and(y_cpu).host<std::int32_t>());
   require_equal_(
-      x_cuda.bitwise_or(y_cuda).to(pluss::pCPU).to_vec<std::int32_t>(),
-      x_cpu.bitwise_or(y_cpu).to_vec<std::int32_t>());
+      x_cuda.bitwise_or(y_cuda).to(pluss::pCPU).host<std::int32_t>(),
+      x_cpu.bitwise_or(y_cpu).host<std::int32_t>());
   require_equal_(
-      x_cuda.bitwise_not().to(pluss::pCPU).to_vec<std::int32_t>(),
-      x_cpu.bitwise_not().to_vec<std::int32_t>());
+      x_cuda.bitwise_not().to(pluss::pCPU).host<std::int32_t>(),
+      x_cpu.bitwise_not().host<std::int32_t>());
 }
 
 TEST_CASE("CUDA strict native bitwise executes supported route", "[cuda][bridge][policy][bitwise]") {
@@ -145,8 +145,8 @@ TEST_CASE("CUDA strict native bitwise executes supported route", "[cuda][bridge]
   const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
   require_equal_(
-      x_cuda.bitwise_xor(y_cuda).to(pluss::pCPU).to_vec<std::uint8_t>(),
-      x_cpu.bitwise_xor(y_cpu).to_vec<std::uint8_t>());
+      x_cuda.bitwise_xor(y_cuda).to(pluss::pCPU).host<std::uint8_t>(),
+      x_cpu.bitwise_xor(y_cpu).host<std::uint8_t>());
 }
 
 TEST_CASE("CUDA compose baseline capability is runtime-dynamic", "[cuda][compose][runtime]") {
@@ -207,11 +207,11 @@ TEST_CASE("CUDA bridge enables compose fallback when strict native is off", "[cu
   const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
   require_equal_(
-      x_cuda.unite({y_cuda}, 1).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.unite({y_cpu}, 1).to_vec<float>());
+      x_cuda.unite({y_cuda}, 1).to(pluss::pCPU).host<float>(),
+      x_cpu.unite({y_cpu}, 1).host<float>());
   require_equal_(
-      x_cuda.pile({y_cuda}, 0).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.pile({y_cpu}, 0).to_vec<float>());
+      x_cuda.pile({y_cuda}, 0).to(pluss::pCPU).host<float>(),
+      x_cpu.pile({y_cpu}, 0).host<float>());
 }
 
 TEST_CASE("CUDA strict native compose executes supported route", "[cuda][bridge][policy][compose]") {
@@ -231,7 +231,7 @@ TEST_CASE("CUDA strict native compose executes supported route", "[cuda][bridge]
   const auto y_cuda = y_cpu.to(pluss::pCUDA);
 
   require_equal_(
-      x_cuda.unite({y_cuda}, 0).to(pluss::pCPU).to_vec<std::int32_t>(),
-      x_cpu.unite({y_cpu}, 0).to_vec<std::int32_t>());
+      x_cuda.unite({y_cuda}, 0).to(pluss::pCPU).host<std::int32_t>(),
+      x_cpu.unite({y_cpu}, 0).host<std::int32_t>());
 }
 

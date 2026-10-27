@@ -1,0 +1,215 @@
+# `distr::UShape`
+
+The U-shaped (symmetric arcsine) distribution: a density that is smallest at the centre and unbounded at both ends of a symmetric interval.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::UShape, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::UShape, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::UShape, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::UShape, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::UShape, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The U-shaped distribution has the density `1/(pi sqrt(s² - (x - t)²))` on `(t - s, t + s)`: the arcsine distribution on a symmetric interval, smallest at the centre and unbounded at the ends. It is the distribution of the sine of a uniformly random angle, and of the position of a harmonic oscillator at a random time.
+
+The kind-based functions take `{}` (centre 0, half-width 1) or `{t, s}`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `t` | any real | the centre |
+| `s` | > 0 | the half-width of the support |
+
+Support: the open interval `(t - s, t + s)`.
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above (a shorter list selects the defaults: `{}` gives centre 0 and half-width 1). A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape. 
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`s` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the UShape on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({-0.95, -0.7, -0.3, 0.0, 0.5, 0.9}, f64);
+  const std::vector<double> params = {};
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::UShape, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::UShape, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::UShape, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+The density is largest on this grid at x = -0.95, where it is 1.01941; the distribution function runs from 0.10108 at x = -0.95 to 0.85643 at x = 0.9, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(1.01941) = 0.01922 at x = -0.95.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {};
+
+  // The three ways to the probability that the variable lies in [-0.8, 0.8]:
+  const auto grid = pluss::series::linspace(-0.8, 0.8, 3001, f64);
+  const double area = distr::pdf(dst::UShape, grid, params).antidiff(grid).trapezoid().item<double>();
+
+  const auto edges = pluss::make_series({-0.8, 0.8}, f64);
+  const auto c = distr::cdf(dst::UShape, edges, params).host<double>();
+
+  const auto draws = distr::sample(dst::UShape, params, {200000}, f64, 7ULL);
+  const double fraction = ((draws >= -0.8).to(pluss::ScalarType::Float64) * (draws <= 0.8).to(pluss::ScalarType::Float64)).mean().item<double>();
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(0.8) - cdf(-0.8): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+The integral of the density (0.59033) and the difference of the distribution function (0.59033) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.58915) differs from it by 0.00118, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 0.0011), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({-0.45, -0.25, 0.0, 0.25, 0.45}, f64);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "s 0.5:";
+  for (double v : distr::pdf(dst::UShape, x, {0.0, 0.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "s 1  :";
+  for (double v : distr::pdf(dst::UShape, x, {0.0, 1.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "s 2  :";
+  for (double v : distr::pdf(dst::UShape, x, {0.0, 2.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Read down the rows: `s 0.5` peaks on this grid at x = -0.45 (value 1.4605); `s 1` peaks on this grid at x = -0.45 (value 0.3564); `s 2` peaks on this grid at x = -0.45 (value 0.1633). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 checks the distribution function against its closed form, `1/2 + arcsin(x)/pi` on `(-1, 1)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(6);
+  const auto x = pluss::make_series({-0.95, -0.7, -0.3, 0.0, 0.5, 0.9}, f64);
+  const std::vector<double> params = {};
+
+  const auto formula = x.asin() * (1.0 / 3.14159265358979323846) + 0.5;
+  const auto library = distr::cdf(dst::UShape, x, params);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "formula:";
+  for (double v : formula.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "distr::cdf:";
+  for (double v : library.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << std::scientific << std::setprecision(2) << "largest difference: " << (formula - library).abs().max().item<double>() << '\n';
+}
+```
+
+The formula and `distr::cdf` agree to 5.55e-17 over the grid, so the library implements exactly the closed form quoted above; the same expression is the quickest way to check a parameterisation before relying on it.
+
+## See Also
+
+- [`Arcsin`](../continuous_bounded/Arcsin.md)
+- [`Beta`](../continuous_bounded/Beta.md)
+- [`Cosine`](../continuous_bounded/Cosine.md)

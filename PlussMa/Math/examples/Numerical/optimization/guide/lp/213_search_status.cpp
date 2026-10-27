@@ -15,16 +15,6 @@ const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series mat(std::vector<double> v, std::int64_t rows, std::int64_t cols) { return pluss::make_series(v, {rows, cols}).to(f64); }
 
-const char* name_of(milp::Status s) {
-  switch (s) {
-    case milp::Status::Optimal: return "Optimal";
-    case milp::Status::Infeasible: return "Infeasible";
-    case milp::Status::Unbounded: return "Unbounded";
-    case milp::Status::NodeLimit: return "NodeLimit";
-  }
-  return "?";
-}
-
 int main() {
   std::cout << std::fixed << std::setprecision(3);
   {
@@ -36,7 +26,7 @@ int main() {
     p.lp.upper = vec({5});
     p.integer = vec({1});
     const auto r = milp::solve(p);
-    std::cout << "2 x = 1, x integer:   " << name_of(r.status) << "\n\n";
+    std::cout << "2 x = 1, x integer:   " << milp::to_string(r.status) << "\n\n";
   }
 
   const int n = 24;
@@ -62,7 +52,7 @@ int main() {
     milp::Options options;
     options.max_nodes = limit;
     const auto r = milp::solve(hard, options);
-    std::cout << std::left << std::setw(16) << limit << std::setw(12) << name_of(r.status) << std::setw(8) << r.nodes << std::setw(14) << -r.objective.item<double>()
+    std::cout << std::left << std::setw(16) << limit << std::setw(12) << milp::to_string(r.status) << std::setw(8) << r.nodes << std::setw(14) << -r.objective.item<double>()
               << std::setw(14) << -r.best_bound << -r.best_bound - -r.objective.item<double>() << "\n";
   }
   return 0;

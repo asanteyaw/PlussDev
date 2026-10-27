@@ -424,7 +424,7 @@ DataFrame DataFrame::take(const Slate& indices) const {
           || values.scalar_type() == pluss::codem::ScalarType::Int16
           || values.scalar_type() == pluss::codem::ScalarType::Int8,
       "DataFrame::take: indices slate must use an integer Series dtype");
-  return take(values.to_vec<std::int64_t>());
+  return take(values.pull<std::int64_t>());
 }
 
 std::pair<DataFrame, DataFrame> DataFrame::split(double frac) const {

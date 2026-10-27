@@ -429,7 +429,7 @@ pluss::kindle::Stream Slot::kindelize() const {
     if (dtype == pluss::codem::ScalarType::Bool) {
       std::vector<bool> out;
       out.reserve(values().size());
-      for (const auto& v : values()) out.push_back(std::get<pluss::Series>(v).to_vec<bool>()[0]);
+      for (const auto& v : values()) out.push_back(std::get<pluss::Series>(v).host<bool>()[0]);
       const auto n = static_cast<std::int64_t>(out.size());
       auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
       auto* p = reinterpret_cast<bool*>(s.raw_data());
@@ -439,14 +439,14 @@ pluss::kindle::Stream Slot::kindelize() const {
     if (dtype == pluss::codem::ScalarType::Int64) {
       std::vector<std::int64_t> out;
       out.reserve(values().size());
-      for (const auto& v : values()) out.push_back(std::get<pluss::Series>(v).to_vec<std::int64_t>()[0]);
+      for (const auto& v : values()) out.push_back(std::get<pluss::Series>(v).host<std::int64_t>()[0]);
       return pluss::kindle::Stream(pluss::make_series(out, {static_cast<std::int64_t>(out.size())}));
     }
 
     std::vector<double> out;
     out.reserve(values().size());
     for (const auto& v : values()) {
-      out.push_back(std::get<pluss::Series>(v).to(pluss::codem::ScalarType::Float64).to_vec<double>()[0]);
+      out.push_back(std::get<pluss::Series>(v).to(pluss::codem::ScalarType::Float64).host<double>()[0]);
     }
     auto merged = pluss::make_series(out, {static_cast<std::int64_t>(out.size())});
     if (dtype != pluss::codem::ScalarType::Float64) merged = merged.to(dtype);

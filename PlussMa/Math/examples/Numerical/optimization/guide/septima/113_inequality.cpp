@@ -12,8 +12,8 @@
 #include <iostream>
 #include <sstream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
@@ -21,7 +21,7 @@ Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<st
 
 int main() {
   const auto target = vec({2.0, 1.0});
-  auto objective = [&](const Trace& x) -> Trace { return optim::sum(optim::square(x - optim::fixed(target))) * 0.5; };
+  auto objective = [&](const pluss::Series& x) -> pluss::Series { return (x - target).square().sum() * 0.5; };
   optim::SeptimaConstraints disc;
   disc.inequalities = [](const std::vector<Series>& x) { return std::vector<Series>{x[0].square().sum() - 1.0}; };
 

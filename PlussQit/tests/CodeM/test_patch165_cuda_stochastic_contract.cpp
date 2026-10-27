@@ -46,11 +46,11 @@ private:
 };
 
 std::vector<float> to_cpu_f32_(const pluss::Series& x) {
-  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().to_vec<float>();
+  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().host<float>();
 }
 
 std::vector<std::int64_t> to_cpu_i64_(const pluss::Series& x) {
-  return x.to(pluss::pCPU).to(pluss::ScalarType::Int64).contiguous().to_vec<std::int64_t>();
+  return x.to(pluss::pCPU).to(pluss::ScalarType::Int64).contiguous().host<std::int64_t>();
 }
 
 void require_close_f32_(const pluss::Series& got, const pluss::Series& want, float tol = 1.0e-5f) {

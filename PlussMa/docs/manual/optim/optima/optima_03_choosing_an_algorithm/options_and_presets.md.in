@@ -1,0 +1,40 @@
+# Options and presets
+
+[Back to Optima 3: Choosing and Tuning an Algorithm](../optima_03_choosing_an_algorithm.md)
+
+Each algorithm has its own options struct with dozens of settings, and most of them do little on a well-behaved problem. This page tells you where to look first. It sweeps the few settings that moved the result on the earlier problem, shows the three **presets** that return a complete `OptimaOptions` with the algorithm chosen and the tolerances set for a typical constrained fit, and ends with the most common configuration mistake: setting an option on the *wrong* struct.
+
+That mistake deserves its place because it fails silently. Each algorithm reads only its own struct, so a setting made on another algorithm's struct is ignored without a message. The default algorithm is SQP, which makes the slip easy in both directions: you ask the interior method for something while the run is using SQP, or the reverse. The last program shows the symptom (a run that ignored your iteration limit) and the fix.
+
+## Program 7: The options that decide the outcome
+
+Most of the options in each algorithm's struct do little on a well-behaved problem. This program sweeps the ones that moved the result on the problem from Program 1, so you know where to look first.
+
+@@example Numerical/optimization/guide/optima/47_algorithm_options.cpp@@
+
+Four lessons. The initial barrier parameter of the interior method is worth a quick sweep: too small and too large both cost iterations, and the default `0.01` was the best of the three. Backing off `fraction_to_boundary` from `0.99` to `0.9` costs two iterations here. `independent_nonlinear_slacks` is the single largest effect in the table, 56 iterations and 293 evaluations without it against 8 and 12 with it, because without independent slacks a start on the boundary of a nonlinear inequality can only creep along the curve. Tightening sequential QP's `optimality_tolerance` from `1e-6` to `1e-10` costs one more iteration, from 4 to 5, with no change visible at four decimals. And the merit method's `penalty` does not just change the path: with `10` it settles at the other first-order point, `27.1464`, while `1` and `100` reach `17.0140`. When one algorithm's answer looks wrong, run it again with a different penalty before blaming the model.
+
+## Program 9: The ready-made option sets
+
+Three presets return a complete `OptimaOptions` with the algorithm chosen and the tolerances set for a typical constrained fit. The program prints what they change from the defaults and runs each on the problem from Program 1.
+
+@@example Numerical/optimization/guide/optima/49_presets.cpp@@
+
+The presets differ from the defaults in tighter constraint tolerance (`1e-8` against `1e-6`) and in turning on scaling from the starting point. `robust_internal_protocol()` raises the iteration limit to 160 and widens the safeguards, so it matters on problems that need more room, not on this one. If you start from a preset and then change one setting, you keep the rest of its choices.
+
+## Program 10: Setting an option on the wrong struct
+
+Each algorithm reads only its own struct, so a setting made on another algorithm's struct is silently ignored. The default algorithm is sequential QP, which makes the mistake easy in both directions. The program then shows the setting done right: sequential QP reduces its quadratic subproblem to a symmetric positive-definite system, and the linear-solver and Krylov options on its own struct choose how that system is solved (Cholesky by default, conjugate gradients on request or for large problems).
+
+@@example Numerical/optimization/guide/optima/50_pitfall_wrong_options.cpp@@
+
+The first run asked for at most 2 iterations on the wrong struct and ran 6 to convergence; the second asked on the right struct and stopped at 2 with flag `0`. Asking for conjugate gradients on the sequential QP struct changed how the subproblems were solved but not the path: both runs take 5 iterations, and `krylov_iterations` is `0` for the default and `88` when conjugate gradients were requested. When a setting seems to have no effect, check that it sits on the struct of the algorithm that is running.
+
+## Decisions and pitfalls
+
+- **Set an option on the struct of the algorithm that runs.** A setting on another algorithm's struct is silently ignored; if a setting seems to do nothing, check which struct you set it on.
+- **Sweep a few options, not all.** The initial barrier parameter, `fraction_to_boundary` and `independent_nonlinear_slacks` of the interior method moved the result most; start there.
+- **Presets are starting points.** If you start from a preset and change one setting, you keep the rest of its choices, including the tighter tolerances.
+- **A change that does not change the path may still change the cost.** Asking for conjugate gradients changed how subproblems were solved (88 Krylov iterations against 0) but not the path; look at the work counters, not only the answer.
+
+Where next: [Chapter 4](../optima_04_sequential_qp.md) opens up the default algorithm, sequential QP.

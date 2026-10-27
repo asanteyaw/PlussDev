@@ -39,7 +39,7 @@ std::int64_t scalar_tick(std::string_view iso_date) {
   return pluss::make_timeline(std::vector<std::string>{normalized})
       .epoch_nanos()
       .to(pluss::Platform::CPU)
-      .to_vec<std::int64_t>()[0];
+      .host<std::int64_t>()[0];
 }
 
 pluss::Timeline timeline_with_nat(std::initializer_list<std::string_view> values,
@@ -98,7 +98,7 @@ void test_round_trip_rebuilds_frame() {
          "flash::Dataset::frame should preserve text payloads");
   expect(rebuilt.features("observed_at").as_timeline().to_note_iso().at(2).substr(0, 10) == "2026-01-03",
          "flash::Dataset::frame should preserve temporal payloads");
-  expect(std::fabs(rebuilt.features("score").as_series().to_vec<double>()[0] - 91.5) < 1e-12,
+  expect(std::fabs(rebuilt.features("score").as_series().host<double>()[0] - 91.5) < 1e-12,
          "flash::Dataset::frame should preserve numeric payloads");
   expect(rebuilt.title() == "rebuilt", "flash::Dataset::frame should accept an explicit output title");
 }
@@ -131,10 +131,10 @@ void test_ragged_dataset_requires_policy_or_pads() {
   expect(padded.ncases() == 3, "PadNull should rectangularize to the maximum column length");
   expect(padded.features() == std::vector<std::string>({"time", "value", "label"}),
          "PadNull should still preserve feature order");
-  expect(pluss::table::detail::validity_mask(padded.features("label"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(padded.features("label"))->host<bool>() ==
              std::vector<bool>({true, true, false}),
          "PadNull should set false validity on padded note rows");
-  expect(pluss::table::detail::validity_mask(padded.features("time"))->to_vec<bool>() ==
+  expect(pluss::table::detail::validity_mask(padded.features("time"))->host<bool>() ==
              std::vector<bool>({true, true, false}),
          "PadNull should set false validity on padded temporal rows");
 }

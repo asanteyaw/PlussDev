@@ -1,0 +1,208 @@
+# `distr::Nakagami`
+
+The Nakagami distribution: a flexible model of the amplitude of a fading signal, with a shape parameter that covers more and less severe fading than the Rayleigh case.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Nakagami, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Nakagami, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Nakagami, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Nakagami, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Nakagami, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The Nakagami distribution models the amplitude of a received radio signal under fading. Its shape parameter `m` controls the severity of the fading (large `m` is mild fading, `m = 1` is Rayleigh fading) and its spread `omega` is the mean square of the amplitude. If `Y` is a gamma variable with shape `m` and scale `omega/m`, the Nakagami variable is `sqrt(Y)`.
+
+The kind-based functions take `{m, omega}`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `m` | >= 1/2 | the shape: 1/2 is the half-normal distribution, 1 is the Rayleigh distribution |
+| `omega` | > 0 | the spread: the mean of the squared variable |
+
+Support: `x > 0`.
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape. 
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`m` and `omega` must be positive (`m` at least 1/2)).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Nakagami on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.25, 0.5, 1.0, 1.5, 2.0, 3.0}, f64);
+  const std::vector<double> params = {2.0, 1.5};
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Nakagami, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Nakagami, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Nakagami, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+The density is largest on this grid at x = 1, where it is 0.93723; the distribution function runs from 0.00329 at x = 0.25 to 0.99992 at x = 3, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.93723) = -0.06483 at x = 1.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {2.0, 1.5};
+
+  // The three ways to the probability that the variable lies in [0.3, 2.5]:
+  const auto grid = pluss::series::linspace(0.3, 2.5, 3001, f64);
+  const double area = distr::pdf(dst::Nakagami, grid, params).antidiff(grid).trapezoid().item<double>();
+
+  const auto edges = pluss::make_series({0.3, 2.5}, f64);
+  const auto c = distr::cdf(dst::Nakagami, edges, params).host<double>();
+
+  const auto draws = distr::sample(dst::Nakagami, params, {200000}, f64, 7ULL);
+  const double fraction = ((draws >= 0.3).to(pluss::ScalarType::Float64) * (draws <= 2.5).to(pluss::ScalarType::Float64)).mean().item<double>();
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(2.5) - cdf(0.3): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+The integral of the density (0.99111) and the difference of the distribution function (0.99111) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.9911) differs from it by 1.00e-05, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 2.10e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({0.25, 0.5, 1.0, 1.5, 2.0, 3.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "m 0.5:";
+  for (double v : distr::pdf(dst::Nakagami, x, {0.5, 1.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "m 1  :";
+  for (double v : distr::pdf(dst::Nakagami, x, {1.0, 1.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "m 4  :";
+  for (double v : distr::pdf(dst::Nakagami, x, {4.0, 1.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Read down the rows: `m 0.5` peaks on this grid at x = 0.25 (value 0.638); `m 1` peaks on this grid at x = 1 (value 0.6846); `m 4` peaks on this grid at x = 1 (value 1.1712). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 confirms that the Nakagami distribution with `m = 1` is a Rayleigh distribution with scale `sqrt(omega/2)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::scientific << std::setprecision(2);
+  const auto x = pluss::make_series({0.2, 0.5, 1.0, 1.5, 2.5}, f64);
+  const std::vector<double> here = {1.0, 0.5};
+  const std::vector<double> there = {0.5};
+
+  const double dpdf = (distr::pdf(dst::Nakagami, x, here) - distr::pdf(dst::Rayleigh, x, there)).abs().max().item<double>();
+  const double dcdf = (distr::cdf(dst::Nakagami, x, here) - distr::cdf(dst::Rayleigh, x, there)).abs().max().item<double>();
+  std::cout << "largest difference in the density: " << dpdf << '\n';
+  std::cout << "largest difference in the distribution function: " << dcdf << '\n';
+}
+```
+
+The two largest differences are 0 for the density and 5.55e-17 for the distribution function over the grid: zero up to rounding, so the two descriptions are the same distribution.
+
+## See Also
+
+- [`Rayleigh`](../continuous_positive/Rayleigh.md)
+- [`Rice`](../continuous_positive/Rice.md)
+- [`Chi`](../continuous_positive/Chi.md)
+- [`Gamma`](../continuous_positive/Gamma.md)

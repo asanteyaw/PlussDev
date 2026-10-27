@@ -26,8 +26,8 @@ int main() {
   const auto d = x.calc.diff.ito_at(pluss::make_series(t).to(f64),
                                     [r](const pluss::Series& time, const pluss::Series& s) { return s.mul(time.mul(-r).exp()); },
                                     mu, sigma);
-  const auto drift = d.drift.to_vec<double>();
-  const auto diffusion = d.diffusion.to_vec<double>();
+  const auto drift = d.drift.host<double>();
+  const auto diffusion = d.diffusion.host<double>();
   std::cout << std::fixed << std::setprecision(5);
   std::cout << "discounted drift:  " << drift[0] << "   " << drift[1] << "\n";
   std::cout << "exp(-r t)(mu - r x): " << std::exp(-r * t) * (r * 100.0 - r * 100.0) << "   "

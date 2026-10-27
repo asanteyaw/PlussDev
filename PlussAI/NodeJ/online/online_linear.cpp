@@ -120,8 +120,8 @@ struct BinaryLabelEncoding {
 
   const Series idx0 = pluss::series::arange(0, 1, i64_on(classes.platform()));
   const Series idx1 = pluss::series::arange(1, 2, i64_on(classes.platform()));
-  const double negative = classes.index_select(0, idx0).reshape({1}).item<double>();
-  const double positive = classes.index_select(0, idx1).reshape({1}).item<double>();
+  const double negative = classes.index_select(0, idx0).reshape({1}).host<double>().front();
+  const double positive = classes.index_select(0, idx1).reshape({1}).host<double>().front();
   const Series y01 = y64.eq(positive).to(ScalarType::Float64);
 
   BinaryLabelEncoding out{};

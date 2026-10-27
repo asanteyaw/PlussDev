@@ -87,7 +87,7 @@ std::vector<bool> bool_vec_from_series(const pluss::Series& s, std::int64_t expe
   PLUSS_CHECK(s.dim() == 1, std::string(where) + ": bool mask must be 1D");
   PLUSS_CHECK(s.numel() == expected_size, std::string(where) + ": bool mask length mismatch");
   PLUSS_CHECK(s.scalar_type() == pluss::codem::ScalarType::Bool, std::string(where) + ": bool mask dtype must be Bool");
-  return s.to_vec<bool>();
+  return s.host<bool>();
 }
 
 void validate_validity_mask(const std::optional<pluss::Series>& mask, std::int64_t size) {
@@ -444,8 +444,8 @@ pluss::Series apply_math_series_series(
     auto af = a.to(pluss::codem::ScalarType::Float64);
     auto bf = b.to(pluss::codem::ScalarType::Float64);
     PLUSS_CHECK(af.numel() == bf.numel(), "Slate::pow: operand length mismatch");
-    const auto av = af.to_vec<double>();
-    const auto bv = bf.to_vec<double>();
+    const auto av = af.host<double>();
+    const auto bv = bf.host<double>();
     auto out = pluss::Series::empty({af.numel()}, pluss::codem::ScalarType::Float64);
     auto* p = reinterpret_cast<double*>(out.raw_data());
     for (std::int64_t i = 0; i < af.numel(); ++i) {
@@ -936,7 +936,7 @@ Slate forward_fill_slate(const Slate& t, std::int64_t limit = -1) {
   if (limit == 0) {
     return t;
   }
-  auto valid = non_missing.to_vec<bool>();
+  auto valid = non_missing.host<bool>();
   if (valid.empty()) {
     return t;
   }
@@ -1022,7 +1022,7 @@ Slate backward_fill_slate(const Slate& t, std::int64_t limit = -1) {
   if (limit == 0) {
     return t;
   }
-  auto valid = non_missing.to_vec<bool>();
+  auto valid = non_missing.host<bool>();
   if (valid.empty()) {
     return t;
   }

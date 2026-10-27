@@ -1,0 +1,41 @@
+# Constraints, budgets and the cache
+
+[Back to Derivative-Free Optimization 7: The Pattern Search Minimiser](../dfo_07_pattern_search.md)
+
+Pattern search is the method behind constrained derivative-free problems. **Bounds and the two linear forms** are enforced on every trial point exactly, with no penalty, so the returned point satisfies them to rounding; the poll adapts its directions to the constraints active at the current point and adds the edges of the feasible cone, so the method can slide along a face and leave a vertex. **Nonlinear constraints** are handled by one of three policies, from the cheapest (a barrier that rejects violating points) to the most accurate (an augmented Lagrangian that adds multiplier estimates to a penalty and refines them over several outer rounds, the only one that can satisfy an equality).
+
+The page ends with budgets and the cache. Each budget (evaluations, iterations) ends the run with its own status, and the cache answers repeated points from memory; a rotating basis never revisits a point, so the cache has nothing to save, while fixed axes repeat points after each mesh refinement.
+
+## Program 5: Linear constraints
+
+Bounds and the two linear forms are enforced on every trial point exactly. No penalty is involved, so the returned point satisfies them to rounding.
+
+@@example Numerical/optimization/guide/dfo/365_pattern_search_linear_constraints.cpp@@
+
+The start is a vertex of the feasible region, where two inequalities and the equality meet. Moving off it means going along an edge of the feasible cone, which the method builds from the active constraints.
+
+## Program 6: Nonlinear constraints and their policies
+
+`nonlinear_constraints` returns a `PSConstraintValues` with an `inequality` vector (feasible when every entry is `<= 0`) and an `equality` vector (`= 0`).
+
+@@example Numerical/optimization/guide/dfo/366_pattern_search_constraint_policies.cpp@@
+
+- **ExtremeBarrier** rejects any violating point. Cheapest, and always feasible, but it can only approach a boundary from inside, so it stops a little short.
+- **MeritPenalty** adds a penalty on the violation to the objective and increases it as needed. It reaches closer to the boundary.
+- **AugmentedLagrangian** (the default) adds multiplier estimates to the penalty and refines them over several outer rounds. It costs the most evaluations and gives the most accurate answer, and it is the policy built for equality constraints, which a barrier cannot satisfy (a random point never lies exactly on one). Its violation is small but not zero.
+
+## Program 7: Budgets and the cache
+
+@@example Numerical/optimization/guide/dfo/367_pattern_search_budgets_cache.cpp@@
+
+Budgets end the run with their own status. The cache answers repeated points from memory. A rotating basis never revisits a point, so the cache has nothing to save; with fixed coordinate axes the poll repeats points after each mesh refinement, and the cache saved 228 evaluations here. Turn the cache off for objectives that are not deterministic.
+
+## Decisions and pitfalls
+
+- **Linear constraints are exact; nonlinear ones are approximate.** A linear constraint holds to rounding at the returned point; a nonlinear one holds to a small violation that depends on the policy.
+- **Choose the policy for the constraint.** `ExtremeBarrier` is cheapest and always feasible but stops short of the boundary; `MeritPenalty` reaches closer; `AugmentedLagrangian` (the default) is the most accurate and the only one that can satisfy equalities.
+- **An equality's violation is small, not zero.** A random point never lies exactly on a curve; read the reported violation.
+- **Turn the cache off for objectives that are not deterministic.** The same input must give the same output for the cache to be valid.
+- **Start at a vertex only knowingly.** The method moves along an edge of the feasible cone from a vertex; if it does not move, check that the cone has directions.
+
+Where next: [Chapter 8](../dfo_08_differential_evolution.md) turns to the population methods.

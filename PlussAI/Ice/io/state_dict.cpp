@@ -67,10 +67,10 @@ void save_parameters(std::string_view filepath, const std::vector<Series*>& para
     const auto* param = parameters[i];
     const auto shape_view = param->sizes();
     const std::vector<double> shape_as_double(shape_view.begin(), shape_view.end());
-    // .to_vec<double>() already migrates off-device and converts dtype
-    // internally (see Series::item<T>()/to_vec<T>()) — no explicit
+    // .host<double>() already migrates off-device and converts dtype
+    // internally (see Series::item<T>()/host<T>()) — no explicit
     // .to(pCPU, ...) needed regardless of which device `param` lives on.
-    const auto flat = param->reshape({param->numel()}).to_vec<double>();
+    const auto flat = param->reshape({param->numel()}).host<double>();
     body << "param_" << i << "_shape=" << join_doubles(shape_as_double) << "\n";
     body << "param_" << i << "=" << join_doubles(flat) << "\n";
   }

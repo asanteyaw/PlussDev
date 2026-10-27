@@ -6,10 +6,10 @@
 //
 // Naming: **Fluctua** (Latin, "a fluctuating/wavering thing") is the
 // forward/adjoint SDE solver pair (fluctua/fluctua_adjoint), the direct
-// stochastic sibling of pluss::ode's **Fluxa** (deterministic flow) --
+// stochastic sibling of pluss::subsp::math::ode's **Fluxa** (deterministic flow) --
 // same Latin-adjective family this program's numerical modules already
-// use (Septima/Optima/Minimax under pluss::optim; Integra/Quadra/
-// Aleatoria/Analytica under pluss::integ; Fluxa under pluss::ode). The
+// use (Septima/Optima/Minimax under pluss::subsp::math::optim; Integra/Quadra/
+// Aleatoria/Analytica under pluss::subsp::math::integ; Fluxa under pluss::subsp::math::ode). The
 // standalone stochastic-integral primitives below (ito_integral/
 // strat_integral) keep their standard field names rather than a
 // Latin pseudonym -- "Ito"/"Stratonovich" are already the universally
@@ -51,7 +51,7 @@
 //     deterministic function of (y0, theta, the fixed noise draws) --
 //     and THAT function is differentiated by Pluss's already-trusted
 //     reverse-mode engine, exactly the same checkpointed-adjoint
-//     architecture pluss::ode::fluxa_adjoint already uses, just with an
+//     architecture pluss::subsp::math::ode::fluxa_adjoint already uses, just with an
 //     extra diffusion term per step. This is the same technique used for
 //     pathwise Greeks in finance and the reparameterization trick in
 //     variational inference -- but it is NOT a general-purpose stochastic
@@ -59,7 +59,7 @@
 //     where Malliavin/likelihood-ratio methods are needed instead (not
 //     built here, a real, separate, documented gap).
 //
-// Scope/tradeoffs, stated plainly (mirroring pluss::ode's own discipline):
+// Scope/tradeoffs, stated plainly (mirroring pluss::subsp::math::ode's own discipline):
 //  - fluctua() uses a fixed step. Schemes: Euler-Maruyama (Ito, strong order
 //    0.5), Milstein (Ito, strong order 1.0 for diagonal noise) and a
 //    Stratonovich Heun scheme (see SdeMethod).
@@ -70,10 +70,10 @@
 //    own entries -- a real, separate piece of work, not attempted here.
 //    It DOES, for free, support batching many independent SDE paths in
 //    one call (y0 with a leading batch axis), exactly like
-//    pluss::integ::quadra's batched integrals -- each batch entry is an
+//    pluss::subsp::math::integ::quadra's batched integrals -- each batch entry is an
 //    independent realization, not a correlated dimension.
 //  - fluctua_adjoint()'s backward pass is the same checkpointed discrete
-//    adjoint pluss::ode::fluxa_adjoint uses: the forward trajectory's y
+//    adjoint pluss::subsp::math::ode::fluxa_adjoint uses: the forward trajectory's y
 //    values AND the realized Wiener increments are stored (O(steps)
 //    memory), then walked backward computing each step's local
 //    vector-Jacobian product via an ordinary `.reverse()` call on a
@@ -87,7 +87,7 @@
 //    nodes are computed once and reused for all of aleatoria's
 //    diagnostics.
 //  - Only a flat/elementwise `y`/`theta` state is supported (matching
-//    pluss::ode::OdeFn's own "flatten your own problem into one Series"
+//    pluss::subsp::math::ode::OdeFn's own "flatten your own problem into one Series"
 //    convention). A caller with structured state flattens/unflattens it
 //    themselves.
 
@@ -103,7 +103,7 @@
 namespace pluss::subsp::math::sde {
 
 // dY = mu(t, Y, theta) dt + sigma(t, Y, theta) dW. `t` is a plain double
-// (as in pluss::ode::OdeFn, time is not part of the Series/autodiff
+// (as in pluss::subsp::math::ode::OdeFn, time is not part of the Series/autodiff
 // system). `sigma`'s output must be the same shape as `y` -- see the
 // module comment above for why this is elementwise/uncorrelated diffusion,
 // not a general multi-factor covariance structure.
@@ -317,7 +317,7 @@ inline SdeAdjointResult fluctua_adjoint(const DriftFn& mu, const DiffusionFn& si
   const Series dw = detail::wiener_increments_(y0, options.steps, h, options.seed);
 
   // Forward pass: store every step boundary's y (checkpointed, same
-  // O(steps)-memory tradeoff pluss::ode::fluxa_adjoint documents).
+  // O(steps)-memory tradeoff pluss::subsp::math::ode::fluxa_adjoint documents).
   std::vector<Series> trajectory;
   trajectory.reserve(static_cast<std::size_t>(options.steps) + 1);
   trajectory.push_back(y0);
@@ -336,7 +336,7 @@ inline SdeAdjointResult fluctua_adjoint(const DriftFn& mu, const DiffusionFn& si
   result.wiener_final = dw.sum(0);
   result.forward_steps = options.steps;
 
-  // Backward pass -- identical structure to pluss::ode::fluxa_adjoint's
+  // Backward pass -- identical structure to pluss::subsp::math::ode::fluxa_adjoint's
   // own backward pass, just replaying em_step_ (drift*h + diffusion*dw)
   // instead of rk4_step_ at each step. `dw_i` is detached/constant, so it
   // never receives or needs a sensitivity of its own.
@@ -534,7 +534,7 @@ inline StochasticIntegralResult stochastic_integral_(const WienerIntegrandFn& f,
   // The Series integral is vectorized over the time axis; adapt the per-step callback to it.
   const Series::CalcAccessor::IntegrandFn vectorized = [&](const Series& t, const Series& w) {
     const std::int64_t n = w.size(0);
-    const std::vector<double> times = t.reshape({n}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const std::vector<double> times = t.reshape({n}).to(pluss::pCPU, ScalarType::Float64).host<double>();
     Series stacked = pluss::series::undefined();
     for (std::int64_t i = 0; i < n; ++i) {
       const Series row = f(times[static_cast<std::size_t>(i)], w.select(0, i)).unsqueeze(0);
@@ -644,7 +644,7 @@ inline void check_adapted_(const SampledIntegrandFn& make, const WienerPath& pat
     const Series diff = base.slice(0, 0, compared, 1).sub(changed.slice(0, 0, compared, 1)).abs();
     Series per_sample = diff;
     while (per_sample.dim() > 1) per_sample = per_sample.amax(per_sample.dim() - 1, false);
-    const std::vector<double> worst = per_sample.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const std::vector<double> worst = per_sample.to(pluss::pCPU, ScalarType::Float64).host<double>();
     for (std::int64_t i = 0; i < compared; ++i) {
       if (worst[static_cast<std::size_t>(i)] > check.tolerance * scale) {
         ::pluss::throw_error(name + ": the integrand at sample " + std::to_string(i) +
@@ -739,7 +739,7 @@ inline StochasticIntegralResult marcus_integral(const WienerIntegrandFn& f, cons
   }
   const Series::CalcAccessor::IntegrandFn vectorized = [&](const Series& t, const Series& w) {
     const std::int64_t n = w.size(0);
-    const std::vector<double> times = t.reshape({n}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const std::vector<double> times = t.reshape({n}).to(pluss::pCPU, ScalarType::Float64).host<double>();
     Series stacked = pluss::series::undefined();
     for (std::int64_t i = 0; i < n; ++i) {
       const Series row = f(times[static_cast<std::size_t>(i)], w.select(0, i)).unsqueeze(0);

@@ -8,28 +8,16 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 
-const char* name_of(optim::SeptimaExitFlag flag) {
-  switch (flag) {
-    case optim::SeptimaExitFlag::Converged: return "Converged";
-    case optim::SeptimaExitFlag::MaxIterations: return "MaxIterations";
-    case optim::SeptimaExitFlag::Stopped: return "Stopped";
-    case optim::SeptimaExitFlag::NoProgress: return "NoProgress";
-    case optim::SeptimaExitFlag::NonFiniteEvaluation: return "NonFiniteEvaluation";
-    case optim::SeptimaExitFlag::InvalidProblem: return "InvalidProblem";
-  }
-  return "?";
-}
-
 int main() {
-  auto quadratic = [](const Trace& x) -> Trace { return optim::sum(optim::square(x - 3.0)); };
+  auto quadratic = [](const pluss::Series& x) -> pluss::Series { return (x - 3.0).square().sum(); };
   const auto row = [](const char* what, const optim::SeptimaResult& r) {
-    std::cout << std::left << std::setw(40) << what << std::setw(21) << name_of(r.exit_flag) << "iterations " << std::setw(6) << r.iteration
+    std::cout << std::left << std::setw(40) << what << std::setw(21) << optim::septima_exit_flag_name(r.exit_flag) << "iterations " << std::setw(6) << r.iteration
               << r.message << "\n";
   };
 
@@ -56,7 +44,7 @@ int main() {
   }
   {
     // log of a negative number is NaN: a large first step leaves the domain.
-    auto domain = [](const Trace& x) -> Trace { return optim::sum(optim::log(x)) * -1.0 + optim::sum(x * 0.1); };
+    auto domain = [](const pluss::Series& x) -> pluss::Series { return x.log().sum() * -1.0 + (x * 0.1).sum(); };
     optim::SeptimaSolveOptions o;
     o.step.adam.learning_rate = 100.0;
     o.step.nan_recovery_attempts = 0;

@@ -1,0 +1,247 @@
+<!-- generated from Bradford.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `distr::Bradford`
+
+The Bradford distribution: a density that decreases over the unit interval, with a single shape parameter.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::Bradford, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::Bradford, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::Bradford, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::Bradford, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::Bradford, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The Bradford distribution has the density `c / (ln(1 + c)(1 + c x))` on `[0, 1]`: it decreases monotonically from `c/ln(1 + c)` at zero to `c/((1 + c) ln(1 + c))` at one. It was introduced to describe the scatter of references over the journals of a subject, and is a general model of a quantity concentrated at the low end of an interval. As `c` goes to zero it becomes uniform.
+
+The kind-based functions take `{c}`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `c` | > 0 | the shape: larger values concentrate the distribution near zero |
+
+Support: the interval `[0, 1]`.
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape. 
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`c` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the Bradford on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.0, 0.1, 0.3, 0.5, 0.8, 1.0}, f64);
+  const std::vector<double> params = {2.0};
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::Bradford, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::Bradford, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::Bradford, x, params).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.00000 0.10000 0.30000 0.50000 0.80000 1.00000
+pdf: 1.82048 1.51707 1.13780 0.91024 0.70018 0.60683
+cdf: 0.00000 0.16596 0.42782 0.63093 0.86974 1.00000
+logpdf: 0.59910 0.41678 0.12910 -0.09405 -0.35641 -0.49951
+```
+
+The density is largest on this grid at x = 0, where it is 1.82048; the distribution function runs from 0 at x = 0 to 1 at x = 1, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(1.82048) = 0.5991 at x = 0.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {2.0};
+
+  // The three ways to the probability that the variable lies in [0.1, 0.9]:
+  const auto grid = pluss::series::linspace(0.1, 0.9, 3001, f64);
+  const double area = distr::pdf(dst::Bradford, grid, params).antidiff(grid).trapezoid().item<double>();
+
+  const auto edges = pluss::make_series({0.1, 0.9}, f64);
+  const auto c = distr::cdf(dst::Bradford, edges, params).host<double>();
+
+  const auto draws = distr::sample(dst::Bradford, params, {200000}, f64, 7ULL);
+  const double fraction = ((draws >= 0.1).to(pluss::ScalarType::Float64) * (draws <= 0.9).to(pluss::ScalarType::Float64)).mean().item<double>();
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(0.9) - cdf(0.1): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+Output
+
+```text
+integral of the density: 0.77124
+cdf(0.9) - cdf(0.1): 0.77124
+fraction of 200000 draws in range: 0.77065
+```
+
+The integral of the density (0.77124) and the difference of the distribution function (0.77124) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.77065) differs from it by 5.90e-04, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 9.39e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({0.0, 0.1, 0.3, 0.5, 0.8, 1.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "c 0.5:";
+  for (double v : distr::pdf(dst::Bradford, x, {0.5}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "c 2  :";
+  for (double v : distr::pdf(dst::Bradford, x, {2.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "c 10 :";
+  for (double v : distr::pdf(dst::Bradford, x, {10.0}).host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.0000 0.1000 0.3000 0.5000 0.8000 1.0000
+c 0.5: 1.2332 1.1744 1.0723 0.9865 0.8808 0.8221
+c 2  : 1.8205 1.5171 1.1378 0.9102 0.7002 0.6068
+c 10 : 4.1703 2.0852 1.0426 0.6951 0.4634 0.3791
+```
+
+Read down the rows: `c 0.5` peaks on this grid at x = 0 (value 1.2332); `c 2` peaks on this grid at x = 0 (value 1.8205); `c 10` peaks on this grid at x = 0 (value 4.1703). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 checks the distribution function against its closed form, `ln(1 + c x)/ln(1 + c)`.
+
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(6);
+  const auto x = pluss::make_series({0.0, 0.1, 0.3, 0.5, 0.8, 1.0}, f64);
+  const std::vector<double> params = {2.0};
+
+  const auto formula = (x * 2.0 + 1.0).log() * (1.0 / 1.0986122886681098);
+  const auto library = distr::cdf(dst::Bradford, x, params);
+
+  std::cout << "x:";
+  for (double v : x.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "formula:";
+  for (double v : formula.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "distr::cdf:";
+  for (double v : library.host<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << std::scientific << std::setprecision(2) << "largest difference: " << (formula - library).abs().max().item<double>() << '\n';
+}
+```
+
+Output
+
+```text
+x: 0.000000 0.100000 0.300000 0.500000 0.800000 1.000000
+formula: 0.000000 0.165956 0.427816 0.630930 0.869744 1.000000
+distr::cdf: 0.000000 0.165956 0.427816 0.630930 0.869744 1.000000
+largest difference: 1.11e-16
+```
+
+The formula and `distr::cdf` agree to 1.11e-16 over the grid, so the library implements exactly the closed form quoted above; the same expression is the quickest way to check a parameterisation before relying on it.
+
+## See Also
+
+- [`Beta`](../continuous_bounded/Beta.md)
+- [`Uniform`](../continuous_bounded/Uniform.md)
+- [`Triangular`](../continuous_bounded/Triangular.md)

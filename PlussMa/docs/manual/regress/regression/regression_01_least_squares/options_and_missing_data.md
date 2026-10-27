@@ -27,14 +27,14 @@ int main() {
   {
     reg::OLSOptions o;
     o.alpha = 0.10;
-    const auto ci = reg::ols_fit(vec(ys), column(xs), o).conf_int.to_vec<double>();
+    const auto ci = reg::ols_fit(vec(ys), column(xs), o).conf_int.host<double>();
     std::cout << "alpha 0.10, slope interval : [" << ci[2] << ", " << ci[3] << "]   (95% was [1.9296, 2.0656])\n";
   }
   {
     reg::OLSOptions o;
     o.add_intercept = false;
     const auto fit = reg::ols_fit(vec(ys), column(xs), o);
-    std::cout << "no intercept, slope        : " << fit.coefficients.to_vec<double>()[0] << "  (" << fit.coefficient_names[0] << "), parameters " << fit.k_params << "\n";
+    std::cout << "no intercept, slope        : " << fit.coefficients.host<double>()[0] << "  (" << fit.coefficient_names[0] << "), parameters " << fit.k_params << "\n";
   }
   {
     auto ym = ys;
@@ -42,7 +42,7 @@ int main() {
     ym[2] = nan;
     xm[5] = nan;
     const auto fit = reg::ols_fit(vec(ym), column(xm));
-    std::cout << "with 2 missing rows        : used " << fit.nobs << " of 8 observations, dropped " << fit.dropped_observations << ", slope " << fit.coefficients.to_vec<double>()[1] << "\n";
+    std::cout << "with 2 missing rows        : used " << fit.nobs << " of 8 observations, dropped " << fit.dropped_observations << ", slope " << fit.coefficients.host<double>()[1] << "\n";
   }
 }
 ```

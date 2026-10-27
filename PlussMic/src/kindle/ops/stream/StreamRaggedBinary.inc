@@ -46,9 +46,9 @@ Stream lay_operand(const Stream& s, std::int64_t width, std::int64_t offset, con
   if (p.absent == RaggedAbsent::Fill) {
     PLUSS_CHECK(s.kind() == StreamKind::Series,
                 "ragged_binary: absent=Fill needs numeric streams; use absent=Null for other kinds");
-    std::vector<double> x = s.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+    std::vector<double> x = s.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
     std::vector<bool> ok(x.size(), true);
-    if (detail::has_validity_mask(s)) ok = detail::validity_mask(s)->to_vec<bool>();
+    if (detail::has_validity_mask(s)) ok = detail::validity_mask(s)->host<bool>();
     std::vector<double> vals(static_cast<std::size_t>(width), *p.fill);
     std::vector<double> valid(static_cast<std::size_t>(width), 1.0);
     bool any_null = false;

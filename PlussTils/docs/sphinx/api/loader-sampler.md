@@ -241,7 +241,7 @@ void print_values(const std::vector<double>& values) {
 std::vector<double> visited(pluss::loader::DataLoader& loader) {
   std::vector<double> out;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).to_vec<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).pull<double>();
     out.insert(out.end(), values.begin(), values.end());
   }
   return out;

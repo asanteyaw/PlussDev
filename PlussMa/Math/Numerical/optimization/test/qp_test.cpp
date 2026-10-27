@@ -19,7 +19,7 @@ void expect(bool value, const std::string &message) {
 
 void close(const pluss::Series &actual, const std::vector<double> &expected,
            double tolerance = 2e-4) {
-  const auto values = actual.to(pluss::ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(pluss::ScalarType::Float64).host<double>();
   expect(values.size() == expected.size(), "QP result size mismatch");
   for (std::size_t i = 0; i < values.size(); ++i)
     expect(std::abs(values[i] - expected[i]) <=

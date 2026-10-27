@@ -87,15 +87,15 @@ int main() {
   // The three splits partition the input: every row appears exactly once.
   std::vector<double> all;
   for (const auto* part : {&split.train_fields[0], &split.val_fields[0], &split.test_fields[0]}) {
-    const auto v = part->reshape({part->numel()}).to_vec<double>();
+    const auto v = part->reshape({part->numel()}).host<double>();
     all.insert(all.end(), v.begin(), v.end());
   }
   std::sort(all.begin(), all.end());
   std::cout << "partition covers all rows once: " << (all == values) << '\n';
 
   // Fields stay aligned: y was built as ten times x, so every train row keeps that relation.
-  const auto train_x = split.train_fields[0].reshape({split.train_fields[0].numel()}).to_vec<double>();
-  const auto train_y = split.train_fields[1].reshape({split.train_fields[1].numel()}).to_vec<double>();
+  const auto train_x = split.train_fields[0].reshape({split.train_fields[0].numel()}).pull<double>();
+  const auto train_y = split.train_fields[1].reshape({split.train_fields[1].numel()}).pull<double>();
   bool aligned = train_x.size() == train_y.size();
   for (std::size_t i = 0; aligned && i < train_x.size(); ++i) aligned = train_y[i] == 10.0 * train_x[i];
   std::cout << "fields stay aligned: " << aligned << '\n';
@@ -103,7 +103,7 @@ int main() {
   // The same seed gives the same split.
   const loader::DataSplit again = loader::split_fields({x, y}, options);
   std::cout << "same seed, same split: "
-            << (again.train_fields[0].reshape({again.train_fields[0].numel()}).to_vec<double>() == train_x) << '\n';
+            << (again.train_fields[0].reshape({again.train_fields[0].numel()}).pull<double>() == train_x) << '\n';
 }
 ```
 

@@ -7,8 +7,8 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
@@ -20,9 +20,9 @@ int main() {
   for (int i = 0; i < n; ++i) start.push_back(i % 2 == 0 ? -1.2 : 1.0);
   const auto head = pluss::make_series(first, {n - 1}).to(pluss::ScalarType::Int64);
   const auto tail = pluss::make_series(second, {n - 1}).to(pluss::ScalarType::Int64);
-  auto chain = [&](const Trace& x) -> Trace {
-    const Trace a = pluss::subsp::math::diff::index_select(x, 0, head), b = pluss::subsp::math::diff::index_select(x, 0, tail);
-    return optim::sum(100.0 * optim::square(b - optim::square(a)) + optim::square(1.0 - a));
+  auto chain = [&](const pluss::Series& x) -> pluss::Series {
+    const pluss::Series a = x.index_select(0, head), b = x.index_select(0, tail);
+    return (100.0 * (b - a.square()).square() + (1.0 - a).square()).sum();
   };
 
   std::cout << std::left << std::setw(16) << "solver" << std::setw(16) << "exit" << std::setw(8) << "iters" << std::setw(8) << "evals" << std::setw(12) << "objective"

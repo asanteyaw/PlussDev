@@ -20,10 +20,6 @@ pluss::Series rastrigin(const pluss::Series& x) {
   const double pi = 3.14159265358979323846;
   return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();
 }
-const char* name(dfo::PopulationSolverStatus s) {
-  return s == dfo::PopulationSolverStatus::Converged ? "Converged"
-         : s == dfo::PopulationSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 
 int main() {
   std::cout << std::left << std::setw(16) << "initial_radius" << "minimum for seeds 1, 2, 3\n";

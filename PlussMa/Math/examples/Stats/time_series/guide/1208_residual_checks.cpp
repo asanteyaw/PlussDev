@@ -41,7 +41,7 @@ std::vector<double> running_sum(const std::vector<double>& e) {
 }
 void print_row(const char* label, const Series& s, int precision = 4) {
   std::cout << std::left << std::setw(16) << label << std::fixed << std::setprecision(precision);
-  for (double v : s.to_vec<double>()) std::cout << " " << std::setw(8) << v;
+  for (double v : s.host<double>()) std::cout << " " << std::setw(8) << v;
   std::cout << "\n";
 }
 int main() {
@@ -58,7 +58,7 @@ int main() {
     const auto q = ts::ljung_box(resid, lb);
     ts::AcfOptions a;
     a.max_lag = 1;
-    std::cout << std::left << std::setw(26) << (p == 0 ? "mean only (no AR term)" : "AR(1)") << std::fixed << std::setprecision(3) << std::setw(14) << q.stat.to_vec<double>()[0] << std::setw(8) << std::setprecision(0)
-              << q.dof.to_vec<double>()[0] << std::scientific << std::setprecision(2) << std::setw(14) << q.pvalue.to_vec<double>()[0] << std::fixed << std::setprecision(3) << ts::acf(resid, a).to_vec<double>()[1] << "\n";
+    std::cout << std::left << std::setw(26) << (p == 0 ? "mean only (no AR term)" : "AR(1)") << std::fixed << std::setprecision(3) << std::setw(14) << q.stat.host<double>()[0] << std::setw(8) << std::setprecision(0)
+              << q.dof.host<double>()[0] << std::scientific << std::setprecision(2) << std::setw(14) << q.pvalue.host<double>()[0] << std::fixed << std::setprecision(3) << ts::acf(resid, a).host<double>()[1] << "\n";
   }
 }

@@ -90,13 +90,13 @@ auto fig1 = studio("flash_rugplot_zero_height");
 auto& pane1 = fig1.pane2();
 Trace& t1 = flash::rugplot(pane1, std::vector<double>{1.0, 2.0, 3.0}, 0.0);
 const auto& d1 = std::get<SpikeData>(t1.payload());
-std::cout << "height=0.0 actual y[0]: " << d1.y.to(pluss::ScalarType::Float64).to_vec<double>().front() << "\n";
+std::cout << "height=0.0 actual y[0]: " << d1.y.to(pluss::ScalarType::Float64).host<double>().front() << "\n";
 
 auto fig2 = studio("flash_rugplot_negative_height");
 auto& pane2 = fig2.pane2();
 Trace& t2 = flash::rugplot(pane2, std::vector<double>{1.0, 2.0, 3.0}, -5.0);
 const auto& d2 = std::get<SpikeData>(t2.payload());
-std::cout << "height=-5.0 actual y[0]: " << d2.y.to(pluss::ScalarType::Float64).to_vec<double>().front() << "\n";
+std::cout << "height=-5.0 actual y[0]: " << d2.y.to(pluss::ScalarType::Float64).host<double>().front() << "\n";
 ```
 
 Output:

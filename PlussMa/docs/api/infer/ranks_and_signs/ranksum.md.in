@@ -1,0 +1,137 @@
+# `ranksum`
+
+Wilcoxon rank-sum (Mann–Whitney) test for two independent samples.
+
+## Signature
+
+```cpp
+RankSumResult ranksum(const pluss::Series& x, const pluss::Series& y, const TestOptions& options = {}, pluss::Config cfg = {});
+```
+
+## What It Does
+
+`ranksum` ranks the pooled observations (tied values share the average rank) and asks whether the values of `x` tend to be larger or smaller than those of `y`. The statistic `rank_sum_x` is the sum of the ranks of `x`; `u_stat` is the Mann–Whitney U, the rank sum minus its smallest possible value `nx (nx + 1) / 2`. Only the ordering of the data matters, so the test is robust to outliers and to skewness.
+
+The p-value is exact for small samples (the smaller sample under 10 observations and fewer than 20 in all) and otherwise comes from the normal approximation with a continuity correction and a variance adjusted for ties; `TestOptions::method` forces either. `stat` is the corresponding z score.
+
+## Parameters
+
+`x`
+: The first sample.
+
+`y`
+: The second sample.
+
+`options` (`TestOptions`)
+: `alpha` (default 0.05), `tail` (`Tail::Both`, `Tail::Right` or `Tail::Left`) and `method` (`PValueMethod::Auto`, `Exact`, `Approximate`; used only by the tests that have both forms).
+
+`cfg`
+: the dtype and platform used for the computation; the default is evaluated in double precision on the CPU.
+
+## Returns
+
+A `RankSumResult`. Its fields:
+
+| Field | Meaning |
+|---|---|
+| `stat` | the test statistic |
+| `pvalue` | the probability, if the null hypothesis is true, of a statistic at least as extreme as the observed one |
+| `critical` | the critical value of the statistic at level `alpha` |
+| `reject` | true when `pvalue < alpha` |
+| `rank_sum_x` | the sum of the ranks of `x` in the pooled sample |
+| `u_stat` | the Mann–Whitney U statistic of `x` |
+| `effective_nx` | finite observations used from `x` |
+| `effective_ny` | finite observations used from `y` |
+
+## Errors
+
+- No finite observation in either sample.
+- `alpha` outside (0, 1).
+
+## Practical Examples
+
+### Example 1
+
+Do two machines produce different fill volumes?
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+
+int main() {
+  std::cout << std::fixed << std::setprecision(4);
+  const auto a = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
+  const auto b = pluss::make_series(std::vector<double>{4.8, 5.2, 5.0, 4.7, 5.6, 4.9, 5.1, 4.6, 5.3}, {9}, as_f64());
+
+  const auto r = hyp::ranksum(a, b);
+  std::cout << "rank sum of A " << r.rank_sum_x << ", U " << r.u_stat << ", z " << r.stat << ", p " << r.pvalue << (r.reject ? " (reject)" : " (keep)") << "\n";
+}
+```
+
+The rank sum of A is 96.5 and the U statistic 60.5, giving z 2.31 and p 0.0164: the fill volumes of the two machines differ. The test uses only the ranks, so it does not depend on the shape of the distributions.
+
+### Example 2
+
+Exact and approximate p-values for samples with ties.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+
+int main() {
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series(std::vector<double>{3, 5, 5, 7, 8, 8, 8, 10, 12, 12, 14, 15}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{4, 5, 6, 8, 8, 9, 11, 11, 13, 13, 13, 16, 18, 20}, {14}, as_f64());
+  hyp::TestOptions exact, approximate;
+  exact.method = hyp::PValueMethod::Exact;
+  approximate.method = hyp::PValueMethod::Approximate;
+  std::cout << "default     p " << hyp::ranksum(x, y).pvalue << "\n";
+  std::cout << "exact       p " << hyp::ranksum(x, y, exact).pvalue << "\n";
+  std::cout << "approximate p " << hyp::ranksum(x, y, approximate).pvalue << "\n";
+}
+```
+
+With ties the default p-value 0.2663 uses the normal approximation with a tie correction, and the exact p-value is 0.2658: the two agree to three decimals, and the decision is the same.
+
+### Example 3
+
+One-sided alternative: does A tend to be larger than B?
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+
+int main() {
+  std::cout << std::fixed << std::setprecision(4);
+  const auto a = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
+  const auto b = pluss::make_series(std::vector<double>{4.8, 5.2, 5.0, 4.7, 5.6, 4.9, 5.1, 4.6, 5.3}, {9}, as_f64());
+
+  hyp::TestOptions options;
+  options.tail = hyp::Tail::Right;
+  const auto r = hyp::ranksum(a, b, options);
+  std::cout << "p " << r.pvalue << ", critical z " << r.critical << "\n";
+}
+```
+
+One-sided, the p-value halves to 0.0082 and is compared with the critical z 1.645.
+
+## See Also
+
+- [`ttest2`](ttest2.md)
+- [`signrank`](signrank.md)
+- [`kstest2`](kstest2.md)

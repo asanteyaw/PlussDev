@@ -6,6 +6,7 @@
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("circuit")
 subdirs("control")
+subdirs("fluid")
 subdirs("lti")
 subdirs("power")
 subdirs("signal")

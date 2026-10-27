@@ -20,7 +20,7 @@ void expect(bool c, const std::string &m) {
 }
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
 double cabs_diff(const hd::Complex &a, std::size_t i, double re, double im) {
-  const double ar = a.re.contiguous().to_vec<double>()[i], ai = a.im.contiguous().to_vec<double>()[i];
+  const double ar = a.re.contiguous().host<double>()[i], ai = a.im.contiguous().host<double>()[i];
   return std::hypot(ar - re, ai - im) / (1e-300 + std::hypot(re, im));
 }
 } // namespace
@@ -43,7 +43,7 @@ int main() {
       const Series omega = vec(w), radius = omega.mul(0.0).add(ref::radius), grad = omega.mul(0.0).add(ref::gradient);
       const Series alpha = hd::womersley_number(radius, omega, ref::rho, ref::mu);
       for (std::size_t i = 0; i < n; ++i)
-        expect(std::abs(alpha.contiguous().to_vec<double>()[i] - alpha_ref[i]) < 1e-9 * alpha_ref[i], "Womersley number");
+        expect(std::abs(alpha.contiguous().host<double>()[i] - alpha_ref[i]) < 1e-9 * alpha_ref[i], "Womersley number");
       const hd::Complex q = hd::womersley_flow(radius, alpha, omega, ref::rho, grad);
       const hd::Complex tau = hd::womersley_wall_shear(radius, alpha, omega, ref::rho, ref::mu, grad);
       const hd::Complex u = hd::womersley_velocity(omega.mul(0.0).add(0.5), alpha, omega, ref::rho, grad);
@@ -58,7 +58,7 @@ int main() {
         const auto at = [&](double rs) { return hd::womersley_velocity(omega.mul(0.0).add(rs), alpha, omega, ref::rho, grad); };
         const hd::Complex um = at(s - h), u0 = at(s), up = at(s + h);
         for (std::size_t i = 0; i < n; ++i) {
-          const auto g = [&](const hd::Complex &c) { return std::complex<double>(c.re.contiguous().to_vec<double>()[i], c.im.contiguous().to_vec<double>()[i]); };
+          const auto g = [&](const hd::Complex &c) { return std::complex<double>(c.re.contiguous().host<double>()[i], c.im.contiguous().host<double>()[i]); };
           const double r = s * ref::radius, dr = h * ref::radius;
           const std::complex<double> upp = (g(up) - 2.0 * g(u0) + g(um)) / (dr * dr), up1 = (g(up) - g(um)) / (2.0 * dr);
           const std::complex<double> lhs = std::complex<double>(0.0, 1.0) * ref::rho * w[i] * g(u0), rhs = ref::gradient + ref::mu * (upp + up1 / r);
@@ -70,7 +70,7 @@ int main() {
       expect(wall.abs().max().item<double>() < 1e-9 * ref::gradient / (w[0] * ref::rho), "no-slip at the wall");
       // force balance on the fluid column: pressure force (pi R^2 A) = wall shear (2 pi R tau_w) + inertia (i rho w Q): check the quasi-steady identity
       for (std::size_t i = 0; i < n; ++i) {
-        const std::complex<double> qq(q.re.contiguous().to_vec<double>()[i], q.im.contiguous().to_vec<double>()[i]), tt(tau.re.contiguous().to_vec<double>()[i], tau.im.contiguous().to_vec<double>()[i]);
+        const std::complex<double> qq(q.re.contiguous().host<double>()[i], q.im.contiguous().host<double>()[i]), tt(tau.re.contiguous().host<double>()[i], tau.im.contiguous().host<double>()[i]);
         const std::complex<double> lhs = M_PI * ref::radius * ref::radius * ref::gradient;
         const std::complex<double> rhs = 2.0 * M_PI * ref::radius * tt + std::complex<double>(0.0, 1.0) * ref::rho * w[i] * qq;
         expect(std::abs(lhs - rhs) < 1e-9 * std::abs(lhs), "axial momentum balance of the fluid column, alpha = " + std::to_string(alpha_ref[i]));
@@ -82,9 +82,9 @@ int main() {
       const Series alpha = hd::womersley_number(radius, omega, ref::rho, ref::mu);
       const hd::Complex q = hd::womersley_flow(radius, alpha, omega, ref::rho, grad);
       const double poiseuille = M_PI * std::pow(ref::radius, 4.0) * ref::gradient / (8.0 * ref::mu);
-      expect(std::abs(q.re.item<double>() - poiseuille) < 1e-4 * poiseuille && std::abs(q.im.item<double>()) < 1e-3 * poiseuille, "Poiseuille limit of Womersley flow");
+      expect(std::abs(q.re.host<double>().front() - poiseuille) < 1e-4 * poiseuille && std::abs(q.im.host<double>().front()) < 1e-3 * poiseuille, "Poiseuille limit of Womersley flow");
       const hd::Complex z = hd::womersley_impedance(radius, alpha, omega, ref::rho, 0.5);
-      expect(std::abs(z.re.item<double>() - hd::poiseuille_resistance(ref::mu, 0.5, radius).item<double>()) < 1e-4 * z.re.item<double>(), "low-frequency impedance = Poiseuille resistance");
+      expect(std::abs(z.re.host<double>().front() - hd::poiseuille_resistance(ref::mu, 0.5, radius).host<double>().front()) < 1e-4 * z.re.host<double>().front(), "low-frequency impedance = Poiseuille resistance");
     }
     // ---- 3-element Windkessel: steady-cycle pressure from the impedance harmonics vs the scipy ODE solution; exact exponential integrator
     {
@@ -97,7 +97,7 @@ int main() {
       std::vector<double> pred;
       const Series k = vec({1.0, 2.0, 3.0});
       const hd::Complex z = hd::windkessel3_impedance(k.mul(w0), zc, rp, c);
-      const auto zr = z.re.contiguous().to_vec<double>(), zi = z.im.contiguous().to_vec<double>();
+      const auto zr = z.re.contiguous().host<double>(), zi = z.im.contiguous().host<double>();
       for (const double t : tgrid) {
         double p = (rp + zc) * q0;
         for (int h = 0; h < 3; ++h) {
@@ -119,14 +119,14 @@ int main() {
         pc = hd::windkessel_capacitor_step(pc, vec({flow(t + 0.5 * dt)}), dt, rp, c);
         t += dt;
       }
-      const double p_end = hd::windkessel3_pressure(pc, vec({flow(t)}), zc).item<double>();
+      const double p_end = hd::windkessel3_pressure(pc, vec({flow(t)}), zc).host<double>().front();
       expect(std::abs(p_end - pref[0]) < 2e-3 * pref[0], "exponential integrator reaches the same cardiac cycle: " + std::to_string(p_end) + " vs " + std::to_string(pref[0]));
       // diastolic decay P = P0 exp(-t / (R C)) with zero flow, exactly
       const Series decayed = hd::windkessel_capacitor_step(vec({90.0}), vec({0.0}), 0.4, 1.1, 1.3);
-      expect(std::abs(decayed.item<double>() - 90.0 * std::exp(-0.4 / (1.1 * 1.3))) < 1e-12, "diastolic decay");
+      expect(std::abs(decayed.host<double>().front() - 90.0 * std::exp(-0.4 / (1.1 * 1.3))) < 1e-12, "diastolic decay");
       // 2-element impedance limits: Z(0) = R, |Z| -> 1 / (w C) at high frequency
       const hd::Complex z2 = hd::windkessel2_impedance(vec({0.0, 1e6}), 1.1, 1.3);
-      expect(std::abs(z2.re.contiguous().to_vec<double>()[0] - 1.1) < 1e-14 && std::abs(z2.abs().contiguous().to_vec<double>()[1] * 1e6 * 1.3 - 1.0) < 1e-6, "2-element impedance limits");
+      expect(std::abs(z2.re.contiguous().host<double>()[0] - 1.1) < 1e-14 && std::abs(z2.abs().contiguous().host<double>()[1] * 1e6 * 1.3 - 1.0) < 1e-6, "2-element impedance limits");
     }
     // ---- pulse-wave speed: Bramwell-Hill with dA/dP of a thin elastic tube equals Moens-Korteweg
     {

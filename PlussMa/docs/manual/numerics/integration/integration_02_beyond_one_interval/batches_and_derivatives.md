@@ -30,10 +30,10 @@ int main() {
   integ::QuadraOptions o;
   o.rule = integ::QuadraRule::GaussLegendre;
   const auto r = integ::quadra(f, 0.0, 1.0, o);
-  const auto v = r.value.to_vec<double>();
+  const auto v = r.value.host<double>();
   std::cout << std::fixed << std::setprecision(6) << "I(k) = k/3   : " << v[0] << " " << v[1] << " " << v[2] << " " << v[3] << "   (shape " << r.value.numel() << ")\n";
   r.value.sum().reverse();
-  const auto g = k.sensitivity().to_vec<double>();
+  const auto g = k.sensitivity().host<double>();
   std::cout << "dI/dk each   : " << g[0] << " " << g[1] << " " << g[2] << " " << g[3] << "   (exact 0.333333)\n";
 }
 ```

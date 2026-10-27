@@ -22,7 +22,7 @@ int main() {
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "true NIG(1.5, -0.4, 0.1, 0.8)\n";
   std::cout << "fitted NIG   alpha " << nig.alpha << "  beta " << nig.beta << "  location " << nig.location << "  scale " << nig.scale << "\n";
-  const auto se = nig.stderr(x).to_vec<double>();
+  const auto se = nig.stderr(x).host<double>();
   std::cout << "std errors        " << std::setw(6) << se[0] << "       " << std::setw(6) << se[1] << "            " << std::setw(6) << se[2] << "         " << std::setw(6) << se[3] << "\n\n";
 
   const double ll_n = normal.loglik(x).item<double>(), ll_g = nig.loglik(x).item<double>();
@@ -32,7 +32,7 @@ int main() {
 
   // Probability of a fall below -3 (about three standard deviations): empirical, normal and NIG.
   const double cut = -3.0;
-  const auto v = x.to_vec<double>();
+  const auto v = x.host<double>();
   double below = 0.0;
   for (double a : v) if (a < cut) below += 1.0;
   const Series t = pluss::make_series(std::vector<double>{cut}, {1}).to(pluss::ScalarType::Float64);

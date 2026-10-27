@@ -38,7 +38,7 @@ auto slot = pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2),
 
 std::int64_t total = 0;
 for (const auto& value : slot.values()) {
-  total += std::get<pluss::Series>(value).to_vec<std::int64_t>()[0];
+  total += std::get<pluss::Series>(value).host<std::int64_t>()[0];
 }
 std::cout << "count=" << slot.values().size() << " total=" << total;
 ```

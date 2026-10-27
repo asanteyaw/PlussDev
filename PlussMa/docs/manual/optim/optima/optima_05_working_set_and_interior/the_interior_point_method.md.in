@@ -1,0 +1,39 @@
+# The interior-point method
+
+[Back to Optima 5: The Working-Set and Interior Methods](../optima_05_working_set_and_interior.md)
+
+The interior-point method replaces each inequality by a **slack variable** and a **barrier term** that grows without bound as the slack approaches zero. It follows a path of barrier problems towards the solution, with a *barrier parameter* that is reduced as the path is followed. Bounds and linear rows are kept *strictly* satisfied at every iterate, which is the property that sets it apart: the iterates never touch the boundary.
+
+The three programs show the method from its own side. The first prints the trace with the barrier parameter, the complementarity (the product of each slack and its multiplier, which must go to zero at a solution) and the stationarity. The second varies the starting barrier parameter and the other options of the schedule. The third shows the benefit: a function with a logarithm in it, defined only for positive arguments, is minimised from a start far from the minimum, and the interior method never evaluates it where it is undefined.
+
+## Program 4: Watching the barrier
+
+The interior method replaces each inequality by a slack variable and a barrier term. The trace shows the barrier parameter, the complementarity (the product of each slack and its multiplier, which must go to zero at a solution) and the stationarity.
+
+@@example Numerical/optimization/guide/optima/64_interior_trace.cpp@@
+
+The barrier parameter stays at 1.00e-02 for four iterations, then falls to 1.00e-03, 3.16e-05, 1.78e-07 and finally its floor 1.00e-08. It falls only when the current barrier problem is solved well enough, which is why the first four iterations are spent at the starting value. Complementarity ends at 3.34e-07 and stationarity at 3.44e-06, both near the tolerances, and the violation falls from 11.3 to 8.84e-08. The same problem took four iterations with sequential QP; the interior method trades more iterations for iterates that stay strictly inside bounds and slacks.
+
+## Program 5: The barrier schedule
+
+@@example Numerical/optimization/guide/optima/65_interior_barrier_options.cpp@@
+
+The starting barrier parameter matters, and in both directions. The default 1e-2 needs 8 iterations. A much smaller start, 1e-6, needs 29 iterations and 66 evaluations: the method behaves like a nearly unpenalized Newton method and spends its steps being pushed back from the walls. A larger start, 1, needs 18 iterations, and 10 does not converge in 100 iterations (flag `0`, objective 17.0439). `barrier_decay` made no difference here, and `fraction_to_boundary` only mattered at 0.9, which costs 10 iterations against 8: a step that may use only 90% of the distance to the nearest wall is a shorter step. Leave all of these at their defaults unless a problem shows the symptoms in the table.
+
+## Program 6: What "interior" buys
+
+Bounds and linear rows are kept strictly satisfied at every iterate of the interior method. The program minimizes a function that contains a logarithm, so it is defined only for positive arguments, from a start far from the minimum, and records the smallest value any iterate takes.
+
+@@example Numerical/optimization/guide/optima/66_interior_stays_inside.cpp@@
+
+The interior method converges in 11 iterations to 0.660517, and its smallest iterate is 3.06e-02: it never reaches the boundary. Sequential QP projects its steps onto the bounds and lands on `x = 0` to within rounding (5.40e-12), where the logarithm is huge. Its line search then fails (flag `-6`, objective 5.189051). If your objective is undefined outside the feasible region, this is the reason to use the interior method with `independent_nonlinear_slacks = false` for nonlinear inequalities as well (chapter 3, Program 2).
+
+## Decisions and pitfalls
+
+- **The barrier parameter falls only when the current barrier problem is solved well enough.** That is why a trace spends its first iterations at the starting value; that is normal.
+- **Sweep the starting barrier parameter.** Too small makes the method behave like an unpenalised Newton method that spends its steps being pushed back from the walls; too large wastes iterations. The default (0.01) was the best of the values tried here.
+- **Use the interior method when the objective is undefined outside the feasible region.** Its iterates never leave bounds and linear rows; SQP projects onto bounds and can land exactly where the objective is infinite.
+- **Nonlinear inequalities are different.** By default each has its own slack, so the nonlinear constraints can be violated on the way; set `independent_nonlinear_slacks = false` to keep them strictly satisfied, and check the cost.
+- **Complementarity is the quantity to watch.** It must fall to the tolerance together with the stationarity; a run that ends with large complementarity has stalled.
+
+Where next: [Chapter 6](../optima_06_curvature_linear_algebra_scaling.md) looks at the curvature models and the linear algebra under every step.

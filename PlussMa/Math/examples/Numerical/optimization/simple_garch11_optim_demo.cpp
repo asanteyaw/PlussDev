@@ -5,8 +5,8 @@
 #include <iostream>
 
 using pluss::ScalarType;
-using pluss::optim::ConstrainedProblem;
-using pluss::optim::OptimaOptions;
+using pluss::subsp::math::optim::ConstrainedProblem;
+using pluss::subsp::math::optim::OptimaOptions;
 
 pluss::Series simulate_garch11(const pluss::Series& omega,
                         const pluss::Series& alpha,
@@ -54,54 +54,54 @@ int main() {
 
   const pluss::Series returns = simulate_garch11(truth_omega, truth_alpha, truth_beta, 200, 20260306ULL, cfg);
   const ConstrainedProblem problem =
-      pluss::optim::problem()
-          .objective([returns, cfg](const pluss::optim::ParameterPack<pluss::optim::Trace>& p) -> pluss::optim::Trace {
+      pluss::subsp::math::optim::problem()
+          .objective([returns, cfg](const pluss::subsp::math::optim::ParameterPack<pluss::Series>& p) -> pluss::Series {
             const auto omega = p.at("omega");
             const auto alpha = p.at("alpha");
             const auto beta = p.at("beta");
-            auto nll = pluss::optim::trace(pluss::make_series(0.0, cfg), false);
-            auto variance = omega / (pluss::optim::trace(pluss::make_series(1.0, cfg), false) - alpha - beta);
+            auto nll = pluss::make_series(0.0, cfg);
+            auto variance = omega / (pluss::make_series(1.0, cfg) - alpha - beta);
             const std::int64_t n = returns.numel();
             for (std::int64_t t = 0; t < n; ++t) {
               if (t > 0) {
-                const auto prev = pluss::optim::trace(returns.select(0, t - 1), false);
+                const auto prev = returns.select(0, t - 1);
                 variance = omega + alpha * (prev * prev) + beta * variance;
               }
-              const auto r = pluss::optim::trace(returns.select(0, t), false);
-              nll = nll + 0.5 * (pluss::optim::log(variance) + (r * r) / variance);
+              const auto r = returns.select(0, t);
+              nll = nll + 0.5 * (variance.log() + (r * r) / variance);
             }
             return nll;
           })
           .ln_ineq(
               pluss::make_series({0.0, 1.0, 1.0}, cfg).reshape({1, 3}),
               pluss::make_series({0.999}, cfg))
-          .nl_ineq([](const pluss::optim::ParameterPack<pluss::optim::Trace>& p) -> pluss::optim::Trace {
+          .nl_ineq([](const pluss::subsp::math::optim::ParameterPack<pluss::Series>& p) -> pluss::Series {
             const auto omega = p.at("omega");
             const auto alpha = p.at("alpha");
             const auto beta = p.at("beta");
             return omega * omega + alpha * alpha + beta * beta - 2.0;
           })
-          .lbs(pluss::optim::pack_scalars({{"omega", pluss::make_series(1e-6, cfg)},
+          .lbs(pluss::subsp::math::optim::pack_scalars({{"omega", pluss::make_series(1e-6, cfg)},
                                            {"alpha", pluss::make_series(1e-6, cfg)},
                                            {"beta", pluss::make_series(1e-6, cfg)}}))
-          .ubs(pluss::optim::pack_scalars({{"omega", pluss::make_series(1.0, cfg)},
+          .ubs(pluss::subsp::math::optim::pack_scalars({{"omega", pluss::make_series(1.0, cfg)},
                                            {"alpha", pluss::make_series(0.999, cfg)},
                                            {"beta", pluss::make_series(0.999, cfg)}}))
           .build();
 
-  const auto initial = pluss::optim::pack_scalars({{"omega", pluss::make_series(0.01, cfg)},
+  const auto initial = pluss::subsp::math::optim::pack_scalars({{"omega", pluss::make_series(0.01, cfg)},
                                                     {"alpha", pluss::make_series(0.15, cfg)},
                                                     {"beta", pluss::make_series(0.70, cfg)}});
 
-  OptimaOptions options = pluss::optim::presets::internal_protocol();
+  OptimaOptions options = pluss::subsp::math::optim::presets::internal_protocol();
   options.internal_protocol.max_iterations = 120;
   options.internal_protocol.constraint_tolerance = 1e-8;
   options.internal_protocol.optimality_tolerance = 1e-6;
 
-  const auto result = pluss::optim::optima(problem, initial, options);
+  const auto result = pluss::subsp::math::optim::optima(problem, initial, options);
 
   std::cout << std::fixed << std::setprecision(6);
-  pluss::optim::reports::compact_summary(std::cout, result) << '\n';
+  pluss::subsp::math::optim::reports::compact_summary(std::cout, result) << '\n';
   const pluss::Series omega_hat = result.params.at("omega");
   const pluss::Series alpha_hat = result.params.at("alpha");
   const pluss::Series beta_hat = result.params.at("beta");

@@ -15,10 +15,6 @@ namespace dfo = pluss::subsp::math::optimization;
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 pluss::Series filled(std::int64_t n, double v) { return pluss::make_series(std::vector<double>(n, v), {n}).to(f64); }
-const char* name(dfo::BlackboxSolverStatus s) {
-  return s == dfo::BlackboxSolverStatus::Converged ? "Converged"
-         : s == dfo::BlackboxSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
 int main() {
   std::cout << std::left << std::setw(22) << "pareto_archive_limit" << std::setw(16) << "archive size" << std::setw(4) << "" << "x range\n";
   for (std::int64_t limit : {256, 20, 5}) {
@@ -34,7 +30,7 @@ int main() {
       return e;
     };
     const auto o = dfo::mads_blackbox_minimizer(blackbox, vec({5.0}), c);
-    const auto p = o.pareto_points.reshape({o.pareto_points.numel()}).to_vec<double>();
+    const auto p = o.pareto_points.reshape({o.pareto_points.numel()}).host<double>();
     
     double lo = 1e300, hi = -1e300;
     for (double v : p) { lo = std::min(lo, v); hi = std::max(hi, v); }

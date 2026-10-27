@@ -23,14 +23,14 @@ TEST_CASE("Series::grouped_mode reverse: gradient splits evenly among within-gro
   values.tracks_slope_(true);
 
   const Series out = values.grouped_mode(group_ids, 2);
-  REQUIRE(out.to_vec<double>() == std::vector<double>{2.0, 5.0});
+  REQUIRE(out.host<double>() == std::vector<double>{2.0, 5.0});
 
   // loss = sum(out^2) -> d(loss)/d(out) = 2*out = {4.0, 10.0}, split evenly
   // (0.5 each) across the two tied elements in each group; untied elements
   // (indices 0 and 3, the group's non-modal values) get exactly zero.
   out.mul(out).sum().reverse();
   REQUIRE(values.has_sensitivity());
-  const auto g = values.sensitivity().to_vec<double>();
+  const auto g = values.sensitivity().host<double>();
   const std::vector<double> expected{0.0, 2.0, 2.0, 0.0, 5.0, 5.0};
   REQUIRE(g.size() == expected.size());
   for (std::size_t i = 0; i < g.size(); ++i) {
@@ -58,7 +58,7 @@ TEST_CASE("Series::grouped_mode reverse: no ties, gradient routes fully to the s
   const Series out = values.grouped_mode(group_ids, 1);
   out.mul(3.0).sum().reverse();
   REQUIRE(values.has_sensitivity());
-  const auto g = values.sensitivity().to_vec<double>();
+  const auto g = values.sensitivity().host<double>();
   double total = 0.0;
   int nonzero_count = 0;
   for (double v : g) {

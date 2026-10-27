@@ -1,0 +1,51 @@
+# Curvature models
+
+[Back to Optima 6: Curvature, Linear Algebra and Scaling](../optima_06_curvature_linear_algebra_scaling.md)
+
+The three quadratic-model algorithms need second-derivative information, and `hessian_approximation` chooses where it comes from: the identity (none at all), a dense BFGS approximation, a limited-memory BFGS approximation, or the exact Hessian, obtained by differentiating your functions a second time. This page measures what each choice costs and buys.
+
+The first program grows the problem and compares the models by iterations and evaluations, which shows that the identity model never converges and the real models grow gently. The second varies `lbfgs_memory`, the number of recent step pairs the limited-memory model remembers. The third runs every algorithm with every model on one problem and shows the one remaining refusal (an exact model on an objective given only as a value and a gradient is rejected, never silently replaced). The fourth looks at the BFGS safeguard, the curvature condition that decides whether an update is accepted.
+
+## Program 1: How the model scales with the problem
+
+The Rosenbrock chain, with its strongly coupled curvature, is solved for 6, 12 and 24 variables. Each cell is iterations and function evaluations.
+
+@@example Numerical/optimization/guide/optima/71_curvature_growth.cpp@@
+
+The real models grow gently: sequential QP with BFGS needs 56, 85 and 145 iterations; the interior method with BFGS 57, 88 and 145; with the limited-memory model 51, 80 and 137. The limited-memory model is the cheapest in iterations here, not just in storage. The identity model, which throws curvature away, does not converge in 300 iterations at any size. Curvature information is the difference between a method that finishes and one that crawls; the choice between BFGS and its limited-memory version is a smaller matter that depends on size and storage.
+
+## Program 2: The memory of the limited-memory model
+
+`lbfgs_memory` is the number of recent step pairs the model remembers.
+
+@@example Numerical/optimization/guide/optima/72_lbfgs_memory.cpp@@
+
+Memory 1 needs 142 iterations and ends at an objective of 1.59e-05; memory 30 needs 74 and reaches 7.43e-09. The default of 10 (80 iterations, 1.69e-07) is already close to the best. A very short memory is a poor model, and a long one costs storage and arithmetic for little gain.
+
+## Program 3: Every algorithm, every model
+
+All three algorithms accept all four models. The exact models need no extra callbacks: they differentiate the problem's own functions a second time, so each function is written once, on plain `Series`. The problem is the four-variable benchmark with one nonlinear inequality and one nonlinear equality.
+
+@@example Numerical/optimization/guide/optima/73_curvature_models.cpp@@
+
+All twelve cells reach the optimum of the problem, 17.0140173, to within 6.2e-07 of it. The cheapest in evaluations is the dense BFGS model, which on this small problem needs 5, 6 and 12 evaluations in the three algorithms; the exact models are close in the first two (6 and 7) and more expensive in the interior method (33). On this small problem the cheap quasi-Newton models are as good as the exact ones, and the table does not show an advantage for the exact models. They give the true curvature at once instead of learning it from the steps, and they cost a Hessian-vector product per variable per iteration (each one runs your functions again), so they pay off where the quasi-Newton model learns slowly or where the Hessian is cheap to evaluate.
+
+The last two lines show the one remaining refusal. An exact model on an objective given only as a value and a gradient (`objective.analytic`) cannot be differentiated again; it is rejected with exit flag `-5` and a message that names what is missing, rather than quietly using another model, so a run never reports results for a model it did not use. The exact Hessian is made positive definite where it has to be: the shift is chosen so that the curvature is positive on the directions the active constraints leave free, not on the whole space, so a full Newton step is kept whenever that reduced curvature is already positive.
+
+## Program 4: The BFGS safeguard
+
+A BFGS update is only valid when the step and the change in gradient point the same way (the curvature condition). A pair that fails it is skipped, and `bfgs_curvature_tolerance` sets how strict that test is.
+
+@@example Numerical/optimization/guide/optima/74_bfgs_safeguard.cpp@@
+
+From 1e-12 to 1e-4 the result is identical: the default is far below anything that matters. At 0.1 the cost shows (89 and 93 iterations against 85 and 88), and at 1 neither algorithm converges in 300 iterations, with an objective of 11.0 left. Do not raise this tolerance to "make the model more cautious": it makes the model stop learning.
+
+## Decisions and pitfalls
+
+- **The limited-memory model is cheap in iterations too, not only in storage.** On a coupled chain it needed the fewest iterations of the real models.
+- **The default memory (10) is close to the best.** Memory 1 is a poor model; memory 30 buys little for its storage and arithmetic.
+- **An exact Hessian needs an autodiff objective.** It differentiates your `Series` functions a second time; an objective given only as a value and a gradient is refused with exit flag `-5` rather than quietly using another model.
+- **Do not raise `bfgs_curvature_tolerance` to be cautious.** Up to about 1e-4 the result is identical; at 1 the model stops learning and neither algorithm converges.
+- **On a small problem the cheap models win.** Exact curvature costs more per iteration; it pays when the problem is difficult, not merely when it is available.
+
+Where next: [The step's linear algebra, and units](linear_algebra_and_units.md) covers the system solved at every step and the effect of units.

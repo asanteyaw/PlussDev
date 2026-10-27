@@ -1,8 +1,0 @@
-# Stopping
-
-[Back to The Differential Evolution Minimisers](../dfo_08_differential_evolution.md)
-
-
-@@example Numerical/optimization/guide/dfo/375_differential_evolution_stopping.cpp@@
-
-With the test off the run uses all 400 generations. With it on (every 10 generations, relative improvement below the tolerance, and the population collapsed to a small spread) the run stops at 160 generations on this unimodal function with the answer already at 1e-26. The test never fires on a population that is still spread out, which protects a multimodal search from stopping on a plateau. Note the statuses: a generation limit reports `ReachedIterationBudget` and an evaluation limit `ReachedEvaluationBudget`.

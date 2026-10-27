@@ -153,9 +153,9 @@ void test_leapfrog() {
       [&](const mechanics::Bodies &state) {
         return -(state.position() * omega2);
       });
-  expect(close(next.position().si_value().item<double>(), 0.995),
+  expect(close(next.position().si_value().host<double>().front(), 0.995),
          "drift-kick-drift position is incorrect");
-  expect(close(next.velocity().si_value().item<double>(), -0.1),
+  expect(close(next.velocity().si_value().host<double>().front(), -0.1),
          "drift-kick-drift velocity is incorrect");
 }
 

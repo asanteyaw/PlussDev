@@ -2,7 +2,124 @@
 
 [Back to Means and Variances](../inference_01_means_and_variances.md)
 
+A test of a mean answers one of three questions: is the mean of one sample equal to a target, do two independent samples have the same mean, or did a measurement change between two readings of the same units. The three tests, `ttest`, `ttest2` and `ttest_paired`, share one result type, so reading the output is the same each time: a statistic, a p-value, a critical value, a decision and a confidence interval. The data in this chapter are cup fill volumes in cl from two filling machines, A (8 cups) and B (9 cups), whose target is 5.0.
 
-@@example Stats/inference/guide/1101_t_tests.cpp@@
+## One sample against a target
 
-How to read the output. Machine A is clearly above target: the mean is 5.6125, the t statistic 3.57 on 7 degrees of freedom, the p-value 0.0091, and the 95% interval [5.21, 6.02] excludes 5.0. Machine B is not distinguishable from the target (p = 0.84). Comparing the machines, the pooled-variance test gives p = 0.0088 and Welch's test, which does not assume equal variances and uses fewer, fractional degrees of freedom (11.8), gives a slightly larger p = 0.0127. Prefer Welch's test unless you have a reason to believe the variances are equal; here both agree. The paired test uses the same cups in the same order, which is a different design: it tests the mean of the differences, with 7 degrees of freedom for 8 pairs, and is only appropriate when each element of `x` is matched to the same-index element of `y`.
+`ttest(x, mean0)` asks whether the mean of `x` equals `mean0`. It divides the distance between the sample mean and the target by the standard error and refers the result to a Student t distribution with n − 1 degrees of freedom. The program tests both machines against 5.0 and prints everything the result carries.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  // Fill volumes in cl from two machines; the target is 5.0.
+  const auto a = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
+  const auto b = pluss::make_series(std::vector<double>{4.8, 5.2, 5.0, 4.7, 5.6, 4.9, 5.1, 4.6, 5.3}, {9}, as_f64());
+
+  const auto ta = hyp::ttest(a, 5.0);
+  out.writeln("machine A: mean", ta.mean, " t", ta.stat, " df", ta.dof, " p", ta.pvalue, ta.reject ? " -> reject" : " -> keep");
+  out.writeln("           standard error", ta.stderr, " 95% interval", ta.ci.pull<double>(), " critical", ta.critical);
+
+  const auto tb = hyp::ttest(b, 5.0);
+  out.writeln("machine B: mean", tb.mean, " t", tb.stat, " df", tb.dof, " p", tb.pvalue, tb.reject ? " -> reject" : " -> keep");
+  out.writeln("           standard error", tb.stderr, " 95% interval", tb.ci.pull<double>());
+}
+```
+
+Machine A's mean is 5.6125 against a target of 5.0. The standard error is 0.1716, so the sample mean is 3.5696 standard errors from the target (`t`), on 7 degrees of freedom. If the true mean were 5.0, a statistic this far out would occur with probability 0.0091 (`pvalue`), which is below the default level of 0.05, so the test rejects. The same decision can be read off two other ways: |t| = 3.5696 exceeds the `critical` value 2.3646, and the 95% interval [5.2068, 6.0182] does not contain 5.0. For a two-sided test these three statements are always equivalent.
+
+Machine B's mean is 5.0222, a distance of only 0.2114 standard errors from the target. The p-value is 0.8379 and the interval [4.7798, 5.2646] contains 5.0, so the test keeps the null hypothesis. That is not a proof that B is on target; the interval says the true mean could be anywhere from 4.78 to 5.26, and B's interval is narrower than A's because B's readings are less spread out (standard error 0.1051 against 0.1716).
+
+## Two independent samples
+
+`ttest2(x, y)` compares the means of two samples that have nothing to do with each other. By default it assumes the two populations have the same variance and pools them (`equal_variance = true`). Welch's version, `equal_variance = false`, does not assume that, and it lowers the degrees of freedom to compensate.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  const auto a = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
+  const auto b = pluss::make_series(std::vector<double>{4.8, 5.2, 5.0, 4.7, 5.6, 4.9, 5.1, 4.6, 5.3}, {9}, as_f64());
+
+  // The default is the pooled test, which assumes both machines have the same variance.
+  const auto pooled = hyp::ttest2(a, b);
+  out.writeln("pooled: t", pooled.stat, " df", pooled.dof, " p", pooled.pvalue, " difference in means", pooled.mean_x - pooled.mean_y);
+  out.writeln("        95% interval for the difference", pooled.ci.pull<double>());
+
+  // Welch's test drops that assumption and reduces the degrees of freedom to match.
+  hyp::TTest2Options unequal;
+  unequal.equal_variance = false;
+  const auto welch = hyp::ttest2(a, b, unequal);
+  out.writeln("Welch:  t", welch.stat, " df", welch.dof, " p", welch.pvalue, " standard error", welch.stderr);
+  out.writeln("        95% interval for the difference", welch.ci.pull<double>());
+}
+```
+
+The pooled test finds the machines different: the difference in means is 0.5903, t = 3.0093 on 15 degrees of freedom (8 + 9 − 2), p = 0.0088, interval [0.1722, 1.0084]. Welch's test reaches the same conclusion with slightly weaker evidence: t = 2.9334, but on only 11.7874 degrees of freedom, p = 0.0127, and a wider interval [0.1510, 1.0296]. The reduction in degrees of freedom is the price of not assuming equal variances. Here the sample variances are 0.2355 for A and 0.0994 for B, a ratio of about 2.4, so the equal-variance assumption is doubtful and Welch's is the safer answer; the next page shows that with samples this small the data cannot settle the question either way.
+
+## Matched pairs
+
+When the two readings are on the same units (the same cups weighed on two scales, the same patients before and after) the readings are paired. `ttest_paired(x, y)` takes the difference within each pair and tests whether the mean difference is zero; the variation between units cancels. The program analyses the same eight cups on two scales both ways, and finishes with missing values.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+#include <limits>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  // Eight cups weighed on two scales: the same cups, so the readings are matched pairs.
+  const auto first = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
+  const auto second = pluss::make_series(std::vector<double>{5.3, 5.0, 6.3, 6.1, 6.1, 5.8, 5.4, 6.4}, {8}, as_f64());
+
+  const auto unpaired = hyp::ttest2(first, second);
+  out.writeln("treated as two samples: t", unpaired.stat, " p", unpaired.pvalue, " 95% interval", unpaired.ci.pull<double>());
+
+  const auto paired = hyp::ttest_paired(first, second);
+  out.writeln("treated as pairs:       t", paired.stat, " p", paired.pvalue, " 95% interval", paired.ci.pull<double>());
+  out.writeln("mean difference", paired.mean, " standard error", paired.stderr, " pairs used", paired.effective_n);
+
+  // Missing values are dropped; the effective sample size says how many observations were used.
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  const auto gappy = pluss::make_series(std::vector<double>{5.1, nan, 6.2, 5.8, 6.0, nan, 5.3, 6.1}, {8}, as_f64());
+  const auto t = hyp::ttest(gappy, 5.0);
+  out.writeln("with 2 missing values: mean", t.mean, " t", t.stat, " df", t.dof, " observations used", t.effective_n);
+}
+```
+
+Treated as two independent samples, the readings show no difference: p = 0.4650 and the interval [−0.7228, 0.3478] straddles zero. The cups simply differ from each other by much more than the scales differ, and that cup-to-cup spread swamps the comparison. Treated as pairs, the same numbers give t = −5.3513 and p = 0.0011: the second scale reads 0.1875 higher on average (the mean difference is −0.1875 for first minus second) with a standard error of only 0.0350, and the interval [−0.2704, −0.1046] excludes zero. The data are identical; the test used the information that each pair is one cup.
+
+The last line shows how missing values are handled. Two of the eight readings were `NaN`; they are dropped, `effective_n` reports the 6 observations that remain, and the test runs on 5 degrees of freedom with a mean of 5.75. Nothing warns you, so check `effective_n` when data may have gaps.
+
+## Decisions and pitfalls
+
+- **Use Welch's test unless you have a reason not to.** It costs little when the variances are equal and protects the level when they are not. Use the pooled test only when equal variances are justified by something other than the data in hand.
+- **Pair when the units are the same.** An unpaired analysis of paired data throws away the matching (p = 0.4650 against p = 0.0011 above). Do not pair when the two samples are different units that merely have the same size.
+- **A large p-value does not show the means are equal.** Read the interval: it shows how large a difference the data could be hiding.
+- **The sign of the statistic follows the order of the arguments.** For `ttest_paired(x, y)` and `ttest2(x, y)` the difference is x − y.
+- **Check `effective_n`.** Missing and non-finite values are removed without a message.
+- **Small samples need roughly normal data.** The t distribution is exact only for normal data. For small samples that are visibly skewed or contain outliers, use the rank tests of Chapter 2.
+
+Where next: [A known standard deviation, and tests of variances](a_known_standard_deviation_and_tests_of_variance.md) covers the case where the spread is known in advance, and tests whether variances are equal.

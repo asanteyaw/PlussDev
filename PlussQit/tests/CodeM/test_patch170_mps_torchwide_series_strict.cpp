@@ -95,107 +95,107 @@ TEST_CASE("MPS strict torchwide float32 unary/binary/reduction parity", "[mps][s
   const auto x_mps = x_cpu.to(pluss::pMPS);
   const auto y_mps = y_cpu.to(pluss::pMPS);
 
-  require_close_(x_mps.abs().to(pluss::pCPU).to_vec<float>(), x_cpu.abs().to_vec<float>(), 2e-4f, "abs");
-  require_close_(x_mps.sign().to(pluss::pCPU).to_vec<float>(), x_cpu.sign().to_vec<float>(), 2e-4f, "sign");
-  require_close_(x_mps.exp().to(pluss::pCPU).to_vec<float>(), x_cpu.exp().to_vec<float>(), 4e-4f, "exp");
-  require_close_(x_mps.log().to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.log().to_vec<float>(),
+  require_close_(x_mps.abs().to(pluss::pCPU).host<float>().array().data, x_cpu.abs().host<float>().array().data, 2e-4f, "abs");
+  require_close_(x_mps.sign().to(pluss::pCPU).host<float>().array().data, x_cpu.sign().host<float>().array().data, 2e-4f, "sign");
+  require_close_(x_mps.exp().to(pluss::pCPU).host<float>().array().data, x_cpu.exp().host<float>().array().data, 4e-4f, "exp");
+  require_close_(x_mps.log().to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.log().host<float>().array().data,
                  4e-4f,
                  "log");
-  require_close_(x_mps.sqrt().to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.sqrt().to_vec<float>(),
+  require_close_(x_mps.sqrt().to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.sqrt().host<float>().array().data,
                  4e-4f,
                  "sqrt");
-  require_close_(x_mps.sin().to(pluss::pCPU).to_vec<float>(), x_cpu.sin().to_vec<float>(), 3e-4f, "sin");
-  require_close_(x_mps.cos().to(pluss::pCPU).to_vec<float>(), x_cpu.cos().to_vec<float>(), 3e-4f, "cos");
-  require_close_(x_mps.tanh().to(pluss::pCPU).to_vec<float>(), x_cpu.tanh().to_vec<float>(), 3e-4f, "tanh");
-  require_close_(x_mps.log1p().to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.log1p().to_vec<float>(),
+  require_close_(x_mps.sin().to(pluss::pCPU).host<float>().array().data, x_cpu.sin().host<float>().array().data, 3e-4f, "sin");
+  require_close_(x_mps.cos().to(pluss::pCPU).host<float>().array().data, x_cpu.cos().host<float>().array().data, 3e-4f, "cos");
+  require_close_(x_mps.tanh().to(pluss::pCPU).host<float>().array().data, x_cpu.tanh().host<float>().array().data, 3e-4f, "tanh");
+  require_close_(x_mps.log1p().to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.log1p().host<float>().array().data,
                  4e-4f,
                  "log1p");
-  require_close_(x_mps.expm1().to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.expm1().to_vec<float>(),
+  require_close_(x_mps.expm1().to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.expm1().host<float>().array().data,
                  4e-4f,
                  "expm1");
-  require_close_(x_mps.erf().to(pluss::pCPU).to_vec<float>(), x_cpu.erf().to_vec<float>(), 8e-4f, "erf");
-  require_close_(x_mps.erfc().to(pluss::pCPU).to_vec<float>(), x_cpu.erfc().to_vec<float>(), 8e-4f, "erfc");
-  require_close_(x_mps.asinh().to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.asinh().to_vec<float>(),
+  require_close_(x_mps.erf().to(pluss::pCPU).host<float>().array().data, x_cpu.erf().host<float>().array().data, 8e-4f, "erf");
+  require_close_(x_mps.erfc().to(pluss::pCPU).host<float>().array().data, x_cpu.erfc().host<float>().array().data, 8e-4f, "erfc");
+  require_close_(x_mps.asinh().to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.asinh().host<float>().array().data,
                  6e-4f,
                  "asinh");
   require_close_(
-      x_mps.add(2.6).acosh().to(pluss::pCPU).to_vec<float>(),
-      x_cpu.add(2.6).acosh().to_vec<float>(),
+      x_mps.add(2.6).acosh().to(pluss::pCPU).host<float>().array().data,
+      x_cpu.add(2.6).acosh().host<float>().array().data,
       6e-4f,
       "acosh");
   require_close_(
-      x_mps.div(3.0).atanh().to(pluss::pCPU).to_vec<float>(),
-      x_cpu.div(3.0).atanh().to_vec<float>(),
+      x_mps.div(3.0).atanh().to(pluss::pCPU).host<float>().array().data,
+      x_cpu.div(3.0).atanh().host<float>().array().data,
       6e-4f,
       "atanh");
-  require_close_(x_mps.nan_to_num(0.0, 100.0, -100.0).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.nan_to_num(0.0, 100.0, -100.0).to_vec<float>(),
+  require_close_(x_mps.nan_to_num(0.0, 100.0, -100.0).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.nan_to_num(0.0, 100.0, -100.0).host<float>().array().data,
                  2e-4f,
                  "nan_to_num");
 
-  require_close_(x_mps.add(y_mps).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.add(y_cpu).to_vec<float>(),
+  require_close_(x_mps.add(y_mps).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.add(y_cpu).host<float>().array().data,
                  2e-4f,
                  "add");
-  require_close_(x_mps.sub(y_mps).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.sub(y_cpu).to_vec<float>(),
+  require_close_(x_mps.sub(y_mps).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.sub(y_cpu).host<float>().array().data,
                  2e-4f,
                  "sub");
-  require_close_(x_mps.mul(y_mps).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.mul(y_cpu).to_vec<float>(),
+  require_close_(x_mps.mul(y_mps).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.mul(y_cpu).host<float>().array().data,
                  2e-4f,
                  "mul");
-  require_close_(x_mps.div(y_mps.add(3.0)).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.div(y_cpu.add(3.0)).to_vec<float>(),
+  require_close_(x_mps.div(y_mps.add(3.0)).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.div(y_cpu.add(3.0)).host<float>().array().data,
                  3e-4f,
                  "div");
-  require_close_(x_mps.pow(2.0).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.pow(2.0).to_vec<float>(),
+  require_close_(x_mps.pow(2.0).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.pow(2.0).host<float>().array().data,
                  3e-4f,
                  "pow");
-  require_close_(x_mps.minimum(y_mps).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.minimum(y_cpu).to_vec<float>(),
+  require_close_(x_mps.minimum(y_mps).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.minimum(y_cpu).host<float>().array().data,
                  2e-4f,
                  "minimum");
-  require_close_(x_mps.maximum(y_mps).to(pluss::pCPU).to_vec<float>(),
-                 x_cpu.maximum(y_cpu).to_vec<float>(),
+  require_close_(x_mps.maximum(y_mps).to(pluss::pCPU).host<float>().array().data,
+                 x_cpu.maximum(y_cpu).host<float>().array().data,
                  2e-4f,
                  "maximum");
 
-  require_close_(x_mps.sum().to(pluss::pCPU).to_vec<float>(), x_cpu.sum().to_vec<float>(), 2e-4f, "sum");
+  require_close_(x_mps.sum().to(pluss::pCPU).host<float>().array().data, x_cpu.sum().host<float>().array().data, 2e-4f, "sum");
   require_close_(
-      x_mps.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+      x_mps.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>().array().data,
+      x_cpu.sum(/*dim=*/1, /*keepdim=*/false).host<float>().array().data,
       2e-4f,
       "sum-dim");
   require_close_(
-      x_mps.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.mean(/*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+      x_mps.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>().array().data,
+      x_cpu.mean(/*dim=*/1, /*keepdim=*/false).host<float>().array().data,
       2e-4f,
       "mean-dim");
   require_close_(
-      x_mps.amax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.amax(/*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+      x_mps.amax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>().array().data,
+      x_cpu.amax(/*dim=*/1, /*keepdim=*/false).host<float>().array().data,
       2e-4f,
       "amax-dim");
   require_close_(
-      x_mps.amin(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.amin(/*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+      x_mps.amin(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>().array().data,
+      x_cpu.amin(/*dim=*/1, /*keepdim=*/false).host<float>().array().data,
       2e-4f,
       "amin-dim");
 
   require_equal_i64_(
-      x_mps.gt(0.0).all(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-      x_cpu.gt(0.0).all(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>(),
+      x_mps.gt(0.0).all(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int64_t>().array().data,
+      x_cpu.gt(0.0).all(/*dim=*/1, /*keepdim=*/false).host<std::int64_t>().array().data,
       "all-dim");
   require_equal_i64_(
-      x_mps.gt(0.0).any(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-      x_cpu.gt(0.0).any(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>(),
+      x_mps.gt(0.0).any(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int64_t>().array().data,
+      x_cpu.gt(0.0).any(/*dim=*/1, /*keepdim=*/false).host<std::int64_t>().array().data,
       "any-dim");
 }
 
@@ -222,8 +222,8 @@ TEST_CASE("MPS strict torchwide indexing/selection/counting parity", "[mps][stri
   const auto idx1_cpu = pluss::make_series(std::vector<std::int64_t>{5, 0, 3, 2}, {4});
   const auto idx1_mps = idx1_cpu.to(pluss::pMPS);
   require_close_(
-      xf_mps.reshape({xf_mps.numel()}).take(idx1_mps).to(pluss::pCPU).to_vec<float>(),
-      xf_cpu.reshape({xf_cpu.numel()}).take(idx1_cpu).to_vec<float>(),
+      xf_mps.reshape({xf_mps.numel()}).take(idx1_mps).to(pluss::pCPU).host<float>(),
+      xf_cpu.reshape({xf_cpu.numel()}).take(idx1_cpu).host<float>(),
       2e-4f,
       "take");
 
@@ -231,68 +231,68 @@ TEST_CASE("MPS strict torchwide indexing/selection/counting parity", "[mps][stri
       pluss::make_series(std::vector<std::int64_t>{2, 0, 1, 1, 2, 0}, {2, 3});
   const auto gather_idx_mps = gather_idx_cpu.to(pluss::pMPS);
   require_close_(
-      xf_mps.gather(1, gather_idx_mps).to(pluss::pCPU).to_vec<float>(),
-      xf_cpu.gather(1, gather_idx_cpu).to_vec<float>(),
+      xf_mps.gather(1, gather_idx_mps).to(pluss::pCPU).host<float>().array().data,
+      xf_cpu.gather(1, gather_idx_cpu).host<float>().array().data,
       2e-4f,
       "gather");
 
   const auto scatter_base_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto scatter_base_mps = scatter_base_cpu.to(pluss::pMPS);
   require_close_(
-      scatter_base_mps.scatter(1, gather_idx_mps, xf_mps).to(pluss::pCPU).to_vec<float>(),
-      scatter_base_cpu.scatter(1, gather_idx_cpu, xf_cpu).to_vec<float>(),
+      scatter_base_mps.scatter(1, gather_idx_mps, xf_mps).to(pluss::pCPU).host<float>().array().data,
+      scatter_base_cpu.scatter(1, gather_idx_cpu, xf_cpu).host<float>().array().data,
       2e-4f,
       "scatter");
   require_close_(
-      scatter_base_mps.scatter_add(1, gather_idx_mps, xf_mps).to(pluss::pCPU).to_vec<float>(),
-      scatter_base_cpu.scatter_add(1, gather_idx_cpu, xf_cpu).to_vec<float>(),
+      scatter_base_mps.scatter_add(1, gather_idx_mps, xf_mps).to(pluss::pCPU).host<float>().array().data,
+      scatter_base_cpu.scatter_add(1, gather_idx_cpu, xf_cpu).host<float>().array().data,
       2e-4f,
       "scatter_add");
 
-  require_equal_i64_(xf_mps.nonzero().to(pluss::pCPU).to_vec<std::int64_t>(),
-                     xf_cpu.nonzero().to_vec<std::int64_t>(),
+  require_equal_i64_(xf_mps.nonzero().to(pluss::pCPU).host<std::int64_t>().array().data,
+                     xf_cpu.nonzero().host<std::int64_t>().array().data,
                      "nonzero");
 
   require_close_(
-      xf_mps.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
-      xf_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>(),
+      xf_mps.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).host<float>().array().data,
+      xf_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).host<float>().array().data,
       2e-4f,
       "sort");
   require_equal_i64_(
-      xf_mps.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
-      xf_cpu.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to_vec<std::int64_t>(),
+      xf_mps.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).host<std::int64_t>().array().data,
+      xf_cpu.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).host<std::int64_t>().array().data,
       "argsort");
   require_close_(
-      xf_mps.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).to_vec<float>(),
-      xf_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to_vec<float>(),
+      xf_mps.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).host<float>().array().data,
+      xf_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).host<float>().array().data,
       2e-4f,
       "topk");
   require_close_(
-      xf_mps.kthvalue(/*k=*/2, /*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      xf_cpu.kthvalue(/*k=*/2, /*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+      xf_mps.kthvalue(/*k=*/2, /*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<float>().array().data,
+      xf_cpu.kthvalue(/*k=*/2, /*dim=*/1, /*keepdim=*/false).host<float>().array().data,
       2e-4f,
       "kthvalue");
 
   require_equal_i32_(
-      xi_mps.unique(/*sorted=*/true).to(pluss::pCPU).to_vec<std::int32_t>(),
-      xi_cpu.unique(/*sorted=*/true).to_vec<std::int32_t>(),
+      xi_mps.unique(/*sorted=*/true).to(pluss::pCPU).host<std::int32_t>().array().data,
+      xi_cpu.unique(/*sorted=*/true).host<std::int32_t>().array().data,
       "unique-i32");
   require_equal_i64_(
-      xi_mps.bincount(/*minlength=*/7).to(pluss::pCPU).to_vec<std::int64_t>(),
-      xi_cpu.bincount(/*minlength=*/7).to_vec<std::int64_t>(),
+      xi_mps.bincount(/*minlength=*/7).to(pluss::pCPU).host<std::int64_t>().array().data,
+      xi_cpu.bincount(/*minlength=*/7).host<std::int64_t>().array().data,
       "bincount-i64");
   require_equal_i64_(
-      xi_mps.histc(/*bins=*/8, /*min=*/0.0, /*max=*/7.0).to(pluss::pCPU).to_vec<std::int64_t>(),
-      xi_cpu.histc(/*bins=*/8, /*min=*/0.0, /*max=*/7.0).to_vec<std::int64_t>(),
+      xi_mps.histc(/*bins=*/8, /*min=*/0.0, /*max=*/7.0).to(pluss::pCPU).host<std::int64_t>().array().data,
+      xi_cpu.histc(/*bins=*/8, /*min=*/0.0, /*max=*/7.0).host<std::int64_t>().array().data,
       "histc-i64");
 
   require_equal_i32_(
-      xi_mps.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int32_t>(),
-      xi_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<std::int32_t>(),
+      xi_mps.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int32_t>().array().data,
+      xi_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).host<std::int32_t>().array().data,
       "cumsum-i32");
   require_equal_i32_(
-      xi_mps.cumprod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int32_t>(),
-      xi_cpu.cumprod(/*dim=*/1, /*keepdim=*/false).to_vec<std::int32_t>(),
+      xi_mps.cumprod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).host<std::int32_t>().array().data,
+      xi_cpu.cumprod(/*dim=*/1, /*keepdim=*/false).host<std::int32_t>().array().data,
       "cumprod-i32");
 }
 
@@ -312,39 +312,39 @@ TEST_CASE("MPS strict torchwide linalg parity", "[mps][strict][torchwide][linalg
 
   const auto a_cpu = pluss::make_series(std::vector<float>{4.f, 1.f, 1.f, 3.f}, {2, 2});
   const auto a_mps = a_cpu.to(pluss::pMPS);
-  require_close_(det(a_mps).to(pluss::pCPU).to_vec<float>(), det(a_cpu).to_vec<float>(), 3e-3f, "det");
+  require_close_(det(a_mps).to(pluss::pCPU).host<float>().array().data, det(a_cpu).host<float>().array().data, 3e-3f, "det");
   require_close_(
-      inverse(a_mps).to(pluss::pCPU).to_vec<float>(),
-      inverse(a_cpu).to_vec<float>(),
+      inverse(a_mps).to(pluss::pCPU).host<float>().array().data,
+      inverse(a_cpu).host<float>().array().data,
       3e-3f,
       "inverse");
   require_close_(
-      cholesky(a_mps, /*upper=*/false).to(pluss::pCPU).to_vec<float>(),
-      cholesky(a_cpu, /*upper=*/false).to_vec<float>(),
+      cholesky(a_mps, /*upper=*/false).to(pluss::pCPU).host<float>().array().data,
+      cholesky(a_cpu, /*upper=*/false).host<float>().array().data,
       3e-3f,
       "cholesky");
-  require_close_(logdet(a_mps).to(pluss::pCPU).to_vec<float>(), logdet(a_cpu).to_vec<float>(), 3e-3f, "logdet");
+  require_close_(logdet(a_mps).to(pluss::pCPU).host<float>().array().data, logdet(a_cpu).host<float>().array().data, 3e-3f, "logdet");
   require_close_(
-      matrix_power(a_mps, 3).to(pluss::pCPU).to_vec<float>(),
-      matrix_power(a_cpu, 3).to_vec<float>(),
+      matrix_power(a_mps, 3).to(pluss::pCPU).host<float>().array().data,
+      matrix_power(a_cpu, 3).host<float>().array().data,
       4e-3f,
       "matrix_power");
   require_close_(
-      matrix_exp(a_mps).to(pluss::pCPU).to_vec<float>(),
-      matrix_exp(a_cpu).to_vec<float>(),
+      matrix_exp(a_mps).to(pluss::pCPU).host<float>().array().data,
+      matrix_exp(a_cpu).host<float>().array().data,
       5e-3f,
       "matrix_exp");
   require_close_(
-      pinverse(a_mps).to(pluss::pCPU).to_vec<float>(),
-      pinverse(a_cpu).to_vec<float>(),
+      pinverse(a_mps).to(pluss::pCPU).host<float>().array().data,
+      pinverse(a_cpu).host<float>().array().data,
       5e-3f,
       "pinverse");
 
   const auto b_cpu = pluss::make_series(std::vector<float>{2.f, -1.f}, {2, 1});
   const auto b_mps = b_cpu.to(pluss::pMPS);
   require_close_(
-      triangular_solve(a_mps, b_mps, /*upper=*/true, /*unitriangular=*/false).to(pluss::pCPU).to_vec<float>(),
-      triangular_solve(a_cpu, b_cpu, /*upper=*/true, /*unitriangular=*/false).to_vec<float>(),
+      triangular_solve(a_mps, b_mps, /*upper=*/true, /*unitriangular=*/false).to(pluss::pCPU).host<float>().array().data,
+      triangular_solve(a_cpu, b_cpu, /*upper=*/true, /*unitriangular=*/false).host<float>().array().data,
       6e-3f,
       "triangular_solve");
 
@@ -353,13 +353,13 @@ TEST_CASE("MPS strict torchwide linalg parity", "[mps][strict][torchwide][linalg
       {2, 2, 2});
   const auto c_mps = c_cpu.to(pluss::pMPS);
   require_close_(
-      qr_q(c_mps, /*reduced=*/true).abs().to(pluss::pCPU).to_vec<float>(),
-      qr_q(c_cpu, /*reduced=*/true).abs().to_vec<float>(),
+      qr_q(c_mps, /*reduced=*/true).abs().to(pluss::pCPU).host<float>().array().data,
+      qr_q(c_cpu, /*reduced=*/true).abs().host<float>().array().data,
       7e-3f,
       "batched-qr_q");
   require_close_(
-      svd_s(c_mps, /*full_matrices=*/false).to(pluss::pCPU).to_vec<float>(),
-      svd_s(c_cpu, /*full_matrices=*/false).to_vec<float>(),
+      svd_s(c_mps, /*full_matrices=*/false).to(pluss::pCPU).host<float>().array().data,
+      svd_s(c_cpu, /*full_matrices=*/false).host<float>().array().data,
       7e-3f,
       "batched-svd_s");
 }

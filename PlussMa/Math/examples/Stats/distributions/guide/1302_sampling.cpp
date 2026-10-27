@@ -15,7 +15,7 @@ using pluss::Series;
 template <class D>
 void check(const char* name, const D& d, double threshold) {
   const Series draws = d.sample({200000}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 20261022ULL);
-  const auto v = draws.template to_vec<double>();
+  const auto v = draws.template host<double>();
   double mean = 0.0;
   for (double a : v) mean += a;
   mean /= static_cast<double>(v.size());

@@ -529,7 +529,7 @@ void check_single_svd_phase_(const Series& skew, const Series& singular_values) 
   if (!is_complex_scalar_(skew.scalar_type())) return;
   const std::size_t k = static_cast<std::size_t>(singular_values.sizes().back());
   const auto values = skew.to(Platform::CPU).to(ScalarType::Complex128)
-                          .contiguous().to_vec<pluss::codem::Complex128>();
+                          .contiguous().host<pluss::codem::Complex128>();
   for (std::size_t i = 0; i < k; ++i) {
     PLUSS_CHECK(
         std::abs(values[i * k + i].imag()) <= 1e-2,
@@ -594,7 +594,7 @@ void check_svd_phase_invariance_(
   std::vector<double> rhs(k, 0.0);
   const auto read_diagonal = [k](const Series& matrix, std::vector<double>& out) {
     const auto values = matrix.to(Platform::CPU).to(ScalarType::Complex128)
-                            .contiguous().to_vec<pluss::codem::Complex128>();
+                            .contiguous().host<pluss::codem::Complex128>();
     for (std::size_t i = 0; i < k; ++i) {
       out[i] = values[i * k + i].imag();
     }
@@ -828,11 +828,11 @@ void bind_matrix_exp_backward_(const Series& out, const Series& a) {
       const auto av = a.to(Platform::CPU)
                           .to(ScalarType::Complex128)
                           .contiguous()
-                          .to_vec<std::complex<double>>();
+                          .host<std::complex<double>>();
       const auto gv = out_sens.to(Platform::CPU)
                           .to(ScalarType::Complex128)
                           .contiguous()
-                          .to_vec<std::complex<double>>();
+                          .host<std::complex<double>>();
       PLUSS_CHECK(av.size() == gv.size() && matrix_size > 0 && av.size() % matrix_size == 0,
                   "subsp::linearalg::matrix_exp: invalid complex reverse-mode batch shape");
       std::vector<std::complex<double>> values(av.size());
@@ -867,8 +867,8 @@ void bind_matrix_exp_backward_(const Series& out, const Series& a) {
       pluss::codem::series_tape::accumulate_sensitivity(a, grad);
       return;
     }
-    const auto av = a.to(Platform::CPU).to(ScalarType::Float64).contiguous().to_vec<double>();
-    const auto gv = out_sens.to(Platform::CPU).to(ScalarType::Float64).contiguous().to_vec<double>();
+    const auto av = a.to(Platform::CPU).to(ScalarType::Float64).contiguous().host<double>();
+    const auto gv = out_sens.to(Platform::CPU).to(ScalarType::Float64).contiguous().host<double>();
     PLUSS_CHECK(av.size() == gv.size() && matrix_size > 0 && av.size() % matrix_size == 0,
                 "subsp::linearalg::matrix_exp: invalid reverse-mode batch shape");
     std::vector<double> values(av.size(), 0.0);
@@ -1547,7 +1547,7 @@ inline Series matrix_power_native_(const Series& a, std::int64_t exp) {
 
 inline Series matrix_exp_native_(const Series& a) {
   require_square_2d_(a, "matrix_exp");
-  const auto values = a.to(Platform::CPU).to(ScalarType::Float64).contiguous().to_vec<double>();
+  const auto values = a.to(Platform::CPU).to(ScalarType::Float64).contiguous().host<double>();
   const auto n = a.sizes()[0];
   double norm_inf = 0.0;
   for (std::int64_t r = 0; r < n; ++r) {
@@ -1642,7 +1642,7 @@ inline DetStats det_stats_mps_native_(const Series& a) {
   // by using canonical slogdet reference values.
   const Series cpu = native_a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   const Series slog = pluss::subsp::math::linalg::slogdet(cpu).to(ScalarType::Float32).contiguous();
-  const auto vals = slog.to_vec<float>();
+  const auto vals = slog.host<float>();
   PLUSS_CHECK(vals.size() == 2, "subsp::linearalg::det: internal slogdet shape mismatch");
 
   DetStats stats{};
@@ -1805,8 +1805,8 @@ inline void canonicalize_qr_bridge_signs_cpu_(Series& q_cpu, Series& r_cpu) {
     return;
   }
 
-  auto qv = q_cpu.to_vec<float>();
-  auto rv = r_cpu.to_vec<float>();
+  auto qv = q_cpu.host<float>().array().data;
+  auto rv = r_cpu.host<float>().array().data;
   for (std::int64_t i = 0; i < diag_lim; ++i) {
     const std::size_t rdiag = static_cast<std::size_t>(i * r_cols + i);
     if (rv[rdiag] >= 0.0f) {
@@ -1843,8 +1843,8 @@ inline void canonicalize_svd_bridge_signs_cpu_(Series& u_cpu, Series& s_cpu, Ser
     return;
   }
 
-  auto uv = u_cpu.to_vec<float>();
-  auto vhv = vh_cpu.to_vec<float>();
+  auto uv = u_cpu.host<float>().array().data;
+  auto vhv = vh_cpu.host<float>().array().data;
   for (std::int64_t i = 0; i < k; ++i) {
     std::int64_t pivot = 0;
     float best = -1.0f;
@@ -2112,7 +2112,7 @@ inline Series pinverse_mps_native_(const Series& a, double rcond) {
   const auto singular_values = decomposition.s.to(Platform::CPU)
                                    .to(ScalarType::Float64)
                                    .contiguous()
-                                   .to_vec<double>();
+                                   .host<double>();
   const double largest = singular_values.empty() ? 0.0 : singular_values.front();
   const Series keep = decomposition.s.gt(rcond * largest);
   const Series zeros = Series::zeros(decomposition.s.sizes(), decomposition.s.scalar_type())
@@ -3080,7 +3080,7 @@ Series pinverse(const Series &a, double rcond) {
   if (a.platform() == Platform::CPU) {
     if (is_complex_scalar_(a.scalar_type())) {
       const auto decomposition = pluss::subsp::math::linalg::svd(a, /*full_matrices=*/false);
-      const auto singular_values = decomposition.S.to(ScalarType::Float64).to_vec<double>();
+      const auto singular_values = decomposition.S.to(ScalarType::Float64).host<double>();
       const double largest = singular_values.empty() ? 0.0 : singular_values.front();
       const double cutoff = rcond * largest;
       std::vector<double> reciprocal;

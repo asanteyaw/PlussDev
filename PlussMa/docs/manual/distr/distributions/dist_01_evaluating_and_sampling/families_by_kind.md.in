@@ -2,7 +2,173 @@
 
 [Back to Evaluating and Sampling](../dist_01_evaluating_and_sampling.md)
 
+Sixty families are implemented, and only the common ones are structs with their own names. All of them, the less common ones included, are reached through one set of free functions that take the family as a value of the enumeration `dst::Kind`:
 
-@@example Stats/distributions/guide/1303_families_by_kind.cpp@@
+- `distr::pdf(kind, x, params)`, `distr::logpdf(...)`, `distr::cdf(...)`, `distr::logcdf(...)`,
+- `distr::sample(kind, params, sizes, cfg, seed)` and `distr::sample_like(kind, params, like, seed)`,
+- `distr::supports(kind)`, which tells whether a kind is implemented.
 
-The kind-based functions give the same numbers as the objects, and relations between families can be checked directly: a chi-squared with 5 degrees of freedom is a gamma with shape 2.5 and scale 2 (the two rows are identical), and the integral of the Weibull density over [0.5, 2], by the trapezoidal rule on 3000 steps, equals `cdf(2) − cdf(0.5)` (both 0.51814). The mean of draws from a gamma of shape 3 and scale 1 is 3.007, close to the exact 3.
+`params` is a list of the parameters in the order of the table in the [chapter overview](../dist_01_evaluating_and_sampling.md); a list with fewer entries selects the family's default parameters where it has a short form (`{nu}` for the Student t means location 0 and scale 1). The kind-based functions give the same numbers as the structs, so the two routes can be mixed freely. The programs use `namespace distr = pluss::subsp::stats::distr;` and `namespace dst = distr::dst;`.
+
+The value of a common interface is that families can be compared, swapped and *checked against each other*, which is what the programs below do.
+
+## A tour of the continuous families
+
+The first program evaluates the density of eight families at the same four points. They differ in support, shape and tail, and reading the table shows how: the Rayleigh, Weibull, Lomax and Gompertz densities live on the positive axis (and the Gompertz is already below 0.000005 at 4), the Laplace, logistic, Cauchy and Student t are symmetric around zero, and the Lomax, Student t and Cauchy decay as a power rather than exponentially.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+
+  const auto x = pluss::make_series({0.5, 1.0, 2.0, 4.0}, f64);
+  out.writeln("x                 ", x.host<double>());
+  out.writeln("Weibull(1.7, 2.1) ", distr::pdf(dst::Weibull, x, {1.7, 2.1}).host<double>());
+  out.writeln("Rayleigh(1.4)     ", distr::pdf(dst::Rayleigh, x, {1.4}).host<double>());
+  out.writeln("Student t(4.5)    ", distr::pdf(dst::StudentT, x, {4.5}).host<double>());
+  out.writeln("Lomax(1.5, 2.5)   ", distr::pdf(dst::Lomax, x, {1.5, 2.5}).host<double>());
+  out.writeln("Gompertz(0.8, 2.0)", distr::pdf(dst::Gompertz, x, {0.8, 2.0}).host<double>());
+  out.writeln("Laplace(0, 1)     ", distr::pdf(dst::Laplace, x, {0.0, 1.0}).host<double>());
+  out.writeln("Logistic(0, 1)    ", distr::pdf(dst::Logistic, x, {0.0, 1.0}).host<double>());
+  out.writeln("Cauchy(0, 1)      ", distr::pdf(dst::Cauchy, x, {0.0, 1.0}).host<double>());
+  out.writeln("kinds implemented: Normal", distr::supports(dst::Normal), ", Gh", distr::supports(dst::Gh));
+}
+```
+
+The point of the table is not any one number. It is that eight families with different supports and shapes were evaluated through the same call, with only the `kind` and the parameter list changing. When you do not know which family describes your data, this is what makes it practical to try several (the maximum-likelihood chapter then fits the ones that have a fit).
+
+## Relationships between families
+
+Many families are special cases of others, and the library gives the same numbers either way. Checking such an identity is a good test of your understanding of the parameterisation, and a good reminder that the parameter *order* matters. The program verifies four: a chi-squared with 5 degrees of freedom is a gamma with shape 2.5 and scale 2 (note the gamma's long form is `{location, scale, shape}`), the Wald family is an inverse Gaussian with mean 1, the Student t approaches the normal as its degrees of freedom grow, and an Erlang is a gamma with an integer shape.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2));
+  const auto x = pluss::make_series({0.3, 0.8, 1.5, 3.0, 6.0}, f64);
+
+  out.writeln("largest difference between two routes to the same distribution");
+  out.writeln("  ChiSquare(5) vs Gamma(shape 2.5, scale 2), cdf:      ", (distr::cdf(dst::ChiSquare, x, {5.0}) - distr::cdf(dst::Gamma, x, {0.0, 2.0, 2.5})).abs().max().item<double>());
+  out.writeln("  Wald(2) vs InverseGaussian(mean 1, shape 2), pdf:    ", (distr::pdf(dst::Wald, x, {2.0}) - distr::pdf(dst::InverseGaussian, x, {1.0, 2.0})).abs().max().item<double>());
+  out.writeln("  Erlang(scale 1.5, k 3) vs Gamma(shape 3, scale 1.5): ", (distr::pdf(dst::Erlang, x, {1.5, 3.0}) - distr::pdf(dst::Gamma, x, {0.0, 1.5, 3.0})).abs().max().item<double>());
+
+  const auto z = pluss::make_series({-2.0, -1.0, 0.0, 1.0, 2.0}, f64);
+  out.writeln("\nStudent t against the normal: largest difference in the density over z in [-2, 2]");
+  for (double nu : {1.0, 3.0, 10.0, 100.0, 1000.0})
+    out.writeln("  nu =", nu, "  ", (distr::pdf(dst::StudentT, z, {nu}) - distr::Normal{0.0, 1.0}.pdf(z)).abs().max().item<double>(), PrintOptions{}.fixed(5));
+}
+```
+
+The first three differences are at rounding level (10⁻¹⁶ or smaller), so these are *identities*, not approximations. The Student t is not: its density differs from the normal's visibly for a few degrees of freedom and converges to it as `nu` grows (the gap falls from 0.08 at `nu = 1` to a few ten-thousandths at `nu = 1000`). The identities are useful beyond testing: when a family you need is missing, it is probably a reparameterisation of one that is there.
+
+## Comparing tails
+
+The practical difference between families is often in the tails, because that is where a wrong model hurts most. The program puts five families on the same footing, symmetric distributions each scaled to variance 1, and prints the probability of exceeding 2, 4 and 6 standard deviations, using the lower tail (`cdf(−x)`, by symmetry) so that nothing is lost to rounding. The ratio to the normal shows how much probability each family puts out there that a normal model would miss.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  const double pi = 3.14159265358979;
+  const auto cut = pluss::make_series({-2.0, -4.0, -6.0}, f64);   // k = 2, 4, 6 standard deviations below the mean
+
+  // Symmetric families scaled to variance 1: the probability of falling more than k standard deviations below the mean.
+  const auto normal   = distr::cdf(dst::Normal, cut, {0.0, 1.0});
+  const auto logistic = distr::cdf(dst::Logistic, cut, {0.0, std::sqrt(3.0) / pi});
+  const auto laplace  = distr::cdf(dst::Laplace, cut, {0.0, 1.0 / std::sqrt(2.0)});
+  const auto t10      = distr::cdf(dst::StudentT, cut, {10.0, 0.0, std::sqrt(8.0 / 10.0)});
+  const auto t4       = distr::cdf(dst::StudentT, cut, {4.0, 0.0, std::sqrt(2.0 / 4.0)});
+
+  out.writeln("P(X < -k sd) for k = 2, 4, 6");
+  out.writeln("  Normal           ", normal.host<double>(), PrintOptions{}.sci(3));
+  out.writeln("  Logistic         ", logistic.host<double>(), PrintOptions{}.sci(3));
+  out.writeln("  Laplace          ", laplace.host<double>(), PrintOptions{}.sci(3));
+  out.writeln("  Student t (10 df)", t10.host<double>(), PrintOptions{}.sci(3));
+  out.writeln("  Student t (4 df) ", t4.host<double>(), PrintOptions{}.sci(3));
+  out.writeln("\nratio to the normal");
+  out.writeln("  Logistic         ", (logistic / normal).host<double>(), PrintOptions{}.fixed(1));
+  out.writeln("  Laplace          ", (laplace / normal).host<double>(), PrintOptions{}.fixed(1));
+  out.writeln("  Student t (10 df)", (t10 / normal).host<double>(), PrintOptions{}.fixed(1));
+  out.writeln("  Student t (4 df) ", (t4 / normal).host<double>(), PrintOptions{}.fixed(1));
+}
+```
+
+With the variance held fixed, the families agree about the middle of the distribution and disagree sharply about the tail. At two standard deviations they are within 30% of each other; at four the logistic, the 10-degree t, the Laplace and the 4-degree t put 22, 19, 55 and 76 times as much probability beyond as the normal; and at six standard deviations the multiples are about 19 000, 27 000, 105 000 and 536 000. This is what "heavy tail" means quantitatively, and why the choice of family matters most for risk questions: a normal fitted to heavy-tailed data is not slightly wrong about extreme events, it is wrong by orders of magnitude. [Chapter 3](../dist_03_heavy_tails_and_mixtures.md) fits families with a tail parameter to data.
+
+## Discrete families
+
+Discrete families are reached the same way; `pdf` is the mass function and the support is the non-negative integers (the positive integers for the geometric, Yule and zeta). A mass function must sum to one, and its mean can be checked against draws. The program verifies both for six discrete kinds: it sums the mass over a long stretch of the support, adds up `k × mass` for the mean, and compares that with the mean of 200 000 draws.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const struct { const char* name; dst::Kind kind; std::vector<double> params; int first, last; } laws[] = {
+      {"Poisson(3.2)", dst::Poisson, {3.2}, 0, 80},         {"Geometric(0.3)", dst::Geometric, {0.3}, 1, 200},
+      {"NegativeBinomial(3, 0.4)", dst::NegativeBinomial, {3.0, 0.4}, 0, 400}, {"Binomial(12, 0.35)", dst::Binomial, {12.0, 0.35}, 0, 12},
+      {"Yule(3)", dst::Yule, {3.0}, 1, 100000},             {"Zeta(3.5)", dst::Zeta, {3.5}, 1, 100000}};
+
+  out.writeln("family                      sum of mass  mean (sum)  mean (200k draws)");
+  for (const auto& law : laws) {
+    const auto k = pluss::series::linspace(law.first, law.last, law.last - law.first + 1, f64).round();
+    const auto mass = distr::pdf(law.kind, k, law.params);
+    const auto draws = distr::sample(law.kind, law.params, {200000}, f64, 17ULL);
+    out.writeln(law.name, "  ", mass.sum().item<double>(), "  ", (mass * k).sum().item<double>(), "  ", draws.mean().item<double>());
+  }
+}
+```
+
+Each mass function sums to one over its support (to five digits; the zeta and Yule sums are cut off at 100 000 and so lack an invisible sliver of their power-law tails). The means from summation and from draws agree to two or three decimals, differing by the Monte Carlo error of 200 000 draws. The zeta and Yule rows are the ones to watch: their tails decay as a power, so their sums converge slowly and their draws have a much larger variance than the others; for a smaller exponent the mean would not exist at all, and the sample mean would not settle however many draws were taken. A heavy-tailed discrete family is where simulated means need the most care.
+
+## Decisions and pitfalls
+
+- **The parameter order is per family.** Read the table: the gamma's long form is `{location, scale, shape}` but the Weibull's is `{shape, scale}`; a wrong order gives a valid but wrong distribution, with no error.
+- **Check with a relationship.** A chi-squared is a gamma, a Wald is an inverse Gaussian, a Student t tends to the normal: verify your parameterisation against a known identity before relying on a family.
+- **Compare tails, not centres.** Families are alike in the middle; they differ most where the data are scarcest.
+- **Use `supports(kind)` before depending on a family.** It tells whether a kind is implemented.
+- **Know the support.** A discrete family takes integers; evaluating a continuous family outside its support gives zero density.
+
+Where next: [Chapter 2](../dist_02_maximum_likelihood.md) fits these families to data by maximum likelihood.

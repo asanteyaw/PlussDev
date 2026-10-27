@@ -20,7 +20,7 @@ void expect(bool c, const std::string &m) {
 }
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
 double max_abs(const Series &a, const std::vector<double> &b) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch");
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -46,11 +46,11 @@ int main() {
     expect(max_abs(mu::tendon_force_length(vec(ref::tgrid), 0.049), ref::ft) < 1e-13, "tendon force-length");
     expect(max_abs(mu::tendon_stiffness(vec(ref::tgrid), 0.049), ref::dft) < 1e-12, "tendon stiffness");
     // ---- defining key points of the model
-    expect(std::abs(mu::active_force_length(vec({1.0})).item<double>() - 1.0) < 1e-12, "f_act(1) = 1");
-    expect(std::abs(mu::force_velocity(vec({0.0})).item<double>() - 1.0) < 1e-12 && std::abs(mu::force_velocity(vec({-1.0})).item<double>()) < 1e-12, "f_v(0) = 1, f_v(-1) = 0");
-    expect(std::abs(mu::tendon_force_length(vec({1.049}), 0.049).item<double>() - 1.0) < 1e-12 && std::abs(mu::tendon_force_length(vec({1.0}), 0.049).item<double>()) < 1e-12, "tendon: unit force at strain 0.049, zero at slack length");
-    expect(std::abs(mu::passive_force_length(vec({1.6}), 0.6).item<double>() - 1.0) < 1e-12 && std::abs(mu::passive_force_length(vec({0.2}), 0.6).item<double>()) < 1e-12, "passive: unit force at strain 0.6, zero at 0.2");
-    expect(mu::force_velocity(vec({1.0})).item<double>() < 1.8 && mu::force_velocity(vec({1.0})).item<double>() > 1.7, "f_v(1) is the documented ~1.794 range maximum");
+    expect(std::abs(mu::active_force_length(vec({1.0})).host<double>().front() - 1.0) < 1e-12, "f_act(1) = 1");
+    expect(std::abs(mu::force_velocity(vec({0.0})).host<double>().front() - 1.0) < 1e-12 && std::abs(mu::force_velocity(vec({-1.0})).host<double>().front()) < 1e-12, "f_v(0) = 1, f_v(-1) = 0");
+    expect(std::abs(mu::tendon_force_length(vec({1.049}), 0.049).host<double>().front() - 1.0) < 1e-12 && std::abs(mu::tendon_force_length(vec({1.0}), 0.049).host<double>().front()) < 1e-12, "tendon: unit force at strain 0.049, zero at slack length");
+    expect(std::abs(mu::passive_force_length(vec({1.6}), 0.6).host<double>().front() - 1.0) < 1e-12 && std::abs(mu::passive_force_length(vec({0.2}), 0.6).host<double>().front()) < 1e-12, "passive: unit force at strain 0.6, zero at 0.2");
+    expect(mu::force_velocity(vec({1.0})).host<double>().front() < 1.8 && mu::force_velocity(vec({1.0})).host<double>().front() > 1.7, "f_v(1) is the documented ~1.794 range maximum");
     // ---- exact inverse relations and monotonicity
     {
       const Series v = vec({-0.95, -0.5, 0.0, 0.4, 0.99}), f = vec({0.05, 0.3, 0.9, 1.0, 1.7, 4.0});
@@ -63,7 +63,7 @@ int main() {
       expect(mu::tendon_force_length(lt.add(h)).sub(mu::tendon_force_length(lt.sub(h))).div(2e-6).sub(mu::tendon_stiffness(lt)).abs().max().item<double>() < 1e-6, "tendon stiffness = d f_T / d l_T");
       // widening the active curve keeps its peak at 1 and lowers it elsewhere
       const Series l = vec({0.7, 1.3});
-      expect(mu::active_force_length(l, 2.0).sub(mu::active_force_length(l, 1.0)).min().item<double>() > 0.0 && std::abs(mu::active_force_length(vec({1.0}), 2.0).item<double>() - 1.0) < 1e-12, "width_scale > 1 widens the curve");
+      expect(mu::active_force_length(l, 2.0).sub(mu::active_force_length(l, 1.0)).min().host<double>().front() > 0.0 && std::abs(mu::active_force_length(vec({1.0}), 2.0).host<double>().front() - 1.0) < 1e-12, "width_scale > 1 widens the curve");
     }
     // ---- isometric equilibrium on a grid of activations and muscle-tendon lengths vs scipy brentq
     {
@@ -72,7 +72,7 @@ int main() {
       std::vector<double> a, len;
       for (std::size_t i = 0; i < n; ++i) { a.push_back(ref::eq[5 * i]); len.push_back(ref::eq[5 * i + 1]); }
       const auto e = mu::isometric_equilibrium(vec(a), vec(len), p);
-      const auto ft = e.norm_tendon_force.contiguous().to_vec<double>(), ln = e.norm_fiber_length.contiguous().to_vec<double>(), lt = e.tendon_length.contiguous().to_vec<double>();
+      const auto ft = e.norm_tendon_force.contiguous().host<double>(), ln = e.norm_fiber_length.contiguous().host<double>(), lt = e.tendon_length.contiguous().host<double>();
       for (std::size_t i = 0; i < n; ++i) {
         expect(std::abs(ft[i] - ref::eq[5 * i + 2]) < 1e-10 && std::abs(ln[i] - ref::eq[5 * i + 3]) < 1e-10 && std::abs(lt[i] - ref::eq[5 * i + 4]) < 1e-10, "isometric equilibrium vs brentq at index " + std::to_string(i));
       }
@@ -91,9 +91,32 @@ int main() {
         const double t = ref::traj[3 * k];
         const auto idx = static_cast<std::size_t>(std::llround(t / 0.0005));
         expect(std::abs(path.times[idx] - t) < 1e-9, "sample time on the grid");
-        expect(std::abs(path.activation[idx].item<double>() - ref::traj[3 * k + 1]) < 5e-5 && std::abs(path.norm_tendon_force[idx].item<double>() - ref::traj[3 * k + 2]) < 5e-4,
-               "muscle state at t = " + std::to_string(t) + ": a " + std::to_string(path.activation[idx].item<double>()) + " vs " + std::to_string(ref::traj[3 * k + 1]) + ", f_T " + std::to_string(path.norm_tendon_force[idx].item<double>()) + " vs " + std::to_string(ref::traj[3 * k + 2]));
+        expect(std::abs(path.activation[idx].host<double>().front() - ref::traj[3 * k + 1]) < 5e-5 && std::abs(path.norm_tendon_force[idx].host<double>().front() - ref::traj[3 * k + 2]) < 5e-4,
+               "muscle state at t = " + std::to_string(t) + ": a " + std::to_string(path.activation[idx].host<double>().front()) + " vs " + std::to_string(ref::traj[3 * k + 1]) + ", f_T " + std::to_string(path.norm_tendon_force[idx].host<double>().front()) + " vs " + std::to_string(ref::traj[3 * k + 2]));
       }
+    }
+    // ---- fibre damping: velocity from a f_act f_v(v) + beta v = rhs (Newton in a bisection bracket) vs a brentq-driven DOP853 trajectory; beta = 0 keeps the closed form
+    {
+      mu::Params p = params();
+      p.fiber_damping = ref::damping[0];
+      const auto excitation = [](double t) { return vec({0.05 + 0.375 * (1.0 + std::tanh((t - 0.15) / 0.02)) - 0.25 * (1.0 + std::tanh((t - 0.40) / 0.03))}); };
+      const auto length = [](double t) { return vec({0.31 + 0.012 * std::sin(2.0 * M_PI * 2.0 * t)}); };
+      const auto velocity = [](double t) { return vec({0.012 * 2.0 * M_PI * 2.0 * std::cos(2.0 * M_PI * 2.0 * t)}); };
+      const auto path = mu::simulate(p, excitation, length, velocity, vec({ref::a0f0[0]}), vec({ref::a0f0[1]}), 0.0, 0.6, 1200);
+      for (std::size_t k = 0; k < 12; ++k) {
+        const double t = ref::traj_damped[3 * k];
+        const auto idx = static_cast<std::size_t>(std::llround(t / 0.0005));
+        expect(std::abs(path.activation[idx].host<double>().front() - ref::traj_damped[3 * k + 1]) < 5e-5 && std::abs(path.norm_tendon_force[idx].host<double>().front() - ref::traj_damped[3 * k + 2]) < 5e-4,
+               "damped muscle state at t = " + std::to_string(t) + ": f_T " + std::to_string(path.norm_tendon_force[idx].host<double>().front()) + " vs " + std::to_string(ref::traj_damped[3 * k + 2]));
+      }
+      // damping resists velocity: for the same state the damped muscle changes its tendon force more slowly under a stretch
+      mu::Params q = params();
+      const Series a = vec({0.5}), f = vec({0.2}), e = vec({0.5}), len = vec({0.33}), vel = vec({0.2});
+      const double plain = mu::state_rate(a, f, e, len, vel, q).select(-1, 1).host<double>().front(), damped = mu::state_rate(a, f, e, len, vel, p).select(-1, 1).host<double>().front();
+      expect(std::abs(damped) != std::abs(plain), "damping changes the dynamics");
+      // isometric equilibrium is unaffected (the damping force vanishes at v = 0)
+      const auto e0 = mu::isometric_equilibrium(vec({0.4}), vec({0.33}), q), e1 = mu::isometric_equilibrium(vec({0.4}), vec({0.33}), p);
+      expect(std::abs(e0.norm_tendon_force.host<double>().front() - e1.norm_tendon_force.host<double>().front()) < 1e-12, "isometric equilibrium independent of damping");
     }
     // ---- steady state: constant excitation and length converge to the isometric equilibrium
     {
@@ -101,14 +124,14 @@ int main() {
       const double e0 = 0.6, len0 = 0.33;
       const auto path = mu::simulate(p, [&](double) { return vec({e0}); }, [&](double) { return vec({len0}); }, [](double) { return vec({0.0}); }, vec({0.3}), vec({0.5}), 0.0, 1.5, 3000);
       const auto eq = mu::isometric_equilibrium(vec({e0}), vec({len0}), p);
-      expect(std::abs(path.activation.back().item<double>() - e0) < 1e-6 && std::abs(path.norm_tendon_force.back().item<double>() - eq.norm_tendon_force.item<double>()) < 1e-5,
-             "dynamic muscle converges to the isometric equilibrium: " + std::to_string(path.norm_tendon_force.back().item<double>()) + " vs " + std::to_string(eq.norm_tendon_force.item<double>()));
+      expect(std::abs(path.activation.back().host<double>().front() - e0) < 1e-6 && std::abs(path.norm_tendon_force.back().host<double>().front() - eq.norm_tendon_force.host<double>().front()) < 1e-5,
+             "dynamic muscle converges to the isometric equilibrium: " + std::to_string(path.norm_tendon_force.back().host<double>().front()) + " vs " + std::to_string(eq.norm_tendon_force.host<double>().front()));
     }
     // ---- activation dynamics: rise faster than decay, fixed points at e = a, batched lanes
     {
       const mu::Params p = params();
       const Series a = vec({0.2, 0.2, 0.7}), e = vec({0.9, 0.2, 0.1});
-      const auto r = mu::activation_rate(a, e, p).contiguous().to_vec<double>();
+      const auto r = mu::activation_rate(a, e, p).contiguous().host<double>();
       expect(r[0] > 0.0 && std::abs(r[1]) < 1e-15 && r[2] < 0.0, "activation sign structure");
       // closed form at one point: a = 0.2, e = 0.9
       const double z = 0.5 + 1.5 * 0.2, f = 0.5 * std::tanh(0.1 * (0.9 - 0.2));

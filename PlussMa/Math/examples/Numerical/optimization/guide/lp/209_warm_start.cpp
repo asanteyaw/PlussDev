@@ -42,7 +42,7 @@ int main() {
   std::cout << std::setw(34) << "base problem, cold start" << std::setw(12) << cold.iterations << std::setw(14) << "-" << std::fixed << std::setprecision(5)
             << cold.objective.item<double>() << "\n";
 
-  const auto plan = cold.x.to_vec<double>();
+  const auto plan = cold.x.host<double>();
   const auto used_most = static_cast<std::size_t>(std::max_element(plan.begin(), plan.end()) - plan.begin());
   auto changed_needs = need;
   changed_needs[3] *= 1.5;  // 50% more of nutrient 3 is required

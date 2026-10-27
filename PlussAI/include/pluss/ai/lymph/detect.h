@@ -30,7 +30,7 @@ inline void require_anomaly_model_(const Model& model, std::string_view where) {
   if (states.empty() || states.front().size() < 3 || !states.front()[2].defined()) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  return states.front()[2].to(pluss::pCPU, ScalarType::Float64).reshape({states.front()[2].numel()}).item<double>();
+  return states.front()[2].to(pluss::pCPU, ScalarType::Float64).reshape({states.front()[2].numel()}).host<double>().front();
 }
 
 [[nodiscard]] inline DataFrameBatchOptions default_data_options_(pluss::msharp::RangeView::Of<std::string> names) {

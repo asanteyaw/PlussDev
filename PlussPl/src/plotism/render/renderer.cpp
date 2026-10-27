@@ -493,9 +493,9 @@ class ScopedSeriesVectorCache {
 
 [[nodiscard]] std::vector<double> to_f64_uncached(const Series& series) {
   if (series.scalar_type() == ScalarType::Float64) {
-    return series.to_vec<double>();
+    return series.host<double>().array().data;
   }
-  return series.to(ScalarType::Float64).to_vec<double>();
+  return series.to(ScalarType::Float64).host<double>().array().data;
 }
 
 [[nodiscard]] std::shared_ptr<const std::vector<double>> to_f64_shared(const Series& series) {

@@ -100,7 +100,7 @@ int main() {
   });
 
   const ai::ProcedureResult out = proc.run({ai::procedure::input("x", x)});
-  const std::vector<double> y = out.get<pluss::Series>("score").to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>();
+  const std::vector<double> y = out.get<pluss::Series>("score").to(pluss::pCPU, pluss::ScalarType::Float64).host<double>();
   std::cout << "score=[" << y[0] << "," << y[1] << "," << y[2] << "]\n";
   return 0;
 }

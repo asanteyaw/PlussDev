@@ -30,12 +30,12 @@ TEST_CASE("Series::grouped_median reverse: odd-sized group routes full gradient 
   values.tracks_slope_(true);
 
   const Series out = values.grouped_median(group_ids, 2);
-  REQUIRE(out.to_vec<double>() == std::vector<double>{3.0, 9.0});
+  REQUIRE(out.host<double>() == std::vector<double>{3.0, 9.0});
 
   // loss = sum(out^2) -> d(loss)/d(out) = 2*out = {6.0, 18.0}.
   out.mul(out).sum().reverse();
   REQUIRE(values.has_sensitivity());
-  const auto g = values.sensitivity().to_vec<double>();
+  const auto g = values.sensitivity().host<double>();
   const std::vector<double> expected{0.0, 0.0, 6.0, 9.0, 9.0, 0.0};
   REQUIRE(g.size() == expected.size());
   for (std::size_t i = 0; i < g.size(); ++i) {
@@ -54,14 +54,14 @@ TEST_CASE("Series::grouped_median reverse: even-sized group splits gradient acro
   values.tracks_slope_(true);
 
   const Series out = values.grouped_median(group_ids, 1);
-  REQUIRE(out.to_vec<double>() == std::vector<double>{4.0});
+  REQUIRE(out.host<double>() == std::vector<double>{4.0});
 
   // loss = 10 * out -> d(loss)/d(out) = 10, split 5.0/5.0 between the lower
   // (index 1) and upper (index 2) middle elements; the two outer elements
   // (indices 0 and 3) get exactly zero.
   out.mul(10.0).sum().reverse();
   REQUIRE(values.has_sensitivity());
-  const auto g = values.sensitivity().to_vec<double>();
+  const auto g = values.sensitivity().host<double>();
   const std::vector<double> expected{0.0, 5.0, 5.0, 0.0};
   REQUIRE(g.size() == expected.size());
   for (std::size_t i = 0; i < g.size(); ++i) {
@@ -81,11 +81,11 @@ TEST_CASE("Series::grouped_median reverse: repeated-value even group splits grad
   values.tracks_slope_(true);
 
   const Series out = values.grouped_median(group_ids, 1);
-  REQUIRE(out.to_vec<double>() == std::vector<double>{2.0});
+  REQUIRE(out.host<double>() == std::vector<double>{2.0});
 
   out.mul(8.0).sum().reverse();  // d(loss)/d(out) = 8.0
   REQUIRE(values.has_sensitivity());
-  const auto g = values.sensitivity().to_vec<double>();
+  const auto g = values.sensitivity().host<double>();
   for (double v : g) {
     REQUIRE(v == Catch::Approx(2.0).margin(1e-12));  // 8.0 / 4 elements
   }

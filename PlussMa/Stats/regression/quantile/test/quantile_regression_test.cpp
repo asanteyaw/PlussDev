@@ -54,7 +54,7 @@ int main() {
     opt.alpha = 0.05;
     opt.max_iter = 600;
     const auto fit = reg::quantile_fit(y, x, opt, cfg);
-    const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto coef = fit.coefficients.to(pluss::pCPU, ScalarType::Float64).host<double>();
 
     expect(fit.converged, "quantile converged");
     expect(fit.k_params == 2, "quantile k_params");
@@ -77,14 +77,14 @@ int main() {
       reg::QuantileOptions o;
       o.tau = 0.25;
       const auto f = reg::quantile_fit(pluss::make_series(hy, {20}).to(ScalarType::Float64), pluss::make_series(hx, {20, 1}).to(ScalarType::Float64), o);
-      const auto b = f.coefficients.to_vec<double>(), se = f.std_errors.to_vec<double>(), pv = f.p_values.to_vec<double>();
+      const auto b = f.coefficients.host<double>(), se = f.std_errors.host<double>(), pv = f.p_values.host<double>();
       expect(std::abs(b[0] + 1.058823) < 1e-4 && std::abs(b[1] - 2.052941) < 1e-4, "quantile coefficients match the reference");
       expect(std::abs(se[0] - 2.560936) < 1e-3 && std::abs(se[1] - 0.2225928) < 1e-4, "quantile standard errors match the reference");
       expect(std::abs(pv[0] - 0.6841599) < 1e-4 && std::abs(pv[1] - 3.055392e-08) < 1e-8, "quantile p-values use the Student t distribution");
       // an extreme tau with a small sample must still give finite standard errors
       o.tau = 0.9;
       const auto g = reg::quantile_fit(pluss::make_series(hy, {20}).to(ScalarType::Float64), pluss::make_series(hx, {20, 1}).to(ScalarType::Float64), o);
-      const auto sg = g.std_errors.to_vec<double>();
+      const auto sg = g.std_errors.host<double>();
       expect(std::isfinite(sg[0]) && sg[0] < 10.0 && sg[1] < 1.0, "extreme tau gives sensible standard errors");
     }
     {
@@ -96,7 +96,7 @@ int main() {
       }
       hy[9] = 60.0;
       const auto f = reg::quantile_fit(pluss::make_series(hy, {10}).to(ScalarType::Float64), pluss::make_series(hx, {10, 1}).to(ScalarType::Float64));
-      expect(f.std_errors.to_vec<double>()[1] < 0.5, "an outlier does not inflate the quantile-regression standard errors");
+      expect(f.std_errors.host<double>()[1] < 0.5, "an outlier does not inflate the quantile-regression standard errors");
     }
 
     std::cout << "quantile_regression_test passed\n";

@@ -16,8 +16,8 @@ Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<st
 int main() {
   const roots::Fn f = [](const Series& x) { return x.pow(3.0) - x * 2.0 - 5.0; };
   const auto r = roots::bisect(f, vec({2.0}), vec({3.0}));
-  std::cout << std::setprecision(15) << "root       : " << r.root.item<double>() << "\n";
-  std::cout << std::scientific << std::setprecision(2) << "residual   : " << r.residual.item<double>() << "\n";
+  std::cout << std::setprecision(15) << "root       : " << as_f64(r.root) << "\n";
+  std::cout << std::scientific << std::setprecision(2) << "residual   : " << as_f64(r.residual) << "\n";
   std::cout << "iterations : " << r.iterations << "\n";
   std::cout << "bracketed  : " << (r.bracketed ? "yes" : "no") << "\n";
 }

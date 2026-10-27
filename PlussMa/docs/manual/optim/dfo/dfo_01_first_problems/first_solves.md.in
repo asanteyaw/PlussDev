@@ -1,0 +1,60 @@
+# First derivative-free solves
+
+[Back to Derivative-Free Optimization 1: First Problems](../dfo_01_first_problems.md)
+
+A derivative-free method needs only the *value* of your function: no gradient, no Jacobian, nothing that requires the function to be smooth. That makes it the tool for objectives that are the output of a simulation, a table lookup, a rule-based model or any code you cannot differentiate. The price is more evaluations, and answers that are accurate to a tolerance rather than certified by an optimality condition.
+
+`solve_dfo(objective, start)` is the shortest route into the family. This page shows the three equivalent ways to call it (the shortcut, a `DfoProblem` with `DfoOptions` filled field by field, and a chained builder), and explains what the default `Auto` choice of method does: it looks at the *problem* (are there bounds, constraints, how many variables, is an evaluation function supplied), never at the objective values, and `selection_reason` always states which rule fired.
+
+## Program 1: A first solve
+
+`solve_dfo(objective, start)` is the shortest route. The objective may return a plain number or a Series.
+
+@@example Numerical/optimization/guide/dfo/301_first_problem.cpp@@
+
+`Converged` means the method's own stopping test was met, not that the point is the global minimum. Here the function is a bowl, so the two coincide; the minimizer is within 1e-4 of (1, -2, 0.5).
+
+## Program 2: Three ways to call
+
+`DFO::solve` takes a `DfoProblem` and `DfoOptions` you fill in field by field, which is the form to use once a problem has bounds or constraints. `DFO::build(start)` chains setters (`with_objective`, `with_bounds`, `with_solver`, `with_seed`, `with_max_evaluations`, and so on) and finishes with `.solve()`.
+
+@@example Numerical/optimization/guide/dfo/302_three_ways_to_call.cpp@@
+
+The three entry points do the same thing; choose by taste.
+
+## Program 3: What Auto chooses
+
+`Auto` looks at the problem, not at the objective values.
+
+| Situation | Method |
+|---|---|
+| a `blackbox` evaluation function is supplied | `MadsAdvanced` |
+| constraints supplied | `PatternSearch` |
+| no bounds, up to 10 variables | `NelderMead` |
+| no bounds, 40 or more variables | `ParticleSwarm` |
+| no bounds, in between | `DifferentialEvolutionPrmm` |
+| bounds, fewer than 40 variables | `DifferentialEvolution` |
+| bounds, 40 or more variables | `ParticleSwarm` |
+
+The thresholds (10 and 40) live in `DfoOptions::auto_policy`. `selection_reason` always states which rule fired.
+
+@@example Numerical/optimization/guide/dfo/303_auto_selection.cpp@@
+
+`Auto` is a sensible first guess, not a verdict. Chapter 2 compares the methods on several functions, and shows where the default is the wrong choice.
+
+## Watching the iterations
+
+Setting `display_iter` on the options (or calling `with_display_iter()` on the builder) makes the solver print one line per iteration to standard output, with the evaluations used so far, the best value, and the phase of the method. The run below is capped at 12 iterations so that the listing stays short.
+
+@@example Numerical/optimization/guide/dfo/306_display_iter.cpp@@
+
+The best value falls from 48 at the seed (iteration 1, three evaluations) to 6.1 by iteration 11, and the `phase` column shows the move the simplex method made at each step: `expand` while the simplex is still marching downhill, `reflect` and `adjust_inner` once it starts to turn and shrink. The run stops at the cap of 12 iterations with `ReachedIterationBudget` after 24 evaluations, a reminder that an iteration is not an evaluation: each iteration here costs about two function calls.
+
+## Decisions and pitfalls
+
+- **`Converged` is the method's own test, not a proof of the global minimum.** On a bowl the two coincide; on a function with many local minima they do not.
+- **`Auto` is a sensible first guess, not a verdict.** It chooses by the shape of the problem; the next chapter compares the methods and shows where the default is the wrong choice.
+- **Pick the call style by the problem.** The shortcut for an unconstrained function; `DfoProblem` and `DfoOptions` once there are bounds or constraints; the builder when you prefer chained setters. They do the same thing.
+- **Read `selection_reason`.** It tells you which rule `Auto` applied, which is the first thing to check when a result surprises you.
+
+Where next: [Budgets, statuses and repeatability](budgets_statuses_and_repeatability.md) explains how a solve ends.

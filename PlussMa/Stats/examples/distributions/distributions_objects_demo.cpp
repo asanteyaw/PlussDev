@@ -16,7 +16,7 @@ using pluss::Series;
 using namespace pluss::subsp::stats::distr;
 
 std::vector<double> as_f64_vec(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).host<double>();
 }
 
 std::string preview(const Series& x, std::size_t limit = 5) {

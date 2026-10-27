@@ -7,12 +7,14 @@
 //   velocity_clamp_ratio       0 = no clamp; otherwise the speed limit as a fraction of the box width
 //   time_varying_acceleration  true moves cognitive/social to final_cognitive/final_social over the run
 #include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
+#include <utility>
+#include <vector>
 
 namespace dfo = pluss::subsp::math::optimization;
+using namespace pluss::tils;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
@@ -21,39 +23,37 @@ pluss::Series rastrigin(const pluss::Series& x) {
   const double pi = 3.14159265358979323846;
   return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();
 }
-const char* name(dfo::PopulationSolverStatus s) {
-  return s == dfo::PopulationSolverStatus::Converged ? "Converged"
-         : s == dfo::PopulationSolverStatus::ReachedEvaluationBudget ? "ReachedEvaluationBudget" : "ReachedIterationBudget";
-}
-
-void run(const char* label, dfo::ParticleSwarmConfig c) {
-  c.lower_bounds = filled(3, -5.12);
-  c.upper_bounds = filled(3, 5.12);
-  c.max_evaluations = 20000;
-  std::cout << std::left << std::setw(30) << label;
-  for (std::uint64_t seed : {1ULL, 2ULL, 3ULL}) {
-    c.rng_seed = seed;
-    const auto o = dfo::particle_swarm_minimizer(rastrigin, filled(3, 3.0), c);
-    std::cout << std::scientific << std::setprecision(2) << o.minimum << "   ";
-  }
-  std::cout << "\n";
-}
 
 int main() {
+  std::vector<std::pair<const char*, dfo::ParticleSwarmConfig>> cases;
   dfo::ParticleSwarmConfig base;
-  run("defaults", base);
+  cases.emplace_back("defaults", base);
   auto small = base; small.population_size = 30;
-  run("population_size 30", small);
+  cases.emplace_back("population_size 30", small);
   auto cog = base; cog.cognitive = 3.0; cog.social = 1.0;
-  run("cognitive 3, social 1", cog);
+  cases.emplace_back("cognitive 3, social 1", cog);
   auto soc = base; soc.cognitive = 1.0; soc.social = 3.0;
-  run("cognitive 1, social 3", soc);
+  cases.emplace_back("cognitive 1, social 3", soc);
   auto constant = base; constant.linear_inertia_schedule = false; constant.inertia = 0.7;
-  run("constant inertia 0.7", constant);
+  cases.emplace_back("constant inertia 0.7", constant);
   auto clamp = base; clamp.velocity_clamp_ratio = 0.1;
-  run("velocity_clamp_ratio 0.1", clamp);
+  cases.emplace_back("velocity_clamp_ratio 0.1", clamp);
   auto tv = base; tv.time_varying_acceleration = true;
-  run("time_varying_acceleration", tv);
+  cases.emplace_back("time_varying_acceleration", tv);
   auto nocenter = base; nocenter.center_particle = false;
-  run("center_particle off", nocenter);
+  cases.emplace_back("center_particle off", nocenter);
+
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2));
+  for (auto [label, c] : cases) {
+    c.lower_bounds = filled(3, -5.12);
+    c.upper_bounds = filled(3, 5.12);
+    c.max_evaluations = 20000;
+    std::vector<double> minima;  // one per seed
+    for (std::uint64_t seed : {1ULL, 2ULL, 3ULL}) {
+      c.rng_seed = seed;
+      minima.push_back(dfo::particle_swarm_minimizer(rastrigin, filled(3, 3.0), c).minimum);
+    }
+    out.writeln(label, minima);
+  }
 }

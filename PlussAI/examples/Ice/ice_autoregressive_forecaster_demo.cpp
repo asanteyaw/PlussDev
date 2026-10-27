@@ -96,12 +96,12 @@ int main() {
   std::cout << "AutoregressiveForecaster demo\n";
   std::cout << "  test MAE: " << mae << "\n";
   std::cout << "  first forecast row mean: ";
-  for (double v : forecast.mean.narrow_copy(0, 0, 1).reshape({kDecoderLength}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>()) {
+  for (double v : forecast.mean.narrow_copy(0, 0, 1).reshape({kDecoderLength}).to(pluss::pCPU, ScalarType::Float64).host<double>()) {
     std::cout << v << " ";
   }
   std::cout << "\n";
   std::cout << "  first forecast row scale: ";
-  for (double v : forecast.scale.narrow_copy(0, 0, 1).reshape({kDecoderLength}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>()) {
+  for (double v : forecast.scale.narrow_copy(0, 0, 1).reshape({kDecoderLength}).to(pluss::pCPU, ScalarType::Float64).host<double>()) {
     std::cout << v << " ";
   }
   std::cout << "\n";

@@ -11,14 +11,14 @@
 #include <iostream>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
   const auto start = optim::pack_scalars({{"x", scalar(-2.0)}, {"y", scalar(-1.2)}});
-  auto f = [](const Pack& p) { return 2.0 * (optim::square(p.at("x")) + optim::square(p.at("y")) - 1.0) - p.at("x"); };
+  auto f = [](const Pack& p) { return 2.0 * (p.at("x").square() + p.at("y").square() - 1.0) - p.at("x"); };
   const auto cons = optim::constraints().nl_eq(
-      [](const Pack& p) { return optim::square(p.at("x")) + optim::square(p.at("y")) - 1.0; });
+      [](const Pack& p) { return p.at("x").square() + p.at("y").square() - 1.0; });
 
   std::cout << std::left << std::setw(26) << "max_line_search_iterations" << std::setw(13) << "restoration" << std::setw(6)
             << "flag" << std::setw(7) << "iters" << std::setw(7) << "evals" << "message\n";

@@ -17,7 +17,7 @@ int main() {
 
   const auto column_sum = [](const pluss::Series& s) {
     double total = 0.0;
-    for (double v : s.to_vec<double>()) total += v;
+    for (double v : s.host<double>()) total += v;
     return total;
   };
 

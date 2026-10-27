@@ -272,7 +272,7 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
 
   const auto flat = input_weights.to(pluss::pCPU, ScalarType::Float64)
                         .reshape({vocab_size * options_.width})
-                        .to_vec<double>();
+                        .host<double>();
   impl->host_vectors.resize(static_cast<std::size_t>(vocab_size));
   for (std::int64_t id = 0; id < vocab_size; ++id) {
     const auto offset = static_cast<std::size_t>(id * options_.width);

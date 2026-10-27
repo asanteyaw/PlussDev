@@ -132,7 +132,7 @@ Example 4. A large sample from `[0, 100)` is uniform over the 100 integers.
 pluss::rng_seed(3);
 auto x = pluss::series::empty({200000}, pluss::ScalarType::Int32);
 x.random_(0, 100);
-auto v = x.to_vec<int>();
+auto v = x.host<int>();
 long lo = 1'000'000'000, hi = -1'000'000'000; double sum = 0;
 for (int e : v) { lo = std::min<long>(lo, e); hi = std::max<long>(hi, e); sum += e; }
 std::cout << "min=" << lo << "  max=" << hi << "  mean~" << sum / v.size() << "  (expect ~49.5)\n";

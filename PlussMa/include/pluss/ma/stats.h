@@ -7,10 +7,7 @@
 #include "pluss/ma/stats/time_series.h"
 
 namespace pluss {
-namespace stats = ::pluss::subsp::stats;
 namespace distr = ::pluss::subsp::stats::distr;
-namespace regression = ::pluss::subsp::stats::regression;
-namespace reg = ::pluss::subsp::stats::regression;
 }
 
 namespace pluss::ma {

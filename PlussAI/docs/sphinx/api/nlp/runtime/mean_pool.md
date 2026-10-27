@@ -92,9 +92,9 @@ int main() {
   nlp::runtime::EmbeddingTable embedding{nlp::runtime::EmbeddingOptions{.width = 2}};
   embedding.reset(static_cast<std::int64_t>(indexer.vocabulary().size()), indexer.pad_id());
   const auto alone = nlp::runtime::mean_pool(embedding.forward(indexer.batch(short_doc).value()), indexer.batch(short_doc).value())
-                         .to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+                         .to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   const auto together = nlp::runtime::mean_pool(embedding.forward(indexer.batch(long_doc).value()), indexer.batch(long_doc).value())
-                            .to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+                            .to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "alone:    " << alone[0] << " " << alone[1] << "\n";
   std::cout << "in batch: " << together[2] << " " << together[3] << "\n";
   return 0;
@@ -131,7 +131,7 @@ int main() {
   nlp::runtime::EmbeddingTable embedding{nlp::runtime::EmbeddingOptions{.width = 2}};
   embedding.reset(static_cast<std::int64_t>(indexer.vocabulary().size()), indexer.pad_id());
   const auto pooled = nlp::runtime::mean_pool(embedding.forward(batch), batch)
-                          .to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+                          .to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "empty row pooled = " << pooled[2] << " " << pooled[3] << "\n";
   return 0;
 }

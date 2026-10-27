@@ -52,7 +52,7 @@ auto c0 = pluss::kindle::Catalog({
 });
 auto archive = pluss::kindle::Archive({c0});
 auto out = archive.tl().epoch();
-std::cout << out.catalog(0).keys("ts").as_series().to_vec<std::int64_t>()[0];
+std::cout << out.catalog(0).keys("ts").as_series().host<std::int64_t>()[0];
 ```
 
 ### Output

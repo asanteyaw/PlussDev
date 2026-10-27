@@ -38,8 +38,8 @@ int main() {
   std::cout << std::fixed << std::setprecision(5);
   for (const auto& row : rows) {
     const auto d = x.calc.diff.ito(row.g, mu, sigma);
-    const auto drift = d.drift.to_vec<double>();
-    const auto diffusion = d.diffusion.to_vec<double>();
+    const auto drift = d.drift.host<double>();
+    const auto diffusion = d.diffusion.host<double>();
     double worst = 0.0;
     std::cout << "g(x) = " << row.name << "\n";
     for (std::size_t i = 0; i < xv.size(); ++i) {

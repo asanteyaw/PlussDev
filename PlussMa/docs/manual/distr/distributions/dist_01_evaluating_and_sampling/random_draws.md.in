@@ -2,7 +2,131 @@
 
 [Back to Evaluating and Sampling](../dist_01_evaluating_and_sampling.md)
 
+Random draws turn a distribution into data. They are how you simulate a model, build a Monte Carlo estimate of a quantity with no closed form, test an estimator on samples whose truth you know, and bootstrap. Every family has the same two entry points: `sample(sizes, cfg, seed)` draws an array of the given shape, and `sample_like(like, seed)` draws an array that matches the shape, dtype and platform of one you already have. `sizes` is a list such as `{n}` or `{rows, cols}`; `cfg` selects the dtype and platform of the result (the default is Float32 on the CPU, so ask for Float64 when precision matters); `seed` makes the draw reproducible.
 
-@@example Stats/distributions/guide/1302_sampling.cpp@@
+A given seed always produces the same numbers, and a seed of 0 is a fixed default, not a random one: there is no hidden global state. Different seeds give different, independent streams. That makes a simulation exactly repeatable, and it makes every simulation in this guide reproducible: the output you see is the output you get.
 
-With 200 000 draws the sample mean agrees with the exact mean to about three decimals (the standard error of a mean is sd / √n: 0.0045 for the first normal), the variance to within a percent, and the fraction of draws below a threshold with the distribution function there. The same seed gives identical draws, a different seed different ones, and `sample_like` returns an array of the same shape and dtype as its template.
+The programs use `namespace distr = pluss::subsp::stats::distr;` and `using pluss::Series;`.
+
+## Seeds, shapes and types
+
+The first program shows the contract: the same seed gives identical draws, a different seed different ones, the shape follows `sizes`, `sample_like` copies the shape and dtype of a template, and the dtype is whatever `cfg` says.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const distr::Normal n{0.0, 1.0};
+  const auto a = n.sample({4}, {}, 7ULL), b = n.sample({4}, {}, 7ULL), c = n.sample({4}, {}, 8ULL);
+  out.writeln("same seed, same draws:     ", (a - b).abs().max().item<double>() == 0.0);
+  out.writeln("different seed, different: ", (a - c).abs().max().item<double>() > 0.0);
+
+  const auto grid = n.sample({2, 3}, {}, 1ULL);
+  out.writeln("sample({2, 3}) has shape   ", std::vector<std::int64_t>{grid.sizes()[0], grid.sizes()[1]});
+
+  const auto like = pluss::series::zeros({5, 2}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32));
+  const auto shaped = n.sample_like(like, 3ULL);
+  out.writeln("sample_like a 5 x 2 float32 array has shape", std::vector<std::int64_t>{shaped.sizes()[0], shaped.sizes()[1]}, "and dtype float32:", shaped.scalar_type() == pluss::ScalarType::Float32);
+
+  const auto wide = n.sample({3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 1ULL);
+  out.writeln("with a Float64 cfg the draws are float64:", wide.scalar_type() == pluss::ScalarType::Float64);
+}
+```
+
+Reproducibility is a property of the *seed*, so a result you want to repeat needs a seed in the call, and independent streams need different seeds (adding the iteration number to a base seed, as the later programs do, is the simple way). The default dtype is Float32, which is fine for plotting and rough work but carries only seven digits; for estimation experiments pass a Float64 `cfg`.
+
+## How accurate are sample moments?
+
+The law of large numbers says the sample mean approaches the true mean, at a rate of `sd/√n`. This is worth seeing once, because it is the rate of every Monte Carlo estimate in the rest of the guide. The program draws from three families, compares the sample mean and variance with the exact values at several sample sizes, and prints the observed error next to the error the formula `sd/√n` predicts.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  const distr::Normal normal{0.5, 2.0};
+  const distr::Gamma gamma{2.5, 1.3, 0.0};
+  const distr::Poisson poisson{3.2};
+  const struct { const char* name; double mean, variance; } laws[] = {{"Normal(0.5, 2)", 0.5, 4.0}, {"Gamma(shape 2.5, scale 1.3)", 3.25, 4.225}, {"Poisson(3.2)", 3.2, 3.2}};
+
+  for (int which = 0; which < 3; ++which) {
+    out.writeln(laws[which].name, "  exact mean", laws[which].mean, "variance", laws[which].variance, "\n          n   sample mean   |error|   sd/sqrt(n)   sample variance");
+    for (int n : {100, 10000, 1000000}) {
+      const auto x = which == 0 ? normal.sample({n}, f64, 11ULL) : which == 1 ? gamma.sample({n}, f64, 11ULL) : poisson.sample({n}, f64, 11ULL);
+      const double m = x.mean().item<double>();
+      const double v = ((x - m) * (x - m)).mean().item<double>();
+      out.writeln(n, "  ", m, "  ", std::abs(m - laws[which].mean), "  ", std::sqrt(laws[which].variance / n), "  ", v);
+    }
+  }
+}
+```
+
+The error of the sample mean is of the order of `sd/√n` at every sample size, sometimes smaller by luck (0.03 against 0.20 for the first normal at `n = 100`) and sometimes a little larger (0.033 against 0.021 for the gamma at `n = 10 000`): it is a random quantity, and `sd/√n` is its typical size. It shrinks by a factor of ten when `n` grows a hundredfold, which is the slow `1/√n` rate: a hundred observations give a mean good to about one fifth of a standard deviation, a million to about one part in five hundred. The sample variance converges at the same rate (4.07 and 4.00 against 4 for the normal at 10 000 and a million). Two practical readings follow: to halve a Monte Carlo error you need four times as many draws, and any observed error should be compared with `sd/√n`, which tells you how much of it is just chance.
+
+## A Monte Carlo estimate with a check
+
+Draws are most useful for quantities with no formula. To learn the method, estimate one that *does* have a formula and compare. The program estimates the probability that the sum of two independent standard normals exceeds 3, and the expected value of the larger of two independent exponentials, both by simulation. The exact values are available (the sum is `N(0, 2)`, and the expected maximum of two unit exponentials is 1.5), so the program prints the error and the interval a normal approximation gives for it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+using namespace pluss::tils;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  OutputEngine out;
+  const int n = 400000;
+
+  // P(Z1 + Z2 > 3): the sum is N(0, 2), so the exact value is one minus its distribution function at 3.
+  const auto s = distr::Normal{0.0, 1.0}.sample({n}, f64, 1ULL) + distr::Normal{0.0, 1.0}.sample({n}, f64, 2ULL);
+  const double p_hat = (s > 3.0).to(pluss::ScalarType::Float64).mean().item<double>();
+  const double p_exact = 1.0 - distr::Normal{0.0, std::sqrt(2.0)}.cdf(pluss::make_series({3.0}, f64)).item<double>();
+
+  // E[max of two unit exponentials] = 1.5: max(a, b) = (a + b + |a - b|) / 2.
+  const auto e1 = distr::Exponential{1.0}.sample({n}, f64, 3ULL), e2 = distr::Exponential{1.0}.sample({n}, f64, 4ULL);
+  const auto big = (e1 + e2 + (e1 - e2).abs()) * 0.5;
+  const double m_hat = big.mean().item<double>();
+  const double se_m = std::sqrt(((big - m_hat) * (big - m_hat)).mean().item<double>() / n);
+
+  out.writeln("P(Z1 + Z2 > 3)   estimate", p_hat, "  exact", p_exact, "  standard error about", std::sqrt(p_exact * (1.0 - p_exact) / n), PrintOptions{}.fixed(5));
+  out.writeln("E[max of 2 exp]  estimate", m_hat, "  exact 1.5  standard error about", se_m, PrintOptions{}.fixed(5));
+}
+```
+
+Both estimates land within about one standard error of the exact value (0.01698 against 0.01695, and 1.5006 against 1.5000), and the standard error is the honest statement of the precision: a Monte Carlo number without one is incomplete. For a probability the standard error is `√(p(1−p)/n)`, which is why *rare* events need far more draws: an event of probability 0.001 estimated to 10% needs about a hundred thousand draws, not a hundred. This is the habit to build into every simulation: estimate something you can compute exactly first, and report the standard error alongside the answer.
+
+## Decisions and pitfalls
+
+- **Pass a seed, and use a different one per stream.** A fixed default is not random; two draws with the same seed are identical, which is a trap when you meant them to be independent.
+- **Ask for Float64 when precision matters.** The default dtype is Float32 on the CPU.
+- **Monte Carlo error falls like `1/√n`.** Four times the draws halve the error; report the standard error with the estimate.
+- **Rare events are expensive.** The relative error of a probability estimate is `√((1−p)/(np))`; for small `p` it needs `n ≫ 1/p`.
+- **Use `sample_like` to match an existing array** instead of rebuilding its shape, dtype and platform by hand.
+
+Where next: [Families by kind](families_by_kind.md) reaches the less common families through one set of functions.

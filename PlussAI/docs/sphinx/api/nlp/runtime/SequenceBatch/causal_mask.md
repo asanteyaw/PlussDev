@@ -57,7 +57,7 @@ int main() {
   nlp::runtime::Indexer indexer{};
   indexer.learn(docs);
   const nlp::runtime::SequenceBatch batch = indexer.batch(docs).value();
-  const auto mask = batch.causal_mask().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto mask = batch.causal_mask().to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   const std::int64_t n = batch.max_length;
   for (std::int64_t row = 0; row < n; ++row) {
     std::cout << "row " << row << ":";

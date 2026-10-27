@@ -18,7 +18,7 @@ void expect(bool c, const std::string &m) {
 }
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
 double rel_diff(const Series &a, const std::vector<double> &b, double floor = 1e-12) {
-  const auto av = a.contiguous().to_vec<double>();
+  const auto av = a.contiguous().host<double>();
   expect(av.size() == b.size(), "size mismatch");
   double w = 0.0;
   for (std::size_t i = 0; i < av.size(); ++i)
@@ -57,7 +57,7 @@ int main() {
       const auto an = ip::analyze(a, m.h);
       expect(std::abs(an.lambda.item<double>() - ipm_reference::lam[0]) < 1e-10, "lambda vs numpy eig");
       expect(rel_diff(an.w, ipm_reference::w, 1e-9) < 1e-6 && rel_diff(an.v, ipm_reference::v, 1e-9) < 1e-6, "w and v vs numpy eig");
-      const auto sd = an.sensitivity.contiguous().to_vec<double>();
+      const auto sd = an.sensitivity.contiguous().host<double>();
       double worst = 0.0;
       for (std::int64_t i = 0; i < n; ++i)
         worst = std::max(worst, std::abs(sd[static_cast<std::size_t>(i * n + i)] - ipm_reference::sens_diag[static_cast<std::size_t>(i)]) / (1e-9 + ipm_reference::sens_diag[static_cast<std::size_t>(i)]));
@@ -95,7 +95,7 @@ int main() {
       Series dens = vec(init);
       const auto grow = [&](const Series &x) { return x.mul(r0).div(x.mul((r0 - 1.0) / kcap).add(1.0)); };
       const auto front = [&](const Series &x) {
-        const auto v = x.contiguous().to_vec<double>();
+        const auto v = x.contiguous().host<double>();
         for (std::size_t i = v.size() - 1; i > 0; --i)
           if (v[i - 1] >= 0.5 * kcap && v[i] < 0.5 * kcap)
             return (static_cast<double>(i) - 0.5 + (v[i - 1] - 0.5 * kcap) / (v[i - 1] - v[i])) * m.h;

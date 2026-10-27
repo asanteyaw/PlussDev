@@ -10,18 +10,18 @@
 #include <vector>
 
 int main() {
-  namespace optim = pluss::optim;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  namespace optim = pluss::subsp::math::optim;
+  using Pack = optim::ParameterPack<pluss::Series>;
   const auto f64 = pluss::ScalarType::Float64;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
   auto two = [&](double a, double b) { return optim::pack_scalars({{"a", scalar(a)}, {"b", scalar(b)}}); };
 
   // minimize (a - 3)^2 + (b - 3)^2 subject to a^2 + b^2 <= 2 (a disc around the origin)
   auto objective = [](const Pack& p) {
-    return optim::square(p.at("a") - 3.0) + optim::square(p.at("b") - 3.0);
+    return (p.at("a") - 3.0).square() + (p.at("b") - 3.0).square();
   };
   const auto disc = optim::constraints().nl_ineq(
-      [](const Pack& p) { return optim::square(p.at("a")) + optim::square(p.at("b")) - 2.0; });
+      [](const Pack& p) { return p.at("a").square() + p.at("b").square() - 2.0; });
 
   struct Row { const char* label; optim::OptimaAlgorithm algorithm; };
   const std::vector<Row> rows = {{"MeritMethod", optim::OptimaAlgorithm::MeritMethod},

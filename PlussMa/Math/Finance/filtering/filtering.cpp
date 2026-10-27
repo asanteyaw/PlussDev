@@ -79,7 +79,7 @@ double innovation_loglik_(const Series& innovation, const Series& innovation_cov
     return 0.0;
   }
   const Series s_inv = pluss::subsp::math::linalg::pinverse(innovation_cov, 1e-12);
-  const double quad = innovation.transpose(0, 1).matmul(s_inv).matmul(innovation).reshape({1}).item<double>();
+  const double quad = innovation.transpose(0, 1).matmul(s_inv).matmul(innovation).reshape({1}).host<double>().front();
   const Series slog = pluss::subsp::math::linalg::slogdet(innovation_cov).reshape({2});
   const double sign = slog.select(0, 0).item<double>();
   const double logdet = slog.select(0, 1).item<double>();
@@ -88,7 +88,7 @@ double innovation_loglik_(const Series& innovation, const Series& innovation_cov
   }
 
   const Series singular_values = pluss::subsp::math::linalg::svd(innovation_cov, false).S;
-  const std::vector<double> sv = singular_values.to(pluss::pCPU, ScalarType::Float64).reshape({singular_values.numel()}).to_vec<double>();
+  const std::vector<double> sv = singular_values.to(pluss::pCPU, ScalarType::Float64).reshape({singular_values.numel()}).host<double>();
   const double tol = std::max(info_tol, kTiny);
   std::int64_t rank = 0;
   double pseudo_logdet = 0.0;
@@ -107,9 +107,9 @@ double innovation_loglik_(const Series& innovation, const Series& innovation_cov
 
 std::vector<std::int64_t> informative_obs_idx_(const Series& yt, const Series& innovation_cov, double info_tol) {
   const auto m = yt.numel();
-  const std::vector<double> yv = yt.to(pluss::pCPU, ScalarType::Float64).reshape({m}).to_vec<double>();
+  const std::vector<double> yv = yt.to(pluss::pCPU, ScalarType::Float64).reshape({m}).host<double>();
   const std::vector<double> s_flat =
-      innovation_cov.to(pluss::pCPU, ScalarType::Float64).reshape({m * m}).to_vec<double>();
+      innovation_cov.to(pluss::pCPU, ScalarType::Float64).reshape({m * m}).host<double>();
   std::vector<std::int64_t> idx;
   idx.reserve(static_cast<std::size_t>(m));
   for (std::int64_t i = 0; i < m; ++i) {
@@ -189,7 +189,7 @@ Series weighted_cov_(const Series& rows, const Series& mean_col, const Series& w
 }
 
 std::vector<double> normalized_cdf_(const Series& weights, std::int64_t n) {
-  const std::vector<double> w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  const std::vector<double> w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).host<double>();
   std::vector<double> cdf(static_cast<std::size_t>(n), 0.0);
   double run = 0.0;
   for (std::int64_t i = 0; i < n; ++i) {
@@ -250,7 +250,7 @@ Series stratified_resample_idx_(const Series& weights, std::int64_t n, Platform 
 }
 
 Series residual_resample_idx_(const Series& weights, std::int64_t n, Platform platform, std::uint64_t seed) {
-  const std::vector<double> w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  const std::vector<double> w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).host<double>();
   std::vector<std::int64_t> idx(static_cast<std::size_t>(n), 0);
   std::vector<double> residual(static_cast<std::size_t>(n), 0.0);
 
@@ -299,7 +299,7 @@ Series resample_idx_(const Series& weights,
 }
 
 bool has_any_finite_(const Series& x) {
-  const auto vals = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  const auto vals = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
   return std::any_of(vals.begin(), vals.end(), [](double v) { return std::isfinite(v); });
 }
 
@@ -690,7 +690,7 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
       if (model.options.resample_trigger == ParticleResampleTrigger::Interval) {
         do_resample = ((t + 1) % interval) == 0;
       } else {
-        do_resample = ess.item<double>() < ess_cut;
+        do_resample = ess.host<double>().front() < ess_cut;
       }
     }
 

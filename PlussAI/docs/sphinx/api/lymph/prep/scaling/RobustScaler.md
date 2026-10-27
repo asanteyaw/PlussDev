@@ -134,8 +134,8 @@ int main() {
   lymph::prep::RobustScaler scaler;
   scaler.features({"amount"}).learn(train);
   const auto s = scaler.summary();
-  std::cout << "center (median) = " << s.state[1].to_vec<double>()[0] << "\n";
-  std::cout << "scale  (IQR)    = " << s.state[2].to_vec<double>()[0] << "\n";
+  std::cout << "center (median) = " << s.state[1].host<double>()[0] << "\n";
+  std::cout << "scale  (IQR)    = " << s.state[2].host<double>()[0] << "\n";
 
   return 0;
 }

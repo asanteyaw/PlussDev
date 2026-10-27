@@ -22,8 +22,8 @@ namespace {
 // itself is read -- so this is a small, self-contained sidecar format
 // instead of forcing them through the parameter-list one.
 void save_standardize_sidecar_(const std::string& path, const Series& mean, const Series& std) {
-  const auto mean_vec = mean.reshape({mean.numel()}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  const auto std_vec = std.reshape({std.numel()}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto mean_vec = mean.reshape({mean.numel()}).to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto std_vec = std.reshape({std.numel()}).to(pluss::pCPU, ScalarType::Float64).host<double>();
   std::ofstream out{path};
   PLUSS_CHECK(out.good(), "pluss::ai::ice::Model::save: failed to open '" + path + "'.");
   out << "pluss_ice_standardize\n";

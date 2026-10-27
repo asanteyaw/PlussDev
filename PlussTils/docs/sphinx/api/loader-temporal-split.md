@@ -217,7 +217,7 @@ int main() {
   std::cout << "last fold train size: " << last_fold.train_fields[0].numel() << '\n';
   std::cout << "last fold test size: " << last_fold.test_fields[0].numel() << '\n';
   std::cout << "last fold test is the final three values: "
-            << (last_fold.test_fields[0].to_vec<double>() == std::vector<double>{9, 10, 11}) << '\n';
+            << (last_fold.test_fields[0].host<double>() == std::vector<double>{9, 10, 11}) << '\n';
   return 0;
 }
 ```

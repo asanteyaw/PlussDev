@@ -31,7 +31,7 @@ using pluss::ScalarType;
 
 [[nodiscard]] std::vector<double> vec_f64(const Series& x) {
   if (!x.defined()) return {};
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 [[nodiscard]] bool all_finite(const Series& x) {
@@ -520,7 +520,7 @@ public:
         if (delta <= options_.tolerance) break;
       }
 
-      const double ev = v.reshape({1, p}).matmul(cov).matmul(v.reshape({p, 1})).reshape({1}).item<double>();
+      const double ev = v.reshape({1, p}).matmul(cov).matmul(v.reshape({p, 1})).reshape({1}).host<double>().front();
       if (!std::isfinite(ev) || ev < 0.0) {
         return Status::numerical_failure("PcaTransformer::learn encountered non-finite eigenvalue.");
       }

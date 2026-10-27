@@ -35,7 +35,7 @@ double scalar_at(const Series& x, std::int64_t i) {
   return x.index_select(0, pluss::series::full({1}, i, Config{}.with_dtype(ScalarType::Int64)))
       .reshape({1})
       .to(pluss::pCPU, ScalarType::Float64)
-      .item<double>();
+      .host<double>().front();
 }
 
 SsmModel make_scalar_model(double a, double b, double c, double d, double mean0, double cov0, Config cfg) {
@@ -70,9 +70,9 @@ void test_filter_missing_and_shapes() {
   const Series f3 = out.filtered_states.index_select(0, pluss::series::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
   const Series p3 = out.forecasted_states.index_select(0, pluss::series::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
   const Series used3 = out.data_used.index_select(0, pluss::series::full({1}, 3, Config{}.with_dtype(ScalarType::Int64))).reshape({1});
-  const double f3v = f3.to(pluss::pCPU, ScalarType::Float64).item<double>();
-  const double p3v = p3.to(pluss::pCPU, ScalarType::Float64).item<double>();
-  const double u3v = used3.to(pluss::pCPU, ScalarType::Float64).item<double>();
+  const double f3v = f3.to(pluss::pCPU, ScalarType::Float64).host<double>().front();
+  const double p3v = p3.to(pluss::pCPU, ScalarType::Float64).host<double>().front();
+  const double u3v = used3.to(pluss::pCPU, ScalarType::Float64).host<double>().front();
   expect(std::abs(f3v - p3v) <= 1e-10, "missing-observation period should not update state mean");
   expect(std::abs(u3v) <= 1e-12, "missing-observation period should have DataUsed=0");
 }
@@ -86,8 +86,8 @@ void test_smooth_reduces_uncertainty() {
   const Series pf = out.filter.filtered_states_cov.to(pluss::pCPU, ScalarType::Float64).reshape({7, 1, 1});
   const Series ps = out.smoothed_states_cov.to(pluss::pCPU, ScalarType::Float64).reshape({7, 1, 1});
   for (std::int64_t t = 0; t < 7; ++t) {
-    const double vf = pf.select(0, t).reshape({1}).item<double>();
-    const double vs = ps.select(0, t).reshape({1}).item<double>();
+    const double vf = pf.select(0, t).reshape({1}).host<double>().front();
+    const double vs = ps.select(0, t).reshape({1}).host<double>().front();
     expect(vs <= vf + 1e-8, "smoothed variance should not exceed filtered variance in scalar case");
   }
 }
@@ -118,8 +118,8 @@ void test_forecast_prior_closed_form() {
 
     const double xh = scalar_at(f.states.reshape({4}), h);
     const double yh = scalar_at(f.observations.reshape({4}), h);
-    const double xv = f.states_cov.select(0, h).reshape({1}).to(pluss::pCPU, ScalarType::Float64).item<double>();
-    const double yv = f.observations_cov.select(0, h).reshape({1}).to(pluss::pCPU, ScalarType::Float64).item<double>();
+    const double xv = f.states_cov.select(0, h).reshape({1}).to(pluss::pCPU, ScalarType::Float64).host<double>().front();
+    const double yv = f.observations_cov.select(0, h).reshape({1}).to(pluss::pCPU, ScalarType::Float64).host<double>().front();
     expect(std::abs(xh - x_mean) <= 1e-8, "forecast state mean mismatch");
     expect(std::abs(yh - y_mean) <= 1e-8, "forecast observation mean mismatch");
     expect(std::abs(xv - x_var) <= 1e-8, "forecast state variance mismatch");

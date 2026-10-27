@@ -59,7 +59,7 @@ TEST_CASE("optima rejects non-scalar objective outputs", "[optim][optima][valida
 TEST_CASE("optima rejects nonlinear jacobian shape mismatches", "[optim][optima][validation][jacobian-shape]") {
   ConstrainedProblem problem;
   problem.objective.analytic = [](const ParameterPack<Series>& p) {
-    const auto x = p.at("x").to_vec<double>();
+    const auto x = p.at("x").host<double>();
     return std::pair{
         make_scalar(x[0] * x[0] + x[1] * x[1]),
         ParameterPack<Series>({
@@ -91,7 +91,7 @@ TEST_CASE("optima rejects nonlinear jacobian shape mismatches", "[optim][optima]
 TEST_CASE("optima reports non-finite nonlinear jacobians", "[optim][optima][validation][jacobian-finite]") {
   ConstrainedProblem problem;
   problem.objective.analytic = [](const ParameterPack<Series>& p) {
-    const auto x = p.at("x").to_vec<double>();
+    const auto x = p.at("x").host<double>();
     return std::pair{
         make_scalar(x[0] * x[0] + x[1] * x[1]),
         ParameterPack<Series>({

@@ -132,19 +132,19 @@ TEST_CASE("CUDA bridge executes vector and batched matmul routes", "[cuda][bridg
 
   const auto got_vm = vec_cuda.matmul(mat_cuda);
   REQUIRE(got_vm.platform() == pluss::pCUDA);
-  require_close_(got_vm.to(pluss::pCPU).to_vec<float>(), vec_cpu.matmul(mat_cpu).to_vec<float>());
+  require_close_(got_vm.to(pluss::pCPU).host<float>(), vec_cpu.matmul(mat_cpu).host<float>());
 
   const auto got_mv = mm_cuda.matmul(vv_cuda);
   REQUIRE(got_mv.platform() == pluss::pCUDA);
-  require_close_(got_mv.to(pluss::pCPU).to_vec<float>(), mm_cpu.matmul(vv_cpu).to_vec<float>());
+  require_close_(got_mv.to(pluss::pCPU).host<float>(), mm_cpu.matmul(vv_cpu).host<float>());
 
   const auto got_batched = batch_a_cuda.matmul(batch_b_cuda);
   REQUIRE(got_batched.platform() == pluss::pCUDA);
-  require_close_(got_batched.to(pluss::pCPU).to_vec<float>(), batch_a_cpu.matmul(batch_b_cpu).to_vec<float>());
+  require_close_(got_batched.to(pluss::pCPU).host<float>(), batch_a_cpu.matmul(batch_b_cpu).host<float>());
 
   const auto got_broadcasted = broad_a_cuda.matmul(broad_b_cuda);
   REQUIRE(got_broadcasted.platform() == pluss::pCUDA);
-  require_close_(got_broadcasted.to(pluss::pCPU).to_vec<float>(), broad_a_cpu.matmul(broad_b_cpu).to_vec<float>());
+  require_close_(got_broadcasted.to(pluss::pCPU).host<float>(), broad_a_cpu.matmul(broad_b_cpu).host<float>());
 }
 
 TEST_CASE("CUDA strict matmul accepts rank-aware supported routes", "[cuda][bridge][policy][matmul][rank]") {
@@ -172,5 +172,5 @@ TEST_CASE("CUDA strict matmul accepts rank-aware supported routes", "[cuda][brid
 
   const auto got = a_cuda.matmul(b_cuda);
   REQUIRE(got.platform() == pluss::pCUDA);
-  require_close_(got.to(pluss::pCPU).to_vec<float>(), a_cpu.matmul(b_cpu).to_vec<float>());
+  require_close_(got.to(pluss::pCPU).host<float>(), a_cpu.matmul(b_cpu).host<float>());
 }

@@ -30,8 +30,8 @@ double clean(double v) { return std::abs(v) < 5e-4 ? 0.0 : v; }
 int main() {
   const std::vector<double> hours = {4.0, 12.0, 18.0};
   const auto base = lp::solve(workshop(hours));
-  const auto x = base.x.to_vec<double>();
-  const auto dual = base.dual_ub.to_vec<double>();
+  const auto x = base.x.host<double>();
+  const auto dual = base.dual_ub.host<double>();
   const std::vector<double> used = {x[0], 2.0 * x[1], 3.0 * x[0] + 2.0 * x[1]};
 
   std::cout << std::fixed << std::setprecision(3);

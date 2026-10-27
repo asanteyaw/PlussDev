@@ -41,7 +41,7 @@ Example 1. Cast a text slot of numeric-looking strings to `Series`.
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")});
 auto out = slot.cast().series();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -57,7 +57,7 @@ auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")}
 pluss::table::SlateCastOptions options;
 options.series_dtype = pluss::codem::ScalarType::Float64;
 auto out = slot.cast(options).series();
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<double>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<double>()[0];
 ```
 
 ### Output

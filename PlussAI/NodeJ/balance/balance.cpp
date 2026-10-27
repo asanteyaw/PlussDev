@@ -108,8 +108,8 @@ using pluss::ScalarType;
       return StatusOr<Series>(
           Status::invalid_argument(std::string(where) + " BalanceTarget.ratio must be finite and in (0, 1]."));
     }
-    const double c0 = counts.index_select(0, pluss::series::arange(0, 1, i64_on(platform))).reshape({1}).item<double>();
-    const double c1 = counts.index_select(0, pluss::series::arange(1, 2, i64_on(platform))).reshape({1}).item<double>();
+    const double c0 = counts.index_select(0, pluss::series::arange(0, 1, i64_on(platform))).reshape({1}).host<double>().front();
+    const double c1 = counts.index_select(0, pluss::series::arange(1, 2, i64_on(platform))).reshape({1}).host<double>().front();
     const double minority = std::min(c0, c1);
     const double majority = std::max(c0, c1);
     const double desired_minority = std::max(minority, std::ceil(target.ratio * majority));
@@ -307,8 +307,8 @@ StatusOr<ClassMix> class_mix(const Series& labels) {
   out.inverse_frequency = total.div(k_scalar.mul(counts).clamp_min(1.0)).reshape({k});
   out.sample_count = n;
   out.class_count = k;
-  const double min_count = counts.min().reshape({1}).item<double>();
-  const double max_count = counts.max().reshape({1}).item<double>();
+  const double min_count = counts.min().reshape({1}).host<double>().front();
+  const double max_count = counts.max().reshape({1}).host<double>().front();
   out.imbalance_ratio = (min_count > 0.0 && std::isfinite(min_count) && std::isfinite(max_count))
                             ? max_count / min_count
                             : 1.0;
@@ -371,7 +371,7 @@ StatusOr<WeightPlan> resolve_weight_plan(const Series& labels,
     return StatusOr<WeightPlan>(Status::invalid_argument(std::string(where) + " produced zero total training weight."));
   }
 
-  const double mean_weight = weights.mean().reshape({1}).item<double>();
+  const double mean_weight = weights.mean().reshape({1}).host<double>().front();
   if (!(std::isfinite(mean_weight) && mean_weight > 0.0)) {
     return StatusOr<WeightPlan>(Status::numerical_failure(std::string(where) + " produced invalid mean training weight."));
   }
@@ -417,8 +417,8 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
 
   const Series y = labels.to(platform, ScalarType::Float64).reshape({n});
   const Series all_indices = pluss::series::arange(0, n, i64_on(platform));
-  const std::vector<double> current = before.counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).to_vec<double>();
-  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).to_vec<double>();
+  const std::vector<double> current = before.counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>();
+  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>();
   const std::uint64_t seed = compose_seed(random);
 
   Series planned = pluss::series::undefined();
@@ -512,7 +512,7 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
   if (!target_counts_or.ok()) return StatusOr<BalancePlan>(target_counts_or.status());
   const Series target_counts = target_counts_or.move_value().to(platform, ScalarType::Float64).reshape({k});
 
-  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).to_vec<double>();
+  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>();
   const std::uint64_t seed = compose_seed(random);
 
   Series retained = pluss::series::undefined();
@@ -591,7 +591,7 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
                                         .reshape({extra});
     const Series steps = pluss::series::rand({extra}, f64_on(platform), splitmix64(class_seed ^ 0x5eededULL)).reshape({extra});
     const Series label_pos = pluss::series::arange(ci, ci + 1, i64_on(platform));
-    const double label_value = before.labels.index_select(0, label_pos).reshape({1}).item<double>();
+    const double label_value = before.labels.index_select(0, label_pos).reshape({1}).host<double>().front();
     const Series labels_extra = pluss::series::ones({extra}, f64_on(platform)).mul(label_value).reshape({extra});
 
     synth_base = append_indices(std::move(synth_base), base_indices);

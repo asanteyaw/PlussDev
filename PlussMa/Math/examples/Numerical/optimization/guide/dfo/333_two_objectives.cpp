@@ -31,7 +31,7 @@ int main() {
     o.mads.multiobjective_scalarization = dfo::MultiObjectiveScalarization::WeightedSum;
     o.mads.objective_weights = vec({w, 1.0 - w});
     const auto r = dfo::DFO::solve(p, o);
-    const auto f = r.objective_vector.to_vec<double>();
+    const auto f = r.objective_vector.host<double>();
     std::cout << std::fixed << std::setprecision(3) << std::left << std::setw(12) << w << std::setw(12)
               << r.minimizer.select(0, 0).item<double>() << std::setw(12) << 2.0 * w - 1.0 << std::setw(12) << std::setw(12) << f[0] << std::setw(12) << f[1] << r.pareto_points.size(0) << "\n";
   }

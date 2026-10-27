@@ -15,7 +15,7 @@ const auto f64 = pluss::ScalarType::Float64;
 Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
 void row(const char* label, const Series& s) {
   std::cout << std::left << std::setw(26) << label << std::right;
-  for (double v : s.to_vec<double>()) std::cout << std::setw(12) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(12) << v;
   std::cout << "\n";
 }
 int main() {

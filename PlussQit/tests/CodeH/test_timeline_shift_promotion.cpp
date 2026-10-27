@@ -36,7 +36,7 @@ TEST_CASE("Timeline shift preserves shape timezone and absence",
   const auto shifted = matrix.shift(2, "hour");
   REQUIRE(shifted.sizes().vec() == std::vector<std::int64_t>{2, 2});
   REQUIRE(shifted.tz() == "America/Edmonton");
-  REQUIRE(shifted.isnat().to_vec<bool>() ==
+  REQUIRE(shifted.isnat().host<bool>() ==
           std::vector<bool>{false, true, false, false});
 }
 

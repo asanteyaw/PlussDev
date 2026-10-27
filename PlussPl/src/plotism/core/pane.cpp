@@ -120,7 +120,7 @@ void require_wedge_compatible(const WedgeData& data, std::string_view where) {
     throw std::invalid_argument(std::string(where) + ": values must be a non-empty vector");
   }
   const Series values = data.values.to(ScalarType::Float64).reshape({data.values.numel()});
-  const auto host = values.to_vec<double>();
+  const auto host = values.host<double>();
   bool any_positive = false;
   for (double value : host) {
     if (!std::isfinite(value)) {

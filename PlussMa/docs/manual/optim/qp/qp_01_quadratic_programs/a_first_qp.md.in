@@ -1,8 +1,0 @@
-# A first QP
-
-[Back to Quadratic Programming](../qp_01_quadratic_programs.md)
-
-
-@@example Numerical/optimization/guide/qp/511_first_qp.cpp@@
-
-The sum constraint is active (its multiplier is large), `x1` sits at its upper bound (positive multiplier) and `x0`'s bound is slack (multiplier 0). The accuracy is about 1e-4, which is what the default tolerance of 1e-5 on the residuals buys; tighten it for more (Program 4).

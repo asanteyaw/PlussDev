@@ -103,13 +103,13 @@ TEST_CASE("isclose uses asymmetric tolerance and supports broadcasting", "[intro
   const auto b = pluss::make_series({{10.0, 20.0, 40.0}});
   const auto close = a.isclose(b, 0.1, 0.0);
   REQUIRE(dims(close.sizes()) == std::vector<std::int64_t>{2, 3});
-  REQUIRE(close.to_vec<bool>() ==
+  REQUIRE(close.host<bool>() ==
           std::vector<bool>{true, false, false, false, true, false});
   REQUIRE(pluss::make_series({9.0}).isclose(pluss::make_series({10.0}), 0.1, 0.0)
-              .item<bool>());
+              .host<bool>().front());
   REQUIRE_FALSE(pluss::make_series({10.0})
                     .isclose(pluss::make_series({9.0}), 0.1, 0.0)
-                    .item<bool>());
+                    .host<bool>().front());
 }
 
 TEST_CASE("isclose treats exact infinities and optional NaNs correctly", "[introspection]") {
@@ -118,9 +118,9 @@ TEST_CASE("isclose treats exact infinities and optional NaNs correctly", "[intro
   const auto a = pluss::make_series({inf, -inf, nan, 1.0});
   const auto b = pluss::make_series({inf, inf, nan, 1.000001});
 
-  REQUIRE(a.isclose(b).to_vec<bool>() ==
+  REQUIRE(a.isclose(b).host<bool>() ==
           std::vector<bool>{true, false, false, true});
-  REQUIRE(a.isclose(b, 1e-5, 1e-8, true).to_vec<bool>() ==
+  REQUIRE(a.isclose(b, 1e-5, 1e-8, true).host<bool>() ==
           std::vector<bool>{true, false, true, true});
   REQUIRE_FALSE(a.allclose(b));
   REQUIRE_FALSE(a.allclose(b, 1e-5, 1e-8, true));

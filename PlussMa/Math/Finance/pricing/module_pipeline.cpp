@@ -44,13 +44,13 @@ double scalar_from_series_(const Series& x, const char* op, const char* name, Co
   const Series v = as_series_vec_(x, op, name).to(cfg.platform, cfg.dtype);
   PLUSS_CHECK(v.numel() == 1,
               std::string("subsp::math::finance::module::") + op + ": " + name + " must have exactly one element");
-  return v.reshape({1}).item<double>();
+  return v.select(0, 0).item<double>();
 }
 
 double first_from_series_(const Series& x, const char* op, const char* name, Config cfg) {
   const Series v = as_series_vec_(x, op, name).to(cfg.platform, cfg.dtype).reshape({x.numel()});
   PLUSS_CHECK(v.numel() > 0, std::string("subsp::math::finance::module::") + op + ": " + name + " must be non-empty");
-  return v.select(0, 0).reshape({1}).item<double>();
+  return v.select(0, 0).item<double>();
 }
 
 double scalar_or_default_(const Series& x, double fallback, const char* op, const char* name, Config cfg) {
@@ -125,7 +125,7 @@ RoughBergomiParams rough_bergomi_params_from_model_(const model::RoughBergomi& m
 double max_maturity_(const instrument::Vanilla& inst, Config cfg) {
   const Series tau = as_series_vec_(inst.maturity, "simulate_paths", "instrument.maturity").to(cfg.platform, cfg.dtype);
   PLUSS_CHECK(tau.numel() > 0, "subsp::math::finance::module::simulate_paths: instrument.maturity must be non-empty");
-  const double tmax = tau.max().reshape({1}).item<double>();
+  const double tmax = tau.max().item<double>();
   PLUSS_CHECK(std::isfinite(tmax) && tmax > 0.0,
               "subsp::math::finance::module::simulate_paths: max maturity must be finite and > 0");
   return tmax;
@@ -161,17 +161,17 @@ pluss::codem::Series evaluate_loss_(Loss loss,
                                     double huber_delta) {
   switch (loss) {
     case Loss::MSE:
-      return pluss::mse(prediction, target);
+      return pluss::losses::mse(prediction, target);
     case Loss::RelativeMSE:
-      return pluss::rel_mse(prediction, target);
+      return pluss::losses::rel_mse(prediction, target);
     case Loss::MAE:
-      return pluss::mae(prediction, target);
+      return pluss::losses::mae(prediction, target);
     case Loss::Huber:
       PLUSS_CHECK(std::isfinite(huber_delta) && huber_delta > 0.0,
                   "subsp::math::finance::module::Field: huber_delta must be finite and > 0");
-      return pluss::huber_loss(prediction, target, huber_delta);
+      return pluss::losses::huber(prediction, target, huber_delta);
   }
-  return pluss::mse(prediction, target);
+  return pluss::losses::mse(prediction, target);
 }
 
 template <typename ModelT>

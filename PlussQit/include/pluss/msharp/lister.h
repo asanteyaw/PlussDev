@@ -210,6 +210,33 @@ public:
 
   BasicLister() = default;
 
+  BasicLister(const BasicLister& other) : owned_(other.owned_) {
+    rebuild_views_();
+  }
+
+  BasicLister(BasicLister&& other) noexcept
+      : owned_(std::move(other.owned_)) {
+    rebuild_views_();
+    other.rebuild_views_();
+  }
+
+  BasicLister& operator=(const BasicLister& other) {
+    if (this != &other) {
+      owned_ = other.owned_;
+      rebuild_views_();
+    }
+    return *this;
+  }
+
+  BasicLister& operator=(BasicLister&& other) noexcept {
+    if (this != &other) {
+      owned_ = std::move(other.owned_);
+      rebuild_views_();
+      other.rebuild_views_();
+    }
+    return *this;
+  }
+
   BasicLister(std::initializer_list<std::string_view> values)
       : owned_(detail::lister::collect_strings(values)) {
     rebuild_views_();

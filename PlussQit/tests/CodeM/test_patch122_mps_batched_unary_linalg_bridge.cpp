@@ -51,7 +51,7 @@ pluss::Series stack_dim0_(const std::vector<pluss::Series>& parts) {
 }
 
 std::vector<float> to_vec_f32_cpu_(const pluss::Series& x) {
-  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().to_vec<float>();
+  return x.to(pluss::pCPU).to(pluss::ScalarType::Float32).contiguous().host<float>().array().data;
 }
 
 void require_close_(const std::vector<float>& got, const std::vector<float>& want, float atol, const char* label) {

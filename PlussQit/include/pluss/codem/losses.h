@@ -6,7 +6,7 @@
 #include <cmath>
 #include <string>
 
-namespace pluss {
+namespace pluss::losses {
 
 enum class LossReduce : std::uint8_t {
   None = 0,
@@ -47,7 +47,7 @@ inline Series mse(const Series& prediction, const Series& target, LossReduce red
   return detail::reduce_loss_(per, reduction);
 }
 
-inline Series quantile_loss(
+inline Series quantile(
     const Series& prediction,
     const Series& target,
     const Series& quantiles,
@@ -91,7 +91,7 @@ inline Series mae(const Series& prediction, const Series& target, LossReduce red
   return detail::reduce_loss_(per, reduction);
 }
 
-inline Series huber_loss(const Series& prediction,
+inline Series huber(const Series& prediction,
                          const Series& target,
                          double delta = 1.0,
                          LossReduce reduction = LossReduce::Mean) {

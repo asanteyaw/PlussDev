@@ -4,51 +4,153 @@
 
 [Back to Ranks, Distributions and Tables](../inference_02_ranks_distributions_and_tables.md)
 
+With three or more groups, comparing every pair with a t-test multiplies the chances of a false rejection. One-way analysis of variance (`anova_1w`) asks the single question "do all the group means agree?". For counts, `chisq_gof` asks whether observed frequencies match an expected pattern and `chisq_indep` asks whether the two classifications of a table are independent.
+
+## Several group means
+
+`anova_1w(y, groups)` takes the observations and a same-length vector of group labels. It splits the total variation into variation between group means and variation within groups; their ratio, scaled by the degrees of freedom, is the F statistic. The program compares the strength of a component from three suppliers.
 
 ```cpp
 #include <pluss/ma.h>
-
-#include <cmath>
-#include <iomanip>
-#include <iostream>
+#include <pluss/tils/aux/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
-using pluss::Series;
+using namespace pluss::tils;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-Series table(std::vector<double> v, std::int64_t rows, std::int64_t cols) { return pluss::make_series(v, {rows, cols}).to(f64); }
-const char* yes_no(bool b) { return b ? "reject" : "keep"; }
-// two samples used throughout: cup fill volumes (cl) from two filling machines
-const std::vector<double> machine_a{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1};
-const std::vector<double> machine_b{4.8, 5.2, 5.0, 4.7, 5.6, 4.9, 5.1, 4.6, 5.3};
 int main() {
-  const Series yield = vec({4.1, 5.2, 6.3, 5.5, 6.8, 7.1, 5.9, 6.4, 7.7, 8.2, 6.9, 7.5});
-  const Series group = vec({0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2});
-  const auto a = hyp::anova_1w(yield, group);
-  std::cout << std::fixed << std::setprecision(4);
-  std::cout << "one-way ANOVA: F = " << a.stat << " on (" << a.dof_between << ", " << a.dof_within << ") df, p = " << a.pvalue << ", " << yes_no(a.reject) << "\n";
-  std::cout << "  between: SS " << a.ss_between << ", MS " << a.ms_between << "   within: SS " << a.ss_within << ", MS " << a.ms_within << "\n";
-  const auto means = a.group_means.to_vec<double>();
-  std::cout << "  group means: " << means[0] << ", " << means[1] << ", " << means[2] << "  (" << a.groups << " groups, " << a.effective_n << " observations)\n";
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
 
-  const auto c = hyp::chisq_indep(table({20, 15, 30, 35, 25, 15}, 2, 3));
-  std::cout << "\nchi-squared test of independence: chi2 = " << c.stat << " on " << c.dof << " df, p = " << c.pvalue << ", " << yes_no(c.reject) << "\n";
-  const auto e = c.expected.to_vec<double>();
-  std::cout << "  expected counts: " << std::setprecision(2) << e[0] << " " << e[1] << " " << e[2] << " / " << e[3] << " " << e[4] << " " << e[5] << "\n";
+  // Strength of a component from three suppliers (24 parts): do the supplier means differ?
+  const auto strength = pluss::make_series(std::vector<double>{4.6, 5.9, 4.2, 5.6, 5.4, 5.1, 4.5,
+                                                              6.4, 5.3, 6.6, 5.6, 6.1, 5.8, 7.0, 5.2, 5.6,
+                                                              6.0, 7.2, 5.5, 7.4, 5.7, 7.1, 7.9, 6.3},
+                                            {24}, as_f64());
+  const auto supplier = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1,
+                                                              2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                                              3, 3, 3, 3, 3, 3, 3, 3},
+                                           {24}, as_f64());
+
+  const auto r = hyp::anova_1w(strength, supplier);
+  out.writeln("F", r.stat, " df", r.dof_between, r.dof_within, " p", r.pvalue, r.reject ? " -> reject" : " -> keep", " critical", r.critical);
+  out.writeln("between: SS", r.ss_between, " MS", r.ms_between, "   within: SS", r.ss_within, " MS", r.ms_within);
+  out.writeln("groups", r.groups, " observations", r.effective_n);
+  out.writeln("group means", r.group_means.pull<double>());
+  out.writeln("group sizes", r.group_counts.pull<double>());
 }
 ```
 
 Output
 
 ```text
-one-way ANOVA: F = 11.4760 on (2.0000, 9.0000) df, p = 0.0033, reject
-  between: SS 10.6217, MS 5.3108   within: SS 4.1650, MS 0.4628
-  group means: 5.2750, 6.5500, 7.5750  (3 groups, 12 observations)
-
-chi-squared test of independence: chi2 = 10.9324 on 2.0000 df, p = 0.0042, reject
-  expected counts: 25.54 18.57 20.89 / 29.46 21.43 24.11
+F 9.2697  df 2.0000 21.0000  p 0.0013  -> reject  critical 3.4668
+between: SS 9.5152  MS 4.7576    within: SS 10.7781  MS 0.5132
+groups 3  observations 24
+group means [5.0429, 5.9556, 6.6375]
+group sizes [7.0000, 9.0000, 8.0000]
 ```
-One-way analysis of variance splits the variation into between-group and within-group parts. The F statistic is their ratio of mean squares; a large F says the group means differ more than the scatter within groups explains. Here F = 11.5 on (2, 9) degrees of freedom, p = 0.003: the three fertilisers do not all give the same mean yield (5.28, 6.55, 7.58). The test says *that* the means differ, not *which*; follow it with pairwise comparisons, adjusted for the number of comparisons. `groups` holds a label for each observation, and `group_means` and `group_counts` come back in the order of the labels.
 
-The chi-squared test of independence compares a table of counts with the counts expected if rows and columns were independent (row total times column total over the grand total). The statistic 10.9 on 2 degrees of freedom gives p = 0.004: the outcome depends on the row. The expected counts are returned so you can see where the table departs from independence; expected counts below about 5 make the chi-squared approximation unreliable.
+The group means are 5.0429, 5.9556 and 6.6375, from groups of 7, 9 and 8 parts. The F statistic is 9.2697 on (2, 21) degrees of freedom, well beyond the critical value 3.4668, and the p-value is 0.0013, so at least one supplier mean differs. The sums of squares show where the F comes from: the variation between the group means is 9.5152 (mean square 4.7576 on 2 degrees of freedom) and the variation within groups is 10.7781 (mean square 0.5132 on 21). The test does not say which means differ, only that they are not all equal; follow a rejection with pairwise comparisons that account for the number of pairs, or with a plot of the means with intervals.
+
+## Is a set of counts what we expected?
+
+`chisq_gof(observed, expected)` compares observed frequencies with expected ones through the statistic Σ (O − E)² / E, which follows a chi-squared distribution with k − 1 degrees of freedom (fewer if parameters were estimated). With no expected counts given, it assumes all categories are equally likely.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  // A die rolled 120 times: is it fair? Counts of faces 1 to 6.
+  const auto rolls = pluss::make_series(std::vector<double>{13, 17, 24, 22, 19, 25}, {6}, as_f64());
+
+  // With no expected counts given, the test assumes equal probabilities.
+  const auto fair = hyp::chisq_gof(rolls);
+  out.writeln("fair die: chi-squared", fair.stat, " df", fair.dof, " p", fair.pvalue, fair.reject ? " -> reject" : " -> keep", " critical", fair.critical);
+  out.writeln("expected counts", fair.expected.pull<double>(), " total", fair.total_count);
+
+  // Expected counts need not be equal. Are the faces 1..6 in the ratio 1:1:1:1:1:2 ?
+  const auto weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 2}, {6}, as_f64());
+  const auto loaded = hyp::chisq_gof(rolls, weights);
+  out.writeln("1:1:1:1:1:2 -> chi-squared", loaded.stat, " p", loaded.pvalue, " expected", loaded.expected.pull<double>());
+
+  // When parameters are estimated from the data, each one costs a degree of freedom: say the 6 counts were fitted with one
+  // parameter, so the test has 6 - 1 - 1 = 4 degrees of freedom.
+  hyp::ChiGofOptions fitted;
+  fitted.ddof = 1;
+  const auto adjusted = hyp::chisq_gof(rolls, pluss::series::undefined(), fitted);
+  out.writeln("with ddof = 1: df", adjusted.dof, " p", adjusted.pvalue, " critical", adjusted.critical);
+}
+```
+
+Output
+
+```text
+fair die: chi-squared 5.2000  df 5.0000  p 0.3920  -> keep  critical 11.0705
+expected counts [20.0000, 20.0000, 20.0000, 20.0000, 20.0000, 20.0000]  total 120.0000
+1:1:1:1:1:2 -> chi-squared 7.8375  p 0.1654  expected [17.1429, 17.1429, 17.1429, 17.1429, 17.1429, 34.2857]
+with ddof = 1: df 4.0000  p 0.2674  critical 9.4877
+```
+
+Of 120 rolls the faces came up 13, 17, 24, 22, 19 and 25 times, against 20 expected for each. The statistic is 5.2 on 5 degrees of freedom, p = 0.3920, below the critical value 11.0705: no evidence the die is unfair. The expected counts need not be equal: given weights in the ratio 1:1:1:1:1:2 the function rescales them to the observed total (17.1429 for each of the first five faces and 34.2857 for the sixth), the statistic is 7.8375 and p = 0.1654. When the expected counts were fitted to the data, each fitted parameter costs a degree of freedom, and `ChiGofOptions::ddof` says how many: with one fitted parameter the degrees of freedom drop from 5 to 4, the critical value to 9.4877 and the p-value for the same statistic (5.2) becomes 0.2674.
+
+## Are two classifications independent?
+
+`chisq_indep(table)` tests a table of counts. The expected count in each cell is (row total × column total) / grand total, the value if rows and columns were unrelated; the same statistic as above measures how far the table is from that.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace hyp = pluss::subsp::stats::inference::hypothesis;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+
+  // Preferred drink (rows: tea, coffee) by age band (columns: under 30, 30 to 50, over 50), 89 people.
+  const auto counts = pluss::make_series(std::vector<double>{12, 8, 15,
+                                                            20, 25, 9},
+                                         {2, 3}, as_f64());
+
+  const auto r = hyp::chisq_indep(counts);
+  out.writeln("chi-squared", r.stat, " df", r.dof, " p", r.pvalue, r.reject ? " -> reject" : " -> keep", " critical", r.critical);
+  out.writeln("table is", r.rows, "x", r.cols);
+  out.writeln("expected counts if drink and age were independent:");
+  out.writeln("  tea   ", r.expected.select(0, 0).pull<double>());
+  out.writeln("  coffee", r.expected.select(0, 1).pull<double>());
+
+  // The chi-squared approximation needs expected counts that are not tiny (a common rule: all at least 5).
+  out.writeln("smallest expected count", r.expected.min().item<double>());
+}
+```
+
+Output
+
+```text
+chi-squared 8.5930  df 2.0000  p 0.0136  -> reject  critical 5.9915
+table is 2 x 3
+expected counts if drink and age were independent:
+  tea    [12.5843, 12.9775, 9.4382]
+  coffee [19.4157, 20.0225, 14.5618]
+smallest expected count 9.4382
+```
+
+Among 89 people, tea is preferred by 12, 8 and 15 people in the three age bands and coffee by 20, 25 and 9. The statistic is 8.5930 on (2 − 1)(3 − 1) = 2 degrees of freedom, beyond the critical value 5.9915, with p = 0.0136, so preference depends on age. The expected counts if the two were independent (tea 12.58, 12.98, 9.44; coffee 19.42, 20.02, 14.56) show where the table departs from them: tea is over-represented in the oldest band (15 against 9.44 expected) and under-represented in the middle band (8 against 12.98), and coffee shows the reverse pattern. The smallest expected count is 9.4382, above the usual rule of thumb of 5, so the chi-squared approximation is trustworthy here.
+
+## Decisions and pitfalls
+
+- **A significant ANOVA does not say which groups differ.** Do not follow it with unadjusted t-tests on every pair; the more pairs, the likelier a false rejection.
+- **ANOVA assumes similar spreads and roughly normal data.** With strongly unequal group variances or skewed data, use rank-based comparisons or transform the data first.
+- **Chi-squared tests need adequate expected counts.** If many cells have expected counts under 5, combine categories or collect more data; the p-value is not reliable.
+- **Count the degrees of freedom.** Give `ddof` the number of parameters estimated from the data when comparing with a fitted distribution.
+- **The tests use counts, not percentages.** Pass frequencies; percentages give the wrong statistic and the wrong p-value.
+
+Where next: the [time-series guide](../../../ts/guide.md) tests for unit roots and serial correlation, and the [distributions guide](../../../distr/distributions.md) fits and samples the distributions used here.

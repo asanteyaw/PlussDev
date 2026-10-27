@@ -57,7 +57,7 @@ void test_michaelis_menten_vs_finite_difference_of_simulation() {
     dn[j] -= h;
     auto run = [&](const std::vector<double> &q) {
       const Series qq = mk(q, {2});
-      return dyn::simulate([&](const Series &y) { return f(y, qq); }, y0, 0.0, 2.0, 200).item<double>();
+      return dyn::simulate([&](const Series &y) { return f(y, qq); }, y0, 0.0, 2.0, 200).host<double>().front();
     };
     const double fd = (run(up) - run(dn)) / (2 * h);
     const double got = s.dydp.select(0, 2).select(0, 0).select(0, j).item<double>();

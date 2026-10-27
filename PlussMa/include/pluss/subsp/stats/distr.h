@@ -2,6 +2,9 @@
 
 #include "pluss/subsp/stats/distr_fwd.h"
 
+#include <utility>
+#include <vector>
+
 namespace pluss::subsp::stats::distr {
 
 namespace detail {
@@ -984,6 +987,252 @@ struct CODEM_API GaussianMixture {
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
   GaussianMixtureFit MLE(const pluss::Series& x) const;
+};
+
+
+struct Distribution;
+
+// The outcome of Distribution::MLE: the estimated parameters with numerical standard errors.
+struct CODEM_API DistributionFit {
+  dst::Kind kind{};
+  std::vector<double> params{};
+  double loglik = 0.0;
+  bool converged = false;
+  std::int64_t iterations = 0;
+  // Covariance of the estimates, row-major params.size() x params.size(); empty when the observed information
+  // is not positive definite at the estimate.
+  std::vector<double> vcov{};
+
+  Distribution model() const;
+  std::vector<double> stderr() const;
+  // One row per parameter: lower and upper bound of the interval at `level`.
+  std::vector<std::pair<double, double>> confint(double level = 0.95) const;
+};
+
+// One object for every family of dst::Kind. It holds the kind and the parameters (in the order the family's
+// page gives) and offers the density, the distribution function, random draws, the cumulant generating function
+// and the cumulants as methods, and a maximum-likelihood fit. The evaluation and sampling methods call the
+// kind-based functions; cgf, cumulant and MLE are computed numerically for every family.
+struct CODEM_API Distribution {
+  dst::Kind kind{};
+  std::vector<double> params{};
+  // Parameters given as Series: the object then stands for a different distribution at every point of x.
+  // Only pdf, logpdf, cdf and logcdf are available in that form.
+  std::vector<pluss::Series> series_params{};
+
+  Distribution() = default;
+  explicit Distribution(dst::Kind k, std::vector<double> p = {}) : kind(k), params(std::move(p)) {}
+  Distribution(dst::Kind k, std::vector<pluss::Series> p) : kind(k), series_params(std::move(p)) {}
+
+  bool is_discrete() const noexcept;
+
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series sample(std::span<const std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  // log E[exp(t X)] by numerical integration over the distribution (a sum for a discrete family). Throws when the
+  // moment generating function does not exist at t, or the tails are too heavy for the integration to settle.
+  pluss::Series cgf(const pluss::Series& t) const;
+  // The cumulant of the given order, 1 to 6, by numerical integration; throws when that moment does not exist.
+  pluss::Series cumulant(std::int64_t order) const;
+  // Maximum likelihood by Nelder-Mead from `start` (the object's own parameters when `start` is empty). Parameters
+  // that the family rejects are treated as an infinitely bad likelihood.
+  DistributionFit MLE(const pluss::Series& x, std::vector<double> start = {}) const;
+};
+
+
+struct Pareto;
+
+// The estimates of Pareto::MLE with numerical standard errors.
+struct CODEM_API ParetoFit {
+  double xm = 1.0;
+  double alpha = 1.0;
+  bool converged = true;
+  std::int64_t iterations = 0;
+
+  Pareto model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  // One row per parameter: the lower and the upper bound at `level`.
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API Pareto {
+  double xm = 1.0;
+  double alpha = 1.0;
+
+  Pareto() = default;
+  Pareto(double xm_, double alpha_) : xm(xm_), alpha(alpha_) {}
+
+  pluss::Series sample(std::span<const std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  // log E[exp(t X)] for t <= 0; the moment generating function does not exist for t > 0.
+  pluss::Series cgf(const pluss::Series& t) const;
+  // The cumulant of the given order, exactly; it exists only when the tail index exceeds the order.
+  pluss::Series cumulant(std::int64_t order) const;
+  // Maximum likelihood in closed form.
+  ParetoFit MLE(const pluss::Series& x) const;
+};
+
+struct Lomax;
+
+// The estimates of Lomax::MLE with numerical standard errors.
+struct CODEM_API LomaxFit {
+  double scale = 1.0;
+  double alpha = 1.0;
+  bool converged = true;
+  std::int64_t iterations = 0;
+
+  Lomax model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  // One row per parameter: the lower and the upper bound at `level`.
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API Lomax {
+  double scale = 1.0;
+  double alpha = 1.0;
+
+  Lomax() = default;
+  Lomax(double scale_, double alpha_) : scale(scale_), alpha(alpha_) {}
+
+  pluss::Series sample(std::span<const std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  // log E[exp(t X)] for t <= 0; the moment generating function does not exist for t > 0.
+  pluss::Series cgf(const pluss::Series& t) const;
+  // The cumulant of the given order, exactly; it exists only when the tail index exceeds the order.
+  pluss::Series cumulant(std::int64_t order) const;
+  // Maximum likelihood from `start` (the object's own parameters when empty).
+  LomaxFit MLE(const pluss::Series& x, std::vector<double> start = {}) const;
+};
+
+struct Burr;
+
+// The estimates of Burr::MLE with numerical standard errors.
+struct CODEM_API BurrFit {
+  double c = 1.0;
+  double k = 1.0;
+  bool converged = true;
+  std::int64_t iterations = 0;
+
+  Burr model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  // One row per parameter: the lower and the upper bound at `level`.
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API Burr {
+  double c = 1.0;
+  double k = 1.0;
+
+  Burr() = default;
+  Burr(double c_, double k_) : c(c_), k(k_) {}
+
+  pluss::Series sample(std::span<const std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  // log E[exp(t X)] for t <= 0; the moment generating function does not exist for t > 0.
+  pluss::Series cgf(const pluss::Series& t) const;
+  // The cumulant of the given order, exactly; it exists only when the tail index exceeds the order.
+  pluss::Series cumulant(std::int64_t order) const;
+  // Maximum likelihood from `start` (the object's own parameters when empty).
+  BurrFit MLE(const pluss::Series& x, std::vector<double> start = {}) const;
+};
+
+struct Zeta;
+
+// The estimates of Zeta::MLE with numerical standard errors.
+struct CODEM_API ZetaFit {
+  double s = 2.0;
+  bool converged = true;
+  std::int64_t iterations = 0;
+
+  Zeta model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  // One row per parameter: the lower and the upper bound at `level`.
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API Zeta {
+  double s = 2.0;
+
+  Zeta() = default;
+  Zeta(double s_) : s(s_) {}
+
+  pluss::Series sample(std::span<const std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  // log E[exp(t X)] for t <= 0; the moment generating function does not exist for t > 0.
+  pluss::Series cgf(const pluss::Series& t) const;
+  // The cumulant of the given order, exactly; it exists only when the tail index exceeds the order.
+  pluss::Series cumulant(std::int64_t order) const;
+  // Maximum likelihood from `start` (the object's own parameters when empty).
+  ZetaFit MLE(const pluss::Series& x, std::vector<double> start = {}) const;
+};
+
+struct Yule;
+
+// The estimates of Yule::MLE with numerical standard errors.
+struct CODEM_API YuleFit {
+  double p = 2.0;
+  bool converged = true;
+  std::int64_t iterations = 0;
+
+  Yule model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  // One row per parameter: the lower and the upper bound at `level`.
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API Yule {
+  double p = 2.0;
+
+  Yule() = default;
+  Yule(double p_) : p(p_) {}
+
+  pluss::Series sample(std::span<const std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  // log E[exp(t X)] for t <= 0; the moment generating function does not exist for t > 0.
+  pluss::Series cgf(const pluss::Series& t) const;
+  // The cumulant of the given order, exactly; it exists only when the tail index exceeds the order.
+  pluss::Series cumulant(std::int64_t order) const;
+  // Maximum likelihood from `start` (the object's own parameters when empty).
+  YuleFit MLE(const pluss::Series& x, std::vector<double> start = {}) const;
 };
 
 } // namespace pluss::subsp::stats::distr

@@ -15,7 +15,7 @@ using pluss::Series;
 
 void row(const char* label, const Series& s) {
   std::cout << std::left << std::setw(16) << label << std::right;
-  for (double v : s.reshape({s.numel()}).to_vec<double>()) std::cout << std::setw(11) << v;
+  for (double v : s.reshape({s.numel()}).host<double>()) std::cout << std::setw(11) << v;
   std::cout << "\n";
 }
 int main() {
@@ -28,7 +28,7 @@ int main() {
   std::cout << "  shape " << gf.shape << "   scale " << gf.scale << "   location (fixed) " << gf.location << "\n";
   row("  stderr", gf.stderr(xg));
   row("  95% intervals", gf.confint(xg));
-  const auto v = gf.vcov(xg).to_vec<double>();
+  const auto v = gf.vcov(xg).host<double>();
   std::cout << "  correlation of shape and scale " << v[1] / std::sqrt(v[0] * v[4]) << "   (vcov is 3 x 3, the location row and column are zero)\n";
   std::cout << "  log-likelihood " << gf.loglik(xg).item<double>() << "\n";
 
@@ -38,7 +38,7 @@ int main() {
   row("  stderr", bf.stderr(xb));
   // The same data on [-1, 3]: telling the object the support is how the family is fitted there.
   std::vector<double> shifted;
-  for (double a : xb.to_vec<double>()) shifted.push_back(-1.0 + 4.0 * a);
+  for (double a : xb.host<double>()) shifted.push_back(-1.0 + 4.0 * a);
   const auto bf2 = distr::Beta{-1.0, 3.0, 1.0, 1.0}.MLE(pluss::make_series(shifted, {500}).to(pluss::ScalarType::Float64));
   std::cout << "  the same data moved to [-1, 3]: alpha " << bf2.alpha << "   beta " << bf2.beta << "\n";
 
@@ -47,7 +47,7 @@ int main() {
   std::cout << "\nNegative binomial sample (true r 3.5, p 0.4)\n  r " << nf.r << "   p " << nf.p << "\n";
   row("  stderr", nf.stderr(xn));
   row("  95% intervals", nf.confint(xn));
-  const auto nv = nf.vcov(xn).to_vec<double>();
+  const auto nv = nf.vcov(xn).host<double>();
   std::cout << "  correlation of r and p " << nv[1] / std::sqrt(nv[0] * nv[3]) << "\n";
 
   // Counts that are not over-dispersed (variance below the mean) have no finite maximum: r grows without bound (the Poisson limit); the fit reports a large r.

@@ -21,7 +21,7 @@ int main() {
   const pluss::Series mapped = lift.learn_map(batch).value();
 
   // Series' own printer truncates a wide row; unpack it to see every term.
-  const std::vector<double> terms = mapped.to(pluss::pCPU, pluss::ScalarType::Float64).reshape({mapped.numel()}).to_vec<double>();
+  const std::vector<double> terms = mapped.to(pluss::pCPU, pluss::ScalarType::Float64).reshape({mapped.numel()}).host<double>();
   const char* names[] = {"bias", "x0", "x1", "x0^2", "x0*x1", "x1^2"};
   for (std::size_t i = 0; i < terms.size(); ++i) {
     std::cout << names[i] << " = " << terms[i] << "\n";

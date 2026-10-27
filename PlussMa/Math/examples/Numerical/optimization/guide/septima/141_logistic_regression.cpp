@@ -2,7 +2,7 @@
 // which side of the line 1.5 x0 - x1 + 0.3 = 0 they fall on, with 10% of the labels flipped so that the classes overlap. The model
 // is logistic regression with a small L2 penalty: minimize the mean of log(1 + exp(-y (x.w + b))) plus 0.05 |w|^2. The data are
 // a `Series` held fixed inside the objective, the parameters are a weight column and a bias, and the objective is a few lines of
-// `Trace` arithmetic. All three optimizers are used; the problem is convex, so they must agree, and the program reports how far
+// `pluss::Series` arithmetic. All three optimizers are used; the problem is convex, so they must agree, and the program reports how far
 // apart their answers are, the fraction of points the model classifies correctly, and the iterations and evaluations each used.
 #include <pluss/ma.h>
 
@@ -11,9 +11,9 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
-using Pack = optim::ParameterPack<Trace>;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
+using Pack = optim::ParameterPack<pluss::Series>;
 using Block = optim::ParameterPack<pluss::Series>::Block;
 
 const auto f64 = pluss::ScalarType::Float64;
@@ -34,10 +34,10 @@ int main() {
   const auto X = pluss::make_series(features, {n, 2}).to(f64);
   const auto y = pluss::make_series(labels, {n, 1}).to(f64);
 
-  const auto loss_of = [&](const Trace& w, const Trace& b) -> Trace {
-    const Trace z = optim::matmul(optim::fixed(X), w) + b;  // [n, 1]
-    const Trace margin = optim::fixed(y) * z;
-    return optim::sum(optim::log(1.0 + optim::exp(margin * -1.0))) * (1.0 / n) + 0.05 * optim::sum(optim::square(w));
+  const auto loss_of = [&](const pluss::Series& w, const pluss::Series& b) -> pluss::Series {
+    const pluss::Series z = X.matmul(w) + b;  // [n, 1]
+    const pluss::Series margin = y * z;
+    return (1.0 + (margin * -1.0).exp()).log().sum() * (1.0 / n) + 0.05 * w.square().sum();
   };
   const auto zeros_w = pluss::Series::zeros({2, 1}, pluss::ScalarType::Float64);
   const auto zeros_b = pluss::Series::zeros({1}, pluss::ScalarType::Float64);
@@ -47,14 +47,14 @@ int main() {
             << "weights, bias\n";
   const auto report = [&](const std::string& name, const char* exit, std::int64_t iterations, std::int64_t evaluations, double loss,
                           const pluss::Series& w, const pluss::Series& b) {
-    const auto wv = w.reshape({2}).to_vec<double>();
-    const double bias = b.item<double>();
+    const auto wv = w.reshape({2}).host<double>();
+    const double bias = as_f64(b);
     fits.push_back({name, {wv[0], wv[1], bias}});
     std::cout << std::left << std::setw(10) << name << std::setw(14) << exit << std::setw(8) << iterations << std::setw(8) << evaluations << std::fixed
               << std::setprecision(6) << std::setw(12) << loss << std::setprecision(4) << wv[0] << ", " << wv[1] << ", " << bias << "\n";
   };
 
-  std::function<Trace(const Pack&)> named = [&](const Pack& p) { return loss_of(p.at("w"), p.at("b")); };
+  std::function<pluss::Series(const Pack&)> named = [&](const Pack& p) { return loss_of(p.at("w"), p.at("b")); };
   const optim::ParameterPack<pluss::Series> start(std::vector<Block>{{"w", zeros_w}, {"b", zeros_b}});
   {
     optim::SeptimaSolveOptions options;
@@ -74,7 +74,7 @@ int main() {
   }
   {
     const auto [params, r] = optim::l_sr1_trust_region(
-        [&](const std::vector<Trace>& blocks) -> Trace { return loss_of(blocks[0], blocks[1]); }, std::vector<pluss::Series>{zeros_w, zeros_b});
+        [&](const std::vector<pluss::Series>& blocks) -> pluss::Series { return loss_of(blocks[0], blocks[1]); }, std::vector<pluss::Series>{zeros_w, zeros_b});
     report("L-SR1", r.converged ? "Converged" : "not converged", r.iteration, r.function_evaluations, r.objective_value, params[0], params[1]);
   }
 

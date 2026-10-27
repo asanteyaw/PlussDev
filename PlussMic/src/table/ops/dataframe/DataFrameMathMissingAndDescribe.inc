@@ -1470,7 +1470,7 @@ Slate DataFrame::csmin(Axis axis, bool skipnull) const {
                            .where(matrix.valid.logical_not(),
                                   std::numeric_limits<double>::infinity())
                            .argmin(normalized_axis)
-                           .to_vec<std::int64_t>();
+                           .host<std::int64_t>();
   auto out = normalized_axis == 0
                  ? src.cases_.take(indices)
                  : make_note_slate(matrix.names).take(indices);
@@ -1490,7 +1490,7 @@ Slate DataFrame::csmax(Axis axis, bool skipnull) const {
                            .where(matrix.valid.logical_not(),
                                   -std::numeric_limits<double>::infinity())
                            .argmax(normalized_axis)
-                           .to_vec<std::int64_t>();
+                           .host<std::int64_t>();
   auto out = normalized_axis == 0
                  ? src.cases_.take(indices)
                  : make_note_slate(matrix.names).take(indices);
@@ -1901,7 +1901,7 @@ DataFrame DataFrame::shownull(Axis axis, bool all) const {
 
   PLUSS_CHECK(axis == Axis::Feature, "DataFrame::shownull: axis must be Axis::Case or Axis::Feature");
   const auto valid = validity_matrix_(src, target_indices, "DataFrame::shownull");
-  const auto non_null_by_feature = valid.to(pluss::codem::ScalarType::Int64).sum(0).to_vec<std::int64_t>();
+  const auto non_null_by_feature = valid.to(pluss::codem::ScalarType::Int64).sum(0).host<std::int64_t>();
 
   std::vector<std::size_t> keep_indices;
   keep_indices.reserve(src.columns_.size());
@@ -2332,7 +2332,7 @@ DataFrame DataFrame::dropnull(const DropOptions& options) const {
     candidate[idx] = true;
   }
   const auto valid = validity_matrix_(src, target_indices, "DataFrame::dropnull");
-  const auto non_null_by_target = valid.to(pluss::codem::ScalarType::Int64).sum(0).to_vec<std::int64_t>();
+  const auto non_null_by_target = valid.to(pluss::codem::ScalarType::Int64).sum(0).host<std::int64_t>();
   std::unordered_map<std::size_t, std::int64_t> target_counts;
   target_counts.reserve(target_indices.size());
   for (std::size_t pos = 0; pos < target_indices.size(); ++pos) {
@@ -2615,7 +2615,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
     key_infos.push_back({
         name,
         col.has_validity_mask() ? col.clear_validity_mask() : col,
-        col.has_validity_mask() ? std::optional<std::vector<bool>>(col.validity_mask()->to_vec<bool>()) : std::nullopt,
+        col.has_validity_mask() ? std::optional<std::vector<bool>>(col.validity_mask()->host<bool>()) : std::nullopt,
     });
     keys.push_back(name);
   }

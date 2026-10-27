@@ -28,7 +28,7 @@
 //    DISTRIBUTION's moments are known exactly.
 //  - fluctua_adjoint() is checked against direct autodiff through the
 //    IDENTICAL unrolled Euler-Maruyama discretization (same pattern
-//    pluss::ode::fluxa_adjoint's own test uses): the oracle reuses the
+//    pluss::subsp::math::ode::fluxa_adjoint's own test uses): the oracle reuses the
 //    module's own RNG helper to guarantee it sees the SAME realized
 //    noise, but hand-rederives the step formula fresh rather than calling
 //    the module's em_step_, so a bug shared between the forward step and
@@ -67,10 +67,10 @@ Series real_series(const std::vector<double>& values, const std::vector<std::int
 
 Series constant_series(double value, std::int64_t n) { return real_series(std::vector<double>(n, value), {n}); }
 
-double scalar_f64(const Series& x) { return x.to(pluss::pCPU, ScalarType::Float64).item<double>(); }
+double scalar_f64(const Series& x) { return x.to(pluss::pCPU, ScalarType::Float64).host<double>().front(); }
 
 std::vector<double> vec_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
 }
 
 } // namespace

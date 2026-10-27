@@ -128,7 +128,7 @@ void test_align_to_exact_mode_tolerates_unsorted_axis() {
   // unsorted axis is [Jan 3, Jan 1, Jan 2]; sorted source values are
   // [1.0 @ Jan1, 2.0 @ Jan2, 3.0 @ Jan3], so the exact join onto the
   // unsorted target axis order should read back [3.0, 1.0, 2.0].
-  const auto vals = out.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto vals = out.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   expect(vals.size() == 3 && vals[0] == 3.0 && vals[1] == 1.0 && vals[2] == 2.0,
          "align_to(Exact) must match by epoch tick regardless of either axis's order");
 }

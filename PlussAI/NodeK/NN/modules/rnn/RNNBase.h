@@ -21,7 +21,7 @@ struct PackedSequence {
 inline PackedSequence pack_padded_sequence(const Series& input, const Series& lengths, bool batch_first = false) {
   ::pluss::detail::nn::require_rank_at_least_(input, 2, "nn::pack_padded_sequence");
   ::pluss::detail::nn::require_rank_at_least_(lengths, 1, "nn::pack_padded_sequence");
-  const auto lengths_vec = lengths.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto lengths_vec = lengths.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
   const auto sorted = ::pluss::detail::nn::sorted_batch_indices_(lengths_vec);
   const auto unsorted = ::pluss::detail::nn::inverse_permutation_(sorted);
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(input.platform());
@@ -52,7 +52,7 @@ inline PackedSequence pack_padded_sequence(const Series& input, const Series& le
 
 inline std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& packed, bool batch_first = false) {
   ::pluss::detail::nn::require_rank_at_least_(packed.data, 1, "nn::pad_packed_sequence");
-  const auto batch_sizes_vec = packed.batch_sizes.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto batch_sizes_vec = packed.batch_sizes.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
   const std::int64_t max_seq = static_cast<std::int64_t>(batch_sizes_vec.size());
   const std::int64_t batch = packed.unsorted_indices.numel();
   std::vector<std::int64_t> tail_sizes(packed.data.sizes().begin() + 1, packed.data.sizes().end());

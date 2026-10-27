@@ -57,6 +57,21 @@ CODEM_API codem::Series undefined();
 
 namespace pluss::codem {
 
+namespace host_detail {
+
+template <class T> struct NativeRank {
+  using leaf_type = std::remove_cv_t<T>;
+  static constexpr std::size_t value = 0;
+};
+
+template <class T, class Allocator>
+struct NativeRank<std::vector<T, Allocator>> {
+  using leaf_type = typename NativeRank<T>::leaf_type;
+  static constexpr std::size_t value = NativeRank<T>::value + 1;
+};
+
+} // namespace host_detail
+
 namespace ops_internal {
 struct SeriesFactoryAccess;
 } // namespace ops_internal
@@ -341,6 +356,12 @@ public:
   template <class T> class HostValue {
   public:
     enum class Kind : std::uint8_t { Scalar = 0, Vector = 1, Array = 2 };
+    using value_type = T;
+    using size_type = typename std::vector<T>::size_type;
+    using reference = typename std::vector<T>::reference;
+    using const_reference = typename std::vector<T>::const_reference;
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
 
     HostValue() = default;
     explicit HostValue(HostArray<T> arr, Kind kind = Kind::Array)
@@ -361,7 +382,7 @@ public:
     bool is_vector() const noexcept { return kind_ == Kind::Vector; }
     bool is_array() const noexcept { return kind_ == Kind::Array; }
 
-    const T &scalar() const {
+    T scalar() const {
       PLUSS_CHECK(is_scalar(), "Series::HostValue: not scalar");
       PLUSS_CHECK(
           arr_.data.size() == 1,
@@ -369,17 +390,74 @@ public:
       return arr_.data.front();
     }
 
-    std::vector<T> vector() const {
-      if (is_scalar())
-        return std::vector<T>{scalar()};
-      return arr_.data;
-    }
-
     const HostArray<T> &array() const { return arr_; }
 
+    // A HostValue retained through `auto` remains a directly readable flat
+    // row-major host range. Assign it to a nested std::vector type when the
+    // native value must preserve Series rank.
+    bool empty() const noexcept { return arr_.data.empty(); }
+    size_type size() const noexcept { return arr_.data.size(); }
+    reference operator[](size_type i) { return arr_.data[i]; }
+    const_reference operator[](size_type i) const { return arr_.data[i]; }
+    reference at(size_type i) { return arr_.data.at(i); }
+    const_reference at(size_type i) const { return arr_.data.at(i); }
+    reference front() { return arr_.data.front(); }
+    const_reference front() const { return arr_.data.front(); }
+    reference back() { return arr_.data.back(); }
+    const_reference back() const { return arr_.data.back(); }
+    iterator begin() noexcept { return arr_.data.begin(); }
+    const_iterator begin() const noexcept { return arr_.data.begin(); }
+    const_iterator cbegin() const noexcept { return arr_.data.cbegin(); }
+    iterator end() noexcept { return arr_.data.end(); }
+    const_iterator end() const noexcept { return arr_.data.end(); }
+    const_iterator cend() const noexcept { return arr_.data.cend(); }
+    T *data() noexcept
+      requires(!std::is_same_v<T, bool>)
+    {
+      return arr_.data.data();
+    }
+    const T *data() const noexcept
+      requires(!std::is_same_v<T, bool>)
+    {
+      return arr_.data.data();
+    }
+
     operator T() const { return scalar(); }
-    operator std::vector<T>() const { return vector(); }
+    template <class Native>
+      requires(host_detail::NativeRank<Native>::value > 0 &&
+               std::is_same_v<
+                   typename host_detail::NativeRank<Native>::leaf_type, T>)
+    operator Native() const {
+      constexpr auto native_rank = host_detail::NativeRank<Native>::value;
+      if constexpr (native_rank == 1) {
+        PLUSS_CHECK(is_vector(),
+                    "Series::host<T>(): a flat vector destination requires "
+                    "a rank-one Series; use pull<T>()");
+        return Native(arr_.data.begin(), arr_.data.end());
+      }
+      PLUSS_CHECK(
+          arr_.sizes.size() == native_rank,
+          "Series::host<T>(): destination nesting depth must match Series rank");
+      std::size_t offset = 0;
+      Native out = build_native_<Native>(0, offset);
+      PLUSS_CHECK(offset == arr_.data.size(),
+                  "Series::host<T>(): shape does not match materialized data");
+      return out;
+    }
     operator HostArray<T>() const { return arr_; }
+
+    friend bool operator==(const HostValue &lhs, const HostValue &rhs) {
+      return lhs.kind_ == rhs.kind_ && lhs.arr_.data == rhs.arr_.data &&
+             lhs.arr_.sizes == rhs.arr_.sizes &&
+             lhs.arr_.strides == rhs.arr_.strides &&
+             lhs.arr_.contiguous == rhs.arr_.contiguous;
+    }
+    friend bool operator==(const HostValue &lhs, const std::vector<T> &rhs) {
+      return lhs.arr_.data == rhs;
+    }
+    friend bool operator==(const std::vector<T> &lhs, const HostValue &rhs) {
+      return lhs == rhs.arr_.data;
+    }
 
     friend std::ostream &operator<<(std::ostream &os, const HostValue &v) {
       auto append_scalar = [&](const auto &x) {
@@ -410,7 +488,7 @@ public:
         return os;
       }
       if (v.is_vector()) {
-        append_vector(v.vector());
+        append_vector(v.arr_.data);
         return os;
       }
       const auto &arr = v.array();
@@ -427,6 +505,28 @@ public:
     }
 
   private:
+    template <class Native>
+    Native build_native_(std::size_t axis, std::size_t &offset) const {
+      if constexpr (host_detail::NativeRank<Native>::value == 0) {
+        PLUSS_CHECK(offset < arr_.data.size(),
+                    "Series::host<T>(): shape exceeds materialized data");
+        return static_cast<Native>(arr_.data[offset++]);
+      } else {
+        PLUSS_CHECK(axis < arr_.sizes.size(),
+                    "Series::host<T>(): invalid nested host rank");
+        const auto extent = arr_.sizes[axis];
+        PLUSS_CHECK(extent >= 0,
+                    "Series::host<T>(): negative Series extent");
+        Native out;
+        out.reserve(static_cast<std::size_t>(extent));
+        for (std::int64_t i = 0; i < extent; ++i) {
+          out.emplace_back(
+              build_native_<typename Native::value_type>(axis + 1, offset));
+        }
+        return out;
+      }
+    }
+
     HostArray<T> arr_{};
     Kind kind_{Kind::Array};
   };
@@ -1141,7 +1241,7 @@ public:
   // generating function. This is deliberately NOT a home for continuous
   // (Riemann/Lebesgue) integration of an arbitrary callable -- that needs
   // to re-invoke a function at points it chooses itself (see quadra's
-  // 1-D/N-D overloads and aleatoria in PlussMa's `pluss::integ`
+  // 1-D/N-D overloads and aleatoria in PlussMa's `pluss::subsp::math::integ`
   // namespace), which a single already-computed Series value structurally
   // cannot provide.
   class SeriesAntidiffProxy final {
@@ -1949,73 +2049,64 @@ public:
     return reinterpret_cast<void *>(raw_data());
   }
 
-  // Materialize host data to a contiguous vector in row-major logical order.
-  // For N-D shape-aware export, use host<T>().array().
-  // Legacy user-facing API: prefer host<T>() / item<T>().
-  // Retained during staged internal migration.
-  template <class T> std::vector<T> to_vec() const {
-    return detail_materialize_vec_<T>();
-  }
-
-  template <class T> T to_vec(std::int64_t index) const {
-    auto data = detail_materialize_vec_<T>();
-    std::int64_t idx = index;
-    if (idx < 0) {
-      idx += static_cast<std::int64_t>(data.size());
-    }
-    if (idx < 0 || idx >= static_cast<std::int64_t>(data.size())) {
-      throw_error("Series::to_vec<T>(index): index out of range");
-    }
-    return data[static_cast<std::size_t>(idx)];
-  }
-
-  // Scalar extraction (Torch-style): requires exactly one element.
+  // Scalar extraction: only a rank-zero Series has a native scalar form.
   // Returns a native C++ value of the requested type.
   template <class T> T item() const {
-    PLUSS_CHECK(numel() == 1,
-                "Series::item<T>: expected tensor with exactly one element");
-    return to_vec<T>(0);
+    PLUSS_CHECK(dim() == 0,
+                "Series::item<T>(): expected a rank-zero Series");
+    auto data = detail_materialize_vec_<T>();
+    PLUSS_CHECK(data.size() == 1,
+                "Series::item<T>(): scalar payload must contain one value");
+    return data.front();
   }
-  // Dynamic scalar extraction: requires exactly one element.
+
+  // One-dimensional host extraction. Higher ranks use host<T>(), which
+  // preserves rank and shape metadata rather than flattening implicitly.
+  template <class T> std::vector<T> pull() const {
+    PLUSS_CHECK(dim() == 1,
+                "Series::pull<T>(): expected a rank-one Series");
+    return detail_materialize_vec_<T>();
+  }
+  // Dynamic scalar extraction: requires a rank-zero Series.
   // Returns a tagged Scalar when caller doesn't want to spell an explicit C++
   // type. Use item<T>() when exact native type extraction is required.
   Scalar item() const {
-    PLUSS_CHECK(numel() == 1,
-                "Series::item(): expected tensor with exactly one element");
+    PLUSS_CHECK(dim() == 0,
+                "Series::item(): expected a rank-zero Series");
     switch (scalar_type()) {
     case ScalarType::Bool:
-      return Scalar(to_vec<bool>(0), ScalarType::Bool);
+      return Scalar(item<bool>(), ScalarType::Bool);
     case ScalarType::UInt8:
-      return Scalar(static_cast<std::uint64_t>(to_vec<std::uint8_t>(0)),
+      return Scalar(static_cast<std::uint64_t>(item<std::uint8_t>()),
                     ScalarType::UInt8);
     case ScalarType::UInt16:
-      return Scalar(static_cast<std::uint64_t>(to_vec<std::uint16_t>(0)),
+      return Scalar(static_cast<std::uint64_t>(item<std::uint16_t>()),
                     ScalarType::UInt16);
     case ScalarType::UInt32:
-      return Scalar(static_cast<std::uint64_t>(to_vec<std::uint32_t>(0)),
+      return Scalar(static_cast<std::uint64_t>(item<std::uint32_t>()),
                     ScalarType::UInt32);
     case ScalarType::UInt64:
-      return Scalar(to_vec<std::uint64_t>(0), ScalarType::UInt64);
+      return Scalar(item<std::uint64_t>(), ScalarType::UInt64);
     case ScalarType::Int8:
-      return Scalar(static_cast<std::int64_t>(to_vec<std::int8_t>(0)),
+      return Scalar(static_cast<std::int64_t>(item<std::int8_t>()),
                     ScalarType::Int8);
     case ScalarType::Int16:
-      return Scalar(static_cast<std::int64_t>(to_vec<std::int16_t>(0)),
+      return Scalar(static_cast<std::int64_t>(item<std::int16_t>()),
                     ScalarType::Int16);
     case ScalarType::Int32:
-      return Scalar(static_cast<std::int64_t>(to_vec<std::int32_t>(0)),
+      return Scalar(static_cast<std::int64_t>(item<std::int32_t>()),
                     ScalarType::Int32);
     case ScalarType::Int64:
-      return Scalar(to_vec<std::int64_t>(0), ScalarType::Int64);
+      return Scalar(item<std::int64_t>(), ScalarType::Int64);
     case ScalarType::Float16:
     case ScalarType::BFloat16:
     case ScalarType::Float8E4M3FN:
     case ScalarType::Float8E5M2:
-      return Scalar(to(ScalarType::Float64).to_vec<double>(0), scalar_type());
+      return Scalar(to(ScalarType::Float64).item<double>(), scalar_type());
     case ScalarType::Float32:
-      return Scalar(static_cast<double>(to_vec<float>(0)), ScalarType::Float32);
+      return Scalar(static_cast<double>(item<float>()), ScalarType::Float32);
     case ScalarType::Float64:
-      return Scalar(to_vec<double>(0), ScalarType::Float64);
+      return Scalar(item<double>(), ScalarType::Float64);
     case ScalarType::Complex64:
     case ScalarType::Complex128:
       PLUSS_FAIL("Series::item(): complex dtype requires explicit "
@@ -2033,9 +2124,9 @@ public:
   // - N-D series materializes as HostArray<T> (data + sizes/strides)
   template <class T> HostValue<T> host() const {
     auto arr = detail_host_array_impl_<T>();
-    if (numel() == 1)
+    if (dim() == 0)
       return HostValue<T>::from_scalar(std::move(arr));
-    if (dim() <= 1)
+    if (dim() == 1)
       return HostValue<T>::from_vector(std::move(arr));
     return HostValue<T>::from_array(std::move(arr));
   }
@@ -2261,7 +2352,7 @@ public:
 
     std::int64_t total = 0;
     if (cpu.scalar_type() == ScalarType::Bool) {
-      const auto values = cpu.to_vec<bool>();
+      const auto values = cpu.host<bool>();
       total = static_cast<std::int64_t>(
           std::count(values.begin(), values.end(), count_true));
     } else {
@@ -2422,7 +2513,7 @@ private:
       PLUSS_CHECK(idx_cpu.dim() == 1 && idx_cpu.size(0) == dim_size,
                   "Series::extract: boolean advanced index must be 1D and "
                   "match the indexed dimension size");
-      const auto mask = idx_cpu.to_vec<bool>();
+      const auto mask = idx_cpu.host<bool>();
       std::vector<std::int64_t> out;
       out.reserve(mask.size());
       for (std::int64_t i = 0; i < static_cast<std::int64_t>(mask.size());
@@ -2444,7 +2535,7 @@ private:
         "Series::extract: advanced index Series must be bool or integer dtype");
     const auto flat = idx_cpu.to(ScalarType::Int64)
                           .reshape({idx_cpu.numel()})
-                          .to_vec<std::int64_t>();
+                          .host<std::int64_t>();
     std::vector<std::int64_t> out;
     out.reserve(flat.size());
     for (std::int64_t i : flat) {
@@ -3058,11 +3149,11 @@ private:
 
   template <class T> HostAny detail_host_any_impl_(ScalarType st) const {
     auto arr = detail_host_array_impl_<T>();
-    if (numel() == 1) {
+    if (dim() == 0) {
       PLUSS_CHECK(!arr.data.empty(), "Series::host(): scalar payload is empty");
       return HostAny::from_scalar(HostScalarAny{arr.data.front()}, st);
     }
-    if (dim() <= 1) {
+    if (dim() == 1) {
       return HostAny::from_vector(HostVectorAny{arr.data}, st);
     }
     HostArrayAny any_arr{
@@ -3077,12 +3168,12 @@ private:
   HostAny detail_host_any_float32_bridge_(ScalarType original_dtype) const {
     const Series cpu_f32 = to(Platform::CPU, ScalarType::Float32);
     auto arr = cpu_f32.detail_host_array_impl_<float>();
-    if (cpu_f32.numel() == 1) {
+    if (cpu_f32.dim() == 0) {
       PLUSS_CHECK(!arr.data.empty(), "Series::host(): scalar payload is empty");
       return HostAny::from_scalar(HostScalarAny{arr.data.front()},
                                   original_dtype);
     }
-    if (cpu_f32.dim() <= 1) {
+    if (cpu_f32.dim() == 1) {
       return HostAny::from_vector(HostVectorAny{arr.data}, original_dtype);
     }
     HostArrayAny any_arr{
@@ -3183,7 +3274,7 @@ private:
       return ScalarType::Complex128;
     } else {
       static_assert(detail_false_<U>::value,
-                    "Series::to_vec<T>: unsupported element type");
+                    "Series::host<T>: unsupported element type");
     }
   }
 

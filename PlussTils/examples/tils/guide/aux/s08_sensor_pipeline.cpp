@@ -17,7 +17,7 @@ int main() {
   const auto whole = pluss::tils::as_i64(shifted, cfg);
 
   std::int64_t sum = 0;
-  for (std::int64_t v : whole.to_vec<std::int64_t>()) sum += v;
+  for (std::int64_t v : whole.host<std::int64_t>()) sum += v;
   const auto count = pluss::make_series(std::vector<std::int64_t>{static_cast<std::int64_t>(whole.numel())}, {}, cfg);
 
   std::cout << "readings: " << pluss::tils::as_i64(count) << '\n';

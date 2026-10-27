@@ -1333,9 +1333,112 @@ terms, material instability, mode tracking across parameter crossings, interval 
 search, or a production sparse shift-invert factorization. Those require explicit later
 contracts rather than being approximated behind these calls.
 
+### E6d matrix-free transient frame motion
+
+`structure::motion()` now integrates the existing planar frame with a single
+generalized-alpha engine. `spectral_radius=1` recovers average-acceleration Newmark;
+values toward zero add controlled algorithmic high-frequency damping. Nonuniform time
+samples, consistent initial acceleration, mass- and stiffness-proportional damping,
+endpoint reactions, kinetic/strain energy, and per-sample Krylov diagnostics share one
+contract.
+
+The effective operator is a per-step linear combination of the E6b consistent mass and
+elastic stiffness actions. Its Jacobi preconditioner similarly combines the exact mass
+and stiffness diagonals, so no dense global matrix or separate damping assembly exists.
+All physical lanes remain vectorized Series operations; only causally ordered time
+samples and PCG iterations are sequential. A tracked exact-zero initial equilibrium uses
+a cancelling shifted pair of mass solves so reverse mode retains the mathematical
+inverse-mass Jacobian instead of differentiating a zero-iteration shortcut.
+
+Permanent verification compares both average-acceleration and generalized-alpha results
+with independently coded scalar recurrences, then covers nonuniform forcing, physical
+and algorithmic damping, energy, batched density, Float32, full load-history and initial
+state sensitivities, diagnostics, and stable invalid-state failures. Detailed equations,
+shape contracts, source references, performance ownership, and deferred scope are in
+`Eng/structure/IMPLEMENTATION.md`.
+
+Sources inspected for this tranche:
+
+- Newmark (1959) and Chung--Hulbert (1993), for the second-order update and
+  generalized-alpha spectral-radius family;
+- MFEM `GeneralizedAlpha2Solver` and `NewmarkSolver`, inspected 2026-10-23, for an
+  independent second-order implementation and stability parameterization;
+- OpenSees `Newmark.cpp` and `GeneralizedAlpha.cpp`, inspected 2026-10-23, for effective
+  tangent coefficients and alpha-level state/load synchronization;
+- PETSc 3.26 `TSALPHA2`, inspected 2026-10-23, for the scalable second-order implicit
+  solver boundary; and
+- local MATLAB R2025b `solveTimeDependent.m`, inspected 2026-10-23, for constrained
+  second-order initial states, proportional damping, and output-time handling.
+
+### E6e matrix-free harmonic response
+
+`structure::harmonic()` now solves
+`[K + i*omega*C - omega^2*M]u = load` with Rayleigh damping
+`C = mass_damping*M + stiffness_damping*K`. It reuses the E6b stiffness and consistent
+mass actions and delegates the indefinite complex system to the canonical restarted
+`math::krylov::gmres` engine; no global structural or dynamic-stiffness matrix is
+assembled.
+
+Frequency is an explicit Series batch axis. Frame/material batches, force-scenario axes,
+and every sampled frequency execute together, while real forcing is promoted
+differentiably to Complex64 or Complex128. Results include displacement, velocity,
+acceleration, constrained reactions, residual diagnostics, iteration count, operator
+evaluations, and restart count. Only homogeneous supports are accepted because
+prescribed phasor motion requires explicit inertial and damping forcing.
+
+Permanent verification covers independent scalar complex responses, force phase,
+phasor kinematics, reactions, distinct material/frequency batches, Float32/Complex64,
+reverse sensitivity through real-to-complex promotion, nonconvergence policy, and stable
+invalid-state failures. Full equations, ownership, references, and deliberate limits are
+recorded in `Eng/structure/IMPLEMENTATION.md`.
+
+Sources inspected for this tranche:
+
+- local MATLAB R2025b `solveDirectFrequencyResponse.m` and
+  `solveModalFrequencyResponse.m`, inspected 2026-10-24, for direct and modal dynamic
+  stiffness, constraint treatment, and phasor kinematics;
+- Saad and Schultz (1986), DOI `10.1137/0907058`, for GMRES residual minimization; and
+- PETSc 3.26 `KSPGMRES` documentation and source, inspected 2026-10-24, for restarted
+  complex Krylov behavior and diagnostics.
+
+### E6f--E6g corotational static and transient response
+
+E6f adds the geometric-nonlinear overload of `structure::solve()`. One private 2-D
+corotational Euler--Bernoulli owner computes current member frames, rigid-motion-free
+basic deformations, elastic basic forces, current-local end actions, strain energy,
+global internal force, and analytical consistent tangent actions. Proportional load
+steps use residual-decreasing Newton backtracking and adaptive cutback. No global
+stiffness matrix is assembled; model and load batches remain Series lanes.
+
+E6g reuses that exact owner in the nonlinear overload of `structure::motion()`.
+Generalized-alpha equilibrium is re-formed at every iterate with consistent mass,
+initial-stiffness Rayleigh damping, current internal force, and the current tangent.
+Initial acceleration comes from nonlinear equilibrium. Static and effective tangents
+use canonical CG on the stable symmetric branch, reporting curvature loss instead of
+regularizing an unstable state.
+
+Reverse mode records residuals and treats converged Newton tangents as local implicit
+linearizations. Exact-zero tracked right-hand sides retain inverse-operator sensitivity
+through cancelling shifted solves. Permanent tests cover objective rigid rotation,
+exact axial statics and dynamics, a full force-history Jacobian, lateral geometric
+motion, batch axes, Float32, cutbacks, convergence diagnostics, and invalid controls.
+
+Sources inspected for these tranches:
+
+- OpenSees `CorotCrdTransf2d.cpp`, `NewtonRaphson.cpp`, and
+  `GeneralizedAlpha.cpp` on `master`, inspected 2026-10-24;
+- Chung and Hulbert (1993), DOI `10.1115/1.2900803`;
+- Roman Vetter, *Growth, Interaction and Packing of Thin Objects*, Section 2.3; and
+- local MATLAB R2025b `solveStationaryNonlinear.m` and `solveTimeDependent.m`,
+  inspected 2026-10-24.
+
+Phase E7 remains reserved for engineered fluid and thermal-fluid networks. Further E6
+depth covers arc-length continuation, path-dependent material state, follower/member
+loads, contact, and three-dimensional frame kinematics as distinct contracts.
+
 ## Public Layout
 
-The canonical implementation namespace remains `pluss::subsp::eng`, with `pluss::eng` as
+The canonical implementation namespace remains `pluss::subsp::eng`, with `pluss::subsp::eng` as
 the opt-in public namespace alias already established by PlussMa.
 
 ```text
@@ -1521,9 +1624,9 @@ explicit reference states and provenance.
 
 Establish mesh, node, degree-of-freedom, material, section, element, constraint, load-case,
 and assembly contracts. Start with truss, beam, and frame elements; static response;
-reaction recovery; modal analysis; buckling; and Newmark/generalized-alpha transient
-response. Geometric and material nonlinearity follow only after the linear verification
-suite is exhaustive.
+reaction recovery; modal analysis; buckling; Newmark/generalized-alpha transient
+response; direct harmonic response; corotational load-stepped nonlinear equilibrium;
+and nonlinear generalized-alpha motion over the same residual/tangent owner.
 
 Element calculations batch over elements and load cases. Connectivity uses gather/scatter
 assembly. Large solves use matrix-free or future canonical sparse machinery, not a dense
@@ -1538,6 +1641,55 @@ extended-period simulation, water age/constituent transport, and network control
 Constitutive relations and fluid properties delegate to NatSci physics and the shared
 property provider. Topology, controls, demand policy, network solves, sizing, and operating
 workflows belong to Engineering.
+
+#### E7a completion: steady pressurized hydraulics
+
+The first E7 tranche is implemented in `Eng/fluid`. It compiles junction/reservoir and
+pipe topology once, then solves batched junction heads and pipe flows through one coupled
+Series Newton system. Darcy--Weisbach follows EPANET's laminar, cubic transition, and
+Swamee--Jain branches with analytical hydraulic gradients; Hazen--Williams is available as
+an explicit alternative. The result reports pressure, velocity, friction, continuity, and
+energy diagnostics and retains reverse history.
+
+The exact contract, validation, tests, inspected references, and deferred tank,
+demand-policy, extended-period, transport, and sparse-solver scope are recorded in
+`Eng/fluid/IMPLEMENTATION.md`.
+
+#### E7b completion: pumps and active control valves
+
+The compiled network now admits zero-length pump and valve links alongside pipes. Pump
+curves retain affinity-law speed scaling and reverse graphs. Throttle, fixed-flow,
+pressure-reducing, and pressure-sustaining valve equations are assembled directly into the
+same coupled Jacobian. Hysteretic status switching remains reserved for extended-period
+control state; the steady contract never guesses an active mode from iteration history.
+
+#### E7c completion: storage and extended-period operation
+
+The canonical hydraulic owner now includes dynamic fixed-grade tanks, analytical
+pressure-driven demand, emitter discharge, cyclic demand/pump/valve patterns, persistent
+timed and state controls, and event-shortened extended-period execution. Tank bounds,
+overflow discharge, and tank-level control crossings are handled on the common event clock;
+all scenario lanes and physical updates remain batched Series operations. The public
+extension is `fluid::run()` plus declarative tank, schedule, and control records. Detailed
+equations, action precedence, validation, verification, references, and remaining
+constant-area/quality-transport limits are recorded in `Eng/fluid/IMPLEMENTATION.md`.
+
+#### E7d completion: constituent transport and water age
+
+`fluid::transport()` now composes the accepted E7c hydraulic event trajectory with a
+conservative batched quality clock. Physical pipes use fixed-shape first-order upwind
+finite volumes with adaptive Courant limiting and bidirectional flow; pumps and valves are
+zero-volume algebraic transfers; junctions mix completely; and constant-area tanks mix as
+one volume. Constituent calls support prescribed source quality plus exact first-order pipe
+and tank rates. Age calls supply their own zero reservoir boundary and unit elapsed-time
+source. Stored inventory, cumulative boundary/reaction accounting, and conservation error
+are reported per scenario, and the path retains reverse history and Float32/Float64 dtype.
+
+The fixed-shape scheme intentionally favors Series batching and differentiation over
+EPANET's dynamic Lagrangian segment lists. Its first-order numerical diffusion, global
+batch CFL clock, one-constituent contract, fully mixed tanks, and deferred multi-species,
+wall-reaction, source-class, and high-resolution advection scope are recorded with the
+equations, tests, and inspected EPANET references in `Eng/fluid/IMPLEMENTATION.md`.
 
 ### Phase E8: robotics and mechatronics
 

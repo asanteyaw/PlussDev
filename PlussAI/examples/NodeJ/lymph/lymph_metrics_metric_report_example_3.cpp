@@ -21,7 +21,7 @@ int main() {
   const lymph::metrics::MetricReport report =
       lymph::metrics::classification::report(truth, predicted);
 
-  const std::vector<double> values = report.values.to_vec<double>();
+  const std::vector<double> values = report.values.host<double>();
   std::cout << "default classification metrics (" << report.requested.size() << "):\n";
   for (std::size_t i = 0; i < report.requested.size(); ++i) {
     std::cout << "  kind " << static_cast<int>(report.requested[i])

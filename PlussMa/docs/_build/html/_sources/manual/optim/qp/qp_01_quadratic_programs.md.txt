@@ -46,10 +46,7 @@ Leading dimensions of `q`, the bounds, and optionally `P` and `A` are batch dime
 
 ## Programs
 
-- [A first QP](qp_01_quadratic_programs/a_first_qp.md)
-- [The constraint forms](qp_01_quadratic_programs/the_constraint_forms.md)
-- [Batches and reuse](qp_01_quadratic_programs/batches_and_reuse.md)
-- [Warm starts and options](qp_01_quadratic_programs/warm_starts_and_options.md)
+- [Quadratic programs](qp_01_quadratic_programs/quadratic_programs.md)
 
 ## Checklist
 
@@ -64,9 +61,6 @@ Leading dimensions of `q`, the bounds, and optionally `P` and `A` are batch dime
 :maxdepth: 2
 :hidden:
 
-qp_01_quadratic_programs/a_first_qp
-qp_01_quadratic_programs/the_constraint_forms
-qp_01_quadratic_programs/batches_and_reuse
-qp_01_quadratic_programs/warm_starts_and_options
+qp_01_quadratic_programs/quadratic_programs
 ```
 <!-- apiref:toctree:end -->

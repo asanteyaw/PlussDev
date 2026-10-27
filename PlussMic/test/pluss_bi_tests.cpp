@@ -308,15 +308,15 @@ void test_duration_filter_bounds() {
 
   expect(detail::apply_filter_(elapsed, Filter::ge("elapsed", zero))
              .as_series()
-             .to_vec<bool>() == std::vector<bool>({false, true, true, false, true}),
+             .host<bool>() == std::vector<bool>({false, true, true, false, true}),
          "Duration scalar filters must broadcast an exact elapsed-time bound");
   expect(detail::apply_filter_(elapsed, Filter::eq("elapsed", three))
              .as_series()
-             .to_vec<bool>() == std::vector<bool>({false, false, true, false, false}),
+             .host<bool>() == std::vector<bool>({false, false, true, false, false}),
          "Duration equality filters must not match NaT or neighboring values");
 
   const auto reversed = Filter::between_duration("elapsed", three, zero);
-  expect(detail::apply_filter_(elapsed, reversed).as_series().to_vec<bool>() ==
+  expect(detail::apply_filter_(elapsed, reversed).as_series().host<bool>() ==
              std::vector<bool>({false, true, true, false, false}),
          "Duration ranges must normalize reversed endpoints and remain inclusive");
 
@@ -362,7 +362,7 @@ void test_query_arrange_orders_results_before_windowing() {
 
   const auto render = studio.render();
   const auto top = *render.boards[0].tiles[0].table;
-  const auto principal = top.features("principal").as_series().to_vec<double>();
+  const auto principal = top.features("principal").as_series().host<double>();
   expect(top.ncases() == 2,
          "arrange() combined with head() should keep only the requested top rows");
   expect(std::fabs(principal[0] - 1500.0) < 1e-12,
@@ -428,9 +428,9 @@ void test_query_group_pivot_and_resample_plans() {
   const auto group_b = grouped_frame.filter(grouped_frame.features("risk_band") == "B");
   expect(group_a.ncases() == 1 && group_b.ncases() == 1,
          "grouped BI query should contain both grouped risk bands");
-  expect(group_a.features("principal_sum").as_series().item<double>() == 2500.0,
+  expect(group_a.features("principal_sum").as_series().host<double>().front() == 2500.0,
          "grouped BI query should sum principal for risk band A");
-  expect(group_b.features("principal_sum").as_series().item<double>() == 2100.0,
+  expect(group_b.features("principal_sum").as_series().host<double>().front() == 2100.0,
          "grouped BI query should sum principal for risk band B");
 
   const auto& pivoted_frame = *render.boards[0].tiles[1].table;

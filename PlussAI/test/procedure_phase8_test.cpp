@@ -171,7 +171,7 @@ bool run_phase8_checks(std::ostream* err = nullptr) {
 
     const ai::Procedure restored = ai::procedure::load(bundle.string());
     const ai::ProcedureResult out = restored.run({ai::procedure::input("x", vec({1.0, 2.0}))});
-    const std::vector<double> got = out.get<Series>("y").to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const std::vector<double> got = out.get<Series>("y").to(pluss::pCPU, ScalarType::Float64).host<double>();
     if (got != std::vector<double>{2.5, 3.5}) {
       if (err) *err << "Procedure phase 8 should restore contract-backed custom steps through the bound registry\n";
       std::filesystem::remove_all(bundle);
@@ -215,7 +215,7 @@ bool run_phase8_checks(std::ostream* err = nullptr) {
     }
     const ai::Procedure restored = ai::procedure::load(bundle.string());
     const ai::ProcedureResult out = restored.run({ai::procedure::input("x", vec({1.5, 3.0}))});
-    const std::vector<double> got = out.get<Series>("y").to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const std::vector<double> got = out.get<Series>("y").to(pluss::pCPU, ScalarType::Float64).host<double>();
     std::filesystem::remove_all(bundle);
     if (got != std::vector<double>{3.0, 6.0}) {
       if (err) *err << "Procedure phase 8 should reload registry-backed callable steps without component artifacts\n";

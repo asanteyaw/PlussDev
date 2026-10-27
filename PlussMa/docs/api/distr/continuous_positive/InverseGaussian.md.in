@@ -1,0 +1,212 @@
+# `distr::InverseGaussian`
+
+The inverse Gaussian distribution: the distribution of the first time a Brownian motion with positive drift reaches a fixed level.
+
+## Signature
+
+```cpp
+pluss::Series distr::pdf(dst::InverseGaussian, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logpdf(dst::InverseGaussian, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::cdf(dst::InverseGaussian, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::logcdf(dst::InverseGaussian, const pluss::Series& x, const std::vector<double>& params);
+pluss::Series distr::sample(dst::InverseGaussian, const std::vector<double>& params, std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The inverse Gaussian (Wald) distribution is the distribution of the time at which a Brownian motion with positive drift first reaches a fixed level, which makes it a model for lifetimes, first-passage times and positively skewed data with a heavier tail than the gamma. It is parameterised by its mean and a shape; the variance is `mean³/shape`. It is the mixing distribution of the normal inverse Gaussian family.
+
+The kind-based functions take `{mean, shape}`; the object `distr::InverseGaussian{theta, chi}` takes the mean first, and its `MLE` takes the sample mean as the estimate of `theta`.
+
+The parameters, in the order of the `params` list:
+
+| Parameter | Constraint | Meaning |
+|---|---|---|
+| `mean` | > 0 | the mean of the distribution |
+| `shape` | > 0 | the shape: larger values make the distribution more symmetric around the mean |
+
+Support: `x > 0`.
+
+The object form of this family, with the same functions as methods, is on its own page: [`distr::InverseGaussian`](../object_based/InverseGaussian.md).
+
+## Parameters
+
+`const pluss::Series& x`
+: The points at which to evaluate, a `Series` of any shape; the result has the same shape. Points outside the support have density zero and distribution value 0 or 1.
+
+`const std::vector<double>& params`
+: The parameters of the family, in the order shown in the table above. A list of the wrong length is refused.
+
+`std::initializer_list<std::int64_t> sizes`
+: The shape of the array of random draws, for example `{n}` or `{rows, columns}`.
+
+`pluss::Config cfg`
+: The dtype and platform of the draws; the default is Float32 on the CPU, so request Float64 when precision matters.
+
+`std::uint64_t seed`
+: The seed of the stream. The same seed always gives the same draws; a seed of 0 is a fixed default, not a random one.
+
+## Returns
+
+`pdf`, `logpdf`, `cdf` and `logcdf` return a `Series` of the shape of `x`; `sample` returns a `Series` of the requested shape.
+
+## Errors
+
+- Parameters outside their valid range are refused with an error that names the requirement (`mean` and `shape` must be positive).
+- A `params` list of the wrong length is refused.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 evaluates the density (mass) function, the distribution function and the log-density of the InverseGaussian on a small grid with `distr::pdf`, `distr::cdf` and `distr::logpdf`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+
+  const auto x = pluss::make_series({0.1, 0.4, 0.8, 1.0, 1.5, 3.0}, f64);
+  const std::vector<double> params = {1.0, 2.0};
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "pdf:";
+  for (double v : distr::pdf(dst::InverseGaussian, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "cdf:";
+  for (double v : distr::cdf(dst::InverseGaussian, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "logpdf:";
+  for (double v : distr::logpdf(dst::InverseGaussian, x, params).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+The density is largest on this grid at x = 0.4, where it is 0.90671; the distribution function runs from 5.00e-05 at x = 0.1 to 0.97854 at x = 3, and it is the running total of the density. `logpdf` is the logarithm of the density, for example log(0.90671) = -0.09793 at x = 0.4.
+
+### Example 2
+
+Example 2 checks that the three descriptions of the same probability agree: the integral of the density (sum of the masses) over a range, the difference of the distribution function at its ends, and the fraction of random draws that land in it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(5);
+  const std::vector<double> params = {1.0, 2.0};
+
+  // The three ways to the probability that the variable lies in [0.3, 2.5]:
+  const auto grid = pluss::series::linspace(0.3, 2.5, 3001, f64);
+  const double area = as_f64(distr::pdf(dst::InverseGaussian, grid, params).antidiff(grid).trapezoid());
+
+  const auto edges = pluss::make_series({0.3, 2.5}, f64);
+  const auto c = distr::cdf(dst::InverseGaussian, edges, params).pull<double>();
+
+  const auto draws = distr::sample(dst::InverseGaussian, params, {200000}, f64, 7ULL);
+  const double fraction = as_f64(((draws >= 0.3).to(pluss::ScalarType::Float64) * (draws <= 2.5).to(pluss::ScalarType::Float64)).mean());
+
+  std::cout << "integral of the density: " << area << '\n';
+  std::cout << "cdf(2.5) - cdf(0.3): " << c[1] - c[0] << '\n';
+  std::cout << "fraction of 200000 draws in range: " << fraction << '\n';
+}
+```
+
+The integral of the density (0.90089) and the difference of the distribution function (0.90089) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.89948) differs from it by 0.00141, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 6.68e-04), so the density, the distribution function and the sampler describe the same distribution.
+
+### Example 3
+
+Example 3 shows how the shape changes with the parameters: the density at the same points for 3 parameter settings.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::fixed << std::setprecision(4);
+  const auto x = pluss::make_series({0.1, 0.4, 0.8, 1.0, 1.5, 3.0}, f64);
+
+  std::cout << "x:";
+  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 0.5:";
+  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 0.5}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 2  :";
+  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 2.0}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+  std::cout << "shape 10 :";
+  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 10.0}).pull<double>()) std::cout << ' ' << v;
+  std::cout << '\n';
+}
+```
+
+Read down the rows: `shape 0.5` peaks on this grid at x = 0.1 (value 1.1775); `shape 2` peaks on this grid at x = 0.4 (value 0.9067); `shape 10` peaks on this grid at x = 0.8 (value 1.3731). The parameters move the location, the width and the shape of the curve, which is what choosing a member of the family means.
+
+### Example 4
+
+Example 4 confirms that the Wald distribution with parameter 2 is the inverse Gaussian distribution with mean 1 and shape 2.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+
+#include <iomanip>
+#include <iostream>
+#include <vector>
+
+namespace distr = pluss::subsp::stats::distr;
+namespace dst = distr::dst;
+
+int main() {
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  std::cout << std::scientific << std::setprecision(2);
+  const auto x = pluss::make_series({0.1, 0.4, 0.8, 1.5, 3.0}, f64);
+  const std::vector<double> here = {1.0, 2.0};
+  const std::vector<double> there = {2.0};
+
+  const double dpdf = as_f64((distr::pdf(dst::InverseGaussian, x, here) - distr::pdf(dst::Wald, x, there)).abs().max());
+  const double dcdf = as_f64((distr::cdf(dst::InverseGaussian, x, here) - distr::cdf(dst::Wald, x, there)).abs().max());
+  std::cout << "largest difference in the density: " << dpdf << '\n';
+  std::cout << "largest difference in the distribution function: " << dcdf << '\n';
+}
+```
+
+The two largest differences are 0 for the density and 0 for the distribution function over the grid: zero up to rounding, so the two descriptions are the same distribution.
+
+## See Also
+
+- [`Wald`](../continuous_positive/Wald.md)
+- [`Gig`](../continuous_positive/Gig.md)
+- [`Gamma`](../continuous_positive/Gamma.md)
+- [`Lognormal`](../continuous_positive/Lognormal.md)
+- [`Nig`](../continuous_real_line/Nig.md)
+- [`distr::InverseGaussian`](../object_based/InverseGaussian.md) -- the object form

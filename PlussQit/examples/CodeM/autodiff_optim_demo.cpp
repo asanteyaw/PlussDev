@@ -22,14 +22,10 @@ int main() {
 
   for (std::int64_t step = 1; step <= 300; ++step) {
     auto [loss, sensitivities] = value_and_grad(
-        [&](const std::vector<Trace>& p) -> Trace {
-          const Trace w = p[0];
-          const Trace b = p[1];
-          const Trace vx = trace(x, false);
-          const Trace vy = trace(y, false);
-          const Trace pred = w * vx + b;
-          const Trace err = pred - vy;
-          return mean(err * err);
+        [&](const std::vector<Series>& p) -> Series {
+          const Series pred = p[0] * x + p[1];
+          const Series err = pred - y;
+          return (err * err).mean();
         },
         params);
 
@@ -49,15 +45,15 @@ int main() {
       pluss::make_series(0.7).to(ScalarType::Float64),
   };
   auto [probe_loss, probe_sens] = value_and_grad(
-      [&](const std::vector<Trace>& p) -> Trace {
-        const Trace z = p[0];
-        const Trace y0 = square(z);
-        const Trace y1 = log(exp(z) + 1.0);
-        const Trace y2 = sqrt(y0 + 2.0);
-        const Trace y3 = tanh(z) + sin(z) - cos(z);
-        const Trace y4 = relu(z - 0.2) + clamp(z, -1.0, 1.0);
-        const Trace y5 = pow(z, 3.0) + rsqrt(y0 + 1.0);
-        const Trace y6 = softplus(z, 1.5, 18.0) + sigmoid(z);
+      [&](const std::vector<Series>& p) -> Series {
+        const Series z = p[0];
+        const Series y0 = z.square();
+        const Series y1 = (z.exp() + 1.0).log();
+        const Series y2 = (y0 + 2.0).sqrt();
+        const Series y3 = z.tanh() + z.sin() - z.cos();
+        const Series y4 = (z - 0.2).relu() + z.clamp(-1.0, 1.0);
+        const Series y5 = z.pow(3.0) + (y0 + 1.0).rsqrt();
+        const Series y6 = z.softplus(1.5, 18.0) + z.sigmoid();
         return y1 + y2 + y3 + y4 + y5 + y6;
       },
       probe_params);
@@ -72,8 +68,9 @@ int main() {
 
   {
     Series direct = pluss::make_series(1.25).to(ScalarType::Float64);
-    auto tracked_direct = trace(direct, true);
-    auto direct_loss = sum(square(tracked_direct));
+    auto tracked_direct = direct;
+    tracked_direct.tracks_slope_(true);
+    auto direct_loss = tracked_direct.square().sum();
     direct_loss.reverse();
     const double direct_sens = tracked_direct.sensitivity().item<double>();
     std::cout << "reverse sensitivity=" << direct_sens << '\n';
@@ -87,8 +84,8 @@ int main() {
     const Series primal = pluss::make_series(std::vector<double>{0.3, -0.2, 0.5}, {3});
     const Series cotangent = pluss::make_series(std::vector<double>{1.0, -0.5, 0.25}, {3});
     auto [vjp_value, pullback] = vjp(
-        [](const Trace& x) -> Trace {
-          return sin(x) + square(x);
+        [](const Series& x) -> Series {
+          return x.sin() + x.square();
         },
         primal);
     const Series pulled = pullback(cotangent);
@@ -151,7 +148,7 @@ int main() {
     };
     auto [jacrev_value, jacrev_matrix] = jacrev(vector_objective, primal);
     auto [jacfwd_value, jacfwd_matrix] = jacfwd(vector_objective, primal);
-    const auto slope = primal.cos().add(primal.mul(2.0)).to_vec<double>();
+    const auto slope = primal.cos().add(primal.mul(2.0)).host<double>();
     const Series expected = pluss::make_series(
         std::vector<double>{
             slope[0], 0.0,      0.0,
@@ -196,10 +193,10 @@ int main() {
         pluss::make_series(0.0).to(ScalarType::Float64),
     };
     auto [bundle_value, bundle_grads] = value_and_grad(
-        [&](const std::vector<Trace>& p) -> Trace {
-          const Trace pred = p[0] * trace(x, false) + p[1];
-          const Trace err = pred - trace(y, false);
-          return mean(err * err);
+        [&](const std::vector<Series>& p) -> Series {
+          const Series pred = p[0] * x + p[1];
+          const Series err = pred - y;
+          return (err * err).mean();
         },
         bundle);
     std::cout << "bundle loss=" << bundle_value.item<double>()
@@ -224,7 +221,7 @@ int main() {
   bool blocked_tracked_inplace = false;
   try {
     Series tracked = pluss::make_series(0.25).to(ScalarType::Float64);
-    (void)trace(tracked, true);
+    tracked.tracks_slope_(true);
     tracked.add_(1.0);
   } catch (const std::exception&) {
     blocked_tracked_inplace = true;

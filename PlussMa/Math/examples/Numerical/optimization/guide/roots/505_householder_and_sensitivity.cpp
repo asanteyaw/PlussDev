@@ -22,8 +22,8 @@ int main() {
         return roots::Derivatives{x.square() - p, x * 2.0, pluss::series::full_like(x, 2.0), pluss::series::zeros_like(x)};
       },
       pluss::series::make(1.0), {12, 1e-13, 1e-13, 1});
-  std::cout << std::setprecision(15) << "root        : " << r.root.item<double>() << "  (sqrt 2 = " << std::sqrt(2.0) << ")\n";
+  std::cout << std::setprecision(15) << "root        : " << as_f64(r.root) << "  (sqrt 2 = " << std::sqrt(2.0) << ")\n";
   std::cout << "iterations  : " << r.iterations << "\n";
   r.root.reverse();
-  std::cout << "d root / dp : " << p.sensitivity().item<double>() << "  (exact " << 0.5 / std::sqrt(2.0) << ")\n";
+  std::cout << "d root / dp : " << as_f64(p.sensitivity()) << "  (exact " << 0.5 / std::sqrt(2.0) << ")\n";
 }

@@ -30,14 +30,14 @@ int main() {
   std::cout << "batches: " << prefetched.batch_count() << '\n';
   bool identical = reference.batch_count() == prefetched.batch_count();
   for (std::size_t i = 0; identical && i < reference.batch_count(); ++i) {
-    identical = reference.batch_at(i).x().to_vec<double>() == prefetched.batch_at(i).x().to_vec<double>();
+    identical = reference.batch_at(i).x().host<double>() == prefetched.batch_at(i).x().host<double>();
   }
   std::cout << "same batches in order: " << identical << '\n';
 
   // Iterating the prefetching loader yields the same order too.
   std::vector<double> streamed;
   for (auto batch : prefetched) {
-    const auto v = batch.x().reshape({batch.x().numel()}).to_vec<double>();
+    const auto v = batch.x().reshape({batch.x().numel()}).host<double>();
     streamed.insert(streamed.end(), v.begin(), v.end());
   }
   std::cout << "streamed order matches: " << (streamed == values) << '\n';

@@ -59,14 +59,14 @@ counts actual literal dots.
 auto slot = pluss::scribble::Slot({pluss::make_note("banana"), pluss::make_note("a.b.c")});
 
 auto regexCount = slot.nt().count(".");
-std::cout << "regex: " << std::get<pluss::Series>(regexCount.at(0)).to_vec<std::int64_t>()[0]
-          << " " << std::get<pluss::Series>(regexCount.at(1)).to_vec<std::int64_t>()[0] << "\n";
+std::cout << "regex: " << std::get<pluss::Series>(regexCount.at(0)).host<std::int64_t>()[0]
+          << " " << std::get<pluss::Series>(regexCount.at(1)).host<std::int64_t>()[0] << "\n";
 
 pluss::table::TextOptions literal;
 literal.regex = false;
 auto literalCount = slot.nt().count(".", literal);
-std::cout << "literal: " << std::get<pluss::Series>(literalCount.at(0)).to_vec<std::int64_t>()[0]
-          << " " << std::get<pluss::Series>(literalCount.at(1)).to_vec<std::int64_t>()[0];
+std::cout << "literal: " << std::get<pluss::Series>(literalCount.at(0)).host<std::int64_t>()[0]
+          << " " << std::get<pluss::Series>(literalCount.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output
@@ -83,8 +83,8 @@ auto slot = pluss::scribble::Slot({pluss::make_note("banana"), pluss::make_note(
 pluss::table::TextOptions opts;
 opts.case_sensitive = false;
 auto out = slot.nt().count("AN", opts);
-std::cout << std::get<pluss::Series>(out.at(0)).to_vec<std::int64_t>()[0] << " "
-          << std::get<pluss::Series>(out.at(1)).to_vec<std::int64_t>()[0];
+std::cout << std::get<pluss::Series>(out.at(0)).host<std::int64_t>()[0] << " "
+          << std::get<pluss::Series>(out.at(1)).host<std::int64_t>()[0];
 ```
 
 ### Output

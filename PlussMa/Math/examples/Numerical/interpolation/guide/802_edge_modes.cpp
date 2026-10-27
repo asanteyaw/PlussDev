@@ -20,7 +20,7 @@ int main() {
   const Series q = vec({0.0, 2.0, 5.0});
   std::cout << std::fixed << std::setprecision(1);
   for (auto mode : {interp::EdgeMode::Clamp, interp::EdgeMode::Linear}) {
-    const auto v = interp::linear(x, y, q, mode).to_vec<double>();
+    const auto v = interp::linear(x, y, q, mode).host<double>();
     std::cout << std::left << std::setw(8) << (mode == interp::EdgeMode::Clamp ? "Clamp" : "Linear") << ": " << v[0] << ", " << v[1] << ", " << v[2] << "\n";
   }
   try {
@@ -28,6 +28,6 @@ int main() {
   } catch (const std::out_of_range& e) {
     std::cout << "Error   : out_of_range thrown\n";
   }
-  const auto inside = interp::linear(x, y, vec({1.5, 2.5}), interp::EdgeMode::Error).to_vec<double>();
+  const auto inside = interp::linear(x, y, vec({1.5, 2.5}), interp::EdgeMode::Error).host<double>();
   std::cout << "Error mode inside the table: " << inside[0] << ", " << inside[1] << "\n";
 }

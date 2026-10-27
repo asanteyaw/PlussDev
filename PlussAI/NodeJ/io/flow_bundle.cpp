@@ -42,7 +42,7 @@ public:
     pod(rank);
     for (std::int64_t i = 0; i < rank; ++i) pod(value.sizes()[static_cast<std::size_t>(i)]);
     const Series host = value.to(pluss::pCPU, ScalarType::Float64).reshape({value.numel()});
-    const std::vector<double> data = host.to_vec<double>();
+    const std::vector<double> data = host.host<double>();
     const std::uint64_t n = static_cast<std::uint64_t>(data.size());
     pod(n);
     if (n > 0) out_.write(reinterpret_cast<const char*>(data.data()), static_cast<std::streamsize>(n * sizeof(double)));

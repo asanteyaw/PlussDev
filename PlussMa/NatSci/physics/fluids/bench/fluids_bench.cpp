@@ -62,6 +62,17 @@ common::ScalarQuantity<fluids::KinematicViscosity> viscosity() {
   return common::ScalarQuantity<fluids::KinematicViscosity>::from_si(0.01);
 }
 
+// 1000:1 density contrast: a smooth-edged heavy disc in a light fluid (the water / air case)
+common::SeriesQuantity<fluids::Density> bubble_density(std::int64_t n, Platform platform) {
+  std::vector<float> v(static_cast<std::size_t>(n * n));
+  for (std::int64_t i = 0; i < n; ++i)
+    for (std::int64_t j = 0; j < n; ++j) {
+      const double x = (static_cast<double>(i) + 0.5) / static_cast<double>(n) - 0.5, y = (static_cast<double>(j) + 0.5) / static_cast<double>(n) - 0.5;
+      v[static_cast<std::size_t>(i * n + j)] = static_cast<float>(1.0 + 999.0 * 0.5 * (1.0 - std::tanh((std::sqrt(x * x + y * y) - 0.25) * static_cast<double>(n) / 3.0)));
+    }
+  return common::SeriesQuantity<fluids::Density>::from_si(pluss::series::make(v, {n, n}).to(platform));
+}
+
 Series cpu_noise(std::initializer_list<std::int64_t> shape,
                  std::uint64_t seed) {
   return pluss::series::randn(shape,
@@ -75,17 +86,23 @@ Series stack(const Series &x, const Series &y) {
   return x.unsqueeze(0).unite({y.unsqueeze(0)}, 0);
 }
 
+std::int64_t g_projection_iterations = 0;
+double g_projection_residual = 0.0;
+bool g_diagnose = false;
+double g_tolerance = 2e-4; // --tolerance=: relative pressure-solve tolerance
+bool g_use_cg = false; // --poisson=cg selects the conjugate-gradient path (default: the best method the problem admits)
 fluids::ProjectionOptions projection_options(std::int64_t size) {
   fluids::ProjectionOptions options;
+  options.poisson.method = g_use_cg ? common::spatial::PoissonMethod::ConjugateGradient : common::spatial::PoissonMethod::Auto;
   options.poisson.solve.max_iterations = std::max<std::int64_t>(256, 4 * size);
-  options.poisson.solve.relative_tolerance = 2e-4;
+  options.poisson.solve.relative_tolerance = g_tolerance;
   options.poisson.solve.absolute_tolerance = 1e-5;
   options.poisson.solve.check_interval = 8;
   // Two discrete derivatives amplify Float32 cancellation noise by h^-2.
   // Scale only the null-space compatibility check; solve tolerances stay fixed.
   options.poisson.mean_tolerance =
       std::max(2e-5, 5e-7 * static_cast<double>(size * size));
-  options.poisson.require_convergence = true;
+  options.poisson.require_convergence = !g_diagnose; // --diagnose: report iterations/residual instead of throwing
   return options;
 }
 
@@ -433,6 +450,15 @@ void append_periodic(std::vector<Result> &results, const Config &config,
                                                       density(), viscosity())
                                   .si_value();
                             }));
+  {
+    const auto rho = bubble_density(config.size, platform);
+    results.push_back(measure("periodic", "project-rho", std::string(platform_name), config.size, 1, config.warmup, config.rounds, [&] {
+      auto projected = fluids::project(setup.divergent, setup.grid, rho, seconds(1.0), options);
+      g_projection_iterations = projected.iterations;
+      return projected.state.velocity().si_value();
+    }));
+    std::cerr << "periodic variable-density projection iterations: " << g_projection_iterations << "\n";
+  }
   results.push_back(measure("periodic", "project", std::string(platform_name),
                             config.size, 1, config.warmup, config.rounds, [&] {
                               return fluids::project(setup.divergent,
@@ -467,15 +493,23 @@ void append_bounded(std::vector<Result> &results, const Config &config,
                                                       viscosity())
                                   .si_value();
                             }));
+  {
+    const auto rho = bubble_density(config.size, platform);
+    results.push_back(measure("bounded", "project-rho", std::string(platform_name), config.size, 1, config.warmup, config.rounds, [&] {
+      auto projected = fluids::project(setup.divergent, setup.grid, setup.bounds, rho, seconds(1.0), options);
+      g_projection_iterations = projected.iterations;
+      return projected.state.velocity().si_value();
+    }));
+    std::cerr << "bounded variable-density projection iterations: " << g_projection_iterations << "\n";
+  }
   results.push_back(measure("bounded", "project", std::string(platform_name),
                             config.size, 1, config.warmup, config.rounds, [&] {
-                              return fluids::project(setup.divergent,
-                                                     setup.grid, setup.bounds,
-                                                     density(), seconds(1.0),
-                                                     options)
-                                  .state.velocity()
-                                  .si_value();
+                              auto projected = fluids::project(setup.divergent, setup.grid, setup.bounds, density(), seconds(1.0), options);
+                              g_projection_iterations = projected.iterations;
+                              g_projection_residual = projected.relative_residual.max().item<double>();
+                              return projected.state.velocity().si_value();
                             }));
+  std::cerr << "bounded projection solver iterations: " << g_projection_iterations << " relative residual " << g_projection_residual << "\n";
   for (const auto rule : {fluids::StepRule::Euler, fluids::StepRule::Rk2,
                           fluids::StepRule::Rk3}) {
     const auto step = step_options(rule, config.size);
@@ -504,6 +538,12 @@ Config parse(int argc, char **argv) {
       config.rounds = std::stoll(value("--rounds="));
     else if (argument.starts_with("--warmup="))
       config.warmup = std::stoll(value("--warmup="));
+    else if (argument.starts_with("--tolerance="))
+      g_tolerance = std::stod(value("--tolerance="));
+    else if (argument == "--diagnose")
+      g_diagnose = true;
+    else if (argument == "--poisson=cg")
+      g_use_cg = true;
     else if (argument.starts_with("--platform="))
       config.platform = value("--platform=");
     else if (argument.starts_with("--domain="))

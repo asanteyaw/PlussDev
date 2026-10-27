@@ -66,7 +66,7 @@ int main() {
   nlp::vectorize::Hasher hasher{pluss::ai::classic::HashMapOptions{.n_features = 4}};
 
   const auto batch = hasher.dense(docs).value();
-  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   for (std::int64_t row = 0; row < batch.sample_count(); ++row) {
     std::cout << "document " << row << ":";
     for (std::int64_t column = 0; column < batch.feature_count(); ++column) {
@@ -105,7 +105,7 @@ int main() {
   const nlp::vectorize::Hasher hasher{pluss::ai::classic::HashMapOptions{.n_features = 8}};
   const std::vector<std::string_view> texts = {"cat sat", "dog"};
   const auto batch = hasher.dense(texts).value();
-  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   std::cout << "shape = " << batch.sample_count() << " x " << batch.feature_count() << "\n";
   std::cout << "row 0 sum = ";
   double sum = 0.0;
@@ -143,7 +143,7 @@ int main() {
   for (const bool signed_hash : {false, true}) {
     const nlp::vectorize::Hasher hasher{pluss::ai::classic::HashMapOptions{.n_features = 4, .alternate_sign = signed_hash}};
     const auto batch = hasher.dense(docs).value();
-    const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+    const auto values = batch.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
     std::cout << "alternate_sign = " << (signed_hash ? "true" : "false") << ":";
     for (const double value : values) std::cout << " " << value;
     std::cout << "\n";

@@ -153,7 +153,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -217,7 +217,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -281,7 +281,7 @@ using pluss::Series;
 const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
 void show(const char* label, const Series& s) {
   std::cout << std::left << std::setw(14) << label << std::right << std::fixed << std::setprecision(4);
-  for (double v : s.to_vec<double>()) std::cout << std::setw(9) << v;
+  for (double v : s.host<double>()) std::cout << std::setw(9) << v;
   std::cout << "\n";
 }
 std::vector<double> noise(int n, int offset) {
@@ -319,9 +319,9 @@ int main() {
   options.lag.response_lags = {1, 2};
   options.lag.predictor_lags = {{1}};
   const auto model = ts::DirectForecaster::fit(data.x, data.y, options);
-  const auto p = model.predict(data.x, data.y).to_vec<double>();
+  const auto p = model.predict(data.x, data.y).host<double>();
   std::cout << "prediction at rows 0, 1, 2: " << p[0] << " " << p[1] << " " << std::fixed << std::setprecision(3) << p[2] << "\n";
-  std::cout << "mae " << model.loss(data.x, data.y, ts::RegressionLoss::MAE).to_vec<double>()[0] << "\n";
+  std::cout << "mae " << model.loss(data.x, data.y, ts::RegressionLoss::MAE).host<double>()[0] << "\n";
 }
 ```
 

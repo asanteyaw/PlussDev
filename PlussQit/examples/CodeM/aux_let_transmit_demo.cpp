@@ -35,7 +35,7 @@ int main() {
   std::cout << "\n";
 
   std::cout << "squared scores: ";
-  for (auto v : squared.to_vec<double>()) std::cout << v << " ";
+  for (auto v : squared.host<double>()) std::cout << v << " ";
   std::cout << "\n";
 
   auto bills = pluss::make_series({42.50, 35.85, 50.03, 15.21, 5.45});
@@ -43,7 +43,7 @@ int main() {
       [](const pluss::Series& values) { return calc_tip(values, 20.0); },
       bills);
   std::cout << "tips: ";
-  for (auto v : tips.to_vec<double>()) std::cout << v << " ";
+  for (auto v : tips.host<double>()) std::cout << v << " ";
   std::cout << "\n";
   
   return 0;

@@ -164,11 +164,12 @@ ModelDims validate_model_dims_(const VarFit& fit, const char* op_name) {
   const std::int64_t k = ar_sizes[1];
   const std::int64_t m = fit.beta.defined() ? as_matrix_(fit.beta, op_name).sizes()[0] : 0;
 
-  PLUSS_CHECK(fit.constant.defined(), std::string("subsp::stats::ts::") + op_name + ": constant is undefined");
-  PLUSS_CHECK(fit.trend.defined(), std::string("subsp::stats::ts::") + op_name + ": trend is undefined");
-  PLUSS_CHECK(fit.constant.numel() == k,
+  // A deterministic term only has to be given when the model includes it, so a hand-built fit without a trend may leave `trend` undefined.
+  PLUSS_CHECK(!fit.include_intercept || fit.constant.defined(), std::string("subsp::stats::ts::") + op_name + ": constant is undefined");
+  PLUSS_CHECK(!fit.include_trend || fit.trend.defined(), std::string("subsp::stats::ts::") + op_name + ": trend is undefined");
+  PLUSS_CHECK(!fit.constant.defined() || fit.constant.numel() == k,
               std::string("subsp::stats::ts::") + op_name + ": constant size must match number of series");
-  PLUSS_CHECK(fit.trend.numel() == k,
+  PLUSS_CHECK(!fit.trend.defined() || fit.trend.numel() == k,
               std::string("subsp::stats::ts::") + op_name + ": trend size must match number of series");
 
   if (m > 0) {
@@ -205,8 +206,8 @@ Series stabilize_cov_(Series covariance) {
 
 Series compose_coeff_(const VarFit& fit, const ModelDims& dims) {
   const auto cpu_cfg = cpu_f64_cfg_();
-  const auto c = row_major_(fit.constant.reshape({dims.k}));
-  const auto tr = row_major_(fit.trend.reshape({dims.k}));
+  const auto c = fit.constant.defined() ? row_major_(fit.constant.reshape({dims.k})) : std::vector<double>(static_cast<std::size_t>(dims.k), 0.0);
+  const auto tr = fit.trend.defined() ? row_major_(fit.trend.reshape({dims.k})) : std::vector<double>(static_cast<std::size_t>(dims.k), 0.0);
   const auto ar = row_major_(fit.ar.reshape({dims.p, dims.k, dims.k}));
   const auto beta = (dims.m > 0) ? row_major_(as_matrix_(fit.beta, "Var"))
                                  : std::vector<double>{};
@@ -298,8 +299,8 @@ Series run_forecast_impl_(const VarFit& fit,
                 std::string("subsp::stats::ts::") + op_name + ": model has no predictor coefficients");
   }
 
-  const auto c = row_major_(fit.constant.reshape({dims.k}));
-  const auto tr = row_major_(fit.trend.reshape({dims.k}));
+  const auto c = fit.constant.defined() ? row_major_(fit.constant.reshape({dims.k})) : std::vector<double>(static_cast<std::size_t>(dims.k), 0.0);
+  const auto tr = fit.trend.defined() ? row_major_(fit.trend.reshape({dims.k})) : std::vector<double>(static_cast<std::size_t>(dims.k), 0.0);
   const auto ar = row_major_(fit.ar.reshape({dims.p, dims.k, dims.k}));
   const auto beta = (dims.m > 0) ? row_major_(as_matrix_(fit.beta, op_name))
                                  : std::vector<double>{};
@@ -358,8 +359,8 @@ Series run_sim_impl_(const VarFit& fit, std::int64_t n, const Series* x, Config 
                 std::string("subsp::stats::ts::") + op_name + ": model has no predictor coefficients");
   }
 
-  const auto c = row_major_(fit.constant.reshape({dims.k}));
-  const auto tr = row_major_(fit.trend.reshape({dims.k}));
+  const auto c = fit.constant.defined() ? row_major_(fit.constant.reshape({dims.k})) : std::vector<double>(static_cast<std::size_t>(dims.k), 0.0);
+  const auto tr = fit.trend.defined() ? row_major_(fit.trend.reshape({dims.k})) : std::vector<double>(static_cast<std::size_t>(dims.k), 0.0);
   const auto ar = row_major_(fit.ar.reshape({dims.p, dims.k, dims.k}));
   const auto beta = (dims.m > 0) ? row_major_(as_matrix_(fit.beta, op_name))
                                  : std::vector<double>{};

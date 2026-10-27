@@ -72,7 +72,6 @@ constrained region.
 ```cpp
 #include <pluss/pluss.h>
 #include <pluss/ai.h>
-#include <pluss/subsp/math/diff.h>
 
 #include <iostream>
 #include <vector>
@@ -80,7 +79,6 @@ constrained region.
 int main() {
   namespace nn = pluss::ai::nn;
   namespace optim = nn::optim;
-  namespace diff = pluss::subsp::math::diff;
   using pluss::Config;
   using pluss::ScalarType;
   using pluss::Series;
@@ -101,9 +99,6 @@ int main() {
   optim::MinimaxConstraints constraints{};
   constraints.inequalities = [](const std::vector<Series>& vars) {
     return std::vector<Series>{vars[0].sub(3.0), vars[1].sub(3.0)};
-  };
-  constraints.inequalities_trace = [](const std::vector<diff::Trace>& vars) {
-    return std::vector<diff::Trace>{vars[0] - 3.0, vars[1] - 3.0};
   };
 
   Series x_adam = pluss::make_series(0.0F, f32);

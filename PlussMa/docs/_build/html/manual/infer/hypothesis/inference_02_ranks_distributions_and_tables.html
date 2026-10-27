@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=0ffde389"></script>
+    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -41,7 +41,7 @@
 <section id="hypothesis-testing-2-ranks-distributions-and-tables">
 <h1>Hypothesis Testing 2: Ranks, Distributions and Tables<a class="headerlink" href="#hypothesis-testing-2-ranks-distributions-and-tables" title="Link to this heading">¶</a></h1>
 <p>The tests of Chapter 1 assume normal data. This chapter covers tests that do not: rank and sign tests for locations, tests of a whole distribution, and tests for several groups and for tables of counts. It also explains when a p-value is exact and when it is a large-sample approximation.</p>
-<p>Every program is complete and its output is the output of that program. The cup data of Chapter 1 are used again.</p>
+<p>Every program is complete and its output is the output of that program. The cup data of Chapter 1 are used again, with simulated samples where a simulation is the clearest way to show how a test behaves.</p>
 <section id="exact-and-approximate-p-values">
 <h2>Exact and approximate p-values<a class="headerlink" href="#exact-and-approximate-p-values" title="Link to this heading">¶</a></h2>
 <p>A rank statistic takes only finitely many values, so its distribution under the null hypothesis can be listed exactly. For large samples that is too much work and the normal distribution does as well. <code class="docutils literal notranslate"><span class="pre">TestOptions::method</span></code> chooses:</p>
@@ -63,7 +63,7 @@
 </tr>
 </tbody>
 </table>
-<p>The <code class="docutils literal notranslate"><span class="pre">Auto</span></code> thresholds: <code class="docutils literal notranslate"><span class="pre">signrank</span></code> is exact for at most 15 nonzero differences; <code class="docutils literal notranslate"><span class="pre">ranksum</span></code> when the smaller sample has fewer than 10 observations and the two together fewer than 20; the one-sample <code class="docutils literal notranslate"><span class="pre">kstest</span></code> up to 140 observations; <code class="docutils literal notranslate"><span class="pre">kstest2</span></code> when the product of the two sample sizes is below 10 000. Exact p-values use the actual ranks, ties included (tied observations share their average rank, and the exact distribution is of those ranks). The approximation uses a continuity correction and a tie adjustment. <code class="docutils literal notranslate"><span class="pre">reject</span></code> is always <code class="docutils literal notranslate"><span class="pre">pvalue</span> <span class="pre">&lt;</span> <span class="pre">alpha</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Auto</span></code> thresholds: <code class="docutils literal notranslate"><span class="pre">signrank</span></code> is exact for at most 15 nonzero differences; <code class="docutils literal notranslate"><span class="pre">ranksum</span></code> when the smaller sample has fewer than 10 observations and the two together fewer than 20; the one-sample <code class="docutils literal notranslate"><span class="pre">kstest</span></code> up to 140 observations; <code class="docutils literal notranslate"><span class="pre">kstest2</span></code> when the product of the two sample sizes is below 10 000. Exact p-values use the actual ranks, ties included (tied observations share their average rank, and the exact distribution is of those ranks). The <code class="docutils literal notranslate"><span class="pre">ranksum</span></code> approximation uses a continuity correction and a tie adjustment; the <code class="docutils literal notranslate"><span class="pre">signrank</span></code> approximation uses the tie adjustment and no continuity correction. <code class="docutils literal notranslate"><span class="pre">reject</span></code> is always <code class="docutils literal notranslate"><span class="pre">pvalue</span> <span class="pre">&lt;</span> <span class="pre">alpha</span></code>.</p>
 </section>
 <section id="programs">
 <h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
@@ -101,7 +101,7 @@
 <div class="pluss-api-sidebar-fallback">
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
@@ -112,6 +112,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
 </ul>
 </li>
 </ul>

@@ -61,7 +61,7 @@ int main() {
       net.upper = mat(*hi[i], {rr[i]});
       const Series e = mt::elementary_modes(net);
       expect(e.size(0) == cc[i], "network " + std::to_string(i) + ": " + std::to_string(e.size(0)) + " modes vs " + std::to_string(cc[i]) + " by brute force");
-      expect(same_modes(rows_of(e.contiguous().to_vec<double>(), static_cast<std::size_t>(rr[i])), rows_of(*modes[i], static_cast<std::size_t>(rr[i])), 1e-7), "network " + std::to_string(i) + ": the mode sets differ");
+      expect(same_modes(rows_of(e.contiguous().host<double>().array().data, static_cast<std::size_t>(rr[i])), rows_of(*modes[i], static_cast<std::size_t>(rr[i])), 1e-7), "network " + std::to_string(i) + ": the mode sets differ");
       // every mode is steady and respects the signs
       const Series resid = net.stoichiometry.matmul(e.transpose(0, 1));
       expect(e.size(0) == 0 || resid.abs().max().item<double>() < 1e-9, "modes satisfy S v = 0");
@@ -79,7 +79,7 @@ int main() {
       // D is a dead end: modes must avoid reactions 3 and 4 (only reaction 0, 1, 2, 5 form a mode)
       const Series e = mt::elementary_modes(net);
       expect(e.size(0) == 1, "dead-end metabolite D leaves exactly one mode: " + std::to_string(e.size(0)));
-      const auto v = e.contiguous().to_vec<double>();
+      const auto v = e.contiguous().host<double>().array().data;
       expect(std::abs(v[0] - 1.0) < 1e-12 && std::abs(v[1] - 1.0) < 1e-12 && std::abs(v[2] - 1.0) < 1e-12 && std::abs(v[3]) < 1e-12 && std::abs(v[4]) < 1e-12 && std::abs(v[5] - 1.0) < 1e-12, "the single mode is uptake -> A -> B -> C -> export");
     }
     // ---- hit-and-run: triangle v1 = v2 + v3, 0 <= v <= 1  (v2, v3 uniform on {v2 + v3 <= 1})
@@ -91,7 +91,7 @@ int main() {
       const auto sm = mt::sample_fluxes(net, 400, 150, 20, 7);
       const Series f = sm.fluxes.reshape({400 * 150, 3});
       const Series mu = f.mean(0, false);
-      const auto m = mu.contiguous().to_vec<double>();
+      const auto m = mu.contiguous().host<double>().array().data;
       const Series c2 = f.select(-1, 1).sub(m[1]), c3 = f.select(-1, 2).sub(m[2]);
       expect(sm.chebyshev_radius > 0.1 && sm.fluxes.min().item<double>() >= -1e-9 && sm.fluxes.max().item<double>() <= 1.0 + 1e-9, "samples stay inside the polytope: radius " + std::to_string(sm.chebyshev_radius) + " min " + std::to_string(sm.fluxes.min().item<double>()) + " max " + std::to_string(sm.fluxes.max().item<double>()));
       expect(std::abs(m[1] - 1.0 / 3.0) < 4e-3 && std::abs(m[2] - 1.0 / 3.0) < 4e-3 && std::abs(m[0] - 2.0 / 3.0) < 4e-3, "triangle means (1/3, 1/3), v1 = 2/3");
@@ -107,7 +107,7 @@ int main() {
       net.upper = mat({1, 1, 2, 2, 1, 0.5}, {6});
       const auto sm = mt::sample_fluxes(net, 300, 200, 15, 11);
       const Series f = sm.fluxes.reshape({300 * 200, 6});
-      const auto m = f.mean(0, false).contiguous().to_vec<double>();
+      const auto m = f.mean(0, false).contiguous().host<double>().array().data;
       expect(std::abs(m[0] - 0.5) < 6e-3 && std::abs(m[2] - 1.0) < 1.2e-2 && std::abs(m[4]) < 1.2e-2 && std::abs(m[5] - 0.5) < 1e-12, "box means (0.5, 1, 0) and the fixed flux");
       const Series v3 = f.select(-1, 2).sub(1.0);
       expect(std::abs(v3.square().mean().item<double>() - 1.0 / 3.0) < 1.5e-2, "uniform variance of v3 on [0, 2] is 1/3");

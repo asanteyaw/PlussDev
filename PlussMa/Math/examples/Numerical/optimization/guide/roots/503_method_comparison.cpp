@@ -26,8 +26,8 @@ int main() {
     const auto nx = roots::newton(f, vec({1.0}), df, o);
     const auto nd = roots::newton(f, vec({1.0}), {}, o);
     const auto sc = roots::secant(f, vec({1.0}), vec({2.0}), o);
-    std::cout << std::left << std::setw(12) << k << std::scientific << std::setprecision(1) << std::setw(12) << std::abs(b.residual.item<double>())
-              << std::setw(12) << std::abs(il.residual.item<double>()) << std::setw(18) << std::abs(nx.residual.item<double>()) << std::setw(18)
-              << std::abs(nd.residual.item<double>()) << std::abs(sc.residual.item<double>()) << "\n";
+    std::cout << std::left << std::setw(12) << k << std::scientific << std::setprecision(1) << std::setw(12) << std::abs(as_f64(b.residual))
+              << std::setw(12) << std::abs(as_f64(il.residual)) << std::setw(18) << std::abs(as_f64(nx.residual)) << std::setw(18)
+              << std::abs(as_f64(nd.residual)) << std::abs(as_f64(sc.residual)) << "\n";
   }
 }

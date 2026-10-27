@@ -237,7 +237,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
           }
           const auto& s = std::get<pluss::Series>(value);
           PLUSS_CHECK(s.numel() == 1, std::string(where) + ": Series values must be scalar-like");
-          out[static_cast<std::size_t>(i)] = s.to_vec<bool>()[0];
+          out[static_cast<std::size_t>(i)] = s.host<bool>()[0];
         }
         return pluss::kindle::Stream(
             pluss::make_series(out, {n}),
@@ -254,7 +254,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
           }
           const auto& s = std::get<pluss::Series>(value);
           PLUSS_CHECK(s.numel() == 1, std::string(where) + ": Series values must be scalar-like");
-          out[static_cast<std::size_t>(i)] = s.to(pluss::codem::ScalarType::Int64).to_vec<std::int64_t>()[0];
+          out[static_cast<std::size_t>(i)] = s.to(pluss::codem::ScalarType::Int64).host<std::int64_t>()[0];
         }
         return pluss::kindle::Stream(
             pluss::make_series(out, {n}),
@@ -270,7 +270,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         }
         const auto& s = std::get<pluss::Series>(value);
         PLUSS_CHECK(s.numel() == 1, std::string(where) + ": Series values must be scalar-like");
-        out[static_cast<std::size_t>(i)] = s.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0];
+        out[static_cast<std::size_t>(i)] = s.to(pluss::codem::ScalarType::Float64).host<double>()[0];
       }
       return pluss::kindle::Stream(
           pluss::make_series(out, {n}, dtype),
@@ -395,24 +395,24 @@ std::string series_scalar_to_string(const pluss::Series& series) {
   PLUSS_CHECK(series.numel() == 1, "Slot::cast(Note): Series value must be scalar-like");
   switch (series.scalar_type()) {
     case pluss::codem::ScalarType::Bool:
-      return series.to_vec<bool>()[0] ? "true" : "false";
+      return series.host<bool>()[0] ? "true" : "false";
     case pluss::codem::ScalarType::Int64:
-      return std::to_string(series.to_vec<std::int64_t>()[0]);
+      return std::to_string(series.host<std::int64_t>()[0]);
     case pluss::codem::ScalarType::UInt64:
-      return std::to_string(series.to_vec<std::uint64_t>()[0]);
+      return std::to_string(series.host<std::uint64_t>()[0]);
     case pluss::codem::ScalarType::Float32: {
       std::ostringstream os;
-      os << series.to(pluss::codem::ScalarType::Float32).to_vec<float>()[0];
+      os << series.to(pluss::codem::ScalarType::Float32).host<float>()[0];
       return os.str();
     }
     case pluss::codem::ScalarType::Float64: {
       std::ostringstream os;
-      os << series.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0];
+      os << series.to(pluss::codem::ScalarType::Float64).host<double>()[0];
       return os.str();
     }
     default: {
       std::ostringstream os;
-      os << series.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0];
+      os << series.to(pluss::codem::ScalarType::Float64).host<double>()[0];
       return os.str();
     }
   }
@@ -513,11 +513,11 @@ bool slot_value_invalid(const Slot::Value& value) {
         } else if constexpr (std::is_same_v<T, pluss::Series>) {
           const auto dtype = v.scalar_type();
           if (dtype == pluss::codem::ScalarType::Float32) {
-            const auto x = v.to(pluss::codem::ScalarType::Float32).template to_vec<float>();
+            const auto x = v.to(pluss::codem::ScalarType::Float32).template host<float>();
             return std::any_of(x.begin(), x.end(), [](float z) { return !std::isfinite(z); });
           }
           if (dtype == pluss::codem::ScalarType::Float64) {
-            const auto x = v.to(pluss::codem::ScalarType::Float64).template to_vec<double>();
+            const auto x = v.to(pluss::codem::ScalarType::Float64).template host<double>();
             return std::any_of(x.begin(), x.end(), [](double z) { return !std::isfinite(z); });
           }
           return false;
@@ -541,11 +541,11 @@ bool slot_value_isnull(const Slot::Value& value) {
         } else if constexpr (std::is_same_v<T, pluss::Series>) {
           const auto dtype = v.scalar_type();
           if (dtype == pluss::codem::ScalarType::Float32) {
-            const auto x = v.to(pluss::codem::ScalarType::Float32).template to_vec<float>();
+            const auto x = v.to(pluss::codem::ScalarType::Float32).template host<float>();
             return std::any_of(x.begin(), x.end(), [](float z) { return std::isnan(z); });
           }
           if (dtype == pluss::codem::ScalarType::Float64) {
-            const auto x = v.to(pluss::codem::ScalarType::Float64).template to_vec<double>();
+            const auto x = v.to(pluss::codem::ScalarType::Float64).template host<double>();
             return std::any_of(x.begin(), x.end(), [](double z) { return std::isnan(z); });
           }
           return false;

@@ -6,6 +6,7 @@
 
 #include <vector>
 
+
 namespace {
 
 using Catch::Approx;
@@ -18,9 +19,6 @@ using pluss::subsp::math::optim::OptimaHessianApproximation;
 using pluss::subsp::math::optim::OptimaLinearSystemSolver;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
-using pluss::subsp::math::optim::trace;
 using pluss::subsp::math::optim::optima;
 
 Series make_vec2(double x0, double x1) {
@@ -31,12 +29,12 @@ ConstrainedProblem make_problem() {
   const Series target = make_vec2(1.0, 2.0);
 
   ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
+  problem.objective.autodiff = [target](const ParameterPack<Series>& p) {
+    const auto err = p.at("x") - target;
+    return err.square().sum();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<pluss::subsp::math::optim::Trace>& p) {
-    return sum(p.at("x")) - 1.5;
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) {
+    return p.at("x").sum() - 1.5;
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", make_vec2(0.0, 0.0)},
@@ -59,15 +57,15 @@ TEST_CASE("optima dispatch routes sequential qp correctly", "[optim][optima][dis
   options.sequential_qp.optimality_tolerance = 1e-5;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.algorithm == OptimaAlgorithm::SequentialQP);
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
-  REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(5e-2));
+  REQUIRE(as_f64(result.evaluation.value) == Approx(1.125).margin(5e-2));
   REQUIRE(result.output.line_search_fraction == Approx(result.last_step_size));
   REQUIRE_FALSE(result.output.detail_message.empty());
   REQUIRE(result.multipliers.nonlinear_inequalities.numel() == 1);
-  REQUIRE(result.multipliers.nonlinear_inequalities.item<double>() > 0.0);
+  REQUIRE(as_f64(result.multipliers.nonlinear_inequalities) > 0.0);
   REQUIRE(x[0] == Approx(0.25).margin(5e-2));
   REQUIRE(x[1] == Approx(1.25).margin(5e-2));
 }
@@ -87,15 +85,15 @@ TEST_CASE("optima dispatch routes interior point correctly", "[optim][optima][di
   options.internal_protocol.optimality_tolerance = 1e-5;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.algorithm == OptimaAlgorithm::InternalProtocol);
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
-  REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(8e-2));
+  REQUIRE(as_f64(result.evaluation.value) == Approx(1.125).margin(8e-2));
   REQUIRE(result.output.line_search_fraction == Approx(result.last_step_size));
   REQUIRE_FALSE(result.output.detail_message.empty());
   REQUIRE(result.multipliers.nonlinear_inequalities.numel() == 1);
-  REQUIRE(result.multipliers.nonlinear_inequalities.item<double>() > 0.0);
+  REQUIRE(as_f64(result.multipliers.nonlinear_inequalities) > 0.0);
   REQUIRE(x[0] == Approx(0.25).margin(7e-2));
   REQUIRE(x[1] == Approx(1.25).margin(7e-2));
 }
@@ -113,16 +111,16 @@ TEST_CASE("optima dispatch routes working set correctly", "[optim][optima][dispa
   options.working_set.optimality_tolerance = 1e-5;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.algorithm == OptimaAlgorithm::WorkingSet);
   REQUIRE(result.output.algorithm == "working-set");
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
-  REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(5e-2));
+  REQUIRE(as_f64(result.evaluation.value) == Approx(1.125).margin(5e-2));
   REQUIRE(result.output.line_search_fraction == Approx(result.last_step_size));
   REQUIRE_FALSE(result.output.detail_message.empty());
   REQUIRE(result.multipliers.nonlinear_inequalities.numel() == 1);
-  REQUIRE(result.multipliers.nonlinear_inequalities.item<double>() > 0.0);
+  REQUIRE(as_f64(result.multipliers.nonlinear_inequalities) > 0.0);
   REQUIRE(x[0] == Approx(0.25).margin(5e-2));
   REQUIRE(x[1] == Approx(1.25).margin(5e-2));
 }
@@ -143,11 +141,11 @@ TEST_CASE("optima sequential qp supports explicit inverse solve and identity Hes
   options.sequential_qp.hessian_approximation = OptimaHessianApproximation::Identity;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.algorithm == OptimaAlgorithm::SequentialQP);
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
-  REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(8e-2));
+  REQUIRE(as_f64(result.evaluation.value) == Approx(1.125).margin(8e-2));
   REQUIRE(x[0] == Approx(0.25).margin(7e-2));
   REQUIRE(x[1] == Approx(1.25).margin(7e-2));
 }
@@ -170,11 +168,11 @@ TEST_CASE("optima interior point supports explicit pseudoinverse solve and ident
   options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Identity;
 
   const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
+  const auto x = result.params.at("x").host<double>();
 
   REQUIRE(result.algorithm == OptimaAlgorithm::InternalProtocol);
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
-  REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(1e-1));
+  REQUIRE(as_f64(result.evaluation.value) == Approx(1.125).margin(1e-1));
   REQUIRE(x[0] == Approx(0.25).margin(9e-2));
   REQUIRE(x[1] == Approx(1.25).margin(9e-2));
 }

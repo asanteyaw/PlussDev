@@ -477,6 +477,10 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_shape_reference_demo examples/CodeM/series_shape_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_shape_reference_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_series_host_extraction_reference_demo
+    examples/CodeM/series_host_extraction_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_host_extraction_reference_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_series_rearrange_reference_demo examples/CodeM/series_rearrange_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_rearrange_reference_demo PRIVATE PlussQit::CodeM)
 

@@ -7,12 +7,12 @@
 #include <string>
 
 int main() {
-  namespace optim = pluss::optim;
+  namespace optim = pluss::subsp::math::optim;
   const auto f64 = pluss::ScalarType::Float64;
-  using Pack = optim::ParameterPack<optim::Trace>;
+  using Pack = optim::ParameterPack<pluss::Series>;
   auto scalar = [&](double v) { return pluss::make_series(v).to(f64); };
 
-  auto objective = [](const Pack& p) { return optim::square(p.at("a")) + optim::square(p.at("b")); };
+  auto objective = [](const Pack& p) { return p.at("a").square() + p.at("b").square(); };
   const auto start = optim::pack_scalars({{"a", scalar(1.0)}, {"b", scalar(1.0)}});
 
   try {
@@ -25,7 +25,7 @@ int main() {
 
   const auto right = optim::constraints().lbs(optim::pack_scalars({{"a", scalar(0.5)}, {"b", scalar(0.0)}}));
   const auto result = optim::optima(objective, start, {}, right);
-  std::cout << "with matching blocks: a = " << result.params.at("a").item<double>() << ", b = "
-            << result.params.at("b").item<double>() << "\n";
+  std::cout << "with matching blocks: a = " << as_f64(result.params.at("a")) << ", b = "
+            << as_f64(result.params.at("b")) << "\n";
   return 0;
 }

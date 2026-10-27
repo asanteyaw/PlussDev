@@ -67,9 +67,9 @@ int main() {
   mapper.learn(docs);
 
   const auto matrix = mapper.tfidf_sparse(wf.infer(std::vector<std::string>{"cat cat dog"})).value();
-  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto cols = matrix.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto cols = matrix.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   for (std::size_t i = 0; i < values.size(); ++i) {
     std::cout << "(" << rows[i] << ", " << mapper.vocabulary()[static_cast<std::size_t>(cols[i])] << ") = " << values[i] << "\n";
   }
@@ -107,11 +107,11 @@ int main() {
   mapper.learn(docs);
 
   const auto dense = mapper.tfidf_dense(docs).value();
-  const auto dense_values = dense.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto dense_values = dense.x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
   const auto sparse = mapper.tfidf_sparse(docs).value();
-  const auto rows = sparse.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto cols = sparse.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-  const auto values = sparse.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+  const auto rows = sparse.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto cols = sparse.column_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+  const auto values = sparse.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
 
   double largest_difference = 0.0;
   for (std::size_t i = 0; i < values.size(); ++i) {
@@ -155,8 +155,8 @@ int main() {
 
   for (const bool normalize : {true, false}) {
     const auto matrix = mapper.tfidf_sparse(docs, pluss::ai::classic::TfIdfMapOptions{.l2_normalize = normalize}).value();
-    const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
-    const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template to_vec<double>();
+    const auto rows = matrix.row_indices.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
+    const auto values = matrix.values.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().template host<double>();
     double first_row_square_sum = 0.0;
     for (std::size_t i = 0; i < values.size(); ++i) {
       if (rows[i] == 0.0) first_row_square_sum += values[i] * values[i];

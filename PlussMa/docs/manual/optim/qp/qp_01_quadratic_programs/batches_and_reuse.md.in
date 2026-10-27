@@ -1,8 +1,0 @@
-# Batches and reuse
-
-[Back to Quadratic Programming](../qp_01_quadratic_programs.md)
-
-
-@@example Numerical/optimization/guide/qp/513_batches_and_reuse.cpp@@
-
-A `q` of shape `[B, n]` solves `B` problems that share `P`, `A` and the bounds. When only `q` or the bounds change between solves, `qp::prepare(P, A)` checks the problem and factorises it once; the `Solver` it returns solves again and again without that setup, and `variables()` and `constraints()` report its size. Results agree with the one-shot call.

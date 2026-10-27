@@ -10,8 +10,8 @@
 #include <iomanip>
 #include <iostream>
 
-namespace optim = pluss::optim;
-using optim::Trace;
+namespace optim = pluss::subsp::math::optim;
+using pluss::Series;
 
 const auto f64 = pluss::ScalarType::Float64;
 pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
@@ -19,9 +19,9 @@ pluss::Series vec(std::vector<double> v) { return pluss::make_series(v, {static_
 int main() {
   const auto index_x = pluss::make_series(std::vector<double>{0}, {1}).to(pluss::ScalarType::Int64);
   const auto index_y = pluss::make_series(std::vector<double>{1}, {1}).to(pluss::ScalarType::Int64);
-  auto saddle = [&](const Trace& v) -> Trace {
-    const Trace x = pluss::subsp::math::diff::index_select(v, 0, index_x), y = pluss::subsp::math::diff::index_select(v, 0, index_y);
-    return optim::sum(optim::square(x) - optim::square(y) + 0.25 * optim::square(optim::square(y)));
+  auto saddle = [&](const pluss::Series& v) -> pluss::Series {
+    const pluss::Series x = v.index_select(0, index_x), y = v.index_select(0, index_y);
+    return (x.square() - y.square() + 0.25 * y.square().square()).sum();
   };
 
   std::cout << std::left << std::setw(12) << "x0" << std::setw(10) << "eps" << std::setw(26) << "L-SR1 (exit, objective)" << "L-BFGS (exit, objective)\n";

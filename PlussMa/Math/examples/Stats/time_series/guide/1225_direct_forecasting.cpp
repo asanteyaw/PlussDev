@@ -61,9 +61,9 @@ int main() {
   const auto model = ts::DirectForecaster::fit(data.x, data.y, options);
 
   std::cout << "coefficients: intercept, x lag 1, x lag 2, y lag 1, y lag 2\n";
-  for (std::int64_t i = 0; i < model.num_steps(); ++i) row(("  horizon " + std::to_string(model.step(i).horizon) + ":").c_str(), model.step(i).beta.to_vec<double>());
-  row("in-sample mse by horizon  ", model.loss(data.x, data.y).to_vec<double>());
-  row("forecast of y(n+1..n+3)   ", model.forecast(data.x, data.y).to_vec<double>());
+  for (std::int64_t i = 0; i < model.num_steps(); ++i) row(("  horizon " + std::to_string(model.step(i).horizon) + ":").c_str(), model.step(i).beta.host<double>());
+  row("in-sample mse by horizon  ", model.loss(data.x, data.y).host<double>());
+  row("forecast of y(n+1..n+3)   ", model.forecast(data.x, data.y).host<double>());
 
   // The same with the predictor treated as leading: its current value (lag 0) is known in advance, so the forecast needs its future values.
   ts::DirectForecasterOptions lead;
@@ -72,7 +72,7 @@ int main() {
   lead.lag.leading_predictors = {0};
   lead.lag.leading_predictor_lags = {{0, 1}};
   const auto known_future = ts::DirectForecaster::fit(data.x, data.y, lead);
-  row("in-sample mse, x known ahead", known_future.loss(data.x, data.y).to_vec<double>());
+  row("in-sample mse, x known ahead", known_future.loss(data.x, data.y).host<double>());
   const Series future = pluss::make_series(std::vector<double>{0.5, 0.2, -0.4}, {3, 1}).to(f64);
-  row("forecast given the next three x", known_future.forecast(data.x, data.y, future).to_vec<double>());
+  row("forecast given the next three x", known_future.forecast(data.x, data.y, future).host<double>());
 }

@@ -64,7 +64,7 @@ Stream words(const std::vector<std::string>& v) {
 std::vector<double> values_of(const Catalog& c, std::string_view key) {
   const auto s = c.get(key);
   expect(s.has_value(), "result catalog should contain the requested stream");
-  return s->as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  return s->as_series().to(pluss::codem::ScalarType::Float64).host<double>();
 }
 
 bool has_key(const Catalog& c, std::string_view key) { return c.has(key); }
@@ -263,7 +263,7 @@ bool has_validity(const Catalog& c, std::string_view key) {
 std::vector<bool> valid_of(const Catalog& c, std::string_view key) {
   const auto s = *c.get(key);
   if (!pluss::kindle::detail::has_validity_mask(s)) return std::vector<bool>(static_cast<std::size_t>(s.size()), true);
-  return pluss::kindle::detail::validity_mask(s)->to_vec<bool>();
+  return pluss::kindle::detail::validity_mask(s)->host<bool>();
 }
 
 std::int64_t records_of(const Catalog& c, std::string_view key) { return c.get(key)->size(); }
@@ -589,7 +589,7 @@ void expect_same_column(const Catalog& native, const pluss::table::DataFrame& ne
   expect(native.has(name) && nexus.get(name).has_value(), "both pulls should produce column '" + name + "'");
   const auto theirs = nexus.features(name);
   const auto mine = *native.get(name);
-  const auto their_null = theirs.isnull().as_series().to_vec<bool>();
+  const auto their_null = theirs.isnull().as_series().host<bool>();
   std::vector<bool> my_valid = valid_of(native, name);
   expect(their_null.size() == my_valid.size(), "column '" + name + "' should have the same length in both pulls");
   for (std::size_t i = 0; i < my_valid.size(); ++i) {
@@ -604,15 +604,15 @@ void expect_same_column(const Catalog& native, const pluss::table::DataFrame& ne
     return;
   }
   if (theirs.kind() == pluss::table::SlateKind::Timeline) {
-    const auto a = theirs.as_timeline().epoch_nanos().to_vec<std::int64_t>();
-    const auto b = mine.as_timeline().epoch_nanos().to_vec<std::int64_t>();
+    const auto a = theirs.as_timeline().epoch_nanos().host<std::int64_t>();
+    const auto b = mine.as_timeline().epoch_nanos().host<std::int64_t>();
     for (std::size_t i = 0; i < a.size(); ++i) {
       if (my_valid[i]) expect(a[i] == b[i], "column '" + name + "' should have the same times in both pulls");
     }
     return;
   }
-  const auto a = theirs.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
-  const auto b = mine.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto a = theirs.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
+  const auto b = mine.as_series().to(pluss::codem::ScalarType::Float64).host<double>();
   for (std::size_t i = 0; i < a.size(); ++i) {
     if (my_valid[i]) {
       expect(std::fabs(a[i] - b[i]) < 1e-9 * (1.0 + std::fabs(a[i])),

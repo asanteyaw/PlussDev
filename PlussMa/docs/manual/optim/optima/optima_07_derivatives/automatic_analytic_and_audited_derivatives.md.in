@@ -1,0 +1,41 @@
+# Automatic, analytic and audited derivatives
+
+[Back to Optima 7: Derivatives](../optima_07_derivatives.md)
+
+Every algorithm in `optima` needs derivatives, and you can supply them three ways: write the objective with plain `Series` operations and let reverse-mode automatic differentiation produce exact gradients; write it with `fwd_objective<N>` for forward mode, which carries the value and `N` partial derivatives in plain doubles; or write the gradient by hand and return it with the value. The algorithms do not care which: they see the same numbers, so the three forms change what *you* write, not what the solver does.
+
+The catch with a hand-written gradient is that the solver trusts it. A wrong sign gives a wrong answer without any warning, because the solver follows whatever it is given. `audit_optima_derivatives` is the guard: it evaluates your analytic objective and the traced one at a point and reports the largest difference. The programs show the same problem solved the three ways, an audit that catches a deliberately wrong gradient (and what the run does without it), and the same checks for nonlinear constraints and their Jacobians.
+
+## Program 1: The same problem, three ways
+
+The Rosenbrock function on a box, solved with a traced objective, a hand-written gradient and a forward-mode objective.
+
+@@example Numerical/optimization/guide/optima/81_three_ways.cpp@@
+
+The three runs are identical to the printed digits: 35 iterations, 45 evaluations, an objective of 5.38e-10, at (0.999977, 0.999954). That is the point. The form changes what you write, not what the algorithm does. `analytic` returns a pair, the value and a pack with the same blocks as the parameters holding the gradient. `fwd_objective<N>` takes a function of an `std::array<Fwd<N>, N>`, with the parameters flattened in block order, and `N` must equal the total number of parameters (a mismatch is an error that names both numbers).
+
+## Program 2: The audit
+
+A wrong hand-written gradient is not caught by the solver, which follows whatever it is given. `audit_optima_derivatives` evaluates your analytic objective and the traced objective at a point and reports the largest difference. It needs both forms of the same function: the traced one is the reference.
+
+@@example Numerical/optimization/guide/optima/82_audit.cpp@@
+
+The correct gradient differs from the traced one by 2.84e-14, rounding, and passes. With one sign wrong in the derivative with respect to `y`, the largest difference is 176 and the audit fails. The second half shows why it is worth running. The correct gradient converges in 35 iterations to an objective of 5.38e-10. The wrong one stops after 6 iterations with exit flag `-6` (`NoProgress`, chapter 2) at an objective of 4.42. The run does not crash or warn; it reports failure to progress, which looks like a hard problem rather than a bug in a derivative. Audit a new analytic derivative once, at a point that is not special (not zero, not a symmetric point where terms cancel), before you trust its runs. The tolerances are `DerivativeAuditOptions::absolute_tolerance` (1e-8) and `relative_tolerance` (1e-6).
+
+## Program 3: Analytic constraints and their audit
+
+Nonlinear constraints take the same forms. The analytic form returns the residuals and, for each block of parameters, a Jacobian of shape `[number of constraints, block size]`. A residual kind your problem does not have (here, equalities) may be left undefined. The problem minimizes `x^2 + y^2` subject to `x y >= 4`, written `4 - x y <= 0`.
+
+@@example Numerical/optimization/guide/optima/83_analytic_constraints.cpp@@
+
+The traced and the analytic constraint give the same run: 5 iterations, `x = y = 2`, a violation of 5.9e-08. The audit of the constraint callbacks compares the analytic Jacobian with the traced one, and with a doubled `d/dx` entry it reports a difference of 2.5 and fails. The traced constraint stays in the problem for this purpose; when only the analytic form is present there is nothing to audit against, and the report says so instead of passing.
+
+## Decisions and pitfalls
+
+- **Audit every hand-written derivative.** A wrong gradient does not crash; it stops early or wanders. Audit it against the traced version before you trust it.
+- **Keep the traced form around for the audit.** The audit needs both forms of the same function; the traced one is the reference. When only the analytic form exists there is nothing to compare with.
+- **The three forms are equivalent in result.** Choose by what is easy to write and fast to run, not by accuracy.
+- **Jacobians have a fixed shape.** For each parameter block the Jacobian is `[number of constraints, block size]`; a residual kind your problem does not have (for example equalities) may be left undefined.
+- **Rounding differences are a pass.** The correct gradient differed from the traced one by about 1e-14; only a difference many orders larger is a failure.
+
+Where next: [Derivative tools, call counts and long loops](derivative_tools_and_costs.md) covers the derivative machinery on its own and its costs.

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+
 namespace {
 
 using Catch::Approx;
@@ -19,12 +20,9 @@ using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::SequentialQPOptions;
-using pluss::subsp::math::optim::Trace;
 using pluss::subsp::math::optim::init_sequential_qp_state;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::sequential_qp_step;
-using pluss::subsp::math::optim::square;
-using pluss::subsp::math::optim::sum;
 
 Series scalar(double value) {
   return full({}, value, ScalarType::Float64).to(pluss::pCPU);
@@ -42,8 +40,8 @@ Series vec2(double x0, double x1) {
 
 TEST_CASE("sequential qp caps the step to remain bound-feasible", "[sqp][bounds][optima]") {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
-    return square(p.at("x") + 1.0);
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) -> Series {
+    return (p.at("x") + 1.0).square();
   };
   problem.bounds.lower = ParameterPack<Series>({
       {"x", vec1(0.0)},
@@ -60,7 +58,7 @@ TEST_CASE("sequential qp caps the step to remain bound-feasible", "[sqp][bounds]
 
   const auto state = init_sequential_qp_state(problem, initial, options);
   const auto next = sequential_qp_step(problem, state, options);
-  const double x = next.params.at("x").to_vec<double>()[0];
+  const double x = next.params.at("x").host<double>()[0];
 
   REQUIRE(next.iteration == state.iteration + 1);
   REQUIRE(next.last_step_size < 1.0);
@@ -70,11 +68,11 @@ TEST_CASE("sequential qp caps the step to remain bound-feasible", "[sqp][bounds]
 
 TEST_CASE("sequential qp can accept a second-order correction on a curved inequality", "[sqp][soc][optima]") {
   ConstrainedProblem problem;
-  problem.objective.autodiff = [](const ParameterPack<Trace>& p) -> Trace {
-    return square(p.at("x0") - 1.0) + square(p.at("x1"));
+  problem.objective.autodiff = [](const ParameterPack<Series>& p) -> Series {
+    return (p.at("x0") - 1.0).square() + p.at("x1").square();
   };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    return square(p.at("x0")) - p.at("x1");
+  problem.nonlinear.inequality = [](const ParameterPack<Series>& p) -> Series {
+    return p.at("x0").square() - p.at("x1");
   };
 
   const ParameterPack<Series> initial({
@@ -95,11 +93,11 @@ TEST_CASE("sequential qp can accept a second-order correction on a curved inequa
   const auto result = optima(problem, initial, options);
 
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
-  REQUIRE(result.params.at("x1").item<double>() + 1e-4 >=
-          result.params.at("x0").item<double>() * result.params.at("x0").item<double>());
+  REQUIRE(as_f64(result.params.at("x1")) + 1e-4 >=
+          as_f64(result.params.at("x0")) * as_f64(result.params.at("x0")));
   const bool terminated_normally = result.exit_flag == pluss::subsp::math::optim::OptimaExitFlag::Converged ||
                                    result.exit_flag == pluss::subsp::math::optim::OptimaExitFlag::MaxIterations;
   REQUIRE(terminated_normally);
   // minimizer of (x0-1)^2 + x0^4: 2(x0-1) + 4 x0^3 = 0
-  REQUIRE(result.params.at("x0").item<double>() == Approx(0.5898).margin(2e-3));
+  REQUIRE(as_f64(result.params.at("x0")) == Approx(0.5898).margin(2e-3));
 }

@@ -39,7 +39,7 @@ void print_note_csv(std::string_view label, const pluss::Note& note) {
 }
 
 void print_bool_series_csv(std::string_view label, const pluss::Series& values) {
-  const auto host = values.to(pluss::Platform::CPU).to_vec<bool>();
+  const auto host = values.to(pluss::Platform::CPU).host<bool>();
   std::cout << label << "=";
   for (std::size_t i = 0; i < host.size(); ++i) {
     if (i > 0) {

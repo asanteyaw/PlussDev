@@ -53,7 +53,7 @@ struct DenseMatrix {
   matrix.original_platform = batch.x.platform();
   matrix.original_dtype = batch.x.scalar_type();
 
-  // to_vec<double>() needs host-resident data regardless of where batch.x
+  // host<double>() needs host-resident data regardless of where batch.x
   // lives, so the platform move must happen together with the dtype cast --
   // batch.x.to(ScalarType::Float64) alone would try to cast in place on
   // whatever platform batch.x is already on, which throws on MPS (Float64
@@ -61,7 +61,7 @@ struct DenseMatrix {
   // to matrix.original_platform/original_dtype, so accepting any input
   // platform here is the intended contract, not new behavior.
   const Series x64 = batch.x.to(pluss::pCPU, ScalarType::Float64);
-  matrix.values = x64.to_vec<double>();
+  matrix.values = x64.host<double>().array().data;
   if (static_cast<std::int64_t>(matrix.values.size()) != matrix.sample_count * matrix.feature_count) {
     return StatusOr<DenseMatrix>(
         Status::shape_mismatch(std::string(where) + " expects contiguous 2D feature storage with matching element count."));
@@ -330,7 +330,7 @@ struct DenseMatrix {
   feature = feature.reshape({rows});
 
   if (pluss::table::detail::has_validity_mask(slate)) {
-    auto host = feature.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    auto host = feature.to(pluss::pCPU, ScalarType::Float64).pull<double>();
     bool touched = false;
     for (std::int64_t i = 0; i < rows; ++i) {
       if (!pluss::table::detail::valid_at(slate, i)) {
@@ -780,12 +780,12 @@ void collect_combinations_no_repetition(std::int64_t start,
 
 [[nodiscard]] std::vector<double> vec_f64(const Series& state) {
   if (!state.defined()) return {};
-  return state.to(pluss::pCPU, ScalarType::Float64).reshape({state.numel()}).to_vec<double>();
+  return state.to(pluss::pCPU, ScalarType::Float64).reshape({state.numel()}).host<double>().array().data;
 }
 
 [[nodiscard]] std::vector<std::int64_t> vec_i64(const Series& state) {
   if (!state.defined()) return {};
-  return state.to(pluss::pCPU, ScalarType::Int64).reshape({state.numel()}).to_vec<std::int64_t>();
+  return state.to(pluss::pCPU, ScalarType::Int64).reshape({state.numel()}).host<std::int64_t>().array().data;
 }
 
 [[nodiscard]] std::vector<double> flatten_nested(const std::vector<std::vector<double>>& nested) {
@@ -3247,7 +3247,7 @@ Status SupervisedEncoderBase::learn_supervised(const FeatureBatch& batch,
   if (!target.defined() || target.numel() != matrix.sample_count) {
     return Status::shape_mismatch(std::string(encoder_name_()) + " target length must match the sample count.");
   }
-  const std::vector<double> y = target.to(pluss::pCPU, ScalarType::Float64).reshape({target.numel()}).to_vec<double>();
+  const std::vector<double> y = target.to(pluss::pCPU, ScalarType::Float64).reshape({target.numel()}).host<double>().array().data;
 
   const SupervisedFitOptions fit_options{.max_categories = max_categories_(), .overflow = overflow_()};
   auto keys_or = fit_category_keys(matrix, fit_options, encoder_name_());

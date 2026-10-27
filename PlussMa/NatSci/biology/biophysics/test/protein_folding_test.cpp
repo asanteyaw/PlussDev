@@ -20,7 +20,7 @@ void expect(bool c, const std::string &m) {
 }
 Series vec(const std::vector<double> &v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(F64); }
 double max_rel(const Series &got, const std::vector<double> &want) {
-  const auto g = got.contiguous().to_vec<double>();
+  const auto g = got.contiguous().host<double>();
   expect(g.size() == want.size(), "size mismatch");
   double worst = 0.0;
   for (std::size_t i = 0; i < g.size(); ++i)
@@ -60,11 +60,11 @@ int main() {
       expect(max_rel(pf::chevron_three_state(x, q[0], q[1], q[2], q[3], q[4], q[5]), ref::pf_chev_three) < 1e-12, "three-state chevron vs PyFolding");
       // chevron arms and equilibrium agree: at the midpoint of a two-state protein k_f exp(-m_f x) = k_u exp(m_u x), stability zero
       const double mid = std::log(p[0] / p[2]) / (p[1] + p[3]);
-      expect(std::abs(pf::chevron_stability(p[0], p[1], p[2], p[3], vec({mid}), rt).item<double>()) < 1e-12, "stability vanishes at the chevron midpoint");
-      expect(std::abs(pf::chevron_two_state(vec({mid}), p[0], p[1], p[2], p[3]).item<double>() - 2.0 * p[0] * std::exp(-p[1] * mid)) < 1e-12, "k_obs is twice k_f at the midpoint");
+      expect(std::abs(pf::chevron_stability(p[0], p[1], p[2], p[3], vec({mid}), rt).host<double>().front()) < 1e-12, "stability vanishes at the chevron midpoint");
+      expect(std::abs(pf::chevron_two_state(vec({mid}), p[0], p[1], p[2], p[3]).host<double>().front() - 2.0 * p[0] * std::exp(-p[1] * mid)) < 1e-12, "k_obs is twice k_f at the midpoint");
     }
     // free energy and the midpoint
-    expect(std::abs(pf::unfolding_free_energy(vec({4.2}), 1.9, 4.2).item<double>()) < 1e-14 && std::abs(pf::two_state_fraction_unfolded(vec({4.2}), 1.9, 4.2, rt).item<double>() - 0.5) < 1e-14, "midpoint: dG = 0, half unfolded");
+    expect(std::abs(pf::unfolding_free_energy(vec({4.2}), 1.9, 4.2).host<double>().front()) < 1e-14 && std::abs(pf::two_state_fraction_unfolded(vec({4.2}), 1.9, 4.2, rt).host<double>().front() - 0.5) < 1e-14, "midpoint: dG = 0, half unfolded");
     // thermal unfolding vs integration of dH/dT = dCp, dS/dT = dCp/T
     {
       pf::Thermal p{ref::th_p[0], ref::th_p[1], ref::th_p[2]};
@@ -73,7 +73,7 @@ int main() {
       expect(pf::thermal_gibbs(t, p).sub(pf::thermal_gibbs_closed_form(t, p)).abs().max().item<double>() < 1e-12, "closed form equals H - T S");
       expect(pf::thermal_fraction_unfolded(t, p).sub(vec(ref::th_frac)).abs().max().item<double>() < 1e-10, "fraction unfolded vs oracle (absolute: K = exp(-G/RT) magnifies relative errors of G)");
       const Series cold = pf::thermal_root(p, vec({200.0}), vec({ref::th_p[1] - 1e-6}));
-      expect(std::abs(cold.item<double>() - ref::th_roots[0]) < 1e-6, "cold denaturation temperature");
+      expect(std::abs(cold.host<double>().front() - ref::th_roots[0]) < 1e-6, "cold denaturation temperature");
       const Series ts = pf::maximum_stability_temperature(p, vec({0.0}));
       expect(std::abs(ts.item<double>() - ref::th_Tstab_numeric[0]) < 1e-3, "temperature of maximum stability vs numerical maximum");
       expect(std::abs(pf::thermal_entropy(ts, p).item<double>()) < 1e-12, "Delta S vanishes at maximum stability");

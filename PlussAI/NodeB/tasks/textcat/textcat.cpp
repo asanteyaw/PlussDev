@@ -82,7 +82,7 @@ std::vector<std::string> build_feature_docs(const std::vector<Doc>& docs,
 [[nodiscard]] std::vector<std::vector<double>> to_host_matrix(const Series& values,
                                                                std::int64_t rows,
                                                                std::int64_t cols) {
-  const auto flat = values.to(pluss::pCPU, ScalarType::Float64).reshape({rows * cols}).to_vec<double>();
+  const auto flat = values.to(pluss::pCPU, ScalarType::Float64).reshape({rows * cols}).host<double>();
   std::vector<std::vector<double>> out(static_cast<std::size_t>(rows));
   for (std::int64_t r = 0; r < rows; ++r) {
     const auto offset = static_cast<std::size_t>(r * cols);
@@ -428,7 +428,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     impl_->sequence_token_to_id = std::move(vocab.token_to_id);
     impl_->sequence_embedding = to_host_matrix(embedding_weights, vocab_size, width);
     impl_->sequence_cls_weight = to_host_matrix(cls_weight, width, num_classes);
-    impl_->sequence_cls_bias = cls_bias.to(pluss::pCPU, ScalarType::Float64).reshape({num_classes}).to_vec<double>();
+    impl_->sequence_cls_bias = cls_bias.to(pluss::pCPU, ScalarType::Float64).reshape({num_classes}).host<double>();
     impl_->trained = true;
     return;
   }
@@ -564,7 +564,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     impl_->sequence_token_to_id = std::move(vocab.token_to_id);
     impl_->sequence_embedding = to_host_matrix(embedding_weights, vocab_size, width);
     impl_->sequence_cls_weight = to_host_matrix(cls_weight, width, num_classes);
-    impl_->sequence_cls_bias = cls_bias.to(pluss::pCPU, ScalarType::Float64).reshape({num_classes}).to_vec<double>();
+    impl_->sequence_cls_bias = cls_bias.to(pluss::pCPU, ScalarType::Float64).reshape({num_classes}).host<double>();
     impl_->trained = true;
     return;
   }
@@ -662,8 +662,8 @@ void TextCatStage::apply(Doc& doc) const {
     auto pred_or = impl_->binary.infer(x_or.value());
     auto score_or = impl_->binary.infer_scores(x_or.value());
     if (!pred_or.ok() || !score_or.ok()) return;
-    const auto pred = static_cast<std::int64_t>(pred_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).item<double>());
-    const double raw_score = score_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).item<double>();
+    const auto pred = static_cast<std::int64_t>(pred_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).host<double>().front());
+    const double raw_score = score_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).host<double>().front();
     if (pred >= 0 && pred < static_cast<std::int64_t>(impl_->label_values.size())) {
       doc.doc_label = impl_->label_values[static_cast<std::size_t>(pred)];
       const double positive_probability = sigmoid(raw_score);
@@ -678,7 +678,7 @@ void TextCatStage::apply(Doc& doc) const {
   if (!pred_or.ok() || !score_or.ok()) return;
   const auto pred = static_cast<std::int64_t>(pred_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).item<double>());
   const auto raw_scores =
-      score_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).reshape({score_or.value().numel()}).to_vec<double>();
+      score_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).reshape({score_or.value().numel()}).host<double>();
   if (pred >= 0 && pred < static_cast<std::int64_t>(impl_->label_values.size())) {
     doc.doc_label = impl_->label_values[static_cast<std::size_t>(pred)];
     if (pred < static_cast<std::int64_t>(raw_scores.size())) {
@@ -786,7 +786,7 @@ std::vector<std::string> TextCatStage::dump_state_lines() const {
   for (std::size_t i = 0; i < state.size(); ++i) {
     const auto values = state[i].to(pluss::pCPU, pluss::ScalarType::Float64)
                             .reshape({state[i].numel()})
-                            .to_vec<double>();
+                            .host<double>();
     lines.push_back("model_state_" + std::to_string(i) + "=" + detail::join_doubles_line(values));
   }
   return lines;

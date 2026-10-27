@@ -1,0 +1,44 @@
+<!-- generated from continuous_bounded.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# distr continuous, bounded
+
+Families on a bounded interval or a circle: proportions, bounded shapes and directions. Each page documents one family: the parameters, the support, how to evaluate the density and the distribution function, how to draw samples, and, for the families that have one, the object form and the maximum-likelihood fit.
+
+## The Surface
+
+| Family | What it is |
+|---|---|
+| [`Anglit`](continuous_bounded/Anglit.md) | The anglit distribution: a cosine-shaped density on a symmetric interval, the distribution of the arcsine of a random square root. |
+| [`Arcsin`](continuous_bounded/Arcsin.md) | The arcsine distribution: a U-shaped density on the unit interval that piles up at both ends. |
+| [`Beta`](continuous_bounded/Beta.md) | The beta distribution: a flexible family on a bounded interval, the standard model of proportions and probabilities. |
+| [`Bradford`](continuous_bounded/Bradford.md) | The Bradford distribution: a density that decreases over the unit interval, with a single shape parameter. |
+| [`Cosine`](continuous_bounded/Cosine.md) | The cosine (raised cosine) distribution: a smooth, bounded, bell-shaped density on a symmetric interval. |
+| [`HalfCosine`](continuous_bounded/HalfCosine.md) | The half-cosine distribution: a single half-wave of a cosine as a density on a symmetric interval. |
+| [`NormalTrunc`](continuous_bounded/NormalTrunc.md) | The truncated normal distribution: a normal distribution restricted to an interval. |
+| [`Quadratic`](continuous_bounded/Quadratic.md) | The quadratic (parabolic, Epanechnikov) distribution: an inverted parabola as a density on a symmetric interval. |
+| [`Semicircle`](continuous_bounded/Semicircle.md) | The semicircle (Wigner) distribution: a density in the shape of a half-circle, the limit law of the eigenvalues of large random symmetric matrices. |
+| [`Triangular`](continuous_bounded/Triangular.md) | The triangular distribution: a density that rises linearly to a mode and falls linearly, specified by its minimum, mode and maximum. |
+| [`UShape`](continuous_bounded/UShape.md) | The U-shaped (symmetric arcsine) distribution: a density that is smallest at the centre and unbounded at both ends of a symmetric interval. |
+| [`Uniform`](continuous_bounded/Uniform.md) | The uniform distribution: every value in an interval is equally likely. |
+| [`VonMises`](continuous_bounded/VonMises.md) | The von Mises distribution: the circular analogue of the normal distribution, for angles. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+continuous_bounded/Anglit
+continuous_bounded/Arcsin
+continuous_bounded/Beta
+continuous_bounded/Bradford
+continuous_bounded/Cosine
+continuous_bounded/HalfCosine
+continuous_bounded/NormalTrunc
+continuous_bounded/Quadratic
+continuous_bounded/Semicircle
+continuous_bounded/Triangular
+continuous_bounded/UShape
+continuous_bounded/Uniform
+continuous_bounded/VonMises
+```
+<!-- apiref:toctree:end -->

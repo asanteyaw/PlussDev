@@ -41,7 +41,7 @@ void require_complex_close(const Series &actual,
                            const std::vector<std::complex<double>> &expected,
                            double margin = 1e-10) {
   const auto values =
-      actual.to(ScalarType::Complex128).to_vec<std::complex<double>>();
+      actual.to(ScalarType::Complex128).host<std::complex<double>>().array().data;
   REQUIRE(values.size() == expected.size());
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     REQUIRE(values[lane].real() ==
@@ -54,7 +54,7 @@ void require_complex_close(const Series &actual,
 void require_real_close(const Series &actual,
                         const std::vector<double> &expected,
                         double margin = 1e-10) {
-  const auto values = actual.to(ScalarType::Float64).to_vec<double>();
+  const auto values = actual.to(ScalarType::Float64).host<double>().array().data;
   REQUIRE(values.size() == expected.size());
   for (std::size_t lane = 0; lane < values.size(); ++lane) {
     REQUIRE(values[lane] == Approx(expected[lane]).margin(margin));
@@ -100,7 +100,7 @@ TEST_CASE("Series Fourier transforms honor axes, batches, and strided inputs",
   const Series strided = rows.transpose(0, 1);
   REQUIRE_FALSE(strided.is_contiguous());
   require_complex_close(strided.fft(-1, 0).transpose(0, 1), expected);
-  require_real_close(by_row.ifft().real(), rows.to_vec<double>());
+  require_real_close(by_row.ifft().real(), rows.host<double>().array().data);
 }
 
 TEST_CASE("Series Fourier length and normalization contracts are explicit",
@@ -118,7 +118,7 @@ TEST_CASE("Series Fourier length and normalization contracts are explicit",
   require_complex_close(input.fft(-1, -1, "forward"),
                         {{2.5, 0}, {-0.5, 0.5}, {-0.5, 0}, {-0.5, -0.5}});
   const double root = std::sqrt(4.0);
-  const auto backward = input.fft().to_vec<std::complex<double>>();
+  const auto backward = input.fft().host<std::complex<double>>().array().data;
   std::vector<std::complex<double>> ortho(backward.size());
   for (std::size_t lane = 0; lane < backward.size(); ++lane) {
     ortho[lane] = backward[lane] / root;
@@ -235,7 +235,7 @@ TEST_CASE("Fourier transforms stay accurate at large and prime lengths in both "
     data[static_cast<std::size_t>(lane)] = 1.0;
     const Series spectrum = pluss::make_series(data, {n}).to(dtype).fft();
     const auto values =
-        spectrum.to(ScalarType::Complex128).to_vec<std::complex<double>>();
+        spectrum.to(ScalarType::Complex128).host<std::complex<double>>().array().data;
     double worst = 0.0;
     for (std::int64_t k = 0; k < n; ++k) {
       // (j k) mod n keeps the angle small, so the expected value itself is
@@ -277,7 +277,7 @@ TEST_CASE("Fourier transforms of real signals are exactly conjugate-symmetric "
       data[static_cast<std::size_t>(i)] =
           std::sin(0.7 * static_cast<double>(i)) + 0.1 * static_cast<double>(i);
     const auto spectrum =
-        pluss::make_series(data, {n}).fft().to_vec<std::complex<double>>();
+        pluss::make_series(data, {n}).fft().host<std::complex<double>>().array().data;
     REQUIRE(spectrum[0].imag() == 0.0);
     for (std::int64_t k = 1; k < n; ++k) {
       const auto mirror = spectrum[static_cast<std::size_t>(n - k)];
@@ -287,7 +287,7 @@ TEST_CASE("Fourier transforms of real signals are exactly conjugate-symmetric "
     if (n % 2 == 0)
       REQUIRE(spectrum[static_cast<std::size_t>(n / 2)].imag() == 0.0);
     const auto one_sided =
-        pluss::make_series(data, {n}).rfft().to_vec<std::complex<double>>();
+        pluss::make_series(data, {n}).rfft().host<std::complex<double>>().array().data;
     REQUIRE(one_sided[0].imag() == 0.0);
   }
 }
@@ -321,8 +321,8 @@ TEST_CASE(
         data[i] = std::sin(0.37 * static_cast<double>(i)) +
                   0.01 * static_cast<double>(i % 7);
       const Series matrix = pluss::make_series(data, {rows, length});
-      const auto full = matrix.fft().to_vec<std::complex<double>>();
-      const auto half = matrix.rfft().to_vec<std::complex<double>>();
+      const auto full = matrix.fft().host<std::complex<double>>().array().data;
+      const auto half = matrix.rfft().host<std::complex<double>>().array().data;
       const std::int64_t m = length / 2 + 1;
       for (std::int64_t r = 0; r < rows; ++r) {
         std::vector<std::complex<double>> row(static_cast<std::size_t>(length));
@@ -344,7 +344,7 @@ TEST_CASE(
       const auto columns = matrix.transpose(0, 1)
                                .contiguous()
                                .fft(-1, 0)
-                               .to_vec<std::complex<double>>();
+                               .host<std::complex<double>>().array().data;
       for (std::int64_t r = 0; r < rows; ++r) {
         for (std::int64_t k = 0; k < length; ++k) {
           REQUIRE(std::abs(columns[static_cast<std::size_t>(k * rows + r)] -
@@ -362,16 +362,16 @@ TEST_CASE("Precision promotion between float and complex dtypes keeps values",
       pluss::make_series(std::vector<double>{1.5, -2.25, 3.0}, {3});
   const Series c64 = x.to(ScalarType::Complex64);
   REQUIRE(c64.scalar_type() == ScalarType::Complex64);
-  REQUIRE(c64.to(ScalarType::Complex128).to_vec<std::complex<double>>() ==
+  REQUIRE(c64.to(ScalarType::Complex128).host<std::complex<double>>().array().data ==
           std::vector<std::complex<double>>{{1.5, 0}, {-2.25, 0}, {3.0, 0}});
   const Series z = pluss::make_series(
       std::vector<std::complex<double>>{{1, 2}, {3, -4}}, {2});
   REQUIRE(z.to(ScalarType::Complex64)
               .to(ScalarType::Complex128)
-              .to_vec<std::complex<double>>() ==
+              .host<std::complex<double>>().array().data ==
           std::vector<std::complex<double>>{{1, 2}, {3, -4}});
-  REQUIRE(x.to(ScalarType::Float32).to(ScalarType::Float64).to_vec<double>() ==
+  REQUIRE(x.to(ScalarType::Float32).to(ScalarType::Float64).host<double>().array().data ==
           std::vector<double>{1.5, -2.25, 3.0});
-  REQUIRE(z.to(ScalarType::Float64).to_vec<double>() ==
+  REQUIRE(z.to(ScalarType::Float64).host<double>().array().data ==
           std::vector<double>{1, 3});
 }

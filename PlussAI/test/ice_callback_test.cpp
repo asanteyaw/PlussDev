@@ -28,7 +28,7 @@ Config float_cfg() {
 }
 
 double first_scalar(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>().front();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>().front();
 }
 
 struct RegressionData {
