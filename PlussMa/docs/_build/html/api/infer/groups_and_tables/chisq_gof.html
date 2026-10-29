@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -136,6 +136,7 @@
 each expected count 20.0000 of 120.0000 rolls
 </pre></div>
 </div>
+<p>For 120 rolls of a fair die each face is expected 20 times. The chi-squared statistic 5.20 on 5 degrees of freedom is below the critical value 11.07, and p 0.39 gives no evidence against a fair die.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -163,6 +164,7 @@ each expected count 20.0000 of 120.0000 rolls
 chi-squared 7.8375, p 0.1654
 </pre></div>
 </div>
+<p>With expected proportions instead of equal probabilities, five faces are expected 17.14 times and the sixth 34.29 times; the statistic 7.84 on 5 degrees of freedom gives p 0.17. The expected counts are computed from the proportions and the total, so they always add up to the number of observations.</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -188,6 +190,7 @@ chi-squared 7.8375, p 0.1654
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>degrees of freedom 4.0000, p 0.2674, critical 9.4877
 </pre></div>
 </div>
+<p>Each parameter estimated from the data removes one degree of freedom: with one estimated parameter the test has 4 instead of 5, the critical value falls to 9.49, and p is 0.27. Forgetting this makes the test too lenient.</p>
 </section>
 </section>
 <section id="see-also">
@@ -216,13 +219,16 @@ chi-squared 7.8375, p 0.1654
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

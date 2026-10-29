@@ -1,0 +1,37 @@
+# Calculus 3: Vector Calculus
+
+A function of several variables has a derivative for every variable, and for every pair of variables a second derivative. Three operators collect them into the shapes calculus uses: `gradient` for the first derivatives of a scalar function, `hessian` for its second derivatives, and `jacobian` for the first derivatives of a vector-valued function. Each returns an ordinary `Function`, evaluated on arrays, so a gradient or a Hessian is a function you can call at a million points. After this chapter you can choose which variables to differentiate and in which order, predict the shape of every result, evaluate on batches, and use the derivatives in an algorithm.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **The derivative axes come last.** Whatever the batch shape of the arguments, `gradient` appends one axis of length `n`, `hessian` appends two and `jacobian` appends two (outputs, then variables).
+- **The variable list decides the layout.** `gradient()` with no list uses every variable in declared order; a list picks and orders the components. The order you give is the order you get.
+- **Exact and shared.** They are built from the same exact rules as `differential`, with the same `DiffOptions` (`nonsmooth`, `fallback`, `max_nodes`).
+
+| Operator | Applies to | Result for batch shape `B` and `n` selected variables |
+|---|---|---|
+| `gradient(vars)` | scalar-valued function | `B + [n]` |
+| `hessian(vars)` | scalar-valued function | `B + [n, n]` |
+| `jacobian(vars)` | vector-valued function of length `m` | `B + [m, n]` |
+| `jacobian(vars)` | scalar-valued function | `B + [n]` (the gradient) |
+
+## Programs
+
+- [Gradients](calculus_03_vector_calculus/gradients.md)
+- [Jacobians and Hessians](calculus_03_vector_calculus/jacobians_and_hessians.md)
+- [Batches and broadcasting](calculus_03_vector_calculus/batches_and_broadcasting.md)
+- [Worked problem: Newton's method on a batch of starts](calculus_03_vector_calculus/a_newton_step_from_the_hessian.md)
+
+## Checklist
+
+1. A gradient and a Hessian need a scalar-valued function; a Jacobian needs a scalar- or vector-valued one. Anything else is an error.
+2. Name the variables you differentiate when you do not want all of them, and in the order you want them.
+3. Index results from the end: the derivative axes are always the last one or two.
+4. Evaluate on whole batches of points in one call rather than in a loop.
+5. Build vector-valued functions with the operators; evaluate hand-assembled ones one point at a time.
+6. The `fallback` option makes `gradient`, `jacobian` and `hessian` accept opaque `Series` callables, as `differential` does.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

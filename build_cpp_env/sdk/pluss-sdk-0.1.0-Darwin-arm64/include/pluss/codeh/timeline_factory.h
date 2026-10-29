@@ -85,6 +85,11 @@ inline pluss::Timeline make(pluss::msharp::RangeView::Of<std::string> flat,
 inline pluss::Timeline date(pluss::codeh::detail::TimelineTextReader data) {
   return pluss::codeh::factory_detail::from_date_textspan(data.flat(), data.shape());
 }
+#ifdef CODEH_ENABLE_TIMELINE_SURFACE
+inline pluss::Timeline date(const pluss::Timeline& value) {
+  return value.date();
+}
+#endif
 inline pluss::Timeline date(pluss::msharp::RangeView::Of<std::string_view> flat,
                             pluss::msharp::RangeView::Of<std::int64_t> sizes) {
   return date(pluss::codeh::detail::TimelineTextReader(flat, sizes));
@@ -97,6 +102,11 @@ inline pluss::Timeline date(pluss::msharp::RangeView::Of<std::string> flat,
 inline pluss::Timeline time(pluss::codeh::detail::TimelineTextReader data) {
   return pluss::codeh::factory_detail::from_time_textspan(data.flat(), data.shape());
 }
+#ifdef CODEH_ENABLE_TIMELINE_SURFACE
+inline pluss::Timeline time(const pluss::Timeline& value) {
+  return value.time();
+}
+#endif
 inline pluss::Timeline time(pluss::msharp::RangeView::Of<std::string_view> flat,
                             pluss::msharp::RangeView::Of<std::int64_t> sizes) {
   return time(pluss::codeh::detail::TimelineTextReader(flat, sizes));
@@ -145,7 +155,7 @@ inline pluss::Timeline from_epoch(const pluss::Series& values,
   CODEM_CHECK(values.defined(), "pluss::timeline::from_epoch: undefined Series");
   CODEM_CHECK(values.scalar_type() == pluss::ScalarType::Int64,
               "pluss::timeline::from_epoch: Series must have int64 dtype");
-  const auto flat = values.to_vec<std::int64_t>();
+  const auto flat = values.host<std::int64_t>().array().data;
   const std::vector<std::int64_t> shape(values.sizes().begin(), values.sizes().end());
   return from_epoch(flat, shape, tz_name);
 }
@@ -472,8 +482,8 @@ inline pluss::Timeline select(const pluss::Series& condition,
 namespace pluss {
 
 // pluss::make_timeline is the one flat spelling kept as a permanent
-// shortcut (mirroring pluss::make_series/make_note/make_timeindex/
-// make_duration) for the common construct-from-data case. Every other flat
+// shortcut (mirroring make_series, make_note, and make_duration) for the
+// common construct-from-data case. Every other flat
 // Timeline spelling (pluss::from_epoch_nanos, pluss::date_range) was a
 // transitional compatibility alias and has been removed now that all
 // internal call sites across the codebase go through pluss::timeline::*

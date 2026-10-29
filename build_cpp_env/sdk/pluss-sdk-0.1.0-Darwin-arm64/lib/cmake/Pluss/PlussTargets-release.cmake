@@ -15,6 +15,16 @@ set_target_properties(Pluss::PlussTilsView PROPERTIES
 list(APPEND _cmake_import_check_targets Pluss::PlussTilsView )
 list(APPEND _cmake_import_check_files_for_Pluss::PlussTilsView "${_IMPORT_PREFIX}/lib/libPlussTilsView.a" )
 
+# Import target "Pluss::PlussBI" for configuration "Release"
+set_property(TARGET Pluss::PlussBI APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_target_properties(Pluss::PlussBI PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
+  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libPlussBI.a"
+  )
+
+list(APPEND _cmake_import_check_targets Pluss::PlussBI )
+list(APPEND _cmake_import_check_files_for_Pluss::PlussBI "${_IMPORT_PREFIX}/lib/libPlussBI.a" )
+
 # Import target "Pluss::PlussTilsCore" for configuration "Release"
 set_property(TARGET Pluss::PlussTilsCore APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(Pluss::PlussTilsCore PROPERTIES

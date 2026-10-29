@@ -1871,7 +1871,9 @@ StatusOr<std::vector<std::vector<Series>>> Flow::dump_transform_states() const {
 StatusOr<std::vector<Series>> Flow::dump_model_state() const {
   if (!has_model()) return StatusOr<std::vector<Series>>(std::vector<Series>{});
   if (classifier_) return classifier_->dump_state();
-  return regressor_->dump_state();
+  if (regressor_) return regressor_->dump_state();
+  // A transform-only flow (a transformer that is itself the model) keeps its state with its stages.
+  return StatusOr<std::vector<Series>>(std::vector<Series>{});
 }
 
 Status Flow::load_transform_states(pluss::msharp::RangeView::Of<std::vector<Series>> states) {
@@ -1896,10 +1898,14 @@ Status Flow::load_model_state(pluss::msharp::RangeView::Series state) {
     }
     return Status::success();
   }
+  // A transform-only flow carries its fitted state with its stages, so there is no separate model state.
+  if (!classifier_ && !regressor_) return Status::success();
   if (state.empty()) {
     return Status::invalid_argument("Flow::load_model_state requires non-empty model state for model flows.");
   }
-  return classifier_ ? classifier_->load_state(state) : regressor_->load_state(state);
+  if (classifier_) return classifier_->load_state(state);
+  if (regressor_) return regressor_->load_state(state);
+  return Status::success();
 }
 
 void Flow::mark_trained(bool trained) noexcept { trained_ = trained; }

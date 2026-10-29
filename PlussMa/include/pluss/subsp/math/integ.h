@@ -1251,3 +1251,5 @@ inline IntegraResult integra(const IntegrandFn& fn, double a, double b, const In
 }
 
 }  // namespace pluss::subsp::math::integ
+
+#include "pluss/subsp/math/integ_lebesgue.h"

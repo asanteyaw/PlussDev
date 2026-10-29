@@ -5,7 +5,10 @@
 Chapters, in reading order:
 
 - [Regression 1: Least Squares](regression/regression_01_least_squares.md)
-- [Regression 2: Generalised Linear, Quantile and Polynomial Regression](regression/regression_02_glm_quantile_polynomial.md)
+- [Regression 2: Generalised Linear Models](regression/regression_02_generalised_linear_models.md)
+- [Regression 3: Quantile Regression](regression/regression_03_quantile_regression.md)
+- [Regression 4: Polynomial Regression](regression/regression_04_polynomial_regression.md)
+- [Regression 5: Worked Problems](regression/regression_05_worked_problems.md)
 
 <!-- apiref:toctree:start -->
 ```{toctree}
@@ -13,6 +16,9 @@ Chapters, in reading order:
 :hidden:
 
 regression/regression_01_least_squares
-regression/regression_02_glm_quantile_polynomial
+regression/regression_02_generalised_linear_models
+regression/regression_03_quantile_regression
+regression/regression_04_polynomial_regression
+regression/regression_05_worked_problems
 ```
 <!-- apiref:toctree:end -->

@@ -51,8 +51,8 @@ struct HestonIntegrationOptions {
 struct HestonFftOptions {
   double vol_risk_premium = 0.0;
   HestonCfMode mode = HestonCfMode::LittleTrap;
-  std::int64_t num_fft = 4096;
-  double characteristic_fcn_step = 0.01;
+  std::int64_t num_fft = 16384;
+  double characteristic_fcn_step = 0.1;
   double log_strike_step = std::numeric_limits<double>::quiet_NaN();
   double damping_factor = 1.5;
   HestonFftQuadrature quadrature = HestonFftQuadrature::Simpson;

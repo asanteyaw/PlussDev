@@ -89,6 +89,8 @@ standard error 0.1716, critical value 2.3646, observations 8
 95% interval [5.2068, 6.0182]
 ```
 
+The mean 5.61 is 3.57 standard errors (0.172) from the target, with 7 degrees of freedom: p 0.0091 rejects, and the 95% interval [5.21, 6.02] does not contain the target. The interval and the test always agree at the same level.
+
 ### Example 2
 
 Change the alternative and the level: a one-sided test at the 1% level.
@@ -123,6 +125,8 @@ t 3.5696, p 0.0046, critical 2.9980 (reject)
 99% one-sided interval [5.0981, inf]
 ```
 
+One-sided at the 1% level: p halves to 0.0046 and the critical value is 3.00, still below the statistic 3.57. The one-sided interval is open on the right, `[5.10, inf]`: it states only a lower bound for the mean.
+
 ### Example 3
 
 Missing values are dropped; `effective_n` says how many were used.
@@ -150,6 +154,8 @@ Output
 ```text
 observations used 6, mean 5.7500, t 4.0775 on 5.0000 df, p 0.0096
 ```
+
+Missing values are dropped, and `effective_n` reports the 6 observations used; the degrees of freedom, 5, follow from that count, not from the length of the input.
 
 ## See Also
 

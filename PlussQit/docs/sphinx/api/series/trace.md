@@ -8,16 +8,20 @@
 
 ```cpp
 Series::trace() const -> Series
+Series::trace(std::int64_t offset) const -> Series
+Series::trace(std::int64_t offset, std::int64_t dim1, std::int64_t dim2) const -> Series
 ```
 
 ## What It Does
 
-`trace()` sums the main diagonal of a 2D `Series` and returns that sum as a
-scalar `Series`.
+`trace()` sums a diagonal of a `Series` and returns that sum. On a 2D matrix
+the result is a scalar `Series`. On higher-rank input the diagonal is taken
+over a chosen pair of axes (by default the first two) and the remaining axes
+are kept, so a stack of matrices gives one trace per matrix.
 
 Two parts of that contract matter in real code:
 
-- it is a reduction, so the output is scalar-shaped
+- it is a reduction over the diagonal axis only
 - it reads only the diagonal positions, not the full matrix
 
 `trace()` also accepts rectangular 2D input. In that case it walks only as far
@@ -26,16 +30,22 @@ as a diagonal still exists, so the effective diagonal length is
 
 ## Parameters
 
-None.
+**offset** (`std::int64_t`, default `0`)
 
-The method always uses the main diagonal. If you need an offset diagonal, first
-extract it with [`diagonal()`](diagonal.md) or [`diag()`](diag.md), then reduce
-that result yourself.
+Which diagonal to sum. Positive values move toward later columns (above the
+main diagonal), negative values toward later rows.
+
+**dim1**, **dim2** (`std::int64_t`, defaults `0` and `1`)
+
+The two axes the diagonal is read from; negative values count from the end.
+They must differ. Every other axis is carried into the result in order. The
+offset is measured from `dim1` toward `dim2`.
 
 ## Returns
 
 `Series`
-    A scalar `Series` containing the sum of the main diagonal.
+    A scalar `Series` for 2D input. For rank `r > 2`, a `Series` of rank
+    `r - 2` holding one diagonal sum per position of the remaining axes.
 
 That scalar result still behaves like an ordinary `Series`. You can print it,
 chain more `Series` methods from it, or extract the contained value with
@@ -93,8 +103,7 @@ Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true
 data=6
 ```
 
-So this is not a "square matrices only" method. It is a "2D matrices only"
-method.
+So this is not a "square matrices only" method.
 
 Example 3. Rank-1 input fails because there is no matrix diagonal to reduce.
 
@@ -110,7 +119,7 @@ try {
 ### Output
 
 ```text
-diag/diagonal: extraction expects a 2D input
+diagonal: expects a Series with at least 2 dimensions
 ```
 
 The message comes from the shared diagonal extraction path, which is why it
@@ -140,18 +149,64 @@ data=[[1, 0, 0],
   [0, 0, 1]]
 ```
 
+Example 5. An offset sums a shifted diagonal.
+
+```cpp
+auto square = pluss::make_series({
+    {1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9},
+}, pluss::ScalarType::Int64);
+
+std::cout << square.trace(1) << "\n";   // 2 + 6
+std::cout << square.trace(-1);          // 4 + 8
+```
+
+### Output
+
+```text
+pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=8
+pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=12
+```
+
+Example 6. Higher-rank input: pick the two axes, and the rest are kept.
+
+```cpp
+auto cube = pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}, {2, 3, 4});
+
+std::cout << cube.trace(0, 1, 2);   // trace of each 3 x 4 slice
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[18, 54]
+```
+
+Axis 0 is kept, so there is one trace per slice: `1 + 6 + 11` and
+`13 + 18 + 23`.
+
 ## Gotchas And Failure Modes
 
 - `trace()` returns a scalar `Series`, not a raw number.
 - Rectangular matrices are valid; the diagonal length is clipped naturally.
-- Rank-0, rank-1, and rank-3+ inputs fail because this method is 2D-only.
+- Rank-0 and rank-1 inputs fail because there is no pair of axes to take a
+  diagonal over.
+- With the default axes, rank-3+ input is a batched trace over axes `0` and
+  `1`; pass `dim1`/`dim2` (for example `-2, -1`) to trace the trailing matrices
+  instead.
 - Reverse-mode only touches the diagonal entries that actually contributed.
 
 ## Summary
 
-Use `trace()` when you want the sum of the main diagonal of a 2D `Series`.
-Expect a scalar `Series` result, expect rectangular matrices to work, and
-expect reverse-mode to mark only the contributing diagonal entries.
+Use `trace()` when you want the sum of a diagonal. A 2D `Series` gives a scalar
+`Series`; higher-rank input keeps its other axes; `offset`, `dim1` and `dim2`
+select which diagonal. Rectangular matrices work, and reverse-mode marks only
+the contributing diagonal entries.
 
 ## See Also
 

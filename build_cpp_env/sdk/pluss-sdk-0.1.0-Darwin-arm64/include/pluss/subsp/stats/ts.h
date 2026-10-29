@@ -48,15 +48,19 @@ CODEM_API pluss::codem::Series lead(const pluss::codem::Series& x, std::int64_t 
 CODEM_API pluss::codem::Series rolling_mean(const pluss::codem::Series& x,
                                             std::int64_t window,
                                             std::int64_t min_periods = 1);
+// Variances and standard deviations divide by (count - ddof): ddof = 1 (default) is the sample statistic, 0 the population one. A window
+// holding count <= ddof observations gives NaN.
 CODEM_API pluss::codem::Series rolling_std(const pluss::codem::Series& x,
                                            std::int64_t window,
-                                           std::int64_t min_periods = 1);
+                                           std::int64_t min_periods = 1,
+                                           std::int64_t ddof = 1);
 CODEM_API pluss::codem::Series rolling_sum(const pluss::codem::Series& x,
                                            std::int64_t window,
                                            std::int64_t min_periods = 1);
 CODEM_API pluss::codem::Series rolling_var(const pluss::codem::Series& x,
                                            std::int64_t window,
-                                           std::int64_t min_periods = 1);
+                                           std::int64_t min_periods = 1,
+                                           std::int64_t ddof = 1);
 CODEM_API pluss::codem::Series rolling_min(const pluss::codem::Series& x,
                                            std::int64_t window,
                                            std::int64_t min_periods = 1);
@@ -72,15 +76,17 @@ CODEM_API pluss::codem::Series expanding_mean(const pluss::codem::Series& x,
                                               std::int64_t min_periods = 1);
 CODEM_API pluss::codem::Series expanding_std(const pluss::codem::Series& x,
                                              std::int64_t min_periods = 1,
-                                             double epsilon = 1e-12);
+                                             double epsilon = 1e-12,
+                                             std::int64_t ddof = 1);
 CODEM_API pluss::codem::Series zscore_rolling(const pluss::codem::Series& x,
                                               std::int64_t window,
                                               std::int64_t min_periods = 1,
-                                              double epsilon = 1e-12);
+                                              double epsilon = 1e-12,
+                                              std::int64_t ddof = 1);
 CODEM_API pluss::codem::Series fill_gaps(const pluss::codem::Series& x,
                                          GapFillMode mode = GapFillMode::Forward,
                                          std::optional<double> constant = std::nullopt);
-CODEM_API ResampleResult resample(const pluss::TimeIndex& index,
+CODEM_API ResampleResult resample(const pluss::Timeline& timeline,
                                   const pluss::codem::Series& values,
                                   std::string_view freq,
                                   ResampleOp op = ResampleOp::Mean,
@@ -249,8 +255,14 @@ class CODEM_API DirectForecaster {
                                                          std::int64_t horizon_step,
                                                          pluss::codem::Config cfg = {}) const;
 
+  // Forecasts of Y at each fitted horizon, made from the last observation: a vector with one entry per horizon step. When leading predictors are used with
+  // lags that reach into the future, pass their future values in `x_future` (rows after the last row of `x`, at least as many as the largest horizon).
   [[nodiscard]] pluss::codem::Series forecast(const pluss::codem::Series& x,
                                               const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(const pluss::codem::Series& x,
+                                              const pluss::codem::Series& y,
+                                              const pluss::codem::Series& x_future,
                                               pluss::codem::Config cfg = {}) const;
 
   [[nodiscard]] pluss::codem::Series loss(const pluss::codem::Series& x,
@@ -800,6 +812,10 @@ struct ArimaOptions {
   std::int64_t max_iterations = 800;
   std::int64_t max_evaluations = 6000;
   double simplex_delta = 0.05;
+  // true: exact Gaussian likelihood by the Kalman filter with the stationary distribution as the starting state (what the standard
+  // statistical packages maximise). false: the conditional likelihood, which skips the first max(p, q) observations. Models with
+  // exogenous regressors always use the conditional likelihood.
+  bool exact_likelihood = true;
 };
 
 struct ArimaFit {
@@ -817,6 +833,7 @@ struct ArimaFit {
   double variance_floor = 1e-12;
   double stationarity_margin = 1e-6;
   double finite_diff_eps = 1e-5;
+  bool exact_likelihood = true;  // which likelihood loglik / loglik_per_obs / score / observed_inf evaluate (see ArimaOptions)
 
   [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
   [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y,
@@ -884,6 +901,7 @@ struct SarimaOptions {
   std::int64_t max_iterations = 800;
   std::int64_t max_evaluations = 6000;
   double simplex_delta = 0.05;
+  bool exact_likelihood = true;  // see ArimaOptions::exact_likelihood
 };
 
 struct SarimaFit {
@@ -1142,6 +1160,11 @@ struct JohansenOptions {
   double alpha = 0.05;
 };
 
+// Johansen's cointegration rank test. Row r of `stat`, `pvalue`, `critical` and `reject` tests "rank <= r" against a larger rank (trace statistic) or
+// against rank r + 1 (maximum eigenvalue); p-values and critical values are from the simulated non-standard limiting distributions for the chosen
+// deterministic terms (none; unrestricted constant; unrestricted constant and trend) and at most 12 series. `selected_rank` is the first r not rejected;
+// `beta` (k x selected_rank) and `alpha` (loadings) are the corresponding eigenvectors and adjustment coefficients. `lag_order` is the order of the VAR
+// in levels, so lag_order - 1 lagged differences are held fixed.
 struct JohansenResult {
   pluss::codem::Series eigenvalues = pluss::series::undefined();
   pluss::codem::Series stat = pluss::series::undefined();
@@ -1168,6 +1191,9 @@ struct VecmOptions {
   double pinv_rcond = 1e-12;
 };
 
+// Delta y_t = constant + trend t + y_{t-1} impact + sum_i Delta y_{t-i} gamma[i-1] + e_t (rows are time), with impact = beta alpha' of rank `rank`:
+// beta (k x r) holds the cointegrating vectors (normalised so the leading r x r block is the identity) and alpha (k x r) the adjustment loadings.
+// For 0 < rank < k the estimate is Johansen's maximum likelihood one; rank = k is unrestricted least squares (with optional `ridge`).
 struct VecmFit {
   std::int64_t lag_order = 1;
   std::int64_t rank = 0;

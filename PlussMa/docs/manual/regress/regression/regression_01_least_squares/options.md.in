@@ -1,0 +1,117 @@
+# Options
+
+[Back to Least Squares](../regression_01_least_squares.md)
+
+```cpp
+struct reg::OLSOptions {
+  double alpha = 0.05;
+  bool add_intercept = true;
+  bool drop_missing = true;
+  double rcond = 1e-12;
+  std::string response_name = "y";
+  std::vector<std::string> predictor_names{};
+  reg::OLSCovarianceType covariance = reg::OLSCovarianceType::Nonrobust;
+};
+```
+
+| Option | Effect | Default |
+|---|---|---|
+| `alpha` | the intervals have coverage `1 − alpha`; must lie strictly between 0 and 1 | 0.05 |
+| `add_intercept` | add a column of ones in front of the predictors | true |
+| `drop_missing` | drop rows with a non-finite value; `false` makes them an error ([Missing data](missing_data.md)) | true |
+| `weights` | precision weights for weighted least squares ([Case weights](case_weights.md)) | none |
+| `rcond` | relative cutoff below which a direction of the design counts as rank deficient; must be positive ([Collinear predictors](collinear_predictors.md)) | 1e-12 |
+| `response_name`, `predictor_names` | labels used by the summary and `coefficient_names` ([Shapes and inputs](shapes_and_inputs.md)) | `"y"`, none |
+| `covariance` | the covariance estimator; `Nonrobust` is the only one, `s² (X′X)⁻¹` | `Nonrobust` |
+
+This page shows `alpha`, `add_intercept` and `covariance`.
+
+## The confidence level
+
+`alpha` fixes the critical multiplier of the intervals and changes nothing else: the coefficients, standard errors, *t* values and p-values are the same at every level. A smaller `alpha` (a higher confidence level) gives wider intervals, and each interval contains the narrower ones.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 6.2, 7.8, 10.1, 12.2, 13.8, 16.1}, {8}, as_f64());
+  out.writeln(" alpha  confidence   slope interval            std error   p value of the slope");
+  for (double alpha : {0.50, 0.10, 0.05, 0.01, 0.001}) {
+    reg::OLSOptions options;
+    options.alpha = alpha;
+    const auto fit = reg::ols_fit(y, x, options);
+    const auto ci = fit.conf_int.host<double>().array().data;
+    out.writeln(alpha, " ", 1.0 - alpha, "   [", ci[2], ",", ci[3], "]", fit.std_errors.pull<double>()[1], fit.p_values.pull<double>()[1], " alpha stored:", fit.alpha);
+  }
+}
+```
+
+The standard error and the p-value are the same in every row: `alpha` enters only through the multiplier. The interval grows from [1.9777, 2.0176] at 50% to [1.8320, 2.1633] at 99.9%, each containing the one before it, and the result stores the `alpha` it used.
+
+## With and without an intercept
+
+`add_intercept = false` forces the line through the origin. The `const` coefficient disappears, `k_params` drops by one, `df_model` equals the rank, and the totals are taken about zero ([Every number in the result](every_number_in_the_result.md)). Fitting through the origin is right when the response is known to be zero at zero predictors; it is wrong, and visibly so in the residuals, when it is not. The program fits data with a real offset both ways.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto offset = pluss::make_series(std::vector<double>{5.1, 6.9, 9.2, 10.8, 13.1, 15.2, 16.8, 19.1}, {8}, as_f64());  // 3 + 2x
+  const auto proportional = pluss::make_series(std::vector<double>{2.1, 3.9, 6.2, 7.8, 10.1, 12.2, 13.8, 16.1}, {8}, as_f64());  // 2x
+
+  reg::OLSOptions origin;
+  origin.add_intercept = false;
+  for (int pass = 0; pass < 2; ++pass) {
+    const auto &y = pass == 0 ? offset : proportional;
+    const auto with = reg::ols_fit(y, x);
+    const auto without = reg::ols_fit(y, x, origin);
+    out.writeln(pass == 0 ? "response 3 + 2x:" : "response 2x    :", "with intercept", with.coefficients.pull<double>(), " rmse", with.rmse);
+    out.writeln("                through origin", without.coefficients.pull<double>(), " rmse", without.rmse, " names", without.coefficient_names);
+    out.writeln("                residual mean (zero when an intercept is fitted):", with.residuals.mean().item<double>(), "vs", without.residuals.mean().item<double>());
+  }
+}
+```
+
+For the response 3 + 2x, the free intercept recovers 3.0357 and 1.9976, while the line forced through the origin has slope 2.5333, a root mean square error of 1.48 against 0.18, and residuals that average 0.625 instead of zero: a visible bias. For the response 2x, the through-origin fit is sound (slope 2.0039, residual mean 0.0074) and its root mean square error, 0.1677, is slightly below 0.1802 because it estimates one parameter fewer. The residuals average exactly zero only when an intercept is fitted.
+
+## The covariance estimator
+
+`OLSCovarianceType` currently has one member, `Nonrobust`, the classical estimate `s² (X′X)⁻¹` that assumes errors with constant variance. The result records the choice in `covariance_type`, and the summary prints it. For errors whose variance changes with a predictor, see the quantile chapter, whose `Robust` covariance does not assume that.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 6.2, 7.8, 10.1, 12.2, 13.8, 16.1}, {8}, as_f64());
+  reg::OLSOptions options;
+  options.covariance = reg::OLSCovarianceType::Nonrobust;
+  const auto fit = reg::ols_fit(y, x, options);
+  out.writeln("covariance_type is Nonrobust:", fit.covariance_type == reg::OLSCovarianceType::Nonrobust ? "yes" : "no");
+  out.writeln("it is s2 (X'X)^-1, so the standard errors scale with sqrt(mse): mse", fit.mse, " rmse", fit.rmse);
+}
+```
+
+The result records the estimator; the standard errors are the square roots of the diagonal of s²(X′X)⁻¹, scaled by the residual standard deviation, 0.1802 here.

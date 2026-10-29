@@ -9,6 +9,18 @@ if(TARGET Catch2::Catch2WithMain)
         multivariable_execution_test.cpp
         simplification_domain_test.cpp
         integral_execution_test.cpp
+        system_integration_test.cpp
+        production_closure_test.cpp
+        tensor_primitives_test.cpp
+        geometry_operators_test.cpp
+        stochastic_operators_test.cpp
+        taylor_operators_test.cpp
+        fourier_series_operators_test.cpp
+        integral_transform_operators_test.cpp
+        measure_operators_test.cpp
+        malliavin_operators_test.cpp
+        extension_closure_test.cpp
+        complex_calculus_test.cpp
     )
     target_link_libraries(plussma_calculus_contract_test
         PRIVATE

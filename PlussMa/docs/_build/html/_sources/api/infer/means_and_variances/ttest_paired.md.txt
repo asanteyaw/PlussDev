@@ -85,6 +85,8 @@ mean difference -0.1875, t -5.3513 on 7.0000 df, p 0.0011
 95% interval [-0.2704, -0.1046]
 ```
 
+The paired test works on the eight differences: their mean is -0.1875, t -5.35 on 7 degrees of freedom, p 0.0011, and the interval [-0.27, -0.10] excludes zero, so one scale reads systematically lower than the other.
+
 ### Example 2
 
 Ignoring the pairing hides the effect.
@@ -115,6 +117,8 @@ Output
 paired   p 0.0011
 unpaired p 0.4650
 ```
+
+Treating the same data as two independent samples gives p 0.465: the cup-to-cup variation swamps the small systematic difference. The paired test removes that variation by comparing each cup with itself, which is why it finds an effect (p 0.0011) the unpaired test cannot.
 
 ## See Also
 

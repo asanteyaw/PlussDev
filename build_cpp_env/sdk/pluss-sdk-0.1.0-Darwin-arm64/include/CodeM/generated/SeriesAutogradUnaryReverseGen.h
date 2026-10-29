@@ -29,9 +29,16 @@ enum class Rule {
   Relu,
   Sigmoid,
   Square,
+  Log2,
+  Log10,
+  Exp2,
+  Cbrt,
 };
 
-inline Series apply(Rule rule, const Series& out_sens, const Series& input) {
+inline Series apply(Rule rule, const Series& out_sens, const Series& input,
+                    const Series& output) {
+  (void)input;
+  (void)output;
   switch (rule) {
     case Rule::Sqrt: return out_sens.mul(conjugate_if_complex_(rsqrt(input).mul(0.5)));
     case Rule::Exp: return out_sens.mul(conjugate_if_complex_(exp(input)));
@@ -57,6 +64,10 @@ inline Series apply(Rule rule, const Series& out_sens, const Series& input) {
     case Rule::Relu: return mul(out_sens, where(gt(input, scalar_like_(input, 0.0)), scalar_like_(input, 1.0), scalar_like_(input, 0.0)));
     case Rule::Sigmoid: return generated_sigmoid_sensitivity_(out_sens, input);
     case Rule::Square: return out_sens.mul(conjugate_if_complex_(input.mul(2.0)));
+    case Rule::Log2: return out_sens.div(conjugate_if_complex_(input.mul(0.69314718055994530942)));
+    case Rule::Log10: return out_sens.div(conjugate_if_complex_(input.mul(2.30258509299404568402)));
+    case Rule::Exp2: return out_sens.mul(conjugate_if_complex_(output.mul(0.69314718055994530942)));
+    case Rule::Cbrt: return out_sens.div(conjugate_if_complex_(output.square().mul(3.0)));
   }
   PLUSS_FAIL("generated::autograd_unary::apply: unsupported unary rule");
 }

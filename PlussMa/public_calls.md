@@ -1014,6 +1014,7 @@ Front doors (intended starting points):
 Front doors (intended starting points):
 
 - `pluss::subsp::natsci::physics::fluids::les`: `eddy_viscosity`, `sgs_dissipation`, `advance`
+- `pluss::subsp::natsci::physics::fluids::rans`: `solve_channel`
 
 | Public enum | Values |
 | --- | --- |
@@ -1030,6 +1031,7 @@ Front doors (intended starting points):
 | `pluss::subsp::natsci::physics::fluids::gas::Rule` | `Euler`, `Rk2`, `Rk3` |
 | `pluss::subsp::natsci::physics::fluids::gas::WallHeat` | `Adiabatic`, `Temperature`, `Flux` |
 | `pluss::subsp::natsci::physics::fluids::les::Model` | `Smagorinsky`, `Wale`, `DynamicSmagorinsky` |
+| `pluss::subsp::natsci::physics::fluids::rans::Model` | `SpalartAllmaras`, `KOmegaSST` |
 
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
@@ -1090,6 +1092,8 @@ Front doors (intended starting points):
 | `pluss::subsp::natsci::physics::fluids::gas::species::State` | - | `flow()`, `partial_density()` |
 | `pluss::subsp::natsci::physics::fluids::gas::species::StepResult` | `state`, `limit`, `flux_evaluations` | - |
 | `pluss::subsp::natsci::physics::fluids::les::Closure` | `model`, `constant`, `width`, `clip`, `local_average`, `test_ratio` | - |
+| `pluss::subsp::natsci::physics::fluids::rans::ChannelOptions` | `model`, `friction_reynolds`, `cells`, `stretching`, `max_iterations`, `tolerance`, `first_step`, `growth_limit`, `max_step` | - |
+| `pluss::subsp::natsci::physics::fluids::rans::ChannelResult` | `y`, `velocity`, `eddy_viscosity`, `total_stress`, `k`, `omega`, `nu_tilde`, `converged`, `iterations`, `residual` | - |
 | `pluss::subsp::natsci::physics::mechanics::Bodies` | - | `axes()`, `count()`, `mass()`, `position()`, `velocity()` |
 | `pluss::subsp::natsci::physics::mechanics::HamiltonianEvaluation` | `value`, `flow` | - |
 | `pluss::subsp::natsci::physics::mechanics::LagrangeEvaluation` | `value`, `momentum`, `mass`, `flow` | - |
@@ -1240,6 +1244,7 @@ Front doors (intended starting points):
 | `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
 | `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
 | `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `ChannelResult pluss::subsp::natsci::physics::fluids::rans::solve_channel(const ChannelOptions & o = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/rans.h` |
 | `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
 | `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
 | `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
@@ -1636,7 +1641,7 @@ Front doors (intended starting points):
 | --- | --- | --- |
 | `pluss::subsp::math::multigrid::Axis` | `cells`, `spacing`, `low`, `high` | - |
 | `pluss::subsp::math::multigrid::Hierarchy` | - | `Hierarchy()`, `apply()`, `coarsest_cells()`, `levels()`, `prolong_from_coarse()`, `restrict_to_coarse()`, `singular()`, `vcycle()` |
-| `pluss::subsp::math::multigrid::Options` | `smoothing_degree`, `coarsest_cells`, `smoothing_ratio`, `max_levels`, `dense_limit` | - |
+| `pluss::subsp::math::multigrid::Options` | `smoothing_degree`, `coarsest_cells`, `smoothing_ratio`, `max_levels`, `dense_limit`, `native_smoother`, `native_cycle` | - |
 | `pluss::subsp::math::multigrid::Problem` | `axes`, `face_low`, `face_high`, `mass` | - |
 
 | Public free-call overload | Header |

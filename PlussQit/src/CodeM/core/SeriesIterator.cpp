@@ -282,6 +282,105 @@ void SeriesIterator::for_each_index(const std::function<void(std::int64_t, std::
   }
 }
 
+namespace {
+
+struct Item16 { std::uint64_t lo, hi; };
+
+// Strided element copy over a (coalesced) shape, one fixed-width element type
+// at a time so the inner loop is a plain load/store the compiler can unroll.
+// Work is split over the outer index space; each worker walks its range with
+// an odometer instead of re-decoding a linear index per element. When the
+// source's unit-stride axis is not the destination's (a transpose-style
+// permute), the two axes are swapped into 32x32 tiles so both the reads and
+// the writes stay cache-resident.
+template <class T>
+void strided_copy_(const std::byte* src_bytes, std::byte* dst_bytes,
+                   const std::vector<std::int64_t>& shape,
+                   const std::vector<std::int64_t>& as,
+                   const std::vector<std::int64_t>& os) {
+  const T* src = reinterpret_cast<const T*>(src_bytes);
+  T* dst = reinterpret_cast<T*>(dst_bytes);
+  const std::size_t nd = shape.size();
+  if (nd == 0) { dst[0] = src[0]; return; }
+
+  // Inner loop = the destination's fastest axis (smallest non-zero stride).
+  std::size_t inner = nd - 1;
+  std::int64_t best = 0;
+  for (std::size_t i = 0; i < nd; ++i) {
+    if (shape[i] <= 1 || os[i] <= 0) continue;
+    if (best == 0 || os[i] < best) { best = os[i]; inner = i; }
+  }
+  // Transpose-style permute: the source's unit-stride axis differs from the
+  // destination's, so pair the two axes into square tiles.
+  std::size_t partner = inner;
+  for (std::size_t i = 0; i < nd; ++i)
+    if (i != inner && shape[i] > 1 && as[i] == 1) partner = i;
+  const bool tiled = partner != inner && as[inner] != 1 && os[partner] > 0 &&
+                     shape[inner] >= 8 && shape[partner] >= 8;
+
+  std::vector<std::size_t> outer_axes;
+  for (std::size_t i = 0; i < nd; ++i)
+    if (i != inner && !(tiled && i == partner)) outer_axes.push_back(i);
+  std::int64_t outer = 1;
+  for (auto ax : outer_axes) outer *= shape[ax];
+
+  const std::int64_t n_inner = shape[inner], si = as[inner], di = os[inner];
+  const std::int64_t n_part = tiled ? shape[partner] : 1;
+  const std::int64_t sp = tiled ? as[partner] : 0, dp = tiled ? os[partner] : 0;
+  constexpr std::int64_t kTile = 32;
+  const std::int64_t ptiles = tiled ? (n_part + kTile - 1) / kTile : 1;
+
+  // Offsets of outer index `o` (row-major over outer_axes).
+  auto decode = [&](std::int64_t o, std::int64_t& soff, std::int64_t& doff) {
+    soff = 0; doff = 0;
+    for (std::size_t k = outer_axes.size(); k-- > 0;) {
+      const auto ax = outer_axes[k];
+      const std::int64_t v = o % shape[ax];
+      o /= shape[ax];
+      soff += v * as[ax];
+      doff += v * os[ax];
+    }
+  };
+
+  // Work unit u = o * ptiles + tile; each unit copies one row (untiled) or one
+  // band of tiles (tiled).
+  auto run = [&](std::int64_t u0, std::int64_t u1) {
+    for (std::int64_t u = u0; u < u1; ++u) {
+      const std::int64_t o = u / ptiles, pt = u % ptiles;
+      std::int64_t soff, doff;
+      decode(o, soff, doff);
+      if (!tiled) {
+        const T* s = src + soff;
+        T* d = dst + doff;
+        if (si == 1 && di == 1) {
+          std::memcpy(d, s, static_cast<std::size_t>(n_inner) * sizeof(T));
+        } else {
+          for (std::int64_t j = 0; j < n_inner; ++j) d[j * di] = s[j * si];
+        }
+      } else {
+        const std::int64_t p0 = pt * kTile, p1 = std::min(p0 + kTile, n_part);
+        for (std::int64_t j0 = 0; j0 < n_inner; j0 += kTile) {
+          const std::int64_t j1 = std::min(j0 + kTile, n_inner);
+          for (std::int64_t p = p0; p < p1; ++p)
+            for (std::int64_t j = j0; j < j1; ++j)
+              dst[doff + p * dp + j * di] = src[soff + p * sp + j * si];
+        }
+      }
+    }
+  };
+
+  const std::int64_t units = outer * ptiles;
+  const std::int64_t per_unit = tiled ? kTile * n_inner : n_inner;
+  const std::int64_t grain = std::max<std::int64_t>(1, (1 << 15) / std::max<std::int64_t>(per_unit, 1));
+  if (units * per_unit >= (1 << 17) && units > 1) {
+    pluss::msharp::parallel_for(0, units, grain, run);
+  } else {
+    run(0, units);
+  }
+}
+
+} // namespace
+
 void SeriesIterator::copy_out_from_in(const Series& in, Series& out) const {
   const auto dt = in.dtype();
   if (in.scalar_type() != out.scalar_type()) throw_error("copy: dtype mismatch");
@@ -296,6 +395,15 @@ void SeriesIterator::copy_out_from_in(const Series& in, Series& out) const {
     return;
   }
 
+  if (numel() == 0) return;
+  switch (dt.itemsize) {
+    case 1: strided_copy_<std::uint8_t>(in.raw_data(), const_cast<std::byte*>(out.raw_data()), shape_, a_strides_, o_strides_); return;
+    case 2: strided_copy_<std::uint16_t>(in.raw_data(), const_cast<std::byte*>(out.raw_data()), shape_, a_strides_, o_strides_); return;
+    case 4: strided_copy_<std::uint32_t>(in.raw_data(), const_cast<std::byte*>(out.raw_data()), shape_, a_strides_, o_strides_); return;
+    case 8: strided_copy_<std::uint64_t>(in.raw_data(), const_cast<std::byte*>(out.raw_data()), shape_, a_strides_, o_strides_); return;
+    case 16: strided_copy_<Item16>(in.raw_data(), const_cast<std::byte*>(out.raw_data()), shape_, a_strides_, o_strides_); return;
+    default: break;
+  }
   for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto* src = in.raw_data() + (std::ptrdiff_t)ao * (std::ptrdiff_t)dt.itemsize;
     auto* dst = const_cast<std::byte*>(out.raw_data()) + (std::ptrdiff_t)oo * (std::ptrdiff_t)dt.itemsize;

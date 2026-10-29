@@ -1,0 +1,45 @@
+<!-- generated from finance_02_implied_volatility.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Finance 2: Implied Volatility
+
+The implied volatility of an option is the volatility that makes the Black-Scholes price equal the observed price. It is the common language in which option prices are quoted and compared, and the quantity that richer models are calibrated to reproduce. After this chapter you can invert prices singly and in batches, choose and control the solver, and know exactly when the answer is `NaN`.
+
+Every program is complete, and its output is the output of that program.
+
+## The calls
+
+```cpp
+double prc::implied_vol(prc::OptionType type, double option_price, double spot, double strike, double rate, double dividend_yield, double maturity, const prc::ImpliedVolOptions &options = {});
+Series prc::implied_vol(type, const Series &option_price, const Series &spot, double strike, double rate, double dividend_yield, double maturity, const prc::ImpliedVolOptions &options = {}, Config cfg = {});
+Series prc::implied_vol(type, const Series &option_price, const Series &spot, const Series &time_to_maturity, double strike, double rate, double dividend_yield, const prc::ImpliedVolOptions &options = {}, Config cfg = {});
+```
+
+| `ImpliedVolOptions` | Meaning | Default |
+|---|---|---|
+| `method` | `Auto` (= `Brent`), `Newton`, `Secant`, `Bisection`, `Brent` | `Auto` |
+| `lower_vol`, `upper_vol` | the search bracket | 1e-8, 10 |
+| `tolerance` | accepted price error, relative to the time value | 1e-8 |
+| `max_iterations` | iteration cap | 128 |
+| `vega_floor` | where the vega is below this, Newton takes a bisection step | 1e-12 |
+
+## Programs
+
+- [Recovering a volatility](finance_02_implied_volatility/recovering_a_volatility.md)
+- [Controls and the no-arbitrage bounds](finance_02_implied_volatility/controls_and_the_no_arbitrage_bounds.md)
+
+## Checklist
+
+1. The result is `NaN`, not an error, when no volatility in the bracket reproduces the price: filter with `isnan`, and look at the quote.
+2. Every price must lie strictly between the discounted intrinsic value and the discounted spot (for a call).
+3. A solver cut off at `max_iterations` gives `NaN`, never a half-converged number.
+4. The bracket is a plausibility filter as well as a search range.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_02_implied_volatility/recovering_a_volatility
+finance_02_implied_volatility/controls_and_the_no_arbitrage_bounds
+```
+<!-- apiref:toctree:end -->

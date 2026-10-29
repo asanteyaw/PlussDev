@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Finance 3: Heston and Bates &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Generic characteristic functions" href="finance_03_heston_and_bates/generic_characteristic_functions.html" />
+    <link rel="prev" title="Controls and the no-arbitrage bounds" href="finance_02_implied_volatility/controls_and_the_no_arbitrage_bounds.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from finance_03_heston_and_bates.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="finance-3-heston-and-bates">
+<h1>Finance 3: Heston and Bates<a class="headerlink" href="#finance-3-heston-and-bates" title="Link to this heading">¶</a></h1>
+<p>Stochastic-volatility models explain the smile that Black-Scholes cannot, and the Heston model does it with a one-dimensional integral. This chapter prices European options under Heston and its jump extension Bates by three semi-analytic methods, numerical integration, the Carr-Madan FFT and the COS series, and shows how to price under any model whose characteristic function is known. Monte Carlo pricing of the same models is the next chapter.</p>
+<p>Every program is complete, and its output is the output of that program.</p>
+<section id="the-calls">
+<h2>The calls<a class="headerlink" href="#the-calls" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Integration</p></th>
+<th class="head"><p>FFT</p></th>
+<th class="head"><p>COS</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Heston</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">heston_price</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">heston_price_fft</span></code>, <code class="docutils literal notranslate"><span class="pre">heston_price_fft_grid</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">heston_price_cos</span></code> (scalar and <code class="docutils literal notranslate"><span class="pre">Series</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bates</p></td>
+<td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bates_price_fft</span></code>, <code class="docutils literal notranslate"><span class="pre">bates_price_fft_grid</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bates_price_cos</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>any characteristic function</p></td>
+<td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">option_price_fft</span></code>, <code class="docutils literal notranslate"><span class="pre">option_price_fft_grid</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">option_price_cos</span></code> (scalar and <code class="docutils literal notranslate"><span class="pre">Series</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+<p>All are in <code class="docutils literal notranslate"><span class="pre">pluss::subsp::math::finance::pricing</span></code> (alias <code class="docutils literal notranslate"><span class="pre">prc</span></code>), with the parameter structs <code class="docutils literal notranslate"><span class="pre">HestonParams</span></code> and <code class="docutils literal notranslate"><span class="pre">BatesParams</span></code> in <code class="docutils literal notranslate"><span class="pre">...::volatility</span></code> (alias <code class="docutils literal notranslate"><span class="pre">vol</span></code>). The controls are <code class="docutils literal notranslate"><span class="pre">HestonIntegrationOptions</span></code>, <code class="docutils literal notranslate"><span class="pre">HestonFftOptions</span></code> and <code class="docutils literal notranslate"><span class="pre">CosOptions</span></code>.</p>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="finance_03_heston_and_bates/the_heston_model.html"><span class="std std-doc">The Heston model</span></a></p></li>
+<li><p><a class="reference internal" href="finance_03_heston_and_bates/the_fft_pricer.html"><span class="std std-doc">The FFT pricer</span></a></p></li>
+<li><p><a class="reference internal" href="finance_03_heston_and_bates/the_cos_pricer.html"><span class="std std-doc">The COS pricer</span></a></p></li>
+<li><p><a class="reference internal" href="finance_03_heston_and_bates/jumps_the_bates_model.html"><span class="std std-doc">Jumps: the Bates model</span></a></p></li>
+<li><p><a class="reference internal" href="finance_03_heston_and_bates/generic_characteristic_functions.html"><span class="std std-doc">Generic characteristic functions</span></a></p></li>
+<li><p><a class="reference internal" href="finance_03_heston_and_bates/smiles_from_heston.html"><span class="std std-doc">Smiles from Heston</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Check any pricer by put-call parity and by the Black-Scholes limit (a small volatility of variance).</p></li>
+<li><p>Prefer COS for accuracy and for batches; use the FFT when a whole strike grid is wanted; use integration as the independent reference.</p></li>
+<li><p>Leave <code class="docutils literal notranslate"><span class="pre">mode</span></code> at <code class="docutils literal notranslate"><span class="pre">LittleTrap</span></code>: the original form is wrong for long maturities.</p></li>
+<li><p>The FFT is accurate only if the frequency range <em>N</em> Δu covers the decay of the characteristic function; raise Δu (not just <em>N</em>) if the answer moves.</p></li>
+<li><p>A supplied characteristic function must be the plain one, of ln S_T, with a risk-neutral drift; both generic pricers apply the discounting.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/finance/pricing/finance_03_heston_and_bates.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -28,11 +28,11 @@ using FlashTableColumns = ::pluss::pl::flash::TableColumns;
 namespace detail {
 
 [[nodiscard]] inline bool series_mask_has_missing_(const pluss::Series& mask) {
-  const auto flags = mask.to(Platform::CPU).to_vec<bool>();
+  const auto flags = mask.to(Platform::CPU).host<bool>();
   return std::any_of(flags.begin(), flags.end(), [](bool v) { return !v; });
 }
 
-[[nodiscard]] inline std::optional<pluss::Series> compact_validity_mask_(const Thread& values) {
+[[nodiscard]] inline std::optional<pluss::Series> compact_validity_mask_(const Slate& values) {
   const auto valid = values.notnull().as_series();
   return series_mask_has_missing_(valid) ? std::optional<pluss::Series>(valid) : std::nullopt;
 }
@@ -68,7 +68,7 @@ namespace detail {
 
   std::vector<bool> flags(static_cast<std::size_t>(target_size), false);
   if (mask.has_value()) {
-    const auto host = mask->to(Platform::CPU).to_vec<bool>();
+    const auto host = mask->to(Platform::CPU).host<bool>();
     PLUSS_CHECK(static_cast<std::int64_t>(host.size()) == current_size,
                 "flash::Dataset::frame: validity mask length mismatch");
     std::copy(host.begin(), host.end(), flags.begin());
@@ -78,14 +78,14 @@ namespace detail {
   return bool_series_from_flags_(flags, platform);
 }
 
-[[nodiscard]] inline Thread rectangularize_series_(
+[[nodiscard]] inline Slate rectangularize_series_(
     const pluss::Series& values,
     const std::optional<pluss::Series>& mask,
     std::int64_t target_size,
     FlashRectifyPolicy policy) {
   const auto current_size = values.numel();
   if (current_size == target_size) {
-    return mask.has_value() ? Thread(values, *mask) : Thread(values);
+    return mask.has_value() ? Slate(values, *mask) : Slate(values);
   }
   PLUSS_CHECK(policy == FlashRectifyPolicy::PadNull,
               "flash::Dataset::frame: numeric feature is ragged; use FramePolicy::PadNull to rectangularize");
@@ -95,17 +95,17 @@ namespace detail {
   const auto tail = pluss::Series::full({pad}, 0.0, values.scalar_type(), values.platform());
   const auto padded = values.unite({tail}, 0, true);
   auto padded_mask = maybe_padded_validity_(mask, current_size, target_size, values.platform());
-  return padded_mask.has_value() ? Thread(padded, *padded_mask) : Thread(padded);
+  return padded_mask.has_value() ? Slate(padded, *padded_mask) : Slate(padded);
 }
 
-[[nodiscard]] inline Thread rectangularize_note_(
+[[nodiscard]] inline Slate rectangularize_note_(
     const pluss::Note& values,
     const std::optional<pluss::Series>& mask,
     std::int64_t target_size,
     FlashRectifyPolicy policy) {
   const auto current_size = values.numel();
   if (current_size == target_size) {
-    return mask.has_value() ? Thread(values, *mask) : Thread(values);
+    return mask.has_value() ? Slate(values, *mask) : Slate(values);
   }
   PLUSS_CHECK(policy == FlashRectifyPolicy::PadNull,
               "flash::Dataset::frame: text feature is ragged; use FramePolicy::PadNull to rectangularize");
@@ -117,34 +117,34 @@ namespace detail {
   }
   auto padded_mask = maybe_padded_validity_(mask, current_size, target_size, Platform::CPU);
   auto out = pluss::make_note(std::move(padded));
-  return padded_mask.has_value() ? Thread(out, *padded_mask) : Thread(out);
+  return padded_mask.has_value() ? Slate(out, *padded_mask) : Slate(out);
 }
 
-[[nodiscard]] inline Thread rectangularize_timeline_(
+[[nodiscard]] inline Slate rectangularize_timeline_(
     const pluss::Timeline& values,
     const std::optional<pluss::Series>& mask,
     std::int64_t target_size,
     FlashRectifyPolicy policy) {
   const auto current_size = values.numel();
   if (current_size == target_size) {
-    return mask.has_value() ? Thread(values, *mask) : Thread(values);
+    return mask.has_value() ? Slate(values, *mask) : Slate(values);
   }
   PLUSS_CHECK(policy == FlashRectifyPolicy::PadNull,
               "flash::Dataset::frame: temporal feature is ragged; use FramePolicy::PadNull to rectangularize");
   PLUSS_CHECK(current_size < target_size,
               "flash::Dataset::frame: temporal feature is longer than the selected rectangular size");
-  auto ticks = values.epoch_nanos().to(Platform::CPU).to_vec<std::int64_t>();
+  auto ticks = values.epoch_nanos().to(Platform::CPU).pull<std::int64_t>();
   ticks.resize(static_cast<std::size_t>(target_size), pluss::Timeline::kNaT);
   const std::array<std::int64_t, 1> shape{target_size};
   auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(ticks, shape);
   auto padded_mask = maybe_padded_validity_(mask, current_size, target_size, out.epoch_nanos().platform());
-  return padded_mask.has_value() ? Thread(out, *padded_mask) : Thread(out);
+  return padded_mask.has_value() ? Slate(out, *padded_mask) : Slate(out);
 }
 
-[[nodiscard]] inline std::vector<std::pair<std::string, Thread>> ordered_flash_columns_(
+[[nodiscard]] inline std::vector<std::pair<std::string, Slate>> ordered_flash_columns_(
     const pluss::pl::flash::Dataset& data,
     const FlashToFrameOptions& options) {
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   std::vector<std::pair<std::string, std::string>> ordered;
 
   if (data.feature_order.has_value() && data.feature_kinds.has_value() &&
@@ -257,7 +257,7 @@ namespace detail {
   return atlas.squeeze();
 }
 
-[[nodiscard]] inline Thread require_named_feature_(
+[[nodiscard]] inline Slate require_named_feature_(
     const DataFrame& frame,
     std::string_view feature_name,
     std::string_view where) {
@@ -266,40 +266,37 @@ namespace detail {
   return frame.features(feature_name);
 }
 
-[[nodiscard]] inline bool is_continuous_thread_(const Thread& values) {
-  return values.kind() == ThreadKind::Series ||
-         values.kind() == ThreadKind::Timeline ||
-         values.kind() == ThreadKind::TimeIndex;
+[[nodiscard]] inline bool is_continuous_slate_(const Slate& values) {
+  return values.kind() == SlateKind::Series ||
+         values.kind() == SlateKind::Timeline;
 }
 
-[[nodiscard]] inline Thread observed_thread_(const Thread& values) {
+[[nodiscard]] inline Slate observed_slate_(const Slate& values) {
   return ::pluss::table::detail::has_validity_mask(values) ? values.dropnull() : values;
 }
 
-[[nodiscard]] inline Series continuous_series_from_thread_(
-    const Thread& values,
+[[nodiscard]] inline Series continuous_series_from_slate_(
+    const Slate& values,
     std::string_view where) {
-  PLUSS_CHECK(is_continuous_thread_(values),
-              std::string(where) + ": expected a numeric or temporal Thread");
-  const auto observed = observed_thread_(values);
+  PLUSS_CHECK(is_continuous_slate_(values),
+              std::string(where) + ": expected a numeric or temporal Slate");
+  const auto observed = observed_slate_(values);
   switch (observed.kind()) {
-    case ThreadKind::Series:
+    case SlateKind::Series:
       return observed.as_series();
-    case ThreadKind::Timeline:
+    case SlateKind::Timeline:
       return ::pluss::pl::flash::detail::to_series(observed.as_timeline());
-    case ThreadKind::TimeIndex:
-      return ::pluss::pl::flash::detail::to_series(observed.as_timeindex());
     default:
-      PLUSS_FAIL(std::string(where) + ": expected a numeric or temporal Thread");
+      PLUSS_FAIL(std::string(where) + ": expected a numeric or temporal Slate");
   }
 }
 
-[[nodiscard]] inline Note observed_note_from_thread_(
-    const Thread& values,
+[[nodiscard]] inline Note observed_note_from_slate_(
+    const Slate& values,
     std::string_view where) {
-  PLUSS_CHECK(values.kind() == ThreadKind::Note,
-              std::string(where) + ": expected a text Thread");
-  return observed_thread_(values).as_note();
+  PLUSS_CHECK(values.kind() == SlateKind::Note,
+              std::string(where) + ": expected a text Slate");
+  return observed_slate_(values).as_note();
 }
 
 [[nodiscard]] inline Series implicit_positions_(std::int64_t n) {
@@ -368,7 +365,7 @@ namespace detail {
   return available.front();
 }
 
-[[nodiscard]] inline std::pair<std::string, Thread> resolve_univariate_feature_(
+[[nodiscard]] inline std::pair<std::string, Slate> resolve_univariate_feature_(
     const DataFrame& frame,
     const FlashTableColumns& columns,
     std::string_view where) {
@@ -377,7 +374,7 @@ namespace detail {
   return {name, require_named_feature_(frame, name, where)};
 }
 
-[[nodiscard]] inline std::array<std::pair<std::string, Thread>, 2> resolve_bivariate_features_(
+[[nodiscard]] inline std::array<std::pair<std::string, Slate>, 2> resolve_bivariate_features_(
     const DataFrame& frame,
     const FlashTableColumns& columns,
     std::string_view where) {
@@ -407,7 +404,7 @@ namespace detail {
   }};
 }
 
-[[nodiscard]] inline std::array<std::pair<std::string, Thread>, 3> resolve_trivariate_features_(
+[[nodiscard]] inline std::array<std::pair<std::string, Slate>, 3> resolve_trivariate_features_(
     const DataFrame& frame,
     const FlashTableColumns& columns,
     std::string_view where) {
@@ -441,83 +438,83 @@ namespace detail {
 }
 
 [[nodiscard]] inline std::pair<Series, Series> paired_continuous_series_(
-    const Thread& x,
-    const Thread& y,
+    const Slate& x,
+    const Slate& y,
     std::string_view where) {
-  PLUSS_CHECK(is_continuous_thread_(x) && is_continuous_thread_(y),
+  PLUSS_CHECK(is_continuous_slate_(x) && is_continuous_slate_(y),
               std::string(where) + ": x and y features must both be numeric or temporal");
   const auto keep = (x.notnull() & y.notnull()).as_series();
   return {
-      continuous_series_from_thread_(x.filter(keep), where),
-      continuous_series_from_thread_(y.filter(keep), where),
+      continuous_series_from_slate_(x.filter(keep), where),
+      continuous_series_from_slate_(y.filter(keep), where),
   };
 }
 
 [[nodiscard]] inline std::tuple<Series, Series, Series> triplet_continuous_series_(
-    const Thread& x,
-    const Thread& y,
-    const Thread& z,
+    const Slate& x,
+    const Slate& y,
+    const Slate& z,
     std::string_view where) {
-  PLUSS_CHECK(is_continuous_thread_(x) && is_continuous_thread_(y) && is_continuous_thread_(z),
+  PLUSS_CHECK(is_continuous_slate_(x) && is_continuous_slate_(y) && is_continuous_slate_(z),
               std::string(where) + ": x, y, and z features must all be numeric or temporal");
   const auto keep = (x.notnull() & y.notnull() & z.notnull()).as_series();
   return {
-      continuous_series_from_thread_(x.filter(keep), where),
-      continuous_series_from_thread_(y.filter(keep), where),
-      continuous_series_from_thread_(z.filter(keep), where),
+      continuous_series_from_slate_(x.filter(keep), where),
+      continuous_series_from_slate_(y.filter(keep), where),
+      continuous_series_from_slate_(z.filter(keep), where),
   };
 }
 
 [[nodiscard]] inline std::tuple<Series, Series, Series, Series> quadruplet_continuous_series_(
-    const Thread& x,
-    const Thread& y,
-    const Thread& z,
-    const Thread& value,
+    const Slate& x,
+    const Slate& y,
+    const Slate& z,
+    const Slate& value,
     std::string_view where) {
   PLUSS_CHECK(
-      is_continuous_thread_(x) && is_continuous_thread_(y) &&
-          is_continuous_thread_(z) && is_continuous_thread_(value),
+      is_continuous_slate_(x) && is_continuous_slate_(y) &&
+          is_continuous_slate_(z) && is_continuous_slate_(value),
       std::string(where) + ": x, y, z, and value features must all be numeric or temporal");
   const auto keep = (x.notnull() & y.notnull() & z.notnull() & value.notnull()).as_series();
   return {
-      continuous_series_from_thread_(x.filter(keep), where),
-      continuous_series_from_thread_(y.filter(keep), where),
-      continuous_series_from_thread_(z.filter(keep), where),
-      continuous_series_from_thread_(value.filter(keep), where),
+      continuous_series_from_slate_(x.filter(keep), where),
+      continuous_series_from_slate_(y.filter(keep), where),
+      continuous_series_from_slate_(z.filter(keep), where),
+      continuous_series_from_slate_(value.filter(keep), where),
   };
 }
 
 [[nodiscard]] inline std::pair<Note, Series> grouped_note_series_(
-    const Thread& group,
-    const Thread& value,
+    const Slate& group,
+    const Slate& value,
     std::string_view where) {
-  PLUSS_CHECK(group.kind() == ThreadKind::Note,
+  PLUSS_CHECK(group.kind() == SlateKind::Note,
               std::string(where) + ": grouping feature must be text");
-  PLUSS_CHECK(is_continuous_thread_(value),
+  PLUSS_CHECK(is_continuous_slate_(value),
               std::string(where) + ": value feature must be numeric or temporal");
   const auto keep = (group.notnull() & value.notnull()).as_series();
   return {
-      observed_note_from_thread_(group.filter(keep), where),
-      continuous_series_from_thread_(value.filter(keep), where),
+      observed_note_from_slate_(group.filter(keep), where),
+      continuous_series_from_slate_(value.filter(keep), where),
   };
 }
 
 [[nodiscard]] inline std::tuple<Note, Series, Note> grouped_note_series_hue_(
-    const Thread& group,
-    const Thread& value,
-    const Thread& hue,
+    const Slate& group,
+    const Slate& value,
+    const Slate& hue,
     std::string_view where) {
-  PLUSS_CHECK(group.kind() == ThreadKind::Note,
+  PLUSS_CHECK(group.kind() == SlateKind::Note,
               std::string(where) + ": grouping feature must be text");
-  PLUSS_CHECK(is_continuous_thread_(value),
+  PLUSS_CHECK(is_continuous_slate_(value),
               std::string(where) + ": value feature must be numeric or temporal");
-  PLUSS_CHECK(hue.kind() == ThreadKind::Note,
+  PLUSS_CHECK(hue.kind() == SlateKind::Note,
               std::string(where) + ": hue feature must be text");
   const auto keep = (group.notnull() & value.notnull() & hue.notnull()).as_series();
   return {
-      observed_note_from_thread_(group.filter(keep), where),
-      continuous_series_from_thread_(value.filter(keep), where),
-      observed_note_from_thread_(hue.filter(keep), where),
+      observed_note_from_slate_(group.filter(keep), where),
+      continuous_series_from_slate_(value.filter(keep), where),
+      observed_note_from_slate_(hue.filter(keep), where),
   };
 }
 
@@ -540,9 +537,9 @@ inline void set_trivariate_labels_(
 }
 
 struct CatFeatureBinding_ {
-  std::pair<std::string, Thread> group{};
-  std::pair<std::string, Thread> value{};
-  std::optional<std::pair<std::string, Thread>> hue{};
+  std::pair<std::string, Slate> group{};
+  std::pair<std::string, Slate> value{};
+  std::optional<std::pair<std::string, Slate>> hue{};
 };
 
 [[nodiscard]] inline CatFeatureBinding_ resolve_catplot_features_(
@@ -566,7 +563,7 @@ struct CatFeatureBinding_ {
     out.group = {group_name, require_named_feature_(frame, group_name, where)};
     out.value = {*columns.y_feature, require_named_feature_(frame, *columns.y_feature, where)};
     if (explicit_hue) {
-      out.hue = std::pair<std::string, Thread>{
+      out.hue = std::pair<std::string, Slate>{
           *columns.hue_feature,
           require_named_feature_(frame, *columns.hue_feature, where),
       };
@@ -582,14 +579,14 @@ struct CatFeatureBinding_ {
   out.group = {available[0], frame.features(available[0])};
   out.value = {available[1], frame.features(available[1])};
   if (available.size() == 3) {
-    out.hue = std::pair<std::string, Thread>{available[2], frame.features(available[2])};
+    out.hue = std::pair<std::string, Slate>{available[2], frame.features(available[2])};
   }
   return out;
 }
 
 struct PieBinding_ {
   std::optional<Note> labels{};
-  Series values{};
+  Series values = pluss::series::undefined();
 };
 
 [[nodiscard]] inline PieBinding_ resolve_pie_binding_(
@@ -620,22 +617,22 @@ struct PieBinding_ {
 
   if (const auto value_name = explicit_single_value(); value_name.has_value()) {
     const auto value_col = require_named_feature_(frame, *value_name, where);
-    if (value_col.kind() == ThreadKind::Note) {
-      const auto categories = observed_note_from_thread_(value_col, where);
+    if (value_col.kind() == SlateKind::Note) {
+      const auto categories = observed_note_from_slate_(value_col, where);
       const auto [labels, values] = categorical_counts_(categories);
       return {labels, values};
     }
-    return {std::nullopt, continuous_series_from_thread_(value_col, where)};
+    return {std::nullopt, continuous_series_from_slate_(value_col, where)};
   }
 
   if (available.size() == 1) {
     const auto value_col = frame.features(available.front());
-    if (value_col.kind() == ThreadKind::Note) {
-      const auto categories = observed_note_from_thread_(value_col, where);
+    if (value_col.kind() == SlateKind::Note) {
+      const auto categories = observed_note_from_slate_(value_col, where);
       const auto [labels, values] = categorical_counts_(categories);
       return {labels, values};
     }
-    return {std::nullopt, continuous_series_from_thread_(value_col, where)};
+    return {std::nullopt, continuous_series_from_slate_(value_col, where)};
   }
 
   PLUSS_CHECK(
@@ -646,11 +643,11 @@ struct PieBinding_ {
 
   const auto left = frame.features(available[0]);
   const auto right = frame.features(available[1]);
-  if (left.kind() == ThreadKind::Note && is_continuous_thread_(right)) {
+  if (left.kind() == SlateKind::Note && is_continuous_slate_(right)) {
     const auto [labels, values] = grouped_note_series_(left, right, where);
     return {labels, values};
   }
-  if (right.kind() == ThreadKind::Note && is_continuous_thread_(left)) {
+  if (right.kind() == SlateKind::Note && is_continuous_slate_(left)) {
     const auto [labels, values] = grouped_note_series_(right, left, where);
     return {labels, values};
   }
@@ -662,18 +659,18 @@ struct PieBinding_ {
 struct NumericFrameColumns_ {
   std::vector<Series> columns{};
   std::vector<std::string> labels{};
-  Series mask{};
+  Series mask = pluss::series::undefined();
 };
 
 [[nodiscard]] inline NumericFrameColumns_ numeric_series_columns_(
     const DataFrame& frame,
     std::string_view where,
     const std::vector<std::string>& excluded_names = {},
-    const Thread* extra_required = nullptr) {
+    const Slate* extra_required = nullptr) {
   const auto names = frame.features();
   PLUSS_CHECK(!names.empty(), std::string(where) + ": frame has no features");
 
-  std::vector<std::pair<std::string, Thread>> selected;
+  std::vector<std::pair<std::string, Slate>> selected;
   selected.reserve(names.size());
   for (const auto& name : names) {
     if (std::find(excluded_names.begin(), excluded_names.end(), name) !=
@@ -682,7 +679,7 @@ struct NumericFrameColumns_ {
     }
     const auto column = frame.features(name);
     PLUSS_CHECK(
-        column.kind() == ThreadKind::Series,
+        column.kind() == SlateKind::Series,
         std::string(where) + ": feature '" + name + "' is not a numeric Series");
     selected.emplace_back(name, column);
   }
@@ -730,9 +727,9 @@ struct NumericFrameColumns_ {
 }
 
 struct MatrixHeatmapPayload_ {
-  Series x{};
-  Series y{};
-  Series z{};
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
   std::vector<std::string> x_labels{};
 };
 
@@ -753,9 +750,9 @@ struct MatrixHeatmapPayload_ {
 }
 
 struct HeatmapFeatureBinding_ {
-  std::pair<std::string, Thread> x{};
-  std::pair<std::string, Thread> y{};
-  std::pair<std::string, Thread> z{};
+  std::pair<std::string, Slate> x{};
+  std::pair<std::string, Slate> y{};
+  std::pair<std::string, Slate> z{};
 };
 
 [[nodiscard]] inline std::optional<HeatmapFeatureBinding_> resolve_heatmap_features_(
@@ -813,7 +810,7 @@ struct HeatmapFeatureBinding_ {
     const auto mask = detail::compact_validity_mask_(column);
 
     switch (column.kind()) {
-      case ThreadKind::Series:
+      case SlateKind::Series:
         PLUSS_CHECK(options.include_series,
                     "flash::Dataset::from_table: series feature '" + name + "' was selected but series export is disabled");
         numeric_names.push_back(name);
@@ -822,7 +819,7 @@ struct HeatmapFeatureBinding_ {
         feature_order.push_back(name);
         feature_kinds.emplace_back("numeric");
         break;
-      case ThreadKind::Note:
+      case SlateKind::Note:
         PLUSS_CHECK(options.include_text,
                     "flash::Dataset::from_table: text feature '" + name + "' was selected but text export is disabled");
         text_names.push_back(name);
@@ -831,7 +828,7 @@ struct HeatmapFeatureBinding_ {
         feature_order.push_back(name);
         feature_kinds.emplace_back("text");
         break;
-      case ThreadKind::Timeline:
+      case SlateKind::Timeline:
         PLUSS_CHECK(options.include_timeline,
                     "flash::Dataset::from_table: timeline feature '" + name + "' was selected but temporal export is disabled");
         temporal_names.push_back(name);
@@ -840,17 +837,8 @@ struct HeatmapFeatureBinding_ {
         feature_order.push_back(name);
         feature_kinds.emplace_back("temporal");
         break;
-      case ThreadKind::TimeIndex:
-        PLUSS_CHECK(options.include_timeindex_as_timeline,
-                    "flash::Dataset::from_table: timeindex feature '" + name + "' requires include_timeindex_as_timeline=true");
-        temporal_names.push_back(name);
-        out.temporal_values.push_back(column.as_timeindex().timeline());
-        out.temporal_validity.push_back(mask);
-        feature_order.push_back(name);
-        feature_kinds.emplace_back("temporal");
-        break;
       default:
-        PLUSS_FAIL("flash::Dataset::from_table: unsupported thread kind for feature '" + name + "'");
+        PLUSS_FAIL("flash::Dataset::from_table: unsupported slate kind for feature '" + name + "'");
     }
   }
 
@@ -894,9 +882,9 @@ namespace pluss::pl::flash {
   return ::pluss::table::frame_from_flash_dataset(*this, options);
 }
 
-inline Trace& lineplot(Pane& pane, const ::pluss::table::Thread& values) {
-  const auto y = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::lineplot(Thread)");
+inline Trace& lineplot(Pane& pane, const ::pluss::table::Slate& values) {
+  const auto y = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::lineplot(Slate)");
   const auto x = ::pluss::table::detail::implicit_positions_(y.numel());
   ::pluss::table::detail::set_bivariate_labels_(pane, "x", "value");
   return lineplot(pane, x, y);
@@ -923,9 +911,9 @@ inline Trace& lineplot(
   return lineplot(pane, frame, columns);
 }
 
-inline Trace& scatterplot(Pane& pane, const ::pluss::table::Thread& values) {
-  const auto y = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::scatterplot(Thread)");
+inline Trace& scatterplot(Pane& pane, const ::pluss::table::Slate& values) {
+  const auto y = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::scatterplot(Slate)");
   const auto x = ::pluss::table::detail::implicit_positions_(y.numel());
   ::pluss::table::detail::set_bivariate_labels_(pane, "x", "value");
   return scatterplot(pane, x, y);
@@ -952,9 +940,9 @@ inline Trace& scatterplot(
   return scatterplot(pane, frame, columns);
 }
 
-inline Trace& stepplot(Pane& pane, const ::pluss::table::Thread& values) {
-  const auto y = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::stepplot(Thread)");
+inline Trace& stepplot(Pane& pane, const ::pluss::table::Slate& values) {
+  const auto y = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::stepplot(Slate)");
   const auto x = ::pluss::table::detail::implicit_positions_(y.numel());
   ::pluss::table::detail::set_bivariate_labels_(pane, "x", "value");
   return stepplot(pane, x, y);
@@ -983,10 +971,10 @@ inline Trace& stepplot(
 
 inline Trace& areaplot(
     Pane& pane,
-    const ::pluss::table::Thread& values,
+    const ::pluss::table::Slate& values,
     double base) {
-  const auto y = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::areaplot(Thread)");
+  const auto y = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::areaplot(Slate)");
   const auto x = ::pluss::table::detail::implicit_positions_(y.numel());
   ::pluss::table::detail::set_bivariate_labels_(pane, "x", "value");
   return areaplot(pane, x, y, base);
@@ -1015,9 +1003,9 @@ inline Trace& areaplot(
   return areaplot(pane, frame, columns, base);
 }
 
-inline Trace& histplot(Pane& pane, const ::pluss::table::Thread& values, int bins) {
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::histplot(Thread)");
+inline Trace& histplot(Pane& pane, const ::pluss::table::Slate& values, int bins) {
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::histplot(Slate)");
   pane.x_label("x").y_label("count");
   return histplot(pane, x, bins);
 }
@@ -1029,7 +1017,7 @@ inline Trace& histplot(
     int bins) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::histplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::histplot(DataFrame)");
   pane.x_label(name).y_label("count");
   return histplot(pane, x, bins);
@@ -1045,7 +1033,7 @@ inline Trace& histplot(
   return histplot(pane, frame, columns, bins);
 }
 
-inline Trace& displot(Pane& pane, const ::pluss::table::Thread& values, int bins) {
+inline Trace& displot(Pane& pane, const ::pluss::table::Slate& values, int bins) {
   return histplot(pane, values, bins);
 }
 
@@ -1067,10 +1055,10 @@ inline Trace& displot(
 
 inline Trace& kdeplot(
     Pane& pane,
-    const ::pluss::table::Thread& values,
+    const ::pluss::table::Slate& values,
     std::int64_t points) {
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::kdeplot(Thread)");
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::kdeplot(Slate)");
   pane.x_label("x").y_label("density");
   return kdeplot(pane, x, points);
 }
@@ -1082,7 +1070,7 @@ inline Trace& kdeplot(
     std::int64_t points) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::kdeplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::kdeplot(DataFrame)");
   pane.x_label(name).y_label("density");
   return kdeplot(pane, x, points);
@@ -1098,9 +1086,9 @@ inline Trace& kdeplot(
   return kdeplot(pane, frame, columns, points);
 }
 
-inline Trace& ecdfplot(Pane& pane, const ::pluss::table::Thread& values) {
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::ecdfplot(Thread)");
+inline Trace& ecdfplot(Pane& pane, const ::pluss::table::Slate& values) {
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::ecdfplot(Slate)");
   pane.x_label("x").y_label("cdf");
   return ecdfplot(pane, x);
 }
@@ -1111,7 +1099,7 @@ inline Trace& ecdfplot(
     const TableColumns& columns) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::ecdfplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::ecdfplot(DataFrame)");
   pane.x_label(name).y_label("cdf");
   return ecdfplot(pane, x);
@@ -1128,10 +1116,10 @@ inline Trace& ecdfplot(
 
 inline Trace& rugplot(
     Pane& pane,
-    const ::pluss::table::Thread& values,
+    const ::pluss::table::Slate& values,
     double height) {
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::rugplot(Thread)");
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::rugplot(Slate)");
   pane.x_label("x");
   return rugplot(pane, x, height);
 }
@@ -1143,7 +1131,7 @@ inline Trace& rugplot(
     double height) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::rugplot(DataFrame)");
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::rugplot(DataFrame)");
   pane.x_label(name);
   return rugplot(pane, x, height);
@@ -1159,15 +1147,15 @@ inline Trace& rugplot(
   return rugplot(pane, frame, columns, height);
 }
 
-inline Trace& countplot(Pane& pane, const ::pluss::table::Thread& values, int bins) {
-  if (values.kind() == ::pluss::table::ThreadKind::Note) {
-    const auto categories = ::pluss::table::detail::observed_note_from_thread_(
-        values, "flash::countplot(Thread)");
+inline Trace& countplot(Pane& pane, const ::pluss::table::Slate& values, int bins) {
+  if (values.kind() == ::pluss::table::SlateKind::Note) {
+    const auto categories = ::pluss::table::detail::observed_note_from_slate_(
+        values, "flash::countplot(Slate)");
     pane.x_label("x").y_label("count");
     return countplot(pane, categories);
   }
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::countplot(Thread)");
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::countplot(Slate)");
   pane.x_label("x").y_label("count");
   return countplot(pane, x, bins);
 }
@@ -1179,13 +1167,13 @@ inline Trace& countplot(
     int bins) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::countplot(DataFrame)");
-  if (column.kind() == ::pluss::table::ThreadKind::Note) {
-    const auto categories = ::pluss::table::detail::observed_note_from_thread_(
+  if (column.kind() == ::pluss::table::SlateKind::Note) {
+    const auto categories = ::pluss::table::detail::observed_note_from_slate_(
         column, "flash::countplot(DataFrame)");
     pane.x_label(name).y_label("count");
     return countplot(pane, categories);
   }
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::countplot(DataFrame)");
   pane.x_label(name).y_label("count");
   return countplot(pane, x, bins);
@@ -1203,11 +1191,11 @@ inline Trace& countplot(
 
 inline Trace& barplot(
     Pane& pane,
-    const ::pluss::table::Thread& values,
+    const ::pluss::table::Slate& values,
     const BarPlotOptions& options) {
-  if (values.kind() == ::pluss::table::ThreadKind::Note) {
-    const auto categories = ::pluss::table::detail::observed_note_from_thread_(
-        values, "flash::barplot(Thread)");
+  if (values.kind() == ::pluss::table::SlateKind::Note) {
+    const auto categories = ::pluss::table::detail::observed_note_from_slate_(
+        values, "flash::barplot(Slate)");
     const auto [labels, counts] = ::pluss::table::detail::categorical_counts_(categories);
     if (options.horizontal) {
       pane.x_label("count").y_label("y");
@@ -1216,8 +1204,8 @@ inline Trace& barplot(
     }
     return barplot(pane, labels, counts, options);
   }
-  const auto y = ::pluss::table::detail::continuous_series_from_thread_(
-      values, "flash::barplot(Thread)");
+  const auto y = ::pluss::table::detail::continuous_series_from_slate_(
+      values, "flash::barplot(Slate)");
   const auto x = ::pluss::table::detail::implicit_positions_(y.numel());
   if (options.horizontal) {
     pane.x_label("value").y_label("y");
@@ -1239,8 +1227,8 @@ inline Trace& barplot(
   if (use_bivariate) {
     const auto [x_col, y_col] = ::pluss::table::detail::resolve_bivariate_features_(
         frame, columns, "flash::barplot(DataFrame)");
-    if (::pluss::table::detail::is_continuous_thread_(x_col.second) &&
-        ::pluss::table::detail::is_continuous_thread_(y_col.second)) {
+    if (::pluss::table::detail::is_continuous_slate_(x_col.second) &&
+        ::pluss::table::detail::is_continuous_slate_(y_col.second)) {
       const auto [x, y] = ::pluss::table::detail::paired_continuous_series_(
           x_col.second, y_col.second, "flash::barplot(DataFrame)");
       if (options.horizontal) {
@@ -1251,8 +1239,8 @@ inline Trace& barplot(
       return barplot(pane, x, y, options);
     }
 
-    if (x_col.second.kind() == ::pluss::table::ThreadKind::Note &&
-        ::pluss::table::detail::is_continuous_thread_(y_col.second)) {
+    if (x_col.second.kind() == ::pluss::table::SlateKind::Note &&
+        ::pluss::table::detail::is_continuous_slate_(y_col.second)) {
       const auto [labels, values] = ::pluss::table::detail::grouped_note_series_(
           x_col.second, y_col.second, "flash::barplot(DataFrame)");
       if (options.horizontal) {
@@ -1263,8 +1251,8 @@ inline Trace& barplot(
       return barplot(pane, labels, values, options);
     }
 
-    if (y_col.second.kind() == ::pluss::table::ThreadKind::Note &&
-        ::pluss::table::detail::is_continuous_thread_(x_col.second)) {
+    if (y_col.second.kind() == ::pluss::table::SlateKind::Note &&
+        ::pluss::table::detail::is_continuous_slate_(x_col.second)) {
       const auto [labels, values] = ::pluss::table::detail::grouped_note_series_(
           y_col.second, x_col.second, "flash::barplot(DataFrame)");
       if (options.horizontal) {
@@ -1281,8 +1269,8 @@ inline Trace& barplot(
 
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::barplot(DataFrame)");
-  if (column.kind() == ::pluss::table::ThreadKind::Note) {
-    const auto categories = ::pluss::table::detail::observed_note_from_thread_(
+  if (column.kind() == ::pluss::table::SlateKind::Note) {
+    const auto categories = ::pluss::table::detail::observed_note_from_slate_(
         column, "flash::barplot(DataFrame)");
     const auto [labels, counts] = ::pluss::table::detail::categorical_counts_(categories);
     if (options.horizontal) {
@@ -1293,7 +1281,7 @@ inline Trace& barplot(
     return barplot(pane, labels, counts, options);
   }
 
-  const auto values = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto values = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::barplot(DataFrame)");
   const auto positions = ::pluss::table::detail::implicit_positions_(values.numel());
   if (options.horizontal) {
@@ -1403,19 +1391,19 @@ inline Trace& relplot(
   const auto hue_col = ::pluss::table::detail::require_named_feature_(
       frame, *columns.hue_feature, "flash::relplot(DataFrame)");
   const auto keep = (x_col.second.notnull() & y_col.second.notnull() & hue_col.notnull()).as_series();
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
       x_col.second.filter(keep), "flash::relplot(DataFrame)");
-  const auto y = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto y = ::pluss::table::detail::continuous_series_from_slate_(
       y_col.second.filter(keep), "flash::relplot(DataFrame)");
-  if (hue_col.kind() == ::pluss::table::ThreadKind::Note) {
-    const auto hue = ::pluss::table::detail::observed_note_from_thread_(
+  if (hue_col.kind() == ::pluss::table::SlateKind::Note) {
+    const auto hue = ::pluss::table::detail::observed_note_from_slate_(
         hue_col.filter(keep), "flash::relplot(DataFrame)");
     return relplot(pane, x, y, hue, kind);
   }
   PLUSS_CHECK(
-      ::pluss::table::detail::is_continuous_thread_(hue_col),
+      ::pluss::table::detail::is_continuous_slate_(hue_col),
       "flash::relplot(DataFrame): hue_feature must be text, numeric, or temporal");
-  const auto hue = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto hue = ::pluss::table::detail::continuous_series_from_slate_(
       hue_col.filter(keep), "flash::relplot(DataFrame)");
   return relplot(pane, x, y, hue, kind);
 }
@@ -1631,7 +1619,7 @@ inline Trace& boxenplot(
     const TableColumns& columns = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::boxenplot(DataFrame)");
-  const auto values = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto values = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::boxenplot(DataFrame)");
   ::pluss::table::detail::set_bivariate_labels_(pane, name, "value");
   return boxenplot(pane, values);
@@ -1770,7 +1758,7 @@ inline Trace& qqplot(
     const QqPlotOptions& options = {}) {
   const auto [name, column] = ::pluss::table::detail::resolve_univariate_feature_(
       frame, columns, "flash::qqplot(DataFrame)");
-  const auto values = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto values = ::pluss::table::detail::continuous_series_from_slate_(
       column, "flash::qqplot(DataFrame)");
   pane.x_label("theoretical quantiles").y_label(name);
   return qqplot(pane, values, options);
@@ -1804,7 +1792,7 @@ inline Trace& heatmap(
   auto matrix = ::pluss::table::detail::matrix_heatmap_payload_(
       frame, "flash::heatmap(DataFrame)");
   const auto label_views = ::pluss::pl::flash::detail::label_views(matrix.x_labels);
-  pane.x_ticks(matrix.x.to_vec<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
+  pane.x_ticks(matrix.x.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
       .y_label("case");
   return heatmap(pane, matrix.x, matrix.y, matrix.z, options);
@@ -1836,7 +1824,7 @@ inline Trace& clustermap(
   auto matrix = ::pluss::table::detail::matrix_heatmap_payload_(
       frame, "flash::clustermap(DataFrame)");
   const auto label_views = ::pluss::pl::flash::detail::label_views(matrix.x_labels);
-  pane.x_ticks(matrix.x.to_vec<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
+  pane.x_ticks(matrix.x.host<double>(), pluss::msharp::RangeView::Of<std::string_view>(label_views))
       .x_label("feature")
       .y_label("case");
   return clustermap(pane, matrix.x, matrix.y, matrix.z, options);
@@ -2069,7 +2057,7 @@ inline Trace& pointplot(
     const auto err_col = ::pluss::table::detail::require_named_feature_(
         frame, *columns.err_feature, "flash::pointplot(DataFrame)");
     const auto keep = (x_col.notnull() & y_col.notnull() & err_col.notnull()).as_series();
-    const auto err = ::pluss::table::detail::continuous_series_from_thread_(
+    const auto err = ::pluss::table::detail::continuous_series_from_slate_(
         err_col.filter(keep), "flash::pointplot(DataFrame)");
     return pointplot(pane, x, y, err);
   }
@@ -2092,11 +2080,11 @@ inline Trace& whiskplot(
     const auto err_col = ::pluss::table::detail::require_named_feature_(
         frame, *columns.err_feature, "flash::whiskplot(DataFrame)");
     const auto keep = (x_col.notnull() & y_col.notnull() & err_col.notnull()).as_series();
-    const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+    const auto x = ::pluss::table::detail::continuous_series_from_slate_(
         x_col.filter(keep), "flash::whiskplot(DataFrame)");
-    const auto y = ::pluss::table::detail::continuous_series_from_thread_(
+    const auto y = ::pluss::table::detail::continuous_series_from_slate_(
         y_col.filter(keep), "flash::whiskplot(DataFrame)");
-    const auto err = ::pluss::table::detail::continuous_series_from_thread_(
+    const auto err = ::pluss::table::detail::continuous_series_from_slate_(
         err_col.filter(keep), "flash::whiskplot(DataFrame)");
     return whiskplot(pane, x, y, err);
   }
@@ -2108,8 +2096,8 @@ inline Trace& whiskplot(
   const auto ypos_col = ::pluss::table::detail::require_named_feature_(
       frame, *columns.ypos_feature, "flash::whiskplot(DataFrame)");
   auto keep = (x_col.notnull() & y_col.notnull() & yneg_col.notnull() & ypos_col.notnull()).as_series();
-  std::optional<::pluss::table::Thread> xneg_col;
-  std::optional<::pluss::table::Thread> xpos_col;
+  std::optional<::pluss::table::Slate> xneg_col;
+  std::optional<::pluss::table::Slate> xpos_col;
   if (columns.xneg_feature.has_value()) {
     xneg_col = ::pluss::table::detail::require_named_feature_(
         frame, *columns.xneg_feature, "flash::whiskplot(DataFrame)");
@@ -2120,20 +2108,20 @@ inline Trace& whiskplot(
         frame, *columns.xpos_feature, "flash::whiskplot(DataFrame)");
     keep = keep.logical_and(xpos_col->notnull().as_series());
   }
-  const auto x = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto x = ::pluss::table::detail::continuous_series_from_slate_(
       x_col.filter(keep), "flash::whiskplot(DataFrame)");
-  const auto y = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto y = ::pluss::table::detail::continuous_series_from_slate_(
       y_col.filter(keep), "flash::whiskplot(DataFrame)");
-  const auto yneg = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto yneg = ::pluss::table::detail::continuous_series_from_slate_(
       yneg_col.filter(keep), "flash::whiskplot(DataFrame)");
-  const auto ypos = ::pluss::table::detail::continuous_series_from_thread_(
+  const auto ypos = ::pluss::table::detail::continuous_series_from_slate_(
       ypos_col.filter(keep), "flash::whiskplot(DataFrame)");
   const auto xneg = columns.xneg_feature.has_value()
-      ? ::pluss::table::detail::continuous_series_from_thread_(
+      ? ::pluss::table::detail::continuous_series_from_slate_(
             xneg_col->filter(keep), "flash::whiskplot(DataFrame)")
       : ::pluss::Series::zeros({x.numel()}, ScalarType::Float64);
   const auto xpos = columns.xpos_feature.has_value()
-      ? ::pluss::table::detail::continuous_series_from_thread_(
+      ? ::pluss::table::detail::continuous_series_from_slate_(
             xpos_col->filter(keep), "flash::whiskplot(DataFrame)")
       : ::pluss::Series::zeros({x.numel()}, ScalarType::Float64);
   return whiskplot(pane, x, y, yneg, ypos, xneg, xpos);
@@ -2195,7 +2183,7 @@ inline Studio& lagplot(
       frame, columns, "flash::lagplot(DataFrame)");
   (void)name;
   return lagplot(studio,
-                 ::pluss::table::detail::continuous_series_from_thread_(column, "flash::lagplot(DataFrame)"),
+                 ::pluss::table::detail::continuous_series_from_slate_(column, "flash::lagplot(DataFrame)"),
                  options);
 }
 
@@ -2218,7 +2206,7 @@ inline Studio& acfplot(
       frame, columns, "flash::acfplot(DataFrame)");
   (void)name;
   return acfplot(studio,
-                 ::pluss::table::detail::continuous_series_from_thread_(column, "flash::acfplot(DataFrame)"),
+                 ::pluss::table::detail::continuous_series_from_slate_(column, "flash::acfplot(DataFrame)"),
                  options);
 }
 
@@ -2241,7 +2229,7 @@ inline Studio& pacfplot(
       frame, columns, "flash::pacfplot(DataFrame)");
   (void)name;
   return pacfplot(studio,
-                  ::pluss::table::detail::continuous_series_from_thread_(column, "flash::pacfplot(DataFrame)"),
+                  ::pluss::table::detail::continuous_series_from_slate_(column, "flash::pacfplot(DataFrame)"),
                   options);
 }
 
@@ -2264,7 +2252,7 @@ inline Studio& actplot(
       frame, columns, "flash::actplot(DataFrame)");
   (void)name;
   return actplot(studio,
-                 ::pluss::table::detail::continuous_series_from_thread_(column, "flash::actplot(DataFrame)"),
+                 ::pluss::table::detail::continuous_series_from_slate_(column, "flash::actplot(DataFrame)"),
                  options);
 }
 
@@ -2288,7 +2276,7 @@ inline Studio& bootstrapplot(
   (void)name;
   return bootstrapplot(
       studio,
-      ::pluss::table::detail::continuous_series_from_thread_(column, "flash::bootstrapplot(DataFrame)"),
+      ::pluss::table::detail::continuous_series_from_slate_(column, "flash::bootstrapplot(DataFrame)"),
       options);
 }
 
@@ -2418,12 +2406,12 @@ inline Studio& parallelplot(
     const TableColumns& columns = {},
     const ParallelCoordinatesOptions& options = {}) {
   std::vector<std::string> excluded;
-  std::optional<::pluss::table::Thread> class_col;
-  const ::pluss::table::Thread* class_ptr = nullptr;
+  std::optional<::pluss::table::Slate> class_col;
+  const ::pluss::table::Slate* class_ptr = nullptr;
   if (columns.class_feature.has_value()) {
     class_col = ::pluss::table::detail::require_named_feature_(
         frame, *columns.class_feature, "flash::parallelplot(DataFrame)");
-    PLUSS_CHECK(class_col->kind() == ::pluss::table::ThreadKind::Note,
+    PLUSS_CHECK(class_col->kind() == ::pluss::table::SlateKind::Note,
                 "flash::parallelplot(DataFrame): class_feature must be a text feature");
     excluded.push_back(*columns.class_feature);
     class_ptr = &*class_col;
@@ -2437,7 +2425,7 @@ inline Studio& parallelplot(
   if (!class_col.has_value()) {
     return parallelplot(studio, numeric.columns, local_options);
   }
-  const auto labels = ::pluss::table::detail::observed_note_from_thread_(
+  const auto labels = ::pluss::table::detail::observed_note_from_slate_(
       class_col->filter(numeric.mask), "flash::parallelplot(DataFrame)");
   return parallelplot(studio, numeric.columns, labels, local_options);
 }
@@ -2458,12 +2446,12 @@ inline Studio& andrews_curves(
     const TableColumns& columns = {},
     const AndrewsCurvesOptions& options = {}) {
   std::vector<std::string> excluded;
-  std::optional<::pluss::table::Thread> class_col;
-  const ::pluss::table::Thread* class_ptr = nullptr;
+  std::optional<::pluss::table::Slate> class_col;
+  const ::pluss::table::Slate* class_ptr = nullptr;
   if (columns.class_feature.has_value()) {
     class_col = ::pluss::table::detail::require_named_feature_(
         frame, *columns.class_feature, "flash::andrews_curves(DataFrame)");
-    PLUSS_CHECK(class_col->kind() == ::pluss::table::ThreadKind::Note,
+    PLUSS_CHECK(class_col->kind() == ::pluss::table::SlateKind::Note,
                 "flash::andrews_curves(DataFrame): class_feature must be a text feature");
     excluded.push_back(*columns.class_feature);
     class_ptr = &*class_col;
@@ -2477,7 +2465,7 @@ inline Studio& andrews_curves(
   if (!class_col.has_value()) {
     return andrews_curves(studio, numeric.columns, local_options);
   }
-  const auto labels = ::pluss::table::detail::observed_note_from_thread_(
+  const auto labels = ::pluss::table::detail::observed_note_from_slate_(
       class_col->filter(numeric.mask), "flash::andrews_curves(DataFrame)");
   return andrews_curves(studio, numeric.columns, labels, local_options);
 }
@@ -2498,12 +2486,12 @@ inline Studio& radviz(
     const TableColumns& columns = {},
     const RadvizOptions& options = {}) {
   std::vector<std::string> excluded;
-  std::optional<::pluss::table::Thread> class_col;
-  const ::pluss::table::Thread* class_ptr = nullptr;
+  std::optional<::pluss::table::Slate> class_col;
+  const ::pluss::table::Slate* class_ptr = nullptr;
   if (columns.class_feature.has_value()) {
     class_col = ::pluss::table::detail::require_named_feature_(
         frame, *columns.class_feature, "flash::radviz(DataFrame)");
-    PLUSS_CHECK(class_col->kind() == ::pluss::table::ThreadKind::Note,
+    PLUSS_CHECK(class_col->kind() == ::pluss::table::SlateKind::Note,
                 "flash::radviz(DataFrame): class_feature must be a text feature");
     excluded.push_back(*columns.class_feature);
     class_ptr = &*class_col;
@@ -2517,7 +2505,7 @@ inline Studio& radviz(
   if (!class_col.has_value()) {
     return radviz(studio, numeric.columns, local_options);
   }
-  const auto labels = ::pluss::table::detail::observed_note_from_thread_(
+  const auto labels = ::pluss::table::detail::observed_note_from_slate_(
       class_col->filter(numeric.mask), "flash::radviz(DataFrame)");
   return radviz(studio, numeric.columns, labels, local_options);
 }

@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <optional>
 #include <stdexcept>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -55,6 +56,8 @@ struct Options final {
   double smoothing_ratio{4.0};   // Chebyshev targets [2/ratio, 2.2]
   std::int64_t max_levels{32};
   std::int64_t dense_limit{1024}; // coarsest levels up to this many cells are inverted by a pseudo-inverse, larger ones smoothed
+  bool native_smoother{true};     // CPU fields that record no derivative smooth with the fused native Chebyshev loop (identical polynomial)
+  bool native_cycle{true};        // CPU fields that record no derivative run the whole V-cycle (smoothing, residual, transfers, coarse solve) on host arrays
 };
 
 namespace detail {
@@ -146,6 +149,17 @@ struct Level final {
   Series mass = pluss::series::undefined();
   Series diag = pluss::series::undefined();    // precomputed: A u = diag u - sum_a (cp_a roll(u,-1) + cm_a roll(u,+1)), wall terms folded in
   std::vector<Series> cp, cm;
+  // Host copies of the stencil for the fused native smoother (filled by finalize for CPU levels that record no derivative).
+  struct Host final {
+    bool ok{false};
+    std::int64_t n[3]{1, 1, 1}; // extents of the (padded) spatial axes, last = fastest
+    std::int64_t total{0};
+    std::size_t d{0};
+    std::vector<double> diag, inv_diag, cp[3], cm[3];
+    // Transfer weights to the next-coarser level in the shape each axis pass sees (axes before it fine, the rest coarse), full batch layout.
+    bool has_w[3]{false, false, false};
+    std::vector<double> we[3], wo[3];
+  } host;
 };
 
 inline Series coef(const Series &b, const Series &like) { return b.defined() ? b : pluss::series::ones_like(like); }
@@ -188,6 +202,173 @@ inline void finalize(Level &level, const Series &like) {
     diag = diag.add(level.mass);
   level.diag = diag.expand(like.sizes()).contiguous();
   level.inv_diag = level.diag.reciprocal();
+  if (like.is_cpu() && !level.diag.tracks_slope() && d <= 3) {
+    const auto pull = [](const Series &x) {
+      const Series cpu = x.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous();
+      return cpu.reshape({cpu.numel()}).host<double>();
+    };
+    Level::Host &h = level.host;
+    h.d = d;
+    for (std::size_t a = 0; a < d; ++a)
+      h.n[3 - d + a] = level.axes[a].cells;
+    h.diag = pull(level.diag);
+    h.inv_diag = pull(level.inv_diag);
+    for (std::size_t a = 0; a < d; ++a) {
+      h.cp[3 - d + a] = pull(level.cp[a]);
+      h.cm[3 - d + a] = pull(level.cm[a]);
+    }
+    h.total = static_cast<std::int64_t>(h.diag.size());
+    h.ok = true;
+  }
+}
+
+// Runs fn(first_row, last_row) over [0, rows) on a few threads when the work is large.
+template <class Fn> inline void parallel_rows(std::int64_t rows, std::int64_t work, Fn &&fn) {
+  const unsigned hw = std::max(1u, std::thread::hardware_concurrency());
+  const unsigned threads = work < 100000 ? 1u : std::min<unsigned>(hw, 8u);
+  if (threads == 1 || rows < 2) {
+    fn(std::int64_t{0}, rows);
+    return;
+  }
+  std::vector<std::thread> pool;
+  const std::int64_t chunk = (rows + threads - 1) / threads;
+  for (unsigned t = 0; t < threads; ++t) {
+    const std::int64_t lo = static_cast<std::int64_t>(t) * chunk, hi = std::min(rows, lo + chunk);
+    if (lo >= hi) break;
+    pool.emplace_back([&fn, lo, hi] { fn(lo, hi); });
+  }
+  for (std::thread &th : pool) th.join();
+}
+
+// out = A u (when r == nullptr), or one fused Chebyshev step: with au = A dir,
+//   r -= au; dir_new = dir * keep + r * inv_diag * gain; x += dir_new
+// in a single pass over the field (the stencil, the residual update, the new direction and the iterate).
+inline void stencil_pass(const Level::Host &h, const double *u, double *out, double *r, double *x, double keep, double gain) {
+  const std::int64_t n0 = h.n[0], n1 = h.n[1], n2 = h.n[2], plane = n1 * n2, cells = n0 * plane;
+  const std::int64_t rows = h.total / n2;
+  parallel_rows(rows, h.total, [&](std::int64_t first, std::int64_t last) {
+    for (std::int64_t row = first; row < last; ++row) {
+      const std::int64_t j = row % n1, i = (row / n1) % n0, b = row / (n1 * n0);
+      const std::int64_t base = row * n2;
+      const std::int64_t up0 = (i + 1 == n0) ? base - (n0 - 1) * plane : base + plane, dn0 = (i == 0) ? base + (n0 - 1) * plane : base - plane;
+      const std::int64_t up1 = (j + 1 == n1) ? base - (n1 - 1) * n2 : base + n2, dn1 = (j == 0) ? base + (n1 - 1) * n2 : base - n2;
+      (void)b; (void)cells;
+      for (std::int64_t k = 0; k < n2; ++k) {
+        const std::int64_t idx = base + k;
+        double au = h.diag[idx] * u[idx];
+        if (h.d >= 3) au -= h.cp[0][idx] * u[up0 + k] + h.cm[0][idx] * u[dn0 + k];
+        if (h.d >= 2) au -= h.cp[1][idx] * u[up1 + k] + h.cm[1][idx] * u[dn1 + k];
+        {
+          const double up = u[(k + 1 == n2) ? base : idx + 1], dn = u[(k == 0) ? base + n2 - 1 : idx - 1];
+          au -= h.cp[2][idx] * up + h.cm[2][idx] * dn;
+        }
+        if (r == nullptr) {
+          out[idx] = au;
+        } else {
+          const double rn = r[idx] - au;
+          r[idx] = rn;
+          const double dn = u[idx] * keep + rn * h.inv_diag[idx] * gain;
+          out[idx] = dn;
+          x[idx] += dn;
+        }
+      }
+    }
+  });
+}
+
+inline std::vector<double> pull_host(const Series &s) {
+  const Series cpu = s.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous();
+  return cpu.reshape({cpu.numel()}).host<double>();
+}
+
+// Chebyshev iteration for A x = b on host arrays (x0 = nullptr: zero start); the same recurrence as `chebyshev`. Returns x.
+inline std::vector<double> cheb_host(const Level::Host &h, const std::vector<double> &b, const std::vector<double> *x0, std::int64_t degree, double lo, double hi) {
+  const double theta = 0.5 * (hi + lo), delta = 0.5 * (hi - lo), sigma = theta / delta;
+  double rho = 1.0 / sigma;
+  const std::size_t total = b.size();
+  std::vector<double> r = b, x(total, 0.0), dir(total), next(total);
+  if (x0 != nullptr) {
+    x = *x0;
+    stencil_pass(h, x.data(), next.data(), nullptr, nullptr, 0.0, 0.0); // next = A x
+    for (std::size_t i = 0; i < total; ++i) r[i] -= next[i];
+  }
+  for (std::size_t i = 0; i < total; ++i) {
+    dir[i] = r[i] * h.inv_diag[i] / theta;
+    x[i] += dir[i];
+  }
+  for (std::int64_t k = 1; k < degree; ++k) {
+    const double rho_new = 1.0 / (2.0 * sigma - rho);
+    stencil_pass(h, dir.data(), next.data(), r.data(), x.data(), rho_new * rho, 2.0 * rho_new / delta);
+    dir.swap(next);
+    rho = rho_new;
+  }
+  return x;
+}
+
+inline Series from_host(std::vector<double> x, const Series &like) {
+  return pluss::make_series(x, std::vector<std::int64_t>(like.sizes().begin(), like.sizes().end()), pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(like.scalar_type());
+}
+
+inline Series chebyshev_native(const Level &lv, const Series &b, const Series &x0, std::int64_t degree, double lo, double hi) {
+  const std::vector<double> rhs = pull_host(b);
+  if (!x0.defined())
+    return from_host(cheb_host(lv.host, rhs, nullptr, degree, lo, hi), b);
+  const std::vector<double> start = pull_host(x0);
+  return from_host(cheb_host(lv.host, rhs, &start, degree, lo, hi), b);
+}
+
+// ---- fused host transfers: one pass per axis over (outer, n, inner) views of [batch..., spatial...] arrays, the formulas of prolong_axis / restrict_axis ----
+
+// coarse c (outer, n, inner) -> fine out (outer, 2n, inner); we/wo (the shape of c) or nullptr for the constant 1/4 weights
+inline void host_prolong_axis(const double *c, double *out, std::int64_t outer, std::int64_t n, std::int64_t inner, const Axis &ax, const double *we, const double *wo) {
+  const bool per_lo = ax.low == Edge::Periodic, per_hi = ax.high == Edge::Periodic;
+  const double s_lo = sign(ax.low), s_hi = sign(ax.high);
+  parallel_rows(outer * n, outer * n * inner, [&](std::int64_t first, std::int64_t last) {
+    for (std::int64_t row = first; row < last; ++row) {
+      const std::int64_t o = row / n, i = row % n;
+      for (std::int64_t j = 0; j < inner; ++j) {
+        const std::int64_t idx = row * inner + j;
+        const double cv = c[idx];
+        const double below = i > 0 ? c[idx - inner] : (per_lo ? c[idx + (n - 1) * inner] : s_lo * cv);
+        const double above = i + 1 < n ? c[idx + inner] : (per_hi ? c[idx - (n - 1) * inner] : s_hi * cv);
+        const double even = we ? cv - (cv - below) * we[idx] : cv * 0.75 + below * 0.25;
+        const double odd = wo ? cv - (cv - above) * wo[idx] : cv * 0.75 + above * 0.25;
+        double *dst = out + (o * 2 * n + 2 * i) * inner + j;
+        dst[0] = even;
+        dst[inner] = odd;
+      }
+    }
+  });
+}
+
+// fine f (outer, 2n, inner) -> coarse out (outer, n, inner): the adjoint of the prolongation, times 1/2
+inline void host_restrict_axis(const double *f, double *out, std::int64_t outer, std::int64_t n, std::int64_t inner, const Axis &ax, const double *we, const double *wo) {
+  const bool per = ax.high == Edge::Periodic;
+  const double s_lo = sign(ax.low), s_hi = sign(ax.high);
+  parallel_rows(outer * n, outer * n * inner, [&](std::int64_t first, std::int64_t last) {
+    for (std::int64_t row = first; row < last; ++row) {
+      const std::int64_t o = row / n, I = row % n;
+      const auto fe_at = [&](std::int64_t row_, std::int64_t j) { return f[(((row_ / n) * 2 * n) + 2 * (row_ % n)) * inner + j]; };
+      const auto fo_at = [&](std::int64_t row_, std::int64_t j) { return f[(((row_ / n) * 2 * n) + 2 * (row_ % n)) * inner + inner + j]; };
+      const auto X = [&](std::int64_t row_, std::int64_t j) { return fe_at(row_, j) * (we ? we[row_ * inner + j] : 0.25); };
+      const auto Y = [&](std::int64_t row_, std::int64_t j) { return fo_at(row_, j) * (wo ? wo[row_ * inner + j] : 0.25); };
+      const std::int64_t next_row = o * n + (I + 1 < n ? I + 1 : 0), prev_row = o * n + (I > 0 ? I - 1 : n - 1);
+      for (std::int64_t j = 0; j < inner; ++j) {
+        const std::int64_t widx = row * inner + j;
+        const double fe = fe_at(row, j), fo = fo_at(row, j);
+        const double own_e = we ? fe - fe * we[widx] : fe * 0.75, own_o = wo ? fo - fo * wo[widx] : fo * 0.75;
+        double from_next, from_prev;
+        if (per) {
+          from_next = X(next_row, j);
+          from_prev = Y(prev_row, j);
+        } else {
+          from_next = (I + 1 < n ? X(next_row, j) : 0.0) + (I + 1 == n ? s_hi * Y(row, j) : 0.0);
+          from_prev = (I > 0 ? Y(prev_row, j) : 0.0) + (I == 0 ? s_lo * X(row, j) : 0.0);
+        }
+        out[widx] = (own_e + own_o + from_next + from_prev) * 0.5;
+      }
+    }
+  });
 }
 
 [[nodiscard]] inline Series apply(const Level &level, const Series &u) {
@@ -316,6 +497,7 @@ public:
         coarse_cells_ = cells;
       }
     }
+    build_native(like);
   }
 
   [[nodiscard]] std::size_t levels() const noexcept { return levels_.size(); }
@@ -328,9 +510,21 @@ public:
   }
 
   // A u on the finest level (positive semi-definite sign)
-  [[nodiscard]] Series apply(const Series &u) const { return detail::apply(levels_.front(), u); }
+  [[nodiscard]] Series apply(const Series &u) const {
+    if (native_ && u.is_cpu() && !u.tracks_slope() && u.sizes().size() == fine_shape_.size() && std::equal(u.sizes().begin(), u.sizes().end(), fine_shape_.begin())) {
+      const std::vector<double> v = detail::pull_host(u);
+      std::vector<double> out(v.size());
+      detail::stencil_pass(levels_.front().host, v.data(), out.data(), nullptr, nullptr, 0.0, 0.0);
+      return detail::from_host(std::move(out), u);
+    }
+    return detail::apply(levels_.front(), u);
+  }
   // one symmetric V-cycle: z ~ A^-1 r
-  [[nodiscard]] Series vcycle(const Series &r) const { return cycle(0, r); }
+  [[nodiscard]] Series vcycle(const Series &r) const {
+    if (native_ && r.is_cpu() && !r.tracks_slope() && r.sizes().size() == fine_shape_.size() && std::equal(r.sizes().begin(), r.sizes().end(), fine_shape_.begin()))
+      return detail::from_host(cycle_host(0, detail::pull_host(r)), r);
+    return cycle(0, r);
+  }
 
 private:
   static Series upper_from_lower(const Series &lo, std::int64_t axis, const Axis &ax) { return detail::upper_neighbor(lo, axis, Axis{ax.cells, ax.spacing, ax.low == Edge::Periodic ? Edge::Periodic : Edge::Neumann, ax.high == Edge::Periodic ? Edge::Periodic : Edge::Neumann}); }
@@ -390,6 +584,8 @@ private:
   // Chebyshev iteration for A x = b on `lv`, starting from x0 (undefined = zero)
   Series smooth(const detail::Level &lv, const Series &b, Series x, std::int64_t degree) const {
     const double hi = 2.2;
+    if (options_.native_smoother && lv.host.ok && b.is_cpu() && !b.tracks_slope() && (!x.defined() || !x.tracks_slope()))
+      return detail::chebyshev_native(lv, b, x, degree, hi / options_.smoothing_ratio, hi);
     return chebyshev([&](const Series &v) { return detail::apply(lv, v); }, lv.inv_diag, b, std::move(x), degree, hi / options_.smoothing_ratio, hi);
   }
 
@@ -415,6 +611,135 @@ public:
   }
 
 private:
+  // Host copies of the transfer weights and the coarse inverse; native_ stays false when any piece cannot be represented.
+  void build_native(const Series &like) {
+    using namespace detail;
+    native_ = false;
+    if (!options_.native_cycle || !like.is_cpu() || like.tracks_slope())
+      return;
+    for (const Level &lv : levels_)
+      if (!lv.host.ok)
+        return;
+    const std::size_t d = levels_.front().axes.size();
+    fine_shape_.assign(like.sizes().begin(), like.sizes().end());
+    for (std::size_t l = 0; l + 1 < levels_.size(); ++l) {
+      Level &lv = levels_[l];
+      const Level &co = levels_[l + 1];
+      for (std::size_t k = 0; k < d; ++k) {
+        if (!lv.we[k].defined() || !lv.wo[k].defined())
+          continue;
+        if (lv.we[k].tracks_slope() || lv.wo[k].tracks_slope())
+          return;
+        std::vector<std::int64_t> shape(like.sizes().begin(), like.sizes().end() - static_cast<std::ptrdiff_t>(d));
+        for (std::size_t j = 0; j < d; ++j)
+          shape.push_back(j < k ? 2 * co.axes[j].cells : co.axes[j].cells);
+        const auto expand = [&](const Series &w) {
+          const Series dup = duplicate_fine(w, w.dim(), d, k);
+          return pull_host(dup.expand(shape));
+        };
+        lv.host.we[k] = expand(lv.we[k]);
+        lv.host.wo[k] = expand(lv.wo[k]);
+        lv.host.has_w[k] = true;
+      }
+    }
+    if (coarse_inverse_.defined()) {
+      if (coarse_inverse_.tracks_slope())
+        return;
+      std::int64_t cells = 1;
+      for (const std::int64_t c : coarse_cells_)
+        cells *= c;
+      std::int64_t lanes = 1;
+      for (std::size_t i = 0; i + d < fine_shape_.size(); ++i)
+        lanes *= fine_shape_[i];
+      coarse_inverse_host_ = pull_host(coarse_inverse_);
+      const std::int64_t inv_lanes = static_cast<std::int64_t>(coarse_inverse_host_.size()) / (cells * cells);
+      if (inv_lanes != 1 && inv_lanes != lanes)
+        return;
+      coarse_inverse_lanes_ = inv_lanes;
+    }
+    native_ = true;
+  }
+
+  // spatial extents of level l's field, fine on axes before `fine_upto` of the given level pair
+  std::vector<double> restrict_host(std::size_t l, std::vector<double> f) const {
+    const detail::Level &lv = levels_[l], &co = levels_[l + 1];
+    const std::size_t d = lv.axes.size();
+    std::int64_t batch = 1;
+    for (std::size_t i = 0; i + d < fine_shape_.size(); ++i)
+      batch *= fine_shape_[i];
+    for (std::size_t k = d; k-- > 0;) {
+      // input: axes <= k fine, > k coarse; output: axis k coarse
+      std::int64_t outer = batch, inner = 1;
+      for (std::size_t j = 0; j < k; ++j)
+        outer *= 2 * co.axes[j].cells;
+      for (std::size_t j = k + 1; j < d; ++j)
+        inner *= co.axes[j].cells;
+      const std::int64_t n = co.axes[k].cells;
+      std::vector<double> out(static_cast<std::size_t>(outer * n * inner));
+      detail::host_restrict_axis(f.data(), out.data(), outer, n, inner, lv.axes[k], lv.host.has_w[k] ? lv.host.we[k].data() : nullptr, lv.host.has_w[k] ? lv.host.wo[k].data() : nullptr);
+      f.swap(out);
+    }
+    return f;
+  }
+  std::vector<double> prolong_host(std::size_t l, std::vector<double> c) const {
+    const detail::Level &lv = levels_[l], &co = levels_[l + 1];
+    const std::size_t d = lv.axes.size();
+    std::int64_t batch = 1;
+    for (std::size_t i = 0; i + d < fine_shape_.size(); ++i)
+      batch *= fine_shape_[i];
+    for (std::size_t k = 0; k < d; ++k) {
+      // input: axes < k fine, >= k coarse; output: axis k fine
+      std::int64_t outer = batch, inner = 1;
+      for (std::size_t j = 0; j < k; ++j)
+        outer *= 2 * co.axes[j].cells;
+      for (std::size_t j = k + 1; j < d; ++j)
+        inner *= co.axes[j].cells;
+      const std::int64_t n = co.axes[k].cells;
+      std::vector<double> out(static_cast<std::size_t>(outer * 2 * n * inner));
+      detail::host_prolong_axis(c.data(), out.data(), outer, n, inner, co.axes[k], lv.host.has_w[k] ? lv.host.we[k].data() : nullptr, lv.host.has_w[k] ? lv.host.wo[k].data() : nullptr);
+      c.swap(out);
+    }
+    return c;
+  }
+
+  std::vector<double> cycle_host(std::size_t l, const std::vector<double> &r) const {
+    const detail::Level &lv = levels_[l];
+    const double hi = 2.2, lo = hi / options_.smoothing_ratio;
+    if (l + 1 == levels_.size() && coarse_inverse_.defined()) {
+      std::int64_t cells = 1;
+      for (const std::int64_t c : coarse_cells_)
+        cells *= c;
+      const std::int64_t lanes = static_cast<std::int64_t>(r.size()) / cells;
+      std::vector<double> z(r.size());
+      for (std::int64_t b = 0; b < lanes; ++b) {
+        const double *inv = coarse_inverse_host_.data() + (coarse_inverse_lanes_ == 1 ? 0 : b) * cells * cells;
+        for (std::int64_t i = 0; i < cells; ++i) {
+          double acc = 0.0;
+          for (std::int64_t j = 0; j < cells; ++j)
+            acc += inv[i * cells + j] * r[static_cast<std::size_t>(b * cells + j)];
+          z[static_cast<std::size_t>(b * cells + i)] = acc;
+        }
+      }
+      return z;
+    }
+    if (l + 1 == levels_.size()) {
+      std::int64_t extent = 1;
+      for (const auto &ax : lv.axes)
+        extent = std::max(extent, ax.cells);
+      return detail::cheb_host(lv.host, r, nullptr, std::clamp<std::int64_t>(2 * extent, 8, 64), lo, hi);
+    }
+    std::vector<double> x = detail::cheb_host(lv.host, r, nullptr, options_.smoothing_degree, lo, hi);
+    std::vector<double> res(r.size());
+    detail::stencil_pass(lv.host, x.data(), res.data(), nullptr, nullptr, 0.0, 0.0);
+    for (std::size_t i = 0; i < res.size(); ++i)
+      res[i] = r[i] - res[i];
+    const std::vector<double> e = cycle_host(l + 1, restrict_host(l, std::move(res)));
+    const std::vector<double> up = prolong_host(l, e);
+    for (std::size_t i = 0; i < x.size(); ++i)
+      x[i] += up[i];
+    return detail::cheb_host(lv.host, r, &x, options_.smoothing_degree, lo, hi);
+  }
+
   Series cycle(std::size_t l, const Series &r) const {
     const detail::Level &lv = levels_[l];
     if (l + 1 == levels_.size() && coarse_inverse_.defined()) {
@@ -447,6 +772,10 @@ private:
   std::vector<detail::Level> levels_;
   Series coarse_inverse_ = pluss::series::undefined();
   std::vector<std::int64_t> coarse_cells_;
+  bool native_{false};
+  std::vector<std::int64_t> fine_shape_;
+  std::vector<double> coarse_inverse_host_;
+  std::int64_t coarse_inverse_lanes_{1};
 };
 
 // Multigrid-preconditioned conjugate gradients on A x = rhs. For a singular problem the rhs must have zero mean over the spatial axes (checked by

@@ -84,18 +84,18 @@ class Result final {
   [[nodiscard]] pluss::table::DataFrame board() const {
     const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(mean_.platform());
     return pluss::table::DataFrame({
-        {"feature", pluss::table::Thread(pluss::make_note(feature_names_))},
-        {"sample_count", pluss::table::Thread(pluss::series::full({feature_count()}, static_cast<double>(sample_count_), i64_cfg))},
-        {"mean", pluss::table::Thread(mean_)},
-        {"stddev", pluss::table::Thread(stddev_)},
-        {"min", pluss::table::Thread(minimum_)},
-        {"max", pluss::table::Thread(maximum_)},
-        {"skewness", pluss::table::Thread(skewness_)},
-        {"excess_kurtosis", pluss::table::Thread(excess_kurtosis_)},
-        {"missing_rate", pluss::table::Thread(missing_rate_)},
-        {"negative_rate", pluss::table::Thread(negative_rate_)},
-        {"zero_rate", pluss::table::Thread(zero_rate_)},
-        {"gaussianize_candidate", pluss::table::Thread(gaussianize_candidate_)},
+        {"feature", pluss::table::Slate(pluss::make_note(feature_names_))},
+        {"sample_count", pluss::table::Slate(pluss::series::full({feature_count()}, static_cast<double>(sample_count_), i64_cfg))},
+        {"mean", pluss::table::Slate(mean_)},
+        {"stddev", pluss::table::Slate(stddev_)},
+        {"min", pluss::table::Slate(minimum_)},
+        {"max", pluss::table::Slate(maximum_)},
+        {"skewness", pluss::table::Slate(skewness_)},
+        {"excess_kurtosis", pluss::table::Slate(excess_kurtosis_)},
+        {"missing_rate", pluss::table::Slate(missing_rate_)},
+        {"negative_rate", pluss::table::Slate(negative_rate_)},
+        {"zero_rate", pluss::table::Slate(zero_rate_)},
+        {"gaussianize_candidate", pluss::table::Slate(gaussianize_candidate_)},
     });
   }
 
@@ -106,7 +106,7 @@ class Result final {
     const Series candidate = variable.logical_and(skewed.logical_or(tailed));
     const std::vector<double> mask = candidate.to(pluss::pCPU, ScalarType::Float64)
                                          .reshape({candidate.numel()})
-                                         .to_vec<double>();
+                                         .host<double>().array().data;
     std::vector<std::string> selected{};
     selected.reserve(feature_names_.size());
     for (std::size_t i = 0; i < feature_names_.size() && i < mask.size(); ++i) {
@@ -211,7 +211,7 @@ class Runner final {
   DataFrameBatchOptions options{};
   options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
-  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
   return options;
 }

@@ -47,6 +47,21 @@ TEST_CASE("function applies shape-safe local simplifications",
   CHECK(impl(composition).plan().size() == 1);
 }
 
+TEST_CASE("simplification factors only pointer-identical common terms",
+          "[calculus][simplification][factoring]") {
+  const math::Function factored = math::function(
+      {"x", "y", "z"}, [](math::Function x, math::Function y,
+                          math::Function z) { return x * y + x * z; });
+  const auto &root = impl(factored).root();
+  const pluss::Series x = pluss::make_series({2.0, 3.0});
+  const pluss::Series y = pluss::make_series({4.0, 5.0});
+  const pluss::Series z = pluss::make_series({6.0, 7.0});
+
+  CHECK(root.kind() == pluss::subsp::math::detail::NodeKind::Primitive);
+  CHECK(root.primitive_id() == pluss::subsp::math::detail::PrimitiveId::Mul);
+  CHECK(close(factored({x, y, z}), x.mul(y.add(z))));
+}
+
 TEST_CASE("Series remains the sole tensor value for arbitrary ranks",
           "[calculus][function][tensor]") {
   const pluss::Series tensor =
@@ -143,6 +158,17 @@ TEST_CASE("derivative graph budgets reject uncontrolled expansion",
       {.nonsmooth = math::NonSmooth::Strict, .max_nodes = 1000})(function));
 }
 
+TEST_CASE("derivative graph budgets bound intermediate orders",
+          "[calculus][differential][graph-limit]") {
+  const math::Function function = math::function(
+      {"x"}, [](math::Function x) { return x.pow(5) * x.sin(); });
+
+  // Without the per-order check this request builds a graph with billions of
+  // nodes before the final comparison is reached.
+  CHECK_THROWS_AS(operators::differential("x", 40)(function), pluss::Error);
+  CHECK_NOTHROW(operators::differential("x", 8)(function));
+}
+
 TEST_CASE("domain and non-smooth policies execute on MPS",
           "[calculus][domain][mps]") {
   if (!pluss::platform_available(pluss::pMPS)) {
@@ -153,9 +179,13 @@ TEST_CASE("domain and non-smooth policies execute on MPS",
       math::function({"x"}, [](math::Function x) { return x.abs(); });
   const math::Function derivative = operators::differential(
       "x", 1, {.nonsmooth = math::NonSmooth::Subgradient})(absolute);
-  const pluss::Series x = pluss::make_series({-2.0, 0.0, 3.0}).to(pluss::pMPS);
+  const pluss::Config f32 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float32);
+  const pluss::Series x =
+      pluss::make_series({-2.0, 0.0, 3.0}, {3}, f32).to(pluss::pMPS);
   const pluss::Series result = derivative({x});
 
   CHECK(result.platform() == pluss::pMPS);
-  CHECK(close(result.to(pluss::pCPU), pluss::make_series({-1.0, 0.0, 1.0})));
+  CHECK(close(result.to(pluss::pCPU),
+              pluss::make_series({-1.0, 0.0, 1.0}, {3}, f32), 1e-5));
 }

@@ -1,0 +1,152 @@
+<!-- generated from smiles_from_heston.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Smiles from Heston
+
+[Back to Heston and Bates](../finance_03_heston_and_bates.md)
+
+The Heston prices become useful when they are read as implied volatilities. Pricing across strikes and inverting with `implied_vol` ([Implied Volatility](../finance_02_implied_volatility.md)) gives the *smile*, the curve of implied volatility against strike that Black-Scholes would make flat. Each parameter has a recognisable effect, and the program reads them off.
+
+## Correlation and the skew
+
+The correlation ρ tilts the smile. With ρ < 0, falling prices come with rising variance, so low strikes have high implied volatilities and the smile slopes down. With ρ = 0 it is symmetric, a smile in the strict sense, and with ρ > 0 it slopes up.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace prc = pluss::subsp::math::finance::pricing;
+namespace vol = pluss::subsp::math::finance::volatility;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
+  auto smile = [&](const vol::HestonParams &p, double t) {
+    std::vector<double> v;
+    for (double strike : {80.0, 90.0, 100.0, 110.0, 120.0}) {
+      v.push_back(prc::implied_vol(prc::Call, prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, t, p), spot, strike, rate, dividend, t));
+    }
+    return v;
+  };
+  out.writeln("implied volatility at strikes 80, 90, 100, 110, 120");
+  for (double rho : {-0.9, -0.5, 0.0, 0.5}) {
+    vol::HestonParams p;
+    p.rho = rho;
+    out.writeln("rho", rho, smile(p, maturity));
+  }
+}
+```
+
+Output
+
+```text
+implied volatility at strikes 80, 90, 100, 110, 120
+rho -0.9000 [0.2339, 0.2131, 0.1920, 0.1705, 0.1487]
+rho -0.5000 [0.2219, 0.2065, 0.1931, 0.1824, 0.1751]
+rho 0.0000 [0.2029, 0.1962, 0.1935, 0.1945, 0.1980]
+rho 0.5000 [0.1755, 0.1822, 0.1929, 0.2046, 0.2160]
+```
+
+A correlation of −0.9 gives a steeply downward smile, from 0.2339 at strike 80 to 0.1487 at strike 120. At −0.5 the slope is gentler, at 0 the smile is nearly symmetric (0.2029, 0.1962, 0.1935, 0.1945 and 0.1980), and at +0.5 it slopes upward, from 0.1755 to 0.2160.
+
+## Volatility of variance and curvature
+
+The volatility of variance σ controls how much the variance moves, and with it how heavy the tails of the return distribution are. Larger σ makes the smile more curved. With ρ = 0 the effect is isolated: the at-the-money implied volatility barely moves and the wings rise.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace prc = pluss::subsp::math::finance::pricing;
+namespace vol = pluss::subsp::math::finance::volatility;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
+  out.writeln("implied volatility at strikes 80, 90, 100, 110, 120, with rho = 0");
+  for (double sigma : {0.1, 0.3, 0.6, 1.0}) {
+    vol::HestonParams p;
+    p.rho = 0.0;
+    p.sigma = sigma;
+    std::vector<double> v;
+    for (double strike : {80.0, 90.0, 100.0, 110.0, 120.0}) {
+      v.push_back(prc::implied_vol(prc::Call, prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, maturity, p), spot, strike, rate, dividend, maturity));
+    }
+    out.writeln("sigma", sigma, v);
+  }
+}
+```
+
+Output
+
+```text
+implied volatility at strikes 80, 90, 100, 110, 120, with rho = 0
+sigma 0.1000 [0.2004, 0.1995, 0.1992, 0.1993, 0.1997]
+sigma 0.3000 [0.2029, 0.1962, 0.1935, 0.1945, 0.1980]
+sigma 0.6000 [0.2073, 0.1887, 0.1794, 0.1829, 0.1940]
+sigma 1.0000 [0.2094, 0.1787, 0.1600, 0.1675, 0.1881]
+```
+
+With a volatility of variance of 0.1 the smile is almost flat (0.1992 to 0.2004). As σ rises the wings lift and the money level drops: at σ = 1 the volatilities are 0.2094, 0.1787, 0.1600, 0.1675 and 0.1881, a strong smile with an at-the-money volatility of 0.16 against 0.1992 at σ = 0.1.
+
+## The term structure
+
+The skew flattens with maturity: the variance has time to revert and the effect of ρ averages out. When the current variance v₀ is below the long-run level θ the at-the-money implied volatility rises with maturity, and when it is above it falls. The program prints the at-the-money volatility and a skew measure (the difference between the volatilities at strikes 90 and 110) for several maturities, for both cases.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace prc = pluss::subsp::math::finance::pricing;
+namespace vol = pluss::subsp::math::finance::volatility;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double spot = 100.0, rate = 0.03, dividend = 0.01;
+  auto implied = [&](const vol::HestonParams &p, double strike, double t) {
+    return prc::implied_vol(prc::Call, prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, t, p), spot, strike, rate, dividend, t);
+  };
+  for (auto [label, v0] : {std::pair<const char *, double>{"v0 = 0.02 (below theta = 0.04)", 0.02}, {"v0 = 0.04 (equal to theta)    ", 0.04}, {"v0 = 0.09 (above theta)         ", 0.09}}) {
+    vol::HestonParams p;
+    p.v0 = v0;
+    out.writeln(label);
+    out.writeln("  maturity     at-the-money vol   skew (vol at 90 - vol at 110)");
+    for (double t : {0.1, 0.5, 1.0, 2.0, 5.0}) {
+      out.writeln("  ", t, implied(p, 100.0, t), implied(p, 90.0, t) - implied(p, 110.0, t));
+    }
+  }
+}
+```
+
+Output
+
+```text
+v0 = 0.02 (below theta = 0.04)
+  maturity     at-the-money vol   skew (vol at 90 - vol at 110)
+   0.1000 0.1447 0.0606
+   0.5000 0.1556 0.0472
+   1.0000 0.1655 0.0354
+   2.0000 0.1768 0.0235
+   5.0000 0.1886 0.0116
+v0 = 0.04 (equal to theta)    
+  maturity     at-the-money vol   skew (vol at 90 - vol at 110)
+   0.1000 0.1985 0.0493
+   0.5000 0.1945 0.0417
+   1.0000 0.1926 0.0332
+   2.0000 0.1925 0.0227
+   5.0000 0.1950 0.0114
+v0 = 0.09 (above theta)         
+  maturity     at-the-money vol   skew (vol at 90 - vol at 110)
+   0.1000 0.2926 0.0346
+   0.5000 0.2686 0.0323
+   1.0000 0.2485 0.0282
+   2.0000 0.2275 0.0207
+   5.0000 0.2103 0.0108
+```
+
+The term structure of the at-the-money volatility follows the starting variance. With v₀ = 0.02, below θ = 0.04, it rises with maturity, from 0.1447 at one month to 0.1886 at five years. With v₀ = θ it is nearly flat (0.1985 down to 0.1926 and back to 0.1950). With v₀ = 0.09 it falls, from 0.2926 to 0.2103. The skew (the volatility at 90 less that at 110) decays with maturity in all three cases, from 0.0606 to 0.0116 in the first, as the variance reverts and its correlation with the price averages out.

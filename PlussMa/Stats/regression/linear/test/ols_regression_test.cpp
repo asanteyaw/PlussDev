@@ -83,6 +83,14 @@ int main() {
       expect(summary.find("OLS Regression Results") != std::string::npos, "summary title");
       expect(summary.find("R-squared") != std::string::npos, "summary rsquared");
       expect(summary.find("feat1") != std::string::npos, "summary predictor name");
+      expect(summary.find("[0.025") != std::string::npos && summary.find("0.975]") != std::string::npos, "summary interval heading at alpha 0.05");
+
+      // The interval heading names the limits actually used, so it follows alpha.
+      reg::OLSOptions ten = opt;
+      ten.alpha = 0.10;
+      const std::string ten_summary = reg::ols_summary(reg::ols_fit(y, x, ten, cfg));
+      expect(ten_summary.find("[0.05") != std::string::npos && ten_summary.find("0.95]") != std::string::npos, "summary interval heading at alpha 0.10");
+      expect(ten_summary.find("[0.025") == std::string::npos, "summary interval heading no longer fixed at 0.025");
     }
 
     {
@@ -122,6 +130,117 @@ int main() {
         threw = true;
       }
       expect(threw, "a model with no predictors and no intercept is rejected");
+    }
+    {
+      // without an intercept the total sum of squares is about zero: R-squared = 1 - SSE / sum(y^2), and F tests every coefficient
+      const std::vector<double> xs{1, 2, 3, 4, 5, 6, 7, 8}, ys{10.1, 9.9, 10.2, 9.8, 10.0, 10.1, 9.9, 10.0};
+      double sxy = 0.0, sxx = 0.0, syy = 0.0;
+      for (std::size_t i = 0; i < xs.size(); ++i) {
+        sxy += xs[i] * ys[i];
+        sxx += xs[i] * xs[i];
+        syy += ys[i] * ys[i];
+      }
+      const double slope = sxy / sxx;
+      double sse = 0.0;
+      for (std::size_t i = 0; i < xs.size(); ++i) {
+        sse += (ys[i] - slope * xs[i]) * (ys[i] - slope * xs[i]);
+      }
+      reg::OLSOptions o;
+      o.add_intercept = false;
+      const auto fit = reg::ols_fit(pluss::make_series(ys, {8}).to(ScalarType::Float64), pluss::make_series(xs, {8, 1}).to(ScalarType::Float64), o);
+      expect(std::abs(fit.sst - syy) < 1e-9, "no-intercept total sum of squares is about zero");
+      expect(std::abs(fit.rsquared - (1.0 - sse / syy)) < 1e-12 && fit.rsquared >= 0.0, "no-intercept R-squared is uncentered");
+      const double f = ((syy - sse) / 1.0) / (sse / 7.0);
+      expect(std::abs(fit.f_stat - f) < 1e-8 * f, "no-intercept F statistic uses the uncentered explained sum of squares");
+      expect(fit.df_model == 1 && fit.df_resid == 7, "no-intercept degrees of freedom");
+    }
+    {
+      // one new observation of several predictors: a [1, p] row is that observation, with or without the column of ones
+      const Series x = mat({1, 2, 2, 1, 3, 0, 4, 2, 5, 1, 6, 3, 7, 4, 8, 5}, 8, 2, cfg);
+      const Series y = vec({0.9, 4.9, 7.2, 6.7, 10.0, 10.8, 10.6, 11.9}, cfg);
+      const auto fit = reg::ols_fit(y, x, {}, cfg);
+      const auto b = fit.coefficients.host<double>();
+      const double expected = b[0] + b[1] * 9.0 + b[2] * 4.0;
+      const Series row = reg::ols_predict(fit, mat({9.0, 4.0}, 1, 2, cfg), cfg);
+      const Series full = reg::ols_predict(fit, mat({1.0, 9.0, 4.0}, 1, 3, cfg), cfg);
+      expect(row.numel() == 1 && approx(row.host<double>().front(), expected, 1e-9), "a [1, p] row is one observation of p predictors");
+      expect(full.numel() == 1 && approx(full.host<double>().front(), expected, 1e-9), "a [1, k] row is one observation of the full design");
+      // a single predictor keeps the older reading: a [1, 2] row is two values of that predictor
+      const Series one = vec({1, 2, 3, 4, 5}, cfg);
+      const auto line = reg::ols_fit(vec({2, 4, 6, 8, 10}, cfg), one, {}, cfg);
+      expect(reg::ols_predict(line, mat({6.0, 7.0}, 1, 2, cfg), cfg).numel() == 2, "a [1, 2] row for a one-predictor fit is two values");
+    }
+    {
+      // integer case weights are the same as repeating the rows: coefficients, sums of squares, R-squared and likelihood agree, and
+      // the covariance differs only by the residual degrees of freedom, which follow the rows
+      const std::vector<double> xs{1, 2, 3, 4, 5, 6}, ys{1.1, 2.3, 2.8, 4.4, 4.7, 6.5}, counts{3, 1, 2, 1, 2, 1};
+      std::vector<double> rx, ry;
+      for (std::size_t i = 0; i < xs.size(); ++i) {
+        for (int c = 0; c < static_cast<int>(counts[i]); ++c) {
+          rx.push_back(xs[i]);
+          ry.push_back(ys[i]);
+        }
+      }
+      reg::OLSOptions weighted;
+      weighted.weights = vec(counts, cfg);
+      const auto a = reg::ols_fit(vec(ys, cfg), vec(xs, cfg), weighted, cfg);
+      const auto b = reg::ols_fit(vec(ry, cfg), vec(rx, cfg), {}, cfg);
+      const auto ca = a.coefficients.host<double>(), cb = b.coefficients.host<double>();
+      expect(approx(ca[0], cb[0], 1e-9) && approx(ca[1], cb[1], 1e-9), "weighted OLS equals replicated rows: coefficients");
+      expect(approx(a.sse, b.sse, 1e-9) && approx(a.sst, b.sst, 1e-9) && approx(a.rsquared, b.rsquared, 1e-9), "weighted OLS equals replicated rows: sums of squares");
+      // the Gaussian likelihood of precision weights (variance sigma^2 / w_i): -(n (ln(2 pi sse / n) + 1) - sum ln w) / 2, with n the rows
+      double sum_log_w = 0.0;
+      for (double c : counts) {
+        sum_log_w += std::log(c);
+      }
+      expect(approx(a.log_likelihood, -0.5 * (6.0 * (std::log(2.0 * 3.14159265358979323846 * a.sse / 6.0) + 1.0) - sum_log_w), 1e-9), "weighted OLS log-likelihood of precision weights");
+      const double ratio = (a.mse / b.mse);
+      expect(approx(ratio, static_cast<double>(b.df_resid) / static_cast<double>(a.df_resid), 1e-9), "weighted OLS: the covariance follows the row degrees of freedom");
+      expect(a.nobs == 6 && a.df_resid == 4, "weighted OLS counts the rows used");
+
+      reg::OLSOptions with_zero;
+      with_zero.weights = vec({1, 1, 0, 1, 1, 1}, cfg);
+      const auto z = reg::ols_fit(vec(ys, cfg), vec(xs, cfg), with_zero, cfg);
+      expect(z.nobs == 5 && z.dropped_observations == 1, "a zero weight removes the row");
+      bool negative = false;
+      try {
+        reg::OLSOptions bad;
+        bad.weights = vec({1, 1, -1, 1, 1, 1}, cfg);
+        (void)reg::ols_fit(vec(ys, cfg), vec(xs, cfg), bad, cfg);
+      } catch (const std::exception&) {
+        negative = true;
+      }
+      expect(negative, "a negative weight is rejected");
+
+      reg::PolyOptions poly;
+      poly.weights = vec(counts, cfg);
+      const auto pf = reg::poly_fit(vec(ys, cfg), vec(xs, cfg), poly, cfg);
+      reg::PolyOptions poly_rep;
+      const auto pr = reg::poly_fit(vec(ry, cfg), vec(rx, cfg), poly_rep, cfg);
+      expect(approx(pf.ols.coefficients.host<double>()[2], pr.ols.coefficients.host<double>()[2], 1e-8), "poly_fit passes the weights through");
+    }
+    {
+      // the rank cutoff and the pseudoinverse that produces the coefficients are one and the same: once rcond declares the nearly
+      // dependent direction lost, the minimum-norm solution (proportional to (1, 2)) is returned, not the full-rank solution
+      std::vector<double> flat, yv;
+      for (int i = 0; i < 10; ++i) {
+        flat.push_back(i + 1.0);
+        flat.push_back(2.0 * (i + 1.0) + (i % 2 ? 1e-4 : -1e-4));
+        yv.push_back(2.0 * (i + 1.0) + 0.3 * (i % 3));
+      }
+      const Series y = pluss::make_series(yv, {10}).to(ScalarType::Float64);
+      const Series x = pluss::make_series(flat, {10, 2}).to(ScalarType::Float64);
+      reg::OLSOptions strict;
+      strict.rcond = 1e-12;
+      const auto full = reg::ols_fit(y, x, strict);
+      expect(full.rank == 3, "tiny rcond keeps all three directions");
+      expect(std::abs(full.coefficients.host<double>()[1]) > 100.0, "the full-rank solution has large offsetting coefficients");
+      reg::OLSOptions loose;
+      loose.rcond = 1e-6;
+      const auto cut = reg::ols_fit(y, x, loose);
+      const auto b = cut.coefficients.host<double>();
+      expect(cut.rank == 2, "a larger rcond drops the nearly dependent direction");
+      expect(std::abs(b[1]) < 5.0 && std::abs(b[2] / b[1] - 2.0) < 1e-3, "the coefficients are the minimum-norm solution for the reported rank");
     }
     {
       // nearly collinear predictors are flagged through the condition number

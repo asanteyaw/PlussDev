@@ -30,9 +30,6 @@ void apply_unary_i64_scalar(const pluss::codem::Series& a, pluss::codem::Series&
     const std::int64_t n = a.numel();
     const std::int64_t* __restrict avp = av;
     std::int64_t* __restrict op_ = o;
-#if defined(__clang__)
-#pragma clang loop vectorize(enable) interleave(enable)
-#endif
     for (std::int64_t i = 0; i < n; ++i) op_[i] = op(avp[i]);
     return;
   }

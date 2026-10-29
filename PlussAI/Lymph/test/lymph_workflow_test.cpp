@@ -27,7 +27,7 @@ Config f64() {
 }
 
 std::vector<double> as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>().array().data;
 }
 
 ModelSpec linear_spec() {
@@ -304,7 +304,7 @@ bool run_workflow_checks(std::ostream* err) {
     if (err) *err << "Workflow should learn and infer through DataFrame-backed Payload objects\n";
     return false;
   }
-  if (payload_workflow.assess(train_payload).r2.item<double>() < 0.999) {
+  if (payload_workflow.assess(train_payload).r2.host<double>().front() < 0.999) {
     if (err) *err << "Workflow::assess(Payload) should evaluate labeled DataFrame payloads\n";
     return false;
   }

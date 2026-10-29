@@ -1804,7 +1804,7 @@ Slate Slate::bucketize(pluss::msharp::RangeView::Double bins,
     assigned = assigned.logical_or(mask);
   }
 
-  const auto assigned_count = assigned.count().to(pluss::codem::Platform::CPU).item<std::int64_t>();
+  const auto assigned_count = assigned.count().to(pluss::codem::Platform::CPU).host<std::int64_t>().front();
   if (assigned_count == x.numel()) {
     return Slate(out);
   }
@@ -1914,7 +1914,7 @@ Slate Slate::freq(SlateFreqOptions options) const {
           .name("prop");
     }
     const auto total =
-        static_cast<double>(count_slate.sum().slate().as_series().item<std::int64_t>());
+        static_cast<double>(count_slate.sum().slate().as_series().host<std::int64_t>().front());
     return count_slate.div(total).label().set(label_slate).name("prop");
   }
   return count_slate.name("count");
@@ -2003,8 +2003,8 @@ SlateView Slate::describe(bool render) const {
   }
 
   if (kind() == SlateKind::Note) {
-    const auto non_null = count(true).as_series().item<std::int64_t>();
-    const auto distinct_count = distinct(/*dropnull=*/true).count(true).as_series().item<std::int64_t>();
+    const auto non_null = count(true).as_series().host<std::int64_t>().front();
+    const auto distinct_count = distinct(/*dropnull=*/true).count(true).as_series().host<std::int64_t>().front();
     auto counts = freq();
 
     std::string top_value = "NULL";
@@ -2093,7 +2093,7 @@ SlateValue Slate::any(bool skipnull) const {
     s = s.logical_and(valid);
   }
 
-  const auto true_count = s.count(true).item<std::int64_t>();
+  const auto true_count = s.count(true).host<std::int64_t>().front();
   return SlateValue(Slate(bool_series_from_bools({true_count > 0})));
 }
 
@@ -2110,7 +2110,7 @@ SlateValue Slate::all(bool skipnull) const {
     s = s.logical_or(valid.logical_not());
   }
 
-  const auto true_count = s.count(true).item<std::int64_t>();
+  const auto true_count = s.count(true).host<std::int64_t>().front();
   return SlateValue(Slate(bool_series_from_bools({true_count == s.numel()})));
 }
 
@@ -2860,7 +2860,7 @@ Slate Slate::between(std::string_view lo, std::string_view hi, bool include_left
 
   auto lower = pluss::make_timeline(lo);
   auto upper = pluss::make_timeline(hi);
-  if ((lower > upper).item<bool>()) {
+  if ((lower > upper).host<bool>().front()) {
     std::swap(lower, upper);
     std::swap(include_left, include_right);
   }

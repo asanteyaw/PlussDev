@@ -290,39 +290,39 @@ struct PiePlotOptions {
 
 struct AutoPlotOptions {};
 
-class ThreadPlotAccessor {
+class SlatePlotAccessor {
 public:
-  explicit ThreadPlotAccessor(Thread value, DataFramePlotOptions options = {});
+  explicit SlatePlotAccessor(Slate value, DataFramePlotOptions options = {});
 
   pluss::pl::Studio line() const;
-  pluss::pl::Studio line(const Thread& x) const;
+  pluss::pl::Studio line(const Slate& x) const;
   pluss::pl::Studio line(const LinePlotOptions& options) const;
-  pluss::pl::Studio line(const Thread& x, const LinePlotOptions& options) const;
+  pluss::pl::Studio line(const Slate& x, const LinePlotOptions& options) const;
 
   pluss::pl::Studio step() const;
-  pluss::pl::Studio step(const Thread& x) const;
+  pluss::pl::Studio step(const Slate& x) const;
   pluss::pl::Studio step(const StepPlotOptions& options) const;
-  pluss::pl::Studio step(const Thread& x, const StepPlotOptions& options) const;
+  pluss::pl::Studio step(const Slate& x, const StepPlotOptions& options) const;
 
   pluss::pl::Studio area() const;
-  pluss::pl::Studio area(const Thread& x) const;
+  pluss::pl::Studio area(const Slate& x) const;
   pluss::pl::Studio area(const AreaPlotOptions& options) const;
-  pluss::pl::Studio area(const Thread& x, const AreaPlotOptions& options) const;
+  pluss::pl::Studio area(const Slate& x, const AreaPlotOptions& options) const;
 
-  pluss::pl::Studio scatter(const Thread& x) const;
-  pluss::pl::Studio scatter(const Thread& x, const ScatterPlotOptions& options) const;
-  pluss::pl::Studio scatter(const Thread& x, const Thread& hue) const;
-  pluss::pl::Studio scatter(const Thread& x, const Thread& hue, const ScatterPlotOptions& options) const;
+  pluss::pl::Studio scatter(const Slate& x) const;
+  pluss::pl::Studio scatter(const Slate& x, const ScatterPlotOptions& options) const;
+  pluss::pl::Studio scatter(const Slate& x, const Slate& hue) const;
+  pluss::pl::Studio scatter(const Slate& x, const Slate& hue, const ScatterPlotOptions& options) const;
 
   pluss::pl::Studio bar() const;
-  pluss::pl::Studio bar(const Thread& x) const;
+  pluss::pl::Studio bar(const Slate& x) const;
   pluss::pl::Studio bar(const BarPlotOptions& options) const;
-  pluss::pl::Studio bar(const Thread& x, const BarPlotOptions& options) const;
+  pluss::pl::Studio bar(const Slate& x, const BarPlotOptions& options) const;
 
   pluss::pl::Studio box(const BoxPlotOptions& options = {}) const;
   pluss::pl::Studio violin(const ViolinPlotOptions& options = {}) const;
-  pluss::pl::Studio violin(const Thread& group) const;
-  pluss::pl::Studio violin(const Thread& group, const ViolinPlotOptions& options) const;
+  pluss::pl::Studio violin(const Slate& group) const;
+  pluss::pl::Studio violin(const Slate& group, const ViolinPlotOptions& options) const;
 
   pluss::pl::Studio hist(std::int64_t bins = 20) const;
   pluss::pl::Studio hist(const HistPlotOptions& options) const;
@@ -332,8 +332,8 @@ public:
 
   pluss::pl::Studio pie() const;
   pluss::pl::Studio pie(const PiePlotOptions& options) const;
-  pluss::pl::Studio pie(const Thread& labels) const;
-  pluss::pl::Studio pie(const Thread& labels, const PiePlotOptions& options) const;
+  pluss::pl::Studio pie(const Slate& labels) const;
+  pluss::pl::Studio pie(const Slate& labels, const PiePlotOptions& options) const;
 
   pluss::pl::Studio lag(const LagPlotOptions& options = {}) const;
   pluss::pl::Studio act(const ActPlotOptions& options = {}) const;
@@ -345,7 +345,7 @@ public:
   pluss::pl::Studio auto_plot(const AutoPlotOptions& options) const;
 
 private:
-  Thread base_{};
+  Slate base_{};
   DataFramePlotOptions options_{};
 };
 
@@ -566,7 +566,7 @@ public:
                               const AutoPlotOptions& options) const;
 
 private:
-  friend class ThreadPlotAccessor;
+  friend class SlatePlotAccessor;
 
   pluss::pl::Studio impl_line(pluss::msharp::RangeView::Of<std::string_view> y_features,
                               std::optional<std::string_view> x_feature) const;

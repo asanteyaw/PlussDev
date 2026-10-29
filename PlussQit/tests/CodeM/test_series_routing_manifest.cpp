@@ -275,6 +275,7 @@ TEST_CASE("series routing manifest", "[routing-manifest][audit]") {
   probe("diag", "(std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.diag(INT64_C(0)); });
   probe("diag_embed", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.diag_embed(); });
   probe("diag_embed", "(std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.diag_embed(INT64_C(0)); });
+  probe("diag_embed", "(std::int64_t, std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.diag_embed(INT64_C(0), INT64_C(0), INT64_C(0)); });
   probe("diagflat", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.diagflat(); });
   probe("diagflat", "(std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.diagflat(INT64_C(0)); });
   probe("diagonal", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.diagonal(); });
@@ -314,6 +315,7 @@ TEST_CASE("series routing manifest", "[routing-manifest][audit]") {
   probe("exponential_", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.exponential_(); });
   probe("exponential_", "(double)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.exponential_(0.5); });
   probe("factorial", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.factorial(); });
+  probe("fft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.fft(INT64_C(0), INT64_C(0), std::string("sum")); });
   probe("fftshift", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.fftshift(); });
   probe("fftshift", "(pluss::msharp::RangeView::Int)", [&]{ Series s = probe_input(); Series mate = probe_input(); std::vector<std::int64_t> il0{1, 1}; return s.fftshift(pluss::msharp::RangeView::Int(il0)); });
   probe("fill_", "(double)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.fill_(0.5); });
@@ -379,6 +381,7 @@ TEST_CASE("series routing manifest", "[routing-manifest][audit]") {
   probe("idct", "(std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.idct(INT64_C(0)); });
   probe("idst", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.idst(); });
   probe("idst", "(std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.idst(INT64_C(0)); });
+  probe("ifft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.ifft(INT64_C(0), INT64_C(0), std::string("sum")); });
   probe("ifftshift", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.ifftshift(); });
   probe("ifftshift", "(pluss::msharp::RangeView::Int)", [&]{ Series s = probe_input(); Series mate = probe_input(); std::vector<std::int64_t> il0{1, 1}; return s.ifftshift(pluss::msharp::RangeView::Int(il0)); });
   probe("igamma", "(const Series&)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.igamma(mate); });
@@ -406,6 +409,7 @@ TEST_CASE("series routing manifest", "[routing-manifest][audit]") {
   probe("indices", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.indices(); });
   probe("inner", "(const Series&)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.inner(mate); });
   probe("int_repr", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.int_repr(); });
+  probe("irfft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.irfft(INT64_C(0), INT64_C(0), std::string("sum")); });
   probe("isclose", "(const Series&)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.isclose(mate); });
   probe("isclose", "(const Series&, double, double)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.isclose(mate, 0.5, 0.5); });
   probe("isclose", "(const Series&, double, double, bool)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.isclose(mate, 0.5, 0.5, false); });
@@ -602,6 +606,7 @@ TEST_CASE("series routing manifest", "[routing-manifest][audit]") {
   probe("retain_grad", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.retain_grad(); });
   probe("retain_grad", "(bool)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.retain_grad(false); });
   probe("retains_grad", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.retains_grad(); });
+  probe("rfft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.rfft(INT64_C(0), INT64_C(0), std::string("sum")); });
   probe("roll", "(std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.roll(INT64_C(0)); });
   probe("roll", "(std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.roll(INT64_C(0), INT64_C(0)); });
   probe("roll", "(pluss::msharp::RangeView::Int)", [&]{ Series s = probe_input(); Series mate = probe_input(); std::vector<std::int64_t> il0{1, 1}; return s.roll(pluss::msharp::RangeView::Int(il0)); });
@@ -699,6 +704,8 @@ TEST_CASE("series routing manifest", "[routing-manifest][audit]") {
   probe("topk", "(std::int64_t, std::int64_t, bool)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.topk(INT64_C(0), INT64_C(0), false); });
   probe("topk", "(std::int64_t, std::int64_t, bool, bool)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.topk(INT64_C(0), INT64_C(0), false, false); });
   probe("trace", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.trace(); });
+  probe("trace", "(std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.trace(INT64_C(0)); });
+  probe("trace", "(std::int64_t, std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.trace(INT64_C(0), INT64_C(0), INT64_C(0)); });
   probe("tracks_slope_", "()", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.tracks_slope_(); });
   probe("tracks_slope_", "(bool)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.tracks_slope_(false); });
   probe("transpose_", "(std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); Series mate = probe_input(); return s.transpose_(INT64_C(0), INT64_C(0)); });

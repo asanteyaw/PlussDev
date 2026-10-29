@@ -30,7 +30,7 @@ public:
   void clear() {
     for (Series* p : parameters()) {
       if (p && p->defined()) {
-        p->clear_sensitivity();
+        p->clear();
       }
     }
   }
@@ -127,7 +127,7 @@ public:
 
   struct SnapshotEntry {
     std::string name;
-    Series value{};
+    Series value = pluss::series::undefined();
   };
 
   struct Snapshot {
@@ -226,13 +226,13 @@ public:
     for (const auto& named : named_parameters()) {
       SnapshotEntry entry{};
       entry.name = named.name;
-      entry.value = (named.series != nullptr && named.series->defined()) ? named.series->clone() : Series();
+      entry.value = (named.series != nullptr && named.series->defined()) ? named.series->clone() : pluss::series::undefined();
       out.parameters.push_back(std::move(entry));
     }
     for (const auto& named : named_buffers()) {
       SnapshotEntry entry{};
       entry.name = named.name;
-      entry.value = (named.series != nullptr && named.series->defined()) ? named.series->clone() : Series();
+      entry.value = (named.series != nullptr && named.series->defined()) ? named.series->clone() : pluss::series::undefined();
       out.buffers.push_back(std::move(entry));
     }
     return out;
@@ -267,9 +267,9 @@ public:
     auto assign_like = [](Series* target, const Series& source) {
       if (target == nullptr) return;
       if (!target->defined()) {
-        *target = source.defined() ? source.clone() : Series();
+        *target = source.defined() ? source.clone() : pluss::series::undefined();
       } else if (!source.defined()) {
-        *target = Series();
+        *target = pluss::series::undefined();
       } else {
         *target = source.to(target->platform(), target->scalar_type());
       }

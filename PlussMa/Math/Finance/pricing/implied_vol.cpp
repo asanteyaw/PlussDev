@@ -38,14 +38,9 @@ Series as_vector_(const Series& x, const char* op) {
   return x.reshape({sizes[0]});
 }
 
-Series scalar_index_(std::int64_t index, Config cfg) {
-  const auto idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  return pluss::make_series(std::vector<std::int64_t>{index}, {1}, idx_cfg);
-}
-
 void validate_type_(OptionType type, const char* op) {
   PLUSS_CHECK(type == OptionType::Call || type == OptionType::Put,
-              std::string("subsp::math::finance::pricing::") + op + ": unsupported option type");
+              std::string("subsp::math::finance::pricing::") + op + ": option type must be Call or Put (OptionType::Auto is only valid for an instrument that supplies is_call)");
 }
 
 void validate_options_(const ImpliedVolOptions& options) {
@@ -123,6 +118,7 @@ double solve_bisection_(OptionType type,
                         double lo,
                         double hi,
                         double flo,
+                        double price_tol,
                         const ImpliedVolOptions& options) {
   double a = lo;
   double b = hi;
@@ -132,7 +128,7 @@ double solve_bisection_(OptionType type,
     const double m = 0.5 * (a + b);
     const double fm = objective_(type, m, target, spot, strike, rate, dividend_yield, ttm);
     if (!std::isfinite(fm)) return std::numeric_limits<double>::quiet_NaN();
-    if (std::abs(fm) <= options.tolerance || 0.5 * std::abs(b - a) <= options.tolerance) return m;
+    if (std::abs(fm) <= price_tol || 0.5 * std::abs(b - a) <= options.tolerance) return m;
     if ((fa <= 0.0 && fm >= 0.0) || (fa >= 0.0 && fm <= 0.0)) {
       b = m;
       fb = fm;
@@ -142,7 +138,11 @@ double solve_bisection_(OptionType type,
     }
   }
   (void)fb;
-  return 0.5 * (a + b);
+  // Not converged within max_iterations: report that no solution was found rather than the last midpoint.
+  const double m = 0.5 * (a + b);
+  const double fm = objective_(type, m, target, spot, strike, rate, dividend_yield, ttm);
+  if (std::isfinite(fm) && (std::abs(fm) <= price_tol || 0.5 * std::abs(b - a) <= options.tolerance)) return m;
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 double solve_secant_(OptionType type,
@@ -155,6 +155,7 @@ double solve_secant_(OptionType type,
                      double lo,
                      double hi,
                      double flo,
+                     double price_tol,
                      const ImpliedVolOptions& options) {
   double a = lo;
   double b = hi;
@@ -166,7 +167,7 @@ double solve_secant_(OptionType type,
   double f1 = fb;
 
   for (std::int64_t i = 0; i < options.max_iterations; ++i) {
-    if (std::abs(f1) <= options.tolerance || std::abs(b - a) <= options.tolerance) return x1;
+    if (std::abs(f1) <= price_tol || std::abs(b - a) <= options.tolerance) return x1;
     double x2 = std::numeric_limits<double>::quiet_NaN();
     const double denom = f1 - f0;
     if (std::isfinite(denom) && std::abs(denom) > 1e-16) {
@@ -202,6 +203,7 @@ double solve_newton_(OptionType type,
                      double lo,
                      double hi,
                      double flo,
+                     double price_tol,
                      const ImpliedVolOptions& options) {
   double a = lo;
   double b = hi;
@@ -212,7 +214,7 @@ double solve_newton_(OptionType type,
     const BsValueVega pv = bs_price_vega_(type, spot, strike, rate, dividend_yield, ttm, x);
     const double fx = pv.price - target;
     if (!std::isfinite(fx) || !std::isfinite(pv.vega)) return std::numeric_limits<double>::quiet_NaN();
-    if (std::abs(fx) <= options.tolerance) return x;
+    if (std::abs(fx) <= price_tol) return x;
 
     if ((fa <= 0.0 && fx >= 0.0) || (fa >= 0.0 && fx <= 0.0)) {
       b = x;
@@ -240,6 +242,7 @@ double solve_brent_(OptionType type,
                     double lo,
                     double hi,
                     double flo,
+                    double price_tol,
                     const ImpliedVolOptions& options) {
   double a = lo;
   double b = hi;
@@ -261,19 +264,20 @@ double solve_brent_(OptionType type,
       e = d;
     }
     if (std::abs(fc) < std::abs(fb)) {
-      const double ta = a;
-      const double tfa = fa;
-      a = b;
-      fa = fb;
+      // (a, b, c) <- (b, c, b): the new contrapoint c is the old b, as in Brent's algorithm
+      const double old_b = b;
+      const double old_fb = fb;
+      a = old_b;
+      fa = old_fb;
       b = c;
       fb = fc;
-      c = ta;
-      fc = tfa;
+      c = old_b;
+      fc = old_fb;
     }
 
     const double tol1 = 2.0 * std::numeric_limits<double>::epsilon() * std::abs(b) + 0.5 * options.tolerance;
     const double m = 0.5 * (c - b);
-    if (std::abs(m) <= tol1 || std::abs(fb) <= options.tolerance) return b;
+    if (std::abs(m) <= tol1 || std::abs(fb) <= price_tol) return b;
 
     if (std::abs(e) >= tol1 && std::abs(fa) > std::abs(fb)) {
       double p = 0.0;
@@ -334,40 +338,47 @@ double implied_vol_scalar_(OptionType type,
   }
 
   const double intrinsic = discounted_intrinsic_(type, spot, strike, rate, dividend_yield, maturity);
+  // The price tolerance is relative to the time value (price less intrinsic value; the whole price out of the money), which is the part
+  // of the price that carries the volatility. A price of 1e-15 is then matched to within 1e-23 and the volatility it implies is
+  // resolved, instead of every volatility below some absolute threshold being accepted, and a deep in-the-money price is not judged
+  // against its large intrinsic value. The floor is a few units in the last place of the price, which is all the price can resolve.
+  const double time_value = std::max(option_price - intrinsic, 0.0);
+  const double price_tol = std::max(options.tolerance * std::max(time_value, std::numeric_limits<double>::min()),
+                                    64.0 * std::numeric_limits<double>::epsilon() * option_price);
   const double lo = options.lower_vol;
   const double hi = options.upper_vol;
   const double plo = bs_price_vega_(type, spot, strike, rate, dividend_yield, maturity, lo).price;
   const double phi = bs_price_vega_(type, spot, strike, rate, dividend_yield, maturity, hi).price;
   if (!std::isfinite(plo) || !std::isfinite(phi)) return std::numeric_limits<double>::quiet_NaN();
-  if (option_price < intrinsic - options.tolerance) return std::numeric_limits<double>::quiet_NaN();
-  if (option_price > phi + options.tolerance) return std::numeric_limits<double>::quiet_NaN();
+  if (option_price < intrinsic - price_tol) return std::numeric_limits<double>::quiet_NaN();
+  if (option_price > phi + price_tol) return std::numeric_limits<double>::quiet_NaN();
 
   const double flo = plo - option_price;
-  if (std::abs(flo) <= options.tolerance) return lo;
+  if (std::abs(flo) <= price_tol) return lo;
   const double fhi = phi - option_price;
-  if (std::abs(fhi) <= options.tolerance) return hi;
+  if (std::abs(fhi) <= price_tol) return hi;
   if ((flo < 0.0 && fhi < 0.0) || (flo > 0.0 && fhi > 0.0)) return std::numeric_limits<double>::quiet_NaN();
 
   double sigma = std::numeric_limits<double>::quiet_NaN();
   switch (options.method) {
     case ImpliedVolMethod::Auto:
     case ImpliedVolMethod::Brent:
-      sigma = solve_brent_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, options);
+      sigma = solve_brent_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, price_tol, options);
       break;
     case ImpliedVolMethod::Newton:
-      sigma = solve_newton_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, options);
+      sigma = solve_newton_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, price_tol, options);
       break;
     case ImpliedVolMethod::Bisection:
-      sigma = solve_bisection_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, options);
+      sigma = solve_bisection_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, price_tol, options);
       break;
     case ImpliedVolMethod::Secant:
-      sigma = solve_secant_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, options);
+      sigma = solve_secant_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, price_tol, options);
       break;
   }
   const double residual = objective_(type, sigma, option_price, spot, strike, rate, dividend_yield, maturity);
   if (!std::isfinite(sigma) || sigma < lo || sigma > hi || !std::isfinite(residual) ||
-      std::abs(residual) > std::max(options.tolerance * 10.0, 1e-10)) {
-    sigma = solve_bisection_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, options);
+      std::abs(residual) > std::max(price_tol * 10.0, 1e-300)) {
+    sigma = solve_bisection_(type, option_price, spot, strike, rate, dividend_yield, maturity, lo, hi, flo, price_tol, options);
   }
   return sigma;
 }
@@ -388,15 +399,17 @@ Series implied_vol_series_(OptionType type,
   PLUSS_CHECK(p.numel() == s.numel() && s.numel() == tau.numel(),
               "subsp::math::finance::pricing::implied_vol: option_price/spot/time_to_maturity size mismatch");
 
-  Series out = pluss::series::full({p.numel()}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
-  for (std::int64_t i = 0; i < p.numel(); ++i) {
-    const double pi = p.select(0, i).item<double>();
-    const double si = s.select(0, i).item<double>();
-    const double ti = tau.select(0, i).item<double>();
-    const double vi = implied_vol_scalar_(type, pi, si, strike, rate, dividend_yield, ti, options);
-    out = pluss::index_put(out, std::vector<Series>{scalar_index_(i, out_cfg)}, pluss::series::full({1}, vi, out_cfg), false);
+  // Solve on host buffers and build the result once; rebuilding the output array element by element would be quadratic in its length.
+  const std::int64_t n = p.numel();
+  const std::vector<double> prices = p.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const std::vector<double> spots = s.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const std::vector<double> maturities = tau.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  std::vector<double> result(static_cast<std::size_t>(n), std::numeric_limits<double>::quiet_NaN());
+  for (std::int64_t i = 0; i < n; ++i) {
+    const auto k = static_cast<std::size_t>(i);
+    result[k] = implied_vol_scalar_(type, prices[k], spots[k], strike, rate, dividend_yield, maturities[k], options);
   }
-  return out;
+  return pluss::make_series(result, {n}, out_cfg);
 }
 
 } // namespace

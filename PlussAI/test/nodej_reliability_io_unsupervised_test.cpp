@@ -22,11 +22,11 @@ Config f64() {
 }
 
 std::vector<double> as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>().array().data;
 }
 
 std::int64_t positive_count(const Series& labels) {
-  return labels.to(pluss::pCPU, ScalarType::Float64).ge(0.5).to(ScalarType::Int64).sum().item<std::int64_t>();
+  return labels.to(pluss::pCPU, ScalarType::Float64).ge(0.5).to(ScalarType::Int64).sum().host<std::int64_t>().front();
 }
 
 bool run_nodej_reliability_io_unsupervised_checks(std::ostream* err = nullptr) {
@@ -78,7 +78,7 @@ bool run_nodej_reliability_io_unsupervised_checks(std::ostream* err = nullptr) {
     const Series y = batch.y.reshape({batch.y.numel()});
     const Series test_y = y.index_select(0, fold.test_indices.to(ScalarType::Int64));
     const Series train_y = y.index_select(0, fold.train_indices.to(ScalarType::Int64));
-    if (!(test_y.sum().item<double>() > 0.0 && train_y.sum().item<double>() > 0.0)) {
+    if (!(test_y.sum().host<double>().front() > 0.0 && train_y.sum().host<double>().front() > 0.0)) {
       if (err) *err << "reliability stratified defaults should keep positive class in both splits\n";
       return false;
     }

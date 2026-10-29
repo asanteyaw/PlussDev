@@ -78,7 +78,8 @@ public:
               this->options_.split_bias,
               this->options_.proj_size,
               this->options_.cfg,
-              seed);
+              seed,
+              this->options_.hidden_size);
         },
         this->options_.num_layers,
         this->options_.bidirectional,
@@ -87,19 +88,29 @@ public:
   }
 
   std::tuple<Series, std::tuple<Series, Series>> forward(const Series& input,
-                                                         const std::tuple<Series, Series>& state = {}) const {
+                                                         const std::tuple<Series, Series>& state = {
+                                                             pluss::series::undefined(),
+                                                             pluss::series::undefined()}) const {
     return pluss::ai::rnn::lstm(input, state, this->params_, detail::as_run_config_(this->options_));
   }
 
   std::tuple<PackedSequence, std::tuple<Series, Series>> forward(
       const PackedSequence& input,
-      const std::tuple<Series, Series>& state = {}) const {
+      const std::tuple<Series, Series>& state = {
+          pluss::series::undefined(),
+          pluss::series::undefined()}) const {
     return this->forward_packed_(input, state, this->options_.batch_first, [this](const Series& padded, const std::tuple<Series, Series>& packed_state) {
       return forward(padded, packed_state);
     });
   }
 
-  auto operator()(const Series& input, const std::tuple<Series, Series>& state = {}) const { return forward(input, state); }
+  auto operator()(
+      const Series& input,
+      const std::tuple<Series, Series>& state = {
+          pluss::series::undefined(),
+          pluss::series::undefined()}) const {
+    return forward(input, state);
+  }
   LSTMImpl* operator->() noexcept { return this; }
   const LSTMImpl* operator->() const noexcept { return this; }
 };

@@ -1,8 +1,0 @@
-# Logistic and Poisson regression
-
-[Back to Generalised Linear, Quantile and Polynomial Regression](../regression_02_glm_quantile_polynomial.md)
-
-
-@@example Stats/regression/guide/1005_logistic_and_poisson.cpp@@
-
-With only an intercept the maximum-likelihood estimate has a closed form (the logit of the mean for the binomial, the log of the mean for the Poisson), and the fit reproduces it. For the pass/fail data the coefficient on hours, 1.353, is on the log-odds scale: each extra hour multiplies the odds of passing by e^1.353 = 3.87. The *score equations*, the conditions that define the maximum-likelihood estimate (the residuals `y − p` sum to zero and are orthogonal to each predictor), hold to rounding, which is an independent check that IRLS converged to the right point. The deviance has dropped from 13.86 to 8.67, a pseudo R² of 0.37.

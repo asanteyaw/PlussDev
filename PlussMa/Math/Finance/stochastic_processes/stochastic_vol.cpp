@@ -79,25 +79,50 @@ Method to_rng_method_(RandMethod method) {
   return Method::Pseudo;
 }
 
+// The independent random inputs of a generator (the spot shock, the variance shock, jump shocks, ...) are columns blocks of ONE
+// low-discrepancy sequence: `count` blocks of `rows` dimensions each, and the draw returns block `index`. Pseudo-random draws ignore the
+// block, since each call already has its own stream.
+struct DrawBlock {
+  std::int64_t index = 0;
+  std::int64_t count = 1;
+};
+
+// Draws a block of a quasi-random sequence with `paths` points and `rows * count` dimensions, and returns it as {rows, paths}. The points
+// are the paths and the dimensions are the time steps; a sequence whose points were time steps would have thousands of dimensions and a
+// handful of points.
+template <typename Sequence>
+Series quasi_block_(Sequence&& sequence, std::int64_t rows, std::int64_t points, DrawBlock block) {
+  const Series all = sequence({points, rows * block.count});
+  return all.slice(1, block.index * rows, (block.index + 1) * rows).transpose(0, 1).contiguous();
+}
+
+// `apply_shift` marks the shock that carries the importance-sampling shift: only the spot shock is shifted, and the likelihood ratio of
+// the price estimators accounts for that shock alone (the variance shock follows through its correlation with it).
 Series draw_normals_(std::int64_t rows,
                      std::int64_t cols,
                      const SimOptions& options,
                      Config cfg,
                      std::uint64_t compat_seed,
-                     std::uint64_t bump) {
+                     std::uint64_t bump,
+                     DrawBlock block = {},
+                     bool apply_shift = false) {
   const std::int64_t base_cols = options.antithetic ? ((cols + 1) / 2) : cols;
   const auto out_cfg = f64_cfg_(cfg);
-
-  if (options.method == RandMethod::Pseudo) {
-    Series z = pluss::series::randn({rows, base_cols}, out_cfg, effective_seed_(options, compat_seed, bump));
+  const bool shifted = apply_shift && std::abs(options.normal_shift) > 0.0;
+  auto finish = [&](Series z) {
     if (options.antithetic) {
       z = append_antithetic_(z, cols);
     }
-    return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
+    return shifted ? z.add(options.normal_shift) : z;
+  };
+
+  if (options.method == RandMethod::Pseudo) {
+    return finish(pluss::series::randn({rows, base_cols}, out_cfg, effective_seed_(options, compat_seed, bump)));
   }
 
-  const std::uint64_t off = effective_offset_(options, bump);
-  const std::uint64_t seed = effective_seed_(options, compat_seed, bump);
+  // Every block of one generator uses the same sequence parameters, so that the blocks are disjoint dimensions of the same points.
+  const std::uint64_t off = effective_offset_(options, 0x1ULL);
+  const std::uint64_t seed = effective_seed_(options, compat_seed, 0x1ULL);
 
   switch (options.method) {
     case RandMethod::Sobol: {
@@ -109,11 +134,7 @@ Series draw_normals_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      Series z = pluss::subsp::stats::rng::sobol({rows, base_cols}, o, out_cfg);
-      if (options.antithetic) {
-        z = append_antithetic_(z, cols);
-      }
-      return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
+      return finish(quasi_block_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::sobol(sz, o, out_cfg); }, rows, base_cols, block));
     }
     case RandMethod::Halton: {
       HaltonOptions o;
@@ -123,11 +144,7 @@ Series draw_normals_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      Series z = pluss::subsp::stats::rng::halton({rows, base_cols}, o, out_cfg);
-      if (options.antithetic) {
-        z = append_antithetic_(z, cols);
-      }
-      return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
+      return finish(quasi_block_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::halton(sz, o, out_cfg); }, rows, base_cols, block));
     }
     case RandMethod::Torus: {
       TorusOptions o;
@@ -137,22 +154,12 @@ Series draw_normals_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      Series z = pluss::subsp::stats::rng::torus({rows, base_cols}, o, out_cfg);
-      if (options.antithetic) {
-        z = append_antithetic_(z, cols);
-      }
-      return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
+      return finish(quasi_block_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::torus(sz, o, out_cfg); }, rows, base_cols, block));
     }
     case RandMethod::Pseudo:
       break;
   }
-
-  Series z = pluss::subsp::stats::rng::standard_normal(
-      {rows, base_cols}, to_rng_method_(options.method), out_cfg, off);
-  if (options.antithetic) {
-    z = append_antithetic_(z, cols);
-  }
-  return (std::abs(options.normal_shift) > 0.0) ? z.add(options.normal_shift) : z;
+  return finish(pluss::subsp::stats::rng::standard_normal({rows, base_cols}, to_rng_method_(options.method), out_cfg, off));
 }
 
 Series draw_uniforms_(std::int64_t rows,
@@ -160,15 +167,16 @@ Series draw_uniforms_(std::int64_t rows,
                       const SimOptions& options,
                       Config cfg,
                       std::uint64_t compat_seed,
-                      std::uint64_t bump) {
+                      std::uint64_t bump,
+                      DrawBlock block = {}) {
   const auto out_cfg = f64_cfg_(cfg);
 
   if (options.method == RandMethod::Pseudo) {
     return pluss::series::rand({rows, cols}, out_cfg, effective_seed_(options, compat_seed, bump));
   }
 
-  const std::uint64_t off = effective_offset_(options, bump);
-  const std::uint64_t seed = effective_seed_(options, compat_seed, bump);
+  const std::uint64_t off = effective_offset_(options, 0x1ULL);
+  const std::uint64_t seed = effective_seed_(options, compat_seed, 0x1ULL);
 
   switch (options.method) {
     case RandMethod::Sobol: {
@@ -180,7 +188,7 @@ Series draw_uniforms_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      return pluss::subsp::stats::rng::sobol({rows, cols}, o, out_cfg);
+      return quasi_block_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::sobol(sz, o, out_cfg); }, rows, cols, block);
     }
     case RandMethod::Halton: {
       HaltonOptions o;
@@ -190,7 +198,7 @@ Series draw_uniforms_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      return pluss::subsp::stats::rng::halton({rows, cols}, o, out_cfg);
+      return quasi_block_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::halton(sz, o, out_cfg); }, rows, cols, block);
     }
     case RandMethod::Torus: {
       TorusOptions o;
@@ -200,7 +208,7 @@ Series draw_uniforms_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      return pluss::subsp::stats::rng::torus({rows, cols}, o, out_cfg);
+      return quasi_block_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::torus(sz, o, out_cfg); }, rows, cols, block);
     }
     case RandMethod::Pseudo:
       break;
@@ -582,7 +590,7 @@ StochVolPaths gbm_paths(std::int64_t steps,
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
   const double sigma2 = params.sigma * params.sigma;
-  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x7011ULL);
+  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x7011ULL, DrawBlock{0, 1}, true);
   const Series z_var = pluss::series::zeros({steps, paths}, out_cfg);
   const Series log_inc = z_spot.mul(params.sigma * std::sqrt(dt)).add((params.mu - 0.5 * sigma2) * dt);
   const Series spot_tail = log_inc.cumsum(0, false).exp().mul(spot0);
@@ -621,10 +629,15 @@ StochVolPaths heston_paths(std::int64_t steps,
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
 
-  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x1021ULL);
-  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0x2303ULL);
-  const bool use_qe = (options.scheme == SimScheme::QuadExp);
-  const Series u_qe = use_qe ? draw_uniforms_(steps, paths, options, out_cfg, seed, 0x4517ULL)
+  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x1021ULL, DrawBlock{0, 3}, true);
+  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0x2303ULL, DrawBlock{1, 3});
+  // The exact transition of the variance is sampled as (Z + sqrt(lambda))^2 + chi-squared, with Z the correlated shock, only when the
+  // degree 4 kappa theta / sigma^2 of the non-central chi-squared law exceeds 1. Below that the exact sampler is a Poisson mixture that
+  // cannot be driven by the correlated shock and would drop the correlation with the spot, so the quadratic-exponential step, which keeps
+  // it, is used in that regime.
+  const bool transition_uses_qe = (options.scheme == SimScheme::Transition) && (4.0 * params.theta * params.kappa <= params.sigma * params.sigma);
+  const bool use_qe = (options.scheme == SimScheme::QuadExp) || transition_uses_qe;
+  const Series u_qe = use_qe ? draw_uniforms_(steps, paths, options, out_cfg, seed, 0x4517ULL, DrawBlock{2, 3})
                              : pluss::series::zeros({steps, paths}, out_cfg);
   const std::uint64_t transition_seed = effective_seed_(options, seed, 0x5843ULL);
 
@@ -643,19 +656,22 @@ StochVolPaths heston_paths(std::int64_t steps,
   for (std::int64_t t = 0; t < steps; ++t) {
     const Series eps_s = z_spot.select(0, t).reshape({1, paths});
     const Series eps_v = z_var.select(0, t).reshape({1, paths});
-    const Series v_next = (options.scheme == SimScheme::Transition)
+    const Series v_next = (options.scheme == SimScheme::Transition && !transition_uses_qe)
                               ? heston_transition_step_(vt, eps_v, dt, params, transition_seed, t)
                               : heston_variance_step_(vt,
                                                      eps_v,
                                                      u_qe.select(0, t).reshape({1, paths}),
                                                      dt,
                                                      params,
-                                                     options.scheme);
-    const Series v_bar = vt.add(v_next).mul(0.5).clamp_min(params.variance_floor);
+                                                     transition_uses_qe ? SimScheme::QuadExp : options.scheme);
+    // The spot step uses the variance at the start of the step, which does not depend on this step's shocks, so that conditional on it
+    // the step is exactly a martingale after discounting. Using the average of the start and end variances instead would make the
+    // diffusion coefficient depend on the variance shock and add a spurious drift of rho * sigma / 4 per unit time.
+    const Series v_start = vt.clamp_min(params.variance_floor);
 
-    const Series log_inc = v_bar.mul(-0.5 * dt)
+    const Series log_inc = v_start.mul(-0.5 * dt)
                                .add(params.mu * dt)
-                               .add(v_bar.mul(dt).sqrt().mul(eps_s));
+                               .add(v_start.mul(dt).sqrt().mul(eps_s));
     const Series s_next = st.mul(log_inc.exp()).clamp_min(params.variance_floor).clamp_max(1.0e12);
 
     vt = v_next;
@@ -702,18 +718,23 @@ StochVolPaths bates_paths(std::int64_t steps,
   const std::int64_t n = steps + 1;
   const HestonParams h_params = to_heston_(params);
 
-  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xA129ULL);
-  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xB273ULL);
-  const bool use_qe = (options.scheme == SimScheme::QuadExp);
-  const Series u_qe = use_qe ? draw_uniforms_(steps, paths, options, out_cfg, seed, 0xC317ULL)
+  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xA129ULL, DrawBlock{0, 5}, true);
+  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xB273ULL, DrawBlock{1, 5});
+  const bool transition_uses_qe = (options.scheme == SimScheme::Transition) && (4.0 * h_params.theta * h_params.kappa <= h_params.sigma * h_params.sigma);  // see heston_paths
+  const bool use_qe = (options.scheme == SimScheme::QuadExp) || transition_uses_qe;
+  const Series u_qe = use_qe ? draw_uniforms_(steps, paths, options, out_cfg, seed, 0xC317ULL, DrawBlock{2, 5})
                              : pluss::series::zeros({steps, paths}, out_cfg);
-  const Series z_jump = draw_normals_(steps, paths, options, out_cfg, seed, 0xD401ULL);
-  const Series u_jump = draw_uniforms_(steps, paths, options, out_cfg, seed, 0xE511ULL);
+  const Series z_jump = draw_normals_(steps, paths, options, out_cfg, seed, 0xD401ULL, DrawBlock{3, 5});
+  const Series u_jump = draw_uniforms_(steps, paths, options, out_cfg, seed, 0xE511ULL, DrawBlock{4, 5});
   const std::uint64_t transition_seed = effective_seed_(options, seed, 0xF713ULL);
 
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
   const double p_jump = 1.0 - std::exp(-params.jump_intensity * dt);
+  // `mu` is the expected growth rate of the spot, jumps included, as for the other generators: each step subtracts the log of the
+  // expected jump factor 1 + p_jump * k, with k = E[e^J] - 1, so that E[S_T] = S_0 exp(mu T).
+  const double mean_jump_factor = std::exp(params.jump_mean + 0.5 * params.jump_vol * params.jump_vol) - 1.0;
+  const double jump_compensator = std::log1p(p_jump * mean_jump_factor);
 
   Series st = pluss::series::full({1, paths}, spot0, out_cfg);
   Series vt = pluss::series::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg);
@@ -730,22 +751,22 @@ StochVolPaths bates_paths(std::int64_t steps,
     const Series zj = z_jump.select(0, t).reshape({1, paths});
     const Series uj = u_jump.select(0, t).reshape({1, paths});
 
-    const Series v_next = (options.scheme == SimScheme::Transition)
+    const Series v_next = (options.scheme == SimScheme::Transition && !transition_uses_qe)
                               ? heston_transition_step_(vt, eps_v, dt, h_params, transition_seed, t)
                               : heston_variance_step_(vt,
                                                      eps_v,
                                                      u_qe.select(0, t).reshape({1, paths}),
                                                      dt,
                                                      h_params,
-                                                     options.scheme);
-    const Series v_bar = vt.add(v_next).mul(0.5).clamp_min(params.variance_floor);
+                                                     transition_uses_qe ? SimScheme::QuadExp : options.scheme);
+    const Series v_start = vt.clamp_min(params.variance_floor);  // see heston_paths
 
     const Series jump_mask = uj.le(p_jump);
     const Series jump_log = zj.mul(params.jump_vol).add(params.jump_mean);
     const Series jump_term = jump_mask.where(jump_log, pluss::series::zeros({1, paths}, out_cfg));
-    const Series log_inc = v_bar.mul(-0.5 * dt)
-                               .add(params.mu * dt)
-                               .add(v_bar.mul(dt).sqrt().mul(eps_s))
+    const Series log_inc = v_start.mul(-0.5 * dt)
+                               .add(params.mu * dt - jump_compensator)
+                               .add(v_start.mul(dt).sqrt().mul(eps_s))
                                .add(jump_term);
     const Series s_next = st.mul(log_inc.exp());
 
@@ -792,8 +813,8 @@ StochVolPaths sv_paths(std::int64_t steps,
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
 
-  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x7811ULL);
-  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0x9119ULL);
+  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0x7811ULL, DrawBlock{0, 2}, true);
+  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0x9119ULL, DrawBlock{1, 2});
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
@@ -865,7 +886,7 @@ StochVolPaths heston_nandi_paths(std::int64_t steps,
   const std::int64_t n = steps + 1;
   const double h0 = heston_nandi_initial_variance_(params, "heston_nandi_paths");
 
-  const Series z_raw = draw_normals_(steps, paths, options, out_cfg, seed, 0xF311ULL);
+  const Series z_raw = draw_normals_(steps, paths, options, out_cfg, seed, 0xF311ULL, DrawBlock{0, 1}, true);
   const Series z_spot = z_raw.isfinite()
                             .where(z_raw, pluss::series::zeros({steps, paths}, out_cfg))
                             .clamp_min(-10.0)
@@ -940,8 +961,8 @@ StochVolPaths sabr_paths(std::int64_t steps,
 
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
-  const Series z1 = draw_normals_(steps, paths, options, out_cfg, seed, 0xAA11ULL);
-  const Series z2 = draw_normals_(steps, paths, options, out_cfg, seed, 0xBB31ULL);
+  const Series z1 = draw_normals_(steps, paths, options, out_cfg, seed, 0xAA11ULL, DrawBlock{0, 2}, true);
+  const Series z2 = draw_normals_(steps, paths, options, out_cfg, seed, 0xBB31ULL, DrawBlock{1, 2});
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_alpha = z1.mul(params.rho).add(z2.mul(rho_scale));
   const double sqdt = std::sqrt(dt);
@@ -1029,8 +1050,8 @@ StochVolPaths slv_paths(std::int64_t steps,
 
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
-  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xCC17ULL);
-  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xDD29ULL);
+  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xCC17ULL, DrawBlock{0, 2}, true);
+  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xDD29ULL, DrawBlock{1, 2});
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
@@ -1103,8 +1124,8 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
   const double H = params.alpha + 0.5;
   const double sqdt = std::sqrt(dt);
 
-  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xAB11ULL);
-  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xCD29ULL);
+  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xAB11ULL, DrawBlock{0, 2}, true);
+  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xCD29ULL, DrawBlock{1, 2});
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 
@@ -1142,8 +1163,7 @@ StochVolPaths rough_heston_paths(std::int64_t steps,
 
     const Series v_next =
         pluss::series::full({1, paths}, std::max(params.v0, params.variance_floor), out_cfg).add(frac_acc).clamp_min(params.variance_floor);
-    const Series v_bar = vt.add(v_next).mul(0.5).clamp_min(params.variance_floor);
-    const Series log_inc = v_bar.mul(-0.5 * dt).add(params.mu * dt).add(v_bar.mul(dt).sqrt().mul(eps_s));
+    const Series log_inc = vt.mul(-0.5 * dt).add(params.mu * dt).add(vt.mul(dt).sqrt().mul(eps_s));  // vt is clamped at the top of the step
     const Series s_next = st.mul(log_inc.exp()).clamp_min(params.variance_floor).clamp_max(1.0e12);
 
     vt = v_next;
@@ -1191,8 +1211,8 @@ StochVolPaths rough_bergomi_paths(std::int64_t steps,
   const double sqdt = std::sqrt(dt);
   const double rough_scale = std::sqrt(std::max(1e-12, 2.0 * H));
 
-  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xD519ULL);
-  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xF731ULL);
+  const Series z_spot = draw_normals_(steps, paths, options, out_cfg, seed, 0xD519ULL, DrawBlock{0, 2}, true);
+  const Series z_aux = draw_normals_(steps, paths, options, out_cfg, seed, 0xF731ULL, DrawBlock{1, 2});
   const double rho_scale = std::sqrt(std::max(0.0, 1.0 - params.rho * params.rho));
   const Series z_var = z_spot.mul(params.rho).add(z_aux.mul(rho_scale));
 

@@ -1,0 +1,170 @@
+# Building and evaluating a function
+
+[Back to Functions](../calculus_01_functions.md)
+
+A `Function` is a formula that you write once and evaluate on any data. You describe it with an ordinary C++ callable; Pluss runs the callable a single time on placeholder variables and records the arithmetic it performs as an expression graph. After that the callable is never called again: evaluating the `Function` replays the recorded graph on the `Series` you supply, so one function serves a single point, a vector of points or a batch of grids.
+
+## A first function
+
+`function(variables, callable)` takes the names of the variables and a callable with one `Function` parameter per name. The body combines those parameters with ordinary operators and the member functions listed in the next page.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+
+  int traced = 0;
+  const math::Function f = math::function({"x", "y"}, [&](math::Function x, math::Function y) {
+    ++traced;
+    return x.pow(2) * (x * y).sin();
+  });
+
+  const auto x = pluss::make_series({0.5, 1.0, 2.0});
+  const auto y = pluss::make_series(0.75);
+
+  out.writeln("arity", f.arity(), " rank", f.rank(), " variables", f.variables()[0], f.variables()[1]);
+  out.writeln("by position", f({x, y}).pull<double>());
+  out.writeln("by name    ", f({{"y", y}, {"x", x}}).pull<double>());
+  out.writeln("the callable ran", traced, "time; the function was evaluated twice");
+}
+```
+
+The function has two variables and is a scalar formula, so its `rank` is 0: `rank` and `shape` describe one evaluation at scalar inputs, and evaluating on arrays adds batch dimensions in front (the next page). The two calls give identical values. The by-name form takes the arguments in any order, which is why `{"y", y}` can come first. The last line is the point of tracing: the callable ran once, while it was recorded, and both evaluations replayed the stored graph. Consequently the body must describe the formula with `Function` arithmetic. A C++ `if` on a placeholder cannot see any data, because during tracing there is none; write a conditional as arithmetic instead.
+
+## Binding the variables
+
+A univariate `Function` accepts an ordinary C++ scalar directly. Use `f(2.0)`,
+`f(2.0F)`, or `f(2)` for a `Float64`, `Float32`, or `Int64` scalar evaluation.
+The result is still a scalar `Series`, so it participates in the same platform,
+dtype and downstream APIs as every other evaluation. There is no need to write
+`f({pluss::make_series(2.0)})` merely to evaluate one scalar point.
+
+For tensor inputs or several variables, call a `Function` with `Series` values
+in one of two ways.
+
+| Call | Meaning |
+|---|---|
+| `f(2.0)` | one-variable scalar evaluation; `float` and integer overloads preserve their corresponding dtype |
+| `f({a, b})` | by position: the arguments follow the order in which the variables were named |
+| `f({{"y", b}, {"x", a}})` | by name, in any order; each variable exactly once |
+| `f()` | for a function of no variables: evaluates the constant |
+
+Both forms also accept a `RangeView` of `Series` or of `Binding` (a `pair<string_view, Series>`), for argument lists that are built at run time. A wrong call fails with a `pluss::Error` that names the problem. The program below makes each mistake once and prints the first line of the message.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <functional>
+#include <string>
+
+namespace math = pluss::math;
+using namespace pluss::tils;
+
+// The first line of an error message (the rest says where it was raised).
+static std::string head(const char *what) {
+  const std::string text(what);
+  return text.substr(0, text.find('\n'));
+}
+
+static void attempt(OutputEngine &out, const char *label, const std::function<void()> &call) {
+  try {
+    call();
+    out.writeln(label, "-> accepted");
+  } catch (const pluss::Error &e) {
+    out.writeln(label, "->", head(e.what()));
+  }
+}
+
+int main() {
+  OutputEngine out;
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y + 1.0; });
+  const auto a = pluss::make_series({1.0, 2.0, 3.0});
+
+  attempt(out, "no arguments:        ", [&] { (void)f(); });
+  attempt(out, "one of two, by name: ", [&] { (void)f({{"x", a}}); });
+  attempt(out, "unknown name:        ", [&] { (void)f({{"x", a}, {"z", a}}); });
+  attempt(out, "name given twice:    ", [&] { (void)f({{"x", a}, {"x", a}, {"y", a}}); });
+  attempt(out, "one of two, by order:", [&] { (void)f({a}); });
+  attempt(out, "undefined Series:    ", [&] { (void)f({a, pluss::Series{}}); });
+  attempt(out, "correct call:        ", [&] { (void)f({a, a}); });
+}
+```
+
+Every failure is a `pluss::Error` raised at the call, before any arithmetic happens, and the message names the offending variable or the two counts. Evaluate with exactly the declared variables, once each. A by-name call may list them in any order; a by-position call must list all of them.
+
+## Which callables are accepted
+
+The callable can be anything with a fixed number of `Function` parameters: a lambda, a function pointer, a function object, a `std::function`, or an object that owns move-only state. It must return a `Function`, a `Series` or an arithmetic scalar; a `Series` or scalar result becomes a constant. The number of parameters has to equal the number of names.
+
+When the number of variables is only known at run time, take a single `std::span<const Function>` instead. The names can then come from any range of strings, and the function can have as many variables as the data requires.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <functional>
+#include <span>
+#include <string>
+#include <vector>
+
+namespace math = pluss::math;
+using namespace pluss::tils;
+
+math::Function blend(math::Function a, math::Function b) { return a * 0.25 + b * 0.75; }
+
+struct Square {
+  math::Function operator()(math::Function v) const { return v * v; }
+};
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto t = pluss::make_series({1.0, 2.0, 4.0});
+
+  const math::Function from_lambda = math::function({"t"}, [](math::Function v) { return v + 1.0; });
+  const math::Function from_pointer = math::function({"a", "b"}, &blend);
+  const math::Function from_object = math::function({"t"}, Square{});
+  const std::function<math::Function(math::Function)> erased = [](math::Function v) { return v.exp(); };
+  const math::Function from_std_function = math::function({"t"}, erased);
+
+  out.writeln("lambda       ", from_lambda({t}).pull<double>());
+  out.writeln("pointer      ", from_pointer({t, t}).pull<double>());
+  out.writeln("object       ", from_object({t}).pull<double>());
+  out.writeln("std::function", from_std_function({t}).pull<double>());
+
+  // Names held in a std::vector<std::string>, and a sum over however many variables there are.
+  std::vector<std::string> names;
+  for (int i = 0; i < 6; ++i) names.push_back("v" + std::to_string(i));
+  const math::Function total = math::function(names, [](std::span<const math::Function> v) {
+    math::Function sum = v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) sum = sum + v[i];
+    return sum;
+  });
+  std::vector<pluss::Series> args(6, t);
+  out.writeln("arity", total.arity(), " sum of six copies of t", total(pluss::RangeView<pluss::Series>(args)).pull<double>());
+}
+```
+
+All four forms trace identically. The `from_pointer` function has two variables (`a` and `b`) and was evaluated with `t` for both, so it returns `0.25 t + 0.75 t = t`. The span form is how to build a function whose number of variables is a run-time quantity: the six names come from a `std::vector<std::string>` and the body folds however many placeholders it receives. Its argument list is likewise a `RangeView<Series>` built from a vector. The names are copied when the function is created, so the vector may be destroyed afterwards.
+
+## Rules for the variable list
+
+- Each name must be non-empty and appear once.
+- The number of names must equal the callable's number of parameters (for a fixed-parameter callable).
+- The callable must return something: an undefined `Function` is rejected.
+- A `Function` obtained from one `function(...)` call cannot be returned from the body of another; each call starts its own set of placeholders.
+
+The next page lists everything the body may do with a placeholder.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

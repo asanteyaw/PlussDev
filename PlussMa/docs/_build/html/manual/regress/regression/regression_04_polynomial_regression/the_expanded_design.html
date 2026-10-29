@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The expanded design &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Choosing the degree" href="choosing_the_degree.html" />
+    <link rel="prev" title="Fitting a curve" href="fitting_a_curve.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from the_expanded_design.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="the-expanded-design">
+<h1>The expanded design<a class="headerlink" href="#the-expanded-design" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../regression_04_polynomial_regression.html"><span class="std std-doc">Back to Polynomial Regression</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">poly_expand</span></code> returns the design matrix that <code class="docutils literal notranslate"><span class="pre">poly_fit</span></code> regresses on, so the layout is visible. It does <strong>not</strong> include the column of ones; the intercept is added by the fit, as for any other least-squares model.</p>
+<p>For <em>p</em> predictors and the maximum power <em>d</em>:</p>
+<ul class="simple">
+<li><p>Without cross terms (<code class="docutils literal notranslate"><span class="pre">include_cross</span> <span class="pre">=</span> <span class="pre">false</span></code>, the default) the columns are the powers of each predictor in turn: x₁, x₁², …, x₁ᵈ, then x₂, x₂², …, x₂ᵈ, and so on. There are <em>p·d</em> of them.</p></li>
+<li><p>With cross terms (<code class="docutils literal notranslate"><span class="pre">include_cross</span> <span class="pre">=</span> <span class="pre">true</span></code>) all of those come first, followed by every product of different predictors whose total degree is at most <em>d</em>, for example x₁x₂ and x₁²x₂. There are C(<em>p</em> + <em>d</em>, <em>d</em>) − 1 columns in all, one for every monomial of degree 1 to <em>d</em>.</p></li>
+<li><p>Within a total degree the cross terms are ordered by the exponent of the first predictor, then of the second, and so on, in increasing order.</p></li>
+<li><p>Cross terms need at least two predictors and a degree of at least 2; otherwise the option has no effect.</p></li>
+</ul>
+<p>A one-row <code class="docutils literal notranslate"><span class="pre">x</span></code> of shape <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">p]</span></code> is read as a single column, as everywhere else (<a class="reference internal" href="../regression_01_least_squares/shapes_and_inputs.html"><span class="std std-doc">Shapes and inputs</span></a>). A <code class="docutils literal notranslate"><span class="pre">degree</span></code> below 1 is an error.</p>
+<section id="one-and-two-predictors">
+<h2>One and two predictors<a class="headerlink" href="#one-and-two-predictors" title="Link to this heading">¶</a></h2>
+<p>The program prints the expansion of small data sets, with the shapes, so the order of the columns can be read off.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">stats</span><span class="o">::</span><span class="nn">regression</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">());</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">powers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">poly_expand</span><span class="p">(</span><span class="n">one</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;x = 1, 2, 3 at degree 3: shape&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">powers</span><span class="p">.</span><span class="n">sizes</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;   rows&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">powers</span><span class="p">.</span><span class="n">host</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">().</span><span class="n">array</span><span class="p">().</span><span class="n">data</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// Two predictors; the first row is (x1, x2) = (1, 2) and the second (3, 4).</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">two</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">());</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">plain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">poly_expand</span><span class="p">(</span><span class="n">two</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">crossed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">poly_expand</span><span class="p">(</span><span class="n">two</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;two predictors, degree 3, no cross terms: shape&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">plain</span><span class="p">.</span><span class="n">sizes</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;   columns x1 x1^2 x1^3 x2 x2^2 x2^3; rows&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">plain</span><span class="p">.</span><span class="n">host</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">().</span><span class="n">array</span><span class="p">().</span><span class="n">data</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;two predictors, degree 3, cross terms: shape&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">crossed</span><span class="p">.</span><span class="n">sizes</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;   the first six columns are the same:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">plain</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">crossed</span><span class="p">.</span><span class="n">index_select</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">))).</span><span class="n">abs</span><span class="p">().</span><span class="n">max</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;   rows&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">crossed</span><span class="p">.</span><span class="n">host</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">().</span><span class="n">array</span><span class="p">().</span><span class="n">data</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// A row vector is one column.</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;a [1, 3] input at degree 2:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">poly_expand</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">()),</span><span class="w"> </span><span class="mi">2</span><span class="p">).</span><span class="n">sizes</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;cross terms have no effect at degree 1:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">poly_expand</span><span class="p">(</span><span class="n">two</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">).</span><span class="n">sizes</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; or with one predictor:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">poly_expand</span><span class="p">(</span><span class="n">one</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">).</span><span class="n">sizes</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x = 1, 2, 3 at degree 3: shape [3, 3]
+   rows [1, 1, 1, 2, 4, 8, 3, 9, 27]
+two predictors, degree 3, no cross terms: shape [2, 6]
+   columns x1 x1^2 x1^3 x2 x2^2 x2^3; rows [1, 1, 1, 2, 4, 8, 3, 9, 27, 4, 16, 64]
+two predictors, degree 3, cross terms: shape [2, 9]
+   the first six columns are the same: 0
+   rows [1, 1, 1, 2, 4, 8, 2, 4, 2, 3, 9, 27, 4, 16, 64, 12, 48, 36]
+a [1, 3] input at degree 2: [3, 2]
+cross terms have no effect at degree 1: [2, 2]  or with one predictor: [3, 3]
+</pre></div>
+</div>
+<p>The columns of one predictor are the powers 1, 2 and 3 of each value, and for two predictors the columns are x₁, x₁², x₁³, x₂, x₂², x₂³. With cross terms the first six columns are the same and three more follow: for the first row (x₁, x₂) = (1, 2) they are x₁x₂ = 2, x₁x₂² = 4 and x₁²x₂ = 2. A <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3]</span></code> input is one column of three values, and cross terms change nothing at degree 1 or with a single predictor. Within a total degree the cross terms are ordered by the exponent of the first predictor, then of the second, in increasing order.</p>
+</section>
+<section id="names-and-the-number-of-columns">
+<h2>Names and the number of columns<a class="headerlink" href="#names-and-the-number-of-columns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">poly_fit</span></code> names the columns. A power is written <code class="docutils literal notranslate"><span class="pre">x1^2</span></code>, a product <code class="docutils literal notranslate"><span class="pre">x1*x2</span></code>, and a mixed term <code class="docutils literal notranslate"><span class="pre">x1^2*x2</span></code>. The program fits three predictors at degree 3 with cross terms, prints every name in column order, and checks the column count against C(<em>p</em> + <em>d</em>, <em>d</em>) − 1.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">stats</span><span class="o">::</span><span class="nn">regression</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">40</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">ys</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">11</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.3</span><span class="p">;</span>
+<span class="w">    </span><span class="n">flat</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="w">    </span><span class="n">flat</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="w">    </span><span class="n">flat</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ys</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fmod</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.6180339887498949</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">reg</span><span class="o">::</span><span class="n">PolyOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">degree</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">include_cross</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">predictor_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">};</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">poly_fit</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">n</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">()),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">()),</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;coefficient names:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">ols</span><span class="p">.</span><span class="n">coefficient_names</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;k_params&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">ols</span><span class="p">.</span><span class="n">k_params</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; num_predictors (expanded columns)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">ols</span><span class="p">.</span><span class="n">num_predictors</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; rank&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">ols</span><span class="p">.</span><span class="n">rank</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">choose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">bottom</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">bottom</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">top</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.5</span><span class="p">);</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;C(p + d, d) - 1 for p = 3, d = 3:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">choose</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; and for p = 2, d = 3:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">choose</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; p = 4, d = 2:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">choose</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;base predictor names&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">base_predictor_names</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coefficient names: [const, a, a^2, a^3, b, b^2, b^3, c, c^2, c^3, b*c, a*c, a*b, b*c^2, b^2*c, a*c^2, a*b*c, a*b^2, a^2*c, a^2*b]
+k_params 20  num_predictors (expanded columns) 19  rank 20
+C(p + d, d) - 1 for p = 3, d = 3: 19  and for p = 2, d = 3: 9  p = 4, d = 2: 14
+base predictor names [a, b, c]
+</pre></div>
+</div>
+<p>The twenty parameters are the constant and 19 expanded columns, in the order of the printed names: the powers of a, then of b, then of c, and then the cross terms, ordered by total degree (the degree-2 products b<em>c, a</em>c and a*b first, then those of degree 3). The count agrees with C(<em>p</em> + <em>d</em>, <em>d</em>) − 1 for the three settings shown. The number of terms grows quickly with the degree and the number of predictors (14 for four predictors at degree 2, 19 for three at degree 3), so the number of rows must exceed it.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/regress/regression/regression_04_polynomial_regression/the_expanded_design.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

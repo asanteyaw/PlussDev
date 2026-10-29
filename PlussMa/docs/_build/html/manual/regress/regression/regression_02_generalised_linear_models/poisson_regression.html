@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Poisson regression &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Families and links" href="families_and_links.html" />
+    <link rel="prev" title="Logistic regression" href="logistic_regression.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from poisson_regression.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="poisson-regression">
+<h1>Poisson regression<a class="headerlink" href="#poisson-regression" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../regression_02_generalised_linear_models.html"><span class="std std-doc">Back to Generalised Linear Models</span></a></p>
+<p>Poisson regression models counts: non-negative whole numbers such as events per day. The family is <code class="docutils literal notranslate"><span class="pre">GLMFamily::Poisson</span></code>, whose canonical link is the logarithm, so the mean is μ = exp(b₀ + b₁x₁ + …), always positive, and its variance equals its mean. A coefficient is a change in the log of the expected count, and exp(b) is a <em>rate ratio</em>: the factor by which the expected count is multiplied for a unit increase in the predictor.</p>
+<p>The response must be non-negative. It need not be a whole number, but the likelihood is that of a count.</p>
+<section id="an-intercept-only-model">
+<h2>An intercept-only model<a class="headerlink" href="#an-intercept-only-model" title="Link to this heading">¶</a></h2>
+<p>With no predictors the maximum-likelihood estimate of the mean is the sample mean, so the coefficient is its logarithm.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">stats</span><span class="o">::</span><span class="nn">regression</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">6</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">6</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">());</span>
+<span class="w">  </span><span class="n">reg</span><span class="o">::</span><span class="n">GLMOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">GLMFamily</span><span class="o">::</span><span class="n">Poisson</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">glm_fit</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">()),</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;coefficient&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">coefficients</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; log of the mean 2:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">));</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;link is the log:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">link</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">GLMLink</span><span class="o">::</span><span class="n">Log</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; fitted mean&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">fitted_values</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coefficient [0.693147]  log of the mean 2: 0.693147
+link is the log: yes  fitted mean 2.000000
+</pre></div>
+</div>
+<p>The coefficient is ln 2 = 0.693147 and every fitted mean is 2.</p>
+</section>
+<section id="counts-and-a-covariate">
+<h2>Counts and a covariate<a class="headerlink" href="#counts-and-a-covariate" title="Link to this heading">¶</a></h2>
+<p>Twelve counts rise with a covariate x. The program fits the model and checks the pieces: the score equations Σ(y − μ) = 0 and Σ x(y − μ) = 0, the covariance (X′WX)⁻¹ with weights W = μ, and the deviance 2 Σ [y ln(y/μ) − (y − μ)], in which a zero count contributes 2μ. It then reports the rate ratio and its interval.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">stats</span><span class="o">::</span><span class="nn">regression</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">linalg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">linalg</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">5</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">counts</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">};</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">xs</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">xs</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">12</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">());</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">12</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">());</span>
+
+<span class="w">  </span><span class="n">reg</span><span class="o">::</span><span class="n">GLMOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">GLMFamily</span><span class="o">::</span><span class="n">Poisson</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">glm_fit</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">coefficients</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;coefficients&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; iterations&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">iterations</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; converged&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">converged</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">fitted_values</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;sum(y - mu)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">mu</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; sum(x (y - mu))&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">y</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">mu</span><span class="p">)).</span><span class="n">sum</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;dispersion&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">dispersion</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; (fixed at 1 for the Poisson family)&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">design</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">ones</span><span class="p">({</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">()).</span><span class="n">unite</span><span class="p">({</span><span class="n">x</span><span class="p">.</span><span class="n">reshape</span><span class="p">({</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">})},</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">information</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">design</span><span class="p">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="n">matmul</span><span class="p">(</span><span class="n">design</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">mu</span><span class="p">.</span><span class="n">reshape</span><span class="p">({</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">})));</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;largest |covariance - (X&#39;WX)^-1|&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">covariance</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">linalg</span><span class="o">::</span><span class="n">inverse</span><span class="p">(</span><span class="n">information</span><span class="p">)).</span><span class="n">abs</span><span class="p">().</span><span class="n">max</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">  </span><span class="c1">// Deviance: 2 sum[y ln(y/mu) - (y - mu)], with the first term absent for a zero count.</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">deviance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fitted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mu</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">counts</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">deviance</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">((</span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">log</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">fitted</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fitted</span><span class="p">[</span><span class="n">i</span><span class="p">]));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;deviance&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">deviance</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; by hand&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">deviance</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">ci</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">conf_int</span><span class="p">.</span><span class="n">host</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">().</span><span class="n">array</span><span class="p">().</span><span class="n">data</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;rate ratio per unit of x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="w"> </span><span class="s">&quot; interval [&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="n">ci</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="n">ci</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;expected count at x = 0 and x = 11&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">11.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coefficients [-0.12403, 0.20636]  iterations 6  converged true
+sum(y - mu) 0.00000  sum(x (y - mu)) 0.00000
+dispersion 1.00000  (fixed at 1 for the Poisson family)
+largest |covariance - (X&#39;WX)^-1| 0.00000
+deviance 4.21304  by hand 4.21304
+rate ratio per unit of x 1.22920  interval [ 1.11115 , 1.35978 ]
+expected count at x = 0 and x = 11 0.88335 8.54995
+</pre></div>
+</div>
+<p>The slope is 0.2064, a rate ratio of 1.2292 per unit of x with an interval of [1.1112, 1.3598] that excludes 1, so the expected count grows by about 23% per unit. The expected count rises from 0.88 at x = 0 to 8.55 at x = 11. The score equations are zero, the covariance is (X′WX)⁻¹ with weights equal to the fitted means, the deviance matches the formula, and <code class="docutils literal notranslate"><span class="pre">dispersion</span></code> is 1.</p>
+</section>
+<section id="are-the-counts-as-variable-as-a-poisson-distribution-says">
+<h2>Are the counts as variable as a Poisson distribution says?<a class="headerlink" href="#are-the-counts-as-variable-as-a-poisson-distribution-says" title="Link to this heading">¶</a></h2>
+<p>The Poisson family fixes the variance at the mean, and <code class="docutils literal notranslate"><span class="pre">dispersion</span></code> is held at 1, so the standard errors are only as good as that assumption. Counts that vary more than that (<em>overdispersion</em>) make the reported standard errors too small. A check that needs no extra option is the Pearson statistic Σ (y − μ)² / μ divided by <code class="docutils literal notranslate"><span class="pre">df_resid</span></code>: near 1 when the variance matches the mean, well above 1 when it does not. When it is large, multiply the standard errors by its square root (the quasi-Poisson correction). The program computes the ratio for the smooth counts above and for counts of the same size that come in bursts.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">stats</span><span class="o">::</span><span class="nn">regression</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">xs</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">xs</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">12</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">());</span>
+<span class="w">  </span><span class="n">reg</span><span class="o">::</span><span class="n">GLMOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">GLMFamily</span><span class="o">::</span><span class="n">Poisson</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">counts</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">12</span><span class="p">},</span><span class="w"> </span><span class="n">as_f64</span><span class="p">());</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">glm_fit</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">pearson</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">sub</span><span class="p">(</span><span class="n">fit</span><span class="p">.</span><span class="n">fitted_values</span><span class="p">).</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">div</span><span class="p">(</span><span class="n">fit</span><span class="p">.</span><span class="n">fitted_values</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">ratio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pearson</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fit</span><span class="p">.</span><span class="n">df_resid</span><span class="p">);</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Pearson/df&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ratio</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; slope std error&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">std_errors</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="s">&quot; corrected&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="p">.</span><span class="n">std_errors</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)));</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">check</span><span class="p">(</span><span class="s">&quot;smooth counts :&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">});</span>
+<span class="w">  </span><span class="n">check</span><span class="p">(</span><span class="s">&quot;bursty counts :&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>smooth counts : Pearson/df 0.3237  slope std error 0.0515  corrected 0.0515
+bursty counts : Pearson/df 5.3030  slope std error 0.0487  corrected 0.1122
+</pre></div>
+</div>
+<p>The smooth counts have a ratio of 0.32: they vary less than a Poisson distribution would, so the standard errors are, if anything, conservative, and no correction is applied (the program multiplies by the square root of the larger of the ratio and 1). The bursty counts have a ratio of 5.30: their variance is about five times their mean, and the reported standard error of the slope, 0.0487, is too small by a factor of √5.30 = 2.30, whose corrected value is 0.1122. The estimates themselves are unchanged; only the statements of precision are affected.</p>
+<p>Counts observed over different exposures are modelled with the log exposure as an <code class="docutils literal notranslate"><span class="pre">offset</span></code> (<a class="reference internal" href="weights_and_offsets.html"><span class="std std-doc">Weights and offsets</span></a>).</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/regress/regression/regression_02_generalised_linear_models/poisson_regression.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -84,6 +84,8 @@ Output
 D 0.2257 (D+ 0.0808, D- 0.2257), p 0.7316, critical 0.4546
 ```
 
+The largest gap between the empirical distribution function and the normal one is D 0.2257, and it comes from the left gap `D-`; the right gap `D+` is only 0.0808. The p-value 0.73 and the critical value 0.4546 both say the fill volumes are consistent with a normal of mean 5.5 and standard deviation 0.5.
+
 ### Example 2
 
 Exact and approximate p-values.
@@ -115,6 +117,8 @@ exact       p 0.7316
 approximate p 0.7534
 ```
 
+For a small sample the exact p-value (0.7316) and the large-sample approximation (0.7534) differ in the second decimal. Both lead to the same decision; the exact one is the default for small samples, and the approximate one is available when it is wanted for comparison.
+
 ### Example 3
 
 One-sided tests look at one of the two gaps.
@@ -145,6 +149,8 @@ Output
 Right (D+) p 0.8609
 Left  (D-) p 0.3852
 ```
+
+The one-sided tests look at one gap each: the right gap `D+` gives p 0.8609 and the left gap `D-` gives p 0.3852. The left gap is the larger, so its p-value is the smaller, and it is the one that carries the two-sided result of the previous examples.
 
 ## See Also
 

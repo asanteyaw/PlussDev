@@ -204,7 +204,7 @@ struct ScalePolicy {
 };
 
 struct AxisTicks {
-  Series positions;
+  Series positions = pluss::series::undefined();
   std::vector<std::string> labels;
 };
 
@@ -282,61 +282,61 @@ class LightRig {
 };
 
 struct TrendData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
 };
 
 struct CloudData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
   std::optional<Series> size;
   std::optional<Series> color;
 };
 
 struct Cloud3Data {
-  Series x;
-  Series y;
-  Series z;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
   std::optional<Series> size;
   std::optional<Series> color;
 };
 
 struct FieldmapData {
-  Series x;
-  Series y;
-  Series z;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
   std::optional<Series> color;
 };
 
 struct ColumnsData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
   double base{0.0};
   double width{0.8};
   bool horizontal{false};
 };
 
 struct RibbonData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
   double base{0.0};
 };
 
 struct SpikeData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
   double base{0.0};
 };
 
 struct WedgeData {
-  Series values;
+  Series values = pluss::series::undefined();
   std::optional<Series> explode;
   std::vector<std::string> labels;
 };
 
 struct WhiskData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
   std::optional<Series> xneg;
   std::optional<Series> xpos;
   std::optional<Series> yneg;
@@ -344,14 +344,14 @@ struct WhiskData {
 };
 
 struct BucketData {
-  Series values;
+  Series values = pluss::series::undefined();
   int bins{12};
   std::optional<Range1d> range;
 };
 
 struct QuartetData {
   std::optional<Series> group;
-  Series values;
+  Series values = pluss::series::undefined();
   double width{0.7};
 };
 
@@ -366,25 +366,25 @@ struct ViolinOptions {
 
 struct ViolinData {
   std::optional<Series> group;
-  Series values;
+  Series values = pluss::series::undefined();
   ViolinOptions options{};
 };
 
 struct RadialData {
-  Series theta;
-  Series radius;
+  Series theta = pluss::series::undefined();
+  Series radius = pluss::series::undefined();
 };
 
 struct Path3Data {
-  Series x;
-  Series y;
-  Series z;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
 };
 
 struct Spire3Data {
-  Series x;
-  Series y;
-  Series z;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
   std::optional<Series> color;
   double width{0.8};
   double depth{0.8};
@@ -392,9 +392,9 @@ struct Spire3Data {
 };
 
 struct ContourData {
-  Series x;
-  Series y;
-  Series z;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
   std::vector<double> levels;
   int auto_levels{8};
   bool filled{false};
@@ -402,18 +402,18 @@ struct ContourData {
 };
 
 struct IsoShellData {
-  Series x;
-  Series y;
-  Series z;
-  Series values;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
+  Series values = pluss::series::undefined();
   std::vector<double> levels;
   int auto_levels{4};
 };
 
 struct SurfaceData {
-  Series x;
-  Series y;
-  Series z;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
   std::optional<Series> color;
 };
 
@@ -502,7 +502,7 @@ inline Series to_series(const Series& values) {
 }
 
 inline std::vector<double> to_f64_vector(const Series& values) {
-  return values.to(ScalarType::Float64).to_vec<double>();
+  return values.to(ScalarType::Float64).host<double>();
 }
 
 inline Series index_series(std::int64_t count, double first = 1.0) {

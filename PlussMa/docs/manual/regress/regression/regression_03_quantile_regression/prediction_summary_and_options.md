@@ -1,0 +1,199 @@
+<!-- generated from prediction_summary_and_options.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Prediction, the summary and options
+
+[Back to Quantile Regression](../regression_03_quantile_regression.md)
+
+```cpp
+struct reg::QuantileOptions {
+  double tau = 0.5;
+  reg::QuantileCovariance covariance = reg::QuantileCovariance::Robust;
+  double alpha = 0.05;
+  bool add_intercept = true;
+  bool drop_missing = true;
+  double rcond = 1e-12;
+  std::int64_t max_iter = 500;
+  double tol = 1e-7;
+  double eps = 1e-6;
+  std::string response_name = "y";
+  std::vector<std::string> predictor_names{};
+};
+```
+
+`tau`, `covariance`, `max_iter`, `tol` and `eps` are covered in the previous pages. The rest behave as in least squares: `alpha` sets the coverage of the *t*-based intervals, `add_intercept` adds the constant column (named `const`), `drop_missing` removes incomplete rows or turns them into errors, `rcond` is the rank cutoff, and the two names label the output ([Options](../regression_01_least_squares/options.md), [Missing data](../regression_01_least_squares/missing_data.md), [Collinear predictors](../regression_01_least_squares/collinear_predictors.md)). The result carries the same counts as the least-squares result (`nobs`, `rank`, `k_params`, `num_predictors`, `df_model`, `df_resid`, `dropped_observations`) and the quantile-specific `tau`, `objective`, `objective_null`, `pseudo_rsquared`, `residual_density0`, `iterations` and `converged`.
+
+## Prediction
+
+`quantile_predict` evaluates the fitted quantile line at new predictor values. As for the other families, `x_new` has either the predictors only or the full design with the leading column of ones. The result is a prediction of the τ-quantile of the response at those values, which is not the same as a prediction of the mean.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> xs, ys;
+  for (int i = 0; i < 60; ++i) {
+    const double x = 1.0 + i * 0.25;
+    xs.push_back(x);
+    const double noise = 2.0 * std::fmod(i * 0.6180339887498949, 1.0) - 1.0;  // a fixed low-discrepancy sequence in [-1, 1)
+    ys.push_back(1.0 + 2.0 * x + x * noise);
+  }
+  const auto x = pluss::make_series(xs, {60, 1}, as_f64());
+  const auto y = pluss::make_series(ys, {60}, as_f64());
+  reg::QuantileOptions options;
+  options.tau = 0.9;
+  const auto fit = reg::quantile_fit(y, x, options);
+
+  const auto new_x = pluss::make_series(std::vector<double>{4.0, 10.0}, {2, 1}, as_f64());
+  const auto with_ones = pluss::make_series(std::vector<double>{1.0, 4.0, 1.0, 10.0}, {2, 2}, as_f64());
+  const auto b = fit.coefficients.pull<double>();
+  out.writeln("predictors only         ", reg::quantile_predict(fit, new_x).pull<double>());
+  out.writeln("with the column of ones ", reg::quantile_predict(fit, with_ones).pull<double>());
+  out.writeln("by hand                 ", std::vector<double>{b[0] + 4.0 * b[1], b[0] + 10.0 * b[1]});
+  out.writeln("in-sample predictions equal the fitted values:", reg::quantile_predict(fit, x).sub(fit.fitted_values).abs().max().item<double>());
+  out.writeln("share of responses at or below the 0.9 line:", y.le(fit.fitted_values.add(1e-6)).to(pluss::ScalarType::Float64).mean().item<double>());
+}
+```
+
+Output
+
+```text
+predictors only          [12.0789, 28.9844]
+with the column of ones  [12.0789, 28.9844]
+by hand                  [12.0789, 28.9844]
+in-sample predictions equal the fitted values: 0.0000
+share of responses at or below the 0.9 line: 0.9167
+```
+
+The two input forms and the hand calculation give the same predictions, 12.0789 at x = 4 and 28.9844 at x = 10 for the 90% line, and predicting at the original rows returns the fitted values. 55 of the 60 responses (0.9167) lie at or below the 90% line, close to the 0.9 that the quantile promises; the line passes through two of the observations.
+
+## The summary
+
+The report has the same layout as the others, with the quantile τ, the iteration count, the convergence flag, the objective and the density of the residuals at zero in the header, and *t* statistics in the table. The interval heading follows `alpha`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <sstream>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  std::vector<double> xs, ys;
+  for (int i = 0; i < 60; ++i) {
+    const double x = 1.0 + i * 0.25;
+    xs.push_back(x);
+    const double noise = 2.0 * std::fmod(i * 0.6180339887498949, 1.0) - 1.0;  // a fixed low-discrepancy sequence in [-1, 1)
+    ys.push_back(1.0 + 2.0 * x + x * noise);
+  }
+  reg::QuantileOptions options;
+  options.tau = 0.9;
+  options.alpha = 0.10;
+  options.response_name = "sales";
+  options.predictor_names = {"visits"};
+  const auto fit = reg::quantile_fit(pluss::make_series(ys, {60}, as_f64()), pluss::make_series(xs, {60, 1}, as_f64()), options);
+  reg::print_quantile_summary(std::cout, fit);
+  std::ostringstream stream;
+  reg::print_quantile_summary(stream, fit);
+  std::cout << "\nThe string form is identical: " << (reg::quantile_summary(fit) == stream.str() ? "yes" : "no") << "\n";
+}
+```
+
+Output
+
+```text
+                         Quantile Regression Results                          
+==============================================================================
+Dep. Variable:                     sales   Pseudo R-squared:                 0.6418
+Model:                          Quantile   Tau:                                 0.9
+Method:                             IRLS   No. Iterations:                       33
+Rank:                                  2   Converged:                          true
+Alpha:                               0.1   Objective:                         44.59
+No. Observations:                     60   Df Residuals:                         58
+Df Model:                              1   Residual Density(0):               0.04759
+==============================================================================
+                        coef     std err           t       P>|t|       [0.05       0.95]
+------------------------------------------------------------------------------
+const                 0.8086      2.0046      0.4034      0.6882     -2.5421      4.1593
+visits                2.8176      0.2166     13.0079  7.6408e-19      2.4555      3.1796
+==============================================================================
+
+The string form is identical: yes
+```
+
+The header shows τ = 0.9, 33 iterations, the objective 44.59 and the density of the residuals at zero, 0.04759. The slope is 2.8176 with standard error 0.2166, *t* = 13.01 and a p-value of 7.6 × 10⁻¹⁹; the intercept, 0.81, is not distinguishable from zero. The interval heading `[0.05` and `0.95]` follows `alpha`, and the string form is identical to the stream form.
+
+## Options and data handling
+
+The remaining options in action: a line through the origin, incomplete rows, and a model with no predictors, where the fit is the sample quantile of the response. For that case the fit is a sample quantile of the response: the order statistic at which the check-function loss is smallest.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <limits>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  std::vector<double> xs{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  std::vector<double> ys{2.2, 4.1, 5.8, 8.3, 9.9, 12.4, 13.7, 16.2, 17.9, 20.3};
+  const auto x = pluss::make_series(xs, {10}, as_f64());
+  const auto y = pluss::make_series(ys, {10}, as_f64());
+
+  reg::QuantileOptions origin;
+  origin.add_intercept = false;
+  const auto through_origin = reg::quantile_fit(y, x, origin);
+  out.writeln("through the origin: names", through_origin.coefficient_names, " coefficient", through_origin.coefficients.pull<double>(), " k_params", through_origin.k_params);
+
+  auto with_gaps = ys;
+  with_gaps[3] = nan;
+  auto x_gaps = xs;
+  x_gaps[7] = nan;
+  const auto fit = reg::quantile_fit(pluss::make_series(with_gaps, {10}, as_f64()), pluss::make_series(x_gaps, {10}, as_f64()));
+  out.writeln("two incomplete rows: nobs", fit.nobs, " dropped", fit.dropped_observations, " fitted values", fit.fitted_values.numel());
+  try {
+    reg::QuantileOptions strict;
+    strict.drop_missing = false;
+    reg::quantile_fit(pluss::make_series(with_gaps, {10}, as_f64()), pluss::make_series(x_gaps, {10}, as_f64()), strict);
+  } catch (const std::exception &error) {
+    const std::string message = error.what();
+    out.writeln("drop_missing = false ->", message.substr(0, message.find('\n')));
+  }
+
+  for (double tau : {0.25, 0.5, 0.75}) {
+    reg::QuantileOptions options;
+    options.tau = tau;
+    const auto constant = reg::quantile_fit(y, pluss::series::zeros({10, 0}, as_f64()), options);
+    out.writeln("no predictors, tau", tau, " coefficient", constant.coefficients.pull<double>(), " converged", constant.converged);
+  }
+  out.writeln("sorted responses", y.sort(0, false, false).pull<double>());
+}
+```
+
+Output
+
+```text
+through the origin: names [x1]  coefficient [2.0250]  k_params 1
+two incomplete rows: nobs 8  dropped 2  fitted values 8
+drop_missing = false -> subsp::stats::regression::quantile_fit: non-finite values found and drop_missing=false
+no predictors, tau 0.2500  coefficient [5.8000]  converged true
+no predictors, tau 0.5000  coefficient [11.0800]  converged true
+no predictors, tau 0.7500  coefficient [16.2000]  converged true
+sorted responses [2.2000, 4.1000, 5.8000, 8.3000, 9.9000, 12.4000, 13.7000, 16.2000, 17.9000, 20.3000]
+```
+
+The line through the origin has slope 2.025 and no `const`. The two incomplete rows leave 8 observations, and `drop_missing = false` makes them an error. The fits with no predictors return the sample quantiles of the ten responses: 5.8 (the third order statistic) at τ = 0.25 and 16.2 (the eighth) at τ = 0.75. At τ = 0.5 the product n·τ is a whole number, so every value between the fifth and sixth order statistics (9.9 and 12.4) minimises the loss equally, and the fit returns one of them, 11.08.
+
+Shape and row errors, a misnamed predictor list, an empty model, too few rows, and `quantile_predict` with the wrong number of columns or on an empty result are rejected exactly as for the other families ([Errors](../regression_01_least_squares/errors.md)), under the name of the quantile function.

@@ -5,22 +5,31 @@
 #include <CodeM/core/Series.h>
 #include <pluss/codem/series_factory.h>
 #include <pluss/config.h>
+#include <pluss/tils/aux/sampler.h>
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
+#include <map>
+#include <memory>
+#include <mutex>
 #include <numeric>
 #include <optional>
 #include <random>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
-namespace pluss::tils {
+namespace pluss::loader {
 
 struct DataBatch {
   std::vector<Series> fields{};
@@ -145,7 +154,7 @@ private:
     out.fields.reserve(fields_.size());
     for (std::size_t i = 0; i < fields_.size(); ++i) {
       const auto& s = fields_[i];
-      const auto cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
+      const auto cfg = ::pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
       const auto idx = make_series(ids, {count}, cfg);
       out.fields.push_back(s.index_select(dims_[i], idx));
     }
@@ -158,6 +167,69 @@ private:
   std::int64_t sample_count_{0};
 };
 
+namespace detail {
+
+// materialize_fields() is the fast, vectorized path -- when a subclass
+// provides it, use it directly. When it is left at its unimplemented
+// (empty) default, fall back to the per-sample contract every subclass
+// already has to implement: call get(i) once per sample and unite the
+// results along batch_dim(), producing the exact fields the vectorized
+// path would have returned. Slower (one get() call per sample instead
+// of a single index_select), but makes every Dataset subclass usable
+// with DataLoader/split_fields/temporal_split_fields out of the box,
+// matching what get() is documented to be for.
+inline std::vector<Series> materialize_via_get_(const Dataset& dataset) {
+  const std::int64_t n = dataset.size();
+  PLUSS_CHECK(n > 0, "pluss::loader::Dataset: dataset must have at least one sample");
+  const std::int64_t dim = dataset.batch_dim();
+
+  const DataBatch first = dataset.get(0);
+  PLUSS_CHECK(
+      !first.fields.empty(),
+      "pluss::loader::Dataset: dataset::get(0) returned no fields "
+      "(materialize_fields() and get() cannot both be empty)");
+
+  std::vector<std::vector<Series>> per_field(first.fields.size());
+  for (std::size_t f = 0; f < first.fields.size(); ++f) {
+    per_field[f].reserve(static_cast<std::size_t>(n));
+    per_field[f].push_back(first.fields[f]);
+  }
+  for (std::int64_t i = 1; i < n; ++i) {
+    const DataBatch sample = dataset.get(i);
+    PLUSS_CHECK(
+        sample.fields.size() == first.fields.size(),
+        "pluss::loader::Dataset: every dataset::get(index) call must return "
+        "the same field count");
+    for (std::size_t f = 0; f < sample.fields.size(); ++f) {
+      per_field[f].push_back(sample.fields[f]);
+    }
+  }
+
+  std::vector<Series> materialized;
+  materialized.reserve(per_field.size());
+  for (auto& samples : per_field) {
+    // A bare scalar (rank 0) has no axis to unite along at all -- the
+    // most natural minimal get() implementation (one scalar per
+    // sample) returns exactly this. Promote to rank 1 first so
+    // batch_dim() names a real axis, the same shape SeriesDataset's
+    // own fields are already required to have (dim() >= 1).
+    for (auto& s : samples) {
+      if (s.dim() == 0) s = s.unsqueeze(0);
+    }
+    materialized.push_back(
+        samples.front().unite(std::vector<Series>(samples.begin() + 1, samples.end()), dim));
+  }
+  return materialized;
+}
+
+inline std::vector<Series> materialize_dataset_fields_(const Dataset& dataset) {
+  auto fields = dataset.materialize_fields();
+  if (!fields.empty()) return fields;
+  return materialize_via_get_(dataset);
+}
+
+} // namespace detail
+
 struct DataLoaderOptions {
   std::int64_t batch_size{32};
   bool shuffle{false};
@@ -168,6 +240,58 @@ struct DataLoaderOptions {
   std::optional<Platform> target_platform{};
   std::optional<ScalarType> target_dtype{};
   std::function<DataBatch(DataBatch)> collate_fn{};
+
+  // A custom index-sampling strategy, overriding `shuffle` when set (the
+  // two are mutually exclusive, the same convention torch.utils.data uses --
+  // see Sampler in <pluss/tils/aux/sampler.h>). Leave unset (the default)
+  // to keep the plain `shuffle` bool's existing behavior unchanged.
+  std::shared_ptr<Sampler> sampler{};
+
+  // How many background threads compute batches ahead of consumption. `0`
+  // (the default) computes every batch synchronously on the calling thread,
+  // exactly as before this field existed -- every existing caller is
+  // unaffected. `> 0` spawns that many worker threads (not OS processes --
+  // C++ has no GIL to work around, so a thread pool avoids the
+  // serialization/IPC cost torch's own multiprocessing workers pay).
+  std::size_t num_workers{0};
+
+  // How many batches each worker may compute ahead of the consumer, before
+  // blocking. Only meaningful when `num_workers > 0`; setting it with
+  // `num_workers == 0` throws, matching torch's own constraint. Defaults to
+  // `2` when left unset and `num_workers > 0`.
+  std::optional<std::int64_t> prefetch_factor{};
+
+  // When `true`, worker threads started for one epoch are kept alive and
+  // reused for the next epoch instead of being joined and respawned.
+  // Requires `num_workers > 0`.
+  bool persistent_workers{false};
+
+  // When `true`, calls `.pin_memory()` on every field of every produced
+  // batch. Currently a documented no-op in the underlying tensor engine
+  // (CodeM's `pin_memory` op returns its input unchanged, and
+  // `Series::is_pinned()` always reports `false`) -- wiring it through here
+  // now means real pinning takes effect automatically the moment CodeM
+  // implements it, with no DataLoader-side change needed.
+  bool pin_memory{false};
+
+  // Seconds to wait for a prefetched batch before throwing. `0.0` (the
+  // default) waits indefinitely. Only meaningful when `num_workers > 0`.
+  double timeout{0.0};
+
+  // When `true` (the default), batches are delivered in strict ascending
+  // index order even when `num_workers > 1` lets workers finish out of
+  // order. When `false`, a batch is delivered as soon as any worker
+  // finishes it, which can improve throughput at the cost of a
+  // non-deterministic delivery order.
+  bool in_order{true};
+
+  // Called once per worker thread, from that thread, right after it starts
+  // and before it computes its first batch -- given the worker's own id in
+  // `[0, num_workers)`. Unlike torch's `worker_init_fn` (which exists partly
+  // to work around per-process RNG state and picklability across a process
+  // boundary), this is a plain thread-entry hook; use it for thread-local
+  // setup a caller's own `collate_fn` might need.
+  std::function<void(std::size_t)> worker_init_fn{};
 };
 
 class DataLoader {
@@ -185,7 +309,7 @@ public:
 
     batch_type operator*() const {
       PLUSS_CHECK(owner_ != nullptr, "pluss::loader::DataLoader::iterator: invalid iterator dereference");
-      return owner_->batch_at(index_);
+      return owner_->fetch_(index_);
     }
 
     iterator& operator++() {
@@ -215,7 +339,9 @@ public:
   DataLoader() = default;
 
   explicit DataLoader(const Dataset& dataset, DataLoaderOptions options = {})
-      : DataLoader(fields_from_dataset_(dataset), with_dataset_dim_(std::move(options), dataset.batch_dim())) {}
+      : DataLoader(
+            detail::materialize_dataset_fields_(dataset),
+            with_dataset_dim_(std::move(options), dataset.batch_dim())) {}
 
   explicit DataLoader(const SeriesDataset& dataset, DataLoaderOptions options = {})
       : DataLoader(fields_from_series_dataset_(dataset), with_dataset_dim_(std::move(options), dataset.batch_dim())) {}
@@ -236,9 +362,10 @@ public:
   [[nodiscard]] std::uint64_t epoch() const noexcept { return epoch_; }
 
   [[nodiscard]] std::size_t batch_count() const noexcept {
-    if (sample_count_ <= 0 || options_.batch_size <= 0) return 0;
-    const std::int64_t full = sample_count_ / options_.batch_size;
-    const std::int64_t rem = sample_count_ % options_.batch_size;
+    const std::int64_t total = static_cast<std::int64_t>(order_.size());
+    if (total <= 0 || options_.batch_size <= 0) return 0;
+    const std::int64_t full = total / options_.batch_size;
+    const std::int64_t rem = total % options_.batch_size;
     if (rem == 0 || options_.drop_last) return static_cast<std::size_t>(full);
     return static_cast<std::size_t>(full + 1);
   }
@@ -252,8 +379,8 @@ public:
   DataLoader& set_epoch(std::uint64_t epoch, bool reshuffle = true) {
     epoch_ = epoch;
     cursor_ = 0;
-    if (reshuffle && options_.shuffle) {
-      shuffle_order_();
+    if (reshuffle && (options_.shuffle || options_.sampler)) {
+      regenerate_order_();
     }
     return *this;
   }
@@ -261,48 +388,91 @@ public:
   DataLoader& reset(bool reshuffle = true) {
     ++epoch_;
     cursor_ = 0;
-    if (reshuffle && options_.shuffle) {
-      shuffle_order_();
+    if (reshuffle && (options_.shuffle || options_.sampler)) {
+      regenerate_order_();
     }
     return *this;
   }
 
   std::optional<batch_type> next() {
-    if (cursor_ >= batch_count()) return std::nullopt;
-    const auto out = batch_at(cursor_);
+    if (cursor_ >= batch_count()) {
+      if (options_.num_workers > 0 && !options_.persistent_workers) stop_prefetch_();
+      return std::nullopt;
+    }
+    batch_type out = fetch_(cursor_);
     ++cursor_;
     return out;
   }
 
   batch_type batch_at(std::size_t batch_index) const {
     PLUSS_CHECK(batch_index < batch_count(), "pluss::loader::DataLoader::batch_at: batch index out of range");
+    const std::int64_t total = static_cast<std::int64_t>(order_.size());
     const std::int64_t start = static_cast<std::int64_t>(batch_index) * options_.batch_size;
     std::int64_t count = options_.batch_size;
     if (!options_.drop_last) {
-      count = std::min<std::int64_t>(count, sample_count_ - start);
+      count = std::min<std::int64_t>(count, total - start);
     }
     return make_batch_(start, count);
   }
 
   iterator begin() {
     if (options_.reshuffle_each_epoch) {
-      reset(/*reshuffle=*/options_.shuffle);
+      reset(/*reshuffle=*/true);
     } else {
       cursor_ = 0;
+    }
+    if (options_.num_workers > 0) {
+      if (!options_.persistent_workers) stop_prefetch_();
+      start_prefetch_();
     }
     return iterator(this, 0);
   }
 
   iterator end() { return iterator(this, batch_count()); }
 
-private:
-  static std::vector<Series> fields_from_dataset_(const Dataset& dataset) {
-    auto fields = dataset.materialize_fields();
-    PLUSS_CHECK(
-        !fields.empty(),
-        "pluss::loader::DataLoader(dataset): dataset must provide map-style fields via materialize_fields()");
-    return fields;
+  ~DataLoader() { stop_prefetch_(); }
+
+  // Not defaulted: a defaulted move would transfer `prefetch_` (a
+  // unique_ptr) by nulling the source's pointer while that source's own
+  // worker threads -- spawned with `this` captured as the source object's
+  // address, which a move does not relocate -- might still be mid-loop and
+  // about to dereference it. Stopping prefetch on the source first (through
+  // its still-valid pointer, exactly as `stop_prefetch_()` now guarantees
+  // for destruction) closes the same hazard here.
+  DataLoader(DataLoader&& other) noexcept {
+    // Stop `other`'s workers *before* touching any of its other members --
+    // they read fields_/options_/dims_/order_ via `this` (== &other) too, so
+    // moving those out first would race a still-running worker's reads of
+    // the very members being moved from under it.
+    other.stop_prefetch_();
+    fields_ = std::move(other.fields_);
+    options_ = std::move(other.options_);
+    dims_ = std::move(other.dims_);
+    order_ = std::move(other.order_);
+    sample_count_ = other.sample_count_;
+    epoch_ = other.epoch_;
+    cursor_ = other.cursor_;
   }
+
+  DataLoader& operator=(DataLoader&& other) noexcept {
+    if (this != &other) {
+      stop_prefetch_();
+      other.stop_prefetch_();
+      fields_ = std::move(other.fields_);
+      options_ = std::move(other.options_);
+      dims_ = std::move(other.dims_);
+      order_ = std::move(other.order_);
+      sample_count_ = other.sample_count_;
+      epoch_ = other.epoch_;
+      cursor_ = other.cursor_;
+    }
+    return *this;
+  }
+
+  DataLoader(const DataLoader&) = delete;
+  DataLoader& operator=(const DataLoader&) = delete;
+
+private:
 
   static std::vector<Series> fields_from_series_dataset_(const SeriesDataset& dataset) {
     return dataset.fields();
@@ -320,8 +490,23 @@ private:
   }
 
   void validate_and_initialize_() {
+    stop_prefetch_();
+
     PLUSS_CHECK(!fields_.empty(), "pluss::loader::DataLoader: expected at least one Series field");
     PLUSS_CHECK(options_.batch_size > 0, "pluss::loader::DataLoader: batch_size must be > 0");
+    PLUSS_CHECK(
+        !(options_.sampler && options_.shuffle),
+        "pluss::loader::DataLoader: sampler and shuffle are mutually exclusive");
+    PLUSS_CHECK(
+        options_.num_workers > 0 || !options_.prefetch_factor.has_value(),
+        "pluss::loader::DataLoader: prefetch_factor requires num_workers > 0");
+    PLUSS_CHECK(
+        !options_.prefetch_factor.has_value() || *options_.prefetch_factor > 0,
+        "pluss::loader::DataLoader: prefetch_factor must be > 0 when set");
+    PLUSS_CHECK(
+        options_.num_workers > 0 || !options_.persistent_workers,
+        "pluss::loader::DataLoader: persistent_workers requires num_workers > 0");
+    PLUSS_CHECK(options_.timeout >= 0.0, "pluss::loader::DataLoader: timeout must be >= 0");
 
     dims_.clear();
     dims_.reserve(fields_.size());
@@ -352,24 +537,62 @@ private:
       dims_.push_back(d);
     }
 
-    order_.resize(static_cast<std::size_t>(sample_count_));
-    std::iota(order_.begin(), order_.end(), static_cast<std::int64_t>(0));
     cursor_ = 0;
     epoch_ = 0;
+    regenerate_order_();
+  }
+
+  // Rebuilds `order_` for the current epoch: a plain 0..sample_count_-1
+  // sequence, optionally shuffled (the original behavior, unchanged), or --
+  // when `options_.sampler` is set -- whatever that Sampler produces
+  // (which may legitimately be a different length than `sample_count_`,
+  // e.g. a RandomSampler with an explicit `num_samples` override). Batch
+  // math (`batch_count()`/`batch_at()`) is sized off `order_.size()`, never
+  // `sample_count_`, directly for this reason.
+  void regenerate_order_() {
+    if (options_.sampler) {
+      order_ = options_.sampler->sample(sample_count_, options_.seed + epoch_);
+      for (const auto idx : order_) {
+        PLUSS_CHECK(
+            idx >= 0 && idx < sample_count_,
+            "pluss::loader::DataLoader: sampler produced an index out of range");
+      }
+      return;
+    }
+    order_.resize(static_cast<std::size_t>(sample_count_));
+    std::iota(order_.begin(), order_.end(), static_cast<std::int64_t>(0));
     if (options_.shuffle) {
-      shuffle_order_();
+      std::mt19937_64 rng(options_.seed + epoch_);
+      std::shuffle(order_.begin(), order_.end(), rng);
     }
   }
 
-  void shuffle_order_() {
-    std::mt19937_64 rng(options_.seed + epoch_);
-    std::shuffle(order_.begin(), order_.end(), rng);
+  // Dispatches a single batch fetch to either the synchronous path
+  // (`num_workers == 0`, unchanged from before this field existed) or the
+  // background prefetch queue. The threaded path ignores `index` and
+  // always delivers the next batch in strictly ascending call order --
+  // safe because every caller (both `next()` and `iterator`) only ever
+  // dereferences sequentially, never out of order or more than once per
+  // position (the same single-pass contract `input_iterator_tag` implies).
+  batch_type fetch_(std::size_t index) {
+    if (options_.num_workers == 0) return batch_at(index);
+    if (!prefetch_ || prefetch_->threads.empty()) start_prefetch_();
+    return pull_prefetched_();
   }
 
   batch_type make_batch_(std::int64_t start, std::int64_t count) const {
+    // Batch construction (index_select/dtype-cast/collate) is bookkeeping,
+    // never a differentiable step -- and, when num_workers > 0, this runs
+    // concurrently from multiple worker threads. The tape's own record/pause
+    // state is thread_local (see CodeM/core/SeriesTape.cpp), so this guard
+    // only ever affects the calling thread's own state, never races with it.
+    const ::pluss::NoGradGuard no_grad;
+
     PLUSS_CHECK(start >= 0, "pluss::loader::DataLoader: internal batch start must be >= 0");
     PLUSS_CHECK(count >= 0, "pluss::loader::DataLoader: internal batch count must be >= 0");
-    PLUSS_CHECK(start + count <= sample_count_, "pluss::loader::DataLoader: internal batch span out of bounds");
+    PLUSS_CHECK(
+        start + count <= static_cast<std::int64_t>(order_.size()),
+        "pluss::loader::DataLoader: internal batch span out of bounds");
 
     std::vector<std::int64_t> ids(static_cast<std::size_t>(count));
     std::copy_n(order_.begin() + start, count, ids.begin());
@@ -378,7 +601,8 @@ private:
     out.fields.reserve(fields_.size());
     for (std::size_t i = 0; i < fields_.size(); ++i) {
       const auto& s = fields_[i];
-      const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
+      const ::pluss::Config icfg =
+          ::pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
       const Series idx = make_series(ids, {count}, icfg);
       auto field = s.index_select(dims_[i], idx);
       if (options_.target_platform.has_value() || options_.target_dtype.has_value()) {
@@ -389,8 +613,171 @@ private:
       out.fields.push_back(std::move(field));
     }
     if (options_.collate_fn) {
-      return options_.collate_fn(std::move(out));
+      out = options_.collate_fn(std::move(out));
     }
+    if (options_.pin_memory) {
+      for (auto& field : out.fields) {
+        if (field.defined()) field = field.pin_memory();
+      }
+    }
+    return out;
+  }
+
+  // --- background prefetching (num_workers > 0) ---------------------
+
+  struct Prefetch {
+    std::vector<std::thread> threads{};
+    std::mutex mu{};
+    // Serializes every worker's actual tensor-engine call (`batch_at()` ->
+    // `index_select`/`.to()`/etc). CodeM's own thread-safety for *concurrent*
+    // Series construction across threads is not a documented guarantee this
+    // codebase makes anywhere else, and empirically crashes under real
+    // concurrent load (confirmed via this DataLoader's own test suite) --
+    // so engine calls are serialized here rather than shipping a race.
+    // Worker-to-worker parallelism for the tensor op itself is therefore
+    // nil, but the pipeline-overlap benefit (a worker preparing the next
+    // batch while the consumer thread is off doing something else with the
+    // batch already delivered) is real and unaffected.
+    std::mutex engine_mu{};
+    std::condition_variable cv{};
+    std::map<std::size_t, batch_type> completed{};
+    std::size_t next_to_compute{0};
+    std::size_t next_to_deliver{0};
+    std::size_t total_batches{0};
+    std::size_t capacity{1};
+    bool stop{false};
+    // Set by whichever worker thread first hits an exception computing a
+    // batch (e.g. a bad value tripping a validation check, or a caller's
+    // own `collate_fn` throwing). An uncaught exception escaping a
+    // std::thread's entry function calls std::terminate(), so every worker
+    // catches everything here and hands it to the consumer instead, which
+    // rethrows it from `pull_prefetched_()` on the calling thread.
+    std::exception_ptr pending_error{};
+
+    // Guarantees a clean shutdown no matter how the owning DataLoader is
+    // destroyed -- a joinable std::thread destroyed while still running
+    // calls std::terminate(), so this must run before `threads` itself is
+    // torn down (its own destructor, invoked immediately after this body).
+    ~Prefetch() {
+      {
+        std::unique_lock<std::mutex> lock(mu);
+        stop = true;
+      }
+      cv.notify_all();
+      for (auto& t : threads) {
+        if (t.joinable()) t.join();
+      }
+    }
+  };
+
+  void worker_loop_(std::size_t worker_id) {
+    try {
+      if (options_.worker_init_fn) options_.worker_init_fn(worker_id);
+    } catch (...) {
+      std::unique_lock<std::mutex> lock(prefetch_->mu);
+      if (!prefetch_->pending_error) prefetch_->pending_error = std::current_exception();
+      prefetch_->cv.notify_all();
+      return;
+    }
+    while (true) {
+      std::size_t my_index;
+      {
+        std::unique_lock<std::mutex> lock(prefetch_->mu);
+        prefetch_->cv.wait(lock, [&] {
+          return prefetch_->stop || prefetch_->pending_error ||
+                 (prefetch_->next_to_compute < prefetch_->total_batches &&
+                  (prefetch_->next_to_compute - prefetch_->next_to_deliver) < prefetch_->capacity);
+        });
+        if (prefetch_->stop || prefetch_->pending_error) return;
+        my_index = prefetch_->next_to_compute++;
+      }
+      try {
+        batch_type result;
+        {
+          std::unique_lock<std::mutex> engine_lock(prefetch_->engine_mu);
+          result = batch_at(my_index);
+        }
+        std::unique_lock<std::mutex> lock(prefetch_->mu);
+        prefetch_->completed.emplace(my_index, std::move(result));
+      } catch (...) {
+        std::unique_lock<std::mutex> lock(prefetch_->mu);
+        if (!prefetch_->pending_error) prefetch_->pending_error = std::current_exception();
+        prefetch_->cv.notify_all();
+        return;
+      }
+      prefetch_->cv.notify_all();
+    }
+  }
+
+  void start_prefetch_() {
+    if (!prefetch_) prefetch_ = std::make_unique<Prefetch>();
+    {
+      std::unique_lock<std::mutex> lock(prefetch_->mu);
+      prefetch_->completed.clear();
+      prefetch_->next_to_compute = 0;
+      prefetch_->next_to_deliver = 0;
+      prefetch_->total_batches = batch_count();
+      const std::int64_t pf = options_.prefetch_factor.value_or(2);
+      prefetch_->capacity = std::max<std::size_t>(1, options_.num_workers * static_cast<std::size_t>(pf));
+      prefetch_->stop = false;
+    }
+    if (prefetch_->threads.empty()) {
+      prefetch_->threads.reserve(options_.num_workers);
+      for (std::size_t w = 0; w < options_.num_workers; ++w) {
+        prefetch_->threads.emplace_back([this, w] { worker_loop_(w); });
+      }
+    }
+    prefetch_->cv.notify_all();
+  }
+
+  void stop_prefetch_() {
+    if (!prefetch_) return;
+    // Signal stop and join *before* resetting the pointer. unique_ptr::reset()
+    // nulls this->prefetch_ before Prefetch's destructor runs, and worker
+    // threads reach the Prefetch object through this->prefetch_ (not a
+    // stable captured raw pointer) -- so if a worker were still between
+    // statements in worker_loop_() when reset() nulled the member, its next
+    // `prefetch_->...` would dereference nullptr. Joining here first,
+    // through the still-valid pointer, guarantees no worker thread is still
+    // running by the time the pointer itself is torn down.
+    {
+      std::unique_lock<std::mutex> lock(prefetch_->mu);
+      prefetch_->stop = true;
+    }
+    prefetch_->cv.notify_all();
+    for (auto& t : prefetch_->threads) {
+      if (t.joinable()) t.join();
+    }
+    prefetch_.reset();
+  }
+
+  batch_type pull_prefetched_() {
+    std::unique_lock<std::mutex> lock(prefetch_->mu);
+    const auto ready = [&] {
+      return prefetch_->stop || prefetch_->pending_error ||
+             (options_.in_order ? prefetch_->completed.count(prefetch_->next_to_deliver) > 0
+                                : !prefetch_->completed.empty());
+    };
+    if (options_.timeout > 0.0) {
+      const bool got = prefetch_->cv.wait_for(lock, std::chrono::duration<double>(options_.timeout), ready);
+      PLUSS_CHECK(got, "pluss::loader::DataLoader: timed out waiting for a prefetched batch");
+    } else {
+      prefetch_->cv.wait(lock, ready);
+    }
+    if (prefetch_->pending_error) {
+      const auto err = prefetch_->pending_error;
+      lock.unlock();
+      std::rethrow_exception(err);
+    }
+    PLUSS_CHECK(!prefetch_->stop, "pluss::loader::DataLoader: prefetch stopped while a batch was still pending");
+
+    const std::size_t key = options_.in_order ? prefetch_->next_to_deliver : prefetch_->completed.begin()->first;
+    auto it = prefetch_->completed.find(key);
+    batch_type out = std::move(it->second);
+    prefetch_->completed.erase(it);
+    ++prefetch_->next_to_deliver;
+    lock.unlock();
+    prefetch_->cv.notify_all();
     return out;
   }
 
@@ -401,6 +788,7 @@ private:
   std::int64_t sample_count_{0};
   std::uint64_t epoch_{0};
   std::size_t cursor_{0};
+  std::unique_ptr<Prefetch> prefetch_{};
 };
 
 struct DataSplitOptions {
@@ -475,7 +863,8 @@ inline std::vector<Series> index_fields_(
   out.reserve(fields.size());
   for (std::size_t i = 0; i < fields.size(); ++i) {
     const auto& s = fields[i];
-    const auto cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
+    const auto cfg =
+        ::pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
     const auto idx = make_series(ids, {static_cast<std::int64_t>(ids.size())}, cfg);
     out.push_back(s.index_select(dims[i], idx));
   }
@@ -661,7 +1050,7 @@ inline TemporalFieldSplit temporal_split_fields(
     const Dataset& dataset,
     TemporalSplitOptions options = {}) {
   options.batch_dim = dataset.batch_dim();
-  return temporal_split_fields(dataset.materialize_fields(), options);
+  return temporal_split_fields(detail::materialize_dataset_fields_(dataset), options);
 }
 
 inline TemporalLoaderSplit temporal_split_loaders(
@@ -707,7 +1096,8 @@ inline TemporalLoaderSplit temporal_split_loaders(
     DataLoaderOptions train_options = {},
     DataLoaderOptions test_options = {}) {
   split_options.batch_dim = dataset.batch_dim();
-  return temporal_split_loaders(dataset.materialize_fields(), split_options, train_options, test_options);
+  return temporal_split_loaders(
+      detail::materialize_dataset_fields_(dataset), split_options, train_options, test_options);
 }
 
 inline DataLoaderSplit split_loaders(
@@ -742,7 +1132,7 @@ inline DataSplit split_fields(const SeriesDataset& dataset, DataSplitOptions opt
 
 inline DataSplit split_fields(const Dataset& dataset, DataSplitOptions options = {}) {
   options.batch_dim = dataset.batch_dim();
-  return split_fields(dataset.materialize_fields(), options);
+  return split_fields(detail::materialize_dataset_fields_(dataset), options);
 }
 
 inline DataLoaderSplit split_loaders(
@@ -762,30 +1152,8 @@ inline DataLoaderSplit split_loaders(
     DataLoaderOptions val_options = {},
     DataLoaderOptions test_options = {}) {
   split_options.batch_dim = dataset.batch_dim();
-  return split_loaders(dataset.materialize_fields(), split_options, train_options, val_options, test_options);
+  return split_loaders(
+      detail::materialize_dataset_fields_(dataset), split_options, train_options, val_options, test_options);
 }
 
-} // namespace pluss::tils
-
-namespace pluss::loader {
-using tils::Dataset;
-using tils::SeriesDataset;
-using tils::DataBatch;
-using tils::DataLoader;
-using tils::DataLoaderOptions;
-using tils::DataLoaderSplit;
-using tils::DataSplit;
-using tils::DataSplitOptions;
-using tils::TemporalSplitOptions;
-using tils::TemporalIndexFold;
-using tils::TemporalIndexSplit;
-using tils::TemporalFieldFold;
-using tils::TemporalFieldSplit;
-using tils::TemporalLoaderFold;
-using tils::TemporalLoaderSplit;
-using tils::split_fields;
-using tils::split_loaders;
-using tils::temporal_split_indices;
-using tils::temporal_split_fields;
-using tils::temporal_split_loaders;
 } // namespace pluss::loader

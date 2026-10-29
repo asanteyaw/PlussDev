@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -133,6 +133,7 @@
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rank sum of A 96.5000, U 60.5000, z 2.3137, p 0.0164 (reject)
 </pre></div>
 </div>
+<p>The rank sum of A is 96.5 and the U statistic 60.5, giving z 2.31 and p 0.0164: the fill volumes of the two machines differ. The test uses only the ranks, so it does not depend on the shape of the distributions.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -163,6 +164,7 @@ exact       p 0.2658
 approximate p 0.2663
 </pre></div>
 </div>
+<p>With ties the default p-value 0.2663 uses the normal approximation with a tie correction, and the exact p-value is 0.2658: the two agree to three decimals, and the decision is the same.</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -190,6 +192,7 @@ approximate p 0.2663
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>p 0.0082, critical z 1.6449
 </pre></div>
 </div>
+<p>One-sided, the p-value halves to 0.0082 and is compared with the critical z 1.645.</p>
 </section>
 </section>
 <section id="see-also">
@@ -219,13 +222,16 @@ approximate p 0.2663
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

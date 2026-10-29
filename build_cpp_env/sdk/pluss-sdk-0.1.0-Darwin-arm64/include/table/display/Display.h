@@ -6,7 +6,7 @@
 
 namespace pluss::table {
 
-class Thread;
+class Slate;
 class DataFrame;
 class Atlas;
 
@@ -53,20 +53,20 @@ DisplayBackend default_backend();
 void set_default_backend(DisplayBackend backend);
 bool gui_backend_available();
 
-std::string render(const Thread& thread, const DisplayOptions& options = {});
+std::string render(const Slate& slate, const DisplayOptions& options = {});
 std::string render(const DataFrame& frame, const DisplayOptions& options = {});
 std::string render(const Atlas& atlas, const DisplayOptions& options = {});
 std::string render_info(const DataFrame& frame, const DisplayOptions& options = {});
-std::string render_html(const Thread& thread, const DisplayOptions& options = {});
+std::string render_html(const Slate& slate, const DisplayOptions& options = {});
 std::string render_html(const DataFrame& frame, const DisplayOptions& options = {});
 std::string render_html(const Atlas& atlas, const DisplayOptions& options = {});
 std::string render_info_html(const DataFrame& frame, const DisplayOptions& options = {});
 
-void print(std::ostream& os, const Thread& thread, const DisplayOptions& options = {});
+void print(std::ostream& os, const Slate& slate, const DisplayOptions& options = {});
 void print(std::ostream& os, const DataFrame& frame, const DisplayOptions& options = {});
 void print(std::ostream& os, const Atlas& atlas, const DisplayOptions& options = {});
 void print_info(std::ostream& os, const DataFrame& frame, const DisplayOptions& options = {});
-void show(const Thread& thread, const DisplayOptions& options = {});
+void show(const Slate& slate, const DisplayOptions& options = {});
 void show(const DataFrame& frame, const DisplayOptions& options = {});
 void show(const Atlas& atlas, const DisplayOptions& options = {});
 void show_info(const DataFrame& frame, const DisplayOptions& options = {});

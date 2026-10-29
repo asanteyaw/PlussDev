@@ -1,0 +1,147 @@
+# Several predictors
+
+[Back to Least Squares](../regression_01_least_squares.md)
+
+With *p* predictors the fit is a hyperplane, and each coefficient is a **partial** effect: the change in the response for a unit change in that predictor with the others held fixed. The fit is the solution of the *normal equations* X′X b = X′y, where X is the design matrix with the intercept column in front, and the covariance matrix of the coefficients is s² (X′X)⁻¹, with s² the residual variance. This page checks each of those statements on a two-predictor fit, and verifies the meaning of a partial coefficient.
+
+## The design matrix and the normal equations
+
+The response is built from y = 2 + 1.5 x₁ − 0.8 x₂ plus a fixed pattern of noise. The program forms X with a column of ones, solves nothing itself, and measures how far the library's answer is from satisfying X′X b = X′y, how far the residuals are from orthogonal to every column of X, and how far `covariance` is from s² (X′X)⁻¹.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+namespace linalg = pluss::subsp::math::linalg;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  const std::vector<double> x2{3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8};
+  const std::vector<double> noise{0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.3, 0.4, -0.1, 0.2, -0.2, 0.1};
+  std::vector<double> ys, flat;
+  for (std::size_t i = 0; i < x1.size(); ++i) {
+    ys.push_back(2.0 + 1.5 * x1[i] - 0.8 * x2[i] + noise[i]);
+    flat.push_back(x1[i]);
+    flat.push_back(x2[i]);
+  }
+  const auto y = pluss::make_series(ys, {12}, as_f64());
+  const auto x = pluss::make_series(flat, {12, 2}, as_f64());
+
+  reg::OLSOptions options;
+  options.predictor_names = {"x1", "x2"};
+  const auto fit = reg::ols_fit(y, x, options);
+  out.writeln("names", fit.coefficient_names, " coefficients", fit.coefficients.pull<double>());
+  out.writeln("std errors", fit.std_errors.pull<double>());
+
+  const auto design = pluss::series::ones({12, 1}, as_f64()).unite({x}, 1);
+  const auto xt = design.transpose(0, 1);
+  const auto beta = fit.coefficients.reshape({3, 1});
+  const auto gram = xt.matmul(design);
+
+  out.writeln("largest |X'X b - X'y|          ", gram.matmul(beta).sub(xt.matmul(y.reshape({12, 1}))).abs().max().item<double>());
+  out.writeln("largest |X' residuals|         ", xt.matmul(fit.residuals.reshape({12, 1})).abs().max().item<double>());
+  out.writeln("sum of residuals               ", fit.residuals.sum().item<double>());
+  out.writeln("largest |covariance - s2 (X'X)^-1|", fit.covariance.sub(linalg::inverse(gram).mul(fit.mse)).abs().max().item<double>());
+  out.writeln("std errors from the covariance diagonal", fit.covariance.diagonal().sqrt().pull<double>());
+}
+```
+
+All four measures of disagreement print as zero to six decimals. The coefficients solve the normal equations; the residuals are orthogonal to the constant column and to both predictors (which is why they sum to zero); and `covariance` is s²(X′X)⁻¹, with the standard errors the square roots of its diagonal. The estimates 1.8886, 1.4819 and −0.7452 recover the generating values 2, 1.5 and −0.8 to within 1.7 standard errors each.
+
+## What a partial coefficient means
+
+The coefficient of x₁ in the two-predictor model equals the slope obtained by first removing x₂ from both sides: regress y on x₂ and keep the residuals, regress x₁ on x₂ and keep those residuals, and then regress the first set of residuals on the second. That is exactly the "with the other predictor held fixed" reading. It also explains why the coefficient of x₁ differs from its slope in a model that leaves x₂ out when the two predictors are related.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  const std::vector<double> x2{3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8};
+  const std::vector<double> noise{0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.3, 0.4, -0.1, 0.2, -0.2, 0.1};
+  std::vector<double> ys, flat;
+  for (std::size_t i = 0; i < x1.size(); ++i) {
+    ys.push_back(2.0 + 1.5 * x1[i] - 0.8 * x2[i] + noise[i]);
+    flat.push_back(x1[i]);
+    flat.push_back(x2[i]);
+  }
+  const auto y = pluss::make_series(ys, {12}, as_f64());
+  const auto x = pluss::make_series(flat, {12, 2}, as_f64());
+  const auto column1 = pluss::make_series(x1, {12}, as_f64());
+  const auto column2 = pluss::make_series(x2, {12}, as_f64());
+
+  const auto full = reg::ols_fit(y, x);
+  const auto y_without_x2 = reg::ols_fit(y, column2).residuals;
+  const auto x1_without_x2 = reg::ols_fit(column1, column2).residuals;
+  const auto partial = reg::ols_fit(y_without_x2, x1_without_x2);
+  out.writeln("coefficient of x1 in the full model      ", full.coefficients.pull<double>()[1]);
+  out.writeln("slope of the two residual series         ", partial.coefficients.pull<double>()[1]);
+
+  const auto alone = reg::ols_fit(y, column1);
+  out.writeln("slope of x1 when x2 is left out          ", alone.coefficients.pull<double>()[1]);
+
+  // Leaving x2 out moves the slope by b2 times the slope of x2 on x1.
+  const double b2 = full.coefficients.pull<double>()[2];
+  const double delta = reg::ols_fit(column2, column1).coefficients.pull<double>()[1];
+  out.writeln("slope of x2 on x1 (delta)                ", delta, " and b2", b2);
+  out.writeln("b1 + b2 * delta                          ", full.coefficients.pull<double>()[1] + b2 * delta);
+}
+```
+
+The coefficient of x₁ in the full model, 1.4819, is exactly the slope of the two residual series. Leaving x₂ out gives 1.2213 instead. The gap is b₂ times δ, where δ = 0.3497 is the slope of x₂ on x₁: the predictors are positively related and b₂ = −0.7452 is negative, so omitting x₂ drags the slope of x₁ down by 0.7452 × 0.3497 = 0.2606, and 1.4819 + (−0.7452)(0.3497) is the 1.2213 printed. A coefficient is a statement about the model it sits in.
+
+## Reading the covariance matrix
+
+The off-diagonal entries of `covariance` say how the estimation errors of two coefficients move together. They matter whenever a quantity is built from several coefficients, because its variance is c′ Σ c for a weight vector c. For the sum of the two slopes, for example, the variance is the two variances plus twice the covariance, and the standard error is its square root. The program builds that standard error from the covariance matrix and from a refit of the model with the sum as a single parameter, which must agree.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  const std::vector<double> x2{3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8};
+  const std::vector<double> noise{0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.3, 0.4, -0.1, 0.2, -0.2, 0.1};
+  std::vector<double> ys, flat, reparametrised;
+  for (std::size_t i = 0; i < x1.size(); ++i) {
+    ys.push_back(2.0 + 1.5 * x1[i] - 0.8 * x2[i] + noise[i]);
+    flat.push_back(x1[i]);
+    flat.push_back(x2[i]);
+    reparametrised.push_back(x1[i]);          // y = a + b1 x1 + b2 x2 = a + (b1 + b2) x1 + b2 (x2 - x1)
+    reparametrised.push_back(x2[i] - x1[i]);
+  }
+  const auto y = pluss::make_series(ys, {12}, as_f64());
+  const auto fit = reg::ols_fit(y, pluss::make_series(flat, {12, 2}, as_f64()));
+
+  const auto cov = fit.covariance.host<double>().array().data;  // row-major 3 x 3
+  const double variance_of_sum = cov[4] + cov[8] + 2.0 * cov[5];
+  const auto b = fit.coefficients.pull<double>();
+  out.writeln("b1 + b2                      ", b[1] + b[2]);
+  out.writeln("std error from the covariance", std::sqrt(variance_of_sum));
+
+  const auto refit = reg::ols_fit(y, pluss::make_series(reparametrised, {12, 2}, as_f64()));
+  out.writeln("slope of x1 after reparametrising", refit.coefficients.pull<double>()[1]);
+  out.writeln("its standard error               ", refit.std_errors.pull<double>()[1]);
+  out.writeln("covariance of b1 and b2 (cov[1][2])", cov[5], " ignoring it would give", std::sqrt(cov[4] + cov[8]));
+}
+```
+
+The standard error of b₁ + b₂ taken from the covariance matrix, 0.029648, equals the standard error of the combined slope in the reparametrised model (y = a + (b₁ + b₂) x₁ + b₂ (x₂ − x₁)), whose x₁ coefficient is the sum 0.736685. The covariance of b₁ and b₂ is small in absolute terms (−0.000387) but not negligible: the two variances alone give 0.040649, 37% too large. Whenever a result combines coefficients, use `covariance`, not just `std_errors`.

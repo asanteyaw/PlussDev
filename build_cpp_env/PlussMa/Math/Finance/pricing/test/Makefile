@@ -221,6 +221,20 @@ black_scholes_test/fast:
 .PHONY : black_scholes_test/fast
 
 # Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/rule
+
+# Convenience name for target.
+cos_benchmark_catch2: PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/rule
+.PHONY : cos_benchmark_catch2
+
+# fast build rule for target.
+cos_benchmark_catch2/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/build
+.PHONY : cos_benchmark_catch2/fast
+
+# Convenience name for target.
 PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/rule
 .PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/rule
@@ -247,6 +261,34 @@ heston_sv_pricing_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_p
 heston_sv_pricing_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build
 .PHONY : heston_sv_pricing_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/rule
+
+# Convenience name for target.
+implied_vol_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/rule
+.PHONY : implied_vol_test
+
+# fast build rule for target.
+implied_vol_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/build
+.PHONY : implied_vol_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/rule
+
+# Convenience name for target.
+mc_consistency_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/rule
+.PHONY : mc_consistency_test
+
+# fast build rule for target.
+mc_consistency_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/build
+.PHONY : mc_consistency_test/fast
 
 # Convenience name for target.
 PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/rule:
@@ -338,6 +380,30 @@ black_scholes_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/black_scholes_test.cpp.s
 .PHONY : black_scholes_test.cpp.s
 
+cos_benchmark_catch2.o: cos_benchmark_catch2.cpp.o
+.PHONY : cos_benchmark_catch2.o
+
+# target to build an object file
+cos_benchmark_catch2.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/cos_benchmark_catch2.cpp.o
+.PHONY : cos_benchmark_catch2.cpp.o
+
+cos_benchmark_catch2.i: cos_benchmark_catch2.cpp.i
+.PHONY : cos_benchmark_catch2.i
+
+# target to preprocess a source file
+cos_benchmark_catch2.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/cos_benchmark_catch2.cpp.i
+.PHONY : cos_benchmark_catch2.cpp.i
+
+cos_benchmark_catch2.s: cos_benchmark_catch2.cpp.s
+.PHONY : cos_benchmark_catch2.s
+
+# target to generate assembly for a file
+cos_benchmark_catch2.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/cos_benchmark_catch2.cpp.s
+.PHONY : cos_benchmark_catch2.cpp.s
+
 cos_fft_greeks_catch2.o: cos_fft_greeks_catch2.cpp.o
 .PHONY : cos_fft_greeks_catch2.o
 
@@ -385,6 +451,54 @@ heston_sv_pricing_test.s: heston_sv_pricing_test.cpp.s
 heston_sv_pricing_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/heston_sv_pricing_test.cpp.s
 .PHONY : heston_sv_pricing_test.cpp.s
+
+implied_vol_test.o: implied_vol_test.cpp.o
+.PHONY : implied_vol_test.o
+
+# target to build an object file
+implied_vol_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/implied_vol_test.cpp.o
+.PHONY : implied_vol_test.cpp.o
+
+implied_vol_test.i: implied_vol_test.cpp.i
+.PHONY : implied_vol_test.i
+
+# target to preprocess a source file
+implied_vol_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/implied_vol_test.cpp.i
+.PHONY : implied_vol_test.cpp.i
+
+implied_vol_test.s: implied_vol_test.cpp.s
+.PHONY : implied_vol_test.s
+
+# target to generate assembly for a file
+implied_vol_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/implied_vol_test.cpp.s
+.PHONY : implied_vol_test.cpp.s
+
+mc_consistency_test.o: mc_consistency_test.cpp.o
+.PHONY : mc_consistency_test.o
+
+# target to build an object file
+mc_consistency_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/mc_consistency_test.cpp.o
+.PHONY : mc_consistency_test.cpp.o
+
+mc_consistency_test.i: mc_consistency_test.cpp.i
+.PHONY : mc_consistency_test.i
+
+# target to preprocess a source file
+mc_consistency_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/mc_consistency_test.cpp.i
+.PHONY : mc_consistency_test.cpp.i
+
+mc_consistency_test.s: mc_consistency_test.cpp.s
+.PHONY : mc_consistency_test.s
+
+# target to generate assembly for a file
+mc_consistency_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/mc_consistency_test.cpp.s
+.PHONY : mc_consistency_test.cpp.s
 
 object_pricing_test.o: object_pricing_test.cpp.o
 .PHONY : object_pricing_test.o
@@ -475,8 +589,11 @@ help:
 	@echo "... test"
 	@echo "... bates_pricing_test"
 	@echo "... black_scholes_test"
+	@echo "... cos_benchmark_catch2"
 	@echo "... cos_fft_greeks_catch2"
 	@echo "... heston_sv_pricing_test"
+	@echo "... implied_vol_test"
+	@echo "... mc_consistency_test"
 	@echo "... object_pricing_test"
 	@echo "... pipeline_module_test"
 	@echo "... sabr_slv_pricing_test"
@@ -486,12 +603,21 @@ help:
 	@echo "... black_scholes_test.o"
 	@echo "... black_scholes_test.i"
 	@echo "... black_scholes_test.s"
+	@echo "... cos_benchmark_catch2.o"
+	@echo "... cos_benchmark_catch2.i"
+	@echo "... cos_benchmark_catch2.s"
 	@echo "... cos_fft_greeks_catch2.o"
 	@echo "... cos_fft_greeks_catch2.i"
 	@echo "... cos_fft_greeks_catch2.s"
 	@echo "... heston_sv_pricing_test.o"
 	@echo "... heston_sv_pricing_test.i"
 	@echo "... heston_sv_pricing_test.s"
+	@echo "... implied_vol_test.o"
+	@echo "... implied_vol_test.i"
+	@echo "... implied_vol_test.s"
+	@echo "... mc_consistency_test.o"
+	@echo "... mc_consistency_test.i"
+	@echo "... mc_consistency_test.s"
 	@echo "... object_pricing_test.o"
 	@echo "... object_pricing_test.i"
 	@echo "... object_pricing_test.s"

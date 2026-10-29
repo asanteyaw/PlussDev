@@ -1,0 +1,194 @@
+# The differentiation rules
+
+[Back to Derivatives](../calculus_02_derivatives.md)
+
+Every primitive of the expression vocabulary has a differentiation rule, and the derivative of a composite is built from them by the chain, product and quotient rules. This page lists the rules and then checks them: each rule's derivative is evaluated and printed beside a closed form written directly with `Series` arithmetic.
+
+| Expression | Derivative with respect to `x` |
+|---|---|
+| `exp(u)` | `exp(u) u'` |
+| `log(u)` | `u' / u` |
+| `log1p(u)` | `u' / (1 + u)` |
+| `expm1(u)` | `exp(u) u'` |
+| `sqrt(u)` | `u' / (2 sqrt(u))` |
+| `sin(u)`, `cos(u)` | `cos(u) u'`, `-sin(u) u'` |
+| `tan(u)` | `u' / cos²(u)` |
+| `sinh(u)`, `cosh(u)` | `cosh(u) u'`, `sinh(u) u'` |
+| `tanh(u)` | `u' / cosh²(u)` |
+| `abs(u)` | `Re(conj(u) u') / abs(u)`; this reduces to `u u' / abs(u)` for real `u` (see [Non-smooth points](non_smooth_points.md)) |
+| `conj(u)` | `conj(u')` for a real parameter |
+| `real(u)`, `imag(u)` | `real(u')`, `imag(u')` for a real parameter |
+| `angle(u)` | `Im(conj(u) u') / abs(u)^2` for a real parameter |
+| `-u` | `-u'` |
+| `u + v`, `u - v` | `u' + v'`, `u' - v'` |
+| `u * v` | `u' v + u v'` |
+| `u / v` | `(u' v - u v') / v²` |
+| `u^v` | `v u^(v-1) u' + u^v log(u) v'` |
+
+The last rule contains `log(u)`: differentiating a power whose exponent is a variable needs the logarithm of the base, so the derivative with respect to the exponent is subject to the domain of `log`. For a power with a constant exponent, only the first term appears, and no logarithm is evaluated.
+
+## Every unary rule
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <functional>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function x = math::function({"x"}, [](math::Function v) { return v; });
+  const auto p = pluss::make_series({0.2, 0.5, 1.25, 2.0});
+  const auto one = pluss::series::ones_like(p);
+  const auto d = operators::differential("x");
+
+  struct Rule {
+    const char *name;
+    math::Function function;
+    pluss::Series closed_form;
+  };
+  const Rule rules[] = {
+      {"exp   ", x.exp(), p.exp()},
+      {"log   ", x.log(), one.div(p)},
+      {"log1p ", x.log1p(), one.div(p.add(1.0))},
+      {"expm1 ", x.expm1(), p.exp()},
+      {"sqrt  ", x.sqrt(), one.div(p.sqrt().mul(2.0))},
+      {"sin   ", x.sin(), p.cos()},
+      {"cos   ", x.cos(), p.sin().neg()},
+      {"tan   ", x.tan(), one.div(p.cos().pow(2))},
+      {"sinh  ", x.sinh(), p.cosh()},
+      {"cosh  ", x.cosh(), p.sinh()},
+      {"tanh  ", x.tanh(), one.div(p.cosh().pow(2))},
+      {"abs   ", x.abs(), p.div(p.abs())},
+      {"neg   ", -x, one.neg()},
+  };
+
+  out.writeln("x     ", p.pull<double>());
+  for (const Rule &rule : rules) {
+    const auto derivative = d(rule.function)({p});
+    out.writeln(rule.name, derivative.pull<double>(), " closed form", rule.closed_form.pull<double>());
+  }
+}
+```
+
+Each derivative column equals the closed form beside it, to the six printed digits, at all four points. Two lines are worth reading closely. `exp` and `expm1` have the same derivative, `exp(x)`, because they differ by the constant 1. And the derivative of `abs` is 1 at every point shown, because all four are positive; at negative points it is −1, and at 0 it is undefined (next page).
+
+## Binary rules, and powers with a variable exponent
+
+The program differentiates a function that combines sums, differences, a product, a quotient and a power with a variable exponent, with respect to each variable in turn:
+
+h(x, y) = (x + y)(x − y)/y + x^y + 2/x
+
+so that ∂h/∂x = 2x/y + y x^(y−1) − 2/x² and ∂h/∂y = −x²/y² − 1 + x^y log x. It then differentiates a power with a constant base, 2^x, whose derivative is 2^x log 2.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function h = math::function({"x", "y"}, [](math::Function x, math::Function y) { return (x + y) * (x - y) / y + x.pow(y) + 2.0 / x; });
+  const auto x = pluss::make_series({1.2, 1.8, 2.5});
+  const auto y = pluss::make_series({0.7, 1.1, 1.6});
+
+  const auto hx = x.mul(2.0).div(y).add(y.mul(x.pow(y.sub(1.0)))).sub(x.pow(2).reciprocal().mul(2.0));
+  const auto hy = x.pow(2).div(y.pow(2)).neg().sub(1.0).add(x.pow(y).mul(x.log()));
+  out.writeln("dh/dx        ", operators::differential("x")(h)({x, y}).pull<double>());
+  out.writeln("closed form  ", hx.pull<double>());
+  out.writeln("dh/dy        ", operators::differential("y")(h)({x, y}).pull<double>());
+  out.writeln("closed form  ", hy.pull<double>());
+
+  const math::Function exponential = math::function({"x"}, [](math::Function v) { return math::function(2.0).pow(v); });
+  out.writeln("d(2^x)/dx    ", operators::differential("x")(exponential)({x}).pull<double>());
+  out.writeln("2^x log 2    ", x.mul(0.0).add(2.0).pow(x).mul(std::log(2.0)).pull<double>());
+}
+```
+
+Both partial derivatives and the derivative of the constant-base power match their closed forms. The variable-exponent rule is the interesting one: `dh/dy` contains `x^y log x`, which came from differentiating `x^y` with respect to its exponent. That term requires `x > 0`; for a base that can be zero or negative, differentiate with respect to the exponent only if the exponent is a constant, or restrict the domain.
+
+## Shared sub-expressions are differentiated once
+
+A function in which one sub-expression appears twice, such as `s + s` with `s = x * x`, has a derivative that is also built once for `s` and used twice. Differentiation walks the recorded graph with a memo table, so the size of the derivative grows with the size of the expression and not with the number of times a piece is reused. That is also why derivatives of high order stay manageable for a well-structured formula. The values are the ordinary ones:
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) {
+    const math::Function square = x * x;
+    return square + square;  // 2 x^2
+  });
+  const auto x = pluss::make_series({1.0, 2.0, 3.0});
+  out.writeln("f'   ", operators::differential("x")(f)({x}).pull<double>(), "  (4x:", x.mul(4.0).pull<double>(), ")");
+  out.writeln("f''  ", operators::differential("x", 2)(f)({x}).pull<double>());
+  out.writeln("f''' ", operators::differential("x", 3)(f)({x}).pull<double>());
+}
+```
+
+The first derivative is 4x, the second the constant 4 and the third zero. The rest of the chapter, and the next one, apply the same machinery to several variables.
+
+## Keeping the derivative graph bounded
+
+Differentiating a formula without limit can produce an enormous graph, because each application of the product rule roughly doubles the number of terms. Every differential operator therefore carries a node budget, `DiffOptions::max_nodes` (default 100000), and refuses a request whose graph would exceed it. The budget applies to every intermediate order, so an unreasonable order is rejected quickly instead of after the graph has filled memory. A request that does not fit can be raised by setting `max_nodes`; a budget of zero is itself an error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.pow(5) * x.sin(); });
+
+  for (const std::int64_t order : {2, 6, 12, 40}) {
+    for (const std::size_t budget : {std::size_t{50}, std::size_t{1000}, std::size_t{100000}}) {
+      try {
+        (void)operators::differential("x", order, {.max_nodes = budget})(f);
+        out.writeln("order", order, " budget", budget, "-> built");
+      } catch (const pluss::Error &) {
+        out.writeln("order", order, " budget", budget, "-> rejected");
+      }
+    }
+  }
+  try {
+    (void)operators::differential("x", 1, {.max_nodes = 0});
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln("max_nodes = 0 ->", text.substr(0, text.find('\n')));
+  }
+}
+```
+
+A budget of 50 is enough for the second derivative of `x⁵ sin x` but not for the sixth, and the twelfth fits the default budget of 100000 but not 1000. The fortieth derivative does not fit any of the budgets, and the program rejected it immediately: the graph of such a derivative is far too large to build, and the check is made on every intermediate order so that it is never built. If a legitimate request is rejected, raise `max_nodes`, or simplify the formula, since sharing a sub-expression (the previous program) is what keeps graphs small. The message for a rejected request is the same in each case and names the safeguard: `transformed graph exceeds max_nodes safeguard`.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

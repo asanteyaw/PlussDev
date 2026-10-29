@@ -228,7 +228,7 @@ public:
   }
 
   ModelCore& learn_(const pluss::table::DataFrame& x,
-                        const pluss::table::Thread& y,
+                        const pluss::table::Slate& y,
                         const TrainOptions& options = {}) {
     return learn_(x, as_stratify_series(y), options);
   }
@@ -256,7 +256,7 @@ public:
   }
 
   [[nodiscard]] ModelCore learn(const pluss::table::DataFrame& x,
-                                    const pluss::table::Thread& y,
+                                    const pluss::table::Slate& y,
                                     const TrainOptions& options = {}) const {
     ModelCore out = clone_for_out_of_place_();
     out.learn_(x, y, options);
@@ -430,7 +430,7 @@ public:
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
-                                     const pluss::table::Thread& y,
+                                     const pluss::table::Slate& y,
                                      const AssessOptions& options = {}) const {
     return assess_series(x, as_stratify_series(y), options);
   }
@@ -452,7 +452,7 @@ public:
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
-                                    const pluss::table::Thread& y,
+                                    const pluss::table::Slate& y,
                                     const AssessOptions& options = {}) const {
     return as_metric_report_(assess_series(x, y, options), resolved_metrics_(options));
   }
@@ -547,7 +547,7 @@ public:
 
   [[nodiscard]] std::vector<double> coefficients() const {
     if (!coeff.defined()) return {};
-    return coeff.to(pluss::pCPU, ScalarType::Float64).reshape({coeff.numel()}).to_vec<double>();
+    return coeff.to(pluss::pCPU, ScalarType::Float64).reshape({coeff.numel()}).host<double>();
   }
 
   [[nodiscard]] double intercept_term() const {
@@ -582,7 +582,7 @@ public:
 
   void save(const std::string& path,
             const pluss::table::DataFrame& x_train,
-            const pluss::table::Thread& y_train,
+            const pluss::table::Slate& y_train,
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
     save(path, x_train, as_stratify_series(y_train), train_options, std::move(metadata));
@@ -693,7 +693,7 @@ private:
     DataFrameBatchOptions options{};
     options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
-    options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+    options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
     return options;
   }
@@ -992,7 +992,7 @@ struct FoldFramePair_ {
 };
 
 [[nodiscard]] inline std::vector<std::int64_t> split_indices_to_vector_(const Series& indices) {
-  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).to_vec<std::int64_t>();
+  return indices.to(pluss::pCPU, ScalarType::Int64).reshape({indices.numel()}).host<std::int64_t>();
 }
 
 [[nodiscard]] inline std::vector<FoldFramePair_> materialize_fold_frames_(const pluss::table::DataFrame& frame,
@@ -1247,7 +1247,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline metrics::CrossValidationReport cross_validate(const ModelCore& model,
                                                                    const pluss::table::DataFrame& x,
-                                                                   const pluss::table::Thread& y,
+                                                                   const pluss::table::Slate& y,
                                                                    selection::CrossValOptions cv = {},
                                                                    TrainOptions train_options = {},
                                                                    AssessOptions assess_options = {}) {
@@ -1341,7 +1341,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline Series classification_metric_series(const ModelCore& model,
                                                          const pluss::table::DataFrame& x,
-                                                         const pluss::table::Thread& y,
+                                                         const pluss::table::Slate& y,
                                                          const AssessOptions& options = {}) {
   return classification_metric_series(model, x, as_stratify_series(y), options);
 }
@@ -1447,7 +1447,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline ThresholdCurve threshold_curve(const ModelCore& model,
                                                     const pluss::table::DataFrame& x,
-                                                    const pluss::table::Thread& y,
+                                                    const pluss::table::Slate& y,
                                                     const InferOptions& infer_options = {}) {
   return threshold_curve(model, x, as_stratify_series(y), infer_options);
 }
@@ -1488,7 +1488,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline double best_threshold(const ModelCore& model,
                                            const pluss::table::DataFrame& x,
-                                           const pluss::table::Thread& y,
+                                           const pluss::table::Slate& y,
                                            MetricKind objective = MetricKind::F1,
                                            const InferOptions& infer_options = {}) {
   return best_threshold(model, x, as_stratify_series(y), objective, infer_options);

@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=fc808d0b"></script>
+    <script src="../../../_static/api_nav.js?v=0f307078"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -51,13 +51,13 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">diagflat()</span></code> flattens the input and writes those flattened values onto a
 diagonal of a new square matrix.</p>
-<p>On the current verified root surface, that behavior is the same practical
-contract as <a class="reference internal" href="diag_embed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diag_embed()</span></code></span></a>: flatten first, embed second, fill
-everything else with zero.</p>
-<p>So the public difference between the two names is mainly one of intent:</p>
+<p>Everything else in the matrix is zero.</p>
+<p>It differs from <a class="reference internal" href="diag_embed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diag_embed()</span></code></span></a> in what happens to the input’s
+structure:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">diagflat()</span></code> advertises the flattening step right in the name</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">diag_embed()</span></code> emphasizes the final diagonal-matrix result</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diagflat()</span></code> flattens first, so any input becomes <strong>one</strong> square matrix</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diag_embed()</span></code> keeps the leading axes as batch axes and embeds only the last
+axis, producing a stack of matrices</p></li>
 </ul>
 </section>
 <section id="parameters">
@@ -79,10 +79,9 @@ A square 2D <code class="docutils literal notranslate"><span class="pre">Series<
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">diagflat()</span></code> follows the same verified reverse-mode behavior as
-<a class="reference internal" href="diag_embed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diag_embed()</span></code></span></a>: the forward pass flattens and writes values
+<p><code class="docutils literal notranslate"><span class="pre">diagflat()</span></code> is differentiable: the forward pass flattens and writes values
 onto one diagonal, and the reverse pass reads sensitivity back from that same
-diagonal.</p>
+diagonal and restores the input’s shape.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -139,8 +138,8 @@ is the wrong family entirely.</p>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="diag_embed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diag_embed</span></code></span></a>: same current value behavior under the
-explicit embedding name.</p></li>
+<li><p><a class="reference internal" href="diag_embed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diag_embed</span></code></span></a>: embeds the last axis and keeps the
+leading axes as a batch.</p></li>
 <li><p><a class="reference internal" href="diag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diag</span></code></span></a>: dual-mode extract-or-embed surface.</p></li>
 <li><p><a class="reference internal" href="diagonal.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diagonal</span></code></span></a>: extraction-only diagonal surface.</p></li>
 </ul>

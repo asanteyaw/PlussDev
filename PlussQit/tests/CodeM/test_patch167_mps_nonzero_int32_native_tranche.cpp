@@ -83,8 +83,17 @@ TEST_CASE("MPS strict nonzero parity covers scalar/empty/discontiguous lanes", "
       b_cpu.to(pluss::pMPS).nonzero().to(pluss::pCPU).host<std::int64_t>(),
       b_cpu.nonzero().host<std::int64_t>());
 
-  const auto scalar_true = pluss::make_series(std::vector<float>{5.f}, {}).to(pluss::pMPS);
-  const auto scalar_false = pluss::make_series(std::vector<float>{0.f}, {}).to(pluss::pMPS);
+  // make_series(values, {}) builds a one-element vector; a rank-0 tensor needs an explicit empty shape.
+  const std::vector<std::int64_t> no_dims{};
+  const auto one_true = pluss::make_series(std::vector<float>{5.f}, {}).to(pluss::pMPS);
+  const auto one_false = pluss::make_series(std::vector<float>{0.f}, {}).to(pluss::pMPS);
+  REQUIRE(one_true.nonzero().sizes()[0] == 1);
+  REQUIRE(one_true.nonzero().sizes()[1] == 1);
+  REQUIRE(one_true.nonzero().to(pluss::pCPU).host<std::int64_t>().front() == 0);
+  REQUIRE(one_false.nonzero().sizes()[0] == 0);
+  REQUIRE(one_false.nonzero().sizes()[1] == 1);
+  const auto scalar_true = pluss::make_series(std::vector<float>{5.f}, {}).reshape(no_dims).to(pluss::pMPS);
+  const auto scalar_false = pluss::make_series(std::vector<float>{0.f}, {}).reshape(no_dims).to(pluss::pMPS);
   require_equal_(
       scalar_true.nonzero().to(pluss::pCPU).host<std::int64_t>(),
       std::vector<std::int64_t>{});

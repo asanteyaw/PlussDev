@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Complex and Wirtinger derivatives &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Non-smooth points" href="non_smooth_points.html" />
+    <link rel="prev" title="The differentiation rules" href="the_differentiation_rules.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from complex_derivatives.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="complex-and-wirtinger-derivatives">
+<h1>Complex and Wirtinger derivatives<a class="headerlink" href="#complex-and-wirtinger-derivatives" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../calculus_02_derivatives.html"><span class="std std-doc">Back to Derivatives</span></a></p>
+<p>A <code class="docutils literal notranslate"><span class="pre">math::Function</span></code> may accept real or complex <code class="docutils literal notranslate"><span class="pre">Series</span></code> values and may return a complex <code class="docutils literal notranslate"><span class="pre">Series</span></code>. The graph remains a formula: applying an operator constructs another <code class="docutils literal notranslate"><span class="pre">Function</span></code>; no point is sampled until that result is called with values.</p>
+<p>There are two distinct questions, and the API keeps them distinct.</p>
+<ol class="arabic simple">
+<li><p><strong>A real parameter with a complex-valued result.</strong> Use <code class="docutils literal notranslate"><span class="pre">differential</span></code>. Characteristic functions are the central example: the argument <code class="docutils literal notranslate"><span class="pre">t</span></code> is real, while <code class="docutils literal notranslate"><span class="pre">phi(t)</span></code> is complex. The ordinary chain rule differentiates <code class="docutils literal notranslate"><span class="pre">conj</span></code>, <code class="docutils literal notranslate"><span class="pre">real</span></code>, <code class="docutils literal notranslate"><span class="pre">imag</span></code>, magnitude and phase along that real parameter.</p></li>
+<li><p><strong>A genuinely complex variable.</strong> Use the Wirtinger pair. <code class="docutils literal notranslate"><span class="pre">wirtinger(&quot;z&quot;)</span></code> constructs <code class="docutils literal notranslate"><span class="pre">partial</span> <span class="pre">f</span> <span class="pre">/</span> <span class="pre">partial</span> <span class="pre">z</span></code>; <code class="docutils literal notranslate"><span class="pre">conjugate_wirtinger(&quot;z&quot;)</span></code> constructs <code class="docutils literal notranslate"><span class="pre">partial</span> <span class="pre">f</span> <span class="pre">/</span> <span class="pre">partial</span> <span class="pre">conj(z)</span></code>. A function is holomorphic in <code class="docutils literal notranslate"><span class="pre">z</span></code> exactly where the second result is zero.</p></li>
+</ol>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">math::Function::conj</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">math::Function::real</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">math::Function::imag</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">math::Function::abs</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">math::Function::angle</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::wirtinger</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="n">operators</span><span class="o">::</span><span class="n">DiffOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::conjugate_wirtinger</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="n">operators</span><span class="o">::</span><span class="n">DiffOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+</pre></div>
+</div>
+<p>Both operators are structural, serializable and platform-neutral. They reject opaque callables: an autodiff fallback cannot infer whether a complex gradient means an ordinary directional derivative, a conjugate gradient or one member of the Wirtinger pair.</p>
+<p><code class="docutils literal notranslate"><span class="pre">differential(&quot;x&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">wirtinger(&quot;x&quot;)</span></code> are therefore not aliases. The former asks how a formula changes along a real parameter named <code class="docutils literal notranslate"><span class="pre">x</span></code>; the latter asks for the complex derivative with respect to <code class="docutils literal notranslate"><span class="pre">x</span></code>. This distinction remains visible even when both happen to produce the same formula for a holomorphic expression.</p>
+<section id="a-characteristic-function">
+<h2>A characteristic function<a class="headerlink" href="#a-characteristic-function" title="Link to this heading">¶</a></h2>
+<p>For a normal random variable with mean <code class="docutils literal notranslate"><span class="pre">mu</span></code> and variance <code class="docutils literal notranslate"><span class="pre">sigma2</span></code>,</p>
+<p><code class="docutils literal notranslate"><span class="pre">phi(t)</span> <span class="pre">=</span> <span class="pre">exp(i</span> <span class="pre">mu</span> <span class="pre">t</span> <span class="pre">-</span> <span class="pre">sigma2</span> <span class="pre">t^2</span> <span class="pre">/</span> <span class="pre">2)</span></code>.</p>
+<p>The first derivative at zero is <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">mu</span></code>; the second is <code class="docutils literal notranslate"><span class="pre">-(sigma2</span> <span class="pre">+</span> <span class="pre">mu^2)</span></code>. These are analytic derivative functions built before zero is supplied.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;complex&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Complex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.5</span><span class="p">;</span>
+<span class="w">  </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">sigma2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.7</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">(</span><span class="n">Complex</span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">phi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;t&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sigma2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)).</span><span class="n">exp</span><span class="p">();</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">differential</span><span class="p">(</span><span class="s">&quot;t&quot;</span><span class="p">)(</span><span class="n">phi</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">differential</span><span class="p">(</span><span class="s">&quot;t&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)(</span><span class="n">phi</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;phi&#39;(0)  = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">first</span><span class="p">(</span><span class="mf">0.0</span><span class="p">).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;phi&#39;&#39;(0) = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">second</span><span class="p">(</span><span class="mf">0.0</span><span class="p">).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>phi&#39;(0)  = (0.000000,1.500000)
+phi&#39;&#39;(0) = (-2.950000,0.000000)
+</pre></div>
+</div>
+<p>The same pattern recovers raw moments from any characteristic function: <code class="docutils literal notranslate"><span class="pre">E[X^n]</span> <span class="pre">=</span> <span class="pre">phi^(n)(0)</span> <span class="pre">/</span> <span class="pre">i^n</span></code>. Unlike a finite-difference estimate, the derivative can be saved, evaluated in batches and differentiated again.</p>
+</section>
+<section id="holomorphic-and-non-holomorphic-graphs">
+<h2>Holomorphic and non-holomorphic graphs<a class="headerlink" href="#holomorphic-and-non-holomorphic-graphs" title="Link to this heading">¶</a></h2>
+<p>For <code class="docutils literal notranslate"><span class="pre">f(z)</span> <span class="pre">=</span> <span class="pre">z^3</span> <span class="pre">+</span> <span class="pre">exp(z)</span></code>, <code class="docutils literal notranslate"><span class="pre">partial</span> <span class="pre">f</span> <span class="pre">/</span> <span class="pre">partial</span> <span class="pre">z</span> <span class="pre">=</span> <span class="pre">3z^2</span> <span class="pre">+</span> <span class="pre">exp(z)</span></code> and <code class="docutils literal notranslate"><span class="pre">partial</span> <span class="pre">f</span> <span class="pre">/</span> <span class="pre">partial</span> <span class="pre">conj(z)</span> <span class="pre">=</span> <span class="pre">0</span></code>. Conjugation and magnitude expose why both operators are needed: <code class="docutils literal notranslate"><span class="pre">conj(z)</span></code> has derivatives <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>, while <code class="docutils literal notranslate"><span class="pre">abs(z)</span></code> has derivatives <code class="docutils literal notranslate"><span class="pre">conj(z)/(2</span> <span class="pre">abs(z))</span></code> and <code class="docutils literal notranslate"><span class="pre">z/(2</span> <span class="pre">abs(z))</span></code> away from zero.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;complex&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iomanip&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Complex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;z&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">holomorphic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">z</span><span class="p">.</span><span class="n">exp</span><span class="p">();</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">point</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">complex</span><span class="p">(</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">3.0</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">4.0</span><span class="p">));</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">dz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">wirtinger</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)(</span><span class="n">holomorphic</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">dbar</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">operators</span><span class="o">::</span><span class="n">conjugate_wirtinger</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)(</span><span class="n">holomorphic</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">conjugate_z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">wirtinger</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)(</span><span class="n">z</span><span class="p">.</span><span class="n">conj</span><span class="p">());</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">conjugate_bar</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">operators</span><span class="o">::</span><span class="n">conjugate_wirtinger</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)(</span><span class="n">z</span><span class="p">.</span><span class="n">conj</span><span class="p">());</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">magnitude_z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">wirtinger</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)(</span><span class="n">z</span><span class="p">.</span><span class="n">abs</span><span class="p">());</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">magnitude_bar</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">operators</span><span class="o">::</span><span class="n">conjugate_wirtinger</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)(</span><span class="n">z</span><span class="p">.</span><span class="n">abs</span><span class="p">());</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fixed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setprecision</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;holomorphic dz   = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dz</span><span class="p">({</span><span class="n">point</span><span class="p">}).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;holomorphic dbar = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dbar</span><span class="p">({</span><span class="n">point</span><span class="p">}).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;conj(z): dz = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">conjugate_z</span><span class="p">({</span><span class="n">point</span><span class="p">}).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, dbar = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">conjugate_bar</span><span class="p">({</span><span class="n">point</span><span class="p">}).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;abs(z):  dz = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">magnitude_z</span><span class="p">({</span><span class="n">point</span><span class="p">}).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, dbar = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">magnitude_bar</span><span class="p">({</span><span class="n">point</span><span class="p">}).</span><span class="n">item</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>holomorphic dz   = (-34.128784,56.799225)
+holomorphic dbar = (0.000000,0.000000)
+
+conj(z): dz = (0.000000,-0.000000), dbar = (1.000000,-0.000000)
+abs(z):  dz = (0.300000,-0.400000), dbar = (0.300000,0.400000)
+</pre></div>
+</div>
+<p>At zero, magnitude and phase are non-smooth. <code class="docutils literal notranslate"><span class="pre">DiffOptions::nonsmooth</span></code> applies there exactly as it does for real <code class="docutils literal notranslate"><span class="pre">abs</span></code>: <code class="docutils literal notranslate"><span class="pre">Strict</span></code> rejects the evaluation, <code class="docutils literal notranslate"><span class="pre">Subgradient</span></code> and <code class="docutils literal notranslate"><span class="pre">Autodiff</span></code> choose zero, and <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code> leaves the branch expression exposed.</p>
+</section>
+<section id="branches-and-domains">
+<h2>Branches and domains<a class="headerlink" href="#branches-and-domains" title="Link to this heading">¶</a></h2>
+<p>Complex <code class="docutils literal notranslate"><span class="pre">log</span></code> and <code class="docutils literal notranslate"><span class="pre">sqrt</span></code> use the principal branches supplied by <code class="docutils literal notranslate"><span class="pre">Series</span></code>. Therefore <code class="docutils literal notranslate"><span class="pre">log(-1</span> <span class="pre">+</span> <span class="pre">0i)</span> <span class="pre">=</span> <span class="pre">i</span> <span class="pre">pi</span></code> and <code class="docutils literal notranslate"><span class="pre">sqrt(-1</span> <span class="pre">+</span> <span class="pre">0i)</span> <span class="pre">=</span> <span class="pre">i</span></code>. <code class="docutils literal notranslate"><span class="pre">log(0)</span></code> and <code class="docutils literal notranslate"><span class="pre">log1p(-1)</span></code> remain domain errors. A derivative formula is analytic only on a region that does not cross its branch cut or singularities; constructing the graph does not erase those mathematical restrictions.</p>
+<p>Complex tensors use the same rules elementwise, preserve <code class="docutils literal notranslate"><span class="pre">Complex64</span></code> or <code class="docutils literal notranslate"><span class="pre">Complex128</span></code>, and execute on the input platform. CPU supports both complex precisions; MPS executes <code class="docutils literal notranslate"><span class="pre">Complex64</span></code> arithmetic, powers, transcendental functions, components and real/complex promotion natively, with no CPU bridge. Tensor contractions, matrix inverse, determinant and trace propagate each member of the Wirtinger pair structurally. No host container represents a complex tensor: the value is always a <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/calculus/functions/calculus_02_derivatives/complex_derivatives.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

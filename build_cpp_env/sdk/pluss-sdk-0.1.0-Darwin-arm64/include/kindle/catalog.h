@@ -15,6 +15,8 @@
 #include <vector>
 
 #include "common/StringViewNameRange.h"
+#include "kindle/Join.h"
+#include "kindle/Ragged.h"
 #include "MSharp/IntrusivePtr.h"
 #include "MSharp/RangeView.h"
 #include "loader/Config.h"
@@ -110,13 +112,41 @@ enum class PairAlignBy : std::uint8_t {
   Pos = 2,
 };
 
+// Reductions across keys (ReduceAxis::Key) on ragged streams. Defaults, which
+// run without padding: position i is reduced over the streams that have a
+// value there (a finished stream contributes nothing), the result is as long
+// as the longest stream, streams line up from their start, and in-range nulls
+// are skipped. Each choice has an explicit switch:
+//   what a finished stream means  ended      Skip (default) | Null: result is null wherever
+//                                            any stream has finished
+//   how many streams must report  min_streams  1 (default): null where fewer contribute
+//   where streams line up         anchor     Head (default) | Tail: align the last values
+//   in-range nulls                skipnull   true (default) | false: a null nulls its position
+//   result length / lengths       align      Outer (default) | Inner: trim to the shortest |
+//                                            Strict: error on unequal lengths
+//   pad instead of jag            fill_scalar / align_by = Label: fall back to padding
+// ended, anchor and min_streams apply only to the default Outer/Pos/no-fill
+// path and are rejected (not silently ignored) elsewhere.
+enum class RaggedEnd : std::uint8_t {
+  Skip = 0,
+  Null = 1,
+};
+
+enum class RaggedAnchor : std::uint8_t {
+  Head = 0,
+  Tail = 1,
+};
+
 struct CatalogReduceOptions {
   ReduceAxis axis{ReduceAxis::Record};
-  Align align{Align::Strict};
+  Align align{Align::Outer};
   AlignBy align_by{AlignBy::Pos};
   bool skipnull{true};
   std::optional<double> fill_scalar{std::nullopt};
   bool unbiased{true};
+  RaggedEnd ended{RaggedEnd::Skip};
+  RaggedAnchor anchor{RaggedAnchor::Head};
+  std::int64_t min_streams{1};
 };
 
 struct KindelizePolicy {
@@ -125,8 +155,12 @@ struct KindelizePolicy {
   std::string label_key{"_label"};
 };
 
+// Tabelize feeds rectangular consumers (DataFrame, SQL, wide export), so by
+// default it pads: every record of the longest stream is kept and missing
+// ones become nulls. (It used to inner-join by label, which dropped ragged
+// records silently; ask for Align::Inner explicitly if that is what you want.)
 struct TabelizePolicy {
-  Align align{Align::Inner};
+  Align align{Align::Outer};
   AlignBy align_by{AlignBy::Label};
   FillPolicy fill{FillPolicy::Null};
   std::optional<double> fill_scalar{std::nullopt};
@@ -189,6 +223,14 @@ public:
   using QueryFn = std::function<pluss::Series(const Catalog&)>;
 
   Catalog();
+  // Opaque handle identity: equal for copies of the same handle, which share
+  // contents until one of them is edited (edits clone). Valid as a cache key
+  // only while a copy of the handle is kept alive.
+  const void* identity() const noexcept;
+  // Content fingerprint: key names plus every stream's fingerprint. Equal while
+  // nothing changed (including in-place edits of shared Series storage); valid
+  // as a cache key only while a copy of the catalog is kept alive.
+  std::uint64_t fingerprint() const;
   explicit Catalog(std::vector<std::pair<std::string, Stream>> streams);
   Catalog(std::initializer_list<std::pair<std::string, Stream>> streams);
   Catalog(std::initializer_list<NamedStream> streams);
@@ -251,14 +293,14 @@ public:
   Catalog filter(const pluss::Series& condition) const;
   Catalog where(const pluss::Series& condition) const;
   Catalog query(const QueryFn& fn) const;
-  static Catalog select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+  static Catalog select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
                         pluss::msharp::RangeView::Of<Catalog> choices,
                         const Catalog& default_value);
-  static Catalog select(std::initializer_list<pluss::table::Thread> conditions,
+  static Catalog select(std::initializer_list<pluss::table::Slate> conditions,
                         std::initializer_list<Catalog> choices,
                         const Catalog& default_value) {
     return select(
-        pluss::msharp::RangeView::Of<pluss::table::Thread>(conditions),
+        pluss::msharp::RangeView::Of<pluss::table::Slate>(conditions),
         pluss::msharp::RangeView::Of<Catalog>(choices),
         default_value);
   }
@@ -291,7 +333,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Catalog fillnull(const pluss::Timeline& value) const;
-  Catalog fillnull(const pluss::TimeIndex& value) const;
+  Catalog fillnull(const pluss::Duration& value) const;
   Catalog dropnull() const;
   Catalog ffill() const;
   Catalog bfill() const;
@@ -299,9 +341,9 @@ public:
   Catalog notnull() const;
   Catalog invalid() const;
   CatalogCastAccessor cast() const;
-  CatalogCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
-  Catalog cast(pluss::table::ThreadCastTarget target,
-               const pluss::table::ThreadCastOptions& options = {}) const;
+  CatalogCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  Catalog cast(pluss::table::SlateCastTarget target,
+               const pluss::table::SlateCastOptions& options = {}) const;
   CatalogNoteAccessor nt() const;
   CatalogTimelineAccessor tl() const;
   CatalogTimeSeriesAccessor ts() const;
@@ -313,6 +355,17 @@ public:
   Catalog distinct(DistinctOptions options = {}) const;
   Catalog freq(FreqOptions options = {}) const;
   Catalog ndistinct(DistinctOptions options = {}) const;
+  // Several cross-key reductions in one pass over the data (columns loaded
+  // once, one sweep). ops: "sum", "mean", "min", "max", "var", "std", "count"
+  // ("count" = contributing streams per index). The result has one stream per op,
+  // named after it, in the order given. Always across keys (options.axis is ignored); the policy knobs
+  // in `options` apply to every op, exactly as for the single reductions.
+  Catalog reduce(std::initializer_list<std::string_view> ops, const CatalogReduceOptions& options = {}) const;
+  Catalog reduce(const std::vector<std::string>& ops, const CatalogReduceOptions& options = {}) const;
+  // A new stream `lhs op rhs` (see ragged_binary) added under out_key (default
+  // "<lhs><op><rhs>"); ragged operands follow the policy, nothing is dropped by default.
+  Catalog combine(std::string_view lhs, std::string_view rhs, std::string_view op, std::string_view out_key = {},
+                  const RaggedPolicy& policy = RaggedPolicy::defaults(OpClass::Elementwise)) const;
   Catalog sum() const;
   Catalog sum(ReduceAxis axis) const;
   Catalog sum(const CatalogReduceOptions& options) const;
@@ -331,7 +384,27 @@ public:
   Catalog std() const;
   Catalog std(ReduceAxis axis) const;
   Catalog std(const CatalogReduceOptions& options) const;
+  // merge keeps every record the policy keeps; how = inner | left | right | outer.
   Catalog merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const;
+  // Relational join of two catalogs: match on the key streams alone, then rebuild
+  // every stream through the matched pairs, so ragged catalogs stay ragged.
+  Catalog join(const Catalog& other, const CatalogJoinSpec& spec, const CatalogJoinOptions& options = {}) const;
+  CatalogJoinResult join_detailed(const Catalog& other, const CatalogJoinSpec& spec,
+                                  const CatalogJoinOptions& options = {}) const;
+  // Just the matching half of a join: which records of this catalog pair with
+  // which records of `other` on the given keys (record r of a side is stream
+  // position r + layout.shift_of(stream)). Pull and traversal compose these.
+  CatalogMatch match_keys(const Catalog& other, const std::vector<std::string>& left_keys,
+                          const std::vector<std::string>& right_keys, relational::JoinHow how,
+                          std::optional<relational::RelationshipCardinality> validate = std::nullopt,
+                          const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational)) const;
+  // Joins reuse the hashed right-hand side of a recent join on the same data and
+  // keys (non-text keys, large sides). (hits, misses) since start; clear drops it.
+  static std::pair<std::int64_t, std::int64_t> join_cache_stats();
+  static void clear_join_cache();
+  CatalogKeyAudit audit_keys(const Catalog& other, const std::vector<std::string>& left_keys,
+                             const std::vector<std::string>& right_keys,
+                             const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational)) const;
   Catalog map(const std::function<Stream(const Stream&)>& fn) const;
   Catalog& map_(const std::function<Stream(const Stream&)>& fn);
   Catalog transform(const std::function<Stream(const Stream&)>& fn) const;
@@ -354,6 +427,9 @@ public:
   Catalog drop(std::initializer_list<std::string_view> keys) const;
 
   pluss::table::DataFrame tabelize(const TabelizePolicy& policy = {}) const;
+  // The same, decided by a RaggedPolicy (Rectangular defaults): enforces
+  // domain = Exact and loss = Error before padding.
+  pluss::table::DataFrame tabelize(const RaggedPolicy& policy) const;
   pluss::scribble::Registry scribbelize() const;
 
   void display() const;
@@ -366,6 +442,11 @@ public:
   void save_excel(std::string_view filename, const pluss::loader::Config& config) const;
   void save_json(std::string_view filename) const;
   void save_json(std::string_view filename, const pluss::loader::Config& config) const;
+  // Ragged-native persistence: one file per stream (with its label as a second
+  // column) plus a streams.csv manifest. store_kind: "parquet" (default), "csv", "json".
+  // Lengths, nulls, kinds and labels round-trip exactly; nothing is padded.
+  void save_streams(std::string_view directory, std::string_view store_kind = "parquet") const;
+  static Catalog load_streams(std::string_view directory);
   void save_parquet(std::string_view filename) const;
   void save_parquet(std::string_view filename, const pluss::loader::Config& config) const;
   void save_as(std::string_view target_type,
@@ -393,12 +474,23 @@ private:
   pluss::msharp::intrusive_ptr<detail::CatalogImpl> impl_{nullptr};
 };
 
+struct CatalogMatch {
+  relational::MatchResult pairs{};
+  RaggedLayout left{};
+  RaggedLayout right{};
+};
+
+struct CatalogJoinResult {
+  Catalog catalog{};
+  CatalogJoinReport report{};
+};
+
 class CatalogKeyAccessor {
 public:
   CatalogKeyAccessor(Catalog base, std::vector<std::string> keys);
 
   CatalogCastAccessor cast() const;
-  CatalogCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  CatalogCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
   CatalogNoteAccessor nt() const;
   CatalogTimelineAccessor tl() const;
   CatalogTimeSeriesAccessor ts() const;
@@ -409,7 +501,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Catalog fillnull(const pluss::Timeline& value) const;
-  Catalog fillnull(const pluss::TimeIndex& value) const;
+  Catalog fillnull(const pluss::Duration& value) const;
   Catalog dropnull() const;
   Catalog ffill() const;
   Catalog bfill() const;
@@ -445,7 +537,7 @@ public:
   Catalog series() const;
   Catalog note() const;
   Catalog timeline() const;
-  Catalog timeindex() const;
+  Catalog duration() const;
   Catalog prefix(std::string_view prefix) const;
   Catalog suffix(std::string_view suffix) const;
 
@@ -457,16 +549,16 @@ class CatalogCastAccessor {
 public:
   CatalogCastAccessor(Catalog base,
                       std::vector<std::string> keys,
-                      pluss::table::ThreadCastOptions options = {});
+                      pluss::table::SlateCastOptions options = {});
 
   Catalog series() const;
   Catalog note() const;
   Catalog timeline() const;
-  Catalog timeindex() const;
+  Catalog duration() const;
 
 private:
   CatalogKeyAccessor keysel_;
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class CatalogNoteAccessor {
@@ -562,7 +654,6 @@ public:
   Catalog tz(std::string_view name) const;
   Catalog localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Catalog utc() const;
-  Catalog index(bool require_sorted = true) const;
 
 private:
   CatalogKeyAccessor keysel_;

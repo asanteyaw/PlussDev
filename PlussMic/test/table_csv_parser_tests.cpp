@@ -3026,9 +3026,9 @@ void test_versatile_dataframe_families() {
          "DataFrame::all(axis=0) should reduce over cases and return one value per feature");
   expect_throw([&]() { (void)miss_isnull.any(static_cast<Axis>(2)); },
                "DataFrame::any(axis) should reject unsupported axis values");
-  expect(miss_isnull.features("score").any().as_series().item<bool>(),
+  expect(miss_isnull.features("score").any().as_series().host<bool>().front(),
          "Slate::any should reduce Bool Series slate to a scalar true/false");
-  expect(!miss_isnull.features("score").all().as_series().item<bool>(),
+  expect(!miss_isnull.features("score").all().as_series().host<bool>().front(),
          "Slate::all should reduce Bool Series slate to a scalar true/false");
 
   const auto miss_notnull = miss.notnull();
@@ -3424,14 +3424,14 @@ void test_slate_bucketize_correctness() {
   expect(pluss::table::detail::has_validity_mask(bucketed),
          "Slate::bucketize should null out values outside configured bins");
 
-  const auto null_count = bucketed.isnull().count().as_series().item<std::int64_t>();
+  const auto null_count = bucketed.isnull().count().as_series().host<std::int64_t>().front();
   expect(null_count == 1, "Slate::bucketize should mark only out-of-range value as null");
 
-  const auto c1 = (bucketed == 1.0).count().as_series().item<std::int64_t>();
-  const auto c2 = (bucketed == 2.0).count().as_series().item<std::int64_t>();
-  const auto c3 = (bucketed == 3.0).count().as_series().item<std::int64_t>();
-  const auto c4 = (bucketed == 4.0).count().as_series().item<std::int64_t>();
-  const auto c5 = (bucketed == 5.0).count().as_series().item<std::int64_t>();
+  const auto c1 = (bucketed == 1.0).count().as_series().host<std::int64_t>().front();
+  const auto c2 = (bucketed == 2.0).count().as_series().host<std::int64_t>().front();
+  const auto c3 = (bucketed == 3.0).count().as_series().host<std::int64_t>().front();
+  const auto c4 = (bucketed == 4.0).count().as_series().host<std::int64_t>().front();
+  const auto c5 = (bucketed == 5.0).count().as_series().host<std::int64_t>().front();
   expect(c1 == 3 && c2 == 2 && c3 == 2 && c4 == 2 && c5 == 2,
          fmt::format("Slate::bucketize counts mismatch (c1={}, c2={}, c3={}, c4={}, c5={})",
                      c1,
@@ -3440,7 +3440,7 @@ void test_slate_bucketize_correctness() {
                      c4,
                      c5));
 
-  const auto total_assigned = bucketed.count().as_series().item<std::int64_t>();
+  const auto total_assigned = bucketed.count().as_series().host<std::int64_t>().front();
   expect(total_assigned == 11, "Slate::bucketize assigned count mismatch");
 
   const auto lower_open = pluss::table::Slate(income).bucketize(
@@ -3448,7 +3448,7 @@ void test_slate_bucketize_correctness() {
       {1, 2, 3, 4, 5},
       true,
       false);
-  const auto lower_open_c1 = (lower_open == 1.0).count().as_series().item<std::int64_t>();
+  const auto lower_open_c1 = (lower_open == 1.0).count().as_series().host<std::int64_t>().front();
   expect(lower_open_c1 == 2,
          "Slate::bucketize(include_lowest=false) should exclude value exactly on first left edge");
 
@@ -3472,9 +3472,9 @@ void test_slate_bucketize_correctness() {
       {1, 2, 3, 4, 5});
   expect(df_bucketed.features("income").as_series().scalar_type() == pluss::codem::ScalarType::Int64,
          "DataFrame::bucketize should replace selected numeric features with Int64 bucket labels");
-  expect(df_bucketed.features("income").isnull().count().as_series().item<std::int64_t>() == 1,
+  expect(df_bucketed.features("income").isnull().count().as_series().host<std::int64_t>().front() == 1,
          "DataFrame::bucketize should preserve out-of-range values as null");
-  expect((df_bucketed.features("bonus") == 1.0).count().as_series().item<std::int64_t>() == 1,
+  expect((df_bucketed.features("bonus") == 1.0).count().as_series().host<std::int64_t>().front() == 1,
          "DataFrame::bucketize should bucketize every selected numeric feature independently");
   expect(df_bucketed.nfeatures() == 2 && !df_bucketed.get("city").has_value(),
          "bucketizing a feature projection should preserve the projected schema");

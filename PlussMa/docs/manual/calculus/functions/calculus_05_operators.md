@@ -1,0 +1,69 @@
+<!-- generated from calculus_05_operators.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Calculus 5: Operators
+
+The previous chapters applied operators the moment they made them. An `Operator` is also a value: a function from functions to functions that you can keep, pass around, combine and save. The same type holds the derivative and integral operators of the library, the shifts and scalings, the combinations built by `compose`, `linear_combination` and `commutator`, and operators you define yourself. After this chapter you can treat a calculus step as data: build a pipeline from operators, apply it to several functions, write your own operator and say what it promises, and store pipelines in files.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **An operator is a value with a contract.** `op(f)` applies it. `key()`, `version()` and `capabilities()` describe it.
+- **Applying builds a graph, once.** The operator runs when it meets a function; the result is an ordinary `Function` that is evaluated without calling the operator again.
+- **Operators form an algebra.** `compose`, `linear_combination` and `commutator` each return an `Operator`, with capabilities computed from the parts.
+- **Custom operators are first-class.** `define` makes an operator from a callable, with declared capabilities; with a key and a loader it can be saved like a built-in.
+
+| Entry point | Purpose |
+|---|---|
+| `identity()`, `scale(c)`, `shift(x, h)`, `multiply(g)` | simple transformations |
+| `compose(outer, inner)` | one after another; the inner operator acts first |
+| `linear_combination({{a, A}, {b, B}})` | parallel combination with coefficients |
+| `commutator(A, B)` | `A∘B − B∘A` |
+| `adjoint(op)` | the formal adjoint of an operator that knows it |
+| `define(key, callable, options)` | a custom operator |
+| `bind(key, version, loader)` | tells the library how to rebuild a saved custom operator |
+| `math::io::save`, `load_function`, `load_operator` | persistence |
+
+## Programs
+
+- [Operators are values](calculus_05_operators/operators_are_values.md)
+- [Composing and combining operators](calculus_05_operators/composing_and_combining.md)
+- [Custom operators](calculus_05_operators/custom_operators.md)
+- [Saving and loading](calculus_05_operators/saving_and_loading.md)
+- [Stochastic operators](calculus_05_operators/stochastic_operators.md)
+- [Taylor operators and power series](calculus_05_operators/taylor_and_power_series.md)
+- [Fourier series operators](calculus_05_operators/fourier_series.md)
+- [Geometry operators](calculus_05_operators/geometry_operators.md)
+- [Fourier and Laplace transforms](calculus_05_operators/integral_transforms.md)
+- [Integration against a measure](calculus_05_operators/measures.md)
+- [Vector, variational and adjoint operators](calculus_05_operators/vector_variational_and_adjoint.md)
+- [Fractional calculus](calculus_05_operators/fractional_calculus.md)
+
+## Checklist
+
+1. Remember the order of `compose(outer, inner)`: the inner operator acts first.
+2. Check `capabilities()` rather than assuming; a combination reports the capabilities that follow from its parts.
+3. Give a custom operator a key if it should ever be saved, set `serializable` truthfully, and register its loader with `bind` before loading.
+4. Declare `linear` only for operators that are linear; the flag is trusted.
+5. `multiply` and `covariant` hold a function and cannot be saved; save the functions they produce instead.
+6. Open streams for artifacts in binary mode, and treat any load error as a refusal of the whole artifact.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_05_operators/operators_are_values
+calculus_05_operators/composing_and_combining
+calculus_05_operators/custom_operators
+calculus_05_operators/saving_and_loading
+calculus_05_operators/stochastic_operators
+calculus_05_operators/taylor_and_power_series
+calculus_05_operators/fourier_series
+calculus_05_operators/geometry_operators
+calculus_05_operators/integral_transforms
+calculus_05_operators/measures
+calculus_05_operators/vector_variational_and_adjoint
+calculus_05_operators/fractional_calculus
+```
+<!-- apiref:toctree:end -->

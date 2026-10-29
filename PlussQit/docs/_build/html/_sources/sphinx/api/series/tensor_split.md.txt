@@ -176,8 +176,8 @@ data=[0, 0, 0, 0, 1, 1]
     <span class="label">Previous</span>
     <span class="title">tensor</span>
   </a>
-  <a class="next-link" href="threshold.html">
+  <a class="next-link" href="tensordot.html">
     <span class="label">Next</span>
-    <span class="title">threshold</span>
+    <span class="title">tensordot</span>
   </a>
 </div>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Worked problem: the sensitivity of a probability &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Worked problem: precision and concurrency" href="precision_and_concurrency.html" />
+    <link rel="prev" title="Worked problem: a Taylor polynomial and its error" href="taylor_polynomials_from_derivatives.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from sensitivity_of_a_probability.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="worked-problem-the-sensitivity-of-a-probability">
+<h1>Worked problem: the sensitivity of a probability<a class="headerlink" href="#worked-problem-the-sensitivity-of-a-probability" title="Link to this heading">¶</a></h1>
+<p>A normal variable with standard deviation σ falls in [−1, 1] with probability</p>
+<p>P(σ) = ∫₋₁¹ (σ√(2π))⁻¹ exp(−x²/(2σ²)) dx = erf(1/(σ√2)).</p>
+<p>The integral has no closed form in the rule table, so <code class="docutils literal notranslate"><span class="pre">integral</span></code> evaluates it numerically. The question is how P changes with σ: the derivative dP/dσ. By Leibniz’s rule that is the integral of the derivative of the density with respect to σ, which <code class="docutils literal notranslate"><span class="pre">differential</span></code> constructs and which is again a numerical integral. The closed form, for checking, is dP/dσ = −2 exp(−1/(2σ²)) / (σ²√(2π)).</p>
+<p>The program builds the density as a function of <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, integrates it over [−1, 1], differentiates with respect to <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, and evaluates both for five standard deviations in single calls.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cmath&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">8</span><span class="p">));</span>
+<span class="w">  </span><span class="k">constexpr</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">two_pi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.283185307179586</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sigma&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[</span><span class="n">two_pi</span><span class="p">](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">sigma</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sigma</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)).</span><span class="n">exp</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">sigma</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="n">two_pi</span><span class="p">));</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">probability</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">integral</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)(</span><span class="n">density</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">sensitivity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">differential</span><span class="p">(</span><span class="s">&quot;sigma&quot;</span><span class="p">)(</span><span class="n">probability</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">sigma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">probability</span><span class="p">({</span><span class="n">sigma</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">dp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sensitivity</span><span class="p">({</span><span class="n">sigma</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">exact_p</span><span class="p">,</span><span class="w"> </span><span class="n">exact_dp</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">sigma</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">exact_p</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">erf</span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">))));</span>
+<span class="w">    </span><span class="n">exact_dp</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mf">-2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="mf">-1.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="p">))</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="n">two_pi</span><span class="p">)));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;sigma      &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sigma</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;P(sigma)   &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;erf form   &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">exact_p</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;dP/dsigma  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dp</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;closed form&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">exact_dp</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;provenance: P&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">probability</span><span class="p">.</span><span class="n">provenance</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Provenance</span><span class="o">::</span><span class="n">Quadrature</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;quadrature&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;exact&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; dP/dsigma&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="n">sensitivity</span><span class="p">.</span><span class="n">provenance</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Provenance</span><span class="o">::</span><span class="n">Quadrature</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;quadrature&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;exact&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sigma       [0.25000000, 0.50000000, 1.00000000, 2.00000000, 4.00000000]
+P(sigma)    [0.99993666, 0.95449974, 0.68268949, 0.38292492, 0.19741265]
+erf form    [0.99993666, 0.95449974, 0.68268949, 0.38292492, 0.19741265]
+dP/dsigma   [-0.00428257, -0.43192773, -0.48394145, -0.17603266, -0.04833351]
+closed form [-0.00428257, -0.43192773, -0.48394145, -0.17603266, -0.04833351]
+provenance: P quadrature  dP/dsigma quadrature
+</pre></div>
+</div>
+<p>The probability agrees with the error function form at all five standard deviations to every printed digit, and so does its derivative with respect to σ. The signs and sizes make sense: widening the distribution lowers the probability of landing in [−1, 1], and the sensitivity is largest in magnitude near σ ≈ 0.6, where the density at the boundary is changing fastest, and small at both extremes. Both quantities are <code class="docutils literal notranslate"><span class="pre">Quadrature</span></code> functions evaluated at five parameter values in one call each. The derivative was obtained without any hand-derived formula and without differencing: <code class="docutils literal notranslate"><span class="pre">differential</span></code> differentiated the density symbolically and wrapped it in the integral.</p>
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/calculus/functions/calculus_06_worked_problems/sensitivity_of_a_probability.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

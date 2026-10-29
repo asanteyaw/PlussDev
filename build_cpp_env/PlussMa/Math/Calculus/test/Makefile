@@ -230,6 +230,30 @@ calculus_contract_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/calculus_contract_test.cpp.s
 .PHONY : calculus_contract_test.cpp.s
 
+complex_calculus_test.o: complex_calculus_test.cpp.o
+.PHONY : complex_calculus_test.o
+
+# target to build an object file
+complex_calculus_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/complex_calculus_test.cpp.o
+.PHONY : complex_calculus_test.cpp.o
+
+complex_calculus_test.i: complex_calculus_test.cpp.i
+.PHONY : complex_calculus_test.i
+
+# target to preprocess a source file
+complex_calculus_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/complex_calculus_test.cpp.i
+.PHONY : complex_calculus_test.cpp.i
+
+complex_calculus_test.s: complex_calculus_test.cpp.s
+.PHONY : complex_calculus_test.s
+
+# target to generate assembly for a file
+complex_calculus_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/complex_calculus_test.cpp.s
+.PHONY : complex_calculus_test.cpp.s
+
 differential_execution_test.o: differential_execution_test.cpp.o
 .PHONY : differential_execution_test.o
 
@@ -254,6 +278,54 @@ differential_execution_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/differential_execution_test.cpp.s
 .PHONY : differential_execution_test.cpp.s
 
+extension_closure_test.o: extension_closure_test.cpp.o
+.PHONY : extension_closure_test.o
+
+# target to build an object file
+extension_closure_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/extension_closure_test.cpp.o
+.PHONY : extension_closure_test.cpp.o
+
+extension_closure_test.i: extension_closure_test.cpp.i
+.PHONY : extension_closure_test.i
+
+# target to preprocess a source file
+extension_closure_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/extension_closure_test.cpp.i
+.PHONY : extension_closure_test.cpp.i
+
+extension_closure_test.s: extension_closure_test.cpp.s
+.PHONY : extension_closure_test.s
+
+# target to generate assembly for a file
+extension_closure_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/extension_closure_test.cpp.s
+.PHONY : extension_closure_test.cpp.s
+
+fourier_series_operators_test.o: fourier_series_operators_test.cpp.o
+.PHONY : fourier_series_operators_test.o
+
+# target to build an object file
+fourier_series_operators_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/fourier_series_operators_test.cpp.o
+.PHONY : fourier_series_operators_test.cpp.o
+
+fourier_series_operators_test.i: fourier_series_operators_test.cpp.i
+.PHONY : fourier_series_operators_test.i
+
+# target to preprocess a source file
+fourier_series_operators_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/fourier_series_operators_test.cpp.i
+.PHONY : fourier_series_operators_test.cpp.i
+
+fourier_series_operators_test.s: fourier_series_operators_test.cpp.s
+.PHONY : fourier_series_operators_test.s
+
+# target to generate assembly for a file
+fourier_series_operators_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/fourier_series_operators_test.cpp.s
+.PHONY : fourier_series_operators_test.cpp.s
+
 function_execution_test.o: function_execution_test.cpp.o
 .PHONY : function_execution_test.o
 
@@ -277,6 +349,126 @@ function_execution_test.s: function_execution_test.cpp.s
 function_execution_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/function_execution_test.cpp.s
 .PHONY : function_execution_test.cpp.s
+
+geometry_operators_test.o: geometry_operators_test.cpp.o
+.PHONY : geometry_operators_test.o
+
+# target to build an object file
+geometry_operators_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/geometry_operators_test.cpp.o
+.PHONY : geometry_operators_test.cpp.o
+
+geometry_operators_test.i: geometry_operators_test.cpp.i
+.PHONY : geometry_operators_test.i
+
+# target to preprocess a source file
+geometry_operators_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/geometry_operators_test.cpp.i
+.PHONY : geometry_operators_test.cpp.i
+
+geometry_operators_test.s: geometry_operators_test.cpp.s
+.PHONY : geometry_operators_test.s
+
+# target to generate assembly for a file
+geometry_operators_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/geometry_operators_test.cpp.s
+.PHONY : geometry_operators_test.cpp.s
+
+integral_execution_test.o: integral_execution_test.cpp.o
+.PHONY : integral_execution_test.o
+
+# target to build an object file
+integral_execution_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/integral_execution_test.cpp.o
+.PHONY : integral_execution_test.cpp.o
+
+integral_execution_test.i: integral_execution_test.cpp.i
+.PHONY : integral_execution_test.i
+
+# target to preprocess a source file
+integral_execution_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/integral_execution_test.cpp.i
+.PHONY : integral_execution_test.cpp.i
+
+integral_execution_test.s: integral_execution_test.cpp.s
+.PHONY : integral_execution_test.s
+
+# target to generate assembly for a file
+integral_execution_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/integral_execution_test.cpp.s
+.PHONY : integral_execution_test.cpp.s
+
+integral_transform_operators_test.o: integral_transform_operators_test.cpp.o
+.PHONY : integral_transform_operators_test.o
+
+# target to build an object file
+integral_transform_operators_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/integral_transform_operators_test.cpp.o
+.PHONY : integral_transform_operators_test.cpp.o
+
+integral_transform_operators_test.i: integral_transform_operators_test.cpp.i
+.PHONY : integral_transform_operators_test.i
+
+# target to preprocess a source file
+integral_transform_operators_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/integral_transform_operators_test.cpp.i
+.PHONY : integral_transform_operators_test.cpp.i
+
+integral_transform_operators_test.s: integral_transform_operators_test.cpp.s
+.PHONY : integral_transform_operators_test.s
+
+# target to generate assembly for a file
+integral_transform_operators_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/integral_transform_operators_test.cpp.s
+.PHONY : integral_transform_operators_test.cpp.s
+
+malliavin_operators_test.o: malliavin_operators_test.cpp.o
+.PHONY : malliavin_operators_test.o
+
+# target to build an object file
+malliavin_operators_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/malliavin_operators_test.cpp.o
+.PHONY : malliavin_operators_test.cpp.o
+
+malliavin_operators_test.i: malliavin_operators_test.cpp.i
+.PHONY : malliavin_operators_test.i
+
+# target to preprocess a source file
+malliavin_operators_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/malliavin_operators_test.cpp.i
+.PHONY : malliavin_operators_test.cpp.i
+
+malliavin_operators_test.s: malliavin_operators_test.cpp.s
+.PHONY : malliavin_operators_test.s
+
+# target to generate assembly for a file
+malliavin_operators_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/malliavin_operators_test.cpp.s
+.PHONY : malliavin_operators_test.cpp.s
+
+measure_operators_test.o: measure_operators_test.cpp.o
+.PHONY : measure_operators_test.o
+
+# target to build an object file
+measure_operators_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/measure_operators_test.cpp.o
+.PHONY : measure_operators_test.cpp.o
+
+measure_operators_test.i: measure_operators_test.cpp.i
+.PHONY : measure_operators_test.i
+
+# target to preprocess a source file
+measure_operators_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/measure_operators_test.cpp.i
+.PHONY : measure_operators_test.cpp.i
+
+measure_operators_test.s: measure_operators_test.cpp.s
+.PHONY : measure_operators_test.s
+
+# target to generate assembly for a file
+measure_operators_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/measure_operators_test.cpp.s
+.PHONY : measure_operators_test.cpp.s
 
 multivariable_execution_test.o: multivariable_execution_test.cpp.o
 .PHONY : multivariable_execution_test.o
@@ -326,6 +518,30 @@ operator_execution_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/operator_execution_test.cpp.s
 .PHONY : operator_execution_test.cpp.s
 
+production_closure_test.o: production_closure_test.cpp.o
+.PHONY : production_closure_test.o
+
+# target to build an object file
+production_closure_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/production_closure_test.cpp.o
+.PHONY : production_closure_test.cpp.o
+
+production_closure_test.i: production_closure_test.cpp.i
+.PHONY : production_closure_test.i
+
+# target to preprocess a source file
+production_closure_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/production_closure_test.cpp.i
+.PHONY : production_closure_test.cpp.i
+
+production_closure_test.s: production_closure_test.cpp.s
+.PHONY : production_closure_test.s
+
+# target to generate assembly for a file
+production_closure_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/production_closure_test.cpp.s
+.PHONY : production_closure_test.cpp.s
+
 simplification_domain_test.o: simplification_domain_test.cpp.o
 .PHONY : simplification_domain_test.o
 
@@ -350,6 +566,102 @@ simplification_domain_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/simplification_domain_test.cpp.s
 .PHONY : simplification_domain_test.cpp.s
 
+stochastic_operators_test.o: stochastic_operators_test.cpp.o
+.PHONY : stochastic_operators_test.o
+
+# target to build an object file
+stochastic_operators_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/stochastic_operators_test.cpp.o
+.PHONY : stochastic_operators_test.cpp.o
+
+stochastic_operators_test.i: stochastic_operators_test.cpp.i
+.PHONY : stochastic_operators_test.i
+
+# target to preprocess a source file
+stochastic_operators_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/stochastic_operators_test.cpp.i
+.PHONY : stochastic_operators_test.cpp.i
+
+stochastic_operators_test.s: stochastic_operators_test.cpp.s
+.PHONY : stochastic_operators_test.s
+
+# target to generate assembly for a file
+stochastic_operators_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/stochastic_operators_test.cpp.s
+.PHONY : stochastic_operators_test.cpp.s
+
+system_integration_test.o: system_integration_test.cpp.o
+.PHONY : system_integration_test.o
+
+# target to build an object file
+system_integration_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/system_integration_test.cpp.o
+.PHONY : system_integration_test.cpp.o
+
+system_integration_test.i: system_integration_test.cpp.i
+.PHONY : system_integration_test.i
+
+# target to preprocess a source file
+system_integration_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/system_integration_test.cpp.i
+.PHONY : system_integration_test.cpp.i
+
+system_integration_test.s: system_integration_test.cpp.s
+.PHONY : system_integration_test.s
+
+# target to generate assembly for a file
+system_integration_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/system_integration_test.cpp.s
+.PHONY : system_integration_test.cpp.s
+
+taylor_operators_test.o: taylor_operators_test.cpp.o
+.PHONY : taylor_operators_test.o
+
+# target to build an object file
+taylor_operators_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/taylor_operators_test.cpp.o
+.PHONY : taylor_operators_test.cpp.o
+
+taylor_operators_test.i: taylor_operators_test.cpp.i
+.PHONY : taylor_operators_test.i
+
+# target to preprocess a source file
+taylor_operators_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/taylor_operators_test.cpp.i
+.PHONY : taylor_operators_test.cpp.i
+
+taylor_operators_test.s: taylor_operators_test.cpp.s
+.PHONY : taylor_operators_test.s
+
+# target to generate assembly for a file
+taylor_operators_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/taylor_operators_test.cpp.s
+.PHONY : taylor_operators_test.cpp.s
+
+tensor_primitives_test.o: tensor_primitives_test.cpp.o
+.PHONY : tensor_primitives_test.o
+
+# target to build an object file
+tensor_primitives_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/tensor_primitives_test.cpp.o
+.PHONY : tensor_primitives_test.cpp.o
+
+tensor_primitives_test.i: tensor_primitives_test.cpp.i
+.PHONY : tensor_primitives_test.i
+
+# target to preprocess a source file
+tensor_primitives_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/tensor_primitives_test.cpp.i
+.PHONY : tensor_primitives_test.cpp.i
+
+tensor_primitives_test.s: tensor_primitives_test.cpp.s
+.PHONY : tensor_primitives_test.s
+
+# target to generate assembly for a file
+tensor_primitives_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/build.make PlussMa/Math/Calculus/test/CMakeFiles/plussma_calculus_contract_test.dir/tensor_primitives_test.cpp.s
+.PHONY : tensor_primitives_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -369,21 +681,60 @@ help:
 	@echo "... calculus_contract_test.o"
 	@echo "... calculus_contract_test.i"
 	@echo "... calculus_contract_test.s"
+	@echo "... complex_calculus_test.o"
+	@echo "... complex_calculus_test.i"
+	@echo "... complex_calculus_test.s"
 	@echo "... differential_execution_test.o"
 	@echo "... differential_execution_test.i"
 	@echo "... differential_execution_test.s"
+	@echo "... extension_closure_test.o"
+	@echo "... extension_closure_test.i"
+	@echo "... extension_closure_test.s"
+	@echo "... fourier_series_operators_test.o"
+	@echo "... fourier_series_operators_test.i"
+	@echo "... fourier_series_operators_test.s"
 	@echo "... function_execution_test.o"
 	@echo "... function_execution_test.i"
 	@echo "... function_execution_test.s"
+	@echo "... geometry_operators_test.o"
+	@echo "... geometry_operators_test.i"
+	@echo "... geometry_operators_test.s"
+	@echo "... integral_execution_test.o"
+	@echo "... integral_execution_test.i"
+	@echo "... integral_execution_test.s"
+	@echo "... integral_transform_operators_test.o"
+	@echo "... integral_transform_operators_test.i"
+	@echo "... integral_transform_operators_test.s"
+	@echo "... malliavin_operators_test.o"
+	@echo "... malliavin_operators_test.i"
+	@echo "... malliavin_operators_test.s"
+	@echo "... measure_operators_test.o"
+	@echo "... measure_operators_test.i"
+	@echo "... measure_operators_test.s"
 	@echo "... multivariable_execution_test.o"
 	@echo "... multivariable_execution_test.i"
 	@echo "... multivariable_execution_test.s"
 	@echo "... operator_execution_test.o"
 	@echo "... operator_execution_test.i"
 	@echo "... operator_execution_test.s"
+	@echo "... production_closure_test.o"
+	@echo "... production_closure_test.i"
+	@echo "... production_closure_test.s"
 	@echo "... simplification_domain_test.o"
 	@echo "... simplification_domain_test.i"
 	@echo "... simplification_domain_test.s"
+	@echo "... stochastic_operators_test.o"
+	@echo "... stochastic_operators_test.i"
+	@echo "... stochastic_operators_test.s"
+	@echo "... system_integration_test.o"
+	@echo "... system_integration_test.i"
+	@echo "... system_integration_test.s"
+	@echo "... taylor_operators_test.o"
+	@echo "... taylor_operators_test.i"
+	@echo "... taylor_operators_test.s"
+	@echo "... tensor_primitives_test.o"
+	@echo "... tensor_primitives_test.i"
+	@echo "... tensor_primitives_test.s"
 .PHONY : help
 
 

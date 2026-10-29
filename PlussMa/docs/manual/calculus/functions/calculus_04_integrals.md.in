@@ -1,0 +1,43 @@
+# Calculus 4: Integrals
+
+Integration is the inverse of differentiation, and the same operators acting on a `Function` carry it out. Three operators cover the cases: `antiderivative` for an unanchored primitive, `integral(x, a)` for the running integral from a fixed point, and `integral(x, a, b)` for a definite integral that becomes a function of whatever parameters remain. Where the integrand has a primitive in the rule table, the integral is exact. Where it does not, it is evaluated by adaptive quadrature when the function is called, and the result is marked so that you can tell. After this chapter you can integrate a formula, know which integrals are exact and which are numerical, evaluate batches of integrals in one call, and differentiate integrals with respect to their limits and parameters.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **Exact where possible, numerical where not, and always labelled.** `provenance()` is `Structural` for an exact result and `Quadrature` for a numerical one.
+- **The integrated variable stays in the variable list.** A definite integral still takes an argument for it, which it ignores; this keeps the calling convention of the original function.
+- **Parameters are carried through.** A definite integral of `f(x, a)` over `x` is a function of `a`, evaluated for any batch of `a`.
+- **Derivatives of integrals are exact in form.** The fundamental theorem and Leibniz's rule are applied symbolically.
+
+```cpp
+operators::Operator operators::antiderivative(std::string_view variable);
+operators::Operator operators::integral(std::string_view variable, double lower);
+operators::Operator operators::integral(std::string_view variable, double lower, double upper);
+```
+
+| Operator | Result for `f(x)` | Exact when |
+|---|---|---|
+| `antiderivative(x)` | a function `F` with `F' = f` (no constant) | `f` is built from the rule table |
+| `integral(x, a)` | `∫ₐˣ f(t) dt` | `f` is built from the rule table |
+| `integral(x, a, b)` | `∫ₐᵇ f(t) dt` | the rule table applies, or `f` is odd and `[a, b]` symmetric |
+
+## Programs
+
+- [Antiderivatives](calculus_04_integrals/antiderivatives.md)
+- [Anchored and definite integrals](calculus_04_integrals/anchored_and_definite_integrals.md)
+- [Numerical integrals and batches](calculus_04_integrals/numerical_integrals_and_batches.md)
+- [Parity and the fundamental theorem](calculus_04_integrals/parity_and_the_fundamental_theorem.md)
+
+## Checklist
+
+1. Check `provenance()` if it matters whether an integral is exact.
+2. If a primitive needs a substitution, expand the integrand into rule terms to get an exact result, or accept the quadrature.
+3. A numerical anchored integral takes a single upper limit; for many integrals at once write a definite integral and pass the parameters.
+4. Limits are finite numbers; an integrand singular at an endpoint is an error, not an infinite value.
+5. Use `Float64` unless you accept the looser tolerance of lower precisions.
+6. Differentiate integrals with `differential`: the limit and parameter derivatives are exact in form.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

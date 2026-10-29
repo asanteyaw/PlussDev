@@ -2,7 +2,7 @@
 <div class="pluss-hero">
 <div class="kicker">Pluss &middot; Mathematics</div>
 <h1>PlussMa</h1>
-<p class="tagline">Numerical and statistical methods for Pluss: optimization, numerical analysis, probability and stochastic processes, distributions, inference, regression and time series. Choose a topic; each has guides with complete programs, and the time-series framework has a full API reference.</p>
+<p class="tagline">Numerical and statistical methods for Pluss: optimization, calculus, numerical analysis, probability and stochastic processes, distributions, inference, regression, finance and time series. Choose a topic; each has guides with complete programs, and the time-series framework has a full API reference.</p>
 <div class="pluss-hero-actions">
 <a class="primary" href="manual/index.html">Guides</a>
 <a class="secondary" href="api_reference.html">API Reference</a>
@@ -51,6 +51,13 @@
 </div>
 
 <div class="pluss-card">
+<span class="card-name">Calculus</span>
+<span class="card-model">calculus</span>
+<p class="card-desc">Functions as values: exact derivatives, integrals and vector calculus, and operators that transform them.</p>
+<a href="manual/calculus.html">Read the calculus guides</a>
+</div>
+
+<div class="pluss-card">
 <span class="card-name">Numerical methods</span>
 <span class="card-model">numerics</span>
 <p class="card-desc">Integration, differential equations, interpolation and large linear systems.</p>
@@ -62,6 +69,13 @@
 <span class="card-model">stochastic</span>
 <p class="card-desc">Stochastic integrals, Itô calculus, jumps, SDE simulation and Malliavin calculus.</p>
 <a href="manual/stochastic.html">Read the stochastic processes guides</a>
+</div>
+
+<div class="pluss-card">
+<span class="card-name">Finance</span>
+<span class="card-model">finance</span>
+<p class="card-desc">Option pricing: Black-Scholes, implied volatility and stochastic-volatility models.</p>
+<a href="manual/finance.html">Read the finance guides</a>
 </div>
 
 </div>

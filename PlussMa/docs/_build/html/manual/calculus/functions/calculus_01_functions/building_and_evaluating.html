@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Building and evaluating a function &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="The expression vocabulary" href="the_expression_vocabulary.html" />
+    <link rel="prev" title="Calculus 1: Functions" href="../calculus_01_functions.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from building_and_evaluating.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="building-and-evaluating-a-function">
+<h1>Building and evaluating a function<a class="headerlink" href="#building-and-evaluating-a-function" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../calculus_01_functions.html"><span class="std std-doc">Back to Functions</span></a></p>
+<p>A <code class="docutils literal notranslate"><span class="pre">Function</span></code> is a formula that you write once and evaluate on any data. You describe it with an ordinary C++ callable; Pluss runs the callable a single time on placeholder variables and records the arithmetic it performs as an expression graph. After that the callable is never called again: evaluating the <code class="docutils literal notranslate"><span class="pre">Function</span></code> replays the recorded graph on the <code class="docutils literal notranslate"><span class="pre">Series</span></code> you supply, so one function serves a single point, a vector of points or a batch of grids.</p>
+<section id="a-first-function">
+<h2>A first function<a class="headerlink" href="#a-first-function" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">function(variables,</span> <span class="pre">callable)</span></code> takes the names of the variables and a callable with one <code class="docutils literal notranslate"><span class="pre">Function</span></code> parameter per name. The body combines those parameters with ordinary operators and the member functions listed in the next page.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">6</span><span class="p">));</span>
+
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">traced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">++</span><span class="n">traced</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">).</span><span class="n">sin</span><span class="p">();</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">0.75</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;arity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">arity</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; rank&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">rank</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; variables&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">variables</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">variables</span><span class="p">()[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;by position&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">({</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;by name    &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">({{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">}}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;the callable ran&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">traced</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;time; the function was evaluated twice&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>arity 2  rank 0  variables x y
+by position [0.091568, 0.681639, 3.989980]
+by name     [0.091568, 0.681639, 3.989980]
+the callable ran 1 time; the function was evaluated twice
+</pre></div>
+</div>
+<p>The function has two variables and is a scalar formula, so its <code class="docutils literal notranslate"><span class="pre">rank</span></code> is 0: <code class="docutils literal notranslate"><span class="pre">rank</span></code> and <code class="docutils literal notranslate"><span class="pre">shape</span></code> describe one evaluation at scalar inputs, and evaluating on arrays adds batch dimensions in front (the next page). The two calls give identical values. The by-name form takes the arguments in any order, which is why <code class="docutils literal notranslate"><span class="pre">{&quot;y&quot;,</span> <span class="pre">y}</span></code> can come first. The last line is the point of tracing: the callable ran once, while it was recorded, and both evaluations replayed the stored graph. Consequently the body must describe the formula with <code class="docutils literal notranslate"><span class="pre">Function</span></code> arithmetic. A C++ <code class="docutils literal notranslate"><span class="pre">if</span></code> on a placeholder cannot see any data, because during tracing there is none; write a conditional as arithmetic instead.</p>
+</section>
+<section id="binding-the-variables">
+<h2>Binding the variables<a class="headerlink" href="#binding-the-variables" title="Link to this heading">¶</a></h2>
+<p>A univariate <code class="docutils literal notranslate"><span class="pre">Function</span></code> accepts an ordinary C++ scalar directly. Use <code class="docutils literal notranslate"><span class="pre">f(2.0)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">f(2.0F)</span></code>, or <code class="docutils literal notranslate"><span class="pre">f(2)</span></code> for a <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, <code class="docutils literal notranslate"><span class="pre">Float32</span></code>, or <code class="docutils literal notranslate"><span class="pre">Int64</span></code> scalar evaluation.
+The result is still a scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>, so it participates in the same platform,
+dtype and downstream APIs as every other evaluation. There is no need to write
+<code class="docutils literal notranslate"><span class="pre">f({pluss::make_series(2.0)})</span></code> merely to evaluate one scalar point.</p>
+<p>For tensor inputs or several variables, call a <code class="docutils literal notranslate"><span class="pre">Function</span></code> with <code class="docutils literal notranslate"><span class="pre">Series</span></code> values
+in one of two ways.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Call</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f(2.0)</span></code></p></td>
+<td><p>one-variable scalar evaluation; <code class="docutils literal notranslate"><span class="pre">float</span></code> and integer overloads preserve their corresponding dtype</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f({a,</span> <span class="pre">b})</span></code></p></td>
+<td><p>by position: the arguments follow the order in which the variables were named</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f({{&quot;y&quot;,</span> <span class="pre">b},</span> <span class="pre">{&quot;x&quot;,</span> <span class="pre">a}})</span></code></p></td>
+<td><p>by name, in any order; each variable exactly once</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f()</span></code></p></td>
+<td><p>for a function of no variables: evaluates the constant</p></td>
+</tr>
+</tbody>
+</table>
+<p>Both forms also accept a <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> of <code class="docutils literal notranslate"><span class="pre">Series</span></code> or of <code class="docutils literal notranslate"><span class="pre">Binding</span></code> (a <code class="docutils literal notranslate"><span class="pre">pair&lt;string_view,</span> <span class="pre">Series&gt;</span></code>), for argument lists that are built at run time. A wrong call fails with a <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code> that names the problem. The program below makes each mistake once and prints the first line of the message.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;functional&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="c1">// The first line of an error message (the rest says where it was raised).</span>
+<span class="k">static</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">head</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">what</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="n">what</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">text</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">attempt</span><span class="p">(</span><span class="n">OutputEngine</span><span class="w"> </span><span class="o">&amp;</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">call</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">call</span><span class="p">();</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;-&gt; accepted&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">head</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;no arguments:        &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">f</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one of two, by name: &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">f</span><span class="p">({{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">}});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;unknown name:        &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">f</span><span class="p">({{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;z&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">}});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;name given twice:    &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">f</span><span class="p">({{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">}});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one of two, by order:&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">f</span><span class="p">({</span><span class="n">a</span><span class="p">});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;undefined Series:    &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">f</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">{}});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;correct call:        &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">f</span><span class="p">({</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">});</span><span class="w"> </span><span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>no arguments:         -&gt; math::Function: ordered argument count 0 does not match function arity 2
+one of two, by name:  -&gt; math::Function: missing variable binding &#39;y&#39;
+unknown name:         -&gt; math::Function: unknown variable binding &#39;z&#39;
+name given twice:     -&gt; math::Function: duplicate variable binding &#39;x&#39;
+one of two, by order: -&gt; math::Function: ordered argument count 1 does not match function arity 2
+undefined Series:     -&gt; math::Function: arguments must be defined Series values
+correct call:         -&gt; accepted
+</pre></div>
+</div>
+<p>Every failure is a <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code> raised at the call, before any arithmetic happens, and the message names the offending variable or the two counts. Evaluate with exactly the declared variables, once each. A by-name call may list them in any order; a by-position call must list all of them.</p>
+</section>
+<section id="which-callables-are-accepted">
+<h2>Which callables are accepted<a class="headerlink" href="#which-callables-are-accepted" title="Link to this heading">¶</a></h2>
+<p>The callable can be anything with a fixed number of <code class="docutils literal notranslate"><span class="pre">Function</span></code> parameters: a lambda, a function pointer, a function object, a <code class="docutils literal notranslate"><span class="pre">std::function</span></code>, or an object that owns move-only state. It must return a <code class="docutils literal notranslate"><span class="pre">Function</span></code>, a <code class="docutils literal notranslate"><span class="pre">Series</span></code> or an arithmetic scalar; a <code class="docutils literal notranslate"><span class="pre">Series</span></code> or scalar result becomes a constant. The number of parameters has to equal the number of names.</p>
+<p>When the number of variables is only known at run time, take a single <code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">Function&gt;</span></code> instead. The names can then come from any range of strings, and the function can have as many variables as the data requires.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;functional&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;span&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">blend</span><span class="p">(</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.25</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.75</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">Square</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">operator</span><span class="p">()(</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">from_lambda</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;t&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">from_pointer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">},</span><span class="w"> </span><span class="o">&amp;</span><span class="n">blend</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">from_object</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;t&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">Square</span><span class="p">{});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="p">(</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">erased</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">exp</span><span class="p">();</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">from_std_function</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;t&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">erased</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;lambda       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">from_lambda</span><span class="p">({</span><span class="n">t</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;pointer      &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">from_pointer</span><span class="p">({</span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;object       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">from_object</span><span class="p">({</span><span class="n">t</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;std::function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">from_std_function</span><span class="p">({</span><span class="n">t</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">  </span><span class="c1">// Names held in a std::vector&lt;std::string&gt;, and a sum over however many variables there are.</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="n">names</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">&quot;v&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">args</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;arity&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">.</span><span class="n">arity</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; sum of six copies of t&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>lambda        [2.0000, 3.0000, 5.0000]
+pointer       [1.0000, 2.0000, 4.0000]
+object        [1.0000, 4.0000, 16.0000]
+std::function [2.7183, 7.3891, 54.5982]
+arity 6  sum of six copies of t [6.0000, 12.0000, 24.0000]
+</pre></div>
+</div>
+<p>All four forms trace identically. The <code class="docutils literal notranslate"><span class="pre">from_pointer</span></code> function has two variables (<code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>) and was evaluated with <code class="docutils literal notranslate"><span class="pre">t</span></code> for both, so it returns <code class="docutils literal notranslate"><span class="pre">0.25</span> <span class="pre">t</span> <span class="pre">+</span> <span class="pre">0.75</span> <span class="pre">t</span> <span class="pre">=</span> <span class="pre">t</span></code>. The span form is how to build a function whose number of variables is a run-time quantity: the six names come from a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code> and the body folds however many placeholders it receives. Its argument list is likewise a <code class="docutils literal notranslate"><span class="pre">RangeView&lt;Series&gt;</span></code> built from a vector. The names are copied when the function is created, so the vector may be destroyed afterwards.</p>
+</section>
+<section id="rules-for-the-variable-list">
+<h2>Rules for the variable list<a class="headerlink" href="#rules-for-the-variable-list" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Each name must be non-empty and appear once.</p></li>
+<li><p>The number of names must equal the callable’s number of parameters (for a fixed-parameter callable).</p></li>
+<li><p>The callable must return something: an undefined <code class="docutils literal notranslate"><span class="pre">Function</span></code> is rejected.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">Function</span></code> obtained from one <code class="docutils literal notranslate"><span class="pre">function(...)</span></code> call cannot be returned from the body of another; each call starts its own set of placeholders.</p></li>
+</ul>
+<p>The next page lists everything the body may do with a placeholder.</p>
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/calculus/functions/calculus_01_functions/building_and_evaluating.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

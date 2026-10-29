@@ -44,6 +44,28 @@ TEST_CASE("nonzero/take/put", "[index]") {
   REQUIRE(outp[3] == 1);
 }
 
+TEST_CASE("nonzero of a one-element tensor keeps one column per dimension", "[index][nonzero]") {
+  // A one-element vector has the coordinate 0, so the result is (1 x 1) holding 0, and (0 x 1) when the element is zero.
+  const Series present = pluss::make_series({5.0});
+  const Series hit = present.nonzero();
+  REQUIRE(hit.sizes()[0] == 1);
+  REQUIRE(hit.sizes()[1] == 1);
+  REQUIRE(hit.host<std::int64_t>().front() == 0);
+  const Series miss = pluss::make_series({0.0}).nonzero();
+  REQUIRE(miss.sizes()[0] == 0);
+  REQUIRE(miss.sizes()[1] == 1);
+
+  // A rank-0 tensor has no coordinates: (1 x 0) when nonzero, (0 x 0) when zero.
+  const Series scalar_hit = present.reshape(std::vector<std::int64_t>{}).nonzero();
+  REQUIRE(scalar_hit.sizes()[0] == 1);
+  REQUIRE(scalar_hit.sizes()[1] == 0);
+
+  // A (1 x 1) matrix keeps both of its coordinates.
+  const Series matrix = pluss::make_series({5.0}).reshape({1, 1}).nonzero();
+  REQUIRE(matrix.sizes()[0] == 1);
+  REQUIRE(matrix.sizes()[1] == 2);
+}
+
 TEST_CASE("Series::pos bounds-checked scalar selection", "[index][pos]") {
   Series s = pluss::make_series({1.0, 2.0, 3.0});
   const pluss::codem::SeriesBase& b = s;

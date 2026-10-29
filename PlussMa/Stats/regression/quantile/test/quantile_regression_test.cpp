@@ -37,6 +37,55 @@ int main() {
   try {
     const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
+    {
+      // one new observation of two predictors is a [1, p] row
+      const Series x2 = mat({1, 2, 2, 1, 3, 0, 4, 2, 5, 1, 6, 3, 7, 4, 8, 5, 9, 2, 10, 6}, 10, 2, cfg);
+      const Series y2 = vec({0.9, 4.9, 7.2, 6.7, 10.0, 10.8, 10.6, 11.9, 14.1, 13.2}, cfg);
+      const auto fit2 = reg::quantile_fit(y2, x2, {}, cfg);
+      const Series one = reg::quantile_predict(fit2, mat({9.0, 4.0}, 1, 2, cfg), cfg);
+      const Series two = reg::quantile_predict(fit2, mat({9.0, 4.0, 9.0, 4.0}, 2, 2, cfg), cfg);
+      expect(one.numel() == 1 && approx(one.host<double>().front(), two.host<double>().front(), 1e-12), "quantile_predict accepts one observation as a [1, p] row");
+    }
+
+    {
+      // integer case weights are the same as repeating the rows
+      std::vector<double> xs, ys, counts, rx, ry;
+      for (int i = 0; i < 12; ++i) {
+        xs.push_back(i);
+        ys.push_back(1.0 + 0.7 * i + 1.5 * (2.0 * std::fmod((i + 1) * 0.6180339887498949, 1.0) - 1.0));
+        counts.push_back(1.0 + (i % 3));
+      }
+      for (std::size_t i = 0; i < xs.size(); ++i) {
+        for (int c = 0; c < static_cast<int>(counts[i]); ++c) {
+          rx.push_back(xs[i]);
+          ry.push_back(ys[i]);
+        }
+      }
+      for (double tau : {0.25, 0.5, 0.8}) {
+        reg::QuantileOptions weighted;
+        weighted.tau = tau;
+        weighted.weights = vec(counts, cfg);
+        weighted.tol = 1e-10;
+        weighted.max_iter = 2000;
+        reg::QuantileOptions replicated;
+        replicated.tau = tau;
+        replicated.tol = 1e-10;
+        replicated.max_iter = 2000;
+        const auto a = reg::quantile_fit(vec(ys, cfg), vec(xs, cfg), weighted, cfg);
+        const auto b = reg::quantile_fit(vec(ry, cfg), vec(rx, cfg), replicated, cfg);
+        const auto ca = a.coefficients.host<double>(), cb = b.coefficients.host<double>();
+        expect(approx(ca[0], cb[0], 1e-5) && approx(ca[1], cb[1], 1e-5), "weighted quantile fit equals replicated rows: coefficients");
+        expect(approx(a.objective, b.objective, 1e-6) && approx(a.objective_null, b.objective_null, 1e-9), "weighted quantile fit equals replicated rows: objectives");
+        expect(approx(a.residual_density0, b.residual_density0, 1e-5 * (1.0 + b.residual_density0)), "weighted quantile fit equals replicated rows: density at zero");
+        const auto sa = a.std_errors.host<double>(), sb = b.std_errors.host<double>();
+        expect(approx(sa[1], sb[1], 1e-4 * (1.0 + sb[1])), "weighted quantile fit equals replicated rows: standard errors");
+      }
+      reg::QuantileOptions with_zero;
+      with_zero.weights = vec({1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1}, cfg);
+      const auto z = reg::quantile_fit(vec(ys, cfg), vec(xs, cfg), with_zero, cfg);
+      expect(z.nobs == 11 && z.dropped_observations == 1, "quantile: a zero weight removes the row");
+    }
+
     std::vector<double> xv;
     std::vector<double> yv;
     for (std::int64_t i = 0; i < 40; ++i) {
@@ -68,6 +117,13 @@ int main() {
 
     const std::string summary = reg::quantile_summary(fit);
     expect(summary.find("Quantile Regression Results") != std::string::npos, "quantile summary title");
+    expect(summary.find("[0.025") != std::string::npos, "quantile summary interval heading at alpha 0.05");
+    {
+      reg::QuantileOptions ten = opt;
+      ten.alpha = 0.10;
+      const std::string ten_summary = reg::quantile_summary(reg::quantile_fit(y, x, ten, cfg));
+      expect(ten_summary.find("[0.05") != std::string::npos && ten_summary.find("0.95]") != std::string::npos, "quantile summary interval heading at alpha 0.10");
+    }
 
     {
       // Reference values from an independent implementation of the Hall-Sheather / Epanechnikov robust covariance (tau = 0.25):

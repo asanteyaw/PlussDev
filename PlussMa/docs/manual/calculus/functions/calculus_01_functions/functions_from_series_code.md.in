@@ -1,0 +1,120 @@
+# Functions from Series code
+
+[Back to Functions](../calculus_01_functions.md)
+
+The vocabulary of [the previous page](the_expression_vocabulary.md) is closed: a body built from it can be differentiated and integrated exactly because the library can see every operation. Sometimes the formula already exists as code that takes and returns `Series` — a model evaluated by a library routine, a function with a loop in it — and rewriting it as `Function` arithmetic is not worth the trouble. `function` accepts that too, as an **opaque** function.
+
+## Making one
+
+Pass a callable of exactly one `Series` parameter that returns a `Series`. The result is a one-variable `Function` whose evaluation calls your code. It supports the same arithmetic as any `Function` (adding a constant, scaling, applying `sin`), but the graph contains a box it cannot look inside.
+
+`provenance()` says how a function was obtained, and is the quickest way to see what you hold:
+
+| `Provenance` | Meaning |
+|---|---|
+| `Structural` | every operation is in the vocabulary; exact derivatives and integrals exist |
+| `Opaque` | built from a `Series` callable; derivatives need an explicit fallback (Chapter 2) |
+| `Quadrature` | an integral that was evaluated numerically (Chapter 4) |
+| `Autodiff` | a derivative of an opaque function, obtained by automatic differentiation |
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Provenance p) {
+  switch (p) {
+  case math::Provenance::Structural: return "Structural";
+  case math::Provenance::Opaque: return "Opaque";
+  case math::Provenance::Quadrature: return "Quadrature";
+  case math::Provenance::Autodiff: return "Autodiff";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto x = pluss::make_series({0.5, 1.0});
+
+  const math::Function structural = math::function({"x"}, [](math::Function v) { return v.sin() * v.exp(); });
+  const math::Function opaque = math::function({"x"}, [](const pluss::Series &v) { return v.sin().mul(v.exp()); });
+
+  out.writeln("structural values", structural({x}).pull<double>());
+  out.writeln("opaque values    ", opaque({x}).pull<double>());
+  out.writeln("provenance: structural", name(structural.provenance()), " opaque", name(opaque.provenance()));
+
+  const math::Function shifted = opaque + 1.0;
+  out.writeln("opaque + 1       ", shifted({x}).pull<double>(), name(shifted.provenance()));
+  out.writeln("sin(2 * opaque)  ", (opaque * 2.0).sin()({x}).pull<double>());
+
+  const math::Function exact_primitive = operators::antiderivative("x")(math::function({"x"}, [](math::Function v) { return v.pow(3); }));
+  const math::Function numeric_primitive = operators::antiderivative("x")(math::function({"x"}, [](math::Function v) { return (-v.pow(2)).exp(); }));
+  const math::Function derivative = operators::differential("x", 1, {.fallback = math::Fallback::Autodiff})(opaque);
+  out.writeln("primitive of x^3:                          ", name(exact_primitive.provenance()));
+  out.writeln("primitive of exp(-x^2):                    ", name(numeric_primitive.provenance()));
+  out.writeln("autodiff derivative of the opaque function:", name(derivative.provenance()));
+}
+```
+
+The two functions agree to every printed digit, but `provenance()` tells them apart. Arithmetic on an opaque function stays opaque: adding 1 or scaling and applying `sin` all produce a working function that still contains the box. The three lines at the bottom preview what the later chapters build on. The primitive of `x³` is computed by an exact rule and stays `Structural`. The primitive of `exp(−x²)` has no closed form in the rule set, so it is evaluated by numerical quadrature and is marked `Quadrature`. The derivative of the opaque function exists only because the fallback was requested, and is marked `Autodiff`. Whenever you hold a function and are unsure whether its derivative or integral is exact, ask `provenance()`.
+
+## What an opaque function cannot do
+
+An opaque function is a deliberately narrow tool, and the library says so rather than guess.
+
+- **Exactly one variable.** The callable takes one `Series`, so the function has arity 1. A function of several variables must be written with `Function` arithmetic.
+- **No mixing with a separately built function.** Two `function(...)` calls make independent traces, and `Function`s from different traces cannot be combined; that includes an opaque function and a structural one. Combine them by writing the structural part inside the `Series` callable instead.
+- **No exact derivative.** `differential` on an opaque function is rejected unless you choose the automatic-differentiation fallback; Chapter 2 shows both.
+- **No saving.** The callable cannot be written to a file ([Saving and loading](../calculus_05_operators/saving_and_loading.md)).
+- **Errors from your code.** A callable that returns an undefined `Series` is reported as an error at evaluation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <sstream>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+template <class F> static void attempt(OutputEngine &out, const char *label, F &&call) {
+  try {
+    call();
+    out.writeln(label, "-> no error");
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(label, "->", text.substr(0, text.find('\n')));
+  }
+}
+
+int main() {
+  OutputEngine out;
+  const math::Function opaque = math::function({"x"}, [](const pluss::Series &v) { return v.sin(); });
+  const math::Function structural = math::function({"x"}, [](math::Function v) { return v; });
+  const auto x = pluss::make_series({0.5});
+
+  out.writeln("arity of the opaque function:", opaque.arity());
+  attempt(out, "opaque * structural                ", [&] { (void)(opaque * structural); });
+  attempt(out, "derivative without a fallback      ", [&] { (void)operators::differential("x")(opaque); });
+  attempt(out, "save to a stream                   ", [&] { std::ostringstream o; math::io::save(opaque, o); });
+  attempt(out, "callable returning an undefined one", [&] {
+    const math::Function bad = math::function({"x"}, [](const pluss::Series &) { return pluss::Series{}; });
+    (void)bad({x});
+  });
+}
+```
+
+Each restriction is an error at the point where the request is made, with a message that says what to do. The fix for the derivative error is quoted in the message itself.
+
+Prefer the `Function` vocabulary whenever the formula can be written in it. It is exact, it saves, and it composes with every operator; reach for an opaque function only for code you cannot restate.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

@@ -142,8 +142,8 @@ class Payload final {
     return *this;
   }
 
-  Payload& thread(DataThreadPolicy policy) noexcept {
-    options_.thread_policy = policy;
+  Payload& slate(DataSlatePolicy policy) noexcept {
+    options_.slate_policy = policy;
     return *this;
   }
 

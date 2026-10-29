@@ -92,6 +92,8 @@ F 9.2697 on (2.0000, 21.0000) df, p 0.0013, critical 3.4668
 SS between 9.5152, SS within 10.7781, MS between 4.7576, MS within 0.5132
 ```
 
+The F statistic 9.27 on (2, 21) degrees of freedom exceeds the critical value 3.47, and the p-value 0.0013 rejects equal means. The table of sums of squares shows why: between suppliers 9.52 against 10.78 within, so the mean squares are 4.76 and 0.51, and their ratio is F.
+
 ### Example 2
 
 The group means and counts.
@@ -124,6 +126,8 @@ group 1: n 3.0000, mean 6.1000
 group 2: n 3.0000, mean 6.2333
 F 2.2684, p 0.1740
 ```
+
+The group counts and means are reported with the test: the three groups have 4, 3 and 3 observations and means 5.08, 6.10 and 6.23. With so few observations per group the F statistic is only 2.27 and p 0.17, so equal means are not rejected for this small data set.
 
 ## See Also
 

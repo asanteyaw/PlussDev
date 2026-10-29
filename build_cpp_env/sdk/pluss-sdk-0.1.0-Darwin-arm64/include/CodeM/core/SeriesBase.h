@@ -1,7 +1,10 @@
 #pragma once
+#include <cctype>
 #include <cstdint>
+#include <optional>
 #include <ostream>
 #include <span>
+#include <string>
 
 #include "CodeM/core/Platform.h"
 #include "CodeM/core/SeriesImpl.h"
@@ -13,6 +16,56 @@ namespace pluss::codem {
 
 class Series;
 struct ExtractSpec;
+
+// Describes the reverse-mode node that produced a tracked Series, if any --
+// this engine's analogue of what other autodiff systems call `grad_fn`,
+// named to match its own renamed autodiff vocabulary (tracks_slope,
+// sensitivity, ...): `sensitivity()` is what flows backward INTO a value;
+// `source()` describes how it was produced going forward. A leaf value, or
+// one that never flowed through a tracked op, has no source.
+struct CODEM_API SeriesSource {
+  // Name of the op that produced this value (e.g. "relu", "matmul",
+  // "grouped_mode") -- the STABLE, snake_case identifier every internal
+  // call site keys off of (op-name allowlists, the backward-manifest audit,
+  // etc.). Never reformat this field itself; use display_name() for
+  // anything printed.
+  std::string op_name;
+  // Number of tracked inputs (parents) this op was recorded with.
+  std::size_t parent_count{0};
+
+  // "grouped_mode" -> "GroupedModeReverse" -- this engine's analogue of
+  // torch's "AddBackward0" display convention: PascalCase + "Reverse"
+  // (matching .reverse() rather than .backward()). No trailing digit --
+  // unlike torch's codegen, op_name here isn't versioned per overload, so a
+  // fake "0" would be noise, not information. Computed fresh from op_name
+  // every call; purely for display, never compared against.
+  std::string display_name() const {
+    std::string out;
+    out.reserve(op_name.size() + 7);
+    bool capitalize_next = true;
+    for (const char c : op_name) {
+      if (c == '_') {
+        capitalize_next = true;
+        continue;
+      }
+      out.push_back(capitalize_next ? static_cast<char>(std::toupper(static_cast<unsigned char>(c))) : c);
+      capitalize_next = false;
+    }
+    out += "Reverse";
+    return out;
+  }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const SeriesSource& src) {
+  return os << src.display_name();
+}
+
+// Prints like torch's `print(x.grad_fn)`: the display name when present,
+// "None" for a leaf or untracked value -- so `std::cout << y.source()`
+// works directly without unwrapping the optional first.
+inline std::ostream& operator<<(std::ostream& os, const std::optional<SeriesSource>& src) {
+  return src ? (os << *src) : (os << "None");
+}
 
 // Handle type (Torch-like TensorBase): cheap copy, shared underlying impl.
 class CODEM_API SeriesBase {
@@ -55,6 +108,12 @@ public:
   bool is_cuda() const noexcept { return platform() == Platform::CUDA; }
   bool is_mps() const noexcept { return platform() == Platform::MPS; }
   bool is_pinned() const noexcept { return false; }
+
+  // The reverse-mode node behind this value, if any -- std::nullopt for a
+  // leaf or a value that never flowed through a tracked op. See
+  // SeriesSource above.
+  std::optional<SeriesSource> source() const;
+
   // Vector-style bounds-checked scalar selection for 1-D Series.
   // Returns a rank-0 Series view of the selected element.
   Series pos(std::int64_t index) const;

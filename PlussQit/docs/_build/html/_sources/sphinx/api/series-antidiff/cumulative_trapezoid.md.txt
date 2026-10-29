@@ -15,9 +15,9 @@ Series SeriesAntidiffProxy::cumulative_trapezoid(const Series& x, std::int64_t d
 Series SeriesAntidiffProxy::cumulative_trapezoid(double dx, std::int64_t dim = -1) const
 Series SeriesAntidiffProxy::cumulative_trapezoid(std::int64_t dim = -1) const
 
-Series pluss::integ::cumulative_trapezoid(const Series& y, const Series& x, std::int64_t dim = -1)
-Series pluss::integ::cumulative_trapezoid(const Series& y, double dx, std::int64_t dim = -1)
-Series pluss::integ::cumulative_trapezoid(const Series& y, std::int64_t dim = -1)
+Series pluss::subsp::math::integ::cumulative_trapezoid(const Series& y, const Series& x, std::int64_t dim = -1)
+Series pluss::subsp::math::integ::cumulative_trapezoid(const Series& y, double dx, std::int64_t dim = -1)
+Series pluss::subsp::math::integ::cumulative_trapezoid(const Series& y, std::int64_t dim = -1)
 ```
 
 ## What It Does

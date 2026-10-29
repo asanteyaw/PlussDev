@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -143,6 +143,7 @@
 95% interval [5.2660, 5.9590]
 </pre></div>
 </div>
+<p>With the standard deviation known to be 0.5, the mean 5.61 is z 3.46 standard errors (0.177) from the target and p is 0.0005; the 95% interval is [5.27, 5.96]. The z test uses the normal distribution, not the t distribution, because the spread is not estimated.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -172,6 +173,7 @@ sigma 0.8000: z 2.1655, p 0.0303 (reject)
 sigma 1.2000: z 1.4437, p 0.1488 (keep)
 </pre></div>
 </div>
+<p>The conclusion depends on the standard deviation assumed: at sigma 0.3, 0.5 and 0.8 the null is rejected (p 0.0000, 0.0005 and 0.0303), while at 1.2 it is kept (p 0.149). Use the z test only when sigma is truly known, not guessed.</p>
 </section>
 </section>
 <section id="see-also">
@@ -200,13 +202,16 @@ sigma 1.2000: z 1.4437, p 0.1488 (keep)
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

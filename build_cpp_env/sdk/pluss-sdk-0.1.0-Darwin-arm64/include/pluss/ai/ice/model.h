@@ -3,6 +3,8 @@
 #include "pluss/ai/ice/step.h"
 #include "pluss/nn.h"
 
+#include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -14,6 +16,24 @@ namespace pluss::ai::ice {
 
 class Coach;
 class Source;
+
+// One epoch of a training run as the coach saw it. `val_loss` is empty when
+// the run had no validation split or the epoch did not validate.
+struct EpochReport {
+  std::int64_t epoch = -1;
+  double train_loss = 0.0;
+  std::optional<double> val_loss = std::nullopt;
+};
+
+// What the most recent learn() call on a Model did. Replaced on every learn()
+// call; a model that has never been trained reports an empty record.
+struct TrainingReport {
+  std::vector<EpochReport> epochs{};
+  std::int64_t global_steps = 0;
+  // Why the run ended early, as set by a stopping callback. Empty when the
+  // run completed its configured epochs.
+  std::string stop_reason{};
+};
 
 // The generic escape hatch (ICE_BLUEPRINT.md §4): define parameters plus
 // forward/loss, get learn/infer/assess/save/load for free. `ice::Outline`
@@ -33,6 +53,20 @@ public:
   // Default dispatches on `kind` to the matching pluss::nn::losses:: free
   // function. Override for models that need a custom objective.
   [[nodiscard]] virtual Series compute_loss(const Series& predictions, const Series& y, LossKind kind) const;
+
+  // Same as the 3-argument overload, except that when `kind ==
+  // LossKind::CrossEntropy` and `label_smoothing != 0.0`, the default
+  // implementation calls `nn::losses::CrossEntropy` with that smoothing
+  // applied instead of delegating to the 3-argument overload -- so a
+  // model whose 3-argument `compute_loss` is overridden only sees that
+  // override when `label_smoothing == 0.0`. `Model::compute_loss(batch,
+  // ctx)` is what actually threads `ctx.recipe->objective_regularization
+  // .label_smoothing` through to this overload; nothing else calls it.
+  [[nodiscard]] virtual Series compute_loss(const Series& predictions,
+                                            const Series& y,
+                                            LossKind kind,
+                                            double label_smoothing) const;
+
   [[nodiscard]] virtual Series compute_loss(const Series& predictions,
                                             const Batch& batch,
                                             const StepContext& ctx) const;
@@ -112,6 +146,7 @@ public:
   void load(std::string_view filepath);
 
   [[nodiscard]] bool ready() const noexcept { return trained_; }
+  [[nodiscard]] const TrainingReport& training_report() const noexcept { return training_report_; }
   [[nodiscard]] bool is_training() const noexcept { return training_; }
   void train(bool enabled = true) noexcept;
   void eval() noexcept { train(false); }
@@ -134,6 +169,7 @@ protected:
 
 private:
   friend class Coach;
+  TrainingReport training_report_{};
 
   std::vector<Series*> owned_parameters_{};
   std::vector<pluss::nn::Module*> owned_modules_{};

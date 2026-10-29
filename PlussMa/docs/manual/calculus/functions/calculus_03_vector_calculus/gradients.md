@@ -1,0 +1,138 @@
+<!-- generated from gradients.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Gradients
+
+[Back to Vector Calculus](../calculus_03_vector_calculus.md)
+
+The gradient of a scalar function of several variables collects its partial derivatives into one vector. `operators::gradient` does that, and it returns a single `Function` whose value is the whole vector, so a gradient is evaluated, stored and passed around like any other function.
+
+```cpp
+operators::Operator operators::gradient(StackArray<std::string_view> variables = {}, DiffOptions options = {});
+```
+
+With no variable list, the gradient is taken with respect to every variable of the function, in the order in which the variables were declared. With a list, only those variables are used, in the order you give, and the list may repeat none and name none that the function lacks.
+
+The gradient has one more axis than the function's output. A scalar function has a gradient of rank 1 whose length is the number of selected variables; the new axis is placed **last**, after any batch axes of the arguments. That makes a batch of points produce a batch of gradient vectors, one row each.
+
+## The gradient of a potential
+
+The potential P(x, y) = x³ + xy + y² has the gradient (3x² + y, x + 2y). The program evaluates the gradient with the variables in declared order, in reversed order, and for the single variable `y`:
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function potential = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.pow(3) + x * y + y.pow(2); });
+
+  const math::Function grad = operators::gradient()(potential);
+  const math::Function grad_yx = operators::gradient({"y", "x"})(potential);
+  const math::Function grad_y = operators::gradient({"y"})(potential);
+  out.writeln("rank of the gradient:", grad.rank(), " shape", grad.shape());
+  out.writeln("rank of the y gradient:", grad_y.rank(), " shape", grad_y.shape());
+
+  const auto x = pluss::make_series({0.5, 1.0, 2.0});
+  const auto y = pluss::make_series({1.5, 2.0, 3.0});
+  const auto dx = x.pow(2).mul(3.0).add(y);
+  const auto dy = x.add(y.mul(2.0));
+
+  const auto g = grad({x, y});
+  out.writeln("gradient shape for three points:", g.sizes());
+  out.writeln("column 0 = dP/dx   ", g.select(1, 0).pull<double>(), " by hand", dx.pull<double>());
+  out.writeln("column 1 = dP/dy   ", g.select(1, 1).pull<double>(), " by hand", dy.pull<double>());
+  const auto r = grad_yx({x, y});
+  out.writeln("reversed: column 0 ", r.select(1, 0).pull<double>(), " column 1", r.select(1, 1).pull<double>());
+  out.writeln("only y:   shape", grad_y({x, y}).sizes(), " values", grad_y({x, y}).select(1, 0).pull<double>());
+}
+```
+
+Output
+
+```text
+rank of the gradient: 1  shape [2]
+rank of the y gradient: 1  shape [1]
+gradient shape for three points: [3, 2]
+column 0 = dP/dx    [2.2500, 5.0000, 15.0000]  by hand [2.2500, 5.0000, 15.0000]
+column 1 = dP/dy    [3.5000, 5.0000, 8.0000]  by hand [3.5000, 5.0000, 8.0000]
+reversed: column 0  [3.5000, 5.0000, 8.0000]  column 1 [2.2500, 5.0000, 15.0000]
+only y:   shape [3, 1]  values [3.5000, 5.0000, 8.0000]
+```
+
+The gradient function has rank 1 and shape `[2]`: two components for the two variables. Evaluated on three points it returns a `[3, 2]` array, one row per point, and the two columns are exactly the hand formulas 3x² + y and x + 2y. Reversing the selector swaps the columns. Selecting only `y` gives shape `[3, 1]`: the new axis always exists, even when it has length one, so the shape does not depend on how many variables you ask for.
+
+## Many variables, and variables that do not appear
+
+The gradient has one entry per selected variable, however many variables the function has. A variable that the formula does not use has a zero partial derivative, and still occupies its place in the vector, so the layout is the same for every function with the same variable list.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  // f(w, x, y, z) = w x + y z + w^2
+  const math::Function f = math::function({"w", "x", "y", "z"}, [](math::Function w, math::Function x, math::Function y, math::Function z) {
+    return w * x + y * z + w.pow(2);
+  });
+  const auto w = pluss::make_series({1.0, 2.0});
+  const auto x = pluss::make_series({3.0, 4.0});
+  const auto y = pluss::make_series({5.0, 6.0});
+  const auto z = pluss::make_series({7.0, 8.0});
+
+  const auto full = operators::gradient()(f)({w, x, y, z});
+  out.writeln("full gradient, shape", full.sizes());
+  out.writeln("  df/dw = x + 2w", full.select(1, 0).pull<double>());
+  out.writeln("  df/dx = w     ", full.select(1, 1).pull<double>());
+  out.writeln("  df/dy = z     ", full.select(1, 2).pull<double>());
+  out.writeln("  df/dz = y     ", full.select(1, 3).pull<double>());
+
+  const auto subset = operators::gradient({"z", "w", "x"})(f)({w, x, y, z});
+  out.writeln("gradient in (z, w, x), shape", subset.sizes());
+  out.writeln("  first column (dz)", subset.select(1, 0).pull<double>());
+
+  const math::Function only_x = math::function({"x", "y"}, [](math::Function x, math::Function) { return x * x; });
+  const auto g = operators::gradient()(only_x)({pluss::make_series(3.0, as_f64()), pluss::make_series(5.0, as_f64())});
+  out.writeln("a function that ignores y: gradient", g.pull<double>());
+}
+```
+
+Output
+
+```text
+full gradient, shape [2, 4]
+  df/dw = x + 2w [5.0, 8.0]
+  df/dx = w      [1.0, 2.0]
+  df/dy = z      [7.0, 8.0]
+  df/dz = y      [5.0, 6.0]
+gradient in (z, w, x), shape [2, 3]
+  first column (dz) [5.0, 6.0]
+a function that ignores y: gradient [6.0, 0.0]
+```
+
+The gradient has shape `[2, 4]` for two points and four variables, with columns in the declared order w, x, y, z; the `(z, w, x)` selector gives three columns in that order, the first being ∂f/∂z. Selecting is just a choice of components, so the values are the same as in the full gradient. A function that ignores `y` returns `[6, 0]` at (3, 5): 2x = 6 for `x`, and a zero for `y`, in its place.
+
+## Errors
+
+| Request | Error |
+|---|---|
+| a repeated variable, `gradient({"x", "x"})` | `duplicate variable 'x'` |
+| an empty name, `gradient({""})` | `variable names must not be empty` |
+| a name the function does not have | `unknown variable 'z'` |
+| a function with no variables | `at least one variable is required` |
+| a function whose output is not a scalar | `input Function must be scalar-valued` |
+
+The last row is a rule about shape: the gradient of a vector-valued function is a Jacobian, which is the subject of the next page.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

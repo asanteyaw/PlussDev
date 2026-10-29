@@ -4,7 +4,6 @@
 #include "pluss/codem/stack_array.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
-#include "pluss/codeh/timeindex_factory.h"
 
 #include <algorithm>
 #include <array>
@@ -207,9 +206,6 @@ struct serializable_value<pluss::Note> : std::true_type {};
 template <>
 struct serializable_value<pluss::Timeline> : std::true_type {};
 
-template <>
-struct serializable_value<pluss::TimeIndex> : std::true_type {};
-
 template <class T, class Alloc>
 struct serializable_value<std::vector<T, Alloc>>
     : std::bool_constant<serializable_value<std::remove_cv_t<T>>::value> {};
@@ -330,14 +326,6 @@ inline void expect_tag_(Tag got, Tag expected, std::string_view where) {
       std::string("pluss::io::load: tag mismatch at ") + std::string(where)
           + ". expected=" + std::to_string(static_cast<std::uint8_t>(expected))
           + ", got=" + std::to_string(static_cast<std::uint8_t>(got)));
-}
-
-inline bool is_non_decreasing_(std::span<const std::int64_t> values) {
-  if (values.size() < 2) return true;
-  for (std::size_t i = 1; i < values.size(); ++i) {
-    if (values[i] < values[i - 1]) return false;
-  }
-  return true;
 }
 
 inline pluss::codem::Platform decode_platform_(std::uint8_t raw, std::string_view where) {
@@ -636,33 +624,16 @@ inline pluss::Timeline read_timeline_payload_(BinaryReader& reader, const LoadOp
   }
 }
 
-inline void write_timeindex_payload_(
-    BinaryWriter& writer,
-    const pluss::TimeIndex& value,
-    const SaveOptions& options);
-
-inline pluss::TimeIndex read_timeindex_payload_(BinaryReader& reader, const LoadOptions& options);
-
 template <class T>
 void write_value_(BinaryWriter& writer, const T& value, const SaveOptions& options);
 
 template <class T>
 T read_value_(BinaryReader& reader, const LoadOptions& options);
 
-inline void write_timeindex_payload_(
-    BinaryWriter& writer,
-    const pluss::TimeIndex& value,
-    const SaveOptions& options) {
-  const auto ticks = value.timeline().ticks();
-  const bool require_sorted = is_non_decreasing_(std::span<const std::int64_t>(ticks.data(), ticks.size()));
-  writer.write_u8(require_sorted ? 1U : 0U, "timeindex.require_sorted");
-  write_value_(writer, value.timeline(), options);
-}
-
-inline pluss::TimeIndex read_timeindex_payload_(BinaryReader& reader, const LoadOptions& options) {
-  const bool require_sorted = reader.read_u8("timeindex.require_sorted") != 0;
-  const auto timeline = read_value_<pluss::Timeline>(reader, options);
-  return pluss::timeindex::make(timeline, require_sorted);
+inline pluss::Timeline read_legacy_timeindex_payload_(BinaryReader& reader,
+                                                       const LoadOptions& options) {
+  (void)reader.read_u8("timeindex.require_sorted");
+  return read_value_<pluss::Timeline>(reader, options);
 }
 
 template <class T>
@@ -733,9 +704,6 @@ void write_value_(BinaryWriter& writer, const T& value, const SaveOptions& optio
   } else if constexpr (std::is_same_v<U, pluss::Timeline>) {
     write_tag_(writer, Tag::Timeline);
     write_timeline_payload_(writer, value, options);
-  } else if constexpr (std::is_same_v<U, pluss::TimeIndex>) {
-    write_tag_(writer, Tag::TimeIndex);
-    write_timeindex_payload_(writer, value, options);
   } else if constexpr (is_std_vector<U>::value) {
     write_tag_(writer, Tag::Vector);
     write_vector_payload_(writer, value, options);
@@ -771,11 +739,11 @@ T read_value_(BinaryReader& reader, const LoadOptions& options) {
     expect_tag_(tag, Tag::Note, "Note");
     return read_note_payload_(reader, options);
   } else if constexpr (std::is_same_v<U, pluss::Timeline>) {
+    if (tag == Tag::TimeIndex) {
+      return read_legacy_timeindex_payload_(reader, options);
+    }
     expect_tag_(tag, Tag::Timeline, "Timeline");
     return read_timeline_payload_(reader, options);
-  } else if constexpr (std::is_same_v<U, pluss::TimeIndex>) {
-    expect_tag_(tag, Tag::TimeIndex, "TimeIndex");
-    return read_timeindex_payload_(reader, options);
   } else if constexpr (is_std_vector<U>::value) {
     expect_tag_(tag, Tag::Vector, "std::vector");
     return read_vector_payload_<U>(reader, options);

@@ -60,7 +60,7 @@ Series option_is_call_mask_(const Vanilla& inst, const Series& ref, Config cfg, 
     return pluss::series::full(ref.sizes(), 0.0, cfg);
   }
   PLUSS_CHECK(inst.type == pricing::OptionType::Auto,
-              std::string("subsp::math::finance::object::") + op + ": unsupported option type");
+              std::string("subsp::math::finance::object::") + op + ": option type must be Call or Put (OptionType::Auto is only valid for an instrument that supplies is_call)");
   PLUSS_CHECK(inst.is_call.defined(),
               std::string("subsp::math::finance::object::") + op +
                   ": instrument.is_call must be defined when instrument.type=OptionType::Auto");

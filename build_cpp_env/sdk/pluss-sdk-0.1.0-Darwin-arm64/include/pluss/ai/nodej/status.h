@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -46,21 +48,31 @@ template <class T>
 class StatusOr {
 public:
   StatusOr(Status status, T value)
-      : status_(std::move(status)), value_(std::move(value)), has_value_(status_.ok()) {}
+      : status_(std::move(status)) {
+    if (status_.ok()) value_.emplace(std::move(value));
+  }
 
-  explicit StatusOr(T value) : status_(Status::success()), value_(std::move(value)), has_value_(true) {}
-  explicit StatusOr(Status status) : status_(std::move(status)), value_{}, has_value_(false) {}
+  explicit StatusOr(T value) : status_(Status::success()), value_(std::move(value)) {}
+  explicit StatusOr(Status status) : status_(std::move(status)) {}
 
-  [[nodiscard]] bool ok() const noexcept { return has_value_ && status_.ok(); }
+  [[nodiscard]] bool ok() const noexcept { return value_.has_value() && status_.ok(); }
   [[nodiscard]] const Status& status() const noexcept { return status_; }
-  [[nodiscard]] const T& value() const noexcept { return value_; }
-  [[nodiscard]] T& value() noexcept { return value_; }
-  [[nodiscard]] T&& move_value() noexcept { return std::move(value_); }
+  [[nodiscard]] const T& value() const {
+    if (!value_) throw std::logic_error("StatusOr::value(): result has no value");
+    return *value_;
+  }
+  [[nodiscard]] T& value() {
+    if (!value_) throw std::logic_error("StatusOr::value(): result has no value");
+    return *value_;
+  }
+  [[nodiscard]] T&& move_value() {
+    if (!value_) throw std::logic_error("StatusOr::move_value(): result has no value");
+    return std::move(*value_);
+  }
 
 private:
   Status status_{};
-  T value_{};
-  bool has_value_{false};
+  std::optional<T> value_{};
 };
 
 } // namespace pluss::ai::nodej

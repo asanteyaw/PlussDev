@@ -1,0 +1,119 @@
+<!-- generated from cumulants_from_a_generating_function.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Worked problem: cumulants from a generating function
+
+[Back to Worked Problems](../calculus_06_worked_problems.md)
+
+The cumulant generating function K(t) = log E[exp(tX)] of a random variable packs all its cumulants into one function: the n-th cumulant is the n-th derivative of K at t = 0. The first is the mean and the second the variance; the third and fourth give skewness and excess kurtosis through κ₃/κ₂^{3/2} and κ₄/κ₂².
+
+That is calculus on a function, and it needs exact high-order derivatives at one point, which is what `differential(variable, order)` provides. The functions below are the cumulant generating functions of seven well-known distributions, written as formulas.
+
+| Distribution | K(t) | Cumulants |
+|---|---|---|
+| Normal(μ = 1.5, σ² = 4) | 1.5 t + 2 t² | κ₁ = 1.5, κ₂ = 4, κ₃ = 0 |
+| Bernoulli(p = 0.3) | log(0.7 + 0.3 eᵗ) | κ₂ = pq = 0.21 |
+| Binomial(n = 7, p = 0.3) | 7 · log(0.7 + 0.3 eᵗ) | κ₂ = npq = 1.47 |
+| Poisson(λ = 2.5) | 2.5 (eᵗ − 1) | every κₙ = λ |
+| Gamma(shape 2, scale 3) | −2 log(1 − 3t) | κₙ = 2 (n−1)! 3ⁿ |
+| Exponential(scale 4) | −log(1 − 4t) | κₙ = (n−1)! 4ⁿ |
+| Laplace(μ = 1, b = 0.75) | t − log(1 − 0.5625 t²) | κ₂ = 2b² = 1.125 |
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+// The n-th derivative of the cumulant generating function at t = 0.
+static double cumulant(const math::Function &cgf, std::int64_t order) {
+  const operators::Operator derivative =
+      operators::differential("t", order);
+  const math::Function cumulant_function = derivative(cgf);
+  const pluss::Series value = cumulant_function(0.0);
+  return value.item<double>();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function normal = math::function({"t"}, [](math::Function t) { return t * 1.5 + t.pow(2) * 2.0; });
+  const math::Function bernoulli = math::function({"t"}, [](math::Function t) { return (0.7 + t.exp() * 0.3).log(); });
+  const math::Function binomial = bernoulli * 7.0;
+  const math::Function poisson = math::function({"t"}, [](math::Function t) { return t.expm1() * 2.5; });
+  const math::Function gamma = math::function({"t"}, [](math::Function t) { return (-t * 3.0).log1p() * -2.0; });
+  const math::Function exponential = math::function({"t"}, [](math::Function t) { return (-(t * 4.0)).log1p() * -1.0; });
+  const math::Function laplace = math::function({"t"}, [](math::Function t) { return t - (1.0 - t.pow(2) * 0.5625).log(); });
+
+  const std::pair<const char *, const math::Function *> models[] = {{"normal     ", &normal}, {"bernoulli  ", &bernoulli}, {"binomial   ", &binomial},
+                                                                    {"poisson    ", &poisson}, {"gamma      ", &gamma},     {"exponential", &exponential},
+                                                                    {"laplace    ", &laplace}};
+  out.writeln("             kappa1     kappa2     kappa3     kappa4");
+  for (const auto &[name, cgf] : models) {
+    out.writeln(name, cumulant(*cgf, 1), cumulant(*cgf, 2), cumulant(*cgf, 3), cumulant(*cgf, 4));
+  }
+
+  // Skewness and excess kurtosis of the gamma distribution: 2 / sqrt(shape) and 6 / shape.
+  const double k2 = cumulant(gamma, 2), k3 = cumulant(gamma, 3), k4 = cumulant(gamma, 4);
+  out.writeln("gamma skewness", k3 / std::pow(k2, 1.5), " (2/sqrt(2) =", 2.0 / std::sqrt(2.0), ")  excess kurtosis", k4 / (k2 * k2), " (6/2 = 3)");
+}
+```
+
+Output
+
+```text
+             kappa1     kappa2     kappa3     kappa4
+normal      1.500000 4.000000 0.000000 0.000000
+bernoulli   0.300000 0.210000 0.084000 -0.054600
+binomial    2.100000 1.470000 0.588000 -0.382200
+poisson     2.500000 2.500000 2.500000 2.500000
+gamma       6.000000 18.000000 108.000000 972.000000
+exponential 4.000000 16.000000 128.000000 1536.000000
+laplace     1.000000 1.125000 0.000000 3.796875
+gamma skewness 1.414214  (2/sqrt(2) = 1.414214 )  excess kurtosis 3.000000  (6/2 = 3)
+```
+
+Every row matches its entry in the table. The normal distribution has mean 1.5, variance 4 and zero third and fourth cumulants. The Bernoulli variance is 0.21 and the binomial, which is seven independent Bernoullis, has cumulants seven times larger: 2.1, 1.47, 0.588 and −0.3822. The Poisson distribution has every cumulant equal to its rate. The gamma and exponential cumulants grow factorially, 6, 18, 108, 972 for the gamma and 4, 16, 128, 1536 for the exponential. The Laplace distribution is symmetric, so its third cumulant vanishes, and its fourth, 12b⁴ = 3.796875, is the heavy-tail signature. The last line derives the gamma distribution's skewness and excess kurtosis from the cumulants, and they equal the known 2/√shape and 6/shape.
+
+## A whole family at once
+
+The cumulants of a family come from the same function by giving the parameter an array. Here the Poisson rate is a variable `rate`, and one call per order evaluates the cumulant for four rates; every Poisson cumulant equals the rate, so the four columns repeat the rates.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function poisson = math::function({"t", "rate"}, [](math::Function t, math::Function rate) { return t.expm1() * rate; });
+  const auto at_zero = pluss::make_series(0.0);
+  const auto rates = pluss::make_series({0.5, 1.0, 2.5, 10.0});
+  out.writeln("rate     ", rates.pull<double>());
+  for (const std::int64_t order : {1, 2, 3, 4}) {
+    out.writeln("kappa", order, "  ", operators::differential("t", order)(poisson)({at_zero, rates}).pull<double>());
+  }
+}
+```
+
+Output
+
+```text
+rate      [0.500000, 1.000000, 2.500000, 10.000000]
+kappa 1    [0.500000, 1.000000, 2.500000, 10.000000]
+kappa 2    [0.500000, 1.000000, 2.500000, 10.000000]
+kappa 3    [0.500000, 1.000000, 2.500000, 10.000000]
+kappa 4    [0.500000, 1.000000, 2.500000, 10.000000]
+```
+
+The four columns show κ₁ to κ₄ equal to the four rates, at every rate, from the same four operators applied to one function. The rate is an ordinary variable of the function, so any number of members of the family are evaluated in the same call. The derivatives are exact, taken symbolically up to order four, not estimated by differences, which is why the fourth cumulant is as precise as the first.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

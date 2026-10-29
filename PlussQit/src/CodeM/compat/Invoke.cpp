@@ -5203,6 +5203,44 @@ static Series diag_extract_2d(const Series& self, std::int64_t diagonal) {
   return out;
 }
 
+// diagonal() on any rank / any axis pair (torch semantics: `diagonal` shifts
+// the diagonal along (dim1, dim2) and the extracted diagonal becomes the LAST
+// axis of the result). 2-D (0,1)/(1,0) keeps the dedicated kernel; every other
+// case is a composite -- bring (dim1, dim2) last, flatten them, and
+// index_select the diagonal's flat positions -- so reverse-mode comes from
+// index_select's own (scatter-add) rule with no extra node here.
+static Series diagonal_nd_(const Series& self, std::int64_t offset, std::int64_t dim1, std::int64_t dim2) {
+  PLUSS_CHECK(self.dim() >= 2, "diagonal: expects a Series with at least 2 dimensions");
+  const auto nd = self.dim();
+  const auto d1 = wrap_dim(dim1, nd, "diagonal");
+  const auto d2 = wrap_dim(dim2, nd, "diagonal");
+  PLUSS_CHECK(d1 != d2, "diagonal: dim1 and dim2 must differ");
+  if (nd == 2) {
+    if (d1 == 0) return diag_extract_2d(self, offset);
+    return diag_extract_2d(self.transpose(0, 1), offset);
+  }
+  std::vector<std::int64_t> perm;
+  for (std::int64_t i = 0; i < nd; ++i)
+    if (i != d1 && i != d2) perm.push_back(i);
+  perm.push_back(d1);
+  perm.push_back(d2);
+  const auto n1 = self.sizes()[static_cast<std::size_t>(d1)];
+  const auto n2 = self.sizes()[static_cast<std::size_t>(d2)];
+  const auto row0 = offset < 0 ? -offset : 0;
+  const auto col0 = offset > 0 ? offset : 0;
+  const auto len = std::max<std::int64_t>(0, std::min(n1 - row0, n2 - col0));
+  std::vector<std::int64_t> flat_shape(perm.size() - 1);
+  for (std::size_t i = 0; i + 2 < perm.size(); ++i)
+    flat_shape[i] = self.sizes()[static_cast<std::size_t>(perm[i])];
+  flat_shape.back() = n1 * n2;
+  auto idx = Series::empty({len}, ScalarType::Int64);
+  auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
+  for (std::int64_t i = 0; i < len; ++i) ip[i] = (row0 + i) * n2 + (col0 + i);
+  return self.permute(std::span<const std::int64_t>(perm.data(), perm.size()))
+      .reshape(flat_shape)
+      .index_select(static_cast<std::int64_t>(flat_shape.size()) - 1, idx.to(self.platform()));
+}
+
 static Series diag_embed_from_1d(const Series& self, std::int64_t diagonal) {
   auto v = self.flatten(0, -1).contiguous();
   PLUSS_CHECK(v.dim() == 1, "diag_embed/diagflat: expected 1D after flatten");
@@ -5234,6 +5272,57 @@ static Series diag_embed_from_1d(const Series& self, std::int64_t diagonal) {
     series_tape::bind_source_link(out, std::move(link));
   }
   return out;
+}
+
+// diag_embed() with torch semantics: the LAST axis of the input becomes a
+// diagonal (shifted by `offset`) of a new (side x side) plane, every leading
+// axis is a batch axis, and the plane's two axes are placed at (dim1, dim2) of
+// the result. Built from scatter into zeros so reverse-mode is scatter's
+// (gather) rule; a plain 1-D default call keeps the dedicated kernel.
+static Series diag_embed_nd_(const Series& self, std::int64_t offset, std::int64_t dim1, std::int64_t dim2) {
+  PLUSS_CHECK(self.dim() >= 1, "diag_embed: expects a Series with at least 1 dimension");
+  const auto nd_out = self.dim() + 1;
+  const auto d1 = wrap_dim(dim1, nd_out, "diag_embed");
+  const auto d2 = wrap_dim(dim2, nd_out, "diag_embed");
+  PLUSS_CHECK(d1 != d2, "diag_embed: dim1 and dim2 must differ");
+  if (self.dim() == 1 && d1 == 0 && d2 == 1) return diag_embed_from_1d(self, offset);
+  const auto n = self.sizes()[static_cast<std::size_t>(self.dim() - 1)];
+  const auto side = n + std::llabs(offset);
+  const auto row0 = offset < 0 ? -offset : 0;
+  const auto col0 = offset > 0 ? offset : 0;
+  std::vector<std::int64_t> batch(self.sizes().begin(), self.sizes().end() - 1);
+  std::vector<std::int64_t> flat_shape = batch;
+  flat_shape.push_back(side * side);
+  std::vector<std::int64_t> plane_shape = batch;
+  plane_shape.push_back(side);
+  plane_shape.push_back(side);
+  auto idx = Series::empty({n}, ScalarType::Int64);
+  auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
+  for (std::int64_t i = 0; i < n; ++i) ip[i] = (row0 + i) * side + (col0 + i);
+  std::vector<std::int64_t> idx_view(static_cast<std::size_t>(self.dim()), 1);
+  idx_view.back() = n;
+  const Series index = idx.to(self.platform()).reshape(idx_view)
+                           .expand(std::span<const std::int64_t>(self.sizes().data(), self.sizes().size()), true)
+                           .contiguous();
+  const Series base = Series::zeros(flat_shape, self.scalar_type()).to(self.platform());
+  Series plane = ops_internal::scatter(base, self.dim() - 1, index, self).reshape(plane_shape);
+  // Move the plane's axes (last two) to (d1, d2).
+  std::vector<std::int64_t> perm(static_cast<std::size_t>(nd_out));
+  std::int64_t next_batch = 0;
+  for (std::int64_t pos = 0; pos < nd_out; ++pos) {
+    if (pos == d1) perm[static_cast<std::size_t>(pos)] = nd_out - 2;
+    else if (pos == d2) perm[static_cast<std::size_t>(pos)] = nd_out - 1;
+    else perm[static_cast<std::size_t>(pos)] = next_batch++;
+  }
+  return plane.permute(std::span<const std::int64_t>(perm.data(), perm.size()));
+}
+
+// trace over any pair of axes: the sum of diagonal(offset, dim1, dim2) over
+// the diagonal axis, so a 2-D input still gives a scalar and a higher-rank
+// input keeps its remaining axes.
+static Series trace_nd_(const Series& self, std::int64_t offset, std::int64_t dim1, std::int64_t dim2) {
+  const Series d = diagonal_nd_(self, offset, dim1, dim2);
+  return ops_internal::sum(d, d.dim() - 1, /*keepdim=*/false);
 }
 
 static Series isclose_impl(const Series& a, const Series& b, double rtol, double atol, bool equal_nan) {
@@ -6875,14 +6964,14 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       const std::array<std::int64_t, 1> dims{{1}};
       return flip_impl(self, std::span<const std::int64_t>(dims.data(), dims.size()), "fliplr");
     }
-    if (op == "trace") return ops_internal::sum(diag_extract_2d(self, /*diagonal=*/0));
+    if (op == "trace") return self.dim() == 2 ? ops_internal::sum(diag_extract_2d(self, /*diagonal=*/0)) : trace_nd_(self, 0, 0, 1);
     if (op == "diag") {
       if (self.dim() == 1) return diag_embed_from_1d(self, /*diagonal=*/0);
       return diag_extract_2d(self, /*diagonal=*/0);
     }
-    if (op == "diagonal") return diag_extract_2d(self, /*diagonal=*/0);
+    if (op == "diagonal") return diagonal_nd_(self, /*offset=*/0, 0, 1);
     if (op == "diagflat") return diag_embed_from_1d(self, /*diagonal=*/0);
-    if (op == "diag_embed") return diag_embed_from_1d(self, /*diagonal=*/0);
+    if (op == "diag_embed") return diag_embed_nd_(self, 0, -2, -1);
     if (op == "rot90") return rot90_impl(self, 1, 0, 1);
     if (op == "dct") return trig_xform_impl(self, /*dim=*/-1, TrigXform::Dct);
     if (op == "idct") return trig_xform_impl(self, /*dim=*/-1, TrigXform::Idct);
@@ -7191,9 +7280,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         if (self.dim() == 1) return diag_embed_from_1d(self, (std::int64_t)s);
         return diag_extract_2d(self, (std::int64_t)s);
       }
-      if (op == "diagonal") return diag_extract_2d(self, (std::int64_t)s);
+      if (op == "diagonal") return diagonal_nd_(self, (std::int64_t)s, 0, 1);
       if (op == "diagflat") return diag_embed_from_1d(self, (std::int64_t)s);
-      if (op == "diag_embed") return diag_embed_from_1d(self, (std::int64_t)s);
+      if (op == "diag_embed") return diag_embed_nd_(self, (std::int64_t)s, -2, -1);
+      if (op == "trace") return trace_nd_(self, (std::int64_t)s, 0, 1);
       if (op == "sum") return ops_internal::sum(self, (std::int64_t)s, /*keepdim=*/false);
       if (op == "mean") return ops_internal::mean(self, (std::int64_t)s, /*keepdim=*/false);
       if (op == "nansum") return nan_sum_impl(self, (std::int64_t)s, /*keepdim=*/false);
@@ -7796,15 +7886,9 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto diagonal = as_i64(args[0]);
       const auto dim1 = as_i64(args[1]);
       const auto dim2 = as_i64(args[2]);
-      if (op == "diagonal") {
-        PLUSS_CHECK(self.dim() == 2, "diagonal: currently implemented for 2D");
-        auto d1 = wrap_dim(dim1, self.dim(), "diagonal");
-        auto d2 = wrap_dim(dim2, self.dim(), "diagonal");
-        PLUSS_CHECK(d1 != d2, "diagonal: dim1 and dim2 must differ");
-        if (d1 == 0 && d2 == 1) return diag_extract_2d(self, diagonal);
-        if (d1 == 1 && d2 == 0) return diag_extract_2d(self.transpose(0, 1), diagonal);
-        return not_impl(op, args, self);
-      }
+      if (op == "diagonal") return diagonal_nd_(self, diagonal, dim1, dim2);
+      if (op == "trace") return trace_nd_(self, diagonal, dim1, dim2);
+      if (op == "diag_embed") return diag_embed_nd_(self, diagonal, dim1, dim2);
     }
 
     // histc(bins, min, max)

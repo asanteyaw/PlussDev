@@ -1,0 +1,14 @@
+# Functions and operators
+
+Chapters, in reading order:
+
+- [Calculus 1: Functions](functions/calculus_01_functions.md)
+- [Calculus 2: Derivatives](functions/calculus_02_derivatives.md)
+- [Calculus 3: Vector Calculus](functions/calculus_03_vector_calculus.md)
+- [Calculus 4: Integrals](functions/calculus_04_integrals.md)
+- [Calculus 5: Operators](functions/calculus_05_operators.md)
+- [Calculus 6: Worked Problems](functions/calculus_06_worked_problems.md)
+- [Calculus 7: Complex Functions](functions/calculus_07_complex_functions.md)
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

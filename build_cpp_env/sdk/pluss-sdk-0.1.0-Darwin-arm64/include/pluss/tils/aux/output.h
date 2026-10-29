@@ -218,6 +218,20 @@ void render_number(std::ostream& os, N value, const ResolvedPrint& r) {
     return;
   }
 
+  // Notation::Metric scales the number itself with an SI suffix (k, M, G, ...), the same scale
+  // humanize_scale uses for Humanize::Metric. It is a notation, not a separate humanize mode, so it
+  // applies even when humanize is left at None.
+  if (r.notation == Notation::Metric) {
+    const auto sc = humanize_scale(static_cast<double>(value), Humanize::Metric);
+    auto [p, ec] = std::to_chars(buf, buf + sizeof buf, sc.value,
+                                 std::chars_format::fixed, (r.humanize_precision > 0 ? r.humanize_precision : 0));
+    (void)ec;
+    std::string body(buf, p);
+    if (r.trim_trailing_zeros) num_trim_zeros_(body, '.');
+    num_finalize_(os, std::move(body), sc.unit, r);
+    return;
+  }
+
   if constexpr (std::is_integral_v<N>) {
     const int base = r.notation == Notation::Hex     ? 16
                    : r.notation == Notation::Octal   ? 8
@@ -590,11 +604,21 @@ decltype(auto) fmt_arg(T&& value) {
 #endif
 
 // ── engine-support: trailing PrintOptions detection + arg-pack peel ───────
+// Decides whether the last argument of a call is a PrintOptions. The check lives in a function with
+// `if constexpr`, so the empty-pack case never names a last element, and a call with no arguments
+// compiles as an ordinary call.
 template <class... Args>
-inline constexpr bool trailing_options_v =
-    sizeof...(Args) > 0 &&
-    is_print_options_v<
+constexpr bool trailing_options_fn_() {
+  if constexpr (sizeof...(Args) == 0) {
+    return false;
+  } else {
+    return is_print_options_v<
         std::tuple_element_t<sizeof...(Args) - 1, std::tuple<std::remove_cvref_t<Args>...>>>;
+  }
+}
+
+template <class... Args>
+inline constexpr bool trailing_options_v = trailing_options_fn_<Args...>();
 
 template <class F, class Tuple, std::size_t... I>
 decltype(auto) apply_peel_last_(F&& f, Tuple&& t, std::index_sequence<I...>) {

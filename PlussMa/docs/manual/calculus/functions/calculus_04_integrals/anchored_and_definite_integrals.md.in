@@ -1,0 +1,154 @@
+# Anchored and definite integrals
+
+[Back to Integrals](../calculus_04_integrals.md)
+
+An antiderivative is defined only up to a constant. The two `integral` operators fix the constant by naming the limits, and they exist in two forms.
+
+```cpp
+operators::Operator operators::integral(std::string_view variable, double lower);                // anchored
+operators::Operator operators::integral(std::string_view variable, double lower, double upper);  // definite
+```
+
+| Form | Result for `f` | Depends on `variable`? |
+|---|---|---|
+| `integral(x, a)` | `F(x) = ∫ₐˣ f(t) dt` | yes: the argument is the upper limit |
+| `integral(x, a, b)` | `∫ₐᵇ f(t) dt` | no: the limits are fixed numbers |
+
+The limits `a` and `b` must be finite numbers. A fixed-bound integral binds and removes the integrated variable from the result's public variable list. Other variables remain and are carried through, so a definite integral of `f(x, a)` over `x` is a one-variable function of `a`; a definite integral of `f(x)` is a zero-argument function.
+
+## Exact and numerical results
+
+Whether the result is exact is decided by the same rule table as for antiderivatives. If the integrand has an exact primitive, the integral is the primitive evaluated at the limits (`Structural`); otherwise it is computed by numerical quadrature when the function is evaluated (`Quadrature`).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *kind(const math::Function &f) { return f.provenance() == math::Provenance::Structural ? "exact" : "quadrature"; }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const math::Function square = math::function({"x"}, [](math::Function x) { return x.pow(2); });
+  const math::Function gaussian = math::function({"x"}, [](math::Function x) { return (-x.pow(2)).exp(); });
+
+  // Anchored at 1: F(x) = (x^3 - 1) / 3.
+  const math::Function anchored = operators::integral("x", 1.0)(square);
+  const auto x = pluss::make_series({1.0, 2.0, 4.0});
+  out.writeln("anchored x^2 from 1   (", kind(anchored), ")", anchored({x}).pull<double>(), " (x^3-1)/3:", x.pow(3).sub(1.0).div(3.0).pull<double>());
+
+  // Definite: x is bound by the limits, so no argument remains.
+  const math::Function definite = operators::integral("x", 1.0, 3.0)(square);
+  out.writeln("definite x^2, 1 to 3  (", kind(definite), ")", definite().item<double>(), " (26/3 = 8.6666667)");
+
+  // The same Gaussian integral, anchored and definite, both numerical.
+  const math::Function g_anchored = operators::integral("x", 0.0)(gaussian);
+  const math::Function g_definite = operators::integral("x", 0.0, 1.0)(gaussian);
+  out.writeln("anchored exp(-x^2) at 1 (", kind(g_anchored), ")", g_anchored({pluss::make_series(1.0, as_f64())}).item<double>());
+  out.writeln("definite exp(-x^2) 0..1 (", kind(g_definite), ")", g_definite().item<double>(), " (0.74682413)");
+
+  // Reversed and equal limits follow the usual conventions.
+  out.writeln("reversed, 1 to 0:", operators::integral("x", 1.0, 0.0)(gaussian)().item<double>(), " equal limits:", operators::integral("x", 1.0, 1.0)(gaussian)().item<double>());
+}
+```
+
+The anchored integral of `x²` from 1 is (x³ − 1)/3: 0 at the anchor, 7/3 at 2 and 21 at 4, and it is exact. The definite integral from 1 to 3 is 26/3 exactly. For the Gaussian no closed form is in the table, so both forms are numerical, and they give the same 0.74682413 because the anchored function evaluated at 1 is the definite integral from 0 to 1. Swapping the limits changes the sign, and equal limits give exactly zero.
+
+## Other variables are carried through
+
+When the integrand has parameters, the definite integral is a function of the parameters, evaluated for all of them at once. The next program integrates exp(−(a x)²) over [0, 1] for three values of `a` in one call. Because `x` is bound by the limits, `a` is the only argument.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const math::Function f = math::function({"x", "a"}, [](math::Function x, math::Function a) { return (-(x * a).pow(2)).exp(); });
+  const math::Function area = operators::integral("x", 0.0, 1.0)(f);
+  out.writeln("variables of the integral:", area.variables()[0], " arity", area.arity());
+
+  const auto a = pluss::make_series({0.5, 1.0, 2.0});
+  const auto result = area({a});
+  out.writeln("a                ", a.pull<double>());
+  out.writeln("integral         ", result.pull<double>());
+  std::vector<double> exact;
+  for (const double value : a.pull<double>()) exact.push_back(std::sqrt(M_PI) / 2.0 * std::erf(value) / value);
+  out.writeln("sqrt(pi) erf(a)/(2a)", exact);
+
+  // The anchored form also carries the other variables, at one upper limit.
+  const math::Function anchored = operators::integral("x", 0.0)(f);
+  out.writeln("anchored, x = 1  ", anchored({pluss::make_series(1.0, as_f64()), a}).pull<double>());
+}
+```
+
+The integral reports one variable, `a`, and arity one. The three values agree with the closed form √π erf(a)/(2a) to every printed digit, and they came from one call: the library integrates the whole batch of parameter values at the same quadrature nodes. The anchored form still has `x` as its upper-limit argument and, evaluated at 1, gives the same three numbers.
+
+## Errors and limits
+
+| Request | Result |
+|---|---|
+| a non-finite limit (`INFINITY`, `NaN`) | error when the operator is applied |
+| an empty variable name | error when the operator is created |
+| a variable that the function does not have | error when the operator is applied |
+| an integrand that is infinite at an endpoint | error from the integrand's own domain check |
+
+Quadrature evaluates the integrand at the endpoints, so an integrand that is singular there, such as `1/x` on `[0, 1]` or `1/sqrt(x)` on `[0, 1]`, is reported through the integrand's own domain error rather than returned as a number. The program shows each.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+#include <functional>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static void attempt(OutputEngine &out, const char *label, const std::function<void()> &call) {
+  try {
+    call();
+    out.writeln(label, "-> no error");
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(label, "->", text.substr(0, text.find('\n')));
+  }
+}
+
+int main() {
+  OutputEngine out;
+  const math::Function gaussian = math::function({"x"}, [](math::Function x) { return (-x.pow(2)).exp(); });
+  const math::Function reciprocal = math::function({"x"}, [](math::Function x) { return 1.0 / x; });
+  const math::Function inverse_root = math::function({"x"}, [](math::Function x) { return 1.0 / x.sqrt(); });
+
+  attempt(out, "empty variable name        ", [] { (void)operators::antiderivative(""); });
+  attempt(out, "empty name, anchored       ", [] { (void)operators::integral("", 0.0); });
+  attempt(out, "missing variable           ", [&] { (void)operators::integral("missing", 0.0)(gaussian); });
+  attempt(out, "infinite lower limit       ", [&] { (void)operators::integral("x", INFINITY)(gaussian); });
+  attempt(out, "NaN upper limit            ", [&] { (void)operators::integral("x", 0.0, NAN)(gaussian); });
+  attempt(out, "1/x over [0, 1]            ", [&] { (void)operators::integral("x", 0.0, 1.0)(reciprocal)(); });
+  attempt(out, "1/sqrt(x) over [0, 1]      ", [&] { (void)operators::integral("x", 0.0, 1.0)(inverse_root)(); });
+  attempt(out, "1/x over [1, 2]            ", [&] { (void)operators::integral("x", 1.0, 2.0)(reciprocal)(); });
+}
+```
+
+The first five rows are checked when the operator is created or applied, before any integrand is evaluated. The last three show endpoint behaviour. `1/x` has an exact primitive, log|x|, which cannot be evaluated at 0, and the error comes from that logarithm; `1/sqrt(x)` is integrated numerically, the rule evaluates the integrand at the endpoint 0, and the error comes from the division. Both integrals are in fact improper, and the correct answers (infinite for `1/x`, 2 for `1/sqrt(x)`) are outside the scope of a finite quadrature. Away from the singularity, `1/x` over [1, 2] is fine. For an improper integral, change the variable analytically or integrate from a small positive limit.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

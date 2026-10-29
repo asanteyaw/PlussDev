@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Jumps: the Bates model &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Smiles from Heston" href="smiles_from_heston.html" />
+    <link rel="prev" title="Generic characteristic functions" href="generic_characteristic_functions.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from jumps_the_bates_model.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="jumps-the-bates-model">
+<h1>Jumps: the Bates model<a class="headerlink" href="#jumps-the-bates-model" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../finance_03_heston_and_bates.html"><span class="std std-doc">Back to Heston and Bates</span></a></p>
+<p>The Heston model produces a skew but, over short maturities, too little of it: a diffusion cannot make large moves quickly. Bates (1996) adds jumps to the asset price. Jumps arrive at the rate λ, and each multiplies the price by e^J with J normally distributed with mean m and standard deviation δ:</p>
+<p>dS / S = (r − q − λk) dt + √v dW₁ + (e^J − 1) dN, with k = e^(m + δ²/2) − 1,</p>
+<p>where the variance follows the Heston dynamics. The drift is compensated by λk so that the discounted price is still a martingale.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">kappa</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="n">theta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.04</span><span class="p">,</span><span class="w"> </span><span class="n">sigma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="n">rho</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.7</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.04</span><span class="p">,</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">variance_floor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">;</span><span class="w">   </span><span class="c1">// as for Heston</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">jump_intensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.15</span><span class="p">;</span><span class="w">   </span><span class="c1">// lambda</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">jump_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.08</span><span class="p">;</span><span class="w">       </span><span class="c1">// m</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">jump_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.20</span><span class="p">;</span><span class="w">         </span><span class="c1">// delta</span>
+<span class="p">};</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">prc::bates_price_fft</span><span class="p">(</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend_yield</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">HestonFftOptions</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">prc::bates_price_cos</span><span class="p">(</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend_yield</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">CosOptions</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">prc::bates_price_mc</span><span class="p">(</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">MonteCarloOptions</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span><span class="w">     </span><span class="c1">// Monte Carlo chapter</span>
+<span class="n">prc</span><span class="o">::</span><span class="n">HestonFftResult</span><span class="w"> </span><span class="nf">prc::bates_price_fft_grid</span><span class="p">(</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend_yield</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
+</pre></div>
+</div>
+<p>The Heston parameters have the same meaning and constraints, <code class="docutils literal notranslate"><span class="pre">jump_intensity</span></code> and <code class="docutils literal notranslate"><span class="pre">jump_vol</span></code> must be non-negative, and <code class="docutils literal notranslate"><span class="pre">jump_mean</span></code> finite. The controls are those of the pricers of the same name for Heston.</p>
+<section id="what-the-jump-parameters-do">
+<h2>What the jump parameters do<a class="headerlink" href="#what-the-jump-parameters-do" title="Link to this heading">¶</a></h2>
+<p>With no jumps (<code class="docutils literal notranslate"><span class="pre">jump_intensity</span> <span class="pre">=</span> <span class="pre">0</span></code>) the price is the Heston price. More frequent jumps, larger jumps and more volatile jumps all raise the price of an at-the-money option, by adding variance. A negative mean jump makes the left tail heavier, so it raises the price of low strikes (puts) more than high ones. The program varies each parameter, and prices with both the COS and FFT pricers, which agree.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">prc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">finance</span><span class="o">::</span><span class="nn">pricing</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">finance</span><span class="o">::</span><span class="nn">volatility</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">6</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">spot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.01</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="n">base</span><span class="p">;</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">cos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">strike</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100.0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">bates_price_cos</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Call</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">fft</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">bates_price_fft</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Call</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span><span class="w"> </span><span class="p">};</span>
+
+<span class="w">  </span><span class="n">vol</span><span class="o">::</span><span class="n">HestonParams</span><span class="w"> </span><span class="n">heston</span><span class="p">;</span>
+<span class="w">  </span><span class="n">heston</span><span class="p">.</span><span class="n">kappa</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">kappa</span><span class="p">;</span><span class="w"> </span><span class="n">heston</span><span class="p">.</span><span class="n">theta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">theta</span><span class="p">;</span><span class="w"> </span><span class="n">heston</span><span class="p">.</span><span class="n">sigma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">sigma</span><span class="p">;</span><span class="w"> </span><span class="n">heston</span><span class="p">.</span><span class="n">rho</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">rho</span><span class="p">;</span><span class="w"> </span><span class="n">heston</span><span class="p">.</span><span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">v0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;Heston (no jumps)&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">heston_price_cos</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Call</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="n">heston</span><span class="p">));</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;default Bates: COS&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">base</span><span class="p">),</span><span class="w"> </span><span class="s">&quot; FFT&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fft</span><span class="p">(</span><span class="n">base</span><span class="p">));</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;jump_intensity (lambda):&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">lambda</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.15</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="p">.</span><span class="n">jump_intensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lambda</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lambda</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; COS&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="w"> </span><span class="s">&quot; FFT&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fft</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;jump_mean (m):&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mf">-0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="p">.</span><span class="n">jump_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; COS&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;jump_vol (delta):&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span>
+<span class="w">    </span><span class="n">p</span><span class="p">.</span><span class="n">jump_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; COS&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;calls at strikes 80 and 120 with no jumps / default jumps:&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">no_jumps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span>
+<span class="w">  </span><span class="n">no_jumps</span><span class="p">.</span><span class="n">jump_intensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">no_jumps</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">),</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">),</span><span class="w"> </span><span class="s">&quot; |&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">no_jumps</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">),</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Heston (no jumps) 8.542257
+default Bates: COS 9.095602  FFT 9.095602
+jump_intensity (lambda):
+   0.000000  COS 8.542257  FFT 8.542257
+   0.050000  COS 8.729699  FFT 8.729699
+   0.150000  COS 9.095602  FFT 9.095602
+   0.500000  COS 10.291034  FFT 10.291034
+   1.000000  COS 11.808685  FFT 11.808685
+jump_mean (m):
+   -0.300000  COS 9.852320
+   -0.080000  COS 9.095602
+   0.000000  COS 9.021930
+   0.100000  COS 9.117524
+jump_vol (delta):
+   0.000000  COS 8.637799
+   0.100000  COS 8.775644
+   0.200000  COS 9.095602
+   0.400000  COS 9.956165
+calls at strikes 80 and 120 with no jumps / default jumps:
+   22.831101 23.110574  | 1.476924 1.913956
+</pre></div>
+</div>
+<p>With no jumps the Bates price is the Heston price, 8.5423. COS and FFT agree to six decimals everywhere. The price rises with the jump intensity, from 8.54 through 9.10 at the default 0.15 to 11.81 at an intensity of 1, and with the jump volatility (8.64 with jumps of fixed size, 9.96 at a volatility of 0.4). The mean jump size has a smaller effect and is U-shaped, with a minimum near zero (9.85 at −0.3, 9.02 at 0 and 9.12 at 0.1), because the compensator removes the effect of the mean on the forward. The jumps raise both wings: the call at strike 80 goes from 22.83 to 23.11 and the call at strike 120 from 1.477 to 1.914, a rise of 30%.</p>
+</section>
+<section id="parity-and-the-martingale-property">
+<h2>Parity and the martingale property<a class="headerlink" href="#parity-and-the-martingale-property" title="Link to this heading">¶</a></h2>
+<p>Put-call parity holds for the Bates prices, which is the statement that the compensated jump process leaves the forward price unchanged: C − P = S e^(−qT) − K e^(−rT) however large the jump parameters. The program checks it for several settings, with both pricers.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">prc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">finance</span><span class="o">::</span><span class="nn">pricing</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">finance</span><span class="o">::</span><span class="nn">volatility</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">sci</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">spot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">105.0</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.03</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.01</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.5</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spot</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dividend</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">maturity</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">strike</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">rate</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">maturity</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;lambda   m      delta   COS: C - P - forward    FFT: C - P - forward&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">lambda</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mf">-0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="n">p</span><span class="p">;</span>
+<span class="w">        </span><span class="n">p</span><span class="p">.</span><span class="n">jump_intensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lambda</span><span class="p">;</span>
+<span class="w">        </span><span class="n">p</span><span class="p">.</span><span class="n">jump_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">        </span><span class="n">p</span><span class="p">.</span><span class="n">jump_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">delta</span><span class="p">;</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">cos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">bates_price_cos</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Call</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">bates_price_cos</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Put</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">fft</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">bates_price_fft</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Call</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">prc</span><span class="o">::</span><span class="n">bates_price_fft</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Put</span><span class="p">,</span><span class="w"> </span><span class="n">spot</span><span class="p">,</span><span class="w"> </span><span class="n">strike</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">,</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="n">maturity</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span>
+<span class="w">        </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">lambda</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="p">,</span><span class="w"> </span><span class="n">cos</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">forward</span><span class="p">,</span><span class="w"> </span><span class="n">fft</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">forward</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>lambda   m      delta   COS: C - P - forward    FFT: C - P - forward
+1.00e-01 -2.00e-01 1.00e-01 4.44e-16 9.33e-15
+1.00e-01 -2.00e-01 3.00e-01 7.55e-15 4.44e-16
+1.00e-01 1.00e-01 1.00e-01 7.55e-15 -1.33e-15
+1.00e-01 1.00e-01 3.00e-01 9.33e-15 9.33e-15
+5.00e-01 -2.00e-01 1.00e-01 9.33e-15 9.33e-15
+5.00e-01 -2.00e-01 3.00e-01 2.22e-15 9.33e-15
+5.00e-01 1.00e-01 1.00e-01 7.55e-15 7.55e-15
+5.00e-01 1.00e-01 3.00e-01 5.77e-15 7.55e-15
+2.00e+00 -2.00e-01 1.00e-01 4.00e-15 4.00e-15
+2.00e+00 -2.00e-01 3.00e-01 4.00e-15 7.55e-15
+2.00e+00 1.00e-01 1.00e-01 7.55e-15 7.55e-15
+2.00e+00 1.00e-01 3.00e-01 4.44e-16 4.00e-15
+</pre></div>
+</div>
+<p>Parity holds to rounding (10⁻¹⁴) for every combination of jump parameters, with both pricers, which is the statement that the compensated jumps leave the forward price unchanged.</p>
+</section>
+<section id="invalid-parameters">
+<h2>Invalid parameters<a class="headerlink" href="#invalid-parameters" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">prc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">finance</span><span class="o">::</span><span class="nn">pricing</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">finance</span><span class="o">::</span><span class="nn">volatility</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">edit</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="n">p</span><span class="p">;</span>
+<span class="w">    </span><span class="n">edit</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">prc</span><span class="o">::</span><span class="n">bates_price_cos</span><span class="p">(</span><span class="n">prc</span><span class="o">::</span><span class="n">Call</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.03</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span>
+<span class="w">      </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;-&gt; no error&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">      </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;bates_price_cos: &quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">17</span><span class="p">;</span>
+<span class="w">      </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="s">&quot;jump_intensity = -1  &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">jump_intensity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="s">&quot;jump_vol = -0.1      &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">jump_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-0.1</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="s">&quot;jump_mean = NaN      &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">jump_mean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="s">&quot;kappa = 0            &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">kappa</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="s">&quot;rho = -1             &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="n">vol</span><span class="o">::</span><span class="n">BatesParams</span><span class="w"> </span><span class="o">&amp;</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">rho</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>jump_intensity = -1   -&gt; jump_intensity must be finite and &gt;= 0
+jump_vol = -0.1       -&gt; jump_vol must be finite and &gt;= 0
+jump_mean = NaN       -&gt; jump_mean must be finite
+kappa = 0             -&gt; kappa must be finite and &gt; 0
+rho = -1              -&gt; rho must be in (-1,1)
+</pre></div>
+</div>
+<p>Each invalid parameter is rejected with its message.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/finance/pricing/finance_03_heston_and_bates/jumps_the_bates_model.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

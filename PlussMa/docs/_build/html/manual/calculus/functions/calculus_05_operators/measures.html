@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Integration against a measure &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Vector, variational and adjoint operators" href="vector_variational_and_adjoint.html" />
+    <link rel="prev" title="Fourier and Laplace transforms" href="integral_transforms.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from measures.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="integration-against-a-measure">
+<h1>Integration against a measure<a class="headerlink" href="#integration-against-a-measure" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../calculus_05_operators.html"><span class="std std-doc">Back to Operators</span></a></p>
+<p>There is no measure type. A measure is carried by the operator that integrates against it, and measure algebra is the operator algebra you already have: a mixture is <code class="docutils literal notranslate"><span class="pre">linear_combination</span></code>, a change of measure is <code class="docutils literal notranslate"><span class="pre">multiply</span></code> by the Radon–Nikodym density, a product measure is <code class="docutils literal notranslate"><span class="pre">compose</span></code> of two integrals. Each operator returns an analytic <code class="docutils literal notranslate"><span class="pre">Function</span></code> of the remaining variables.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Entry point</p></th>
+<th class="head"><p>Measure</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">measure::lebesgue(x,</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">null_points)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dμ</span> <span class="pre">=</span> <span class="pre">dx</span></code> on <code class="docutils literal notranslate"><span class="pre">[a,</span> <span class="pre">b]</span></code>; null points are never sampled</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">measure::weighted(x,</span> <span class="pre">density,</span> <span class="pre">a,</span> <span class="pre">b)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dμ</span> <span class="pre">=</span> <span class="pre">ρ</span> <span class="pre">dx</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">measure::atomic(x,</span> <span class="pre">points,</span> <span class="pre">weights)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Σ</span> <span class="pre">wᵢ</span> <span class="pre">δ_{xᵢ}</span></code>: the exact sum <code class="docutils literal notranslate"><span class="pre">Σ</span> <span class="pre">wᵢ</span> <span class="pre">f(xᵢ)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">measure::stieltjes(x,</span> <span class="pre">cdf,</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">jump_points,</span> <span class="pre">jump_sizes)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dF</span></code>: the density of the continuous part plus explicit jumps</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::measure::lebesgue</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">upper</span><span class="p">,</span><span class="w"> </span><span class="n">RangeView</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">null_points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::measure::weighted</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">density</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">upper</span><span class="p">,</span><span class="w"> </span><span class="n">RangeView</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">null_points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::measure::atomic</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="n">RangeView</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">points</span><span class="p">,</span><span class="w"> </span><span class="n">RangeView</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">weights</span><span class="p">);</span>
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::measure::stieltjes</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">cdf</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">lower</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">upper</span><span class="p">,</span><span class="w"> </span><span class="n">RangeView</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">jump_points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">RangeView</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">jump_sizes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+</pre></div>
+</div>
+<p>Atomic measures are exact finite sums; the others are integrals evaluated by quadrature when you supply a value. They save and load except <code class="docutils literal notranslate"><span class="pre">weighted</span></code> and <code class="docutils literal notranslate"><span class="pre">stieltjes</span></code>, which hold a function.</p>
+<section id="expectations-mixtures-and-a-change-of-measure">
+<h2>Expectations, mixtures and a change of measure<a class="headerlink" href="#expectations-mixtures-and-a-change-of-measure" title="Link to this heading">¶</a></h2>
+<p>The second moment of a standard normal is 1. A mixture <code class="docutils literal notranslate"><span class="pre">½·Lebesgue[0,1]</span> <span class="pre">+</span> <span class="pre">2·δ₁</span></code> integrates <code class="docutils literal notranslate"><span class="pre">x²</span></code> to <code class="docutils literal notranslate"><span class="pre">½/3</span> <span class="pre">+</span> <span class="pre">2</span></code>. Weighting Lebesgue measure on <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> by the density <code class="docutils literal notranslate"><span class="pre">3x²</span></code> and integrating <code class="docutils literal notranslate"><span class="pre">x</span></code> gives <code class="docutils literal notranslate"><span class="pre">3/4</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">measure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="o">::</span><span class="nn">measure</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">8</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">square</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">identity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">pdf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">).</span><span class="n">exp</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">acos</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">));</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">density</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">3.0</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;E[x^2], normal       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">measure</span><span class="o">::</span><span class="n">weighted</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pdf</span><span class="p">,</span><span class="w"> </span><span class="mf">-10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">)(</span><span class="n">square</span><span class="p">)().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">mixture</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">linear_combination</span><span class="p">({{</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">measure</span><span class="o">::</span><span class="n">lebesgue</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">measure</span><span class="o">::</span><span class="n">atomic</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">})}});</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;mixture of x^2       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">mixture</span><span class="p">(</span><span class="n">square</span><span class="p">)().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;   exact &quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">tilted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">compose</span><span class="p">(</span><span class="n">measure</span><span class="o">::</span><span class="n">lebesgue</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">),</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">multiply</span><span class="p">(</span><span class="n">density</span><span class="p">));</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;change of measure    &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">tilted</span><span class="p">(</span><span class="n">identity</span><span class="p">)().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;   exact 0.75&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">xy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">compose</span><span class="p">(</span><span class="n">measure</span><span class="o">::</span><span class="n">lebesgue</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">),</span><span class="w"> </span><span class="n">measure</span><span class="o">::</span><span class="n">lebesgue</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">));</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;product measure      &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">product</span><span class="p">(</span><span class="n">xy</span><span class="p">)().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;   exact 1&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>E[x^2], normal        1.00000000
+mixture of x^2        2.16666667    exact  2.16666667
+change of measure     0.75000000    exact 0.75
+product measure       1.00000000    exact 1
+</pre></div>
+</div>
+</section>
+<section id="range-partition-on-arrays">
+<h2>Range partition on arrays<a class="headerlink" href="#range-partition-on-arrays" title="Link to this heading">¶</a></h2>
+<p>The Lebesgue integral partitions the range of the integrand instead of the domain. That evaluator is eager and works on arrays, so it lives with the numerical integrals rather than the operators: <code class="docutils literal notranslate"><span class="pre">integ::lebesgue(f,</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">options)</span></code> returns the value with a certified <code class="docutils literal notranslate"><span class="pre">lower</span></code>/<code class="docutils literal notranslate"><span class="pre">upper</span></code> bracket and the refinement history, and <code class="docutils literal notranslate"><span class="pre">integ::measure_of(f,</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">level)</span></code> returns <code class="docutils literal notranslate"><span class="pre">μ({x</span> <span class="pre">:</span> <span class="pre">f(x)</span> <span class="pre">&gt;</span> <span class="pre">level})</span></code>. Grading the cells (<code class="docutils literal notranslate"><span class="pre">options.grading</span></code>) handles endpoint singularities such as <code class="docutils literal notranslate"><span class="pre">1/√x</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">integ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">subsp</span><span class="o">::</span><span class="nn">math</span><span class="o">::</span><span class="nn">integ</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">8</span><span class="p">));</span>
+<span class="w">  </span><span class="n">integ</span><span class="o">::</span><span class="n">LebesgueOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">  </span><span class="n">options</span><span class="p">.</span><span class="n">grading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">integ</span><span class="o">::</span><span class="n">lebesgue</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">rsqrt</span><span class="p">();</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;int x^-1/2 = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;  bracket [&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">lower</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">upper</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;]  converged &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">converged</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">integ</span><span class="o">::</span><span class="n">measure_of</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">square</span><span class="p">();</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.36</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;mu(x^2 &gt; 0.36) = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">mu</span><span class="p">.</span><span class="n">value</span><span class="p">.</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;   exact 0.4&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>int x^-1/2 =  2.00000000   bracket [ 2.00000000 ,  2.00000000 ]  converged  true
+mu(x^2 &gt; 0.36) =  0.40000000    exact 0.4
+</pre></div>
+</div>
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/calculus/functions/calculus_05_operators/measures.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

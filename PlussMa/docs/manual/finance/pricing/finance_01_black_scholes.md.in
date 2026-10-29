@@ -1,0 +1,42 @@
+# Finance 1: Black-Scholes
+
+The Black-Scholes model prices a European option on an asset with constant volatility. It is the reference that every richer model in this guide reduces to, and the basis of the quoting convention of implied volatility. After this chapter you can price calls and puts, read and check the five Greeks, price whole surfaces with `Series` inputs, and know exactly which inputs are rejected.
+
+Every program is complete, and its output is the output of that program.
+
+## The calls
+
+```cpp
+double prc::black_scholes_price(prc::OptionType type, double spot, double strike, double rate, double dividend_yield, double maturity, double volatility);
+Series prc::black_scholes_price(type, const Series &spot, double strike, double rate, double dividend_yield, double maturity, double volatility, Config cfg = {});
+Series prc::black_scholes_price(type, const Series &spot, const Series &time_to_maturity, double strike, double rate, double dividend_yield, double volatility, Config cfg = {});
+
+prc::BlackScholesGreeks       prc::black_scholes_greeks(type, spot, strike, rate, dividend_yield, maturity, volatility);        // delta, gamma, vega, theta, rho
+prc::BlackScholesSeriesGreeks prc::black_scholes_greeks(type, const Series &spot, ...);                                         // the same two Series forms
+double prc::black_scholes_delta(...);  prc::black_scholes_gamma(...);  prc::black_scholes_vega(...);  prc::black_scholes_theta(...);  prc::black_scholes_rho(...);
+```
+
+`prc` stands for `pluss::subsp::math::finance::pricing`. `OptionType` is `prc::Call` or `prc::Put` (`Auto` belongs to the object API). Rates and yields are annual and continuously compounded, `maturity` and `time_to_maturity` are in years, and `volatility` is annual.
+
+| Input | Constraint |
+|---|---|
+| `spot`, `strike`, `volatility` | finite and positive |
+| `maturity`, `time_to_maturity` | finite and non-negative; zero gives the intrinsic value |
+| `rate`, `dividend_yield` | finite; may be negative |
+
+## Programs
+
+- [Prices and put-call parity](finance_01_black_scholes/prices_and_parity.md)
+- [The Greeks](finance_01_black_scholes/the_greeks.md)
+- [Batches of spots and maturities](finance_01_black_scholes/batches_of_spots_and_maturities.md)
+- [Edge cases and errors](finance_01_black_scholes/edge_cases_and_errors.md)
+
+## Checklist
+
+1. Quote `vega` and `rho` per unit, `theta` per year: scale them before comparing with a market convention.
+2. A call minus a put must equal `S e^(−qT) − K e^(−rT)` whatever the volatility; use it to test any pricer.
+3. Two `Series` arguments are paired element by element, not combined into a grid.
+4. A zero volatility is an error: use a small positive one, or the discounted forward intrinsic value.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

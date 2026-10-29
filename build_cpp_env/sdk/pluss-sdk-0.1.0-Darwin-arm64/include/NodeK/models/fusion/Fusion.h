@@ -4,7 +4,7 @@
 
 namespace pluss::ai {
 
-inline Series ff(const Series& input, const Series& weight, const Series& bias = Series()) {
+inline Series ff(const Series& input, const Series& weight, const Series& bias = pluss::series::undefined()) {
   return ::pluss::detail::nn::affine_(input, weight, bias, "ff");
 }
 

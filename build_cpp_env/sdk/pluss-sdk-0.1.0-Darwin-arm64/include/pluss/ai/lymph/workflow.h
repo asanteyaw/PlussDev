@@ -356,7 +356,7 @@ class Workflow final {
   }
 
   Workflow& learn_(const pluss::table::DataFrame& x,
-                   const pluss::table::Thread& y,
+                   const pluss::table::Slate& y,
                    const TrainOptions& options = {}) {
     detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::learn_(x,y)");
     model_.learn_(policy_.apply(x), y, options);
@@ -386,7 +386,7 @@ class Workflow final {
   }
 
   [[nodiscard]] Workflow learn(const pluss::table::DataFrame& x,
-                               const pluss::table::Thread& y,
+                               const pluss::table::Slate& y,
                                const TrainOptions& options = {}) const {
     Workflow out(*this);
     out.learn_(x, y, options);
@@ -527,7 +527,7 @@ class Workflow final {
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
-                                    const pluss::table::Thread& y,
+                                    const pluss::table::Slate& y,
                                     const AssessOptions& options = {}) const {
     detail::require_workflow_xy_policy_safe_(policy_, "lymph::workflow::Workflow::assess(x,y)");
     return model_.assess(policy_.apply(x), y, options);

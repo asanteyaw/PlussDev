@@ -67,7 +67,7 @@ Series full_like_(const Series& like, double value, Config cfg) {
 
 void validate_option_type_(OptionType type, const char* op) {
   PLUSS_CHECK(type == OptionType::Call || type == OptionType::Put,
-              std::string("subsp::math::finance::pricing::") + op + ": unsupported option type");
+              std::string("subsp::math::finance::pricing::") + op + ": option type must be Call or Put (OptionType::Auto is only valid for an instrument that supplies is_call)");
 }
 
 BsSeriesCore bs_core_(OptionType type,

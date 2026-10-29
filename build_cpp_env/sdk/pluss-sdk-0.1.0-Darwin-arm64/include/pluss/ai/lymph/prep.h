@@ -89,9 +89,9 @@ struct TimeSeriesSplit {
   }
 };
 
-[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread) {
-  if (thread.kind() == pluss::table::ThreadKind::Series) return thread.as_series();
-  return thread.cast({.series_dtype = ScalarType::Float64}).series().as_series();
+[[nodiscard]] inline Series as_stratify_series(const pluss::table::Slate& slate) {
+  if (slate.kind() == pluss::table::SlateKind::Series) return slate.as_series();
+  return slate.cast({.series_dtype = ScalarType::Float64}).series().as_series();
 }
 
 [[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options) {
@@ -135,10 +135,10 @@ struct TimeSeriesSplit {
   const IndexSplit indices = make_holdout_indices(frame, options);
   const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
                                                    .reshape({indices.train_indices.numel()})
-                                                   .to_vec<std::int64_t>();
+                                                   .host<std::int64_t>().array().data;
   const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
                                                  .reshape({indices.test_indices.numel()})
-                                                 .to_vec<std::int64_t>();
+                                                 .host<std::int64_t>().array().data;
   return HoldoutSplit{
       .train_set = frame.take(train_idx),
       .test_set = frame.take(test_idx),
@@ -169,10 +169,10 @@ struct TimeSeriesSplit {
   for (const IndexSplit& indices : plan.folds) {
     const std::vector<std::int64_t> train_idx = indices.train_indices.to(pluss::pCPU, ScalarType::Int64)
                                                     .reshape({indices.train_indices.numel()})
-                                                    .to_vec<std::int64_t>();
+                                                    .host<std::int64_t>().array().data;
     const std::vector<std::int64_t> test_idx = indices.test_indices.to(pluss::pCPU, ScalarType::Int64)
                                                    .reshape({indices.test_indices.numel()})
-                                                   .to_vec<std::int64_t>();
+                                                   .host<std::int64_t>().array().data;
     out.push_back(TimeSeriesSplit{
         .train_set = frame.take(train_idx),
         .test_set = frame.take(test_idx),
@@ -189,11 +189,10 @@ struct TimeSeriesSplit {
   if (!axis.has_value()) {
     ::pluss::throw_error("prep::timeseries_split(frame,time_feature): missing time feature \"" + std::string(time_feature) + "\".");
   }
-  if (axis->kind() != pluss::table::ThreadKind::Timeline &&
-      axis->kind() != pluss::table::ThreadKind::TimeIndex) {
+  if (axis->kind() != pluss::table::SlateKind::Timeline) {
     ::pluss::throw_error(
         "prep::timeseries_split(frame,time_feature): time feature \"" + std::string(time_feature) +
-        "\" must be timeline/timeindex. Cast it first.");
+        "\" must be timeline. Cast it first.");
   }
   const pluss::table::DataFrame ordered = frame.arrange(std::array<std::string_view, 1>{time_feature}, true, true);
   return timeseries_split(ordered, options);
@@ -231,7 +230,7 @@ template <class WrapperT>
 inline void prep_refresh_encoder_attrs_(WrapperT&) {}
 
 template <class WrapperT>
-inline void prep_before_thread_fit_(WrapperT&, const pluss::table::Thread&) {}
+inline void prep_before_slate_fit_(WrapperT&, const pluss::table::Slate&) {}
 
 [[nodiscard]] inline std::uint64_t prep_key_for_value_(double value) {
   if (value == 0.0) value = 0.0;
@@ -558,10 +557,10 @@ public:
   }
 
   OutlierIsolator& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
-  [[nodiscard]] pluss::table::Thread infer(const pluss::table::DataFrame& frame, const InferOptions& options = {}) const;
-  [[nodiscard]] pluss::table::Thread score_samples(const pluss::table::DataFrame& frame,
+  [[nodiscard]] pluss::table::Slate infer(const pluss::table::DataFrame& frame, const InferOptions& options = {}) const;
+  [[nodiscard]] pluss::table::Slate score_samples(const pluss::table::DataFrame& frame,
                                                    const InferOptions& options = {}) const;
-  [[nodiscard]] pluss::table::Thread learn_infer(const pluss::table::DataFrame& frame,
+  [[nodiscard]] pluss::table::Slate learn_infer(const pluss::table::DataFrame& frame,
                                                  const TrainOptions& learn_options = {},
                                                  const InferOptions& infer_options = {});
   [[nodiscard]] pluss::table::DataFrame filter_inliers(const pluss::table::DataFrame& frame,
@@ -649,7 +648,7 @@ private:
     bool learned_{false};                                                                        \
   };
 
-#define PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(WrapperName, OptionsType)                  \
+#define PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_SLATE(WrapperName, OptionsType)                  \
   class WrapperName final {                                                                      \
   public:                                                                                        \
     explicit WrapperName(OptionsType options = {})                                               \
@@ -676,10 +675,10 @@ private:
                                                     const TrainOptions& learn_options = {},      \
                                                     const InferOptions& infer_options = {});     \
                                                                                                  \
-    WrapperName& learn(const pluss::table::Thread& feature, const TrainOptions& options = {});  \
-    [[nodiscard]] Series map(const pluss::table::Thread& feature,                                \
+    WrapperName& learn(const pluss::table::Slate& feature, const TrainOptions& options = {});  \
+    [[nodiscard]] Series map(const pluss::table::Slate& feature,                                \
                              const InferOptions& options = {}) const;                            \
-    [[nodiscard]] Series learn_map(const pluss::table::Thread& feature,                          \
+    [[nodiscard]] Series learn_map(const pluss::table::Slate& feature,                          \
                                    const TrainOptions& learn_options = {},                       \
                                    const InferOptions& infer_options = {});                      \
                                                                                                  \
@@ -711,7 +710,7 @@ private:
         const char* where);                                                                      \
     void refresh_state_();                                                                       \
     friend void prep_refresh_encoder_attrs_(WrapperName& wrapper);                               \
-    friend void prep_before_thread_fit_(WrapperName& wrapper, const pluss::table::Thread& feature); \
+    friend void prep_before_slate_fit_(WrapperName& wrapper, const pluss::table::Slate& feature); \
     ::pluss::ai::nodej::prep::WrapperName core_{};                                               \
     std::unordered_map<std::uint64_t, std::string> category_labels_by_key_{};                   \
     bool feature_names_pinned_{false};                                                           \
@@ -722,10 +721,10 @@ PLUSS_NODEJ_DECLARE_PREP_WRAPPER(MinMaxScaler, MinMaxScalerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(RobustScaler, RobustScalerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(NeighborImputer, NeighborImputerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(IterativeImputer, IterativeImputerOptions)
-PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(OneHotEncoder, OneHotEncoderOptions)
-PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(FrequencyEncoder, FrequencyEncoderOptions)
-PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(OrdinalEncoder, OrdinalEncoderOptions)
-PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD(LabelEncoder, LabelEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_SLATE(OneHotEncoder, OneHotEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_SLATE(FrequencyEncoder, FrequencyEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_SLATE(OrdinalEncoder, OrdinalEncoderOptions)
+PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_SLATE(LabelEncoder, LabelEncoderOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(VectorNormalizer, VectorNormalizerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(MaxAbsScaler, MaxAbsScalerOptions)
 PLUSS_NODEJ_DECLARE_PREP_WRAPPER(QuantileMap, QuantileMapOptions)
@@ -739,13 +738,13 @@ inline void prep_refresh_encoder_attrs_(OneHotEncoder& wrapper);
 inline void prep_refresh_encoder_attrs_(FrequencyEncoder& wrapper);
 inline void prep_refresh_encoder_attrs_(OrdinalEncoder& wrapper);
 inline void prep_refresh_encoder_attrs_(LabelEncoder& wrapper);
-inline void prep_before_thread_fit_(OneHotEncoder& wrapper, const pluss::table::Thread& feature);
-inline void prep_before_thread_fit_(FrequencyEncoder& wrapper, const pluss::table::Thread& feature);
-inline void prep_before_thread_fit_(OrdinalEncoder& wrapper, const pluss::table::Thread& feature);
-inline void prep_before_thread_fit_(LabelEncoder& wrapper, const pluss::table::Thread& feature);
+inline void prep_before_slate_fit_(OneHotEncoder& wrapper, const pluss::table::Slate& feature);
+inline void prep_before_slate_fit_(FrequencyEncoder& wrapper, const pluss::table::Slate& feature);
+inline void prep_before_slate_fit_(OrdinalEncoder& wrapper, const pluss::table::Slate& feature);
+inline void prep_before_slate_fit_(LabelEncoder& wrapper, const pluss::table::Slate& feature);
 
 #undef PLUSS_NODEJ_DECLARE_PREP_WRAPPER
-#undef PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_THREAD
+#undef PLUSS_NODEJ_DECLARE_PREP_WRAPPER_WITH_SLATE
 
 class CategoryIndexer final {
 public:
@@ -767,15 +766,15 @@ public:
   }
 
   CategoryIndexer& learn(const pluss::table::DataFrame& frame, const TrainOptions& options = {});
-  CategoryIndexer& learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  CategoryIndexer& learn(const pluss::table::Slate& feature, const TrainOptions& options = {});
 
   [[nodiscard]] pluss::table::DataFrame map(const pluss::table::DataFrame& frame, const InferOptions& options = {}) const;
-  [[nodiscard]] Series map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] Series map(const pluss::table::Slate& feature, const InferOptions& options = {}) const;
 
   [[nodiscard]] pluss::table::DataFrame learn_map(const pluss::table::DataFrame& frame,
                                                   const TrainOptions& learn_options = {},
                                                   const InferOptions& infer_options = {});
-  [[nodiscard]] Series learn_map(const pluss::table::Thread& feature,
+  [[nodiscard]] Series learn_map(const pluss::table::Slate& feature,
                                  const TrainOptions& learn_options = {},
                                  const InferOptions& infer_options = {});
 
@@ -800,7 +799,7 @@ public:
 private:
   [[nodiscard]] static OneHotEncoderOptions to_one_hot_options_(const CategoryIndexerOptions& options);
   [[nodiscard]] static Series encode_feature_(const OneHotEncoder& encoder,
-                                              const pluss::table::Thread& feature,
+                                              const pluss::table::Slate& feature,
                                               bool one_based,
                                               const InferOptions& options,
                                               const char* where);

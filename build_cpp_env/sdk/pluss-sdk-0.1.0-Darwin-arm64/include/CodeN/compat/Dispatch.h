@@ -56,8 +56,6 @@ using CodenValues = ::std::vector<CodenValue>;
 ::pluss::coden::Note  call_note (::std::string_view op, const ::pluss::coden::Note&  self, const CodenValues& args);
 
 // Additional typed entry points.
-::std::vector<::std::uint8_t> call_u8list_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args);
-::std::vector<::std::int64_t> call_i64list_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args);
 TokenBatch call_tokenbatch_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args);
 
 } // namespace pluss::coden::_compat

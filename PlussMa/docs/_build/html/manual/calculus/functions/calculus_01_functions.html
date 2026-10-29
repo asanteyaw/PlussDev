@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Calculus 1: Functions &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Building and evaluating a function" href="calculus_01_functions/building_and_evaluating.html" />
+    <link rel="prev" title="Functions and operators" href="../functions.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from calculus_01_functions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="calculus-1-functions">
+<h1>Calculus 1: Functions<a class="headerlink" href="#calculus-1-functions" title="Link to this heading">¶</a></h1>
+<p>A formula is the thing calculus acts on, and in most code a formula is trapped inside a C++ function that can only be called. <code class="docutils literal notranslate"><span class="pre">pluss::math::Function</span></code> makes it a value: you write the formula once, Pluss records its structure, and from then on the same object can be evaluated on any data, differentiated, integrated, combined with others, transformed by operators, and saved. After this chapter you can build a function of several variables, evaluate it by position or by name on scalars, vectors and grids, state what you know about its variables so that it simplifies, predict which inputs it rejects, and wrap existing <code class="docutils literal notranslate"><span class="pre">Series</span></code> code when the formula cannot be restated.</p>
+<p>Every program is complete and its output is the output of that program. Values are printed with <code class="docutils literal notranslate"><span class="pre">OutputEngine</span></code> and shown to the digits that are meaningful for the point being made.</p>
+<section id="the-mental-model">
+<h2>The mental model<a class="headerlink" href="#the-mental-model" title="Link to this heading">¶</a></h2>
+<p>The header is <code class="docutils literal notranslate"><span class="pre">&lt;pluss/ma.h&gt;</span></code>; the types are <code class="docutils literal notranslate"><span class="pre">pluss::math::Function</span></code> and, from Chapter 5, <code class="docutils literal notranslate"><span class="pre">pluss::operators::Operator</span></code>. The programs use the aliases <code class="docutils literal notranslate"><span class="pre">namespace</span> <span class="pre">math</span> <span class="pre">=</span> <span class="pre">pluss::math;</span></code> and <code class="docutils literal notranslate"><span class="pre">namespace</span> <span class="pre">operators</span> <span class="pre">=</span> <span class="pre">pluss::operators;</span></code>.</p>
+<ul class="simple">
+<li><p><strong>A <code class="docutils literal notranslate"><span class="pre">Function</span></code> is an immutable value.</strong> Copies are cheap and share the same recorded formula; nothing you do to a copy, or to the arrays you evaluated it on, changes it. It can be shared between threads.</p></li>
+<li><p><strong>It is built by tracing.</strong> <code class="docutils literal notranslate"><span class="pre">math::function({&quot;x&quot;,</span> <span class="pre">&quot;y&quot;},</span> <span class="pre">callable)</span></code> runs <code class="docutils literal notranslate"><span class="pre">callable</span></code> once with placeholder <code class="docutils literal notranslate"><span class="pre">Function</span></code>s for <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>, and records the operations it performs. The formula is the graph of those operations, not the C++ code.</p></li>
+<li><p><strong>It is evaluated on <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">f({x,</span> <span class="pre">y})</span></code> or <code class="docutils literal notranslate"><span class="pre">f({{&quot;y&quot;,</span> <span class="pre">y},</span> <span class="pre">{&quot;x&quot;,</span> <span class="pre">x}})</span></code> replays the graph with real arrays. Shapes broadcast, the floating-point precision and the platform of the arguments are kept, and the result is a <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<li><p><strong>It preserves real or complex Series values.</strong> Real inputs receive strict real-domain checks; complex inputs use principal branches and reject their singular points.</p></li>
+</ul>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Entry point</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">math::function(variables,</span> <span class="pre">callable)</span></code></p></td>
+<td><p>traces a callable into a <code class="docutils literal notranslate"><span class="pre">Function</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">math::function(double)</span></code>, <code class="docutils literal notranslate"><span class="pre">math::function(Series)</span></code></p></td>
+<td><p>a constant</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f(...)</span></code></p></td>
+<td><p>evaluates by position or by name</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f.arity()</span></code>, <code class="docutils literal notranslate"><span class="pre">f.variables()</span></code>, <code class="docutils literal notranslate"><span class="pre">f.rank()</span></code>, <code class="docutils literal notranslate"><span class="pre">f.shape()</span></code></p></td>
+<td><p>describes the function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f.arg(&quot;x&quot;)</span></code></p></td>
+<td><p>the coordinate <code class="docutils literal notranslate"><span class="pre">x</span></code> of <code class="docutils literal notranslate"><span class="pre">f</span></code> as a function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f.assume(&quot;x&quot;,</span> <span class="pre">assumption)</span></code>, <code class="docutils literal notranslate"><span class="pre">f.assumption(&quot;x&quot;)</span></code></p></td>
+<td><p>states and reads what is known about a variable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f.provenance()</span></code></p></td>
+<td><p>how the function was obtained</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">add</span></code>, <code class="docutils literal notranslate"><span class="pre">sub</span></code>, <code class="docutils literal notranslate"><span class="pre">mul</span></code>, <code class="docutils literal notranslate"><span class="pre">div</span></code>, <code class="docutils literal notranslate"><span class="pre">pow</span></code>, <code class="docutils literal notranslate"><span class="pre">exp</span></code>, <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">log1p</span></code>, <code class="docutils literal notranslate"><span class="pre">expm1</span></code>, <code class="docutils literal notranslate"><span class="pre">sqrt</span></code>, <code class="docutils literal notranslate"><span class="pre">sin</span></code>, <code class="docutils literal notranslate"><span class="pre">cos</span></code>, <code class="docutils literal notranslate"><span class="pre">tan</span></code>, <code class="docutils literal notranslate"><span class="pre">sinh</span></code>, <code class="docutils literal notranslate"><span class="pre">cosh</span></code>, <code class="docutils literal notranslate"><span class="pre">tanh</span></code>, <code class="docutils literal notranslate"><span class="pre">abs</span></code>, unary <code class="docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>the expression vocabulary</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="calculus_01_functions/building_and_evaluating.html"><span class="std std-doc">Building and evaluating a function</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_01_functions/the_expression_vocabulary.html"><span class="std std-doc">The expression vocabulary</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_01_functions/simplification_and_assumptions.html"><span class="std std-doc">Simplification and assumptions</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_01_functions/domains_and_errors.html"><span class="std std-doc">Domains and errors</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_01_functions/functions_from_series_code.html"><span class="std std-doc">Functions from Series code</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write the formula with <code class="docutils literal notranslate"><span class="pre">Function</span></code> arithmetic inside the callable; do not branch on values, because there are none while tracing.</p></li>
+<li><p>Name each variable once; evaluate with every variable, by position or by name.</p></li>
+<li><p>Name a sub-expression you use twice and reuse it: it is simplified and evaluated once.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">assume</span></code> only for facts that are true of the problem. It is a promise and the data is not checked against it.</p></li>
+<li><p>Expect an error, not a <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, from <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">log1p</span></code>, <code class="docutils literal notranslate"><span class="pre">sqrt</span></code> and division outside their domains; do not expect one from <code class="docutils literal notranslate"><span class="pre">pow</span></code>.</p></li>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">Function</span></code> vocabulary when you can. An opaque <code class="docutils literal notranslate"><span class="pre">Series</span></code> callable works but has no exact derivative and cannot be saved.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/calculus/functions/calculus_01_functions.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

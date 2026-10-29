@@ -73,6 +73,8 @@ f_ratio  F 2.3685, p 0.2501
 vartest2 F 2.3685, p 0.2501
 ```
 
+`f_ratio` and `vartest2` are two names for the same function and give identical results: F 2.37 and p 0.25.
+
 ### Example 2
 
 One-sided: is the variance of A larger than that of B?
@@ -102,6 +104,8 @@ Output
 ```text
 F 2.3685, one-sided p 0.1251, critical 3.5005
 ```
+
+For the one-sided question the p-value is halved to 0.125, and the critical value 3.50 is above the statistic 2.37, so the variance of A is not shown to be larger.
 
 ## See Also
 

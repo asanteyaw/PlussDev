@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -137,6 +137,7 @@ skewed: skewness 2.4012, kurtosis 9.6191, JB 557.3073, p 0.0000 (reject)
 heavy-tailed: skewness -0.8449, kurtosis 6.3158, JB 115.4137, p 0.0000 (reject)
 </pre></div>
 </div>
+<p>The normal sample keeps the null (p 0.31) with skewness near 0 and kurtosis near 3, the values a normal distribution has. The skewed sample, a squared normal, has skewness 2.40 and kurtosis 9.62, and the heavy-tailed sample has kurtosis 6.32; both are rejected with p-values that print as 0.0000. The statistic is built from exactly these two numbers, <code class="docutils literal notranslate"><span class="pre">JB</span> <span class="pre">=</span> <span class="pre">n/6</span> <span class="pre">*</span> <span class="pre">(skewness^2</span> <span class="pre">+</span> <span class="pre">(kurtosis</span> <span class="pre">-</span> <span class="pre">3)^2</span> <span class="pre">/</span> <span class="pre">4)</span></code>, so the result always says which departure drove the rejection.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -161,6 +162,7 @@ heavy-tailed: skewness -0.8449, kurtosis 6.3158, JB 115.4137, p 0.0000 (reject)
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>n 8, JB 0.7251, p 0.4093, 5% critical value 2.0938 (the chi-squared limit would be 5.9915)
 </pre></div>
 </div>
+<p>With only 8 observations the large-sample chi-squared limit is not a safe guide: the library uses a finite-sample critical value, 2.09 here, where the chi-squared limit would be 5.99. The test statistic of 0.73 is far below it, so the null is kept, and the p-value 0.41 comes from the same finite-sample reference.</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -184,6 +186,7 @@ heavy-tailed: skewness -0.8449, kurtosis 6.3158, JB 115.4137, p 0.0000 (reject)
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>JB 25.2657, critical 12.4959, p 0.0021 (reject)
 </pre></div>
 </div>
+<p>At a stricter level the critical value rises to 12.50. The statistic 25.27 still exceeds it, and the p-value 0.0021 agrees: the sample is not normal at the 1% level either.</p>
 </section>
 </section>
 <section id="see-also">
@@ -212,13 +215,16 @@ heavy-tailed: skewness -0.8449, kurtosis 6.3158, JB 115.4137, p 0.0000 (reject)
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

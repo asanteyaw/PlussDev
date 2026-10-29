@@ -14,6 +14,8 @@ struct FoldAssessResult {
   Series metrics = pluss::series::undefined();
   Series train_indices = pluss::series::undefined();
   Series test_indices = pluss::series::undefined();
+  double fit_time_seconds = 0.0;
+  double score_time_seconds = 0.0;
 };
 
 struct CrossAssessReport {

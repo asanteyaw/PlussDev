@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-#include "CodeH/core/TimeIndex.h"
+#include "CodeH/core/TimelineIndexAccessor.h"
 #include "CodeH/core/Timeline.h"
 
 namespace pluss::codeh::_compat {
@@ -22,21 +22,21 @@ pluss::codem::Series call_series_timeline(std::string_view op, const Timeline& s
 pluss::codem::Series call_series_duration(std::string_view op, const Duration& self, const Args& args);
 pluss::coden::Note call_note_duration(std::string_view op, const Duration& self, const Args& args);
 std::vector<std::int64_t> call_i64vec_duration(std::string_view op, const Duration& self, const Args& args);
-pluss::codem::Series call_series_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-std::int64_t call_i64_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-bool call_bool_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-std::string call_string_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-pluss::coden::Note call_note_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-Timeline call_timeline_from_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-TimeIndex call_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-TimeIndex::ResampleBins call_resamplebins_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
-TimeIndex::AlignUnion call_alignunion_timeindex(std::string_view op, const TimeIndex& self, const Args& args);
+pluss::codem::Series call_series_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+std::int64_t call_i64_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+bool call_bool_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+std::string call_string_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+pluss::coden::Note call_note_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+Timeline call_timeline_from_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+TimelineIndexAccessor call_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+TimelineIndexAccessor::ResampleBins call_resample_bins_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
+TimelineIndexAccessor::AlignUnion call_align_union_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args);
 pluss::coden::Note call_note_timeline(std::string_view op, const Timeline& self, const Args& args);
 std::string call_string_timeline(std::string_view op, const Timeline& self, const Args& args);
 bool call_bool_timeline(std::string_view op, const Timeline& self, const Args& args);
 std::vector<std::int64_t> call_i64vec_timeline(std::string_view op, const Timeline& self, const Args& args);
 
-// Static-style: construct TimeIndex from a Timeline.
-TimeIndex call_timeindex_from_timeline(std::string_view op, const Timeline& self, const Args& args);
+// Static-style: construct TimelineIndexAccessor from a Timeline.
+TimelineIndexAccessor call_index_accessor_from_timeline(std::string_view op, const Timeline& self, const Args& args);
 
 } // namespace pluss::codeh::_compat

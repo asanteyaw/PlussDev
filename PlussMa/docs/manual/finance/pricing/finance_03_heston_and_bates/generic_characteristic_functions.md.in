@@ -1,0 +1,152 @@
+# Generic characteristic functions
+
+[Back to Heston and Bates](../finance_03_heston_and_bates.md)
+
+The FFT and COS pricers need nothing from a model but the characteristic function of ln S_T under the pricing measure, φ(u) = E[e^(i u ln S_T)]. The model-specific pricers wrap one built-in characteristic function; the generic pricers take any function you supply.
+
+```cpp
+using prc::CharacteristicFn = std::function<std::complex<double>(std::complex<double>)>;
+double prc::option_price_cos(type, spot, strike, rate, dividend_yield, maturity, const prc::CharacteristicFn &, const prc::CosOptions & = {}, Config = {});
+double prc::option_price_fft(type, spot, strike, rate, dividend_yield, maturity, const prc::CharacteristicFn &, const prc::HestonFftOptions & = {}, Config = {});
+prc::HestonFftResult prc::option_price_fft_grid(type, spot, rate, dividend_yield, maturity, const prc::CharacteristicFn &, const prc::HestonFftOptions & = {}, Config = {});
+```
+
+The function is evaluated at complex arguments (the FFT pricer evaluates it at u − (α + 1) i), so it must be defined there: that is, the model must have finite moments of order α + 1. It must be the *plain* characteristic function, not discounted: both pricers apply the discount factor. `spot`, `rate` and `dividend_yield` are used for the discounting and the parity of puts; the drift of the model must already be risk neutral, E[S_T] = S e^((r − q) T), which the function you supply must encode.
+
+The COS pricer estimates the mean and variance of ln S_T from the function by finite differences with step `cumulant_step`, to place its interval [a, b]. A series form takes a function of a `Series` instead ([COS pricer](the_cos_pricer.md)).
+
+## Black-Scholes as a check
+
+A characteristic function that is Gaussian, φ(u) = exp(i u μ − σ² T u² / 2) with μ = ln S + (r − q − σ²/2) T, is Black-Scholes. Both generic pricers must then reproduce the Black-Scholes price.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace prc = pluss::subsp::math::finance::pricing;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0, sigma = 0.2;
+  const std::complex<double> i(0.0, 1.0);
+  const prc::CharacteristicFn gaussian = [&](std::complex<double> u) {
+    const double mu = std::log(spot) + (rate - dividend - 0.5 * sigma * sigma) * maturity;
+    return std::exp(i * u * mu - 0.5 * sigma * sigma * maturity * u * u);
+  };
+  out.writeln("strike   Black-Scholes   COS          FFT");
+  for (double strike : {80.0, 100.0, 125.0}) {
+    out.writeln(strike, prc::black_scholes_price(prc::Call, spot, strike, rate, dividend, maturity, sigma), prc::option_price_cos(prc::Call, spot, strike, rate, dividend, maturity, gaussian),
+                prc::option_price_fft(prc::Call, spot, strike, rate, dividend, maturity, gaussian));
+  }
+  out.writeln("a put:", prc::black_scholes_price(prc::Put, spot, 110.0, rate, dividend, maturity, sigma), prc::option_price_cos(prc::Put, spot, 110.0, rate, dividend, maturity, gaussian),
+              prc::option_price_fft(prc::Put, spot, 110.0, rate, dividend, maturity, gaussian));
+}
+```
+
+The COS price from the Gaussian characteristic function equals the Black-Scholes price to eight decimals, calls and put. The FFT agrees to within 4 × 10⁻⁶ (22.318545 against 22.318548 at strike 80, and exact at the money).
+
+## A new model: Merton's jump diffusion
+
+Merton (1976) adds log-normal jumps to a Black-Scholes diffusion, without stochastic volatility. Its characteristic function is
+
+φ(u) = exp( i u (ln S + (r − q − λk − σ²/2) T) − σ² T u² / 2 + λ T (e^(i u m − δ² u² / 2) − 1) ), with k = e^(m + δ²/2) − 1,
+
+and, unlike most models, its price is also known as a series: a Poisson-weighted sum of Black-Scholes prices, Σₙ e^(−λ′T) (λ′T)ⁿ / n! · BS(σₙ, rₙ) with λ′ = λ(1 + k), σₙ² = σ² + n δ² / T and rₙ = r − λk + n ln(1 + k) / T. That gives an independent check of a user-supplied characteristic function.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace prc = pluss::subsp::math::finance::pricing;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
+  const double sigma = 0.15, lambda = 0.8, m = -0.1, delta = 0.25;
+  const double k = std::exp(m + 0.5 * delta * delta) - 1.0;
+  const std::complex<double> i(0.0, 1.0);
+  const prc::CharacteristicFn merton = [&](std::complex<double> u) {
+    const double drift = std::log(spot) + (rate - dividend - lambda * k - 0.5 * sigma * sigma) * maturity;
+    return std::exp(i * u * drift - 0.5 * sigma * sigma * maturity * u * u + lambda * maturity * (std::exp(i * u * m - 0.5 * delta * delta * u * u) - 1.0));
+  };
+
+  auto series = [&](prc::OptionType type, double strike) {
+    const double lambda_prime = lambda * (1.0 + k);
+    double total = 0.0, weight = std::exp(-lambda_prime * maturity);
+    for (int n = 0; n < 80; ++n) {
+      const double sigma_n = std::sqrt(sigma * sigma + n * delta * delta / maturity);
+      const double rate_n = rate - lambda * k + n * std::log(1.0 + k) / maturity;
+      total += weight * prc::black_scholes_price(type, spot, strike, rate_n, dividend, maturity, sigma_n);
+      weight *= lambda_prime * maturity / (n + 1);
+    }
+    return total;
+  };
+  out.writeln("strike   Poisson series   COS          FFT");
+  for (double strike : {80.0, 100.0, 125.0}) {
+    out.writeln(strike, series(prc::Call, strike), prc::option_price_cos(prc::Call, spot, strike, rate, dividend, maturity, merton), prc::option_price_fft(prc::Call, spot, strike, rate, dividend, maturity, merton));
+  }
+  out.writeln("a put at 110:", series(prc::Put, 110.0), prc::option_price_cos(prc::Put, spot, 110.0, rate, dividend, maturity, merton), prc::option_price_fft(prc::Put, spot, 110.0, rate, dividend, maturity, merton));
+
+  // Implied volatilities of the model: a smile with no stochastic volatility.
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> smile;
+  for (double strike : {80.0, 90.0, 100.0, 110.0, 120.0}) {
+    smile.push_back(prc::implied_vol(prc::Call, prc::option_price_cos(prc::Call, spot, strike, rate, dividend, maturity, merton), spot, strike, rate, dividend, maturity));
+  }
+  out.writeln("implied volatilities at strikes 80 to 120:", smile);
+}
+```
+
+The Poisson series, the COS price and the FFT price agree: the COS price equals the series to eight decimals, and the FFT price is within 5 × 10⁻⁶. The model's implied volatilities, 0.2886, 0.2696, 0.2556, 0.2482 and 0.2468, form a downward-sloping smile that comes from negative jumps alone, with no stochastic volatility.
+
+## The cumulant step
+
+For a supplied function, the interval [a, b] of the COS expansion is built from the mean and variance of ln S_T found by finite differences of the function at zero. The step `cumulant_step` must be small enough to be accurate and large enough to be free of rounding: a step below 1e-6 is rejected, because the variance, which is a second difference of the function, is then lost to rounding and the price would be wrong. The program prices the Merton option across the accepted steps, then tries one that is too small.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace prc = pluss::subsp::math::finance::pricing;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
+  const double sigma = 0.15, lambda = 0.8, m = -0.1, delta = 0.25;
+  const double k = std::exp(m + 0.5 * delta * delta) - 1.0;
+  const std::complex<double> i(0.0, 1.0);
+  const prc::CharacteristicFn merton = [&](std::complex<double> u) {
+    const double drift = std::log(spot) + (rate - dividend - lambda * k - 0.5 * sigma * sigma) * maturity;
+    return std::exp(i * u * drift - 0.5 * sigma * sigma * maturity * u * u + lambda * maturity * (std::exp(i * u * m - 0.5 * delta * delta * u * u) - 1.0));
+  };
+  prc::CosOptions reference;
+  const double exact = prc::option_price_cos(prc::Call, spot, 100.0, rate, dividend, maturity, merton, reference);
+  out.writeln("default price", exact);
+  out.print_defaults(PrintOptions{}.sci(2));
+  for (double step : {1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6}) {
+    prc::CosOptions o;
+    o.cumulant_step = step;
+    out.writeln("cumulant_step", step, " difference", prc::option_price_cos(prc::Call, spot, 100.0, rate, dividend, maturity, merton, o) - exact);
+  }
+  try {
+    prc::CosOptions o;
+    o.cumulant_step = 1e-8;
+    prc::option_price_cos(prc::Call, spot, 100.0, rate, dividend, maturity, merton, o);
+  } catch (const std::exception &e) {
+    const std::string message = e.what();
+    const auto start = message.find("option_price_cos: ") + 18;
+    out.writeln("cumulant_step 1e-8 ->", message.substr(start, message.find('\n') - start));
+  }
+}
+```
+
+The price does not change with `cumulant_step` over the whole accepted range, from 10⁻¹ to 10⁻⁶ (the differences are below 10⁻¹¹). A step of 10⁻⁸ is rejected.

@@ -1,0 +1,110 @@
+# The normal family and least squares
+
+[Back to Generalised Linear Models](../regression_02_generalised_linear_models.md)
+
+A GLM with the `Normal` family and the identity link is ordinary least squares, reached by a different route: IRLS with constant weights converges in one step. The point estimates, the covariance, the deviance and the likelihood must therefore agree with `ols_fit`. One thing differs on purpose. Least squares estimates the residual variance, so its test statistics are Student *t* with `df_resid` degrees of freedom. A GLM reports its tests and intervals with the normal distribution, the large-sample reference, for every family. With few degrees of freedom the GLM's p-values are smaller and its intervals narrower than the *t*-based ones.
+
+| Quantity | Least squares | Normal-family GLM |
+|---|---|---|
+| coefficients, covariance | same | same |
+| residual scale | `mse = sse / df_resid` | `dispersion = deviance / df_resid` (the same number) |
+| sum of squares | `sse` | `deviance` |
+| log-likelihood, AIC, BIC | Gaussian | Gaussian (the same values) |
+| test statistic | `t_values` | `z_values` (the same ratios) |
+| p-values, intervals | Student *t* | standard normal |
+
+## The same fit, twice
+
+The program fits the two-predictor data of the least-squares chapter with `ols_fit` and with `glm_fit`, and prints the largest difference in each shared quantity and then the two sets of p-values and interval half-widths.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  const std::vector<double> x2{3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8};
+  const std::vector<double> noise{0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.3, 0.4, -0.1, 0.2, -0.2, 0.1};
+  std::vector<double> ys, flat;
+  for (std::size_t i = 0; i < x1.size(); ++i) {
+    ys.push_back(2.0 + 1.5 * x1[i] - 0.8 * x2[i] + noise[i]);
+    flat.push_back(x1[i]);
+    flat.push_back(x2[i]);
+  }
+  const auto y = pluss::make_series(ys, {12}, as_f64());
+  const auto x = pluss::make_series(flat, {12, 2}, as_f64());
+
+  const auto ols = reg::ols_fit(y, x);
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Normal;
+  const auto glm = reg::glm_fit(y, x, options);
+
+  out.writeln("iterations", glm.iterations, " converged", glm.converged, " link identity:", glm.link == reg::GLMLink::Identity ? "yes" : "no");
+  out.writeln("coefficients        ", ols.coefficients.sub(glm.coefficients).abs().max().item<double>());
+  out.writeln("covariance          ", ols.covariance.sub(glm.covariance).abs().max().item<double>());
+  out.writeln("std errors          ", ols.std_errors.sub(glm.std_errors).abs().max().item<double>());
+  out.writeln("t values vs z values", ols.t_values.sub(glm.z_values).abs().max().item<double>());
+  out.writeln("residuals           ", ols.residuals.sub(glm.residuals).abs().max().item<double>());
+  out.writeln("mse / dispersion    ", ols.mse, glm.dispersion);
+  out.writeln("sse / deviance      ", ols.sse, glm.deviance);
+  out.writeln("log-likelihood      ", ols.log_likelihood, glm.log_likelihood);
+  out.writeln("AIC / BIC           ", ols.aic, glm.aic, ols.bic, glm.bic);
+  out.writeln("R2 / pseudo R2      ", ols.rsquared, glm.pseudo_rsquared);
+
+  out.print_defaults(PrintOptions{}.sci(3));
+  const auto ols_ci = ols.conf_int.host<double>().array().data;
+  const auto glm_ci = glm.conf_int.host<double>().array().data;
+  out.writeln("p values  (t on 9 df)", ols.p_values.pull<double>(), " (normal)", glm.p_values.pull<double>());
+  out.writeln("interval half-width of b1  (t)", (ols_ci[3] - ols_ci[2]) / 2.0, " (normal)", (glm_ci[3] - glm_ci[2]) / 2.0, " ratio", (ols_ci[3] - ols_ci[2]) / (glm_ci[3] - glm_ci[2]), "= 2.2622 / 1.9600");
+}
+```
+
+Every shared quantity agrees to the six decimals printed, after one iteration: the coefficients, covariance, standard errors, residuals, the residual scale (`mse` and `dispersion` are both 0.058814), the sum of squares and the deviance, the log-likelihood, AIC and BIC, and R² and the pseudo R². The test statistics are the same ratios. They differ only in their reference distribution: with 9 residual degrees of freedom the interval half-width of b₁ is 0.0529 for least squares and 0.0458 for the GLM, in the ratio 2.2622 / 1.9600 = 1.1542 of the two critical values. With few degrees of freedom the normal reference is too optimistic, so for a normal-error model with a small sample prefer the least-squares fit and its *t* intervals.
+
+## A different mean function: the normal family with the log link
+
+The point of the framework is that the family and the link are chosen separately. A normal family with a log link models a positive mean that grows exponentially, μ = exp(b₀ + b₁x), with additive constant-variance errors. That is not the same as least squares on ln y, which models the mean of ln y and assumes multiplicative errors. The program generates a response y = exp(0.5 + 0.2x) + e with additive errors and fits it both ways.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<double> wobble{0.4, -0.3, 0.2, -0.5, 0.3, -0.1, 0.6, -0.4, 0.1, -0.6, 0.5, -0.2, 0.3, -0.7, 0.4, -0.3, 0.6, -0.5, 0.2, -0.4};
+  std::vector<double> xs, ys;
+  for (int i = 0; i < 20; ++i) {
+    xs.push_back(i * 0.5);
+    ys.push_back(std::exp(0.5 + 0.2 * xs.back()) + wobble[i]);
+  }
+  const auto x = pluss::make_series(xs, {20}, as_f64());
+  const auto y = pluss::make_series(ys, {20}, as_f64());
+
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Normal;
+  options.link = reg::GLMLink::Log;
+  const auto glm = reg::glm_fit(y, x, options);
+  const auto on_log_scale = reg::ols_fit(y.log(), x);
+  out.writeln("generating values            [0.5000, 0.2000]");
+  out.writeln("normal family, log link      ", glm.coefficients.pull<double>(), " converged", glm.converged, " iterations", glm.iterations);
+  out.writeln("least squares on ln(y)       ", on_log_scale.coefficients.pull<double>());
+
+  const auto at = pluss::make_series(std::vector<double>{0.0, 5.0, 10.0}, {3}, as_f64());
+  out.writeln("true mean at 0, 5, 10        ", at.mul(0.2).add(0.5).exp().pull<double>());
+  out.writeln("GLM mean (predict, Mean)     ", reg::glm_predict(glm, at).pull<double>());
+  out.writeln("exp of the ln(y) line        ", reg::ols_predict(on_log_scale, at).exp().pull<double>());
+}
+```
+
+The normal family with the log link recovers the generating values closely (0.5137 and 0.1972 against 0.5 and 0.2) in 12 iterations. Least squares on ln y gives 0.5050 and 0.1977, but it estimates a different quantity, the mean of ln y, so exponentiating its line does not give the mean of y. The GLM's `Mean` predictions are fitted to the mean of y on its own scale, and they differ from the exponentiated line at the three test points (1.6714 and 1.6569 against the true mean 1.6487, then 4.4803 and 4.4533 against 4.4817, then 12.0099 and 11.9689 against 12.1825).

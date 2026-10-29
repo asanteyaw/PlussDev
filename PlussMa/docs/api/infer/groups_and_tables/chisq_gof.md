@@ -83,6 +83,8 @@ chi-squared 5.2000 on 5.0000 df, p 0.3920, critical 11.0705
 each expected count 20.0000 of 120.0000 rolls
 ```
 
+For 120 rolls of a fair die each face is expected 20 times. The chi-squared statistic 5.20 on 5 degrees of freedom is below the critical value 11.07, and p 0.39 gives no evidence against a fair die.
+
 ### Example 2
 
 Expected proportions instead of equal probabilities.
@@ -113,6 +115,8 @@ expected counts 17.1429 (five faces) and 34.2857 (the sixth)
 chi-squared 7.8375, p 0.1654
 ```
 
+With expected proportions instead of equal probabilities, five faces are expected 17.14 times and the sixth 34.29 times; the statistic 7.84 on 5 degrees of freedom gives p 0.17. The expected counts are computed from the proportions and the total, so they always add up to the number of observations.
+
 ### Example 3
 
 Each estimated parameter costs a degree of freedom.
@@ -140,6 +144,8 @@ Output
 ```text
 degrees of freedom 4.0000, p 0.2674, critical 9.4877
 ```
+
+Each parameter estimated from the data removes one degree of freedom: with one estimated parameter the test has 4 instead of 5, the critical value falls to 9.49, and p is 0.27. Forgetting this makes the test too lenient.
 
 ## See Also
 

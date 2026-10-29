@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -40,15 +40,17 @@
   <!-- generated from regression_01_least_squares.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
 <section id="regression-1-least-squares">
 <h1>Regression 1: Least Squares<a class="headerlink" href="#regression-1-least-squares" title="Link to this heading">¶</a></h1>
-<p>Least squares fits a line (or a plane) to data by making the sum of squared residuals as small as possible. It is the foundation of regression, and Pluss reports with it everything needed to judge the fit: uncertainty of each coefficient, goodness of fit, and diagnostics. After this chapter you can fit a model, read the result, predict, control the options, deal with missing values, and recognise collinear predictors.</p>
-<p>Every program is complete and its output is the output of that program.</p>
-<section id="the-call">
-<h2>The call<a class="headerlink" href="#the-call" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">reg</span><span class="o">::</span><span class="n">OLSFitResult</span><span class="w"> </span><span class="nf">reg::ols_fit</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">OLSOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
-<span class="n">Series</span><span class="w">            </span><span class="nf">reg::ols_predict</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">OLSFitResult</span><span class="o">&amp;</span><span class="w"> </span><span class="n">fit</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x_new</span><span class="p">,</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<p>Least squares fits a line, a plane or a hyperplane to data by making the sum of squared residuals as small as possible. It is the foundation of regression, and <code class="docutils literal notranslate"><span class="pre">ols_fit</span></code> reports with it everything needed to judge the fit: the uncertainty of each coefficient, the goodness of fit, diagnostics of the residuals, and warnings when the design is unreliable. After this chapter you can fit a model, read every field of the result and check it by hand, predict with intervals, control the options, deal with missing values and collinear predictors, and know which inputs are rejected.</p>
+<p>Every program is complete, and its output is the output of that program.</p>
+<section id="the-calls">
+<h2>The calls<a class="headerlink" href="#the-calls" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">reg</span><span class="o">::</span><span class="n">OLSFitResult</span><span class="w"> </span><span class="nf">reg::ols_fit</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">OLSOptions</span><span class="w"> </span><span class="o">&amp;</span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">Series</span><span class="w">            </span><span class="nf">reg::ols_predict</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">OLSFitResult</span><span class="w"> </span><span class="o">&amp;</span><span class="n">fit</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x_new</span><span class="p">,</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w">       </span><span class="nf">reg::ols_summary</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">OLSFitResult</span><span class="w"> </span><span class="o">&amp;</span><span class="n">fit</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w">     </span><span class="o">&amp;</span><span class="nf">reg::print_ols_summary</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="n">os</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">reg</span><span class="o">::</span><span class="n">OLSFitResult</span><span class="w"> </span><span class="o">&amp;</span><span class="n">fit</span><span class="p">);</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">y</span></code> has shape <code class="docutils literal notranslate"><span class="pre">[n]</span></code>; the predictors <code class="docutils literal notranslate"><span class="pre">x</span></code> have shape <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">p]</span></code> (a vector <code class="docutils literal notranslate"><span class="pre">[n]</span></code> is one predictor). By default an intercept column is added, and its coefficient comes first, named <code class="docutils literal notranslate"><span class="pre">const</span></code>; the others are named <code class="docutils literal notranslate"><span class="pre">x1</span></code>, <code class="docutils literal notranslate"><span class="pre">x2</span></code>, … or by <code class="docutils literal notranslate"><span class="pre">predictor_names</span></code>. A model with no predictors and an intercept (<code class="docutils literal notranslate"><span class="pre">x</span></code> of shape <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">0]</span></code>) fits the sample mean.</p>
+<p><code class="docutils literal notranslate"><span class="pre">y</span></code> has shape <code class="docutils literal notranslate"><span class="pre">[n]</span></code> and the predictors <code class="docutils literal notranslate"><span class="pre">x</span></code> have shape <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">p]</span></code>; <a class="reference internal" href="regression_01_least_squares/shapes_and_inputs.html"><span class="std std-doc">Shapes and inputs</span></a> lists the accepted shorthand. By default an intercept column is added, and its coefficient comes first, named <code class="docutils literal notranslate"><span class="pre">const</span></code>. A model with no predictors and an intercept (<code class="docutils literal notranslate"><span class="pre">x</span></code> of shape <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">0]</span></code>) fits the sample mean.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">OLSOptions</span></code></p></th>
@@ -58,7 +60,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
-<td><p>confidence level: intervals have coverage <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code></p></td>
+<td><p>the intervals have coverage <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">−</span> <span class="pre">alpha</span></code></p></td>
 <td><p>0.05</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_intercept</span></code></p></td>
@@ -66,16 +68,24 @@
 <td><p>true</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">drop_missing</span></code></p></td>
-<td><p>drop rows with a non-finite value in <code class="docutils literal notranslate"><span class="pre">y</span></code> or <code class="docutils literal notranslate"><span class="pre">x</span></code> (false makes them an error)</p></td>
+<td><p>drop rows with a non-finite value; <code class="docutils literal notranslate"><span class="pre">false</span></code> makes them an error</p></td>
 <td><p>true</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rcond</span></code></p></td>
-<td><p>relative cutoff for treating a direction of the design as rank deficient</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>precision weights (finite, non-negative; zero removes the row)</p></td>
+<td><p>none</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rcond</span></code></p></td>
+<td><p>relative cutoff below which a direction of the design counts as lost</p></td>
 <td><p>1e-12</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">response_name</span></code>, <code class="docutils literal notranslate"><span class="pre">predictor_names</span></code></p></td>
-<td><p>labels used by the summary</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">response_name</span></code>, <code class="docutils literal notranslate"><span class="pre">predictor_names</span></code></p></td>
+<td><p>labels used by the summary and <code class="docutils literal notranslate"><span class="pre">coefficient_names</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;y&quot;</span></code>, none</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">covariance</span></code></p></td>
+<td><p>the covariance estimator; <code class="docutils literal notranslate"><span class="pre">Nonrobust</span></code> is the only one</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Nonrobust</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -96,25 +106,28 @@
 <td><p>the <code class="docutils literal notranslate"><span class="pre">[k,</span> <span class="pre">k]</span></code> covariance matrix of the coefficients</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fitted_values</span></code>, <code class="docutils literal notranslate"><span class="pre">residuals</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[n]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[n]</span></code>, for the rows used</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nobs</span></code>, <code class="docutils literal notranslate"><span class="pre">rank</span></code>, <code class="docutils literal notranslate"><span class="pre">k_params</span></code>, <code class="docutils literal notranslate"><span class="pre">df_model</span></code>, <code class="docutils literal notranslate"><span class="pre">df_resid</span></code>, <code class="docutils literal notranslate"><span class="pre">dropped_observations</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nobs</span></code>, <code class="docutils literal notranslate"><span class="pre">rank</span></code>, <code class="docutils literal notranslate"><span class="pre">k_params</span></code>, <code class="docutils literal notranslate"><span class="pre">num_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">df_model</span></code>, <code class="docutils literal notranslate"><span class="pre">df_resid</span></code>, <code class="docutils literal notranslate"><span class="pre">dropped_observations</span></code></p></td>
 <td><p>counts</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rsquared</span></code>, <code class="docutils literal notranslate"><span class="pre">adj_rsquared</span></code>, <code class="docutils literal notranslate"><span class="pre">f_stat</span></code>, <code class="docutils literal notranslate"><span class="pre">f_pvalue</span></code></p></td>
 <td><p>goodness of fit</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sse</span></code>, <code class="docutils literal notranslate"><span class="pre">ssr</span></code>, <code class="docutils literal notranslate"><span class="pre">sst</span></code>, <code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">rmse</span></code></p></td>
-<td><p>sums of squares and residual scale</p></td>
+<td><p>sums of squares and the residual scale</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">log_likelihood</span></code>, <code class="docutils literal notranslate"><span class="pre">aic</span></code>, <code class="docutils literal notranslate"><span class="pre">bic</span></code></p></td>
 <td><p>information criteria</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">durbin_watson</span></code>, <code class="docutils literal notranslate"><span class="pre">jarque_bera</span></code> (+ <code class="docutils literal notranslate"><span class="pre">_pvalue</span></code>), <code class="docutils literal notranslate"><span class="pre">skewness</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">durbin_watson</span></code>, <code class="docutils literal notranslate"><span class="pre">jarque_bera</span></code>, <code class="docutils literal notranslate"><span class="pre">omnibus</span></code> (each with a p-value where defined), <code class="docutils literal notranslate"><span class="pre">skewness</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p></td>
 <td><p>residual diagnostics</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">condition_number</span></code>, <code class="docutils literal notranslate"><span class="pre">smallest_eig</span></code>, <code class="docutils literal notranslate"><span class="pre">warnings</span></code></p></td>
 <td><p>conditioning of the design</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">has_intercept</span></code>, <code class="docutils literal notranslate"><span class="pre">covariance_type</span></code>, <code class="docutils literal notranslate"><span class="pre">response_name</span></code>, <code class="docutils literal notranslate"><span class="pre">coefficient_names</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p>what the fit was made with</p></td>
 </tr>
 </tbody>
 </table>
@@ -123,19 +136,29 @@
 <h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="regression_01_least_squares/a_first_fit_checked_by_hand.html"><span class="std std-doc">A first fit, checked by hand</span></a></p></li>
-<li><p><a class="reference internal" href="regression_01_least_squares/the_summary_and_prediction.html"><span class="std std-doc">The summary, and prediction</span></a></p></li>
-<li><p><a class="reference internal" href="regression_01_least_squares/options_and_missing_data.html"><span class="std std-doc">Options and missing data</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/shapes_and_inputs.html"><span class="std std-doc">Shapes and inputs</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/several_predictors.html"><span class="std std-doc">Several predictors</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/every_number_in_the_result.html"><span class="std std-doc">Every number in the result</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/residual_diagnostics.html"><span class="std std-doc">Residual diagnostics</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/the_summary_report.html"><span class="std std-doc">The summary report</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/prediction_and_intervals.html"><span class="std std-doc">Prediction and intervals</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/options.html"><span class="std std-doc">Options</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/case_weights.html"><span class="std std-doc">Case weights</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/missing_data.html"><span class="std std-doc">Missing data</span></a></p></li>
 <li><p><a class="reference internal" href="regression_01_least_squares/collinear_predictors.html"><span class="std std-doc">Collinear predictors</span></a></p></li>
+<li><p><a class="reference internal" href="regression_01_least_squares/errors.html"><span class="std std-doc">Errors</span></a></p></li>
 </ul>
 </section>
 <section id="checklist">
 <h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> is <code class="docutils literal notranslate"><span class="pre">[n]</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">p]</span></code>; the intercept is added and listed first.</p></li>
-<li><p>Read the standard errors and intervals, not just the coefficients.</p></li>
-<li><p>Check <code class="docutils literal notranslate"><span class="pre">warnings</span></code> and <code class="docutils literal notranslate"><span class="pre">condition_number</span></code> before trusting a coefficient.</p></li>
-<li><p>Keep predictions inside the range of the data.</p></li>
-<li><p>Missing values are dropped by default; read <code class="docutils literal notranslate"><span class="pre">dropped_observations</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> is <code class="docutils literal notranslate"><span class="pre">[n]</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">p]</span></code>; the intercept is added and listed first. A row vector <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">p]</span></code> is read as a column.</p></li>
+<li><p>Read the standard errors and intervals, not just the coefficients; combine coefficients through <code class="docutils literal notranslate"><span class="pre">covariance</span></code>.</p></li>
+<li><p>Check <code class="docutils literal notranslate"><span class="pre">warnings</span></code>, <code class="docutils literal notranslate"><span class="pre">rank</span></code> and <code class="docutils literal notranslate"><span class="pre">condition_number</span></code> before trusting a coefficient.</p></li>
+<li><p>Without an intercept, R² and F are measured about zero and cannot be compared with an intercept model’s.</p></li>
+<li><p>Durbin–Watson is meaningful only when the rows are in time order.</p></li>
+<li><p>Predict inside the range of the data; the intervals cannot warn of extrapolation.</p></li>
+<li><p>Incomplete rows are dropped by default; read <code class="docutils literal notranslate"><span class="pre">dropped_observations</span></code>.</p></li>
 </ol>
 <!-- apiref:toctree:start -->
 <div class="toctree-wrapper compound">
@@ -161,13 +184,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../../regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

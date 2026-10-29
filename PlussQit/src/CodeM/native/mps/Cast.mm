@@ -260,6 +260,20 @@ kernel void cast_u8_to_i32(
     uint gid [[thread_position_in_grid]]) {
   out[gid] = (in[gid] == uchar(0)) ? 0 : 1;
 }
+
+kernel void cast_f32_to_c64(
+    const device float* in [[buffer(0)]],
+    device float2* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = float2(in[gid], 0.0f);
+}
+
+kernel void cast_c64_to_f32(
+    const device float2* in [[buffer(0)]],
+    device float* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = in[gid].x;
+}
 )metal";
 
 struct Context {
@@ -301,6 +315,8 @@ struct Context {
   id<MTLComputePipelineState> cast_i64_to_i32{nil};
   id<MTLComputePipelineState> cast_i32_to_u8{nil};
   id<MTLComputePipelineState> cast_u8_to_i32{nil};
+  id<MTLComputePipelineState> cast_f32_to_c64{nil};
+  id<MTLComputePipelineState> cast_c64_to_f32{nil};
   std::string error{};
 };
 
@@ -393,6 +409,8 @@ Context& ctx_() {
       if (!make_pipeline("cast_i64_to_i32", &ctx.cast_i64_to_i32)) return;
       if (!make_pipeline("cast_i32_to_u8", &ctx.cast_i32_to_u8)) return;
       if (!make_pipeline("cast_u8_to_i32", &ctx.cast_u8_to_i32)) return;
+      if (!make_pipeline("cast_f32_to_c64", &ctx.cast_f32_to_c64)) return;
+      if (!make_pipeline("cast_c64_to_f32", &ctx.cast_c64_to_f32)) return;
       ctx.ready = true;
     }
   });
@@ -520,6 +538,12 @@ id<MTLComputePipelineState> choose_pso_(Context& c, ScalarType src, ScalarType d
   if (src == ScalarType::Bool && dst == ScalarType::Int32) {
     return c.cast_u8_to_i32;
   }
+  if (src == ScalarType::Float32 && dst == ScalarType::Complex64) {
+    return c.cast_f32_to_c64;
+  }
+  if (src == ScalarType::Complex64 && dst == ScalarType::Float32) {
+    return c.cast_c64_to_f32;
+  }
   return nil;
 }
 
@@ -535,6 +559,7 @@ std::size_t dtype_bytes_(ScalarType dt) {
     case ScalarType::Int32: return sizeof(std::int32_t);
     case ScalarType::Bool: return sizeof(std::uint8_t);
     case ScalarType::Int64: return sizeof(std::int64_t);
+    case ScalarType::Complex64: return sizeof(float) * 2u;
     default: break;
   }
   return 0;
@@ -576,7 +601,9 @@ bool supports_cast(ScalarType src, ScalarType dst) noexcept {
          (src == ScalarType::Int32 && dst == ScalarType::Int64) ||
          (src == ScalarType::Int64 && dst == ScalarType::Int32) ||
          (src == ScalarType::Int32 && dst == ScalarType::Bool) ||
-         (src == ScalarType::Bool && dst == ScalarType::Int32);
+         (src == ScalarType::Bool && dst == ScalarType::Int32) ||
+         (src == ScalarType::Float32 && dst == ScalarType::Complex64) ||
+         (src == ScalarType::Complex64 && dst == ScalarType::Float32);
 }
 
 void cast(const Series& in, Series& out) {

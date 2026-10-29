@@ -18,6 +18,9 @@ struct OLSOptions {
   bool add_intercept = true;
   bool drop_missing = true;
   double rcond = 1e-12;
+  // Case weights (length n, finite and non-negative) give weighted least squares: row i counts weights[i] times in the sums of squares.
+  // A row of weight zero is not used and is counted in `dropped_observations`. Undefined means every weight is 1.
+  pluss::codem::Series weights = pluss::series::undefined();
   std::string response_name = "y";
   std::vector<std::string> predictor_names{};
   OLSCovarianceType covariance = OLSCovarianceType::Nonrobust;
@@ -50,6 +53,11 @@ struct GLMOptions {
   double rcond = 1e-12;
   std::int64_t max_iter = 200;
   double tol = 1e-8;
+  // Case weights (length n, finite and non-negative) multiply each observation's contribution to the likelihood; a row of weight zero is
+  // not used and is counted in `dropped_observations`. The offset (length n) is a known term added to the linear predictor, for example
+  // the log of the exposure in a Poisson rate model. Both are undefined by default.
+  pluss::codem::Series weights = pluss::series::undefined();
+  pluss::codem::Series offset = pluss::series::undefined();
   std::string response_name = "y";
   std::vector<std::string> predictor_names{};
 };
@@ -69,6 +77,9 @@ struct QuantileOptions {
   std::int64_t max_iter = 500;
   double tol = 1e-7;
   double eps = 1e-6;
+  // Case weights (length n, finite and non-negative): row i counts weights[i] times in the check-function loss, the density estimate and
+  // the covariance, as if it were repeated. A row of weight zero is not used and is counted in `dropped_observations`.
+  pluss::codem::Series weights = pluss::series::undefined();
   std::string response_name = "y";
   std::vector<std::string> predictor_names{};
 };
@@ -80,6 +91,7 @@ struct PolyOptions {
   bool drop_missing = true;
   double rcond = 1e-12;
   double alpha = 0.05;
+  pluss::codem::Series weights = pluss::series::undefined();  // case weights, as for OLSOptions
   std::string response_name = "y";
   std::vector<std::string> predictor_names{};
 };
@@ -231,6 +243,13 @@ CODEM_API GLMFitResult glm_fit(const pluss::codem::Series& y,
 
 CODEM_API pluss::codem::Series glm_predict(const GLMFitResult& fit,
                                            const pluss::codem::Series& x,
+                                           GLMPredictionType type = GLMPredictionType::Mean,
+                                           pluss::codem::Config cfg = {});
+
+// As above for a fit made with an offset: `offset` (one value per row of `x`) is added to the linear predictor before the inverse link.
+CODEM_API pluss::codem::Series glm_predict(const GLMFitResult& fit,
+                                           const pluss::codem::Series& x,
+                                           const pluss::codem::Series& offset,
                                            GLMPredictionType type = GLMPredictionType::Mean,
                                            pluss::codem::Config cfg = {});
 

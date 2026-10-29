@@ -19,7 +19,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_cmake_targets_defined "")
 set(_cmake_targets_not_defined "")
 set(_cmake_expected_targets "")
-foreach(_cmake_expected_target IN ITEMS Pluss::pluss_sdk_zip_link Pluss::PlussTilsView Pluss::PlussTilsCore Pluss::PlussTils Pluss::PlussPl Pluss::plussmic_curl_link Pluss::PlussMic Pluss::pluss)
+foreach(_cmake_expected_target IN ITEMS Pluss::pluss_sdk_zip_link Pluss::PlussTilsView Pluss::PlussBI Pluss::PlussTilsCore Pluss::PlussTils Pluss::PlussPl Pluss::plussmic_curl_link Pluss::PlussMic Pluss::pluss)
   list(APPEND _cmake_expected_targets "${_cmake_expected_target}")
   if(TARGET "${_cmake_expected_target}")
     list(APPEND _cmake_targets_defined "${_cmake_expected_target}")
@@ -71,6 +71,14 @@ set_target_properties(Pluss::PlussTilsView PROPERTIES
   INTERFACE_LINK_LIBRARIES "Pluss::pluss_sdk_zip_link;-framework Cocoa;-framework UniformTypeIdentifiers;-framework WebKit;-framework QuartzCore;-framework CoreText;-framework CoreFoundation;-framework CoreGraphics;-framework CoreVideo;-framework Metal"
 )
 
+# Create imported target Pluss::PlussBI
+add_library(Pluss::PlussBI STATIC IMPORTED)
+
+set_target_properties(Pluss::PlussBI PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+  INTERFACE_LINK_LIBRARIES "Threads::Threads"
+)
+
 # Create imported target Pluss::PlussTilsCore
 add_library(Pluss::PlussTilsCore STATIC IMPORTED)
 
@@ -83,7 +91,7 @@ add_library(Pluss::PlussTils INTERFACE IMPORTED)
 
 set_target_properties(Pluss::PlussTils PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_LINK_LIBRARIES "Pluss::PlussTilsCore;Pluss::PlussTilsView;Pluss::pluss"
+  INTERFACE_LINK_LIBRARIES "Pluss::PlussTilsCore;Pluss::PlussTilsView;Pluss::PlussBI;Pluss::pluss"
 )
 
 # Create imported target Pluss::PlussPl

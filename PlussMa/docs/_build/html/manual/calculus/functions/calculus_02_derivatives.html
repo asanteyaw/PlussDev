@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Calculus 2: Derivatives &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Partial derivatives and higher orders" href="calculus_02_derivatives/partial_derivatives_and_higher_orders.html" />
+    <link rel="prev" title="Functions from Series code" href="calculus_01_functions/functions_from_series_code.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from calculus_02_derivatives.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="calculus-2-derivatives">
+<h1>Calculus 2: Derivatives<a class="headerlink" href="#calculus-2-derivatives" title="Link to this heading">¶</a></h1>
+<p>The derivative of a <code class="docutils literal notranslate"><span class="pre">Function</span></code> is another <code class="docutils literal notranslate"><span class="pre">Function</span></code>. <code class="docutils literal notranslate"><span class="pre">operators::differential</span></code> takes the recorded formula of its input and produces the recorded formula of the derivative by applying the rules of calculus to each operation, so the result is exact, can be evaluated anywhere, can be differentiated again, and, if the input could be saved, can be saved. After this chapter you can take partial and higher-order derivatives, know what happens at the points where a derivative does not exist, differentiate code that is not written as a <code class="docutils literal notranslate"><span class="pre">Function</span></code>, and use the magnitude, absolute and covariant variants.</p>
+<p>Every program is complete and its output is the output of that program.</p>
+<section id="the-mental-model">
+<h2>The mental model<a class="headerlink" href="#the-mental-model" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>A derivative is an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> applied to a <code class="docutils literal notranslate"><span class="pre">Function</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">operators::differential(&quot;x&quot;,</span> <span class="pre">2)</span></code> is a value describing “differentiate twice in <code class="docutils literal notranslate"><span class="pre">x</span></code>”; calling it on a function applies it. The operator can be stored, passed around and composed (Chapter 5).</p></li>
+<li><p><strong>The result keeps the variables of the input.</strong> A derivative with respect to <code class="docutils literal notranslate"><span class="pre">x</span></code> of a function of <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> is still a function of <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p></li>
+<li><p><strong>Differentiation is symbolic.</strong> It applies one rule per operation, shares sub-expressions, and does not sample the function. Nothing is approximated.</p></li>
+<li><p><strong>Failure is explicit.</strong> A corner (<code class="docutils literal notranslate"><span class="pre">abs</span></code> at zero) is governed by an option, a singularity is a domain error at evaluation, a runaway request is stopped by a budget, and a function without structure is differentiated only on request.</p></li>
+</ul>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::differential</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">DiffOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::wirtinger</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">DiffOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::conjugate_wirtinger</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">DiffOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::magnitude_differential</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">DiffOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">operators::covariant</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">variable</span><span class="p">,</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">connection</span><span class="p">,</span><span class="w"> </span><span class="n">DiffOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">DiffOptions</span></code> field</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nonsmooth</span></code></p></td>
+<td><p>what the derivative of <code class="docutils literal notranslate"><span class="pre">abs</span></code> is at 0: <code class="docutils literal notranslate"><span class="pre">Strict</span></code>, <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code>, <code class="docutils literal notranslate"><span class="pre">Subgradient</span></code> or <code class="docutils literal notranslate"><span class="pre">Autodiff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Strict</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fallback</span></code></p></td>
+<td><p>how an opaque <code class="docutils literal notranslate"><span class="pre">Series</span></code> callable is differentiated: <code class="docutils literal notranslate"><span class="pre">Reject</span></code> or <code class="docutils literal notranslate"><span class="pre">Autodiff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Reject</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_nodes</span></code></p></td>
+<td><p>the largest derivative graph, counted for every intermediate order</p></td>
+<td><p>100000</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="programs">
+<h2>Programs<a class="headerlink" href="#programs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="calculus_02_derivatives/partial_derivatives_and_higher_orders.html"><span class="std std-doc">Partial derivatives and higher orders</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_02_derivatives/the_differentiation_rules.html"><span class="std std-doc">The differentiation rules</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_02_derivatives/complex_derivatives.html"><span class="std std-doc">Complex and Wirtinger derivatives</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_02_derivatives/non_smooth_points.html"><span class="std std-doc">Non-smooth points</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_02_derivatives/opaque_functions_and_the_autodiff_fallback.html"><span class="std std-doc">Opaque functions and the autodiff fallback</span></a></p></li>
+<li><p><a class="reference internal" href="calculus_02_derivatives/absolute_and_covariant_differentials.html"><span class="std std-doc">Magnitude, absolute and covariant differentials</span></a></p></li>
+</ul>
+</section>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write the formula with the <code class="docutils literal notranslate"><span class="pre">Function</span></code> vocabulary and differentiate it with <code class="docutils literal notranslate"><span class="pre">differential</span></code>; the derivative is exact.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">differential(x,</span> <span class="pre">n)</span></code> for higher orders; it is equivalent to applying the first-order operator <code class="docutils literal notranslate"><span class="pre">n</span></code> times.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">nonsmooth</span></code> deliberately if the formula contains <code class="docutils literal notranslate"><span class="pre">abs</span></code> and the point can be 0.</p></li>
+<li><p>Expect a domain error, not a <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, where a derivative divides by zero or takes a logarithm of a non-positive number.</p></li>
+<li><p>Keep sub-expressions shared; if a derivative is rejected by <code class="docutils literal notranslate"><span class="pre">max_nodes</span></code>, simplify the formula before raising the budget.</p></li>
+<li><p>For code that is not written as a <code class="docutils literal notranslate"><span class="pre">Function</span></code>, request <code class="docutils literal notranslate"><span class="pre">Fallback::Autodiff</span></code>; it is accepted by every differential operator.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/calculus/functions/calculus_02_derivatives.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

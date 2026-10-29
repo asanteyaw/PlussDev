@@ -11,6 +11,7 @@
 #include <span>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -2283,6 +2284,29 @@ public:
   split_with_sizes(pluss::msharp::RangeView::Int split_sizes,
                    std::int64_t dim = 0) const;
   std::vector<Series> unbind(std::int64_t dim = 0) const;
+
+  // Contraction family (torch parity: torch.tensordot / torch.einsum).
+  // Composites over diagonal/sum/permute/reshape/bmm, so reverse-mode
+  // autograd flows through the existing verified reverse rules.
+  //
+  // tensordot(other, n): contract the last `n` axes of this with the first
+  // `n` axes of `other` (n = 0 is the outer product). The explicit overload
+  // contracts `dims_self[i]` with `dims_other[i]` (negative axes allowed);
+  // result axes are this's free axes followed by other's free axes. A
+  // contracted pair whose sizes differ is allowed only when one of them is 1
+  // (that axis is summed first), as in torch.
+  Series tensordot(const Series &other, std::int64_t dims = 2) const;
+  Series tensordot(const Series &other,
+                   const std::vector<std::int64_t> &dims_self,
+                   const std::vector<std::int64_t> &dims_other) const;
+  // einsum(equation, operands): Einstein summation with torch's grammar --
+  // lower/upper-case subscripts, implicit mode (no "->": output is the labels
+  // seen once, ellipsis axes first, then alphabetical), explicit mode, "..."
+  // broadcasting, repeated subscripts within one operand (diagonal), and
+  // size-1 broadcasting of a shared label. Operands are contracted pairwise
+  // left to right, each pair as one batched matmul.
+  static Series einsum(std::string_view equation,
+                       const std::vector<Series> &operands);
   std::vector<Series> tensor_split(std::int64_t sections,
                                    std::int64_t dim = 0) const;
   std::vector<Series> tensor_split(pluss::msharp::RangeView::Int indices,

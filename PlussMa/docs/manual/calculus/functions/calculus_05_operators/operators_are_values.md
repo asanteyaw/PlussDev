@@ -1,0 +1,165 @@
+<!-- generated from operators_are_values.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Operators are values
+
+[Back to Operators](../calculus_05_operators.md)
+
+An `Operator` is a function of functions: it takes a `Function` and returns a new `Function`. `differential`, `gradient`, `integral` and the others in the previous chapters are all operators, and they were applied the moment they were created. This page treats an operator as a value in its own right. It can be named, stored in a variable, passed to a function, applied more than once, and combined with other operators (next page).
+
+```cpp
+math::Function operators::Operator::operator()(const math::Function &input) const;
+```
+
+| Member | Meaning |
+|---|---|
+| `op(f)` | applies the operator and returns the transformed `Function`; raises an error if `op` or `f` is undefined |
+| `defined()`, `explicit operator bool` | whether the operator holds a transformation (a default-constructed `Operator` does not) |
+| `key()` | the operator's name, such as `"differential"` or `"shift"`; empty for an anonymous custom operator |
+| `version()` | the version of the operator's definition (1 for the built-in operators) |
+| `capabilities()` | what the operator promises, as a `Capabilities` value |
+
+An `Operator` is an immutable handle: copies share the same transformation, it is cheap to copy, and it can be used from any thread.
+
+## The built-in operators
+
+Besides the derivative and integral operators already seen, four simple operators transform a function without calculus:
+
+| Operator | Result for `f` |
+|---|---|
+| `identity()` | `f` itself |
+| `scale(c)` | `c · f` |
+| `shift(x, h)` | `f` with `x` replaced by `x + h`, that is `f(…, x + h, …)` |
+| `multiply(g)` | `g · f`, the product with the function `g` |
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function square = math::function({"x"}, [](math::Function x) { return x.pow(2); });
+  const auto x = pluss::make_series({-1.0, 0.0, 2.0});
+
+  out.writeln("x                 ", x.pull<double>());
+  out.writeln("f(x) = x^2        ", square({x}).pull<double>());
+  out.writeln("identity          ", operators::identity()(square)({x}).pull<double>());
+  out.writeln("shift(x, 1.5)     ", operators::shift("x", 1.5)(square)({x}).pull<double>(), " = (x + 1.5)^2:", x.add(1.5).pow(2).pull<double>());
+  out.writeln("scale(3)          ", operators::scale(3.0)(square)({x}).pull<double>());
+  out.writeln("multiply(x)       ", operators::multiply(square.arg("x"))(square)({x}).pull<double>(), " = x^3:", x.pow(3).pull<double>());
+  out.writeln("multiply(5)       ", operators::multiply(math::function(5.0))(square)({x}).pull<double>());
+
+  // An operator is a value: keep one, apply it to several functions.
+  const operators::Operator advance = operators::shift("x", 1.0);
+  const math::Function cube = math::function({"x"}, [](math::Function v) { return v.pow(3); });
+  out.writeln("advance(f)        ", advance(square)({x}).pull<double>());
+  out.writeln("advance(cube)     ", advance(cube)({x}).pull<double>());
+}
+```
+
+Output
+
+```text
+x                  [-1.0000, 0.0000, 2.0000]
+f(x) = x^2         [1.0000, 0.0000, 4.0000]
+identity           [1.0000, 0.0000, 4.0000]
+shift(x, 1.5)      [0.2500, 2.2500, 12.2500]  = (x + 1.5)^2: [0.2500, 2.2500, 12.2500]
+scale(3)           [3.0000, 0.0000, 12.0000]
+multiply(x)        [-1.0000, 0.0000, 8.0000]  = x^3: [-1.0000, 0.0000, 8.0000]
+multiply(5)        [5.0000, 0.0000, 20.0000]
+advance(f)         [0.0000, 1.0000, 9.0000]
+advance(cube)      [0.0000, 1.0000, 27.0000]
+```
+
+`identity` returns the function unchanged. `shift("x", 1.5)` of x² is (x + 1.5)², which at −1, 0 and 2 is 0.25, 2.25 and 12.25. `scale(3)` triples the values, `multiply(x)` multiplies by the coordinate so x² becomes x³, and `multiply(5)` multiplies by a constant. The last two lines show an operator as a reusable value: `advance` is created once and applied to two different functions, giving (x + 1)² and (x + 1)³.
+
+`shift` moves the graph of the function to the left by `h`: the value of the shifted function at `x` is the original at `x + h`. For a function of several variables only the named variable shifts, and the rest keep their values.
+
+## What an operator promises: `capabilities()`
+
+Every operator reports a `Capabilities`, a set of flags that describe what is known about its action. Callers (and the operator algebra of the next page) use them to decide what is safe to do.
+
+| Flag | Meaning |
+|---|---|
+| `structural` | the operator acts on the recorded graph, so the result keeps its structure (can be differentiated and saved) |
+| `evaluated_only` | the operator acts only on values, so the result has no usable structure; incompatible with `structural` |
+| `linear` | `op(a f + b g) = a op(f) + b op(g)` |
+| `adjoint_known` | the operator's adjoint is known |
+| `serializable` | the operator can be saved to a file |
+| `platform_pure` | the operator does not move data between platforms |
+
+The program prints the key, version and capabilities of every built-in operator.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static void report(OutputEngine &out, const char *label, const operators::Operator &op) {
+  const operators::Capabilities c = op.capabilities();
+  out.writeln(label, "key", op.key(), " v", op.version(), " | structural", c.structural, " linear", c.linear, " adjoint", c.adjoint_known,
+              " serializable", c.serializable, " pure", c.platform_pure);
+}
+
+int main() {
+  OutputEngine out;
+  const math::Function sample = math::function({"x"}, [](math::Function x) { return x.pow(2); });
+  report(out, "identity               ", operators::identity());
+  report(out, "differential           ", operators::differential("x"));
+  report(out, "magnitude_differential ", operators::magnitude_differential("x"));
+  report(out, "covariant              ", operators::covariant("x", math::function(3.0)));
+  report(out, "gradient               ", operators::gradient());
+  report(out, "jacobian               ", operators::jacobian());
+  report(out, "hessian                ", operators::hessian());
+  report(out, "antiderivative         ", operators::antiderivative("x"));
+  report(out, "integral (anchored)    ", operators::integral("x", 0.0));
+  report(out, "integral (definite)    ", operators::integral("x", 0.0, 1.0));
+  report(out, "shift                  ", operators::shift("x", 1.0));
+  report(out, "multiply               ", operators::multiply(sample.arg("x")));
+  report(out, "scale                  ", operators::scale(2.0));
+  report(out, "compose                ", operators::compose(operators::scale(2.0), operators::shift("x", 1.0)));
+  report(out, "linear_combination     ", operators::linear_combination({{1.0, operators::scale(2.0)}, {2.0, operators::identity()}}));
+  report(out, "commutator             ", operators::commutator(operators::scale(2.0), operators::shift("x", 1.0)));
+}
+```
+
+Output
+
+```text
+identity                key identity  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+differential            key differential  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+magnitude_differential  key magnitude_differential  v 1  | structural true  linear false  adjoint false  serializable true  pure true
+covariant               key covariant  v 1  | structural true  linear true  adjoint false  serializable false  pure true
+gradient                key gradient  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+jacobian                key jacobian  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+hessian                 key hessian  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+antiderivative          key antiderivative  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+integral (anchored)     key integral  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+integral (definite)     key integral  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+shift                   key shift  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+multiply                key multiply  v 1  | structural true  linear true  adjoint true  serializable false  pure true
+scale                   key scale  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+compose                 key compose  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+linear_combination      key linear_combination  v 1  | structural true  linear true  adjoint true  serializable false  pure true
+commutator              key commutator  v 1  | structural true  linear true  adjoint false  serializable false  pure true
+```
+
+Every built-in operator reports `structural` and `platform_pure`, and all are linear except `magnitude_differential`, as the previous chapter explained. The operators that cannot be saved are `covariant` and the geometric `absolute_differential` (they hold an arbitrary connection function), `multiply` (it holds an arbitrary coefficient function), `linear_combination` and `commutator`; the next page and [Saving and loading](saving_and_loading.md) come back to this. `identity`, `scale` and, by extension, a linear combination of operators that have one, report a known adjoint; the derivative and integral operators do not. The key of a composition is `compose`, and the composition's flags are computed from its parts.
+
+## Details to know
+
+**`multiply` needs a coefficient from the same function.** `multiply(g)` forms the product of `g` and the function it is applied to. If `g` is a coordinate or an expression of a function, as in `multiply(square.arg("x"))`, it belongs to that function's variables, and the operator can be applied only to functions with those same variables from the same trace, or you get the error "expressions from different variable traces cannot be combined". A constant, as in `multiply(math::function(5.0))`, belongs to no trace and combines with anything.
+
+**Undefined operators fail loudly.** Applying a default-constructed `Operator`, or applying any operator to an undefined `Function`, raises an error; so does a custom operator whose body returns an undefined `Function`.
+
+**An operator is applied when it is applied.** Creating `differential("x")` does nothing to any function. The work, which for the derivative operators is the construction of the derivative graph, happens in `op(f)`, once, and the result is an ordinary `Function`.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

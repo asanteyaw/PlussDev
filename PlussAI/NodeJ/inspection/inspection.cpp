@@ -68,7 +68,7 @@ struct DenseRows {
 
   Series rows = batch.x.to(pluss::pCPU, ScalarType::Float64).contiguous();
   if (batch.layout == ObservationLayout::Columns) rows = rows.transpose(0, 1).contiguous();
-  out.x = rows.host<double>();
+  out.x = rows.host<double>().array().data;
   if (static_cast<std::int64_t>(out.x.size()) != out.samples * out.features) {
     return StatusOr<DenseRows>(Status::shape_mismatch(std::string(where) + " encountered inconsistent feature shape."));
   }
@@ -90,7 +90,7 @@ struct DenseRows {
   if (flat.numel() != 1) {
     return StatusOr<double>(Status::shape_mismatch(std::string(where) + " expected one metric value."));
   }
-  const double value = flat.item<double>();
+  const double value = flat.host<double>().front();
   if (!std::isfinite(value)) {
     return StatusOr<double>(Status::numerical_failure(std::string(where) + " produced non-finite metric value."));
   }

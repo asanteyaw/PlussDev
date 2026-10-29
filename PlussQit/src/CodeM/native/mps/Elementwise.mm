@@ -96,6 +96,67 @@ kernel void binary_f32(
   out[gid] = v;
 }
 
+inline float2 complex_mul(float2 a, float2 b) {
+  return float2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+inline float2 complex_div(float2 a, float2 b) {
+  const float denom = b.x * b.x + b.y * b.y;
+  return float2((a.x * b.x + a.y * b.y) / denom,
+                (a.y * b.x - a.x * b.y) / denom);
+}
+
+inline float2 complex_exp(float2 z) {
+  const float scale = exp(z.x);
+  return float2(scale * cos(z.y), scale * sin(z.y));
+}
+
+inline float2 complex_log(float2 z) {
+  return float2(log(length(z)), atan2(z.y, z.x));
+}
+
+inline float2 complex_sqrt(float2 z) {
+  const float radius = length(z);
+  const float real = sqrt(max(0.0f, 0.5f * (radius + z.x)));
+  const float imag = copysign(sqrt(max(0.0f, 0.5f * (radius - z.x))), z.y);
+  return float2(real, imag);
+}
+
+inline float2 complex_sin(float2 z) {
+  return float2(sin(z.x) * cosh(z.y), cos(z.x) * sinh(z.y));
+}
+
+inline float2 complex_cos(float2 z) {
+  return float2(cos(z.x) * cosh(z.y), -sin(z.x) * sinh(z.y));
+}
+
+inline float2 complex_sinh(float2 z) {
+  return float2(sinh(z.x) * cos(z.y), cosh(z.x) * sin(z.y));
+}
+
+inline float2 complex_cosh(float2 z) {
+  return float2(cosh(z.x) * cos(z.y), sinh(z.x) * sin(z.y));
+}
+
+inline float2 complex_asin(float2 z) {
+  const float2 iz = float2(-z.y, z.x);
+  const float2 root = complex_sqrt(float2(1.0f, 0.0f) - complex_mul(z, z));
+  const float2 logged = complex_log(iz + root);
+  return float2(logged.y, -logged.x);
+}
+
+inline float2 complex_acos(float2 z) {
+  const float2 value = complex_asin(z);
+  return float2(1.5707963267948966f - value.x, -value.y);
+}
+
+inline float2 complex_atan(float2 z) {
+  const float2 iz = float2(-z.y, z.x);
+  const float2 delta = complex_log(float2(1.0f, 0.0f) - iz) -
+                       complex_log(float2(1.0f, 0.0f) + iz);
+  return float2(-0.5f * delta.y, 0.5f * delta.x);
+}
+
 kernel void binary_cmp_f32(
     const device float* a [[buffer(0)]],
     const device float* b [[buffer(1)]],
@@ -159,12 +220,9 @@ kernel void binary_c64(
   switch (meta.op) {
     case 0: v = av + bv; break;
     case 1: v = av - bv; break;
-    case 2: v = float2(av.x * bv.x - av.y * bv.y, av.x * bv.y + av.y * bv.x); break;
-    case 3: {
-      const float denom = bv.x * bv.x + bv.y * bv.y;
-      v = float2((av.x * bv.x + av.y * bv.y) / denom, (av.y * bv.x - av.x * bv.y) / denom);
-      break;
-    }
+    case 2: v = complex_mul(av, bv); break;
+    case 3: v = complex_div(av, bv); break;
+    case 4: v = complex_exp(complex_mul(bv, complex_log(av))); break;
     default: v = float2(0.0f, 0.0f); break;
   }
   out[gid] = v;
@@ -335,6 +393,36 @@ kernel void unary_f32(
   out[gid] = v;
 }
 
+kernel void unary_c64(
+    const device float2* in [[buffer(0)]],
+    device float2* out [[buffer(1)]],
+    constant UnaryMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  const float2 z = in[gid];
+  float2 v = float2(0.0f, 0.0f);
+  switch (meta.op) {
+    case 0: v = -z; break;
+    case 2: v = complex_log(float2(1.0f, 0.0f) + z); break;
+    case 3: v = complex_exp(z) - float2(1.0f, 0.0f); break;
+    case 4: v = complex_exp(z); break;
+    case 5: v = complex_log(z); break;
+    case 6: v = complex_sqrt(z); break;
+    case 7: v = complex_sin(z); break;
+    case 8: v = complex_cos(z); break;
+    case 9: v = complex_div(complex_sinh(z), complex_cosh(z)); break;
+    case 10: v = complex_div(complex_sin(z), complex_cos(z)); break;
+    case 11: v = complex_asin(z); break;
+    case 12: v = complex_acos(z); break;
+    case 13: v = complex_atan(z); break;
+    case 14: v = complex_sinh(z); break;
+    case 15: v = complex_cosh(z); break;
+    case 16: v = complex_div(float2(1.0f, 0.0f), z); break;
+    case 25: v = complex_div(float2(1.0f, 0.0f), float2(1.0f, 0.0f) + complex_exp(-z)); break;
+    default: v = float2(0.0f, 0.0f); break;
+  }
+  out[gid] = v;
+}
+
 kernel void complex_conj_c64(
     const device float2* in [[buffer(0)]],
     device float2* out [[buffer(1)]],
@@ -425,6 +513,7 @@ struct Context {
   id<MTLComputePipelineState> where_f32{nil};
   id<MTLComputePipelineState> where_c64{nil};
   id<MTLComputePipelineState> unary_f32{nil};
+  id<MTLComputePipelineState> unary_c64{nil};
   id<MTLComputePipelineState> complex_conj_c64{nil};
   id<MTLComputePipelineState> complex_component_c64{nil};
   id<MTLComputePipelineState> complex_from_parts_c64{nil};
@@ -492,6 +581,7 @@ Context& ctx_() {
       if (!make_pipeline("where_f32", &ctx.where_f32)) return;
       if (!make_pipeline("where_c64", &ctx.where_c64)) return;
       if (!make_pipeline("unary_f32", &ctx.unary_f32)) return;
+      if (!make_pipeline("unary_c64", &ctx.unary_c64)) return;
       if (!make_pipeline("complex_conj_c64", &ctx.complex_conj_c64)) return;
       if (!make_pipeline("complex_component_c64", &ctx.complex_component_c64)) return;
       if (!make_pipeline("complex_from_parts_c64", &ctx.complex_from_parts_c64)) return;
@@ -785,6 +875,7 @@ bool supports_binary(cpu::BinaryOpId op, ScalarType dt) noexcept {
       case B::Sub:
       case B::Mul:
       case B::Div:
+      case B::Pow:
       case B::Eq:
       case B::Ne:
         return true;
@@ -1191,10 +1282,20 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
 }
 
 bool supports_unary(cpu::UnaryOpId op, ScalarType dt) noexcept {
+  using U = cpu::UnaryOpId;
+  if (dt == ScalarType::Complex64) {
+    switch (op) {
+      case U::Neg:
+      case U::Log1p:
+      case U::Expm1:
+        return true;
+      default:
+        return false;
+    }
+  }
   if (dt != ScalarType::Float32) {
     return false;
   }
-  using U = cpu::UnaryOpId;
   switch (op) {
     case U::Neg:
     case U::Abs:
@@ -1212,8 +1313,9 @@ void unary(cpu::UnaryOpId op, const Series& a, Series& out) {
   }
   validate_mps_tensor_(a, "unary");
   validate_mps_tensor_(out, "unary");
-  if (a.scalar_type() != ScalarType::Float32 || out.scalar_type() != ScalarType::Float32) {
-    fail_("unary: only float32 is supported on current MPS path");
+  if (a.scalar_type() != out.scalar_type() ||
+      (a.scalar_type() != ScalarType::Float32 && a.scalar_type() != ScalarType::Complex64)) {
+    fail_("unary: expected matching float32 or complex64 input/output");
   }
   if (!supports_unary(op, a.scalar_type())) {
     fail_("unary: unsupported op on current MPS path");
@@ -1224,8 +1326,10 @@ void unary(cpu::UnaryOpId op, const Series& a, Series& out) {
 
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const bool complex_data = a.scalar_type() == ScalarType::Complex64;
+    const std::size_t elem_bytes = complex_data ? sizeof(float) * 2u : sizeof(float);
+    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
     id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(a, c.device, in_bytes);
     id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
     if (in_buf == nil || out_buf == nil) {
@@ -1235,7 +1339,9 @@ void unary(cpu::UnaryOpId op, const Series& a, Series& out) {
     if (meta.op == 999) {
       fail_("unary: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_op_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary");
+    id<MTLCommandBuffer> cb = encode_op_(complex_data ? c.unary_c64 : c.unary_f32,
+                                         in_buf, out_buf, nil, nil, &meta, sizeof(meta),
+                                         2, out.numel(), "unary");
     if (cb != nil) {
       submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);
@@ -1244,6 +1350,27 @@ void unary(cpu::UnaryOpId op, const Series& a, Series& out) {
 }
 
 bool supports_unary_math(UnaryMathOp op, ScalarType dt) noexcept {
+  if (dt == ScalarType::Complex64) {
+    switch (op) {
+      case UnaryMathOp::Exp:
+      case UnaryMathOp::Log:
+      case UnaryMathOp::Sqrt:
+      case UnaryMathOp::Sin:
+      case UnaryMathOp::Cos:
+      case UnaryMathOp::Tanh:
+      case UnaryMathOp::Tan:
+      case UnaryMathOp::Asin:
+      case UnaryMathOp::Acos:
+      case UnaryMathOp::Atan:
+      case UnaryMathOp::Sinh:
+      case UnaryMathOp::Cosh:
+      case UnaryMathOp::Reciprocal:
+      case UnaryMathOp::Sigmoid:
+        return true;
+      default:
+        return false;
+    }
+  }
   if (dt != ScalarType::Float32) {
     return false;
   }
@@ -1279,8 +1406,9 @@ void unary_math(UnaryMathOp op, const Series& a, Series& out) {
   }
   validate_mps_tensor_(a, "unary_math");
   validate_mps_tensor_(out, "unary_math");
-  if (a.scalar_type() != ScalarType::Float32 || out.scalar_type() != ScalarType::Float32) {
-    fail_("unary_math: only float32 is supported on current MPS path");
+  if (a.scalar_type() != out.scalar_type() ||
+      (a.scalar_type() != ScalarType::Float32 && a.scalar_type() != ScalarType::Complex64)) {
+    fail_("unary_math: expected matching float32 or complex64 input/output");
   }
   if (!supports_unary_math(op, a.scalar_type())) {
     fail_("unary_math: unsupported op on current MPS path");
@@ -1291,8 +1419,10 @@ void unary_math(UnaryMathOp op, const Series& a, Series& out) {
 
   auto& c = ctx_();
   @autoreleasepool {
-    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const bool complex_data = a.scalar_type() == ScalarType::Complex64;
+    const std::size_t elem_bytes = complex_data ? sizeof(float) * 2u : sizeof(float);
+    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * elem_bytes;
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
     id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(a, c.device, in_bytes);
     id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
     if (in_buf == nil || out_buf == nil) {
@@ -1302,7 +1432,9 @@ void unary_math(UnaryMathOp op, const Series& a, Series& out) {
     if (meta.op == 999) {
       fail_("unary_math: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_op_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary_math");
+    id<MTLCommandBuffer> cb = encode_op_(complex_data ? c.unary_c64 : c.unary_f32,
+                                         in_buf, out_buf, nil, nil, &meta, sizeof(meta),
+                                         2, out.numel(), "unary_math");
     if (cb != nil) {
       submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);

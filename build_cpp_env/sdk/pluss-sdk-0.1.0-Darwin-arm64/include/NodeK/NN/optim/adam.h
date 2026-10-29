@@ -128,8 +128,8 @@ private:
   struct GroupState {
     std::vector<std::size_t> indices{};
     AdamOptions options{};
-    Series beta1_power{};
-    Series beta2_power{};
+    Series beta1_power = pluss::series::undefined();
+    Series beta2_power = pluss::series::undefined();
   };
 
   void apply_step_(pluss::msharp::RangeView::Series gradients) override {
@@ -244,6 +244,17 @@ private:
       if (anchor == nullptr || !anchor->defined()) {
         ::pluss::throw_error("pluss::ai::nn::optim::Adam: capturable mode expects defined group parameters");
       }
+      // Capturable mode is CUDA-graph-capture oriented (torch itself only
+      // supports it on cuda/xpu/hpu); complex-parameter support in this pass
+      // targets the ordinary Loop lane only (see view_as_real_/
+      // view_as_complex_ in optim_base.h) and was never exercised against
+      // capturable's own per-group bias-correction-power scalars, which are
+      // typed to match the group's parameters. Reject rather than risk a
+      // silently wrong interaction.
+      if (pluss::codem::dtype_of(anchor->scalar_type()).is_complex()) {
+        ::pluss::throw_error(
+            "pluss::ai::nn::optim::Adam: capturable mode is not supported for complex parameters");
+      }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
@@ -306,8 +317,8 @@ private:
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
     const double b2_correction = 1.0 - std::pow(options.beta2, static_cast<double>(step_));
 
-    Series b1_corr_series;
-    Series b2_corr_series;
+    Series b1_corr_series = pluss::series::undefined();
+    Series b2_corr_series = pluss::series::undefined();
     if (options.execution.capturable) {
       const Series one_b1 = scalar_on_(1.0, group.beta1_power);
       const Series one_b2 = scalar_on_(1.0, group.beta2_power);
@@ -340,6 +351,18 @@ private:
         sensitivity = sensitivity.add(parameter_value.mul(options.weight_decay));
       }
 
+      // Complex parameters: view as real with a new trailing [.., 2] dim
+      // (real(g)^2 and imag(g)^2 tracked independently, matching torch's
+      // own `_view_as_real` in torch/optim/adam.py -- capturable mode is
+      // rejected for complex above, so use_capturable is guaranteed false
+      // whenever original_dtype is complex). No-op for real parameters.
+      const ScalarType original_dtype = parameter_value.scalar_type();
+      sensitivity = view_as_real_(sensitivity);
+      parameter_value = view_as_real_(parameter_value);
+      m1_value = view_as_real_(m1_value);
+      m2_value = view_as_real_(m2_value);
+      mmax_value = view_as_real_(mmax_value);
+
       if (use_capturable) {
         const Series one = scalar_on_(1.0, parameter_value);
         const Series beta1 = scalar_on_(options.beta1, parameter_value);
@@ -347,10 +370,10 @@ private:
         const Series one_minus_beta1 = one.sub(beta1);
         const Series one_minus_beta2 = one.sub(beta2);
         m1_value = m1_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
-        m2_value = m2_value.mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+        m2_value = m2_value.mul(beta2).add(sensitivity.abs2().mul(one_minus_beta2));
       } else {
         m1_value = m1_value.mul(options.beta1).add(sensitivity.mul(1.0 - options.beta1));
-        m2_value = m2_value.mul(options.beta2).add(sensitivity.square().mul(1.0 - options.beta2));
+        m2_value = m2_value.mul(options.beta2).add(sensitivity.abs2().mul(1.0 - options.beta2));
       }
 
       Series second_hat = use_capturable
@@ -375,7 +398,7 @@ private:
       }();
       if (debug_adam_update && parameter_value.platform() == pluss::pMPS && step_ <= 3) {
         auto print_vec = [&](const char* label, const Series& s) {
-          const auto v = s.reshape({s.numel()}).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+          const auto v = s.reshape({s.numel()}).to(pluss::pCPU, ScalarType::Float64).host<double>();
           std::cerr << " " << label << "=";
           for (std::size_t k = 0; k < v.size(); ++k) {
             if (k) std::cerr << ",";
@@ -400,10 +423,10 @@ private:
         std::cerr << "\n";
       }
 
-      first_moment_[i] = m1_value;
-      second_moment_[i] = m2_value;
-      max_second_hat_[i] = mmax_value;
-      assign_parameter_(*param_ptr, next_value);
+      first_moment_[i] = view_as_complex_(m1_value, original_dtype);
+      second_moment_[i] = view_as_complex_(m2_value, original_dtype);
+      max_second_hat_[i] = view_as_complex_(mmax_value, original_dtype);
+      assign_parameter_(*param_ptr, view_as_complex_(next_value, original_dtype));
     }
   }
 
@@ -455,7 +478,7 @@ private:
       g_batch = g_batch.add(p_batch.mul(scalar_on_(options.weight_decay, p_batch)));
     }
     m1_batch = m1_batch.mul(beta1).add(g_batch.mul(one_minus_beta1));
-    m2_batch = m2_batch.mul(beta2).add(g_batch.square().mul(one_minus_beta2));
+    m2_batch = m2_batch.mul(beta2).add(g_batch.abs2().mul(one_minus_beta2));
 
     Series second_hat = options.execution.capturable
                             ? m2_batch.div(scalar_on_(1.0, group.beta2_power).sub(group.beta2_power))
@@ -533,7 +556,7 @@ private:
     m1_batch = m1_batch.mul(beta1);
     m1_batch = m1_batch.add(g_batch.mul(one_minus_beta1));
     m2_batch = m2_batch.mul(beta2);
-    m2_batch = m2_batch.add(g_batch.square().mul(one_minus_beta2));
+    m2_batch = m2_batch.add(g_batch.abs2().mul(one_minus_beta2));
 
     Series second_hat = options.execution.capturable
                             ? m2_batch.div(scalar_on_(1.0, group.beta2_power).sub(group.beta2_power))
@@ -584,8 +607,8 @@ private:
   void initialize_group_capture_state_() {
     const auto& params = parameters();
     for (auto& group : groups_) {
-      group.beta1_power = Series{};
-      group.beta2_power = Series{};
+      group.beta1_power = pluss::series::undefined();
+      group.beta2_power = pluss::series::undefined();
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];

@@ -85,6 +85,8 @@ variances 0.2355 and 0.0994, F 2.3685 on (7.0000, 8.0000) df, p 0.2501
 95% interval [0.5230, 11.6042]
 ```
 
+The two variances, 0.2355 and 0.0994, differ by a factor F 2.37 on (7, 8) degrees of freedom, p 0.25: not significant, and the 95% interval for the ratio, [0.52, 11.60], is wide and contains 1.
+
 ### Example 2
 
 The interval for the ratio shows how much the data leave open.
@@ -115,6 +117,8 @@ Output
 ```text
 90% interval for the variance ratio [0.6766, 8.8244], upper critical value 3.5005
 ```
+
+The 90% interval for the variance ratio is [0.68, 8.82]: a ratio anywhere from slightly below 1 to almost 9 is compatible with the data. Small samples leave much open about a ratio of variances.
 
 ## See Also
 

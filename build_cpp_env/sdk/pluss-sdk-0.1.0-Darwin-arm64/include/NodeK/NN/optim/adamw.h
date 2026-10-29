@@ -125,8 +125,8 @@ private:
   struct GroupState {
     std::vector<std::size_t> indices{};
     AdamWOptions options{};
-    Series beta1_power{};
-    Series beta2_power{};
+    Series beta1_power = pluss::series::undefined();
+    Series beta2_power = pluss::series::undefined();
   };
 
   void apply_step_(pluss::msharp::RangeView::Series gradients) override {
@@ -241,6 +241,17 @@ private:
       if (anchor == nullptr || !anchor->defined()) {
         ::pluss::throw_error("pluss::ai::nn::optim::AdamW: capturable mode expects defined group parameters");
       }
+      // Capturable mode is CUDA-graph-capture oriented (torch itself only
+      // supports it on cuda/xpu/hpu); complex-parameter support in this pass
+      // targets the ordinary Loop lane only (see view_as_real_/
+      // view_as_complex_ in optim_base.h) and was never exercised against
+      // capturable's own per-group bias-correction-power scalars, which are
+      // typed to match the group's parameters. Reject rather than risk a
+      // silently wrong interaction.
+      if (pluss::codem::dtype_of(anchor->scalar_type()).is_complex()) {
+        ::pluss::throw_error(
+            "pluss::ai::nn::optim::AdamW: capturable mode is not supported for complex parameters");
+      }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];
         if (p == nullptr || !p->defined()) continue;
@@ -303,8 +314,8 @@ private:
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
     const double b2_correction = 1.0 - std::pow(options.beta2, static_cast<double>(step_));
 
-    Series b1_corr_series;
-    Series b2_corr_series;
+    Series b1_corr_series = pluss::series::undefined();
+    Series b2_corr_series = pluss::series::undefined();
     if (options.execution.capturable) {
       const Series one_b1 = scalar_on_(1.0, group.beta1_power);
       const Series one_b2 = scalar_on_(1.0, group.beta2_power);
@@ -324,33 +335,50 @@ private:
       }
 
       Series parameter_value = *param_ptr;
+      if (options.weight_decay != 0.0) {
+        const Series decay_one = scalar_on_(1.0, parameter_value);
+        const Series decay = scalar_on_(options.learning_rate * options.weight_decay, parameter_value);
+        parameter_value = parameter_value.mul(decay_one.sub(decay));
+      }
+
+      // Complex parameters: view as real with a new trailing [.., 2] dim
+      // (real(g)^2 and imag(g)^2 tracked independently, matching torch's
+      // own `_view_as_real` in torch/optim/adamw.py -- capturable mode is
+      // rejected for complex above). No-op for real parameters.
+      const ScalarType original_dtype = parameter_value.scalar_type();
+      sensitivity = view_as_real_(sensitivity);
+      parameter_value = view_as_real_(parameter_value);
+      Series m1_value = view_as_real_(first_moment_[i]);
+      Series m2_value = view_as_real_(second_moment_[i]);
+      Series mmax_value = view_as_real_(max_second_hat_[i]);
+
       const Series one = scalar_on_(1.0, parameter_value);
       const Series beta1 = scalar_on_(options.beta1, parameter_value);
       const Series beta2 = scalar_on_(options.beta2, parameter_value);
       const Series one_minus_beta1 = one.sub(beta1);
       const Series one_minus_beta2 = one.sub(beta2);
-      if (options.weight_decay != 0.0) {
-        const Series decay = scalar_on_(options.learning_rate * options.weight_decay, parameter_value);
-        parameter_value = parameter_value.mul(one.sub(decay));
-      }
 
-      first_moment_[i] = first_moment_[i].mul(beta1).add(sensitivity.mul(one_minus_beta1));
-      second_moment_[i] = second_moment_[i].mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+      m1_value = m1_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
+      m2_value = m2_value.mul(beta2).add(sensitivity.abs2().mul(one_minus_beta2));
 
       Series second_hat = options.execution.capturable
-                              ? second_moment_[i].div(b2_corr_series)
-                              : second_moment_[i].div(scalar_on_(b2_correction, parameter_value));
+                              ? m2_value.div(b2_corr_series)
+                              : m2_value.div(scalar_on_(b2_correction, parameter_value));
       if (options.amsgrad) {
-        max_second_hat_[i] = max_second_hat_[i].maximum(second_hat);
-        second_hat = max_second_hat_[i];
+        mmax_value = mmax_value.maximum(second_hat);
+        second_hat = mmax_value;
       }
 
       const Series first_hat = options.execution.capturable
-                                   ? first_moment_[i].div(b1_corr_series)
-                                   : first_moment_[i].div(scalar_on_(b1_correction, parameter_value));
+                                   ? m1_value.div(b1_corr_series)
+                                   : m1_value.div(scalar_on_(b1_correction, parameter_value));
       const Series denominator = second_hat.sqrt().add(scalar_on_(options.epsilon, parameter_value));
       const Series delta = first_hat.div(denominator).mul(scalar_on_(options.learning_rate, parameter_value));
-      assign_parameter_(*param_ptr, parameter_value.sub(delta));
+
+      first_moment_[i] = view_as_complex_(m1_value, original_dtype);
+      second_moment_[i] = view_as_complex_(m2_value, original_dtype);
+      max_second_hat_[i] = view_as_complex_(mmax_value, original_dtype);
+      assign_parameter_(*param_ptr, view_as_complex_(parameter_value.sub(delta), original_dtype));
     }
   }
 
@@ -403,7 +431,7 @@ private:
       p_batch = p_batch.mul(one.sub(decay));
     }
     m1_batch = m1_batch.mul(beta1).add(g_batch.mul(one_minus_beta1));
-    m2_batch = m2_batch.mul(beta2).add(g_batch.square().mul(one_minus_beta2));
+    m2_batch = m2_batch.mul(beta2).add(g_batch.abs2().mul(one_minus_beta2));
 
     Series second_hat = options.execution.capturable
                             ? m2_batch.div(scalar_on_(1.0, group.beta2_power).sub(group.beta2_power))
@@ -481,7 +509,7 @@ private:
     m1_batch = m1_batch.mul(beta1);
     m1_batch = m1_batch.add(g_batch.mul(one_minus_beta1));
     m2_batch = m2_batch.mul(beta2);
-    m2_batch = m2_batch.add(g_batch.square().mul(one_minus_beta2));
+    m2_batch = m2_batch.add(g_batch.abs2().mul(one_minus_beta2));
 
     Series second_hat = options.execution.capturable
                             ? m2_batch.div(scalar_on_(1.0, group.beta2_power).sub(group.beta2_power))
@@ -531,8 +559,8 @@ private:
   void initialize_group_capture_state_() {
     const auto& params = parameters();
     for (auto& group : groups_) {
-      group.beta1_power = Series{};
-      group.beta2_power = Series{};
+      group.beta1_power = pluss::series::undefined();
+      group.beta2_power = pluss::series::undefined();
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];

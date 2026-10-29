@@ -10,5 +10,5 @@
 //
 // Public namespace families:
 // - pluss::ai::classic -> NodeJ classical ML core
-// - pluss::ai::nets    -> NodeK neural/module surface
+// - pluss::ai::nn      -> NodeK neural/module surface
 // - pluss::ai::nlp     -> NodeB NLP surface

@@ -9,12 +9,12 @@
 namespace pluss::ai::rnn {
 
 struct NetWeight {
-  Series weight_ih{};
-  Series weight_hh{};
-  Series bias{};
-  Series bias_ih{};
-  Series bias_hh{};
-  Series weight_hr{};
+  Series weight_ih = pluss::series::undefined();
+  Series weight_hh = pluss::series::undefined();
+  Series bias = pluss::series::undefined();
+  Series bias_ih = pluss::series::undefined();
+  Series bias_hh = pluss::series::undefined();
+  Series weight_hr = pluss::series::undefined();
 
   [[nodiscard]] bool has_bias() const noexcept { return bias.defined() || bias_ih.defined() || bias_hh.defined(); }
   [[nodiscard]] bool has_projection() const noexcept { return weight_hr.defined(); }
@@ -45,7 +45,7 @@ inline void validate_config(const NetConfig& cfg) {
 
 inline Series unified_bias(const NetWeight& params, const Series& like) {
   if (params.bias.defined()) return ::pluss::detail::nn::cast_like_(params.bias, like);
-  return Series();
+  return pluss::series::undefined();
 }
 
 inline Series gate_chunk(const Series& gates, std::int64_t chunk, std::int64_t chunks) {

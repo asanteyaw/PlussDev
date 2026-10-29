@@ -78,6 +78,8 @@ Output
 D 0.5278 (D+ 0.0000, D- 0.5278), p 0.1423
 ```
 
+The two machines differ by D 0.5278, entirely from the left gap (`D-` 0.5278, `D+` 0.0), with p 0.14: with these sample sizes the gap is not large enough to reject equality of the two distributions.
+
 ### Example 2
 
 Same centre, different spread: the t-test sees nothing, this test does.
@@ -107,6 +109,8 @@ Kolmogorov-Smirnov p 0.0003
 t-test             p 0.1707
 ```
 
+Two samples with the same centre and different spread: the Kolmogorov-Smirnov test rejects with p 0.0003 because it compares whole distribution functions, while the t-test, which compares only means, finds nothing (p 0.17). Use this test when the shape or the spread may differ, not only the centre.
+
 ### Example 3
 
 Repeated values are handled.
@@ -133,6 +137,8 @@ Output
 ```text
 D 0.2619, p 0.6844
 ```
+
+With repeated values the empirical distribution functions have jumps, and the test accounts for them: D 0.2619 with p 0.68, so the two samples are consistent with one distribution.
 
 ## See Also
 

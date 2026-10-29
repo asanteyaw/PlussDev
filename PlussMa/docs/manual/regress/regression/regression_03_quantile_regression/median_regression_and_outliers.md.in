@@ -1,0 +1,101 @@
+# Median regression and outliers
+
+[Back to Quantile Regression](../regression_03_quantile_regression.md)
+
+Least squares models the conditional *mean* of the response, and one wild observation can drag it a long way. Quantile regression models a conditional *quantile* instead. The fit at τ = 0.5 is *median regression*: the line below which half of the observations fall.
+
+```cpp
+reg::QuantileFitResult reg::quantile_fit(const Series &y, const Series &x, const reg::QuantileOptions &options = {}, Config cfg = {});
+Series                 reg::quantile_predict(const reg::QuantileFitResult &fit, const Series &x_new, Config cfg = {});
+```
+
+Inputs are read as for least squares ([Shapes and inputs](../regression_01_least_squares/shapes_and_inputs.md)). The fit minimises the *check-function* loss Σ ρ_τ(rᵢ), where ρ_τ(r) = τ r for a residual r ≥ 0 and (τ − 1) r for r < 0. The loss weighs a residual above the line by τ and a residual below it by 1 − τ, so at the minimum a fraction τ of the observations lie below the line. At τ = 0.5 both weights are equal and the loss is half the sum of absolute residuals, which grows only linearly with a large residual, unlike the square in least squares.
+
+The fit is computed by iteratively reweighted least squares: each step is a weighted least-squares fit with weights τ or 1 − τ divided by the absolute residual. `QuantileOptions::tau` is the quantile and must lie strictly between 0 and 1.
+
+## One outlier
+
+The response is close to the line y = 1 + 2x at ten points. The last observation is replaced by a wild value, and the program fits least squares and the median line to the data as the outlier grows from 21 (no outlier) to 60, 600 and 6000. The median fit does not move.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<double> xs{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const std::vector<double> clean{3.0, 5.1, 6.9, 9.0, 11.1, 13.0, 15.0, 16.9, 19.1, 21.0};
+  const auto x = pluss::make_series(xs, {10}, as_f64());
+
+  out.writeln("last value   least squares (intercept, slope)   median (intercept, slope)   median converged / iterations");
+  for (double outlier : {21.0, 60.0, 600.0, 6000.0}) {
+    auto values = clean;
+    values[9] = outlier;
+    const auto y = pluss::make_series(values, {10}, as_f64());
+    const auto ols = reg::ols_fit(y, x);
+    const auto median = reg::quantile_fit(y, x);
+    out.writeln(outlier, "  ", ols.coefficients.pull<double>(), "  ", median.coefficients.pull<double>(), "  ", median.converged, median.iterations);
+  }
+}
+```
+
+Least squares is moved at once: with the last value at 60 its line is [−6.79, 4.13], and with 6000 it is [−1194.8, 328.1], nothing like the other nine points. The median line is [1, 2] in every row. Four of the points lie exactly on y = 1 + 2x (at x = 1, 4, 6 and 7), and the median condition only counts how many observations lie above and below the line, not how far: an observation that is already above it can move any distance without changing the fit. The number of iterations depends on the data (9, 141, 115 and 131 here), and the fit converged each time.
+
+## What the fit satisfies
+
+A least-squares line has residuals that sum to zero and are orthogonal to the predictors. The median line has its own characterisation: no small change in the coefficients can lower the check-function loss, and neither side of the line holds more than half of the observations. The program checks the reported `objective` against the loss computed by hand, and then evaluates the loss at a ring of perturbed coefficient pairs. Every one is at least as large, which is what a minimum means. The least-squares coefficients, evaluated in the same loss, are worse.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> xs{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  std::vector<double> values{3.0, 5.1, 6.9, 9.0, 11.1, 13.0, 15.0, 16.9, 19.1, 60.0};
+  const auto x = pluss::make_series(xs, {10}, as_f64());
+  const auto y = pluss::make_series(values, {10}, as_f64());
+  const auto fit = reg::quantile_fit(y, x);
+  const auto b = fit.coefficients.pull<double>();
+
+  // The check-function loss of a line with the given intercept and slope.
+  auto loss = [&](double intercept, double slope, double tau) {
+    const auto r = y.sub(x.mul(slope).add(intercept));
+    return r.ge(0.0).where(r.mul(tau), r.mul(tau - 1.0)).sum().item<double>();
+  };
+  out.writeln("objective reported", fit.objective, " by hand", loss(b[0], b[1], 0.5));
+
+  double smallest_ring_loss = 1e300;
+  for (double di : {-0.05, 0.0, 0.05}) {
+    for (double ds : {-0.05, 0.0, 0.05}) {
+      if (di != 0.0 || ds != 0.0) {
+        smallest_ring_loss = std::min(smallest_ring_loss, loss(b[0] + di, b[1] + ds, 0.5));
+      }
+    }
+  }
+  out.writeln("smallest loss on the surrounding ring", smallest_ring_loss, " (at least the objective)");
+  const auto ols = reg::ols_fit(y, x).coefficients.pull<double>();
+  out.writeln("loss at the least-squares line       ", loss(ols[0], ols[1], 0.5));
+
+  const auto r = fit.residuals.pull<double>();
+  int below = 0, above = 0, near = 0;
+  for (double v : r) {
+    (v < -1e-4 ? below : v > 1e-4 ? above : near)++;
+  }
+  out.writeln("residuals below / near zero / above", below, near, above, " of", fit.nobs);
+  out.writeln("fitted + residuals = response:", fit.fitted_values.add(fit.residuals).sub(y).abs().max().item<double>());
+  out.writeln("null objective (constant median)", fit.objective_null, " pseudo R2", fit.pseudo_rsquared, " by hand", 1.0 - fit.objective / fit.objective_null);
+}
+```
+
+The reported `objective` equals the check-function loss computed by hand, 19.75. The nearest perturbed lines all have a larger loss (the smallest is 19.80), and the least-squares line, with its loss of 36.12, is far worse as a median line. Of the ten residuals, two are below the line, four are on it (the four points just named, to within 10⁻⁴) and four are above: neither side holds more than half of the observations, which is the median condition. The fitted values plus the residuals give back the response, and the pseudo R² of 0.5557 is the loss removed relative to a constant at the sample median (44.45).

@@ -2,8 +2,10 @@
 
 #include "pluss/subsp/math/function.h"
 #include "pluss/subsp/math/operators.h"
+#include "pluss/subsp/math/calculus_io.h"
 #include "pluss/ma/math/optimization.h"
 #include "pluss/ma/math/integration.h"
+#include "pluss/ma/math/signal.h"
 #include "pluss/ma/math/interpolation.h"
 #include "pluss/subsp/math/krylov.h"
 #include "pluss/subsp/math/multigrid.h"

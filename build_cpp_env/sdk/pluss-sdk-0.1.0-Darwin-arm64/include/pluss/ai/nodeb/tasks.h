@@ -10,7 +10,11 @@ struct MatcherPattern {
   bool use_lemmas = true;
 };
 
-using EntityPattern = MatcherPattern;
+struct EntityPattern {
+  std::string label{};
+  std::vector<std::string> tokens{};
+  bool use_lemmas = true;
+};
 
 class SentencizerStage final : public IStage {
 public:
@@ -67,6 +71,7 @@ public:
              const TrainOptions& options) override;
   [[nodiscard]] std::vector<std::string> dump_state_lines() const override;
   void load_state_lines(pluss::msharp::RangeView::Of<std::string_view> lines) override;
+  [[nodiscard]] TrainingReport training_report() const;
 
 private:
   struct Impl;
@@ -102,6 +107,7 @@ public:
   void load_state_lines(pluss::msharp::RangeView::Of<std::string_view> lines) override;
 
   NerStage& add_pattern(EntityPattern pattern);
+  [[nodiscard]] TrainingReport training_report() const;
 
 private:
   struct Impl;
@@ -122,6 +128,7 @@ public:
              const TrainOptions& options) override;
   [[nodiscard]] std::vector<std::string> dump_state_lines() const override;
   void load_state_lines(pluss::msharp::RangeView::Of<std::string_view> lines) override;
+  [[nodiscard]] TrainingReport training_report() const;
 
 private:
   struct Impl;

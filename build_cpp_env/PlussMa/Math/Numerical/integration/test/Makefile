@@ -206,6 +206,20 @@ integ_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/build
 .PHONY : integ_test/fast
 
+# Convenience name for target.
+PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/rule
+
+# Convenience name for target.
+lebesgue_test: PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/rule
+.PHONY : lebesgue_test
+
+# fast build rule for target.
+lebesgue_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/build
+.PHONY : lebesgue_test/fast
+
 integ_test.o: integ_test.cpp.o
 .PHONY : integ_test.o
 
@@ -230,6 +244,30 @@ integ_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/integ_test.cpp.s
 .PHONY : integ_test.cpp.s
 
+lebesgue_test.o: lebesgue_test.cpp.o
+.PHONY : lebesgue_test.o
+
+# target to build an object file
+lebesgue_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/lebesgue_test.cpp.o
+.PHONY : lebesgue_test.cpp.o
+
+lebesgue_test.i: lebesgue_test.cpp.i
+.PHONY : lebesgue_test.i
+
+# target to preprocess a source file
+lebesgue_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/lebesgue_test.cpp.i
+.PHONY : lebesgue_test.cpp.i
+
+lebesgue_test.s: lebesgue_test.cpp.s
+.PHONY : lebesgue_test.s
+
+# target to generate assembly for a file
+lebesgue_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/lebesgue_test.cpp.s
+.PHONY : lebesgue_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,9 +284,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... integ_test"
+	@echo "... lebesgue_test"
 	@echo "... integ_test.o"
 	@echo "... integ_test.i"
 	@echo "... integ_test.s"
+	@echo "... lebesgue_test.o"
+	@echo "... lebesgue_test.i"
+	@echo "... lebesgue_test.s"
 .PHONY : help
 
 

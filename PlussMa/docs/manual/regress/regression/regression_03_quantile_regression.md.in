@@ -1,0 +1,58 @@
+# Regression 3: Quantile Regression
+
+Least squares describes the conditional mean of a response. Quantile regression describes a conditional *quantile*: the line below which a given fraction τ of the responses lie. The median line (τ = 0.5) is not dragged by outliers, and a set of quantile lines shows how the whole distribution of the response changes with the predictors, including its spread. After this chapter you can fit a quantile line, compare several quantiles, choose the covariance estimator, control the optimiser, and read the report.
+
+Every program is complete, and its output is the output of that program.
+
+## The calls
+
+```cpp
+reg::QuantileFitResult reg::quantile_fit(const Series &y, const Series &x, const reg::QuantileOptions &options = {}, Config cfg = {});
+Series                 reg::quantile_predict(const reg::QuantileFitResult &fit, const Series &x_new, Config cfg = {});
+std::string            reg::quantile_summary(const reg::QuantileFitResult &fit);
+std::ostream          &reg::print_quantile_summary(std::ostream &os, const reg::QuantileFitResult &fit);
+```
+
+Inputs are read as for least squares ([Shapes and inputs](regression_01_least_squares/shapes_and_inputs.md)). The loss minimised is the check function, which weighs a residual above the line by τ and below it by 1 − τ.
+
+| `QuantileOptions` | Meaning | Default |
+|---|---|---|
+| `tau` | the quantile, strictly between 0 and 1 | 0.5 |
+| `covariance` | `Robust` (a sandwich estimator) or `Iid` | `Robust` |
+| `alpha` | the intervals have coverage `1 − alpha` | 0.05 |
+| `add_intercept`, `drop_missing`, `rcond` | as for least squares | true, true, 1e-12 |
+| `weights` | case weights; row *i* counts as if repeated `weights[i]` times | none |
+| `max_iter`, `tol`, `eps` | the optimiser: iteration cap, convergence tolerance, and floor on the absolute residual in the weights | 500, 1e-7, 1e-6 |
+| `response_name`, `predictor_names` | labels used by the summary | `"y"`, none |
+
+| `QuantileFitResult` | Meaning |
+|---|---|
+| `coefficients`, `std_errors`, `t_values`, `p_values` | one per parameter; the p-values and intervals use Student's *t* on `df_resid` degrees of freedom |
+| `conf_int`, `covariance` | `[k, 2]` limits and the `[k, k]` covariance matrix |
+| `fitted_values`, `residuals` | `[n]`, for the rows used |
+| `tau`, `objective`, `objective_null`, `pseudo_rsquared` | the quantile, the check-function loss at the fit and at a constant, and `1 − objective / objective_null` |
+| `residual_density0` | the estimated density of the residuals at zero, on which the standard errors rest |
+| `iterations`, `converged` | what the optimiser did |
+| `nobs`, `rank`, `k_params`, `num_predictors`, `df_model`, `df_resid`, `dropped_observations`, `warnings` | counts and conditioning |
+| `has_intercept`, `coefficient_names`, `response_name`, `alpha` | what the fit was made with |
+
+## Programs
+
+- [Median regression and outliers](regression_03_quantile_regression/median_regression_and_outliers.md)
+- [Several quantiles](regression_03_quantile_regression/several_quantiles.md)
+- [Covariance choices](regression_03_quantile_regression/covariance_choices.md)
+- [Optimiser controls](regression_03_quantile_regression/optimiser_controls.md)
+- [Case weights](regression_03_quantile_regression/case_weights.md)
+- [Prediction, the summary and options](regression_03_quantile_regression/prediction_summary_and_options.md)
+
+## Checklist
+
+1. A response with outliers, or a question about the median or another quantile: quantile regression. A question about the mean: least squares.
+2. Fit several τ to see whether the spread changes with the predictors; do not read a quantile function off lines that cross.
+3. Read `converged`. An unconverged fit returns its last iterate, not the minimum.
+4. The standard errors are only as good as the estimate of the density at zero: they need enough observations near the line.
+5. `Robust` and `Iid` give the same coefficients; they differ in precision, except at τ = 0.5 where they agree.
+6. A prediction is a prediction of the τ-quantile, not of the mean.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

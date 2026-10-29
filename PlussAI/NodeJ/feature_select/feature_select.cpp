@@ -47,7 +47,7 @@ struct DenseRows {
   if (batch.layout == ObservationLayout::Columns) {
     rows = rows.transpose(0, 1).contiguous();
   }
-  out.x = rows.host<double>();
+  out.x = rows.host<double>().array().data;
   if (static_cast<std::int64_t>(out.x.size()) != out.samples * out.features) {
     return StatusOr<DenseRows>(Status::shape_mismatch(std::string(where) + " encountered inconsistent feature shape."));
   }
@@ -62,7 +62,7 @@ struct DenseRows {
   if (y_flat.isnan().any().item<bool>()) {
     return StatusOr<std::vector<double>>(Status::invalid_argument(std::string(where) + " requires finite labels."));
   }
-  return StatusOr<std::vector<double>>(y_flat.host<double>());
+  return StatusOr<std::vector<double>>(y_flat.host<double>().array().data);
 }
 
 [[nodiscard]] std::vector<double> normalized_unique(std::vector<double> values) {

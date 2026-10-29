@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=fc808d0b"></script>
+    <script src="../../../_static/api_nav.js?v=0f307078"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -43,16 +43,20 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">trace</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<span class="n">Series</span><span class="o">::</span><span class="n">trace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">offset</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<span class="n">Series</span><span class="o">::</span><span class="n">trace</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">offset</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim1</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim2</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">trace()</span></code> sums the main diagonal of a 2D <code class="docutils literal notranslate"><span class="pre">Series</span></code> and returns that sum as a
-scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">trace()</span></code> sums a diagonal of a <code class="docutils literal notranslate"><span class="pre">Series</span></code> and returns that sum. On a 2D matrix
+the result is a scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>. On higher-rank input the diagonal is taken
+over a chosen pair of axes (by default the first two) and the remaining axes
+are kept, so a stack of matrices gives one trace per matrix.</p>
 <p>Two parts of that contract matter in real code:</p>
 <ul class="simple">
-<li><p>it is a reduction, so the output is scalar-shaped</p></li>
+<li><p>it is a reduction over the diagonal axis only</p></li>
 <li><p>it reads only the diagonal positions, not the full matrix</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">trace()</span></code> also accepts rectangular 2D input. In that case it walks only as far
@@ -61,15 +65,19 @@ as a diagonal still exists, so the effective diagonal length is
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p>None.</p>
-<p>The method always uses the main diagonal. If you need an offset diagonal, first
-extract it with <a class="reference internal" href="diagonal.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagonal()</span></code></span></a> or <a class="reference internal" href="diag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diag()</span></code></span></a>, then reduce
-that result yourself.</p>
+<p><strong>offset</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p>
+<p>Which diagonal to sum. Positive values move toward later columns (above the
+main diagonal), negative values toward later rows.</p>
+<p><strong>dim1</strong>, <strong>dim2</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, defaults <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>)</p>
+<p>The two axes the diagonal is read from; negative values count from the end.
+They must differ. Every other axis is carried into the result in order. The
+offset is measured from <code class="docutils literal notranslate"><span class="pre">dim1</span></code> toward <code class="docutils literal notranslate"><span class="pre">dim2</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code> containing the sum of the main diagonal.</p>
+A scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code> for 2D input. For rank <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">&gt;</span> <span class="pre">2</span></code>, a <code class="docutils literal notranslate"><span class="pre">Series</span></code> of rank
+<code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">-</span> <span class="pre">2</span></code> holding one diagonal sum per position of the remaining axes.</p>
 <p>That scalar result still behaves like an ordinary <code class="docutils literal notranslate"><span class="pre">Series</span></code>. You can print it,
 chain more <code class="docutils literal notranslate"><span class="pre">Series</span></code> methods from it, or extract the contained value with
 <code class="docutils literal notranslate"><span class="pre">item&lt;T&gt;()</span></code> when you truly need a plain scalar.</p>
@@ -121,8 +129,7 @@ summed.</p>
 data=6
 </pre></div>
 </div>
-<p>So this is not a “square matrices only” method. It is a “2D matrices only”
-method.</p>
+<p>So this is not a “square matrices only” method.</p>
 <p>Example 3. Rank-1 input fails because there is no matrix diagonal to reduce.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">).</span><span class="n">trace</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -135,7 +142,7 @@ method.</p>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>diag/diagonal: extraction expects a 2D input
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>diagonal: expects a Series with at least 2 dimensions
 </pre></div>
 </div>
 <p>The message comes from the shared diagonal extraction path, which is why it
@@ -162,6 +169,42 @@ data=[[1, 0, 0],
   [0, 0, 1]]
 </pre></div>
 </div>
+<p>Example 5. An offset sums a shifted diagonal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">square</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">square</span><span class="p">.</span><span class="n">trace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">   </span><span class="c1">// 2 + 6</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">square</span><span class="p">.</span><span class="n">trace</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span><span class="w">          </span><span class="c1">// 4 + 8</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=8
+pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=12
+</pre></div>
+</div>
+<p>Example 6. Higher-rank input: pick the two axes, and the rest are kept.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">                                </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">trace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w">   </span><span class="c1">// trace of each 3 x 4 slice</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[18, 54]
+</pre></div>
+</div>
+<p>Axis 0 is kept, so there is one trace per slice: <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">6</span> <span class="pre">+</span> <span class="pre">11</span></code> and
+<code class="docutils literal notranslate"><span class="pre">13</span> <span class="pre">+</span> <span class="pre">18</span> <span class="pre">+</span> <span class="pre">23</span></code>.</p>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -169,15 +212,20 @@ data=[[1, 0, 0],
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">trace()</span></code> returns a scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not a raw number.</p></li>
 <li><p>Rectangular matrices are valid; the diagonal length is clipped naturally.</p></li>
-<li><p>Rank-0, rank-1, and rank-3+ inputs fail because this method is 2D-only.</p></li>
+<li><p>Rank-0 and rank-1 inputs fail because there is no pair of axes to take a
+diagonal over.</p></li>
+<li><p>With the default axes, rank-3+ input is a batched trace over axes <code class="docutils literal notranslate"><span class="pre">0</span></code> and
+<code class="docutils literal notranslate"><span class="pre">1</span></code>; pass <code class="docutils literal notranslate"><span class="pre">dim1</span></code>/<code class="docutils literal notranslate"><span class="pre">dim2</span></code> (for example <code class="docutils literal notranslate"><span class="pre">-2,</span> <span class="pre">-1</span></code>) to trace the trailing matrices
+instead.</p></li>
 <li><p>Reverse-mode only touches the diagonal entries that actually contributed.</p></li>
 </ul>
 </section>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">trace()</span></code> when you want the sum of the main diagonal of a 2D <code class="docutils literal notranslate"><span class="pre">Series</span></code>.
-Expect a scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code> result, expect rectangular matrices to work, and
-expect reverse-mode to mark only the contributing diagonal entries.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">trace()</span></code> when you want the sum of a diagonal. A 2D <code class="docutils literal notranslate"><span class="pre">Series</span></code> gives a scalar
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>; higher-rank input keeps its other axes; <code class="docutils literal notranslate"><span class="pre">offset</span></code>, <code class="docutils literal notranslate"><span class="pre">dim1</span></code> and <code class="docutils literal notranslate"><span class="pre">dim2</span></code>
+select which diagonal. Rectangular matrices work, and reverse-mode marks only
+the contributing diagonal entries.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>

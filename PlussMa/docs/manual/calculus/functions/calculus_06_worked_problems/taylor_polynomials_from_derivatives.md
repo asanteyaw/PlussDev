@@ -1,0 +1,60 @@
+<!-- generated from taylor_polynomials_from_derivatives.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Worked problem: a Taylor polynomial and its error
+
+The Taylor polynomial of degree n about a point a is Σ f⁽ᵏ⁾(a)(x − a)ᵏ/k!, built from the derivatives of f at a. With `differential` those derivatives are exact functions, so the polynomial can be assembled from them and compared with the function it approximates.
+
+This program expands f(x) = exp(sin x) about a = 0, a function whose derivatives become progressively more complicated (f′ = cos x · f, f″ = (cos²x − sin x) f, and so on, none of which is written by hand here). It builds the coefficients from the derivatives at 0, evaluates the polynomials of degrees 1, 2, 3, 4 and 6 at three points, and prints the error against the function itself.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sin().exp(); });
+
+  // coefficients[k] = f^(k)(0) / k!
+  std::vector<double> coefficients;
+  double factorial = 1.0;
+  for (std::int64_t k = 0; k <= 6; ++k) {
+    if (k > 0) factorial *= static_cast<double>(k);
+    const double derivative = (k == 0 ? f : operators::differential("x", k)(f))(0.0).item<double>();
+    coefficients.push_back(derivative / factorial);
+  }
+  out.writeln("Taylor coefficients about 0:", coefficients);
+
+  const auto x = pluss::make_series({0.1, 0.5, 1.0});
+  out.writeln("f(x)          ", f({x}).pull<double>(), " at x", x.pull<double>());
+  for (const std::int64_t degree : {1, 2, 3, 4, 6}) {
+    auto polynomial = pluss::series::zeros_like(x);
+    for (std::int64_t k = 0; k <= degree; ++k) polynomial = polynomial.add(x.pow(static_cast<double>(k)).mul(coefficients[static_cast<std::size_t>(k)]));
+    out.writeln("degree", degree, " error", f({x}).sub(polynomial).abs().pull<double>());
+  }
+}
+```
+
+Output
+
+```text
+Taylor coefficients about 0: [1.000000, 1.000000, 0.500000, 0.000000, -0.125000, -0.066667, -0.004167]
+f(x)           [1.104987, 1.615146, 2.319777]  at x [0.100000, 0.500000, 1.000000]
+degree 1  error [0.004987, 0.115146, 0.319777]
+degree 2  error [0.000013, 0.009854, 0.180223]
+degree 3  error [0.000013, 0.009854, 0.180223]
+degree 4  error [0.000001, 0.002041, 0.055223]
+degree 6  error [0.000000, 0.000107, 0.015610]
+```
+
+The seven derivatives at 0 give the coefficients 1, 1, ½, 0, −⅛, −1/15 and −1/240, which is the known series exp(sin x) = 1 + x + x²/2 − x⁴/8 − x⁵/15 − x⁶/240 + …, and none of the intermediate derivatives was written out. The errors fall with the degree and rise with the distance from 0, as a Taylor remainder does. At x = 0.1 the degree-2 polynomial is already accurate to 1.3e-5, at 0.5 the degree-6 polynomial is within 1.1e-4, and at x = 1 it is still within 0.016. Degrees 2 and 3 have identical errors because the coefficient of x³ is exactly zero.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

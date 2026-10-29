@@ -22,7 +22,7 @@
 namespace pluss::codeh {
 
 class Timeline;
-class TimeIndex;
+class TimelineIndexAccessor;
 
 enum class TimelineSpanUnit : std::uint8_t {
   Nanos = 0,
@@ -319,8 +319,12 @@ public:
   pluss::codem::Series operator>=(const Timeline& other) const;
 
   Timeline shift(int periods, std::string_view freq) const;
-  Timeline to_period(std::string_view freq) const;
-  TimeIndex to_timeindex(bool require_sorted = true) const;
+  Timeline period_start(std::string_view unit) const;
+
+  // Validate this Timeline as a rank-one temporal axis. The returned handle
+  // owns the validated state, so its index operations do not repeat the
+  // monotonicity scan.
+  TimelineIndexAccessor index(bool require_sorted = true) const;
 
   // High-priority interop tranche for dataframe-style datetime workflows.
   // Build Timeline from calendar component columns (Series) and convert back
@@ -358,7 +362,7 @@ public:
   static Timeline tomorrow();
   static std::vector<Timeline> date_range(const Timeline& start,
                                           const Timeline& end,
-                                          std::string_view freq = "D",
+                                          std::string_view freq = "day",
                                           int step = 1);
 
   static void validate_ticks_series(const pluss::codem::Series& ticks) {

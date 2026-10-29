@@ -5,6 +5,7 @@
 #include "pluss/nn.h"
 
 #include <cstdint>
+#include <iosfwd>
 #include <memory>
 #include <optional>
 #include <string>
@@ -87,6 +88,25 @@ private:
   std::vector<std::shared_ptr<Callback>> callbacks_{};
 };
 
+class EpochLoggerCallback final : public Callback {
+public:
+  explicit EpochLoggerCallback(ProgressPolicy policy = {});
+  EpochLoggerCallback(ProgressPolicy policy, std::ostream& output);
+
+  void on_epoch_end(RunState& state) override;
+  void on_run_end(RunState& state) override;
+  void on_exception(RunState& state) override;
+
+  [[nodiscard]] const ProgressPolicy& policy() const noexcept { return policy_; }
+
+private:
+  void finish_line_();
+
+  ProgressPolicy policy_{};
+  std::ostream* output_ = nullptr;
+  bool line_open_ = false;
+};
+
 class EarlyStopCallback final : public Callback {
 public:
   EarlyStopCallback(ValidationPolicy validation, LoopRegularization regularization)
@@ -114,7 +134,6 @@ private:
   std::int64_t stopped_epoch_ = -1;
   std::int64_t wait_count_ = 0;
   std::vector<Series> best_parameters_{};
-  bool loaded_from_checkpoint_ = false;
 };
 
 } // namespace pluss::ai::ice

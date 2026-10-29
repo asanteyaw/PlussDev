@@ -86,6 +86,8 @@ mean 5.6125, z 3.4648, p 0.0005, standard error 0.1768
 95% interval [5.2660, 5.9590]
 ```
 
+With the standard deviation known to be 0.5, the mean 5.61 is z 3.46 standard errors (0.177) from the target and p is 0.0005; the 95% interval is [5.27, 5.96]. The z test uses the normal distribution, not the t distribution, because the spread is not estimated.
+
 ### Example 2
 
 The answer depends on the assumed sigma.
@@ -117,6 +119,8 @@ sigma 0.5000: z 3.4648, p 0.0005 (reject)
 sigma 0.8000: z 2.1655, p 0.0303 (reject)
 sigma 1.2000: z 1.4437, p 0.1488 (keep)
 ```
+
+The conclusion depends on the standard deviation assumed: at sigma 0.3, 0.5 and 0.8 the null is rejected (p 0.0000, 0.0005 and 0.0303), while at 1.2 it is kept (p 0.149). Use the z test only when sigma is truly known, not guessed.
 
 ## See Also
 

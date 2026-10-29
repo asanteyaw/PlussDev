@@ -1,6 +1,7 @@
 #include <pluss/ma.h>
 
 #include <iostream>
+#include <span>
 
 int main() {
   namespace fin = pluss::subsp::math::finance;
@@ -53,7 +54,8 @@ int main() {
   shifted[2] = 0.34;
   shifted[3] = -0.60;
   shifted[4] = 0.05;
-  pipe.model.parameters(shifted, cfg);
+  pipe.model.parameters(
+      std::span<const double>(shifted.data(), shifted.size()), cfg);
   std::cout << "objective(shifted): " << pipe.objective(market_px, cfg) << "\n";
 
   pipe.controls.engine = mod::Engine::MonteCarlo;

@@ -1,0 +1,191 @@
+<!-- generated from custom_operators.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Custom operators
+
+[Back to Operators](../calculus_05_operators.md)
+
+A custom operator is an `Operator` defined by a callable: any callable that takes a `const math::Function &` and returns a `math::Function`. It has the same type as the built-in operators, so it can be applied, composed, combined in a linear combination and stored with them.
+
+```cpp
+template <class Callable> operators::Operator operators::define(std::string_view key, Callable &&callable, Options options = {});
+template <class Callable> operators::Operator operators::define(Callable &&callable);
+```
+
+The callable runs at **application time**, once, when `op(f)` is called, and it receives the function as a value. It builds the result from `f` with the operations the previous chapters described, including other operators. The result is an ordinary `Function`.
+
+## A first operator
+
+The logarithmic derivative f′/f is not a built-in operator but is one line to define, using `differential` inside:
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  int applications = 0;
+  const operators::Operator log_derivative = operators::define("example.log_derivative", [&applications](const math::Function &f) {
+    ++applications;
+    return operators::differential("x")(f) / f;
+  });
+
+  const math::Function gaussian = math::function({"x"}, [](math::Function x) { return (-x.pow(2)).exp(); });
+  const math::Function rate = log_derivative(gaussian);
+  const auto x = pluss::make_series({-1.0, 0.5, 2.0});
+
+  out.writeln("applications so far:", applications, "(the callable ran once, when the operator met the function)");
+  out.writeln("f'/f for exp(-x^2)    ", rate({x}).pull<double>(), " = -2x:", x.mul(-2.0).pull<double>());
+  out.writeln("evaluated again       ", rate({x}).pull<double>());
+  out.writeln("applications:", applications);
+  out.writeln("key", log_derivative.key(), " version", log_derivative.version());
+}
+```
+
+Output
+
+```text
+applications so far: 1 (the callable ran once, when the operator met the function)
+f'/f for exp(-x^2)     [2.000000, -1.000000, -4.000000]  = -2x: [2.000000, -1.000000, -4.000000]
+evaluated again        [2.000000, -1.000000, -4.000000]
+applications: 1
+key example.log_derivative  version 1
+```
+
+The callable ran exactly once, at the moment of `log_derivative(gaussian)`; evaluating `rate` any number of times replays the stored graph and does not call it again. The key `example.log_derivative` is a name you choose. The operator was applied to a function with the variable `x`, so the callable names `x`; to work with any variable, take the variable name as a parameter of a factory function, as `plus_constant` does with its offset below.
+
+## Parameters, composition and move-only state
+
+A callable can capture parameters, including move-only values such as a `unique_ptr`, and the operator it defines owns what it captured. Operators defined this way compose with the built-in ones.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <memory>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+// A factory: the operator that adds `offset` to a function. It captures its parameter by value.
+static operators::Operator plus_constant(double offset) {
+  return operators::define("example.plus_constant", [offset](const math::Function &f) { return f + offset; });
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.pow(2) + x; });
+  const auto x = pluss::make_series({0.0, 1.0, 2.0});
+
+  // Move-only state: the exponent lives in a unique_ptr that the operator now owns.
+  auto exponent = std::make_unique<double>(3.0);
+  const operators::Operator power = operators::define([exponent = std::move(exponent)](const math::Function &g) { return g.pow(*exponent); });
+  out.writeln("g^3 for g = x^2 + x ", power(f)({x}).pull<double>());
+
+  // A custom operator composes with built-in ones: the derivative of g^3.
+  const operators::Operator d_of_power = operators::compose(operators::differential("x"), power);
+  out.writeln("d/dx (g^3)          ", d_of_power(f)({x}).pull<double>(), " = 3 g^2 g':", x.pow(2).add(x).pow(2).mul(x.mul(2.0).add(1.0)).mul(3.0).pull<double>());
+
+  // A parameterised operator from a factory, composed with another operator.
+  const operators::Operator lifted = plus_constant(10.0);
+  out.writeln("g + 10              ", lifted(f)({x}).pull<double>());
+  out.writeln("d/dx (g + 10)       ", operators::compose(operators::differential("x"), lifted)(f)({x}).pull<double>(), " = g':", x.mul(2.0).add(1.0).pull<double>());
+  out.writeln("lifted is linear:", lifted.capabilities().linear ? "yes" : "no", "(adding a constant is affine, not linear)");
+}
+```
+
+Output
+
+```text
+g^3 for g = x^2 + x  [0.0000, 8.0000, 216.0000]
+d/dx (g^3)           [0.0000, 36.0000, 540.0000]  = 3 g^2 g': [0.0000, 36.0000, 540.0000]
+g + 10               [10.0000, 12.0000, 16.0000]
+d/dx (g + 10)        [1.0000, 3.0000, 5.0000]  = g': [1.0000, 3.0000, 5.0000]
+lifted is linear: no (adding a constant is affine, not linear)
+```
+
+The power operator owns the `unique_ptr` it captured; the operator can be copied freely, because copies share that one owned state. It maps `g = x² + x` to `g³`, and composing it with the derivative operator gives 3g²g′. The factory `plus_constant` shows the usual way to parameterise an operator: a function that returns `define(...)` with the parameter captured by value. The declared flags default to the cautious values, and `plus_constant` is correctly not marked linear, because `f ↦ f + c` is affine.
+
+## Declaring capabilities
+
+`define` takes an `Options` value that states what the operator promises. The library trusts these flags: it uses `linear` when it combines operators, and `serializable` decides whether `save` accepts the operator. They are declarations, not checks.
+
+| `Options` field | Default | Meaning |
+|---|---|---|
+| `version` | 1 | version of the definition; saved operators remember it, and it must be positive |
+| `structural` | true | the callable builds the result from the graph of `f` |
+| `evaluated_only` | false | the callable works on values only; cannot be combined with `structural` |
+| `linear` | false | the callable is linear in `f` |
+| `adjoint_known` | false | the adjoint is known |
+| `serializable` | false | the operator can be saved; requires a key, and a loader bound with `operators::bind` for loading |
+| `platform_pure` | true | the callable does not move data between platforms |
+| `payload` | empty | text saved with the operator and handed back to its loader |
+
+Declare `linear = true` only if the operator really is linear, because combinations of operators compute their own `linear` flag from their parts' flags. The contracts that can be checked are checked: an empty `std::function`, a body that returns an undefined `Function`, contradictory `structural` and `evaluated_only`, a `serializable` operator without a key, and a zero version are all errors.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <functional>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static void attempt(OutputEngine &out, const char *label, const std::function<void()> &call) {
+  try {
+    call();
+    out.writeln(label, "-> accepted");
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(label, "->", text.substr(0, text.find('\n')));
+  }
+}
+
+int main() {
+  OutputEngine out;
+  const auto pass_through = [](const math::Function &f) { return f; };
+  const math::Function square = math::function({"x"}, [](math::Function x) { return x.pow(2); });
+
+  attempt(out, "empty std::function                ", [&] { (void)operators::define("empty", std::function<math::Function(const math::Function &)>{}); });
+  attempt(out, "structural and evaluated_only      ", [&] { (void)operators::define("both", pass_through, operators::Options{.structural = true, .evaluated_only = true}); });
+  attempt(out, "serializable without a key         ", [&] { (void)operators::define({}, pass_through, operators::Options{.serializable = true}); });
+  attempt(out, "version 0                          ", [&] { (void)operators::define("v0", pass_through, operators::Options{.version = 0}); });
+  attempt(out, "body returns an undefined Function ", [&] {
+    const operators::Operator bad = operators::define("bad", [](const math::Function &) { return math::Function{}; });
+    (void)bad(square);
+  });
+  attempt(out, "an undefined Operator, applied     ", [&] { (void)operators::Operator{}(square); });
+  attempt(out, "a valid declaration                ", [&] { (void)operators::define("ok", pass_through, operators::Options{.version = 3, .linear = true}); });
+
+  const operators::Operator declared = operators::define("example.declared", pass_through, operators::Options{.version = 3, .linear = true});
+  out.writeln("declared: key", declared.key(), " version", declared.version(), " linear", declared.capabilities().linear,
+              " serializable", declared.capabilities().serializable);
+}
+```
+
+Output
+
+```text
+empty std::function                 -> operators::define: callable must not be empty
+structural and evaluated_only       -> operators::define: structural and evaluated_only cannot both be true
+serializable without a key          -> operators::define: a serializable custom operator requires a stable key
+version 0                           -> operators::define: version must be positive
+body returns an undefined Function  -> operators::Operator: application returned an undefined Function
+an undefined Operator, applied      -> operators::Operator: operation requires a defined operator
+a valid declaration                 -> accepted
+declared: key example.declared  version 3  linear true  serializable false
+```
+
+The first six rows are contracts the library checks, and each message says which one failed. The last two of them, the body that returns nothing and the undefined operator, fail when the operator is applied rather than when it is defined. The last two lines show the declared metadata coming back from the operator: the key, the version 3 and the `linear` flag set by the caller, with `serializable` still false because it was not requested.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

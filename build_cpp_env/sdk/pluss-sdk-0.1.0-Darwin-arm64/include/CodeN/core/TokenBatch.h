@@ -28,9 +28,11 @@ public:
   bool defined() const noexcept { return static_cast<bool>(impl_); }
   bool empty() const noexcept;
 
-  // Accessors (references are valid as long as *this is alive).
+  // Accessors (references are valid as long as *this is alive). A ragged
+  // result is a closed pair of Notes: `tokens()` (Text/Bytes) and
+  // `offsets()` (Int64, length numel()+1 -- CSR-style row boundaries).
   const Note& tokens() const;
-  const ::std::vector<::std::int64_t>& offsets() const;
+  const Note& offsets() const;
 
 private:
   explicit TokenBatch(::pluss::msharp::intrusive_ptr<TokenBatchImpl> impl) : impl_(::std::move(impl)) {}

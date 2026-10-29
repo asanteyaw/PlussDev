@@ -1,0 +1,178 @@
+<!-- generated from non_smooth_points.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Non-smooth points
+
+[Back to Derivatives](../calculus_02_derivatives.md)
+
+The absolute value `|x|` has a derivative everywhere except at 0, where it has a corner. A function can contain `abs` and still be a perfectly good model, as in a loss, a payoff or a rectifier, and what its derivative should be at the corner depends on what you are doing. Rather than choose silently, `DiffOptions::nonsmooth` makes you choose.
+
+| `NonSmooth` | Derivative of `abs(u)` where `u = 0` |
+|---|---|
+| `Strict` (default) | an error: `abs is not differentiable at zero` |
+| `Piecewise` | `NaN`, marking the point as one where the derivative does not exist |
+| `Subgradient` | 0, the midpoint of the subdifferential [−1, 1] (times `u'` for a composite) |
+| `Autodiff` | 0, what reverse-mode automatic differentiation gives for `abs` |
+
+Away from the corner every policy gives the same answer, the sign of `u` times `u'`. The policy matters only at points where the argument of `abs` is exactly zero, and it applies to every derivative taken by the operator, including the higher orders and the gradient, Jacobian and Hessian of the next chapter.
+
+## The four policies
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const math::Function absolute = math::function({"x"}, [](math::Function x) { return x.abs(); });
+  const auto points = pluss::make_series({-2.0, 0.0, 3.0});
+  out.writeln("x                 ", points.pull<double>());
+
+  const std::pair<const char *, math::NonSmooth> policies[] = {{"Strict     ", math::NonSmooth::Strict},
+                                                                {"Piecewise  ", math::NonSmooth::Piecewise},
+                                                                {"Subgradient", math::NonSmooth::Subgradient},
+                                                                {"Autodiff   ", math::NonSmooth::Autodiff}};
+  for (const auto &[name, policy] : policies) {
+    for (const std::int64_t order : {1, 2}) {
+      const math::Function derivative = operators::differential("x", order, {.nonsmooth = policy})(absolute);
+      try {
+        out.writeln(name, "derivative of order", order, derivative({points}).pull<double>());
+      } catch (const pluss::Error &e) {
+        const std::string text(e.what());
+        out.writeln(name, "derivative of order", order, "->", text.substr(text.find(' ') + 1, text.find('\n') - text.find(' ') - 1));
+      }
+    }
+  }
+}
+```
+
+Output
+
+```text
+x                  [-2.00, 0.00, 3.00]
+Strict      derivative of order 1 -> complex derivative is undefined at zero
+Strict      derivative of order 2 -> complex derivative is undefined at zero
+Piecewise   derivative of order 1 [-1.00, nan, 1.00]
+Piecewise   derivative of order 2 [0.00, nan, 0.00]
+Subgradient derivative of order 1 [-1.00, 0.00, 1.00]
+Subgradient derivative of order 2 [0.00, 0.00, 0.00]
+Autodiff    derivative of order 1 [-1.00, 0.00, 1.00]
+Autodiff    derivative of order 2 [0.00, 0.00, 0.00]
+```
+
+The `Strict` policy refuses at the corner for both orders, and names the reason; the other three agree everywhere else (−1 at −2 and +1 at 3). At the corner they differ. `Piecewise` returns `NaN`, so the corner stays visible in the result, and it is the right choice when you want to find or mask such points. `Subgradient` and `Autodiff` both return 0; `Subgradient` states the convention and `Autodiff` matches what an automatic-differentiation pass over the same formula gives, which is the right choice when the derivative feeds an optimiser whose other gradients come from automatic differentiation. The second derivative of `|x|` is 0 away from the corner, since the first derivative is piecewise constant, and the same policy decides the corner.
+
+## A rectifier
+
+The function relu(x) = (x + |x|)/2 is the usual rectifier. Its derivative is 0 for negative `x`, 1 for positive `x` and, by a convention that depends on the use, something at 0. The policies give the three common answers:
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const math::Function relu = math::function({"x"}, [](math::Function x) { return (x + x.abs()) * 0.5; });
+  const auto points = pluss::make_series({-2.0, 0.0, 3.0});
+  out.writeln("x           ", points.pull<double>());
+  out.writeln("relu        ", relu({points}).pull<double>());
+  for (const auto &[name, policy] : {std::pair<const char *, math::NonSmooth>{"Piecewise  ", math::NonSmooth::Piecewise},
+                                     {"Subgradient", math::NonSmooth::Subgradient}}) {
+    out.writeln(name, operators::differential("x", 1, {.nonsmooth = policy})(relu)({points}).pull<double>());
+  }
+  try {
+    (void)operators::differential("x")(relu)({points});
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln("Strict      ", text.substr(text.find(' ') + 1, text.find('\n') - text.find(' ') - 1));
+  }
+}
+```
+
+Output
+
+```text
+x            [-2.00, 0.00, 3.00]
+relu         [0.00, 0.00, 3.00]
+Piecewise   [0.00, nan, 1.00]
+Subgradient [0.00, 0.50, 1.00]
+Strict       complex derivative is undefined at zero
+```
+
+`relu` is 0 at 0, and its derivative there depends on the policy: `Piecewise` marks it with `NaN`, `Subgradient` gives the midpoint ½ of the subdifferential [0, 1], and `Strict` refuses. The `Subgradient` value ½ is the average of the two one-sided slopes; the rectifier convention of 0 at the origin corresponds to the `Autodiff` policy applied to a formula written with `max` rather than `abs`, which the vocabulary does not have. Choose the policy that matches what the number is used for, and record it in the code with the option, where it can be read.
+
+## Other places where a derivative does not exist
+
+`NonSmooth` governs the one corner in the vocabulary, `abs`. Other points where a derivative is undefined are not corners but singularities, and they are reported as domain errors when the derivative is evaluated, because the formula for the derivative contains a division or a logarithm that is not defined there.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static void evaluate(OutputEngine &out, const char *label, const math::Function &f, std::vector<double> at) {
+  try {
+    const auto values = f({pluss::make_series(at, {static_cast<std::int64_t>(at.size())}, as_f64())}).pull<double>();
+    out.writeln(label, values);
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(label, "->", text.substr(text.find(' ') + 1, text.find('\n') - text.find(' ') - 1));
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto d = operators::differential("x");
+  evaluate(out, "d sqrt(x) at 0, 4        ", d(math::function({"x"}, [](math::Function x) { return x.sqrt(); })), {0.0, 4.0});
+  evaluate(out, "d log(x) at 0            ", d(math::function({"x"}, [](math::Function x) { return x.log(); })), {0.0});
+  evaluate(out, "d x^0.5 at 0, 4          ", d(math::function({"x"}, [](math::Function x) { return x.pow(0.5); })), {0.0, 4.0});
+  evaluate(out, "d x^2.5 at -1, 0, 4      ", d(math::function({"x"}, [](math::Function x) { return x.pow(2.5); })), {-1.0, 0.0, 4.0});
+  const math::Function power = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.pow(y); });
+  const auto dy = operators::differential("y")(power);
+  for (const double base : {2.0, 0.0, -1.0}) {
+    try {
+      const auto v = dy({pluss::make_series(base, as_f64()), pluss::make_series(3.0, as_f64())}).item<double>();
+      out.writeln("d/dy x^y at x =", static_cast<int>(base), ", y = 3   ", v);
+    } catch (const pluss::Error &e) {
+      const std::string text(e.what());
+      out.writeln("d/dy x^y at x =", static_cast<int>(base), ", y = 3   ->", text.substr(text.find(' ') + 1, text.find('\n') - text.find(' ') - 1));
+    }
+  }
+}
+```
+
+Output
+
+```text
+d sqrt(x) at 0, 4         -> division domain excludes zero denominators
+d log(x) at 0             -> division domain excludes zero denominators
+d x^0.5 at 0, 4           [inf, 0.2500]
+d x^2.5 at -1, 0, 4       [nan, 0.0000, 20.0000]
+d/dy x^y at x = 2 , y = 3    5.5452
+d/dy x^y at x = 0 , y = 3   -> log domain excludes zero and requires positive real values
+d/dy x^y at x = -1 , y = 3   -> log domain excludes zero and requires positive real values
+```
+
+`sqrt` and `log` at 0 fail because their derivatives are `u'/(2 sqrt u)` and `u'/u`, and the division by zero is rejected like any other. A power with a constant exponent follows the arithmetic of the power rule instead: `x^0.5` has an infinite slope at 0, returned as `inf`, and `x^2.5` at −1 is `NaN` because a negative base has no real fractional power. The derivative with respect to a variable exponent needs `log x`, so it exists only for `x > 0`: it is computed at `x = 2` (the value is 2³ · log 2 = 5.5452) and rejected at 0 and at −1. These are not corner cases to be configured away; they mark where the function really has no derivative, or where the formula needs restricting.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

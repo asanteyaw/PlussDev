@@ -319,7 +319,7 @@ struct LinearPenalty {
   Series weights = pluss::series::zeros({p}, f64_on(design.platform()));
   const Series design_t = design.transpose(0, 1);
   const Series col_sq_sum = design.square().sum(0, false);
-  const double max_col_sq = col_sq_sum.max().reshape({1}).item<double>();
+  const double max_col_sq = col_sq_sum.max().reshape({1}).host<double>().front();
   double lipschitz = (std::isfinite(max_col_sq) ? max_col_sq : 0.0) / static_cast<double>(n);
   lipschitz += std::max(0.0, lambda_l2);
   if (!(lipschitz > 0.0) || !std::isfinite(lipschitz)) {
@@ -357,7 +357,7 @@ struct LinearPenalty {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
     }
 
-    const double step_inf = w_next.sub(weights).abs().max().reshape({1}).item<double>();
+    const double step_inf = w_next.sub(weights).abs().max().reshape({1}).host<double>().front();
     if (step_inf <= tolerance || std::abs(prev_loss - loss) <= tolerance) {
       weights = w_next;
       break;
@@ -392,7 +392,7 @@ struct LinearPenalty {
   Series weights = pluss::series::zeros({p}, f64_on(design.platform()));
   const Series design_t = design.transpose(0, 1);
   const Series col_sq_sum = design.square().sum(0, false);
-  const double max_col_sq = col_sq_sum.max().reshape({1}).item<double>();
+  const double max_col_sq = col_sq_sum.max().reshape({1}).host<double>().front();
   // Lipschitz upper bound for Huber gradient in prediction space is 1.
   double lipschitz = (std::isfinite(max_col_sq) ? max_col_sq : 0.0) / static_cast<double>(n);
   lipschitz += std::max(0.0, lambda_l2);
@@ -435,12 +435,12 @@ struct LinearPenalty {
     const Series quadratic = next_abs.clamp_max(robust_transition);
     const Series linear = next_abs.sub(quadratic);
     const Series huber_loss = quadratic.square().mul(0.5).add(linear.mul(robust_transition)).mean();
-    const double loss = huber_loss.item<double>() + linear_l2_term(w_next, fit_intercept, lambda_l2) + linear_l1_term(w_next, fit_intercept, lambda_l1);
+    const double loss = huber_loss.host<double>().front() + linear_l2_term(w_next, fit_intercept, lambda_l2) + linear_l1_term(w_next, fit_intercept, lambda_l1);
     if (!std::isfinite(loss)) {
       return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
     }
 
-    const double step_inf = w_next.sub(weights).abs().max().reshape({1}).item<double>();
+    const double step_inf = w_next.sub(weights).abs().max().reshape({1}).host<double>().front();
     if (step_inf <= tolerance || std::abs(prev_loss - loss) <= tolerance) {
       weights = w_next;
       break;

@@ -504,6 +504,7 @@ struct Scaled { double value; std::string_view unit; };
 inline void apply_case_inplace(std::string& s, CaseXf mode) noexcept {
   if (mode == CaseXf::None) return;
   bool at_word_start = true;
+  bool at_sentence_start = true;  // true at the start of the text and after . ! or ?
   for (char& ch : s) {
     const unsigned char u = static_cast<unsigned char>(ch);
     const bool alpha = (u | 0x20u) - 'a' < 26u;
@@ -514,8 +515,13 @@ inline void apply_case_inplace(std::string& s, CaseXf mode) noexcept {
         if (alpha) ch = at_word_start ? char(u & ~0x20u) : char(u | 0x20u);
         break;
       case CaseXf::Sentence:
-        if (alpha && at_word_start) ch = char(u & ~0x20u);
-        else if (alpha)             ch = char(u | 0x20u);
+        // Only the first letter of each sentence is capitalized; every other letter is lowercased.
+        if (alpha) {
+          ch = at_sentence_start ? char(u & ~0x20u) : char(u | 0x20u);
+          at_sentence_start = false;
+        } else if (u == '.' || u == '!' || u == '?') {
+          at_sentence_start = true;
+        }
         break;
       default: break;
     }

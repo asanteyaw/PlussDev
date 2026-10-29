@@ -683,7 +683,7 @@ std::string scalar_time_iso(std::int64_t epoch_nanos) {
 SlateValue::HostAny scalar_series_host(const pluss::Series& series) {
   PLUSS_CHECK(series.numel() == 1,
               "SlateValue::host: Series payload must contain exactly one value");
-  const auto scalar = series.item();
+  const auto scalar = series.reshape(std::vector<std::int64_t>{}).item();
   return std::visit(
       [](const auto& value) -> SlateValue::HostAny {
         using T = std::remove_cv_t<std::remove_reference_t<decltype(value)>>;

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
 #include "MSharp/IntrusivePtr.h"
 
 namespace pluss::coden {
@@ -12,15 +9,18 @@ class TokenBatch;
 
 // Implementation storage for TokenBatch.
 //
-// Important: Note is an incomplete type here; we intentionally store it as an
-// owning pointer and define the destructor out-of-line (TokenBatch.cpp) where
-// Note is complete. This avoids incomplete-type delete / destruction hazards.
+// Important: Note is an incomplete type here; we intentionally store both
+// tokens and offsets as owning pointers and define the destructor out-of-line
+// (TokenBatch.cpp) where Note is complete. This avoids incomplete-type
+// delete / destruction hazards. A ragged result is a closed pair of Notes
+// (pass 6 of the Note redesign): `tokens_ptr` (Text/Bytes) and `offsets_ptr`
+// (Int64, length numel()+1) -- no raw std::vector<int64_t> leaks out.
 struct TokenBatchImpl final : ::pluss::msharp::RefCounted {
-  Note* tokens_ptr = nullptr; // owning
-  ::std::vector<::std::int64_t> offsets;
+  Note* tokens_ptr = nullptr;  // owning
+  Note* offsets_ptr = nullptr; // owning; Int64 Note
 
-  TokenBatchImpl(Note* tokens_ptr_, ::std::vector<::std::int64_t> offsets_)
-      : tokens_ptr(tokens_ptr_), offsets(::std::move(offsets_)) {}
+  TokenBatchImpl(Note* tokens_ptr_, Note* offsets_ptr_)
+      : tokens_ptr(tokens_ptr_), offsets_ptr(offsets_ptr_) {}
 
   ~TokenBatchImpl();
 
@@ -30,7 +30,7 @@ struct TokenBatchImpl final : ::pluss::msharp::RefCounted {
 
 namespace ops_internal {
 struct TokenBatchFactoryAccess {
-  static TokenBatch make(Note tokens, ::std::vector<::std::int64_t> offsets);
+  static TokenBatch make(Note tokens, Note offsets);
 };
 } // namespace ops_internal
 

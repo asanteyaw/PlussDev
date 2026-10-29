@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -149,6 +149,7 @@
 95% interval [0.1722, 1.0084]
 </pre></div>
 </div>
+<p>The pooled test, which assumes equal variances, gives a difference of 0.59 with t 3.01 on 15 degrees of freedom and p 0.0088; the 95% interval [0.17, 1.01] excludes zero.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -179,6 +180,7 @@
 95% interval [0.1510, 1.0296]
 </pre></div>
 </div>
+<p>Welch’s test does not assume equal variances: the degrees of freedom become fractional, 11.79, the standard error 0.201 and p 0.0127, a little more cautious than the pooled test, and the interval widens to [0.15, 1.03].</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -207,6 +209,7 @@
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>p 0.0064, critical 1.7850 (reject)
 </pre></div>
 </div>
+<p>The one-sided test of whether A is larger gives p 0.0064 against the critical value 1.785, and rejects.</p>
 </section>
 </section>
 <section id="see-also">
@@ -237,13 +240,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

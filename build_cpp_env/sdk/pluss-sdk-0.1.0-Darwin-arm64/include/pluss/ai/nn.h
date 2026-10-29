@@ -3,6 +3,13 @@
 #include "pluss/ai/nn_grad.h"
 #include "pluss/ai/nn_functional.h"
 
+// The DataLoader stack (Dataset/SeriesDataset/DataLoader/split_fields/
+// split_loaders/temporal_split_*, reachable as pluss::loader::*) physically
+// lives in PlussTils, not PlussAI -- it is purpose-built to pair with nn
+// training and documented as the nn/data family, so it belongs behind this
+// same single include.
+#include "pluss/tils/aux/data_loader.h"
+
 #include "NodeK/NN/modules/Module.h"
 #include "NodeK/NN/modules/activation/Activation.h"
 #include "NodeK/NN/modules/container/Schedule.h"
@@ -20,9 +27,3 @@
 #include "NodeK/NN/modules/cnn/NNconvNd.h"
 #include "NodeK/NN/modules/cnn/NNconv3d.h"
 #include "NodeK/NN/optim/optim.h"
-
-namespace pluss::ai {
-
-namespace nets = ::pluss::ai::nn;
-
-} // namespace pluss::ai

@@ -72,8 +72,11 @@ struct TFTOptions {
   std::uint64_t seed = 0;
 
   [[nodiscard]] static TFTOptions from_data(const data::DataSet& dataset) {
+    return from_batch(dataset.batch());
+  }
+
+  [[nodiscard]] static TFTOptions from_batch(const data::Batch& batch) {
     TFTOptions out{};
-    const auto& batch = dataset.batch();
     if (batch.has(data::field_names::static_inputs)) {
       out.static_size = batch.feature_width(data::field_names::static_inputs);
       out.static_categoricals = batch.categoricals(data::field_names::static_inputs);
@@ -86,7 +89,7 @@ struct TFTOptions {
   }
 
   [[nodiscard]] static TFTOptions from_dataset(const data::TimeSeriesDataSet& dataset) {
-    return from_data(dataset.data());
+    return from_batch(dataset.batch().to_batch());
   }
 };
 
@@ -126,6 +129,7 @@ struct TFTTrainOptions {
   OptimizerKind optimizer = OptimizerKind::Adam;
   bool shuffle = true;
   std::uint64_t seed = 0;
+  ProgressPolicy progress{};
   ValidationPolicy validation{};
   ObjectiveRegularization objective_regularization{};
   LoopRegularization loop_regularization{};
@@ -183,6 +187,9 @@ public:
 
   [[nodiscard]] bool ready() const noexcept;
   TemporalFusionTransformer& to(Platform platform);
+
+  void save(std::string_view filepath) const;
+  [[nodiscard]] static TemporalFusionTransformer load(std::string_view filepath);
 
 private:
   struct Impl;

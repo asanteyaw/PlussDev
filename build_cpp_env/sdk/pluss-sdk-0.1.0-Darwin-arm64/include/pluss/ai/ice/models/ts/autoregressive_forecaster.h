@@ -37,8 +37,11 @@ struct AutoregressiveForecasterOptions {
   std::uint64_t seed = 0;
 
   [[nodiscard]] static AutoregressiveForecasterOptions from_data(const data::DataSet& dataset) {
+    return from_batch(dataset.batch());
+  }
+
+  [[nodiscard]] static AutoregressiveForecasterOptions from_batch(const data::Batch& batch) {
     AutoregressiveForecasterOptions out{};
-    const auto& batch = dataset.batch();
     if (batch.has(data::field_names::static_inputs)) {
       out.static_size = batch.feature_width(data::field_names::static_inputs);
       out.static_categoricals = batch.categoricals(data::field_names::static_inputs);
@@ -57,13 +60,13 @@ struct AutoregressiveForecasterOptions {
       out.encoder_length = batch.field(data::field_names::encoder_target).sizes()[1];
     }
     if (out.decoder_length == 0 && batch.target().defined()) {
-      out.decoder_length = batch.target().sizes()[1];
+      out.decoder_length = batch.target().dim() >= 2 ? batch.target().sizes()[1] : 1;
     }
     return out;
   }
 
   [[nodiscard]] static AutoregressiveForecasterOptions from_dataset(const data::TimeSeriesDataSet& dataset) {
-    return from_data(dataset.data());
+    return from_batch(dataset.batch().to_batch());
   }
 };
 
@@ -104,6 +107,7 @@ struct AutoregressiveTrainOptions {
   OptimizerKind optimizer = OptimizerKind::Adam;
   bool shuffle = true;
   std::uint64_t seed = 0;
+  ProgressPolicy progress{};
   ValidationPolicy validation{};
   ObjectiveRegularization objective_regularization{};
   LoopRegularization loop_regularization{};
@@ -167,6 +171,9 @@ public:
 
   [[nodiscard]] bool ready() const noexcept;
   AutoregressiveForecaster& to(Platform platform);
+
+  void save(std::string_view filepath) const;
+  [[nodiscard]] static AutoregressiveForecaster load(std::string_view filepath);
 
 private:
   struct Impl;

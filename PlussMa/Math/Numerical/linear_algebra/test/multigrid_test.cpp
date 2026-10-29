@@ -2,10 +2,12 @@
 // counts, variable (jumping) coefficients, singular problems, batch lanes.
 #include "pluss/subsp/math/multigrid.h"
 
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 
 namespace mg = pluss::subsp::math::multigrid;
 namespace krylov = pluss::subsp::math::krylov;
@@ -175,6 +177,45 @@ int main() {
         const Series r1 = rhs.select(0, lane), c1 = coef.select(0, lane);
         mg::Hierarchy h1({.axes = axes, .face_high = {c1, c1}}, r1);
         expect(maxdiff(mg::solve(h1, r1, 2).solution, batched.solution.select(0, lane)) < 1e-6, "lane solve vs batched solve");
+      }
+    }
+    // ---- the fused native smoother is the same Chebyshev polynomial: identical cycles and solves, 1-D to 3-D, walls and periodic
+    {
+      const auto run = [](std::vector<mg::Axis> axes, bool native, const Series &rhs, std::vector<Series> bh) {
+        mg::Options o;
+        o.native_smoother = native;
+        o.native_cycle = native; // the fused host V-cycle (smoothing, residual, transfers, coarse solve) against the Series cycle
+        mg::Problem p{.axes = axes};
+        if (!bh.empty()) p.face_high = bh;
+        mg::Hierarchy h(p, rhs, o);
+        const auto t0 = std::chrono::steady_clock::now();
+        const auto r = mg::solve(h, rhs, axes.size());
+        const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        return std::make_tuple(r, h.vcycle(rhs), seconds);
+      };
+      struct Case { std::vector<mg::Axis> axes; std::vector<std::int64_t> shape; bool coefficients; };
+      const Case cases[] = {
+          {{{64, 0.1, mg::Edge::Periodic, mg::Edge::Periodic}}, {64}, false},
+          {{{32, 0.1, mg::Edge::Periodic, mg::Edge::Periodic}, {32, 0.1, mg::Edge::Dirichlet, mg::Edge::Neumann}}, {2, 32, 32}, true},
+          {{{256, 0.01, mg::Edge::Periodic, mg::Edge::Periodic}, {256, 0.01, mg::Edge::Periodic, mg::Edge::Periodic}}, {256, 256}, false},
+          {{{16, 0.2, mg::Edge::Neumann, mg::Edge::Neumann}, {16, 0.2, mg::Edge::Periodic, mg::Edge::Periodic}, {16, 0.2, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}, {16, 16, 16}, true},
+      };
+      for (const Case &c : cases) {
+        Series rhs = noise(c.shape, 21);
+        std::vector<Series> bh;
+        if (c.coefficients) {
+          for (std::size_t a = 0; a < c.axes.size(); ++a) bh.push_back(noise(c.shape, 30 + a).add(0.75));
+        }
+        const bool singular = !c.coefficients || true;
+        (void)singular;
+        for (std::size_t a = 0; a < c.axes.size(); ++a) { (void)a; }
+        // singular problems need a zero-mean right-hand side
+        rhs = rhs.sub(rhs.mean());
+        const auto [rn, vn, tn] = run(c.axes, true, rhs, bh);
+        const auto [rs, vs, ts] = run(c.axes, false, rhs, bh);
+        expect(maxdiff(vn, vs) < 1e-10, "native V-cycle equals the Series V-cycle");
+        expect(maxdiff(rn.solution, rs.solution) < 1e-8, "native solve equals the Series solve");
+        std::cout << "native cycle: solve " << tn * 1e3 << " ms vs series " << ts * 1e3 << " ms (" << c.shape.size() << "-D)\n";
       }
     }
     std::cout << "multigrid tests passed\n";

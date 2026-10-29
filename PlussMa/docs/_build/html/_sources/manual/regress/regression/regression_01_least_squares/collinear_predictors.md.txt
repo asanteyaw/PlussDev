@@ -4,52 +4,210 @@
 
 [Back to Least Squares](../regression_01_least_squares.md)
 
+When one predictor is (nearly) a combination of the others, the data cannot say which of them deserves the credit. The fit does not fail; it reports the symptoms. This page shows what they are and how `rcond` controls when a direction of the design is treated as lost.
+
+| Field | Reads |
+|---|---|
+| `rank` | the number of independent directions in the design, counted with the cutoff `rcond · max(n, k) · max(σ_max, 1)` on the singular values σ of the design |
+| `condition_number` | σ_max / σ_min of the design; large means near-singular |
+| `smallest_eig` | the smallest eigenvalue of X′X, σ_min² |
+| `warnings` | text for rank deficiency and for a condition number above 1000 ([The summary report](the_summary_report.md)) |
+
+When `rank < k_params` the normal equations have many solutions. The fit returns the one with the smallest norm, computed through the pseudoinverse, and the coefficients along the lost directions are not estimated at all.
+
+## Three second predictors
+
+The program fits the same response on x₁ together with a second predictor that is (a) unrelated, (b) 2x₁ plus a 10⁻⁴ perturbation, and (c) exactly 2x₁. It prints the rank, the condition number and the standard error of the first slope.
 
 ```cpp
 #include <pluss/ma.h>
-
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <limits>
+#include <pluss/tils/aux/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
-using pluss::Series;
+using namespace pluss::tils;
 
-const auto f64 = pluss::ScalarType::Float64;
-Series column(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size()), 1}).to(f64); }
-Series vec(std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}).to(f64); }
-Series table(std::vector<double> v, std::int64_t rows, std::int64_t cols) { return pluss::make_series(v, {rows, cols}).to(f64); }
 int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
   const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   const std::vector<double> y{2.3, 4.1, 6.4, 7.7, 10.2, 11.8, 14.1, 16.3, 17.8, 20.2};
-  auto run = [&](const char* label, const std::vector<double>& x2) {
+  std::vector<double> unrelated{3, 1, 4, 1, 5, 9, 2, 6, 5, 3}, nearly(10), exact(10);
+  for (int i = 0; i < 10; ++i) {
+    nearly[i] = 2.0 * x1[i] + (i % 2 ? 1e-4 : -1e-4);
+    exact[i] = 2.0 * x1[i];
+  }
+  auto run = [&](const char *label, const std::vector<double> &second) {
     std::vector<double> flat;
-    for (std::size_t i = 0; i < x1.size(); ++i) { flat.push_back(x1[i]); flat.push_back(x2[i]); }
-    const auto fit = reg::ols_fit(vec(y), table(flat, 10, 2));
-    const auto se = fit.std_errors.host<double>();
-    std::cout << std::left << std::setw(30) << label << std::setw(8) << fit.rank << std::scientific << std::setprecision(1) << std::setw(14) << fit.condition_number << std::fixed
-              << std::setprecision(3) << "slope-1 std error " << se[1] << "   warnings " << fit.warnings.size() << "\n";
-    for (const auto& w : fit.warnings) std::cout << "    warning: " << w << "\n";
+    for (int i = 0; i < 10; ++i) {
+      flat.push_back(x1[i]);
+      flat.push_back(second[i]);
+    }
+    const auto fit = reg::ols_fit(pluss::make_series(y, {10}, as_f64()), pluss::make_series(flat, {10, 2}, as_f64()));
+    out.writeln(label, "rank", fit.rank, "of", fit.k_params, " cond", fit.condition_number, " smallest eig", fit.smallest_eig, " se(b1)", fit.std_errors.pull<double>()[1], " warnings", fit.warnings.size());
+    out.writeln("      coefficients", fit.coefficients.pull<double>());
+    return fit;
   };
-  std::cout << std::left << std::setw(30) << "second predictor" << std::setw(8) << "rank" << std::setw(14) << "condition no." << "\n";
-  std::vector<double> exact(10), near_exact(10), unrelated{3, 1, 4, 1, 5, 9, 2, 6, 5, 3};
-  for (int i = 0; i < 10; ++i) { exact[i] = 2.0 * x1[i]; near_exact[i] = 2.0 * x1[i] + (i % 2 ? 1e-4 : -1e-4); }
-  run("unrelated", unrelated);
-  run("2 * x1 plus 1e-4 noise", near_exact);
-  run("2 * x1 exactly", exact);
+  run("unrelated second predictor :", unrelated);
+  run("2 x1 plus 1e-4 perturbation:", nearly);
+  const auto fit = run("2 x1 exactly              :", exact);
+  for (const auto &warning : fit.warnings) {
+    out.writeln("warning:", warning);
+  }
 }
 ```
 
 Output
 
 ```text
-second predictor              rank    condition no. 
-unrelated                     3       1.8e+01       slope-1 std error 0.031   warnings 0
-2 * x1 plus 1e-4 noise        3       3.2e+05       slope-1 std error 1659.797   warnings 1
-    warning: The condition number is large, 3.157e+05. This might indicate strong multicollinearity or other numerical problems.
-2 * x1 exactly                2       inf           slope-1 std error 0.006   warnings 2
-    warning: The design matrix is singular or rank deficient; coefficients were estimated using a pseudoinverse.
-    warning: The smallest eigenvalue is 3.109e-31. This might indicate strong multicollinearity or a singular design matrix.
+unrelated second predictor : rank 3 of 3  cond 18.1942  smallest eig 1.6840  se(b1) 0.0314  warnings 0
+      coefficients [0.1821, 1.9839, -0.0009]
+2 x1 plus 1e-4 perturbation: rank 3 of 3  cond 315696.0279  smallest eig 0.0000  se(b1) 1659.7974  warnings 1
+      coefficients [0.1587, 1276.9875, -637.5000]
+2 x1 exactly              : rank 2 of 3  cond inf  smallest eig 0.0000  se(b1) 0.0055  warnings 2
+      coefficients [0.1800, 0.3967, 0.7935]
+warning: The design matrix is singular or rank deficient; coefficients were estimated using a pseudoinverse.
+warning: The smallest eigenvalue is 3.109e-31. This might indicate strong multicollinearity or a singular design matrix.
 ```
-When one predictor is a multiple of another, the data cannot say how to split the effect between them. Exactly collinear: the rank falls to 2 and the coefficients are chosen by a pseudoinverse (the minimum-norm solution), with two warnings; the standard errors are not meaningful. Almost collinear: the rank is full but the condition number is 3×10⁵, the standard error of the first slope is over 1600 where the unrelated pair gives 0.03, and the fit warns. The rules are the usual ones: a warning when the smallest eigenvalue of XᵀX is below 1e-10, otherwise when the condition number exceeds 1000. The remedy is to drop or combine predictors, or to gather data in which they vary independently.
+
+With an unrelated second predictor the design is well conditioned (condition number 18), the standard error of b₁ is 0.0314 and there are no warnings. With the 10⁻⁴ perturbation the design still has rank 3, since the perturbation exceeds the default cutoff, but the condition number is 315,696 and the standard error of b₁ is 1659.8, about fifty thousand times larger. The coefficients, 1276.99 and −637.50, offset each other: only their combination b₁ + 2b₂ = 1.99 is determined by the data. With exact duplication the rank falls to 2, the condition number is `inf`, and two warnings are raised. The standard error 0.0055 then describes only the one direction that was estimated.
+
+## The minimum-norm solution
+
+For the exact case, only the combination b₁ + 2b₂ is determined by the data, since x₂ = 2x₁ gives y = b₀ + (b₁ + 2b₂) x₁. Of all pairs with that combination, the pseudoinverse returns the shortest, which is proportional to (1, 2). The program confirms both facts, and that the fitted values do not depend on how the weight was split, so predictions on the same line are unaffected.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const std::vector<double> y{2.3, 4.1, 6.4, 7.7, 10.2, 11.8, 14.1, 16.3, 17.8, 20.2};
+  std::vector<double> flat;
+  for (double v : x1) {
+    flat.push_back(v);
+    flat.push_back(2.0 * v);
+  }
+  const auto response = pluss::make_series(y, {10}, as_f64());
+  const auto both = reg::ols_fit(response, pluss::make_series(flat, {10, 2}, as_f64()));
+  const auto alone = reg::ols_fit(response, pluss::make_series(x1, {10}, as_f64()));
+
+  const auto b = both.coefficients.pull<double>();
+  const auto a = alone.coefficients.pull<double>();
+  out.writeln("b1 + 2 b2 with both columns  ", b[1] + 2.0 * b[2], " slope with x1 alone", a[1]);
+  out.writeln("ratio b2 / b1 (minimum norm: 2)", b[2] / b[1]);
+  out.writeln("fitted values agree          ", both.fitted_values.sub(alone.fitted_values).abs().max().item<double>());
+  out.writeln("rank", both.rank, " df_resid", both.df_resid, " (df_resid = n - rank)");
+}
+```
+
+Output
+
+```text
+b1 + 2 b2 with both columns   1.983636  slope with x1 alone 1.983636
+ratio b2 / b1 (minimum norm: 2) 2.000000
+fitted values agree           0.000000
+rank 2  df_resid 8  (df_resid = n - rank)
+```
+
+The estimable combination, 1.983636, is identical to the slope fitted with x₁ alone, the split between the two columns follows b₂ / b₁ = 2, and the fitted values agree to rounding, so predictions on the same line are unaffected. The degrees of freedom are n − rank = 8.
+
+## Variance inflation
+
+Short of exact collinearity, the damage is quantified by the *variance inflation factor*. If R²ⱼ is the R² from regressing predictor *j* on the other predictors, the variance of its coefficient is s² / (Sⱼⱼ (1 − R²ⱼ)), where Sⱼⱼ is its centred sum of squares: the usual variance, multiplied by 1 / (1 − R²ⱼ). The program builds a second predictor that is x₁ plus noise of decreasing size and shows the standard error of b₁ growing as the factor does, with the formula reproduced exactly.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  const std::vector<double> wobble{0.9, -0.7, 0.4, -0.2, 0.8, -0.9, 0.3, -0.5, 0.6, -0.4, 0.7, -0.8};
+  const std::vector<double> y{2.4, 4.1, 6.5, 7.6, 10.4, 11.7, 14.3, 15.8, 18.2, 19.7, 22.4, 23.6};
+  const auto response = pluss::make_series(y, {12}, as_f64());
+  const auto first = pluss::make_series(x1, {12}, as_f64());
+
+  out.writeln("noise scale   R2 of x1 on x2     VIF    se(b1)   se(b1) from the formula     condition");
+  for (double scale : {3.0, 1.0, 0.3, 0.1, 0.03}) {
+    std::vector<double> flat, x2;
+    for (int i = 0; i < 12; ++i) {
+      x2.push_back(x1[i] + scale * wobble[i]);
+      flat.push_back(x1[i]);
+      flat.push_back(x2.back());
+    }
+    const auto fit = reg::ols_fit(response, pluss::make_series(flat, {12, 2}, as_f64()));
+    const double r2 = reg::ols_fit(first, pluss::make_series(x2, {12}, as_f64())).rsquared;
+    const double sxx = first.sub(first.mean()).pow(2.0).sum().item<double>();
+    out.writeln(scale, r2, 1.0 / (1.0 - r2), fit.std_errors.pull<double>()[1], std::sqrt(fit.mse / (sxx * (1.0 - r2))), fit.condition_number);
+  }
+}
+```
+
+Output
+
+```text
+noise scale   R2 of x1 on x2     VIF    se(b1)   se(b1) from the formula     condition
+3.0000 0.7265 3.6564 0.0318 0.0318 22.7434
+1.0000 0.9655 28.9699 0.0896 0.0896 24.0909
+0.3000 0.9970 328.4116 0.3017 0.3017 77.9218
+0.1000 0.9997 2991.1975 0.9105 0.9105 234.4124
+0.0300 1.0000 33395.3931 3.0423 3.0423 782.3899
+```
+
+The formula reproduces every standard error exactly. As the second predictor approaches the first, R² rises from 0.73 to 1.0000 (to four decimals), the factor from 3.7 to 33,395, and the standard error of b₁ from 0.0318 to 3.04, about 96 times larger, which is the square root of the 9,100-fold rise in the factor. The condition number rises from 23 to 782 over the same range, so it ranks the problems in the same order.
+
+If two predictors carry nearly the same information, drop one, combine them into a single predictor, or collect data that varies them independently. Raising `rcond` is not a fix: it only decides at what point a direction is declared lost, as the next section shows.
+
+## The effect of `rcond`
+
+`rcond` sets the cutoff on the singular values of the design. A direction whose singular value falls below `rcond · max(n, k) · max(σ_max, 1)` is dropped from the solution, and `rank` counts the directions kept. At the default 10⁻¹² a perturbation of 10⁻⁴ is a real direction. Raising `rcond` far enough declares it lost, and the pseudoinverse then returns the minimum-norm combination instead of an enormous pair of offsetting coefficients.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<double> x1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const std::vector<double> y{2.3, 4.1, 6.4, 7.7, 10.2, 11.8, 14.1, 16.3, 17.8, 20.2};
+  std::vector<double> flat;
+  for (int i = 0; i < 10; ++i) {
+    flat.push_back(x1[i]);
+    flat.push_back(2.0 * x1[i] + (i % 2 ? 1e-4 : -1e-4));
+  }
+  const auto response = pluss::make_series(y, {10}, as_f64());
+  const auto design = pluss::make_series(flat, {10, 2}, as_f64());
+  const std::vector<std::pair<const char *, double>> cutoffs{{"1e-12", 1e-12}, {"1e-9", 1e-9}, {"1e-6", 1e-6}, {"1e-4", 1e-4}, {"1e-2", 1e-2}};
+  for (const auto &[label, rcond] : cutoffs) {
+    reg::OLSOptions options;
+    options.rcond = rcond;
+    const auto fit = reg::ols_fit(response, design, options);
+    out.writeln("rcond", label, " rank", fit.rank, " coefficients", fit.coefficients.pull<double>(), " warnings", fit.warnings.size());
+  }
+}
+```
+
+Output
+
+```text
+rcond 1e-12  rank 3  coefficients [0.1587, 1276.9875, -637.5000]  warnings 1
+rcond 1e-9  rank 3  coefficients [0.1587, 1276.9875, -637.5000]  warnings 1
+rcond 1e-6  rank 2  coefficients [0.1800, 0.3967, 0.7935]  warnings 2
+rcond 1e-4  rank 2  coefficients [0.1800, 0.3967, 0.7935]  warnings 2
+rcond 1e-2  rank 1  coefficients [0.0572, 0.4002, 0.8005]  warnings 2
+```
+
+At 10⁻¹² and 10⁻⁹ the perturbation counts as a direction (rank 3) and the offsetting pair is returned. At 10⁻⁶ and 10⁻⁴ it is declared lost: the rank is 2, the coefficients are the minimum-norm pair (0.3967, 0.7935) and a second warning appears. At 10⁻² a second direction is also lost, rank is 1, and the fit degrades (the intercept drops from 0.18 to 0.0572), so a loose cutoff is not harmless. The rank and the coefficients always describe the same cutoff.

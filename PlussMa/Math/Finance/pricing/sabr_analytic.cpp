@@ -221,7 +221,7 @@ double sabr_price_approx(OptionType type,
   validate_sabr_(forward, strike, maturity, params, options, "sabr_price_approx");
   PLUSS_CHECK(std::isfinite(rate), "subsp::math::finance::pricing::sabr_price_approx: rate must be finite");
   PLUSS_CHECK(type == OptionType::Call || type == OptionType::Put,
-              "subsp::math::finance::pricing::sabr_price_approx: unsupported option type");
+              "subsp::math::finance::pricing::sabr_price_approx: option type must be Call or Put (OptionType::Auto is only valid for an instrument that supplies is_call)");
 
   if (maturity <= 0.0) {
     return (type == OptionType::Call) ? std::max(forward - strike, 0.0) : std::max(strike - forward, 0.0);

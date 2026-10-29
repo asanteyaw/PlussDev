@@ -65,7 +65,7 @@ private:
   void on_dtype_changed_(ScalarType dtype) override { options_.cfg = options_.cfg.with_dtype(dtype); }
 
   EmbeddingOptions options_;
-  Series weight_;
+  Series weight_ = pluss::series::undefined();
 };
 PLUSS_MODULE_IMPL(Embedding, EmbeddingImpl);
 

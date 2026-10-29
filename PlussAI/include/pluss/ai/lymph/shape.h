@@ -106,7 +106,7 @@ class Result final {
     const Series candidate = variable.logical_and(skewed.logical_or(tailed));
     const std::vector<double> mask = candidate.to(pluss::pCPU, ScalarType::Float64)
                                          .reshape({candidate.numel()})
-                                         .host<double>();
+                                         .host<double>().array().data;
     std::vector<std::string> selected{};
     selected.reserve(feature_names_.size());
     for (std::size_t i = 0; i < feature_names_.size() && i < mask.size(); ++i) {

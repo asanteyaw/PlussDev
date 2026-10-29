@@ -206,6 +206,9 @@ private:
                                                        const InferOptions& infer_options,
                                                        const Series* target = nullptr);
   [[nodiscard]] Status check_ready_for_infer(const char* where) const;
+  // Removes the TaskKind::Transform model set_model() may have pushed onto
+  // transforms_ (see has_transform_model_ below), if any. No-op otherwise.
+  void clear_transform_model() noexcept;
 
   std::vector<std::unique_ptr<TransformerBase>> transforms_{};
   std::optional<ModelSpec> model_spec_{};
@@ -213,6 +216,14 @@ private:
   bool has_opaque_transforms_{false};
   std::unique_ptr<ClassifierBase> classifier_{};
   std::unique_ptr<RegressorBase> regressor_{};
+  // true when transforms_.back() is the model set_model() built from a
+  // TaskKind::Transform ModelSpec, rather than an ordinary transform stage.
+  // Such a model carries no transform_specs_ entry (it isn't one), so it is
+  // always kept at the tail: add_named_transform()/append_transform() refuse
+  // to add anything after it (see their transforms_/transform_specs_ size
+  // check), which is what makes "the last entry, if this flag is set" a
+  // sound way to find it again for replacement or removal.
+  bool has_transform_model_{false};
   bool trained_{false};
 };
 

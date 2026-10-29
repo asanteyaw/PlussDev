@@ -13,18 +13,53 @@
 
 namespace pluss::codem::series_tape {
 
-// Renamed internal autograd terms:
+enum class HigherOrderSupport {
+  Traceable,
+  ConstantJacobian,
+  Unsupported,
+};
+
+// INTERNAL ENGINE NAMESPACE -- not the public Series surface, even though
+// this header is transitively reachable from public includes (it's used by
+// pluss/subsp/math/diff.h and other engine-internal headers). End users
+// should reach for the Series member surface instead:
+//   - Series::source()          <- reverse-mode node info (see SourceInfo
+//                                  below); this is the one most users want.
+//   - Series::tracks_slope()    <- was requires_grad
+//   - Series::sensitivity()     <- was grad
+//   - Series::has_sensitivity()
+//   - Series::is_leaf()
+// The free functions below (source_info/source_link/bind_source_link/
+// accumulate_sensitivity/...) exist for op implementations (OpsInternal.cpp,
+// Invoke.cpp) and the autodiff test suite to wire and inspect the tape
+// directly; they carry engine-internal detail (capture file/line, the raw
+// propagate closure) that the public wrapper deliberately does not expose.
+//
+// Renamed internal terms (previously torch-style autograd naming; this
+// engine consistently calls the whole system "autodiff"):
 // - tracks_slope  (was requires_grad)
 // - sensitivity   (was grad)
 // - source_link   (was grad_fn)
 struct SourceLink {
   std::vector<Series> parents{};
   std::vector<std::int64_t> parent_versions{};
+  // Optional, parallel to `parents`: false means this parent is only a graph
+  // edge for gradient accumulation and its *data* is not read by any backward
+  // rule that will run, so an in-place mutation of it after capture is
+  // harmless and must not trip the version check (matches how libtorch guards
+  // only actually-saved variables). Empty => guard every parent (safe default).
+  std::vector<bool> parent_data_guarded{};
   std::int64_t output_version{0};
   std::string op_name{};
   std::string capture_file{};
   std::string capture_function{};
   std::uint_least32_t capture_line{0};
+  // First-order formulas that evaluate outside the tape must identify
+  // themselves so higher-order transforms fail instead of treating a detached
+  // sensitivity as a mathematically constant derivative.
+  // Fail closed. A reverse kernel must opt in only after its propagation path
+  // has been reviewed to construct every differentiable contribution on tape.
+  HigherOrderSupport higher_order_support{HigherOrderSupport::Unsupported};
   std::function<void(const Series&)> propagate{};
 };
 

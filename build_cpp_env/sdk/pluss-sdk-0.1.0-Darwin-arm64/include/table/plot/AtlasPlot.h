@@ -95,7 +95,7 @@ struct AtlasPlotOptions {
 class AtlasPlotAccessor {
 public:
   AtlasPlotAccessor(std::vector<DataFrame> frames,
-                    std::optional<Thread> depth_labels = std::nullopt,
+                    std::optional<Slate> depth_labels = std::nullopt,
                     AtlasPlotOptions options = {});
 
   DataFramePlotAccessor frames(std::int64_t frame_index = 0) const;
@@ -136,7 +136,7 @@ private:
   void apply_figure_options(pluss::pl::Studio& figure) const;
 
   std::vector<DataFrame> frames_{};
-  std::optional<Thread> depth_labels_{std::nullopt};
+  std::optional<Slate> depth_labels_{std::nullopt};
   AtlasPlotOptions options_{};
 };
 

@@ -270,7 +270,7 @@ class Plan final {
 
   [[nodiscard]] metrics::CrossValidationReport run(const ModelSpec& spec,
                                                    const pluss::table::DataFrame& x,
-                                                   const pluss::table::Thread& y,
+                                                   const pluss::table::Slate& y,
                                                    TrainOptions train_options = {},
                                                    AssessOptions assess_options = {}) const {
     return run(spec, x, as_stratify_series(y), std::move(train_options), std::move(assess_options));
@@ -307,7 +307,7 @@ class Plan final {
 
   [[nodiscard]] metrics::CrossValidationReport run(const models::Model& model,
                                                    const pluss::table::DataFrame& x,
-                                                   const pluss::table::Thread& y,
+                                                   const pluss::table::Slate& y,
                                                    TrainOptions train_options = {},
                                                    AssessOptions assess_options = {}) const {
     return run(model, x, as_stratify_series(y), std::move(train_options), std::move(assess_options));
@@ -461,7 +461,7 @@ class Plan final {
 
   [[nodiscard]] Series scores(const ModelSpec& spec,
                               const pluss::table::DataFrame& x,
-                              const pluss::table::Thread& y,
+                              const pluss::table::Slate& y,
                               MetricKind metric,
                               TrainOptions train_options = {},
                               AssessOptions assess_options = {}) const {
@@ -499,7 +499,7 @@ class Plan final {
 
   [[nodiscard]] double score(const ModelSpec& spec,
                              const pluss::table::DataFrame& x,
-                             const pluss::table::Thread& y,
+                             const pluss::table::Slate& y,
                              MetricKind metric,
                              TrainOptions train_options = {},
                              AssessOptions assess_options = {}) const {

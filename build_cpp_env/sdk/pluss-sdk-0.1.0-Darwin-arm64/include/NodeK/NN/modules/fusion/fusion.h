@@ -72,8 +72,8 @@ private:
   void on_dtype_changed_(ScalarType dtype) override { options_.cfg = options_.cfg.with_dtype(dtype); }
 
   FusionOptions options_;
-  Series weight_;
-  Series bias_;
+  Series weight_ = pluss::series::undefined();
+  Series bias_ = pluss::series::undefined();
 };
 
 PLUSS_MODULE_IMPL(Fusion, FusionImpl);

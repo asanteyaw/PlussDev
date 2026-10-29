@@ -56,12 +56,4 @@ Series             reg::poly_predict(fit, x_new, Config cfg = {});
 4. Curves: low-degree polynomials; compare with the information criteria.
 
 <!-- apiref:toctree:start -->
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-regression_02_glm_quantile_polynomial/logistic_and_poisson_regression
-regression_02_glm_quantile_polynomial/robust_and_conditional_quantile_fits
-regression_02_glm_quantile_polynomial/curves_and_cross_terms
-```
 <!-- apiref:toctree:end -->

@@ -1,6 +1,7 @@
 target_sources(pluss PRIVATE
     Function.cpp
     Operator.cpp
+    Persistence.cpp
     PrimitiveRegistry.cpp
 )
 

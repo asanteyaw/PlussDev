@@ -1,5 +1,9 @@
 #include "pluss/subsp/stats/regression.h"
 
+#include "../design_rank.h"
+#include "../predict_input.h"
+#include "../summary_labels.h"
+
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
@@ -129,12 +133,15 @@ std::string fmt_short_(double x) {
 struct CleanData {
   Series y = pluss::series::undefined();
   Series x = pluss::series::undefined();
+  Series w = pluss::series::undefined();
+  Series off = pluss::series::undefined();
   std::int64_t n = 0;
   std::int64_t p = 0;
   std::int64_t dropped = 0;
 };
 
-CleanData sanitize_inputs_(const Series& y, const Series& x, bool drop_missing, Config cfg, const char* op) {
+CleanData sanitize_inputs_(const Series& y, const Series& x, const GLMOptions& options, Config cfg, const char* op) {
+  const bool drop_missing = options.drop_missing;
   const auto out_cfg = f64_cfg_like_(x, cfg);
   const Series yv = as_vector_(y, op).to(out_cfg.platform, out_cfg.dtype).contiguous();
   const Series xm = as_matrix_(x, op).to(out_cfg.platform, out_cfg.dtype).contiguous();
@@ -144,16 +151,27 @@ CleanData sanitize_inputs_(const Series& y, const Series& x, bool drop_missing, 
   const std::int64_t p = xm.sizes()[1];
   PLUSS_CHECK(n > 0 && p >= 0, std::string(op) + ": empty y or X");
 
-  const Series row_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false));
+  const Series wv = options.weights.defined() ? as_vector_(options.weights, op).to(out_cfg.platform, out_cfg.dtype).contiguous()
+                                              : pluss::series::ones({n}, out_cfg);
+  const Series ov = options.offset.defined() ? as_vector_(options.offset, op).to(out_cfg.platform, out_cfg.dtype).contiguous()
+                                             : pluss::series::zeros({n}, out_cfg);
+  PLUSS_CHECK(wv.numel() == n, std::string(op) + ": weights must have one value per row");
+  PLUSS_CHECK(ov.numel() == n, std::string(op) + ": offset must have one value per row");
+  PLUSS_CHECK(scalar_(wv.lt(0.0).logical_and(wv.isfinite()).logical_not().all()) > 0.5, std::string(op) + ": weights must be non-negative");
+
+  const Series finite_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false)).logical_and(wv.isfinite()).logical_and(ov.isfinite());
+  const bool all_ok = scalar_(finite_ok.all()) > 0.5;
+  PLUSS_CHECK(all_ok || drop_missing, std::string(op) + ": non-finite values found and drop_missing=false");
+  const Series row_ok = finite_ok.logical_and(wv.gt(0.0));  // a row of weight zero does not take part in the fit
   const std::int64_t n_clean = static_cast<std::int64_t>(std::llround(scalar_(row_ok.to(ScalarType::Float64).sum())));
   PLUSS_CHECK(n_clean > 0, std::string(op) + ": no observations left after filtering missing values");
-  const bool all_ok = scalar_(row_ok.all()) > 0.5;
-  PLUSS_CHECK(all_ok || drop_missing, std::string(op) + ": non-finite values found and drop_missing=false");
 
   const Series idx = row_ok.nonzero().reshape({n_clean}).to(out_cfg.platform, ScalarType::Int64);
   return CleanData{
       .y = yv.index_select(0, idx),
       .x = xm.index_select(0, idx),
+      .w = wv.index_select(0, idx),
+      .off = ov.index_select(0, idx),
       .n = n_clean,
       .p = p,
       .dropped = n - n_clean,
@@ -267,46 +285,46 @@ Series variance_mu_(const Series& mu_in, GLMFamily family, Config cfg) {
   return mu.mul(one.sub(mu)).maximum(kMinMu);
 }
 
-double deviance_value_(GLMFamily family, const Series& y, const Series& mu) {
+double deviance_value_(GLMFamily family, const Series& y, const Series& mu, const Series& w) {
   if (family == GLMFamily::Normal) {
     const Series r = y.sub(mu);
-    return scalar_(r.mul(r).sum());
+    return scalar_(r.mul(r).mul(w).sum());
   }
   if (family == GLMFamily::Poisson) {
     const Series yi = y.maximum(0.0);
     const Series mui = mu.maximum(kMinMu);
     const Series log_ratio = yi.maximum(kMinMu).div(mui).log();
     const Series core = yi.gt(0.0).where(yi.mul(log_ratio).sub(yi.sub(mui)), mui);
-    return 2.0 * scalar_(core.sum());
+    return 2.0 * scalar_(core.mul(w).sum());
   }
   const Series yi = y.clamp(kMinMu, kMaxMu);
   const Series mui = mu.clamp(kMinMu, kMaxMu);
   const Series one = pluss::series::ones(yi.sizes(), f64_cfg_like_(yi, {}));
   const Series term = yi.mul(yi.div(mui).log())
                           .add(one.sub(yi).mul(one.sub(yi).div(one.sub(mui)).log()));
-  return 2.0 * scalar_(term.sum());
+  return 2.0 * scalar_(term.mul(w).sum());
 }
 
-double loglik_value_(GLMFamily family, const Series& y, const Series& mu) {
+double loglik_value_(GLMFamily family, const Series& y, const Series& mu, const Series& w) {
   const std::int64_t n = y.numel();
   if (family == GLMFamily::Normal) {
     const Series r = y.sub(mu);
-    const double sse = scalar_(r.mul(r).sum());
+    const double sse = scalar_(r.mul(r).mul(w).sum());
     if (sse <= kEps) {
       return std::numeric_limits<double>::infinity();
     }
     const double sigma2_mle = sse / static_cast<double>(n);
-    return -0.5 * static_cast<double>(n) * (std::log(2.0 * std::numbers::pi * sigma2_mle) + 1.0);
+    return -0.5 * (static_cast<double>(n) * (std::log(2.0 * std::numbers::pi * sigma2_mle) + 1.0) - scalar_(w.log().sum()));
   }
   if (family == GLMFamily::Poisson) {
     const Series yi = y.maximum(0.0);
     const Series mui = mu.maximum(kMinMu);
-    return scalar_(yi.mul(mui.log()).sub(mui).sub(yi.add(1.0).lgamma()).sum());
+    return scalar_(yi.mul(mui.log()).sub(mui).sub(yi.add(1.0).lgamma()).mul(w).sum());
   }
   const Series yi = y.clamp(kMinMu, kMaxMu);
   const Series mui = mu.clamp(kMinMu, kMaxMu);
   const Series one = pluss::series::ones(yi.sizes(), f64_cfg_like_(yi, {}));
-  return scalar_(yi.mul(mui.log()).add(one.sub(yi).mul(one.sub(mui).log())).sum());
+  return scalar_(yi.mul(mui.log()).add(one.sub(yi).mul(one.sub(mui).log())).mul(w).sum());
 }
 
 } // namespace
@@ -318,7 +336,7 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   PLUSS_CHECK(options.max_iter > 0, std::string(op) + ": max_iter must be > 0");
   PLUSS_CHECK(std::isfinite(options.tol) && options.tol > 0.0, std::string(op) + ": tol must be > 0");
 
-  const auto clean = sanitize_inputs_(y, x, options.drop_missing, cfg, op);
+  const auto clean = sanitize_inputs_(y, x, options, cfg, op);
   PLUSS_CHECK(clean.p > 0 || options.add_intercept, std::string(op) + ": a model needs at least one predictor or an intercept");
   const auto out_cfg = f64_cfg_like_(clean.x, cfg);
 
@@ -331,6 +349,11 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
     const bool valid = scalar_(clean.y.ge(0.0).all()) > 0.5;
     PLUSS_CHECK(valid, std::string(op) + ": poisson family expects y >= 0");
   }
+  if (resolved_link == GLMLink::Logit) {
+    // the logit link keeps the mean strictly between 0 and 1, so a response outside [0,1] could never be matched
+    const bool valid = scalar_(clean.y.ge(0.0).logical_and(clean.y.le(1.0)).all()) > 0.5;
+    PLUSS_CHECK(valid, std::string(op) + ": the logit link expects y in [0,1]");
+  }
 
   const Series X = build_design_(clean.x, options.add_intercept, out_cfg);
   const Series ycol = clean.y.reshape({clean.n, 1});
@@ -338,61 +361,86 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   const std::int64_t k = X.sizes()[1];
   PLUSS_CHECK(n >= k, std::string(op) + ": requires n >= number of parameters");
 
-  Series beta = pluss::series::zeros({k, 1}, out_cfg);
+  // One cutoff defines both the rank and the pseudoinverse that produces the coefficients.
+  const auto drank = detail::design_rank(X, options.rcond);
+  const double smax = drank.largest;
+  const double smin = drank.smallest;
+  const std::int64_t rank = drank.rank;
+
+  const Series pw = clean.w.reshape({n, 1});
+  const Series off = clean.off.reshape({n, 1});
+  const double total_weight = scalar_(pw.sum());
+  const double weighted_offset = scalar_(off.mul(pw).sum()) / total_weight;
+
+  // The starting point: the constant-mean model's coefficient on the link scale, less the mean offset.
+  auto start_for = [&](std::int64_t columns, bool intercept) {
+    Series b = pluss::series::zeros({columns, 1}, out_cfg);
+    if (intercept && columns > 0) {
+      const double ymean = scalar_(ycol.mul(pw).sum()) / total_weight;
+      double b0 = 0.0;
+      if (resolved_link == GLMLink::Log) {
+        b0 = std::log(std::max(kMinMu, ymean));
+      } else if (resolved_link == GLMLink::Logit) {
+        const double ym = std::clamp(ymean, kMinMu, kMaxMu);
+        b0 = std::log(ym / (1.0 - ym));
+      } else {
+        b0 = ymean;
+      }
+      b0 -= weighted_offset;
+      const Series head = pluss::series::full({1, 1}, b0, out_cfg);
+      b = columns > 1 ? head.unite({pluss::series::zeros({columns - 1, 1}, out_cfg)}, 0) : head;
+    }
+    return b;
+  };
+
+  struct Irls {
+    Series beta = pluss::series::undefined();
+    std::int64_t iterations = 0;
+    bool converged = false;
+  };
+  // Iteratively reweighted least squares on the design `D`: each step regresses the working response on D with the weights
+  // (case weight) / (variance * link-derivative^2).
+  auto irls = [&](const Series& D, Series beta0, double pinv_rcond) {
+    Irls r;
+    Series b = beta0;
+    Series e = D.matmul(b).add(off);
+    for (std::int64_t it = 0; it < options.max_iter; ++it) {
+      r.iterations = it + 1;
+      const Series m = inv_link_(e, resolved_link, out_cfg);
+      const Series var = variance_mu_(m, options.family, out_cfg);
+      const Series gprime = link_derivative_mu_(m, resolved_link, out_cfg);
+      const Series denom = var.mul(gprime).mul(gprime).maximum(kMinMu);
+      const Series working_weight = pw.div(denom);
+      const Series z = e.sub(off).add(ycol.sub(m).mul(gprime));
+      const Series sw = working_weight.sqrt();
+      const Series b_new = pluss::subsp::math::linalg::pinverse(D.mul(sw), pinv_rcond).matmul(z.mul(sw));
+      const double max_abs_delta = scalar_(b_new.sub(b).abs().max());
+      const double max_abs_beta = scalar_(b_new.abs().max());
+      b = b_new;
+      e = D.matmul(b).add(off);
+      if (max_abs_delta <= options.tol * (1.0 + max_abs_beta)) {
+        r.converged = true;
+        break;
+      }
+    }
+    r.beta = b;
+    return r;
+  };
+
+  Series beta0 = start_for(k, options.add_intercept);
   if (options.family == GLMFamily::Normal) {
-    beta = pluss::subsp::math::linalg::pinverse(X, options.rcond).matmul(ycol);
-  } else if (options.add_intercept && k > 0) {
-    const double ymean = scalar_(ycol.mean());
-    double b0 = 0.0;
-    if (resolved_link == GLMLink::Log) {
-      b0 = std::log(std::max(kMinMu, ymean));
-    } else if (resolved_link == GLMLink::Logit) {
-      const double ym = std::clamp(ymean, kMinMu, kMaxMu);
-      b0 = std::log(ym / (1.0 - ym));
-    } else {
-      b0 = ymean;
-    }
-    const Series head = pluss::series::full({1, 1}, b0, out_cfg);
-    if (k > 1) {
-      beta = head.unite({pluss::series::zeros({k - 1, 1}, out_cfg)}, 0);
-    } else {
-      beta = head;
-    }
+    // for the normal family with the identity link the first step is the weighted least-squares solution
+    const Series sw0 = pw.sqrt();
+    beta0 = pluss::subsp::math::linalg::pinverse(X.mul(sw0), drank.pinv_rcond).matmul(ycol.sub(off).mul(sw0));
   }
-
-  std::int64_t iters = 0;
-  bool converged = false;
-  Series eta = X.matmul(beta);
+  const Irls fitted = irls(X, beta0, drank.pinv_rcond);
+  Series beta = fitted.beta;
+  const std::int64_t iters = fitted.iterations;
+  const bool converged = fitted.converged;
+  Series eta = X.matmul(beta).add(off);
   Series mu = inv_link_(eta, resolved_link, out_cfg);
-  Series weights = pluss::series::ones({n, 1}, out_cfg);
+  Series weights = pw;
   std::vector<std::string> warnings;
-
-  for (std::int64_t it = 0; it < options.max_iter; ++it) {
-    iters = it + 1;
-
-    mu = inv_link_(eta, resolved_link, out_cfg);
-    const Series var = variance_mu_(mu, options.family, out_cfg);
-    const Series gprime = link_derivative_mu_(mu, resolved_link, out_cfg);
-    const Series denom = var.mul(gprime).mul(gprime).maximum(kMinMu);
-    const Series ones = pluss::series::ones(denom.sizes(), out_cfg);
-    weights = ones.div(denom);
-
-    const Series z = eta.add(ycol.sub(mu).mul(gprime));
-    const Series sw = weights.sqrt();
-    const Series Xw = X.mul(sw);
-    const Series zw = z.mul(sw);
-    const Series beta_new = pluss::subsp::math::linalg::pinverse(Xw, options.rcond).matmul(zw);
-
-    const double max_abs_delta = scalar_(beta_new.sub(beta).abs().max());
-    const double max_abs_beta = scalar_(beta_new.abs().max());
-
-    beta = beta_new;
-    eta = X.matmul(beta);
-    if (max_abs_delta <= options.tol * (1.0 + max_abs_beta)) {
-      converged = true;
-      break;
-    }
-  }
   if (!converged) {
     warnings.push_back("IRLS reached max_iter without satisfying tolerance.");
   }
@@ -400,38 +448,43 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
   mu = inv_link_(eta, resolved_link, out_cfg);
   const Series resid = ycol.sub(mu).reshape({n});
 
-  const double deviance = deviance_value_(options.family, ycol.reshape({n}), mu.reshape({n}));
-  const double llf = loglik_value_(options.family, ycol.reshape({n}), mu.reshape({n}));
+  const Series w_vec = pw.reshape({n});
+  const double deviance = deviance_value_(options.family, ycol.reshape({n}), mu.reshape({n}), w_vec);
+  const double llf = loglik_value_(options.family, ycol.reshape({n}), mu.reshape({n}), w_vec);
 
-  const double mean_y = scalar_(ycol.mean());
-  Series mu_null = pluss::series::full({n, 1}, mean_y, out_cfg);
-  if (options.family == GLMFamily::Binomial) {
-    mu_null = mu_null.maximum(kMinMu).minimum(kMaxMu);
-  } else if (options.family == GLMFamily::Poisson) {
-    mu_null = mu_null.maximum(kMinMu);
+  // The null model has a constant linear predictor (plus the offset, if there is one).
+  Series mu_null = pluss::series::undefined();
+  if (options.offset.defined() && options.family != GLMFamily::Normal) {
+    const Series ones_design = pluss::series::ones({n, 1}, out_cfg);
+    const Irls null_fit = irls(ones_design, start_for(1, true), options.rcond);
+    mu_null = inv_link_(ones_design.matmul(null_fit.beta).add(off), resolved_link, out_cfg);
+  } else {
+    const double mean_y = scalar_(ycol.mul(pw).sum()) / total_weight - (options.family == GLMFamily::Normal ? weighted_offset : 0.0);
+    mu_null = pluss::series::full({n, 1}, mean_y, out_cfg);
+    if (options.family == GLMFamily::Normal) {
+      mu_null = mu_null.add(off);
+    }
+    if (options.family == GLMFamily::Binomial) {
+      mu_null = mu_null.maximum(kMinMu).minimum(kMaxMu);
+    } else if (options.family == GLMFamily::Poisson) {
+      mu_null = mu_null.maximum(kMinMu);
+    }
   }
-  const double null_deviance = deviance_value_(options.family, ycol.reshape({n}), mu_null.reshape({n}));
+  const double null_deviance = deviance_value_(options.family, ycol.reshape({n}), mu_null.reshape({n}), w_vec);
   const double pseudo_r2 =
       (std::isfinite(null_deviance) && null_deviance > kEps) ? (1.0 - deviance / null_deviance) : std::numeric_limits<double>::quiet_NaN();
 
-  const auto svd_x = pluss::subsp::math::linalg::svd(X, false);
-  const Series sing = svd_x.S.reshape({svd_x.S.numel()}).to(out_cfg.platform, out_cfg.dtype);
-  const double smax = scalar_(sing.max());
-  const double smin = scalar_(sing.min());
-  const double rank_tol = options.rcond * std::max<std::int64_t>(n, k) * std::max(smax, 1.0);
-  const std::int64_t rank = static_cast<std::int64_t>(std::llround(scalar_(sing.gt(rank_tol).sum())));
   const std::int64_t df_resid = std::max<std::int64_t>(0, n - rank);
   const std::int64_t df_model = options.add_intercept ? std::max<std::int64_t>(0, rank - 1) : rank;
 
   const Series var = variance_mu_(mu, options.family, out_cfg);
   const Series gprime = link_derivative_mu_(mu, resolved_link, out_cfg);
   const Series denom = var.mul(gprime).mul(gprime).maximum(kMinMu);
-  const Series ones = pluss::series::ones(denom.sizes(), out_cfg);
-  weights = ones.div(denom);
+  weights = pw.div(denom);
 
   const Series sw = weights.sqrt();
   const Series Xw = X.mul(sw);
-  const Series pinv_xw = pluss::subsp::math::linalg::pinverse(Xw, options.rcond);
+  const Series pinv_xw = pluss::subsp::math::linalg::pinverse(Xw, drank.pinv_rcond);
   const Series xtx_inv = pinv_xw.matmul(pinv_xw.transpose(0, 1));
 
   double dispersion = 1.0;
@@ -503,10 +556,14 @@ GLMFitResult glm_fit(const Series& y, const Series& x, const GLMOptions& options
 }
 
 Series glm_predict(const GLMFitResult& fit, const Series& x, GLMPredictionType type, Config cfg) {
+  return glm_predict(fit, x, pluss::series::undefined(), type, cfg);
+}
+
+Series glm_predict(const GLMFitResult& fit, const Series& x, const Series& offset, GLMPredictionType type, Config cfg) {
   const char* op = "subsp::stats::regression::glm_predict";
   PLUSS_CHECK(fit.coefficients.defined(), std::string(op) + ": fit.coefficients is undefined");
 
-  const Series xm = as_matrix_(x, op).to(fit.coefficients.platform(), ScalarType::Float64);
+  const Series xm = detail::prediction_matrix(x, fit.num_predictors, fit.k_params, op).to(fit.coefficients.platform(), ScalarType::Float64);
   const auto out_cfg = f64_cfg_like_(fit.coefficients, cfg);
 
   Series design = xm;
@@ -526,7 +583,12 @@ Series glm_predict(const GLMFitResult& fit, const Series& x, GLMPredictionType t
   }
 
   const Series beta_col = fit.coefficients.reshape({fit.k_params, 1}).to(out_cfg.platform, out_cfg.dtype);
-  const Series eta = design.to(out_cfg.platform, out_cfg.dtype).matmul(beta_col).reshape({n});
+  Series eta = design.to(out_cfg.platform, out_cfg.dtype).matmul(beta_col).reshape({n});
+  if (offset.defined()) {
+    const Series shift = offset.to(out_cfg.platform, out_cfg.dtype).reshape({offset.numel()});
+    PLUSS_CHECK(shift.numel() == n, std::string(op) + ": offset must have one value per row of X");
+    eta = eta.add(shift);
+  }
   if (type == GLMPredictionType::Linear) {
     return eta;
   }
@@ -564,8 +626,8 @@ std::ostream& print_glm_summary(std::ostream& os, const GLMFitResult& fit) {
      << std::setw(12) << "std err"
      << std::setw(12) << "z"
      << std::setw(12) << "P>|z|"
-     << std::setw(12) << "[0.025"
-     << std::setw(12) << "0.975]"
+     << std::setw(12) << detail::ci_lower_label(fit.alpha)
+     << std::setw(12) << detail::ci_upper_label(fit.alpha)
      << '\n';
   os << "------------------------------------------------------------------------------\n";
 

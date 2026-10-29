@@ -74,6 +74,31 @@ int main() {
       expect(approx(pv[0], 1.0 + 2.0 * 1.5 + 0.5 * 1.5 * 1.5, 1e-7), "poly predict value 1");
       expect(approx(pv[1], 1.0 + 2.0 * -2.0 + 0.5 * 4.0, 1e-7), "poly predict value 2");
       expect(reg::poly_summary(fit).find("Polynomial Regression") != std::string::npos, "poly summary title");
+
+      // a single observation of two predictors is a [1, 2] row
+      std::vector<double> flat, outcome;
+      for (int i = 0; i < 12; ++i) {
+        const double a = (i % 4) * 0.5, b = (i / 4) * 0.7;
+        flat.push_back(a);
+        flat.push_back(b);
+        outcome.push_back(1.0 + a + b + 0.3 * a * b + 0.02 * (i % 3));
+      }
+      reg::PolyOptions two_options;
+      two_options.degree = 2;
+      two_options.include_cross = true;
+      const auto two_fit = reg::poly_fit(vec(outcome, cfg), mat(flat, 12, 2, cfg), two_options, cfg);
+      const Series one_row = reg::poly_predict(two_fit, mat({0.5, 0.7}, 1, 2, cfg), cfg);
+      const Series two_rows = reg::poly_predict(two_fit, mat({0.5, 0.7, 0.5, 0.7}, 2, 2, cfg), cfg);
+      expect(one_row.numel() == 1 && approx(one_row.host<double>().front(), two_rows.host<double>().front(), 1e-12), "poly_predict accepts one observation as a [1, p] row");
+
+      // a prediction set with the wrong number of columns is refused with a message about the columns
+      bool refused = false;
+      try {
+        (void)reg::poly_predict(fit, mat({1.0, 2.0, 3.0, 4.0}, 2, 2, cfg), cfg);
+      } catch (const std::exception& e) {
+        refused = std::string(e.what()).find("expected X with 1 columns") != std::string::npos;
+      }
+      expect(refused, "poly_predict names the expected number of columns");
     }
 
     {

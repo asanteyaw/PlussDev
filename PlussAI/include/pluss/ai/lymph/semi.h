@@ -75,8 +75,8 @@ inline void validate_options_(const Options& options) {
   }
 
   const Series scores = raw_scores.to(ScalarType::Float64).reshape({raw_scores.numel()});
-  const double lo = scores.amin().reshape({1}).item<double>();
-  const double hi = scores.amax().reshape({1}).item<double>();
+  const double lo = scores.amin().reshape({1}).host<double>().front();
+  const double hi = scores.amax().reshape({1}).host<double>().front();
   const Series prob = (std::isfinite(lo) && std::isfinite(hi) && lo >= 0.0 && hi <= 1.0)
                           ? scores
                           : scores.sigmoid();

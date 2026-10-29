@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -131,6 +131,7 @@
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>chi-squared 8.5930 on 2.0000 df, p 0.0136, critical 5.9915
 </pre></div>
 </div>
+<p>For the drink and age table of 89 people the chi-squared statistic 8.59 on 2 degrees of freedom exceeds the 5% critical value 5.99, and p 0.0136 rejects independence: the preferred drink depends on the age band.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -161,6 +162,7 @@ row 2 expected 19.4157, 20.0225, 14.5618
 table 2 x 3
 </pre></div>
 </div>
+<p>The expected counts under independence are the row total times the column total over the grand total; comparing them with the observed table shows which cells depart most. The table printed is 2 by 3, and the first row is expected 12.58, 12.98 and 9.44.</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -184,6 +186,7 @@ table 2 x 3
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>p 0.0136, critical 9.2103 (keep)
 </pre></div>
 </div>
+<p>At the 1% level the critical value is 9.21, above the statistic 8.59, so the same table that was rejected at 5% is kept here (p is unchanged, 0.0136). The decision depends on the level, which is why the level is a parameter and the p-value is reported alongside.</p>
 </section>
 </section>
 <section id="see-also">
@@ -212,13 +215,16 @@ table 2 x 3
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Custom operators &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Saving and loading" href="saving_and_loading.html" />
+    <link rel="prev" title="Composing and combining operators" href="composing_and_combining.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from custom_operators.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="custom-operators">
+<h1>Custom operators<a class="headerlink" href="#custom-operators" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../calculus_05_operators.html"><span class="std std-doc">Back to Operators</span></a></p>
+<p>A custom operator is an <code class="docutils literal notranslate"><span class="pre">Operator</span></code> defined by a callable: any callable that takes a <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">math::Function</span> <span class="pre">&amp;</span></code> and returns a <code class="docutils literal notranslate"><span class="pre">math::Function</span></code>. It has the same type as the built-in operators, so it can be applied, composed, combined in a linear combination and stored with them.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">Callable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">Callable</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="n">callable</span><span class="p">,</span><span class="w"> </span><span class="n">Options</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">Callable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="n">Callable</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="n">callable</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The callable runs at <strong>application time</strong>, once, when <code class="docutils literal notranslate"><span class="pre">op(f)</span></code> is called, and it receives the function as a value. It builds the result from <code class="docutils literal notranslate"><span class="pre">f</span></code> with the operations the previous chapters described, including other operators. The result is an ordinary <code class="docutils literal notranslate"><span class="pre">Function</span></code>.</p>
+<section id="a-first-operator">
+<h2>A first operator<a class="headerlink" href="#a-first-operator" title="Link to this heading">¶</a></h2>
+<p>The logarithmic derivative f′/f is not a built-in operator but is one line to define, using <code class="docutils literal notranslate"><span class="pre">differential</span></code> inside:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">6</span><span class="p">));</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">applications</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">log_derivative</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;example.log_derivative&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="n">applications</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">++</span><span class="n">applications</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">differential</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)(</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">f</span><span class="p">;</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">gaussian</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)).</span><span class="n">exp</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">log_derivative</span><span class="p">(</span><span class="n">gaussian</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;applications so far:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">applications</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;(the callable ran once, when the operator met the function)&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;f&#39;/f for exp(-x^2)    &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; = -2x:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">-2.0</span><span class="p">).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;evaluated again       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="p">({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;applications:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">applications</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">log_derivative</span><span class="p">.</span><span class="n">key</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; version&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">log_derivative</span><span class="p">.</span><span class="n">version</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>applications so far: 1 (the callable ran once, when the operator met the function)
+f&#39;/f for exp(-x^2)     [2.000000, -1.000000, -4.000000]  = -2x: [2.000000, -1.000000, -4.000000]
+evaluated again        [2.000000, -1.000000, -4.000000]
+applications: 1
+key example.log_derivative  version 1
+</pre></div>
+</div>
+<p>The callable ran exactly once, at the moment of <code class="docutils literal notranslate"><span class="pre">log_derivative(gaussian)</span></code>; evaluating <code class="docutils literal notranslate"><span class="pre">rate</span></code> any number of times replays the stored graph and does not call it again. The key <code class="docutils literal notranslate"><span class="pre">example.log_derivative</span></code> is a name you choose. The operator was applied to a function with the variable <code class="docutils literal notranslate"><span class="pre">x</span></code>, so the callable names <code class="docutils literal notranslate"><span class="pre">x</span></code>; to work with any variable, take the variable name as a parameter of a factory function, as <code class="docutils literal notranslate"><span class="pre">plus_constant</span></code> does with its offset below.</p>
+</section>
+<section id="parameters-composition-and-move-only-state">
+<h2>Parameters, composition and move-only state<a class="headerlink" href="#parameters-composition-and-move-only-state" title="Link to this heading">¶</a></h2>
+<p>A callable can capture parameters, including move-only values such as a <code class="docutils literal notranslate"><span class="pre">unique_ptr</span></code>, and the operator it defines owns what it captured. Operators defined this way compose with the built-in ones.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="c1">// A factory: the operator that adds `offset` to a function. It captures its parameter by value.</span>
+<span class="k">static</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="nf">plus_constant</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">offset</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;example.plus_constant&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">offset</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">offset</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+
+<span class="w">  </span><span class="c1">// Move-only state: the exponent lives in a unique_ptr that the operator now owns.</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">exponent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">3.0</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">power</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">([</span><span class="n">exponent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">exponent</span><span class="p">)](</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">g</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">g</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="o">*</span><span class="n">exponent</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;g^3 for g = x^2 + x &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">power</span><span class="p">(</span><span class="n">f</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">  </span><span class="c1">// A custom operator composes with built-in ones: the derivative of g^3.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">d_of_power</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">compose</span><span class="p">(</span><span class="n">operators</span><span class="o">::</span><span class="n">differential</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">power</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;d/dx (g^3)          &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">d_of_power</span><span class="p">(</span><span class="n">f</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; = 3 g^2 g&#39;:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">mul</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">add</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)).</span><span class="n">mul</span><span class="p">(</span><span class="mf">3.0</span><span class="p">).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">  </span><span class="c1">// A parameterised operator from a factory, composed with another operator.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">lifted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plus_constant</span><span class="p">(</span><span class="mf">10.0</span><span class="p">);</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;g + 10              &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lifted</span><span class="p">(</span><span class="n">f</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;d/dx (g + 10)       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">compose</span><span class="p">(</span><span class="n">operators</span><span class="o">::</span><span class="n">differential</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">lifted</span><span class="p">)(</span><span class="n">f</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; = g&#39;:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">).</span><span class="n">add</span><span class="p">(</span><span class="mf">1.0</span><span class="p">).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;lifted is linear:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lifted</span><span class="p">.</span><span class="n">capabilities</span><span class="p">().</span><span class="n">linear</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;(adding a constant is affine, not linear)&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>g^3 for g = x^2 + x  [0.0000, 8.0000, 216.0000]
+d/dx (g^3)           [0.0000, 36.0000, 540.0000]  = 3 g^2 g&#39;: [0.0000, 36.0000, 540.0000]
+g + 10               [10.0000, 12.0000, 16.0000]
+d/dx (g + 10)        [1.0000, 3.0000, 5.0000]  = g&#39;: [1.0000, 3.0000, 5.0000]
+lifted is linear: no (adding a constant is affine, not linear)
+</pre></div>
+</div>
+<p>The power operator owns the <code class="docutils literal notranslate"><span class="pre">unique_ptr</span></code> it captured; the operator can be copied freely, because copies share that one owned state. It maps <code class="docutils literal notranslate"><span class="pre">g</span> <span class="pre">=</span> <span class="pre">x²</span> <span class="pre">+</span> <span class="pre">x</span></code> to <code class="docutils literal notranslate"><span class="pre">g³</span></code>, and composing it with the derivative operator gives 3g²g′. The factory <code class="docutils literal notranslate"><span class="pre">plus_constant</span></code> shows the usual way to parameterise an operator: a function that returns <code class="docutils literal notranslate"><span class="pre">define(...)</span></code> with the parameter captured by value. The declared flags default to the cautious values, and <code class="docutils literal notranslate"><span class="pre">plus_constant</span></code> is correctly not marked linear, because <code class="docutils literal notranslate"><span class="pre">f</span> <span class="pre">↦</span> <span class="pre">f</span> <span class="pre">+</span> <span class="pre">c</span></code> is affine.</p>
+</section>
+<section id="declaring-capabilities">
+<h2>Declaring capabilities<a class="headerlink" href="#declaring-capabilities" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">define</span></code> takes an <code class="docutils literal notranslate"><span class="pre">Options</span></code> value that states what the operator promises. The library trusts these flags: it uses <code class="docutils literal notranslate"><span class="pre">linear</span></code> when it combines operators, and <code class="docutils literal notranslate"><span class="pre">serializable</span></code> decides whether <code class="docutils literal notranslate"><span class="pre">save</span></code> accepts the operator. They are declarations, not checks.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">Options</span></code> field</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">version</span></code></p></td>
+<td><p>1</p></td>
+<td><p>version of the definition; saved operators remember it, and it must be positive</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">structural</span></code></p></td>
+<td><p>true</p></td>
+<td><p>the callable builds the result from the graph of <code class="docutils literal notranslate"><span class="pre">f</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluated_only</span></code></p></td>
+<td><p>false</p></td>
+<td><p>the callable works on values only; cannot be combined with <code class="docutils literal notranslate"><span class="pre">structural</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">linear</span></code></p></td>
+<td><p>false</p></td>
+<td><p>the callable is linear in <code class="docutils literal notranslate"><span class="pre">f</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">adjoint_known</span></code></p></td>
+<td><p>false</p></td>
+<td><p>the adjoint is known</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">serializable</span></code></p></td>
+<td><p>false</p></td>
+<td><p>the operator can be saved; requires a key, and a loader bound with <code class="docutils literal notranslate"><span class="pre">operators::bind</span></code> for loading</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">platform_pure</span></code></p></td>
+<td><p>true</p></td>
+<td><p>the callable does not move data between platforms</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">payload</span></code></p></td>
+<td><p>empty</p></td>
+<td><p>text saved with the operator and handed back to its loader</p></td>
+</tr>
+</tbody>
+</table>
+<p>Declare <code class="docutils literal notranslate"><span class="pre">linear</span> <span class="pre">=</span> <span class="pre">true</span></code> only if the operator really is linear, because combinations of operators compute their own <code class="docutils literal notranslate"><span class="pre">linear</span></code> flag from their parts’ flags. The contracts that can be checked are checked: an empty <code class="docutils literal notranslate"><span class="pre">std::function</span></code>, a body that returns an undefined <code class="docutils literal notranslate"><span class="pre">Function</span></code>, contradictory <code class="docutils literal notranslate"><span class="pre">structural</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluated_only</span></code>, a <code class="docutils literal notranslate"><span class="pre">serializable</span></code> operator without a key, and a zero version are all errors.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;functional&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">attempt</span><span class="p">(</span><span class="n">OutputEngine</span><span class="w"> </span><span class="o">&amp;</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">call</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">call</span><span class="p">();</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;-&gt; accepted&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">    </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">)));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">pass_through</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">f</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">square</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;empty std::function                &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;empty&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;</span><span class="p">{});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;structural and evaluated_only      &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;both&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pass_through</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Options</span><span class="p">{.</span><span class="n">structural</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">evaluated_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;serializable without a key         &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">({},</span><span class="w"> </span><span class="n">pass_through</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Options</span><span class="p">{.</span><span class="n">serializable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;version 0                          &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;v0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pass_through</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Options</span><span class="p">{.</span><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;body returns an undefined Function &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;bad&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="p">{};</span><span class="w"> </span><span class="p">});</span>
+<span class="w">    </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">bad</span><span class="p">(</span><span class="n">square</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;an undefined Operator, applied     &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="p">{}(</span><span class="n">square</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">attempt</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a valid declaration                &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;ok&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pass_through</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Options</span><span class="p">{.</span><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">linear</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span><span class="w"> </span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">declared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">define</span><span class="p">(</span><span class="s">&quot;example.declared&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pass_through</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Options</span><span class="p">{.</span><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">linear</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;declared: key&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">declared</span><span class="p">.</span><span class="n">key</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; version&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">declared</span><span class="p">.</span><span class="n">version</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; linear&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">declared</span><span class="p">.</span><span class="n">capabilities</span><span class="p">().</span><span class="n">linear</span><span class="p">,</span>
+<span class="w">              </span><span class="s">&quot; serializable&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">declared</span><span class="p">.</span><span class="n">capabilities</span><span class="p">().</span><span class="n">serializable</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>empty std::function                 -&gt; operators::define: callable must not be empty
+structural and evaluated_only       -&gt; operators::define: structural and evaluated_only cannot both be true
+serializable without a key          -&gt; operators::define: a serializable custom operator requires a stable key
+version 0                           -&gt; operators::define: version must be positive
+body returns an undefined Function  -&gt; operators::Operator: application returned an undefined Function
+an undefined Operator, applied      -&gt; operators::Operator: operation requires a defined operator
+a valid declaration                 -&gt; accepted
+declared: key example.declared  version 3  linear true  serializable false
+</pre></div>
+</div>
+<p>The first six rows are contracts the library checks, and each message says which one failed. The last two of them, the body that returns nothing and the undefined operator, fail when the operator is applied rather than when it is defined. The last two lines show the declared metadata coming back from the operator: the key, the version 3 and the <code class="docutils literal notranslate"><span class="pre">linear</span></code> flag set by the caller, with <code class="docutils literal notranslate"><span class="pre">serializable</span></code> still false because it was not requested.</p>
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/calculus/functions/calculus_05_operators/custom_operators.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

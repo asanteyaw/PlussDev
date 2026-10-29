@@ -81,6 +81,8 @@ Output
 W+ 0.0000, W- 36.0000, z -2.5361, p 0.0078, pairs used 8
 ```
 
+Every second reading is higher, so all the signed ranks are negative: W+ is 0 and W- is 36, z -2.54, p 0.0078 with 8 pairs used. The smallest possible p-value for 8 pairs is reached.
+
 ### Example 2
 
 One sample against a hypothesised median.
@@ -107,6 +109,8 @@ Output
 ```text
 W+ 34.5000, W- 1.5000, p 0.0234
 ```
+
+Against a hypothesised median the signed ranks are W+ 34.5 and W- 1.5, with p 0.0234: the median differs from the hypothesised value.
 
 ### Example 3
 
@@ -138,6 +142,8 @@ Output
 exact       p 0.5000
 approximate p 0.4461
 ```
+
+One of the eight values equals the hypothesised median 5.5 and is dropped; the other seven split into 4 above and 3 below, so the exact two-sided p-value is 0.5 and the normal approximation 0.446. Both keep the null; for a sample this small the exact value is the one to report.
 
 ## See Also
 

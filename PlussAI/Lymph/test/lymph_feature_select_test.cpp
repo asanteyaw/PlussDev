@@ -54,7 +54,7 @@ bool run_feature_select_checks(std::ostream* err) {
     if (err) *err << "permutation_importance should return one mean/std per feature and [repeats, features] raw drops\n";
     return false;
   }
-  const auto means = importance.importances_mean.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto means = importance.importances_mean.to(pluss::pCPU, ScalarType::Float64).host<double>().array().data;
   if (!(means[0] > means[1]) || !(means[0] > means[2])) {
     if (err) *err << "permutation_importance should rank the informative feature above both noise features\n";
     return false;
@@ -71,12 +71,12 @@ bool run_feature_select_checks(std::ostream* err) {
         .eq(prediction.reshape({prediction.numel()}))
         .to(ScalarType::Float64)
         .mean()
-        .item<double>();
+        .host<double>().front();
   };
   const features::PermutationImportance custom_importance = features::permutation_importance(
       trained, batch, selection::make_scorer("acc", accuracy_fn),
       features::PermutationOptions{.repeats = 8, .random = {.seed = 20260904ULL, .deterministic = true}});
-  const auto custom_means = custom_importance.importances_mean.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto custom_means = custom_importance.importances_mean.to(pluss::pCPU, ScalarType::Float64).host<double>().array().data;
   for (std::size_t i = 0; i < means.size(); ++i) {
     if (std::abs(means[i] - custom_means[i]) > 1e-9) {
       if (err) *err << "a custom accuracy Scorer should match MetricKind::Accuracy in permutation_importance\n";

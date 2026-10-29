@@ -5,7 +5,9 @@
 #include <charconv>
 #include <cmath>
 #include <cstdlib>
+#include <locale>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -87,11 +89,14 @@ double get_double(std::string_view key, double fallback) {
   const std::string token = trim_ascii(*raw);
   if (token.empty()) return fallback;
 
+  // Floating-point from_chars is still absent from some supported libc++
+  // versions. The classic locale keeps parsing independent of the host locale.
+  std::istringstream stream(token);
+  stream.imbue(std::locale::classic());
+  stream >> std::noskipws;
   double parsed = fallback;
-  const char* begin = token.data();
-  const char* end = token.data() + token.size();
-  const auto result = std::from_chars(begin, end, parsed, std::chars_format::general);
-  if (result.ec != std::errc{} || result.ptr != end) return fallback;
+  stream >> parsed;
+  if (!stream || !stream.eof()) return fallback;
   if (!std::isfinite(parsed)) return fallback;
   return parsed;
 }

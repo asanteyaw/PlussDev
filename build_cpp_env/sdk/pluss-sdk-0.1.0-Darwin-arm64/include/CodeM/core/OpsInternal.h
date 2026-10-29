@@ -1,5 +1,6 @@
 #pragma once
 #include "CodeM/core/Series.h"
+#include <cmath>
 #include <cstdint>
 #include <string_view>
 #include <vector>
@@ -26,6 +27,21 @@ class PlatformScope final {
  private:
   bool active_{false};
 };
+
+// dtype of the constant built for a scalar operand `v` combined with a tensor of dtype `tensor_dt`.
+// libtorch wraps a Python scalar as a 0-dim "wrapped number" that takes part in type promotion:
+// an integer/bool tensor combined with a floating scalar gives a floating result (default dtype
+// float32). The scalar here is a C++ double, so an integral value keeps the tensor's dtype (it
+// cannot be told apart from a Python int) while a fractional or non-finite value would be
+// truncated by an integer constant; those promote to float32 instead, and the ordinary binary-op
+// promotion then yields a floating result.
+inline ScalarType scalar_operand_dtype(ScalarType tensor_dt, double v) noexcept {
+  const bool integral_tensor =
+      tensor_dt == ScalarType::Bool || pluss::codem::dtype_of(tensor_dt).is_integral();
+  if (integral_tensor && (!std::isfinite(v) || std::trunc(v) != v))
+    return ScalarType::Float32;
+  return tensor_dt;
+}
 
 // Enforce same-platform semantics for tensor interop ops.
 void require_same_platform(const Series& a, const Series& b, std::string_view op);
@@ -163,6 +179,10 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series real(const Series& a);
   Series imag(const Series& a);
   Series angle(const Series& a);
+  // torch.complex: build a complex Series from real + imaginary parts.
+  // Differentiable — grad flows back as real(grad) / imag(grad).
+  Series complex_from_parts(const Series& real_part, const Series& imag_part,
+                            ScalarType out_dt);
 
   // Ternary and masking
   Series where(const Series& cond, const Series& a, const Series& b);
@@ -181,10 +201,37 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series& softplus_(Series& a, double beta=1.0, double threshold=20.0);
   Series silu(const Series& a);
   Series& silu_(Series& a);
-  Series gelu(const Series& a, bool approximate=true);
-  Series& gelu_(Series& a, bool approximate=true);
+  // approximate=false is exact-erf gelu (x*Phi(x)); matches the torch default
+  // ('none'). Pass true for the tanh approximation.
+  Series gelu(const Series& a, bool approximate=false);
+  Series& gelu_(Series& a, bool approximate=false);
   Series leaky_relu(const Series& a, double negative_slope=0.01);
   Series& leaky_relu_(Series& a, double negative_slope=0.01);
+  // Matches at::elu's 3-parameter form (also the shared implementation
+  // behind celu/selu): scale*x for x>0, alpha*scale*(exp(input_scale*x)-1)
+  // otherwise.
+  Series elu(const Series& a, double alpha=1.0, double scale=1.0, double input_scale=1.0);
+  Series& elu_(Series& a, double alpha=1.0, double scale=1.0, double input_scale=1.0);
+  Series celu(const Series& a, double alpha=1.0);
+  Series& celu_(Series& a, double alpha=1.0);
+  Series selu(const Series& a);
+  Series& selu_(Series& a);
+  Series hardsigmoid(const Series& a);
+  Series& hardsigmoid_(Series& a);
+  Series hardswish(const Series& a);
+  Series& hardswish_(Series& a);
+  Series mish(const Series& a);
+  Series& mish_(Series& a);
+  // x if x > threshold_val else value (value is a plain constant, no grad).
+  Series threshold(const Series& a, double threshold_val, double value);
+  Series& threshold_(Series& a, double threshold_val, double value);
+  // rrelu's fused single-node form lives in compat/Invoke.cpp (rrelu_impl_)
+  // rather than here: its training-mode RNG must reuse the exact noise draw
+  // from forward in the backward closure (not recompute it -- unlike every
+  // other Track B op, since this noise never depends on `a` there's no
+  // higher-order pitfall in capturing it), and the uniform-sampling helper
+  // it needs (uniform_like) is a compat-layer primitive with no
+  // ops_internal equivalent.
 
 
   // Clamping / activations

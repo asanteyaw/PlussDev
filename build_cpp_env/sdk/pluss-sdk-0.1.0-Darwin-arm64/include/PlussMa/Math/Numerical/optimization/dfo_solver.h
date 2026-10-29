@@ -97,6 +97,9 @@ struct DfoDiagnostics {
 struct DfoResult {
   Series minimizer{pluss::series::undefined()};
   Series objective_vector{pluss::series::undefined()};
+  // Mesh methods only: the non-dominated points found (rows) and their objective vectors (rows); undefined otherwise.
+  Series pareto_points{pluss::series::undefined()};
+  Series pareto_objectives{pluss::series::undefined()};
   double minimum{0.0};
   DfoStatus status{DfoStatus::ReachedIterationBudget};
   DfoSolverKind selected_solver{DfoSolverKind::Auto};

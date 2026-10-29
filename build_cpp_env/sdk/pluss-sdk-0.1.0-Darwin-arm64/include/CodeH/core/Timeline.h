@@ -20,7 +20,7 @@ namespace pluss::codeh {
 namespace _compat { namespace detail { struct Access; } }
 
 class Timeline;
-class TimeIndex;
+class TimelineIndexAccessor;
 struct CalendarOffset;
 
 namespace ops_internal {
@@ -83,6 +83,37 @@ public:
 
   Timeline() = delete; // construction via factories only
 
+  // Canonical policies for ordered-axis operations reached through index().
+  enum class ResampleClosed : std::uint8_t {
+    Left = 0,
+    Right = 1,
+  };
+
+  enum class ResampleLabel : std::uint8_t {
+    Left = 0,
+    Right = 1,
+  };
+
+  enum class ResampleOrigin : std::uint8_t {
+    StartDay = 0,
+    Start = 1,
+    Epoch = 2,
+  };
+
+  struct ResampleOptions {
+    std::string freq{"D"};
+    std::int64_t step{1};
+    ResampleClosed closed{ResampleClosed::Left};
+    ResampleLabel label{ResampleLabel::Left};
+    ResampleOrigin origin{ResampleOrigin::StartDay};
+    std::int64_t offset_nanos{0};
+  };
+
+  enum class AsofDirection { Backward, Forward, Nearest };
+
+  // The accessor belongs to Timeline's public surface; it is not a root value type.
+  using TimelineIndexAccessor = pluss::codeh::TimelineIndexAccessor;
+
   using TimelineBase::weekday_name;
   using TimelineBase::month_name;
 
@@ -97,7 +128,7 @@ public:
 #endif
 
 private:
-  friend class TimeIndex;
+  friend class ::pluss::codeh::TimelineIndexAccessor;
   friend struct ::pluss::codeh::_compat::detail::Access; // internal bridge
 
   friend Timeline pluss::codeh::ops_internal::timeline_from_utf8(std::span<const std::string_view>,

@@ -32,7 +32,7 @@ constexpr double kEps = 1e-12;
 
 void validate_option_(OptionType type, const char* op) {
   PLUSS_CHECK(type == OptionType::Call || type == OptionType::Put,
-              std::string("subsp::math::finance::pricing::") + op + ": unsupported option type");
+              std::string("subsp::math::finance::pricing::") + op + ": option type must be Call or Put (OptionType::Auto is only valid for an instrument that supplies is_call)");
 }
 
 void validate_common_(double spot,
@@ -178,11 +178,13 @@ void validate_mc_(const MonteCarloOptions& opt, const char* op) {
               std::string("subsp::math::finance::pricing::") + op + ": importance_shift must be finite");
   PLUSS_CHECK(std::isfinite(opt.control_vol) && opt.control_vol >= 0.0,
               std::string("subsp::math::finance::pricing::") + op + ": control_vol must be finite and >= 0");
+  PLUSS_CHECK(opt.sobol_scrambling >= 0 && opt.sobol_scrambling <= 3,
+              std::string("subsp::math::finance::pricing::") + op + ": sobol_scrambling must be in [0,3]");
 }
 
 void validate_heston_integration_(const HestonIntegrationOptions& opt, const char* op) {
-  PLUSS_CHECK(opt.integration_steps > 0,
-              std::string("subsp::math::finance::pricing::") + op + ": integration_steps must be > 0");
+  PLUSS_CHECK(opt.integration_steps >= 2,
+              std::string("subsp::math::finance::pricing::") + op + ": integration_steps must be >= 2");
   PLUSS_CHECK(std::isfinite(opt.integration_u_max) && opt.integration_u_max > 0.0,
               std::string("subsp::math::finance::pricing::") + op + ": integration_u_max must be finite and > 0");
 }
@@ -207,13 +209,13 @@ void validate_cos_options_(const CosOptions& opt, const char* op) {
               std::string("subsp::math::finance::pricing::") + op + ": num_terms must be >= 2");
   PLUSS_CHECK(std::isfinite(opt.truncation) && opt.truncation > 0.0,
               std::string("subsp::math::finance::pricing::") + op + ": truncation must be finite and > 0");
-  PLUSS_CHECK(std::isfinite(opt.cumulant_step) && opt.cumulant_step > 0.0,
-              std::string("subsp::math::finance::pricing::") + op + ": cumulant_step must be finite and > 0");
+  PLUSS_CHECK(std::isfinite(opt.cumulant_step) && opt.cumulant_step >= 1e-6,
+              std::string("subsp::math::finance::pricing::") + op + ": cumulant_step must be finite and >= 1e-6");
 }
 
 void validate_heston_nandi_integration_(const HestonNandiIntegrationOptions& opt, const char* op) {
-  PLUSS_CHECK(opt.integration_steps > 0,
-              std::string("subsp::math::finance::pricing::") + op + ": integration_steps must be > 0");
+  PLUSS_CHECK(opt.integration_steps >= 2,
+              std::string("subsp::math::finance::pricing::") + op + ": integration_steps must be >= 2");
   PLUSS_CHECK(std::isfinite(opt.integration_u_max) && opt.integration_u_max > 0.0,
               std::string("subsp::math::finance::pricing::") + op + ": integration_u_max must be finite and > 0");
   PLUSS_CHECK(opt.periods_per_year > 0,
@@ -323,46 +325,6 @@ ComplexSeries_ heston_logspot_cf_series_(const Series& u,
       scalar_series_(0.0, cfg),
       uu.mul(spot2.log()).add(uu.mul(rate - dividend_yield).mul(tau)));
   return c_exp_(c_add_(c_add_(a_term, c_mul_(b_term, p.v0)), drift));
-}
-
-struct CosSeriesInterval_ {
-  Series a = pluss::series::undefined();
-  Series b = pluss::series::undefined();
-};
-
-CosSeriesInterval_ heston_cos_interval_series_(const Series& spot,
-                                               const Series& maturity,
-                                               double rate,
-                                               double dividend_yield,
-                                               const HestonParams& p,
-                                               const CosOptions& options,
-                                               Config cfg) {
-  const double h = std::max(options.cumulant_step, 1.0e-6);
-  const Series um2 = pluss::series::full({1, 1}, -2.0 * h, f64_cfg_(cfg));
-  const Series um1 = pluss::series::full({1, 1}, -h, f64_cfg_(cfg));
-  const Series u0 = pluss::series::full({1, 1}, 0.0, f64_cfg_(cfg));
-  const Series up1 = pluss::series::full({1, 1}, h, f64_cfg_(cfg));
-  const Series up2 = pluss::series::full({1, 1}, 2.0 * h, f64_cfg_(cfg));
-
-  const ComplexSeries_ fm2 = c_log_(heston_logspot_cf_series_(um2, spot, maturity, rate, dividend_yield, p, cfg));
-  const ComplexSeries_ fm1 = c_log_(heston_logspot_cf_series_(um1, spot, maturity, rate, dividend_yield, p, cfg));
-  const ComplexSeries_ f0 = c_log_(heston_logspot_cf_series_(u0, spot, maturity, rate, dividend_yield, p, cfg));
-  const ComplexSeries_ fp1 = c_log_(heston_logspot_cf_series_(up1, spot, maturity, rate, dividend_yield, p, cfg));
-  const ComplexSeries_ fp2 = c_log_(heston_logspot_cf_series_(up2, spot, maturity, rate, dividend_yield, p, cfg));
-
-  const ComplexSeries_ d1 = c_div_(c_sub_(c_add_(fm2, c_mul_(fp1, 8.0)), c_add_(c_mul_(fm1, 8.0), fp2)), 12.0 * h);
-  const ComplexSeries_ d2 = c_div_(
-      c_add_(c_add_(c_mul_(fm2, -1.0), c_mul_(fm1, 16.0)), c_add_(c_mul_(f0, -30.0), c_add_(c_mul_(fp1, 16.0), c_mul_(fp2, -1.0)))),
-      12.0 * h * h);
-  const ComplexSeries_ d4 = c_div_(
-      c_add_(c_add_(fm2, c_mul_(fm1, -4.0)), c_add_(c_mul_(f0, 6.0), c_add_(c_mul_(fp1, -4.0), fp2))),
-      h * h * h * h);
-
-  const Series c1 = d1.im;
-  const Series c2 = d2.re.mul(-1.0).clamp_min(kEps);
-  const Series c4 = d4.re.clamp_min(0.0);
-  const Series width = c2.add(c4.add(kEps).sqrt()).sqrt().mul(options.truncation);
-  return CosSeriesInterval_{c1.sub(width), c1.add(width)};
 }
 
 std::complex<double> heston_cf_(std::complex<double> phi,
@@ -608,6 +570,23 @@ double interp_linear_on_log_strike_(const std::vector<double>& strikes,
   const std::size_t hi = static_cast<std::size_t>(std::distance(strikes.begin(), it));
   const std::size_t lo = hi - 1;
 
+  // Cubic (four-point Lagrange) interpolation in the log strike: the grid is uniform in log K, and the price is smooth, so the error
+  // falls as the fourth power of the grid spacing instead of the second. Next to the ends of the grid the linear interpolant is used.
+  if (lo >= 1 && hi + 1 < strikes.size()) {
+    const double x[4] = {std::log(strikes[lo - 1]), std::log(strikes[lo]), std::log(strikes[hi]), std::log(strikes[hi + 1])};
+    const double y[4] = {prices[lo - 1], prices[lo], prices[hi], prices[hi + 1]};
+    double value = 0.0;
+    for (int i = 0; i < 4; ++i) {
+      double basis = 1.0;
+      for (int j = 0; j < 4; ++j) {
+        if (j != i) {
+          basis *= (logk - x[j]) / (x[i] - x[j]);
+        }
+      }
+      value += y[i] * basis;
+    }
+    return value;
+  }
   const double x0 = std::log(strikes[lo]);
   const double x1 = std::log(strikes[hi]);
   const double y0 = prices[lo];
@@ -628,15 +607,75 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
                                                                              double maturity,
                                                                              const CharacteristicFn& char_fn,
                                                                              const HestonFftOptions& options) {
-  (void)rate;
-  (void)dividend_yield;
+  // `char_fn` is the characteristic function of ln S_T, E[exp(i u ln S_T)], as for the COS pricer; the Carr-Madan transform is of the
+  // discounted payoff, so the discount factor is applied here.
+  const double discount = std::exp(-rate * maturity);
   const std::int64_t n = options.num_fft;
   const double eta = options.characteristic_fcn_step;
   const double lambda = std::isnan(options.log_strike_step)
                             ? (2.0 * kPi / static_cast<double>(n) / eta)
                             : options.log_strike_step;
-  const double alpha = options.damping_factor;
   const double log_s = std::log(spot);
+  const std::complex<double> i(0.0, 1.0);
+  const double forward = std::exp(log_s + (rate - dividend_yield) * maturity);
+
+  // The damped transform exists only if the moment E[S_T^(alpha + 1)] is finite, and it is accurate only if the damped integrand has
+  // decayed by the end of the frequency grid. A model can lose the moment (the Heston model does at a large volatility of variance and
+  // a long maturity), and near that point the integrand decays too slowly for any grid. Past it the characteristic function continues
+  // analytically through the singularity to numbers that are not a moment: not real, not positive, or below the Jensen bound
+  // F^(alpha + 1), or finite but so close to the explosion that the damped transform has lost its accuracy (the moment more than twice F^(alpha + 1)). So halve the damping exponent until the moment is a genuine one and the integrand has decayed, rather than return a
+  // price that is silently wrong.
+  auto moment_exists = [&](double a) {
+    const std::complex<double> m = char_fn(std::complex<double>(0.0, -(a + 1.0)));
+    return std::isfinite(m.real()) && std::isfinite(m.imag()) && m.real() > 0.0 && std::abs(m.imag()) <= 1e-6 * m.real() &&
+           m.real() >= std::pow(forward, a + 1.0) * (1.0 - 1e-6) &&
+           m.real() <= 2.0 * std::pow(forward, a + 1.0);
+  };
+  auto integrand = [&](double a, std::vector<std::complex<double>>& psi) {
+    for (std::int64_t j = 0; j < n; ++j) {
+      const double u = eta * static_cast<double>(j);
+      const auto f2 = discount * char_fn(std::complex<double>(u, 0.0) - (a + 1.0) * i);
+      const auto den = (a * a + a - u * u) + i * u * (2.0 * a + 1.0);
+      psi[static_cast<std::size_t>(j)] = f2 / den;
+    }
+  };
+  auto decayed = [&](const std::vector<std::complex<double>>& psi) {
+    double peak = 0.0, tail = 0.0;
+    for (std::int64_t j = 1; j < n; ++j) {  // the first node divides by a polynomial that vanishes only for alpha = 0 or -1
+      const double magnitude = std::abs(psi[static_cast<std::size_t>(j)]);
+      peak = std::max(peak, magnitude);
+      if (j >= n - n / 10) {
+        tail = std::max(tail, magnitude);
+      }
+    }
+    return std::isfinite(tail) && tail <= 1e-6 * peak;
+  };
+  std::vector<std::complex<double>> psi(static_cast<std::size_t>(n));
+  double alpha = options.damping_factor;
+  double first_valid = -1.0;
+  bool accepted = false;
+  for (int halving = 0; halving < 12 && !accepted; ++halving) {
+    const double candidate = options.damping_factor * std::pow(0.5, halving);
+    if (!moment_exists(candidate)) {
+      continue;
+    }
+    if (first_valid < 0.0) {
+      first_valid = candidate;
+    }
+    integrand(candidate, psi);
+    if (decayed(psi)) {
+      alpha = candidate;
+      accepted = true;
+    }
+  }
+  if (!accepted) {
+    // No exponent gives a decayed integrand (for instance, the frequency range was set too short): use the largest one with a genuine moment.
+    PLUSS_CHECK(first_valid > 0.0,
+                "subsp::math::finance::pricing::option_price_fft: the characteristic function has no finite moment E[S_T^(1 + damping_factor)] "
+                "for any damping factor tried; use the COS pricer");
+    alpha = first_valid;
+    integrand(alpha, psi);
+  }
   const double frft_param = (lambda * eta) / (2.0 * kPi);
   const double fft_param = 1.0 / static_cast<double>(n);
 
@@ -653,16 +692,12 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
     weights.back() = 0.5;
   }
 
-  const std::complex<double> i(0.0, 1.0);
   std::vector<std::complex<double>> x(static_cast<std::size_t>(n), {0.0, 0.0});
   for (std::int64_t j = 0; j < n; ++j) {
     const double u = eta * static_cast<double>(j);
     const std::complex<double> phi(u, 0.0);
-    const auto f2 = char_fn(phi - (alpha + 1.0) * i);
-    const auto den = (alpha * alpha + alpha - u * u) + i * u * (2.0 * alpha + 1.0);
-    const auto psi = f2 / den;
     const auto phase = std::exp(i * phi * (static_cast<double>(n) * lambda * 0.5 - log_s));
-    x[static_cast<std::size_t>(j)] = phase * psi * weights[static_cast<std::size_t>(j)];
+    x[static_cast<std::size_t>(j)] = phase * psi[static_cast<std::size_t>(j)] * weights[static_cast<std::size_t>(j)];
   }
 
   std::vector<std::complex<double>> transform;
@@ -692,8 +727,7 @@ std::pair<std::vector<double>, std::vector<double>> heston_fft_grid_values_(doub
                                                                              const HestonParams& params,
                                                                              const HestonFftOptions& options) {
   const CharacteristicFn cf = [&](std::complex<double> phi) {
-    return std::exp(-rate * maturity) *
-           heston_cf_(phi,
+    return heston_cf_(phi,
                       spot,
                       rate,
                       dividend_yield,
@@ -713,8 +747,7 @@ std::pair<std::vector<double>, std::vector<double>> bates_fft_grid_values_(doubl
                                                                             const BatesParams& params,
                                                                             const HestonFftOptions& options) {
   const CharacteristicFn cf = [&](std::complex<double> phi) {
-    return std::exp(-rate * maturity) *
-           bates_cf_(phi, spot, rate, dividend_yield, maturity, params, options.mode, options.vol_risk_premium);
+    return bates_cf_(phi, spot, rate, dividend_yield, maturity, params, options.mode, options.vol_risk_premium);
   };
   return option_fft_grid_values_(spot, rate, dividend_yield, maturity, cf, options);
 }
@@ -985,8 +1018,7 @@ HestonFftResult bates_price_fft_grid(OptionType type,
                                      Config cfg) {
   validate_bates_(params, "bates_price_fft_grid");
   const CharacteristicFn cf = [&](std::complex<double> phi) {
-    return std::exp(-rate * maturity) *
-           bates_cf_(phi, spot, rate, dividend_yield, maturity, params, options.mode, options.vol_risk_premium);
+    return bates_cf_(phi, spot, rate, dividend_yield, maturity, params, options.mode, options.vol_risk_premium);
   };
   return option_price_fft_grid(type, spot, rate, dividend_yield, maturity, cf, options, cfg);
 }
@@ -1002,8 +1034,7 @@ double bates_price_fft(OptionType type,
                        Config cfg) {
   validate_bates_(params, "bates_price_fft");
   const CharacteristicFn cf = [&](std::complex<double> phi) {
-    return std::exp(-rate * maturity) *
-           bates_cf_(phi, spot, rate, dividend_yield, maturity, params, options.mode, options.vol_risk_premium);
+    return bates_cf_(phi, spot, rate, dividend_yield, maturity, params, options.mode, options.vol_risk_premium);
   };
   return option_price_fft(type, spot, strike, rate, dividend_yield, maturity, cf, options, cfg);
 }
@@ -1041,11 +1072,35 @@ Series heston_price_cos(OptionType type,
   validate_heston_(params, "heston_price_cos");
   validate_cos_options_(options, "heston_price_cos");
   const Config out_cfg = f64_cfg_(cfg);
+  // Small batches are cheaper through the per-option loop: the vectorized path pays a fixed cost for its dozens of
+  // whole-grid operations, which only amortizes once options x terms is large (measured crossover near 10^4).
+  constexpr std::int64_t kScalarWork = 12000;
+  if (spot.numel() == strike.numel() && spot.numel() == maturity.numel() &&
+      spot.numel() * std::max<std::int64_t>(options.num_terms, 8) < kScalarWork) {
+    const auto s = spot.reshape({spot.numel()}).host<double>();
+    const auto k = strike.reshape({strike.numel()}).host<double>();
+    const auto t = maturity.reshape({maturity.numel()}).host<double>();
+    std::vector<double> out(s.size());
+    for (std::size_t i = 0; i < s.size(); ++i) {
+      const CharacteristicFn cf = [&, i](std::complex<double> phi) {
+        return heston_cf_(phi, s[i], rate, dividend_yield, t[i], params, HestonCfMode::LittleTrap, 2, 0.0);
+      };
+      out[i] = option_price_cos(type, s[i], k[i], rate, dividend_yield, t[i], cf, options, out_cfg);
+    }
+    return pluss::make_series(out, {static_cast<std::int64_t>(out.size())}, out_cfg);
+  }
+  // A strike chain (one spot, one maturity) needs the characteristic function once per frequency, not once per
+  // option: hand it single-element spot/maturity and let the strike axis broadcast.
+  const auto constant = [&](const Series& x) {
+    return x.numel() > 1 && x.amax().item<double>() == x.amin().item<double>();
+  };
+  const Series spot_c = constant(spot) ? spot.flatten(0, -1).slice(0, 0, 1) : spot;
+  const Series maturity_c = constant(maturity) ? maturity.flatten(0, -1).slice(0, 0, 1) : maturity;
   const CharacteristicSeriesFn cf = [&](const Series& u) {
-    const ComplexSeries_ z = heston_logspot_cf_series_(u, spot, maturity, rate, dividend_yield, params, out_cfg);
+    const ComplexSeries_ z = heston_logspot_cf_series_(u, spot_c, maturity_c, rate, dividend_yield, params, out_cfg);
     return ComplexSeries{z.re, z.im};
   };
-  return option_price_cos(type, spot, strike, rate, dividend_yield, maturity, cf, options, out_cfg);
+  return option_price_cos(type, spot_c, strike, rate, dividend_yield, maturity_c, cf, options, out_cfg);
 }
 
 double bates_price_cos(OptionType type,
@@ -1062,8 +1117,7 @@ double bates_price_cos(OptionType type,
   validate_bates_(params, "bates_price_cos");
   validate_cos_options_(options, "bates_price_cos");
   const CharacteristicFn cf = [&](std::complex<double> phi) {
-    return std::exp(-rate * maturity) *
-           bates_cf_(phi, spot, rate, dividend_yield, maturity, params, HestonCfMode::LittleTrap, 0.0);
+    return bates_cf_(phi, spot, rate, dividend_yield, maturity, params, HestonCfMode::LittleTrap, 0.0);
   };
   return option_price_cos(type, spot, strike, rate, dividend_yield, maturity, cf, options, cfg);
 }

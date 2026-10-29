@@ -50,8 +50,8 @@ Duration impl_mod_i64(const Duration& a, std::int64_t k);
 pluss::codem::Series impl_total(const Duration& a, std::string_view unit);
 pluss::codem::Series impl_component(const Duration& a, std::string_view component);
 Duration impl_round(const Duration& a, std::string_view mode, std::string_view unit);
-Duration impl_min_duration(const Duration& a);
-Duration impl_max_duration(const Duration& a);
+Duration impl_min_duration(const Duration& a, bool skipna);
+Duration impl_max_duration(const Duration& a, bool skipna);
 Duration impl_sort_duration(const Duration& a);
 Duration impl_unique_duration(const Duration& a);
 pluss::codem::Series impl_argsort_duration(const Duration& a);
@@ -61,7 +61,7 @@ pluss::coden::Note impl_duration_to_note(const Duration& a, std::string_view sty
 
 namespace pluss::codeh {
 
-class TimeIndex;
+class TimelineIndexAccessor;
 class Timeline;
 class Duration;
 class DurationTotal;
@@ -119,7 +119,7 @@ private:
 
 
   friend class Timeline;
-  friend class TimeIndex;
+  friend class TimelineIndexAccessor;
   friend struct ::pluss::codeh::_compat::detail::Access;
   friend Duration detail::impl_diff(const Timeline&, const Timeline&);
   friend Timeline detail::impl_add_duration(const Timeline&, const Duration&);
@@ -146,8 +146,8 @@ private:
   friend pluss::codem::Series detail::impl_total(const Duration&, std::string_view);
   friend pluss::codem::Series detail::impl_component(const Duration&, std::string_view);
   friend Duration detail::impl_round(const Duration&, std::string_view, std::string_view);
-  friend Duration detail::impl_min_duration(const Duration&);
-  friend Duration detail::impl_max_duration(const Duration&);
+  friend Duration detail::impl_min_duration(const Duration&, bool);
+  friend Duration detail::impl_max_duration(const Duration&, bool);
   friend Duration detail::impl_sort_duration(const Duration&);
   friend Duration detail::impl_unique_duration(const Duration&);
   friend pluss::codem::Series detail::impl_argsort_duration(const Duration&);

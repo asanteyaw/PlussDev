@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace pluss::ai::ice {
 
@@ -32,6 +33,23 @@ enum class MonitorDirection : std::uint8_t {
   Auto = 0,
   Min = 1,
   Max = 2,
+};
+
+enum class ProgressOutput : std::uint8_t {
+  Stdout = 0,
+  Stderr = 1,
+};
+
+struct ProgressPolicy {
+  // Enables Coach's built-in epoch logger. A manually installed
+  // EpochLoggerCallback writes regardless of this flag.
+  bool verbose = false;
+  std::int64_t log_every_n_epochs = 1;
+  bool progress_bar = false;
+  ProgressOutput output = ProgressOutput::Stdout;
+  std::vector<std::string> metrics{"loss", "val_loss"};
+  std::int64_t bar_width = 24;
+  std::int64_t precision = 6;
 };
 
 struct ValidationPolicy {
@@ -107,6 +125,7 @@ struct Recipe {
   // Only consulted by the DataFrame overload: per-feature-column
   // standardization ((x - mean) / std) before training.
   bool standardize = false;
+  ProgressPolicy progress{};
   ValidationPolicy validation{};
   ArchitectureRegularization architecture_regularization{};
   ObjectiveRegularization objective_regularization{};

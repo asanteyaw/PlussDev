@@ -5,6 +5,8 @@
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/native/cpu/BlasGemm.h"
 
+#include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <numeric>
 #include <vector>
@@ -34,16 +36,23 @@ static void naive_matmul_f32(const float* A, const float* B, float* C,
   }
 }
 
-static void naive_matmul_i32(const std::int32_t* A, const std::int32_t* B, std::int32_t* C,
+// Integer matmul: i-k-j loop (rows of B are walked contiguously) with a
+// 64-bit unsigned row accumulator, so overflow wraps (two's complement) like
+// the fixed-width result type instead of being signed-overflow UB.
+template <class T>
+static void naive_matmul_int(const T* A, const T* B, T* C,
                              std::int64_t M, std::int64_t N, std::int64_t K) {
+  std::vector<std::uint64_t> acc(static_cast<std::size_t>(N));
   for (std::int64_t i = 0; i < M; ++i) {
-    for (std::int64_t j = 0; j < N; ++j) {
-      std::int64_t acc = 0;
-      for (std::int64_t k = 0; k < K; ++k) {
-        acc += static_cast<std::int64_t>(A[i * K + k]) * static_cast<std::int64_t>(B[k * N + j]);
+    std::fill(acc.begin(), acc.end(), std::uint64_t{0});
+    for (std::int64_t k = 0; k < K; ++k) {
+      const auto a = static_cast<std::uint64_t>(static_cast<std::int64_t>(A[i * K + k]));
+      const T* brow = B + k * N;
+      for (std::int64_t j = 0; j < N; ++j) {
+        acc[static_cast<std::size_t>(j)] += a * static_cast<std::uint64_t>(static_cast<std::int64_t>(brow[j]));
       }
-      C[i * N + j] = static_cast<std::int32_t>(acc);
     }
+    for (std::int64_t j = 0; j < N; ++j) C[i * N + j] = static_cast<T>(acc[static_cast<std::size_t>(j)]);
   }
 }
 
@@ -105,12 +114,23 @@ Series matmul_2d_core_(const Series& a, const Series& b) {
     return out;
   }
 
-  if (a.scalar_type() == ScalarType::Int32) {
-    const auto* A = reinterpret_cast<const std::int32_t*>(a.raw_data());
-    const auto* B = reinterpret_cast<const std::int32_t*>(b.raw_data());
-    auto* C = reinterpret_cast<std::int32_t*>(out.raw_data());
-    naive_matmul_i32(A, B, C, M, N, K);
-    return out;
+  {
+    auto run_int = [&](auto tag) -> bool {
+      using T = decltype(tag);
+      const auto* A = reinterpret_cast<const T*>(a.raw_data());
+      const auto* B = reinterpret_cast<const T*>(b.raw_data());
+      auto* C = reinterpret_cast<T*>(out.raw_data());
+      naive_matmul_int<T>(A, B, C, M, N, K);
+      return true;
+    };
+    switch (a.scalar_type()) {
+      case ScalarType::Int8: run_int(std::int8_t{}); return out;
+      case ScalarType::UInt8: run_int(std::uint8_t{}); return out;
+      case ScalarType::Int16: run_int(std::int16_t{}); return out;
+      case ScalarType::Int32: run_int(std::int32_t{}); return out;
+      case ScalarType::Int64: run_int(std::int64_t{}); return out;
+      default: break;
+    }
   }
 
   if (a.scalar_type() == ScalarType::Complex64) {
@@ -129,7 +149,7 @@ Series matmul_2d_core_(const Series& a, const Series& b) {
     return out;
   }
 
-  throw_error("matmul: dtype not implemented (only float16/bfloat16/float32/float64/int32/complex64/complex128)");
+  throw_error("matmul: dtype not implemented (only float16/bfloat16/float32/float64/int8/uint8/int16/int32/int64/complex64/complex128)");
 }
 
 std::vector<std::int64_t> prefix_batch_shape_(const Series& x) {

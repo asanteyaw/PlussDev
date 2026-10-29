@@ -1,0 +1,332 @@
+# apiref_manifest_calculus.toml -- the `Calculus` guides of PlussMa.
+
+[framework.calculus]
+nav_title = "Calculus guide"
+nav_prefix = "manual/calculus/"
+root_page = "manual/calculus.html"
+title = "Calculus"
+summary = "Functions as values, differential and integral operators, and vector calculus."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "calculus/functions/calculus_01_functions"
+page = "manual/calculus/functions/calculus_01_functions.md"
+title = "Functions"
+maxdepth = 2
+children = ["calculus_01_functions/building_and_evaluating", "calculus_01_functions/the_expression_vocabulary", "calculus_01_functions/simplification_and_assumptions", "calculus_01_functions/domains_and_errors", "calculus_01_functions/functions_from_series_code"]
+
+[[family]]
+path = "calculus/functions/calculus_02_derivatives"
+page = "manual/calculus/functions/calculus_02_derivatives.md"
+title = "Derivatives"
+maxdepth = 2
+children = ["calculus_02_derivatives/partial_derivatives_and_higher_orders", "calculus_02_derivatives/the_differentiation_rules", "calculus_02_derivatives/complex_derivatives", "calculus_02_derivatives/non_smooth_points", "calculus_02_derivatives/opaque_functions_and_the_autodiff_fallback", "calculus_02_derivatives/absolute_and_covariant_differentials"]
+
+[[family]]
+path = "calculus/functions/calculus_03_vector_calculus"
+page = "manual/calculus/functions/calculus_03_vector_calculus.md"
+title = "Vector Calculus"
+maxdepth = 2
+children = ["calculus_03_vector_calculus/gradients", "calculus_03_vector_calculus/jacobians_and_hessians", "calculus_03_vector_calculus/batches_and_broadcasting", "calculus_03_vector_calculus/a_newton_step_from_the_hessian"]
+
+[[family]]
+path = "calculus/functions/calculus_04_integrals"
+page = "manual/calculus/functions/calculus_04_integrals.md"
+title = "Integrals"
+maxdepth = 2
+children = ["calculus_04_integrals/antiderivatives", "calculus_04_integrals/anchored_and_definite_integrals", "calculus_04_integrals/numerical_integrals_and_batches", "calculus_04_integrals/parity_and_the_fundamental_theorem"]
+
+[[family]]
+path = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators.md"
+title = "Operators"
+maxdepth = 2
+children = ["calculus_05_operators/operators_are_values", "calculus_05_operators/composing_and_combining", "calculus_05_operators/custom_operators", "calculus_05_operators/saving_and_loading", "calculus_05_operators/stochastic_operators", "calculus_05_operators/taylor_and_power_series", "calculus_05_operators/fourier_series", "calculus_05_operators/geometry_operators", "calculus_05_operators/integral_transforms", "calculus_05_operators/measures", "calculus_05_operators/vector_variational_and_adjoint", "calculus_05_operators/fractional_calculus"]
+
+[[family]]
+path = "calculus/functions/calculus_06_worked_problems"
+page = "manual/calculus/functions/calculus_06_worked_problems.md"
+title = "Worked Problems"
+maxdepth = 2
+children = ["calculus_06_worked_problems/cumulants_from_a_generating_function", "calculus_06_worked_problems/taylor_polynomials_from_derivatives", "calculus_06_worked_problems/sensitivity_of_a_probability", "calculus_06_worked_problems/precision_and_concurrency"]
+
+[[family]]
+path = "calculus/functions/calculus_07_complex_functions"
+page = "manual/calculus/functions/calculus_07_complex_functions.md"
+title = "Complex Functions"
+maxdepth = 2
+children = ["calculus_07_complex_functions/complex_values", "calculus_07_complex_functions/wirtinger_derivatives", "calculus_07_complex_functions/real_parameters_and_integrals"]
+
+[[family]]
+path = "calculus/functions"
+page = "manual/calculus/functions.md"
+title = "functions and operators"
+maxdepth = 2
+children = ["functions/calculus_01_functions", "functions/calculus_02_derivatives", "functions/calculus_03_vector_calculus", "functions/calculus_04_integrals", "functions/calculus_05_operators", "functions/calculus_06_worked_problems", "functions/calculus_07_complex_functions"]
+
+[[symbol]]
+qualname = "calculus::calculus_01_functions::Building and evaluating a function"
+kind = "page"
+family = "calculus/functions/calculus_01_functions"
+page = "manual/calculus/functions/calculus_01_functions/building_and_evaluating.md"
+summary = "Building and evaluating a function"
+
+[[symbol]]
+qualname = "calculus::calculus_01_functions::The expression vocabulary"
+kind = "page"
+family = "calculus/functions/calculus_01_functions"
+page = "manual/calculus/functions/calculus_01_functions/the_expression_vocabulary.md"
+summary = "The expression vocabulary"
+
+[[symbol]]
+qualname = "calculus::calculus_01_functions::Simplification and assumptions"
+kind = "page"
+family = "calculus/functions/calculus_01_functions"
+page = "manual/calculus/functions/calculus_01_functions/simplification_and_assumptions.md"
+summary = "Simplification and assumptions"
+
+[[symbol]]
+qualname = "calculus::calculus_01_functions::Domains and errors"
+kind = "page"
+family = "calculus/functions/calculus_01_functions"
+page = "manual/calculus/functions/calculus_01_functions/domains_and_errors.md"
+summary = "Domains and errors"
+
+[[symbol]]
+qualname = "calculus::calculus_01_functions::Functions from Series code"
+kind = "page"
+family = "calculus/functions/calculus_01_functions"
+page = "manual/calculus/functions/calculus_01_functions/functions_from_series_code.md"
+summary = "Functions from Series code"
+
+[[symbol]]
+qualname = "calculus::calculus_02_derivatives::Partial derivatives and higher orders"
+kind = "page"
+family = "calculus/functions/calculus_02_derivatives"
+page = "manual/calculus/functions/calculus_02_derivatives/partial_derivatives_and_higher_orders.md"
+summary = "Partial derivatives and higher orders"
+
+[[symbol]]
+qualname = "calculus::calculus_02_derivatives::The differentiation rules"
+kind = "page"
+family = "calculus/functions/calculus_02_derivatives"
+page = "manual/calculus/functions/calculus_02_derivatives/the_differentiation_rules.md"
+summary = "The differentiation rules"
+
+[[symbol]]
+qualname = "calculus::calculus_02_derivatives::Complex and Wirtinger derivatives"
+kind = "page"
+family = "calculus/functions/calculus_02_derivatives"
+page = "manual/calculus/functions/calculus_02_derivatives/complex_derivatives.md"
+summary = "Complex-valued functions, holomorphic derivatives and Wirtinger calculus"
+
+[[symbol]]
+qualname = "calculus::calculus_02_derivatives::Non-smooth points"
+kind = "page"
+family = "calculus/functions/calculus_02_derivatives"
+page = "manual/calculus/functions/calculus_02_derivatives/non_smooth_points.md"
+summary = "Non-smooth points"
+
+[[symbol]]
+qualname = "calculus::calculus_02_derivatives::Opaque functions and the autodiff fallback"
+kind = "page"
+family = "calculus/functions/calculus_02_derivatives"
+page = "manual/calculus/functions/calculus_02_derivatives/opaque_functions_and_the_autodiff_fallback.md"
+summary = "Opaque functions and the autodiff fallback"
+
+[[symbol]]
+qualname = "calculus::calculus_02_derivatives::Absolute and covariant differentials"
+kind = "page"
+family = "calculus/functions/calculus_02_derivatives"
+page = "manual/calculus/functions/calculus_02_derivatives/absolute_and_covariant_differentials.md"
+summary = "Absolute and covariant differentials"
+
+[[symbol]]
+qualname = "calculus::calculus_03_vector_calculus::Gradients"
+kind = "page"
+family = "calculus/functions/calculus_03_vector_calculus"
+page = "manual/calculus/functions/calculus_03_vector_calculus/gradients.md"
+summary = "Gradients"
+
+[[symbol]]
+qualname = "calculus::calculus_03_vector_calculus::Jacobians and Hessians"
+kind = "page"
+family = "calculus/functions/calculus_03_vector_calculus"
+page = "manual/calculus/functions/calculus_03_vector_calculus/jacobians_and_hessians.md"
+summary = "Jacobians and Hessians"
+
+[[symbol]]
+qualname = "calculus::calculus_03_vector_calculus::Batches and broadcasting"
+kind = "page"
+family = "calculus/functions/calculus_03_vector_calculus"
+page = "manual/calculus/functions/calculus_03_vector_calculus/batches_and_broadcasting.md"
+summary = "Batches and broadcasting"
+
+[[symbol]]
+qualname = "calculus::calculus_03_vector_calculus::Worked problem: Newton's method on a batch of starts"
+kind = "page"
+family = "calculus/functions/calculus_03_vector_calculus"
+page = "manual/calculus/functions/calculus_03_vector_calculus/a_newton_step_from_the_hessian.md"
+summary = "Worked problem: Newton's method on a batch of starts"
+
+[[symbol]]
+qualname = "calculus::calculus_04_integrals::Antiderivatives"
+kind = "page"
+family = "calculus/functions/calculus_04_integrals"
+page = "manual/calculus/functions/calculus_04_integrals/antiderivatives.md"
+summary = "Antiderivatives"
+
+[[symbol]]
+qualname = "calculus::calculus_04_integrals::Anchored and definite integrals"
+kind = "page"
+family = "calculus/functions/calculus_04_integrals"
+page = "manual/calculus/functions/calculus_04_integrals/anchored_and_definite_integrals.md"
+summary = "Anchored and definite integrals"
+
+[[symbol]]
+qualname = "calculus::calculus_04_integrals::Numerical integrals and batches"
+kind = "page"
+family = "calculus/functions/calculus_04_integrals"
+page = "manual/calculus/functions/calculus_04_integrals/numerical_integrals_and_batches.md"
+summary = "Numerical integrals and batches"
+
+[[symbol]]
+qualname = "calculus::calculus_04_integrals::Parity and the fundamental theorem"
+kind = "page"
+family = "calculus/functions/calculus_04_integrals"
+page = "manual/calculus/functions/calculus_04_integrals/parity_and_the_fundamental_theorem.md"
+summary = "Parity and the fundamental theorem"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Operators are values"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/operators_are_values.md"
+summary = "Operators are values"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Composing and combining operators"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/composing_and_combining.md"
+summary = "Composing and combining operators"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Custom operators"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/custom_operators.md"
+summary = "Custom operators"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Saving and loading"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/saving_and_loading.md"
+summary = "Saving and loading"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Stochastic operators"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/stochastic_operators.md"
+summary = "Stochastic operators"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Taylor operators and power series"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/taylor_and_power_series.md"
+summary = "Taylor operators and power series"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Fourier series operators"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/fourier_series.md"
+summary = "Fourier series operators"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Geometry operators"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/geometry_operators.md"
+summary = "Geometry operators"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Fourier and Laplace transforms"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/integral_transforms.md"
+summary = "Fourier and Laplace transforms"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Integration against a measure"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/measures.md"
+summary = "Integration against a measure"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Vector, variational and adjoint operators"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/vector_variational_and_adjoint.md"
+summary = "Vector, variational and adjoint operators"
+
+[[symbol]]
+qualname = "calculus::calculus_05_operators::Fractional calculus"
+kind = "page"
+family = "calculus/functions/calculus_05_operators"
+page = "manual/calculus/functions/calculus_05_operators/fractional_calculus.md"
+summary = "Fractional calculus"
+
+[[symbol]]
+qualname = "calculus::calculus_06_worked_problems::Cumulants from a generating function"
+kind = "page"
+family = "calculus/functions/calculus_06_worked_problems"
+page = "manual/calculus/functions/calculus_06_worked_problems/cumulants_from_a_generating_function.md"
+summary = "Cumulants from a generating function"
+
+[[symbol]]
+qualname = "calculus::calculus_06_worked_problems::A Taylor polynomial and its error"
+kind = "page"
+family = "calculus/functions/calculus_06_worked_problems"
+page = "manual/calculus/functions/calculus_06_worked_problems/taylor_polynomials_from_derivatives.md"
+summary = "A Taylor polynomial and its error"
+
+[[symbol]]
+qualname = "calculus::calculus_06_worked_problems::The sensitivity of a probability"
+kind = "page"
+family = "calculus/functions/calculus_06_worked_problems"
+page = "manual/calculus/functions/calculus_06_worked_problems/sensitivity_of_a_probability.md"
+summary = "The sensitivity of a probability"
+
+[[symbol]]
+qualname = "calculus::calculus_06_worked_problems::Precision and concurrency"
+kind = "page"
+family = "calculus/functions/calculus_06_worked_problems"
+page = "manual/calculus/functions/calculus_06_worked_problems/precision_and_concurrency.md"
+summary = "Precision and concurrency"
+
+[[symbol]]
+qualname = "calculus::calculus_07_complex_functions::Complex values"
+kind = "page"
+family = "calculus/functions/calculus_07_complex_functions"
+page = "manual/calculus/functions/calculus_07_complex_functions/complex_values.md"
+summary = "Complex values"
+
+[[symbol]]
+qualname = "calculus::calculus_07_complex_functions::Wirtinger derivatives"
+kind = "page"
+family = "calculus/functions/calculus_07_complex_functions"
+page = "manual/calculus/functions/calculus_07_complex_functions/wirtinger_derivatives.md"
+summary = "Wirtinger derivatives"
+
+[[symbol]]
+qualname = "calculus::calculus_07_complex_functions::Real parameters and integrals"
+kind = "page"
+family = "calculus/functions/calculus_07_complex_functions"
+page = "manual/calculus/functions/calculus_07_complex_functions/real_parameters_and_integrals.md"
+summary = "Real parameters and integrals"

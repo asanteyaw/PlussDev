@@ -156,7 +156,7 @@ StatusOr<SpatialIndex> SpatialIndex::build(const Series& rows) {
   index.dim_ = dim;
   index.platform_ = rows.platform();
   index.points_ =
-      rows.to(pluss::pCPU, ScalarType::Float64).contiguous().reshape({n * dim}).host<double>();
+      rows.to(pluss::pCPU, ScalarType::Float64).contiguous().reshape({n * dim}).host<double>().array().data;
 
   std::vector<std::int32_t> indices(static_cast<std::size_t>(n));
   std::iota(indices.begin(), indices.end(), 0);
@@ -175,7 +175,7 @@ StatusOr<KNearestResult> SpatialIndex::query_k(const Series& query_rows, std::in
   }
   const std::int64_t n_queries = query_rows.sizes()[0];
   const auto data =
-      query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().reshape({n_queries * dim_}).host<double>();
+      query_rows.to(pluss::pCPU, ScalarType::Float64).contiguous().reshape({n_queries * dim_}).host<double>().array().data;
   return query_k_impl_(data.data(), n_queries, k, /*self_query=*/false);
 }
 

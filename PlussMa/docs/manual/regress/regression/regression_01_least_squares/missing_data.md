@@ -1,0 +1,117 @@
+<!-- generated from missing_data.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Missing data
+
+[Back to Least Squares](../regression_01_least_squares.md)
+
+A row is *incomplete* when its response or any of its predictors is not finite: `NaN`, `+∞` or `−∞`. What a fit does with incomplete rows is chosen by `drop_missing`.
+
+| `drop_missing` | Behaviour |
+|---|---|
+| `true` (default) | incomplete rows are removed before fitting; `nobs` counts the rows used and `dropped_observations` the rows removed |
+| `false` | any incomplete row is an error |
+
+Removal is by whole rows. The fitted values and residuals have `nobs` entries, one per row that was kept, in their original order. A fit where every row is incomplete is an error whatever `drop_missing` says.
+
+## Dropping rows
+
+The program puts a `NaN` in the response of one row and an infinity in a predictor of another, and shows that the result is exactly the fit of the six remaining rows.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <limits>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  const double inf = std::numeric_limits<double>::infinity();
+  std::vector<double> xs{1, 2, 3, 4, 5, 6, 7, 8};
+  std::vector<double> ys{2.1, 3.9, 6.2, 7.8, 10.1, 12.2, 13.8, 16.1};
+  ys[2] = nan;   // row 2 has no response
+  xs[5] = inf;   // row 5 has an infinite predictor
+
+  const auto fit = reg::ols_fit(pluss::make_series(ys, {8}, as_f64()), pluss::make_series(xs, {8}, as_f64()));
+  out.writeln("nobs", fit.nobs, " dropped", fit.dropped_observations, " fitted values", fit.fitted_values.numel(), " residuals", fit.residuals.numel());
+  out.writeln("coefficients", fit.coefficients.pull<double>(), " df_resid", fit.df_resid);
+
+  // The same fit made from the six complete rows directly.
+  const std::vector<double> kept_x{1, 2, 4, 5, 7, 8};
+  const std::vector<double> kept_y{2.1, 3.9, 7.8, 10.1, 13.8, 16.1};
+  const auto direct = reg::ols_fit(pluss::make_series(kept_y, {6}, as_f64()), pluss::make_series(kept_x, {6}, as_f64()));
+  out.writeln("complete rows only", direct.coefficients.pull<double>(), " largest difference", fit.coefficients.sub(direct.coefficients).abs().max().item<double>());
+  out.writeln("residuals match    ", fit.residuals.sub(direct.residuals).abs().max().item<double>());
+}
+```
+
+Output
+
+```text
+nobs 6  dropped 2  fitted values 6  residuals 6
+coefficients [-0.021333, 1.997333]  df_resid 4
+complete rows only [-0.021333, 1.997333]  largest difference 0.000000
+residuals match     0.000000
+```
+
+Two rows were dropped, the one with the `NaN` response and the one with the infinite predictor. The six remaining rows give `nobs` 6 and `df_resid` 4, the fitted values and residuals have six entries, and the coefficients and residuals are identical to those of the six complete rows fitted directly.
+
+## Refusing incomplete data
+
+With `drop_missing = false` the same data are an error, which is the safer setting when a missing value would mean a mistake upstream. The last two attempts show that an all-missing data set is an error either way, and that prediction does not drop anything: a prediction row holding a `NaN` gives `NaN`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <limits>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  std::vector<double> ys{2.1, 3.9, nan, 7.8, 10.1, 12.2, 13.8, 16.1};
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+
+  auto attempt = [&](const char *label, auto &&fit) {
+    try {
+      fit();
+    } catch (const std::exception &e) {
+      const std::string message = e.what();
+      out.writeln(label, "->", message.substr(0, message.find('\n')));
+    }
+  };
+  attempt("drop_missing = false     ", [&] {
+    reg::OLSOptions strict;
+    strict.drop_missing = false;
+    reg::ols_fit(pluss::make_series(ys, {8}, as_f64()), x, strict);
+  });
+  attempt("every response missing   ", [&] { reg::ols_fit(pluss::make_series(std::vector<double>(8, nan), {8}, as_f64()), x); });
+  attempt("every row missing, strict", [&] {
+    reg::OLSOptions strict;
+    strict.drop_missing = false;
+    reg::ols_fit(pluss::make_series(std::vector<double>(8, nan), {8}, as_f64()), x, strict);
+  });
+
+  const auto fit = reg::ols_fit(pluss::make_series(ys, {8}, as_f64()), x);
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("prediction with a NaN row:", reg::ols_predict(fit, pluss::make_series(std::vector<double>{9, nan, 10}, {3}, as_f64())).pull<double>());
+}
+```
+
+Output
+
+```text
+drop_missing = false      -> subsp::stats::regression::ols_fit: non-finite values found and drop_missing=false
+every response missing    -> subsp::stats::regression::ols_fit: no observations left after filtering missing values
+every row missing, strict -> subsp::stats::regression::ols_fit: non-finite values found and drop_missing=false
+prediction with a NaN row: [18.0217, nan, 20.0268]
+```
+
+With `drop_missing = false` the incomplete data are an error, which is the safer setting when a missing value would mean a mistake upstream. A data set with no complete row is an error either way. Prediction drops nothing: the row holding `NaN` gives `NaN`, and the other predictions are unaffected.

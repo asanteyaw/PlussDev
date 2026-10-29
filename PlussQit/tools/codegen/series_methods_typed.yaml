@@ -312,6 +312,14 @@ methods:
     signature: "Series trace() const"
     forward: ""
 
+  - name: trace
+    signature: "Series trace(std::int64_t offset) const"
+    forward: "offset"
+
+  - name: trace
+    signature: "Series trace(std::int64_t offset, std::int64_t dim1, std::int64_t dim2) const"
+    forward: "offset, dim1, dim2"
+
   - name: diag
     signature: "Series diag() const"
     forward: ""
@@ -347,6 +355,10 @@ methods:
   - name: diag_embed
     signature: "Series diag_embed(std::int64_t diagonal) const"
     forward: "diagonal"
+
+  - name: diag_embed
+    signature: "Series diag_embed(std::int64_t diagonal, std::int64_t dim1, std::int64_t dim2) const"
+    forward: "diagonal, dim1, dim2"
 
   - name: flipud
     signature: "Series flipud() const"

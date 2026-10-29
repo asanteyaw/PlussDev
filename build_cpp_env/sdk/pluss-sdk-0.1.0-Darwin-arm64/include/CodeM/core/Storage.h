@@ -34,6 +34,10 @@ public:
   std::int64_t version() const noexcept;
   void bump_version() const noexcept;
 
+  // The allocation pool reads PLUSS_CODEM_STORAGE_POOL once and caches it (it sits on the allocation hot
+  // path of every Series op); call this after changing the variable at run time.
+  static void reload_pool_env() noexcept;
+
 private:
   struct VersionState {
     std::atomic<std::int64_t> value{0};

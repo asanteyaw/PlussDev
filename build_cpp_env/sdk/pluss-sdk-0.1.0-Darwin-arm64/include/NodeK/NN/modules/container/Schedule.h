@@ -31,29 +31,48 @@ public:
   template <class... Layers, std::enable_if_t<(sizeof...(Layers) > 0), int> = 0>
   explicit ScheduleImpl(Layers&&... layers) : Module(true) {
     reserve(sizeof...(Layers));
-    (then(std::forward<Layers>(layers)), ...);
+    (append(std::forward<Layers>(layers)), ...);
   }
 
   template <class Layer>
-  ScheduleImpl& then(Layer&& layer) {
-    return then(std::to_string(next_auto_name_++), std::forward<Layer>(layer));
+  ScheduleImpl& append(Layer&& layer) {
+    return append(std::to_string(next_auto_name_++), std::forward<Layer>(layer));
   }
 
   template <class Layer>
-  ScheduleImpl& then(std::string name, Layer&& layer) {
-    return then_as<Series, Series>(std::move(name), std::forward<Layer>(layer));
+  ScheduleImpl& append(std::string name, Layer&& layer) {
+    return append_as<Series, Series>(std::move(name), std::forward<Layer>(layer));
   }
 
   template <class In, class Out, class Layer>
-  ScheduleImpl& then_as(Layer&& layer) {
-    return then_as<In, Out>(std::to_string(next_auto_name_++), std::forward<Layer>(layer));
+  ScheduleImpl& append_as(Layer&& layer) {
+    return append_as<In, Out>(std::to_string(next_auto_name_++), std::forward<Layer>(layer));
   }
 
   template <class In, class Out, class Layer>
-  ScheduleImpl& then_as(std::string name, Layer&& layer) {
+  ScheduleImpl& append_as(std::string name, Layer&& layer) {
     auto stage = make_stage_<In, Out>(std::forward<Layer>(layer));
     append_stage_(std::move(name), std::move(stage));
     return *this;
+  }
+
+  // Multiple same-typed, auto-named stages in one call -- the
+  // Sequential(...)-style list form. A view over an existing container
+  // (vector, array, span, ...); see the initializer_list overload below for
+  // a literal `{...}` argument, which a class template like RangeView<Layer>
+  // cannot deduce Layer from directly.
+  template <class Layer>
+  ScheduleImpl& append(pluss::RangeView<Layer> layers) {
+    reserve(size() + layers.size());
+    for (const auto& layer : layers) {
+      append(layer);
+    }
+    return *this;
+  }
+
+  template <class Layer>
+  ScheduleImpl& append(std::initializer_list<Layer> layers) {
+    return append(pluss::RangeView<Layer>(layers));
   }
 
   template <class Layer>
@@ -92,7 +111,7 @@ public:
   template <class Container>
   ScheduleImpl& extend(const Container& layers) {
     for (const auto& layer : layers) {
-      then(layer);
+      append(layer);
     }
     return *this;
   }
@@ -441,26 +460,38 @@ public:
   using Impl [[maybe_unused]] = ScheduleImpl;
 
   template <class Layer>
-  Schedule& then(Layer&& layer) {
-    this->operator->()->then(std::forward<Layer>(layer));
+  Schedule& append(Layer&& layer) {
+    this->operator->()->append(std::forward<Layer>(layer));
     return *this;
   }
 
   template <class Layer>
-  Schedule& then(std::string name, Layer&& layer) {
-    this->operator->()->then(std::move(name), std::forward<Layer>(layer));
+  Schedule& append(std::string name, Layer&& layer) {
+    this->operator->()->append(std::move(name), std::forward<Layer>(layer));
     return *this;
   }
 
   template <class In, class Out, class Layer>
-  Schedule& then_as(Layer&& layer) {
-    this->operator->()->template then_as<In, Out>(std::forward<Layer>(layer));
+  Schedule& append_as(Layer&& layer) {
+    this->operator->()->template append_as<In, Out>(std::forward<Layer>(layer));
     return *this;
   }
 
   template <class In, class Out, class Layer>
-  Schedule& then_as(std::string name, Layer&& layer) {
-    this->operator->()->template then_as<In, Out>(std::move(name), std::forward<Layer>(layer));
+  Schedule& append_as(std::string name, Layer&& layer) {
+    this->operator->()->template append_as<In, Out>(std::move(name), std::forward<Layer>(layer));
+    return *this;
+  }
+
+  template <class Layer>
+  Schedule& append(pluss::RangeView<Layer> layers) {
+    this->operator->()->template append<Layer>(layers);
+    return *this;
+  }
+
+  template <class Layer>
+  Schedule& append(std::initializer_list<Layer> layers) {
+    this->operator->()->template append<Layer>(layers);
     return *this;
   }
 

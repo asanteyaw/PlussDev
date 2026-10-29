@@ -9,8 +9,10 @@ PlussMa is organized by public framework first, so you can enter through the exa
 | Inference | Tests of means, variances, ranks, distributions and tables | [API reference](api/plussma_infer.md) · [Guides](manual/infer.md) |
 | Regression | Least squares, generalised linear, quantile and polynomial regression | [Guides](manual/regress.md) |
 | Optimization | Constrained and unconstrained optimization, linear and mixed-integer programming, derivative-free search, root finding | [Guides](manual/optim.md) |
+| Calculus | Functions as values, exact derivatives and integrals, vector calculus and operators | [Guides](manual/calculus.md) |
 | Numerical methods | Integration, differential equations, interpolation and large linear systems | [Guides](manual/numerics.md) |
 | Stochastic processes | Stochastic integrals, Itô calculus, jump processes, SDE simulation | [Guides](manual/stochastic.md) |
+| Finance | Option pricing: Black-Scholes, implied volatility and stochastic-volatility models | [Guides](manual/finance.md) |
 
 Time series, distributions and inference have a full API reference, one page per function or family. The other frameworks are documented through their guides, which cover every public entry point with complete programs and real output.
 

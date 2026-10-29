@@ -221,13 +221,15 @@ TEST_CASE("function span form supports runtime-sized variable sets",
   CHECK(function.variables()[127] == "variable_127");
 }
 
-TEST_CASE("function constants carry scalar vector and matrix output metadata",
+TEST_CASE("function constants carry arbitrary Series tensor metadata",
           "[calculus][function][shape]") {
   const math::Function scalar = math::function(3.5);
   const math::Function vector =
       math::function(pluss::make_series({1.0, 2.0, 3.0}));
   const math::Function matrix =
       math::function(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {2, 2}));
+  const math::Function tensor =
+      math::function(pluss::make_series({1.0}, {1, 1, 1}));
   const math::Function traced_scalar =
       math::function(pluss::StackArray<std::string_view>{}, [] { return 4; });
   const math::Function traced_vector =
@@ -246,6 +248,12 @@ TEST_CASE("function constants carry scalar vector and matrix output metadata",
   REQUIRE(matrix.shape().size() == 2);
   CHECK(matrix.shape()[0] == 2);
   CHECK(matrix.shape()[1] == 2);
+
+  CHECK(tensor.rank() == 3);
+  REQUIRE(tensor.shape().size() == 3);
+  CHECK(tensor.shape()[0] == 1);
+  CHECK(tensor.shape()[1] == 1);
+  CHECK(tensor.shape()[2] == 1);
 
   CHECK(traced_scalar.rank() == 0);
   CHECK(traced_vector.rank() == 1);
@@ -266,8 +274,6 @@ TEST_CASE("function rejects malformed variable and callable contracts",
       math::function({"x"}, [](math::Function) { return math::Function{}; }),
       pluss::Error);
   CHECK_THROWS_AS(math::function(pluss::Series{}), pluss::Error);
-  CHECK_THROWS_AS(math::function(pluss::make_series({1.0}, {1, 1, 1})),
-                  pluss::Error);
 }
 
 TEST_CASE("function rejects projections from a foreign trace",

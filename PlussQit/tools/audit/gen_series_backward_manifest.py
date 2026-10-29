@@ -214,6 +214,12 @@ HAND_WRITTEN_PROBES: list[tuple[str, str, list[str], str]] = [
      ["Series idx2 = make_series(std::vector<std::int64_t>{0, 1, 2, 0, 1, 2}, {2, 3}).to(ScalarType::Int64);",
       "Series src = probe_input();"],
      "s.scatter_reduce_amin(INT64_C(1), idx2, src, true)"),
+    # Contraction composites (permute/reshape/bmm/diagonal/sum): TRACKED by
+    # construction; probed so a future native rewrite cannot silently drop the node.
+    ("tensordot", "(const Series&, int64_t)", [], "s.tensordot(mate, INT64_C(2))"),
+    ("tensordot", "(const Series&, vector<int64_t>, vector<int64_t>)", [],
+     "s.tensordot(mate, std::vector<std::int64_t>{1}, std::vector<std::int64_t>{1})"),
+    ("einsum", "(string_view, vector<Series>)", [], 'Series::einsum("ij,kj->ik", {s, mate})'),
     ("isnan", "()", [], "s.isnan()"),
     ("isinf", "()", [], "s.isinf()"),
     ("isfinite", "()", [], "s.isfinite()"),
@@ -291,6 +297,9 @@ def base_type(param: str) -> str:
     return t
 
 
+FFT_FAMILY = {"fft", "ifft", "rfft", "irfft"}
+
+
 def synth_arg(ptype: str, idx: int) -> tuple[str, str | None]:
     t = base_type(ptype)
     if t == "const Series&":
@@ -341,6 +350,13 @@ def main() -> int:
         if not ok:
             skipped.append(f"{name}{sig}")
             continue
+        if name in FFT_FAMILY and params:
+            # n=0 is rejected ("transform length must be greater than zero");
+            # probe with the documented defaults (n=-1 -> input length).
+            args = ["INT64_C(-1)", "INT64_C(-1)", 'std::string("backward")']
+        if name in {"diagonal", "trace", "diag_embed"} and len(params) == 3:
+            # (offset, dim1, dim2): all-zero args name the same axis twice.
+            args = ["INT64_C(0)", "INT64_C(0)", "INT64_C(1)"]
         call = f"s.{name}(" + ", ".join(args) + ")"
         probes.append((name, sig, pres, call, uses_mate))
 

@@ -1,0 +1,60 @@
+<!-- generated from calculus_02_derivatives.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Calculus 2: Derivatives
+
+The derivative of a `Function` is another `Function`. `operators::differential` takes the recorded formula of its input and produces the recorded formula of the derivative by applying the rules of calculus to each operation, so the result is exact, can be evaluated anywhere, can be differentiated again, and, if the input could be saved, can be saved. After this chapter you can take partial and higher-order derivatives, know what happens at the points where a derivative does not exist, differentiate code that is not written as a `Function`, and use the magnitude, absolute and covariant variants.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **A derivative is an `Operator` applied to a `Function`.** `operators::differential("x", 2)` is a value describing "differentiate twice in `x`"; calling it on a function applies it. The operator can be stored, passed around and composed (Chapter 5).
+- **The result keeps the variables of the input.** A derivative with respect to `x` of a function of `x` and `y` is still a function of `x` and `y`.
+- **Differentiation is symbolic.** It applies one rule per operation, shares sub-expressions, and does not sample the function. Nothing is approximated.
+- **Failure is explicit.** A corner (`abs` at zero) is governed by an option, a singularity is a domain error at evaluation, a runaway request is stopped by a budget, and a function without structure is differentiated only on request.
+
+```cpp
+operators::Operator operators::differential(std::string_view variable, std::int64_t order = 1, DiffOptions options = {});
+operators::Operator operators::wirtinger(std::string_view variable, std::int64_t order = 1, DiffOptions options = {});
+operators::Operator operators::conjugate_wirtinger(std::string_view variable, std::int64_t order = 1, DiffOptions options = {});
+operators::Operator operators::magnitude_differential(std::string_view variable, std::int64_t order = 1, DiffOptions options = {});
+operators::Operator operators::covariant(std::string_view variable, math::Function connection, DiffOptions options = {});
+```
+
+| `DiffOptions` field | Meaning | Default |
+|---|---|---|
+| `nonsmooth` | what the derivative of `abs` is at 0: `Strict`, `Piecewise`, `Subgradient` or `Autodiff` | `Strict` |
+| `fallback` | how an opaque `Series` callable is differentiated: `Reject` or `Autodiff` | `Reject` |
+| `max_nodes` | the largest derivative graph, counted for every intermediate order | 100000 |
+
+## Programs
+
+- [Partial derivatives and higher orders](calculus_02_derivatives/partial_derivatives_and_higher_orders.md)
+- [The differentiation rules](calculus_02_derivatives/the_differentiation_rules.md)
+- [Complex and Wirtinger derivatives](calculus_02_derivatives/complex_derivatives.md)
+- [Non-smooth points](calculus_02_derivatives/non_smooth_points.md)
+- [Opaque functions and the autodiff fallback](calculus_02_derivatives/opaque_functions_and_the_autodiff_fallback.md)
+- [Magnitude, absolute and covariant differentials](calculus_02_derivatives/absolute_and_covariant_differentials.md)
+
+## Checklist
+
+1. Write the formula with the `Function` vocabulary and differentiate it with `differential`; the derivative is exact.
+2. Use `differential(x, n)` for higher orders; it is equivalent to applying the first-order operator `n` times.
+3. Choose `nonsmooth` deliberately if the formula contains `abs` and the point can be 0.
+4. Expect a domain error, not a `NaN`, where a derivative divides by zero or takes a logarithm of a non-positive number.
+5. Keep sub-expressions shared; if a derivative is rejected by `max_nodes`, simplify the formula before raising the budget.
+6. For code that is not written as a `Function`, request `Fallback::Autodiff`; it is accepted by every differential operator.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_02_derivatives/partial_derivatives_and_higher_orders
+calculus_02_derivatives/the_differentiation_rules
+calculus_02_derivatives/complex_derivatives
+calculus_02_derivatives/non_smooth_points
+calculus_02_derivatives/opaque_functions_and_the_autodiff_fallback
+calculus_02_derivatives/absolute_and_covariant_differentials
+```
+<!-- apiref:toctree:end -->

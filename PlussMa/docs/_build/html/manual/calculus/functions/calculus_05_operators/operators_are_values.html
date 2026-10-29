@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Operators are values &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Composing and combining operators" href="composing_and_combining.html" />
+    <link rel="prev" title="Calculus 5: Operators" href="../calculus_05_operators.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from operators_are_values.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="operators-are-values">
+<h1>Operators are values<a class="headerlink" href="#operators-are-values" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../calculus_05_operators.html"><span class="std std-doc">Back to Operators</span></a></p>
+<p>An <code class="docutils literal notranslate"><span class="pre">Operator</span></code> is a function of functions: it takes a <code class="docutils literal notranslate"><span class="pre">Function</span></code> and returns a new <code class="docutils literal notranslate"><span class="pre">Function</span></code>. <code class="docutils literal notranslate"><span class="pre">differential</span></code>, <code class="docutils literal notranslate"><span class="pre">gradient</span></code>, <code class="docutils literal notranslate"><span class="pre">integral</span></code> and the others in the previous chapters are all operators, and they were applied the moment they were created. This page treats an operator as a value in its own right. It can be named, stored in a variable, passed to a function, applied more than once, and combined with other operators (next page).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="nf">operators::Operator::operator</span><span class="p">()(</span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">input</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Member</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">op(f)</span></code></p></td>
+<td><p>applies the operator and returns the transformed <code class="docutils literal notranslate"><span class="pre">Function</span></code>; raises an error if <code class="docutils literal notranslate"><span class="pre">op</span></code> or <code class="docutils literal notranslate"><span class="pre">f</span></code> is undefined</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">defined()</span></code>, <code class="docutils literal notranslate"><span class="pre">explicit</span> <span class="pre">operator</span> <span class="pre">bool</span></code></p></td>
+<td><p>whether the operator holds a transformation (a default-constructed <code class="docutils literal notranslate"><span class="pre">Operator</span></code> does not)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">key()</span></code></p></td>
+<td><p>the operator’s name, such as <code class="docutils literal notranslate"><span class="pre">&quot;differential&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;shift&quot;</span></code>; empty for an anonymous custom operator</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">version()</span></code></p></td>
+<td><p>the version of the operator’s definition (1 for the built-in operators)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">capabilities()</span></code></p></td>
+<td><p>what the operator promises, as a <code class="docutils literal notranslate"><span class="pre">Capabilities</span></code> value</p></td>
+</tr>
+</tbody>
+</table>
+<p>An <code class="docutils literal notranslate"><span class="pre">Operator</span></code> is an immutable handle: copies share the same transformation, it is cheap to copy, and it can be used from any thread.</p>
+<section id="the-built-in-operators">
+<h2>The built-in operators<a class="headerlink" href="#the-built-in-operators" title="Link to this heading">¶</a></h2>
+<p>Besides the derivative and integral operators already seen, four simple operators transform a function without calculus:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Operator</p></th>
+<th class="head"><p>Result for <code class="docutils literal notranslate"><span class="pre">f</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">identity()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">f</span></code> itself</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scale(c)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">·</span> <span class="pre">f</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shift(x,</span> <span class="pre">h)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">f</span></code> with <code class="docutils literal notranslate"><span class="pre">x</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">h</span></code>, that is <code class="docutils literal notranslate"><span class="pre">f(…,</span> <span class="pre">x</span> <span class="pre">+</span> <span class="pre">h,</span> <span class="pre">…)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiply(g)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">g</span> <span class="pre">·</span> <span class="pre">f</span></code>, the product with the function <code class="docutils literal notranslate"><span class="pre">g</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">print_defaults</span><span class="p">(</span><span class="n">PrintOptions</span><span class="p">{}.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">square</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;x                 &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;f(x) = x^2        &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">square</span><span class="p">({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;identity          &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">identity</span><span class="p">()(</span><span class="n">square</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;shift(x, 1.5)     &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">)(</span><span class="n">square</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; = (x + 1.5)^2:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="mf">1.5</span><span class="p">).</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;scale(3)          &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">scale</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)(</span><span class="n">square</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;multiply(x)       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">multiply</span><span class="p">(</span><span class="n">square</span><span class="p">.</span><span class="n">arg</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">))(</span><span class="n">square</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; = x^3:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">3</span><span class="p">).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;multiply(5)       &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">multiply</span><span class="p">(</span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">(</span><span class="mf">5.0</span><span class="p">))(</span><span class="n">square</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">  </span><span class="c1">// An operator is a value: keep one, apply it to several functions.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="n">advance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;advance(f)        &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">advance</span><span class="p">(</span><span class="n">square</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="s">&quot;advance(cube)     &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">advance</span><span class="p">(</span><span class="n">cube</span><span class="p">)({</span><span class="n">x</span><span class="p">}).</span><span class="n">pull</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x                  [-1.0000, 0.0000, 2.0000]
+f(x) = x^2         [1.0000, 0.0000, 4.0000]
+identity           [1.0000, 0.0000, 4.0000]
+shift(x, 1.5)      [0.2500, 2.2500, 12.2500]  = (x + 1.5)^2: [0.2500, 2.2500, 12.2500]
+scale(3)           [3.0000, 0.0000, 12.0000]
+multiply(x)        [-1.0000, 0.0000, 8.0000]  = x^3: [-1.0000, 0.0000, 8.0000]
+multiply(5)        [5.0000, 0.0000, 20.0000]
+advance(f)         [0.0000, 1.0000, 9.0000]
+advance(cube)      [0.0000, 1.0000, 27.0000]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">identity</span></code> returns the function unchanged. <code class="docutils literal notranslate"><span class="pre">shift(&quot;x&quot;,</span> <span class="pre">1.5)</span></code> of x² is (x + 1.5)², which at −1, 0 and 2 is 0.25, 2.25 and 12.25. <code class="docutils literal notranslate"><span class="pre">scale(3)</span></code> triples the values, <code class="docutils literal notranslate"><span class="pre">multiply(x)</span></code> multiplies by the coordinate so x² becomes x³, and <code class="docutils literal notranslate"><span class="pre">multiply(5)</span></code> multiplies by a constant. The last two lines show an operator as a reusable value: <code class="docutils literal notranslate"><span class="pre">advance</span></code> is created once and applied to two different functions, giving (x + 1)² and (x + 1)³.</p>
+<p><code class="docutils literal notranslate"><span class="pre">shift</span></code> moves the graph of the function to the left by <code class="docutils literal notranslate"><span class="pre">h</span></code>: the value of the shifted function at <code class="docutils literal notranslate"><span class="pre">x</span></code> is the original at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">h</span></code>. For a function of several variables only the named variable shifts, and the rest keep their values.</p>
+</section>
+<section id="what-an-operator-promises-capabilities">
+<h2>What an operator promises: <code class="docutils literal notranslate"><span class="pre">capabilities()</span></code><a class="headerlink" href="#what-an-operator-promises-capabilities" title="Link to this heading">¶</a></h2>
+<p>Every operator reports a <code class="docutils literal notranslate"><span class="pre">Capabilities</span></code>, a set of flags that describe what is known about its action. Callers (and the operator algebra of the next page) use them to decide what is safe to do.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">structural</span></code></p></td>
+<td><p>the operator acts on the recorded graph, so the result keeps its structure (can be differentiated and saved)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluated_only</span></code></p></td>
+<td><p>the operator acts only on values, so the result has no usable structure; incompatible with <code class="docutils literal notranslate"><span class="pre">structural</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">linear</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">op(a</span> <span class="pre">f</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">g)</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">op(f)</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">op(g)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">adjoint_known</span></code></p></td>
+<td><p>the operator’s adjoint is known</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">serializable</span></code></p></td>
+<td><p>the operator can be saved to a file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">platform_pure</span></code></p></td>
+<td><p>the operator does not move data between platforms</p></td>
+</tr>
+</tbody>
+</table>
+<p>The program prints the key, version and capabilities of every built-in operator.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/ma.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/tils/aux/output.h&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">math</span><span class="p">;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">operators</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">operators</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">tils</span><span class="p">;</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="n">OutputEngine</span><span class="w"> </span><span class="o">&amp;</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Operator</span><span class="w"> </span><span class="o">&amp;</span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">Capabilities</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">op</span><span class="p">.</span><span class="n">capabilities</span><span class="p">();</span>
+<span class="w">  </span><span class="n">out</span><span class="p">.</span><span class="n">writeln</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">op</span><span class="p">.</span><span class="n">key</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; v&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">op</span><span class="p">.</span><span class="n">version</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot; | structural&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="n">structural</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; linear&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="n">linear</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; adjoint&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="n">adjoint_known</span><span class="p">,</span>
+<span class="w">              </span><span class="s">&quot; serializable&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="n">serializable</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; pure&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="n">platform_pure</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">OutputEngine</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">[](</span><span class="n">math</span><span class="o">::</span><span class="n">Function</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;identity               &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">identity</span><span class="p">());</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;differential           &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">differential</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;magnitude_differential &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">magnitude_differential</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;covariant              &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">covariant</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">math</span><span class="o">::</span><span class="n">function</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;gradient               &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">gradient</span><span class="p">());</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;jacobian               &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">jacobian</span><span class="p">());</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hessian                &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">hessian</span><span class="p">());</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;antiderivative         &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">antiderivative</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;integral (anchored)    &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">integral</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;integral (definite)    &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">integral</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;shift                  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;multiply               &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">multiply</span><span class="p">(</span><span class="n">sample</span><span class="p">.</span><span class="n">arg</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;scale                  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">scale</span><span class="p">(</span><span class="mf">2.0</span><span class="p">));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;compose                &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">compose</span><span class="p">(</span><span class="n">operators</span><span class="o">::</span><span class="n">scale</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;linear_combination     &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">linear_combination</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">scale</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)},</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">identity</span><span class="p">()}}));</span>
+<span class="w">  </span><span class="n">report</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;commutator             &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">commutator</span><span class="p">(</span><span class="n">operators</span><span class="o">::</span><span class="n">scale</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span><span class="w"> </span><span class="n">operators</span><span class="o">::</span><span class="n">shift</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>identity                key identity  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+differential            key differential  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+magnitude_differential  key magnitude_differential  v 1  | structural true  linear false  adjoint false  serializable true  pure true
+covariant               key covariant  v 1  | structural true  linear true  adjoint false  serializable false  pure true
+gradient                key gradient  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+jacobian                key jacobian  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+hessian                 key hessian  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+antiderivative          key antiderivative  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+integral (anchored)     key integral  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+integral (definite)     key integral  v 1  | structural true  linear true  adjoint false  serializable true  pure true
+shift                   key shift  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+multiply                key multiply  v 1  | structural true  linear true  adjoint true  serializable false  pure true
+scale                   key scale  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+compose                 key compose  v 1  | structural true  linear true  adjoint true  serializable true  pure true
+linear_combination      key linear_combination  v 1  | structural true  linear true  adjoint true  serializable false  pure true
+commutator              key commutator  v 1  | structural true  linear true  adjoint false  serializable false  pure true
+</pre></div>
+</div>
+<p>Every built-in operator reports <code class="docutils literal notranslate"><span class="pre">structural</span></code> and <code class="docutils literal notranslate"><span class="pre">platform_pure</span></code>, and all are linear except <code class="docutils literal notranslate"><span class="pre">magnitude_differential</span></code>, as the previous chapter explained. The operators that cannot be saved are <code class="docutils literal notranslate"><span class="pre">covariant</span></code> and the geometric <code class="docutils literal notranslate"><span class="pre">absolute_differential</span></code> (they hold an arbitrary connection function), <code class="docutils literal notranslate"><span class="pre">multiply</span></code> (it holds an arbitrary coefficient function), <code class="docutils literal notranslate"><span class="pre">linear_combination</span></code> and <code class="docutils literal notranslate"><span class="pre">commutator</span></code>; the next page and <a class="reference internal" href="saving_and_loading.html"><span class="std std-doc">Saving and loading</span></a> come back to this. <code class="docutils literal notranslate"><span class="pre">identity</span></code>, <code class="docutils literal notranslate"><span class="pre">scale</span></code> and, by extension, a linear combination of operators that have one, report a known adjoint; the derivative and integral operators do not. The key of a composition is <code class="docutils literal notranslate"><span class="pre">compose</span></code>, and the composition’s flags are computed from its parts.</p>
+</section>
+<section id="details-to-know">
+<h2>Details to know<a class="headerlink" href="#details-to-know" title="Link to this heading">¶</a></h2>
+<p><strong><code class="docutils literal notranslate"><span class="pre">multiply</span></code> needs a coefficient from the same function.</strong> <code class="docutils literal notranslate"><span class="pre">multiply(g)</span></code> forms the product of <code class="docutils literal notranslate"><span class="pre">g</span></code> and the function it is applied to. If <code class="docutils literal notranslate"><span class="pre">g</span></code> is a coordinate or an expression of a function, as in <code class="docutils literal notranslate"><span class="pre">multiply(square.arg(&quot;x&quot;))</span></code>, it belongs to that function’s variables, and the operator can be applied only to functions with those same variables from the same trace, or you get the error “expressions from different variable traces cannot be combined”. A constant, as in <code class="docutils literal notranslate"><span class="pre">multiply(math::function(5.0))</span></code>, belongs to no trace and combines with anything.</p>
+<p><strong>Undefined operators fail loudly.</strong> Applying a default-constructed <code class="docutils literal notranslate"><span class="pre">Operator</span></code>, or applying any operator to an undefined <code class="docutils literal notranslate"><span class="pre">Function</span></code>, raises an error; so does a custom operator whose body returns an undefined <code class="docutils literal notranslate"><span class="pre">Function</span></code>.</p>
+<p><strong>An operator is applied when it is applied.</strong> Creating <code class="docutils literal notranslate"><span class="pre">differential(&quot;x&quot;)</span></code> does nothing to any function. The work, which for the derivative operators is the construction of the derivative graph, happens in <code class="docutils literal notranslate"><span class="pre">op(f)</span></code>, once, and the result is an ordinary <code class="docutils literal notranslate"><span class="pre">Function</span></code>.</p>
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../infer.html">Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../optim.html">Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../../_sources/manual/calculus/functions/calculus_05_operators/operators_are_values.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

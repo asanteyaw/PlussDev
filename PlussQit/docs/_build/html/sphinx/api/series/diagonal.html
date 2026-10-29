@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=fc808d0b"></script>
+    <script src="../../../_static/api_nav.js?v=0f307078"></script>
     <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -55,10 +55,11 @@ into matrix-building mode.</p>
 <p>That makes it the better root method when you want your call site to state
 “read a diagonal” unambiguously, regardless of what rank the input happens to
 be.</p>
-<p>The current verified root surface is narrower than the name might suggest:</p>
+<p>It works on any input with at least two axes:</p>
 <ul class="simple">
-<li><p>it is currently implemented for 2D inputs</p></li>
-<li><p>the three-argument overload accepts only the two real matrix axes</p></li>
+<li><p>the three-argument overload names which two axes form the “matrix” the
+diagonal is read from; every other axis is carried along unchanged</p></li>
+<li><p>the extracted diagonal becomes the <strong>last</strong> axis of the result</p></li>
 <li><p>swapping <code class="docutils literal notranslate"><span class="pre">dim1</span></code> and <code class="docutils literal notranslate"><span class="pre">dim2</span></code> changes which direction the diagonal is read from</p></li>
 </ul>
 </section>
@@ -81,31 +82,27 @@ be.</p>
 <li><p>negative values move toward later rows</p></li>
 </ul>
 <p><strong>dim1</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The first matrix axis.</p>
+<p>The first of the two axes the diagonal is read from.</p>
 <p><strong>dim2</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
-<p>The second matrix axis.</p>
+<p>The second of the two axes the diagonal is read from.</p>
 <p>Both dimension parameters accept negative indexing, but they must refer to two
 different axes after normalization.</p>
-<p>On the current verified root surface, the practical choices for a 2D matrix are
-just:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">0)</span></code></p></li>
-</ul>
-<p>The first reads the diagonal in the ordinary orientation. The second reads the
-diagonal after the matrix axes have been conceptually swapped.</p>
+<p>For a 2D matrix the choices are <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code> (the ordinary orientation) and
+<code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">0)</span></code> (the diagonal after the two axes have been swapped). For higher-rank
+input any two distinct axes may be named; the offset is measured from <code class="docutils literal notranslate"><span class="pre">dim1</span></code>
+toward <code class="docutils literal notranslate"><span class="pre">dim2</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
-A 1D <code class="docutils literal notranslate"><span class="pre">Series</span></code> containing the extracted diagonal values.</p>
+For a 2D input, a 1D <code class="docutils literal notranslate"><span class="pre">Series</span></code> of the diagonal. For higher rank, the input
+shape with <code class="docutils literal notranslate"><span class="pre">dim1</span></code> and <code class="docutils literal notranslate"><span class="pre">dim2</span></code> removed and the diagonal’s length appended as
+the last axis.</p>
 </section>
 <section id="gradient">
 <h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">diagonal()</span></code> shares the same verified extraction route as matrix-extract
-<a class="reference internal" href="diag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diag()</span></code></span></a>.</p>
-<p>That means reverse-mode sensitivity is scattered back onto the selected
-diagonal positions and leaves every non-participating position untouched.</p>
+<p>Reverse-mode sensitivity is scattered back onto the selected diagonal
+positions and leaves every non-participating position untouched, for any rank.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -143,7 +140,12 @@ data=[2, 6]
 </div>
 <p>Example 3. Swapping <code class="docutils literal notranslate"><span class="pre">dim1</span></code> and <code class="docutils literal notranslate"><span class="pre">dim2</span></code> changes which matrix orientation is used
 before the diagonal is read.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rectangular</span><span class="p">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rectangular</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rectangular</span><span class="p">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -156,7 +158,13 @@ data=[1, 5]
 <p>That result comes from reading the diagonal of the transposed orientation, not
 from the ordinary <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code> orientation.</p>
 <p>Example 4. The named axes must differ.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">square</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">square</span><span class="p">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
@@ -170,6 +178,46 @@ from the ordinary <code class="docutils literal notranslate"><span class="pre">(
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>diagonal: dim1 and dim2 must differ
 </pre></div>
 </div>
+<p>Example 5. Higher-rank input: name the two axes, and the diagonal becomes the
+last axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">                                </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+
+<span class="c1">// the diagonal of each 3 x 4 slice, one row per slice</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 6, 11],
+  [13, 18, 23]]
+</pre></div>
+</div>
+<p>Axis 0 is carried through, and the length-3 diagonal of every slice is the new
+last axis.</p>
+<p>Example 6. The offset and the axes combine; the offset is measured from <code class="docutils literal notranslate"><span class="pre">dim1</span></code>
+toward <code class="docutils literal notranslate"><span class="pre">dim2</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cube</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">                                </span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cube</span><span class="p">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 7, 12],
+  [14, 19, 24]]
+pluss::Series(shape=[3,2], strides=[2,1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 14],
+  [5, 18],
+  [9, 22]]
+</pre></div>
+</div>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -177,7 +225,7 @@ from the ordinary <code class="docutils literal notranslate"><span class="pre">(
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">diagonal()</span></code> always extracts. If you wanted a diagonal matrix, use
 <a class="reference internal" href="diag_embed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diag_embed()</span></code></span></a> or <a class="reference internal" href="diagflat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagflat()</span></code></span></a> instead.</p></li>
-<li><p>The current root surface is 2D-only.</p></li>
+<li><p>Inputs need at least two axes; a 1D or scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code> throws.</p></li>
 <li><p>Swapping <code class="docutils literal notranslate"><span class="pre">dim1</span></code> and <code class="docutils literal notranslate"><span class="pre">dim2</span></code> is not cosmetic. It changes the extraction
 orientation.</p></li>
 <li><p>Reverse-mode follows the same diagonal-scatter rule as matrix-extract

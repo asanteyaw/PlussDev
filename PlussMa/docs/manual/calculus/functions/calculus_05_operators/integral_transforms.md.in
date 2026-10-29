@@ -1,0 +1,97 @@
+# Fourier and Laplace transforms
+
+[Back to Operators](../calculus_05_operators.md)
+
+The transform operators turn a function of `x` into a function of a **new free variable**, the frequency, which you name. The result is a `Function`: it differentiates, composes and saves, and nothing is computed until you supply a value. When the integrand is an exponential polynomial (sums and products of `xⁿ`, `exp`, `sin`, `cos`, `sinh`, `cosh`, and `exp(−a x²)` for the whole-line Fourier transform) the result is a closed formula. Otherwise it is an unresolved integral over an infinite range that is evaluated by quadrature when you ask for a number; `provenance()` tells you which one you got.
+
+| Entry point | Meaning |
+|---|---|
+| `fourier::transform(x, w, convention)` | `∫ f(x) e^{−iwx} dx` over the line |
+| `fourier::inverse_transform(w, x, convention)` | the inverse, acting on a function of `w` |
+| `fourier::cosine_transform(x, w)`, `sine_transform(x, w)` | `∫₀^∞ f cos(wx) dx`, `∫₀^∞ f sin(wx) dx` |
+| `laplace::transform(x, s)` | `∫₀^∞ f(x) e^{−sx} dx` |
+| `laplace::inverse_transform(s, x, terms)` | Talbot inversion: a sum of `terms/2` evaluations of `F`, no quadrature |
+| `convolution(x, kernel)` | `∫ f(t) k(x − t) dt` |
+
+`fourier::Convention` is `Angular` (no prefactor forward, `1/2π` inverse), `Unitary` (`1/√2π` both ways) or `Ordinary` (frequency in cycles, phase `2πξx`).
+
+```cpp
+operators::Operator operators::fourier::transform(std::string_view variable, std::string_view frequency, Convention convention = Convention::Angular);
+operators::Operator operators::fourier::inverse_transform(std::string_view frequency, std::string_view variable, Convention convention = Convention::Angular);
+operators::Operator operators::laplace::transform(std::string_view variable, std::string_view frequency);
+operators::Operator operators::laplace::inverse_transform(std::string_view frequency, std::string_view variable, std::int64_t terms = 32);
+operators::Operator operators::convolution(std::string_view variable, math::Function kernel);
+```
+
+The closed forms hold inside the region of convergence (`Re s` above every exponent, a positive Gaussian coefficient); outside it they are the analytic continuation.
+
+## A table lookup and a lazy integral
+
+The transform of `e^{−x²/2}` is `√(2π) e^{−w²/2}`, and the Laplace transform of `x e^{−x/2} cos 3x` is `Re 1/(s + ½ − 3i)²`; both are exponential polynomials, so both come back as formulas. `1/(1+x)` is not, so its Laplace transform stays an integral, evaluated at `s = 1` to `e·E₁(1) = 0.5963…`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace fourier = pluss::operators::fourier;
+namespace laplace = pluss::operators::laplace;
+using namespace pluss::tils;
+
+static const char *kind(const math::Function &f) { return f.provenance() == math::Provenance::Quadrature ? "lazy integral" : "closed form"; }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const math::Function gauss = math::function({"x"}, [](math::Function x) { return (-(x * x) * 0.5).exp(); });
+  const math::Function damped = math::function({"x"}, [](math::Function x) { return x * (-x * 0.5).exp() * (x * 3.0).cos(); });
+  const math::Function rational = math::function({"x"}, [](math::Function x) { return 1.0 / (x + 1.0); });
+
+  const math::Function spectrum = fourier::transform("x", "w")(gauss);
+  const math::Function L = laplace::transform("x", "s")(damped);
+  const math::Function Lr = laplace::transform("x", "s")(rational);
+  const auto w = pluss::make_series(0.7), s = pluss::make_series(2.0), one = pluss::make_series(1.0);
+
+  out.writeln("Fourier of a Gaussian   ", spectrum.real()({w}).item<double>(), "  exact ", std::sqrt(2 * std::acos(-1.0)) * std::exp(-0.245), "  ", kind(spectrum));
+  out.writeln("Laplace of x e^-x/2 cos ", L({s}).item<double>(), "  exact ", (1.0 / std::pow(std::complex<double>(2.5, -3.0), 2)).real(), "  ", kind(L));
+  out.writeln("Laplace of 1/(1+x)      ", Lr({one}).item<double>(), "  exact 0.59634736  ", kind(Lr));
+}
+```
+
+## Inversion and convolution
+
+`laplace::inverse_transform` returns a formula in `t` built from `F` itself, so it is exact to rounding for a function such as `1/(s+1)²`, whose inverse is `t e^{−t}`. The convolution of two Gaussians `e^{−x²/2}` is `√π e^{−x²/4}`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const math::Function F = math::function({"s"}, [](math::Function s) { return 1.0 / ((s + 1.0) * (s + 1.0)); });
+  const operators::Operator invert = operators::laplace::inverse_transform("s", "t");   // staged
+  const math::Function f = invert(F);
+  for (const double t : {0.5, 2.0}) out.writeln("f(", t, ") = ", f({pluss::make_series(t)}).item<double>(), "   t e^-t = ", t * std::exp(-t));
+
+  const math::Function gauss = math::function({"x"}, [](math::Function x) { return (-(x * x) * 0.5).exp(); });
+  const math::Function conv = operators::convolution("x", gauss)(gauss);                 // compact
+  out.writeln("(g*g)(1) = ", conv({pluss::make_series(1.0)}).item<double>(), "   sqrt(pi) e^-1/4 = ", std::sqrt(std::acos(-1.0)) * std::exp(-0.25));
+}
+```
+
+## Limits to know
+
+- A transform of a transform that is itself an integral nests two quadratures and may not converge; build the inverse from a formula.
+- Talbot inversion needs `t > 0`, and poles on the imaginary axis lose accuracy as `t` grows (raise `terms`).
+- Transform operators evaluate on the CPU.
+- They save and load ([Saving and loading](saving_and_loading.md)) except `convolution`, which holds a kernel.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

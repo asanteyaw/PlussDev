@@ -417,8 +417,8 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
 
   const Series y = labels.to(platform, ScalarType::Float64).reshape({n});
   const Series all_indices = pluss::series::arange(0, n, i64_on(platform));
-  const std::vector<double> current = before.counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>();
-  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>();
+  const std::vector<double> current = before.counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>().array().data;
+  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>().array().data;
   const std::uint64_t seed = compose_seed(random);
 
   Series planned = pluss::series::undefined();
@@ -512,7 +512,7 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
   if (!target_counts_or.ok()) return StatusOr<BalancePlan>(target_counts_or.status());
   const Series target_counts = target_counts_or.move_value().to(platform, ScalarType::Float64).reshape({k});
 
-  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>();
+  const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).host<double>().array().data;
   const std::uint64_t seed = compose_seed(random);
 
   Series retained = pluss::series::undefined();

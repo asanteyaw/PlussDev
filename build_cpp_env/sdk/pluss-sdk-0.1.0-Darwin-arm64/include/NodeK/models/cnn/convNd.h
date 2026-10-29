@@ -141,7 +141,7 @@ inline Series conv2d_impl_(const Series& input,
   PLUSS_CHECK(x.dim() == 4, "pluss::ai::conv: expected input with shape [N,C,H,W] or [C,H,W]");
 
   const Series w = cast_like_(weight, x);
-  const Series b = bias.defined() ? cast_like_(bias, x) : Series();
+  const Series b = bias.defined() ? cast_like_(bias, x) : pluss::series::undefined();
 
   const std::int64_t batch = x.sizes()[0];
   const std::int64_t in_channels = x.sizes()[1];
@@ -198,7 +198,7 @@ inline Series conv2d_impl_(const Series& input,
     if (mps_conv_cpu_bridge_enabled_) {
       const Series x_cpu = x.to(pluss::pCPU, x.scalar_type());
       const Series w_cpu = w.to(pluss::pCPU, w.scalar_type());
-      const Series b_cpu = b.defined() ? b.to(pluss::pCPU, b.scalar_type()) : Series();
+      const Series b_cpu = b.defined() ? b.to(pluss::pCPU, b.scalar_type()) : pluss::series::undefined();
       const Series out_cpu = conv2d_impl_(x_cpu, w_cpu, b_cpu, stride, padding, dilation, groups);
       const Series out = out_cpu.to(x.platform(), x.scalar_type());
       return batched ? out : out.squeeze(0);
@@ -215,12 +215,24 @@ inline Series conv2d_impl_(const Series& input,
   const std::int64_t out_h = output_extent_(padded_h, kernel_h, stride[0], dilation[0]);
   const std::int64_t out_w = output_extent_(padded_w, kernel_w, stride[1], dilation[1]);
 
-  Series patches = padded.unfold(2, effective_kh, stride[0]).unfold(4, effective_kw, stride[1]);
+  // unfold appends its new window dim at the very END (see unfold_impl in
+  // Invoke.cpp -- out_sizes.push_back), not adjacent to the unfolded dim.
+  // So after unfolding dim2 (H), the layout is [B,Cin,outH,W,kh] with W
+  // still at index 3 -- the second unfold must target dim 3 (W) to extract
+  // width windows, not dim 4 (which by then is the kh window itself, a
+  // completely different axis). Unfolding dim 4 there silently produced a
+  // structurally-similar-shaped but semantically wrong result (a window
+  // over the *kernel_h* axis using the *kernel_w* size/step) -- correct by
+  // construction only in the degenerate in_channels==1 case, wrong for any
+  // real multi-channel 2D convolution. Caught via a Track A drill pass
+  // comparing pluss::ai::conv1d/conv2d directly against libtorch.
+  Series patches = padded.unfold(2, effective_kh, stride[0]).unfold(3, effective_kw, stride[1]);
+  // patches is now [B(0), Cin(1), outH(2), outW(3), kh(4), kw(5)].
   if (dilation[0] > 1) {
     std::vector<std::int64_t> kh_idx(static_cast<std::size_t>(kernel_h));
     for (std::int64_t i = 0; i < kernel_h; ++i) kh_idx[static_cast<std::size_t>(i)] = i * dilation[0];
     const Series idx = pluss::make_series(kh_idx, {kernel_h}, Config{}.with_dtype(ScalarType::Int64).with_platform(patches.platform()));
-    patches = patches.index_select(3, idx);
+    patches = patches.index_select(4, idx);
   }
   if (dilation[1] > 1) {
     std::vector<std::int64_t> kw_idx(static_cast<std::size_t>(kernel_w));
@@ -229,7 +241,11 @@ inline Series conv2d_impl_(const Series& input,
     patches = patches.index_select(5, idx);
   }
 
-  const std::array<std::int64_t, 6> permute_order{0, 2, 4, 1, 3, 5};
+  // [B,Cin,outH,outW,kh,kw] -> [B,outH,outW,Cin,kh,kw], so the last 3 dims
+  // reshape to exactly (in_channels, kernel_h, kernel_w) -- matching
+  // flat_weight's natural [out_channels, in_channels*kernel_h*kernel_w]
+  // layout below.
+  const std::array<std::int64_t, 6> permute_order{0, 2, 3, 1, 4, 5};
   const Series cols =
       patches.permute(std::span<const std::int64_t>(permute_order.data(), permute_order.size()))
           .contiguous()
@@ -275,7 +291,7 @@ inline Series conv3d_impl_(const Series& input,
   PLUSS_CHECK(x.dim() == 5, "pluss::ai::conv3d: expected input with shape [N,C,D,H,W] or [C,D,H,W]");
 
   const Series w = cast_like_(weight, x);
-  const Series b = bias.defined() ? cast_like_(bias, x) : Series();
+  const Series b = bias.defined() ? cast_like_(bias, x) : pluss::series::undefined();
 
   const std::int64_t batch = x.sizes()[0];
   const std::int64_t in_channels = x.sizes()[1];
@@ -320,7 +336,7 @@ inline Series conv3d_impl_(const Series& input,
   std::vector<Series> depth_outputs;
   depth_outputs.reserve(static_cast<std::size_t>(out_d));
   for (std::int64_t od = 0; od < out_d; ++od) {
-    Series depth_accum;
+    Series depth_accum = pluss::series::undefined();
     for (std::int64_t kd = 0; kd < kernel_d; ++kd) {
       const std::int64_t src_depth = od * stride[0] + kd * dilation[0];
       const Series x_slice = padded.select(2, src_depth).contiguous();
@@ -328,7 +344,7 @@ inline Series conv3d_impl_(const Series& input,
       const Series plane = conv2d_impl_(
           x_slice,
           w_slice,
-          Series(),
+          pluss::series::undefined(),
           Pair{stride[1], stride[2]},
           Pair{0, 0},
           Pair{dilation[1], dilation[2]},
@@ -352,7 +368,7 @@ namespace pluss::ai {
 
 inline Series conv(const Series& input,
                    const Series& weight,
-                   const Series& bias = Series(),
+                   const Series& bias = pluss::series::undefined(),
                    std::array<std::int64_t, 2> stride = {1, 1},
                    std::array<std::int64_t, 2> padding = {0, 0},
                    std::array<std::int64_t, 2> dilation = {1, 1},
@@ -372,7 +388,7 @@ inline Series conv(const Series& input,
 
 inline Series conv2d(const Series& input,
                      const Series& weight,
-                     const Series& bias = Series(),
+                     const Series& bias = pluss::series::undefined(),
                      std::array<std::int64_t, 2> stride = {1, 1},
                      std::array<std::int64_t, 2> padding = {0, 0},
                      std::array<std::int64_t, 2> dilation = {1, 1},
@@ -392,7 +408,7 @@ inline Series conv2d(const Series& input,
 
 inline Series conv3d(const Series& input,
                      const Series& weight,
-                     const Series& bias = Series(),
+                     const Series& bias = pluss::series::undefined(),
                      std::array<std::int64_t, 3> stride = {1, 1, 1},
                      std::array<std::int64_t, 3> padding = {0, 0, 0},
                      std::array<std::int64_t, 3> dilation = {1, 1, 1},

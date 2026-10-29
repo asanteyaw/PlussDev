@@ -89,7 +89,7 @@ public:
   Registry fields(const NameRange& keys) const;
   RegistryFieldAxisAccessor fieldaxis() const;
   RegistryCastAccessor cast() const;
-  RegistryCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  RegistryCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
   RegistryNoteAccessor nt() const;
   RegistryTimelineAccessor tl() const;
   bool has(std::string_view key) const;
@@ -148,7 +148,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Registry fillnull(const pluss::Timeline& value) const;
-  Registry fillnull(const pluss::TimeIndex& value) const;
+  Registry fillnull(const pluss::Duration& value) const;
   Registry dropnull() const;
   Registry distinct(pluss::kindle::DistinctOptions options = {}) const;
   Registry freq(pluss::kindle::FreqOptions options = {}) const;
@@ -246,7 +246,7 @@ public:
   Registry series() const;
   Registry note() const;
   Registry timeline() const;
-  Registry timeindex() const;
+  Registry duration() const;
   Registry mixed() const;
   Registry nulls() const;
   Registry empty() const;
@@ -259,17 +259,17 @@ class RegistryCastAccessor {
 public:
   explicit RegistryCastAccessor(Registry base,
                                 std::vector<std::string> keys,
-                                pluss::table::ThreadCastOptions options = {});
+                                pluss::table::SlateCastOptions options = {});
 
   Registry series() const;
   Registry note() const;
   Registry timeline() const;
-  Registry timeindex() const;
+  Registry duration() const;
 
 private:
   Registry base_{};
   std::vector<std::string> keys_{};
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class RegistryNoteAccessor {
@@ -349,7 +349,6 @@ public:
   Registry tz(std::string_view name) const;
   Registry localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Registry utc() const;
-  Registry index(bool require_sorted = true) const;
 
 private:
   Registry base_{};

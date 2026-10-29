@@ -167,8 +167,7 @@ TEST_CASE("operator contracts reject undefined values and false promises",
           operators::Options{.structural = true, .evaluated_only = true}),
       pluss::Error);
   CHECK_THROWS_AS(operators::define(
-                      "premature.codec",
-                      [](const math::Function &input) { return input; },
+                      {}, [](const math::Function &input) { return input; },
                       operators::Options{.serializable = true}),
                   pluss::Error);
 }

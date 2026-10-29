@@ -79,6 +79,8 @@ Output
 positive 0, negative 8, p 0.0078
 ```
 
+All 8 differences are negative: 0 positive, 8 negative, and the two-sided p-value is 0.0078, the probability of 8 of one sign under a fair coin.
+
 ### Example 2
 
 One sample against a median; the signs of the differences are mixed.
@@ -105,6 +107,8 @@ Output
 ```text
 positive 4, negative 3, used 7, p 1.0000
 ```
+
+With 4 positive and 3 negative differences among 7 used, the data say nothing: p is 1.0.
 
 ## See Also
 

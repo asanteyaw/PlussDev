@@ -69,14 +69,10 @@ struct MinimaxOptions {
 
 struct MinimaxConstraints {
   using ResidualFn = std::function<std::vector<Series>(const std::vector<Series>&)>;
-  using TraceResidualFn =
-      std::function<std::vector<pluss::subsp::math::diff::Trace>(const std::vector<pluss::subsp::math::diff::Trace>&)>;
 
   // Equality residuals c(x) = 0 and inequality residuals h(x) <= 0.
   ResidualFn equalities{};
   ResidualFn inequalities{};
-  TraceResidualFn equalities_trace{};
-  TraceResidualFn inequalities_trace{};
 
   // Optional per-parameter bounds. Empty means "no bounds".
   // If provided, size must match parameter count.
@@ -262,7 +258,13 @@ private:
   }
 
   static bool finite_series_(const Series& x) {
-    const Series finite = x.isfinite().all();
+    // CodeM's `isfinite()` predicate has no complex-dtype implementation
+    // (it's a real-valued ordering/comparison predicate, same family as the
+    // box-constraint ordering ops) -- go through view_as_real_ first so a
+    // complex candidate is checked component-wise (both the real and
+    // imaginary channels must be finite), exactly like every other
+    // per-component optimizer op in this file/optim_base.h.
+    const Series finite = view_as_real_(x).isfinite().all();
     if (finite.platform() == pluss::pCUDA && !pluss::cuda::cpu_bridge_enabled()) {
       ::pluss::throw_error(
           "pluss::ai::nn::optim::Minimax: CUDA finite recovery checks require explicit CPU scalar "
@@ -428,6 +430,20 @@ private:
     const auto& params = parameters();
     for (std::size_t i = 0; i < bounds.size(); ++i) {
       if (!bounds[i].defined()) continue;
+      // Box-constraint projection (maximum(lower_bound)/minimum(upper_bound))
+      // orders the PARAMETER's own values directly, unlike gradient-norm
+      // clipping (Optimizer::clip_gradient_), which only ever orders a
+      // derived real scalar. There's no single natural convention for
+      // "clamp a complex number into a box" (per-component? by magnitude?)
+      // -- a real design decision this Float64/complex-support pass didn't
+      // make, so reject it loudly here rather than silently pick one.
+      if (pluss::codem::dtype_of(params[i]->scalar_type()).is_complex()) {
+        ::pluss::throw_error(
+            std::string("pluss::ai::nn::optim::Minimax: ") + name +
+            " box constraints are not supported for complex parameters (no defined ordering "
+            "convention) -- omit constraints for this parameter, or clip a real projection of it "
+            "yourself before the step");
+      }
       if (bounds[i].platform() != params[i]->platform()) {
         ::pluss::throw_error(std::string("pluss::ai::nn::optim::Minimax: ") + name + " platform mismatch");
       }
@@ -440,25 +456,6 @@ private:
   void validate_constraints_() const {
     validate_bounds_vector_(constraints_.lower_bounds, "lower_bounds");
     validate_bounds_vector_(constraints_.upper_bounds, "upper_bounds");
-
-    if (!constraints_.equalities && constraints_.equalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: equalities_trace requires equalities callback");
-    }
-    if (!constraints_.inequalities && constraints_.inequalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: inequalities_trace requires inequalities callback");
-    }
-
-    if (!constraint_options_().enable_constraint_autodiff) return;
-    if (constraints_.equalities && !constraints_.equalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: equalities callback requires equalities_trace for autodiff constraints");
-    }
-    if (constraints_.inequalities && !constraints_.inequalities_trace) {
-      ::pluss::throw_error(
-          "pluss::ai::nn::optim::Minimax: inequalities callback requires inequalities_trace for autodiff constraints");
-    }
   }
 
   void initialize_state_() {
@@ -494,8 +491,12 @@ private:
     upper_multipliers_.clear();
 
     const auto& params = parameters();
-    lower_multipliers_.resize(params.size());
-    upper_multipliers_.resize(params.size());
+    lower_multipliers_.reserve(params.size());
+    upper_multipliers_.reserve(params.size());
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      lower_multipliers_.push_back(pluss::series::undefined());
+      upper_multipliers_.push_back(pluss::series::undefined());
+    }
 
     for (std::size_t i = 0; i < params.size(); ++i) {
       if (!constraints_.lower_bounds.empty() && constraints_.lower_bounds[i].defined()) {
@@ -523,9 +524,37 @@ private:
       const auto residuals = constraints_.inequalities(params_value);
       ineq_multipliers_.reserve(residuals.size());
       for (const auto& r : residuals) {
+        // The dual-ascent multiplier update projects onto {mu >= 0}
+        // (`residuals[i].relu()` / `.clamp_min(0.0)` in
+        // update_constraint_multipliers_) -- an ordering operation with no
+        // meaning over complex numbers, regardless of what dtype the
+        // PARAMETERS being optimized are. A complex parameter with a
+        // REAL-valued inequality residual (e.g. h(x) = |x|^2 - 1 <= 0) is
+        // perfectly well-posed and is not rejected here -- only a complex
+        // RESIDUAL is, since that's what the ordering op actually touches.
+        if (pluss::codem::dtype_of(r.scalar_type()).is_complex()) {
+          ::pluss::throw_error(
+              "pluss::ai::nn::optim::Minimax: inequality residuals must be real-valued (the dual "
+              "multiplier's non-negativity projection has no meaning over complex numbers); return a "
+              "real residual from the inequalities callback even if the parameters themselves are "
+              "complex");
+        }
         ineq_multipliers_.push_back(pluss::series::zeros_like(r, r.scalar_type()));
       }
     }
+  }
+
+  // Residuals as tape values: the plain Series callback is called on the slope-tracking values, so a
+  // constraint written once over Series is differentiated as is.
+  static std::vector<pluss::subsp::math::diff::Trace> traced_residuals_(
+      const MinimaxConstraints::ResidualFn& series_fn,
+      const std::vector<pluss::subsp::math::diff::Trace>& vars) {
+    std::vector<Series> values;
+    values.reserve(vars.size());
+    for (const auto& v : vars) values.push_back(v.value());
+    std::vector<pluss::subsp::math::diff::Trace> out;
+    for (const auto& r : series_fn(values)) out.emplace_back(r);
+    return out;
   }
 
   static pluss::subsp::math::diff::Trace scalar_zero_trace_(
@@ -545,8 +574,8 @@ private:
 
     Trace total = scalar_zero_trace_(vars);
 
-    if (constraints_.equalities_trace) {
-      const auto residuals = constraints_.equalities_trace(vars);
+    if (constraints_.equalities) {
+      const auto residuals = traced_residuals_(constraints_.equalities, vars);
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         const Trace c = residuals[i];
         const Trace lambda(eq_multipliers_[i], false);
@@ -557,8 +586,8 @@ private:
       }
     }
 
-    if (constraints_.inequalities_trace) {
-      const auto residuals = constraints_.inequalities_trace(vars);
+    if (constraints_.inequalities) {
+      const auto residuals = traced_residuals_(constraints_.inequalities, vars);
       for (std::size_t i = 0; i < residuals.size(); ++i) {
         const Trace h = relu(residuals[i]);
         const Trace mu(ineq_multipliers_[i], false);
@@ -766,7 +795,7 @@ private:
         }
 
         first_moment_[i] = first_moment_[i].mul(beta1).add(g.mul(one_minus_beta1));
-        second_moment_[i] = second_moment_[i].mul(beta2).add(g.square().mul(one_minus_beta2));
+        second_moment_[i] = second_moment_[i].mul(beta2).add(g.abs2().mul(one_minus_beta2));
 
         Series second_hat = second_moment_[i].div(scalar_on_(b2_correction, parameter_value));
         if (options.amsgrad) {
@@ -805,7 +834,7 @@ private:
         if (options.weight_decay != 0.0) {
           g = g.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
         }
-        rmsprop_avg_[i] = rmsprop_avg_[i].mul(alpha).add(g.square().mul(one_minus_alpha));
+        rmsprop_avg_[i] = rmsprop_avg_[i].mul(alpha).add(g.abs2().mul(one_minus_alpha));
         Series update = g.div(rmsprop_avg_[i].sqrt().add(eps));
         if (options.momentum > 0.0) {
           momentum_buffer_[i] = momentum_buffer_[i].mul(momentum).add(update);

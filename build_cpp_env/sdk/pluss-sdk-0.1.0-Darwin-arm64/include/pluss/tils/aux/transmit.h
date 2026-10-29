@@ -55,9 +55,10 @@ constexpr decltype(auto) invoke_binary(F&& fn, A&& a, B&& b, std::size_t index) 
 } // namespace detail
 
 template <class F, class T>
-requires (!std::ranges::input_range<std::remove_reference_t<T>>)
+requires (!std::ranges::input_range<std::remove_reference_t<T>>) &&
+         std::invocable<F, T>
 constexpr decltype(auto) transmit(F&& fn, T&& value) {
-  return detail::invoke_with_optional_index(std::forward<F>(fn), std::forward<T>(value), 0);
+  return std::invoke(std::forward<F>(fn), std::forward<T>(value));
 }
 
 template <class F, std::ranges::input_range R>
@@ -74,7 +75,8 @@ auto transmit(F&& fn, R&& input, transmit_options opts = {}) {
       opts.grain_size > 0 &&
       std::ranges::random_access_range<R> &&
       std::ranges::sized_range<R> &&
-      std::default_initializable<out_t>) {
+      std::default_initializable<out_t> &&
+      std::copy_constructible<std::decay_t<F>>) {
     const std::size_t n = static_cast<std::size_t>(std::ranges::size(input));
     out.resize(n);
     if (n == 0) return out;
@@ -92,7 +94,7 @@ auto transmit(F&& fn, R&& input, transmit_options opts = {}) {
     for (std::size_t c = 0; c < chunks; ++c) {
       const std::size_t start = c * block;
       const std::size_t end = std::min<std::size_t>(n, start + block);
-      futures.emplace_back(std::async(std::launch::async, [&, start, end]() {
+      futures.emplace_back(std::async(std::launch::async, [&, fn_copy, start, end]() mutable {
         for (std::size_t i = start; i < end; ++i) {
           out[i] = detail::invoke_with_optional_index(fn_copy, *(begin + static_cast<std::ptrdiff_t>(i)), i);
         }

@@ -10,12 +10,12 @@ namespace pluss::table::detail {
 // so a genuine 1/0-encoded boolean column still resolves to Bool. Callers that infer
 // a single cell in isolation, with no sibling rows to disambiguate, want the opposite
 // so a lone "1" reads as an integer rather than a boolean.
-pluss::table::Thread infer_thread_from_raw_csv_column(std::string_view col_name,
+pluss::table::Slate infer_slate_from_raw_csv_column(std::string_view col_name,
                                                        std::size_t source_col_index,
                                                        const std::vector<std::string>& raw_values,
                                                        const pluss::loader::ReadCsvOptions& options,
                                                        bool prefer_numeric_over_bool = false);
-pluss::table::Thread infer_thread_from_raw_csv_column(const pluss::loader::CsvRawColumn& column,
+pluss::table::Slate infer_slate_from_raw_csv_column(const pluss::loader::CsvRawColumn& column,
                                                        const pluss::loader::ReadCsvOptions& options,
                                                        bool prefer_numeric_over_bool = false);
 

@@ -88,6 +88,8 @@ difference 0.5903, t 3.0093 on 15.0000 df, p 0.0088
 95% interval [0.1722, 1.0084]
 ```
 
+The pooled test, which assumes equal variances, gives a difference of 0.59 with t 3.01 on 15 degrees of freedom and p 0.0088; the 95% interval [0.17, 1.01] excludes zero.
+
 ### Example 2
 
 Welch's test: set `equal_variance` to false.
@@ -121,6 +123,8 @@ t 2.9334 on 11.7874 df, p 0.0127, standard error 0.2012
 95% interval [0.1510, 1.0296]
 ```
 
+Welch's test does not assume equal variances: the degrees of freedom become fractional, 11.79, the standard error 0.201 and p 0.0127, a little more cautious than the pooled test, and the interval widens to [0.15, 1.03].
+
 ### Example 3
 
 One-sided: is A larger than B?
@@ -151,6 +155,8 @@ Output
 ```text
 p 0.0064, critical 1.7850 (reject)
 ```
+
+The one-sided test of whether A is larger gives p 0.0064 against the critical value 1.785, and rejects.
 
 ## See Also
 

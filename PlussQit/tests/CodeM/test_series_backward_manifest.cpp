@@ -278,11 +278,12 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("diag", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diag(INT64_C(0)); });
   probe("diag_embed", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diag_embed(); });
   probe("diag_embed", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diag_embed(INT64_C(0)); });
+  probe("diag_embed", "(std::int64_t, std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diag_embed(INT64_C(0), INT64_C(0), INT64_C(1)); });
   probe("diagflat", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diagflat(); });
   probe("diagflat", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diagflat(INT64_C(0)); });
   probe("diagonal", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diagonal(); });
   probe("diagonal", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diagonal(INT64_C(0)); });
-  probe("diagonal", "(std::int64_t, std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diagonal(INT64_C(0), INT64_C(0), INT64_C(0)); });
+  probe("diagonal", "(std::int64_t, std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diagonal(INT64_C(0), INT64_C(0), INT64_C(1)); });
   probe("diagonal_scatter", "(const Series&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.diagonal_scatter(mate); });
   probe("diagonal_scatter", "(const Series&, std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.diagonal_scatter(mate, INT64_C(0)); });
   probe("diff", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.diff(INT64_C(0)); });
@@ -317,6 +318,7 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("exponential_", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.exponential_(); });
   probe("exponential_", "(double)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.exponential_(0.5); });
   probe("factorial", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.factorial(); });
+  probe("fft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.fft(INT64_C(-1), INT64_C(-1), std::string("backward")); });
   probe("fftshift", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.fftshift(); });
   probe("fftshift", "(pluss::msharp::RangeView::Int)", [&]{ Series s = probe_input(); s.tracks_slope_(true); std::vector<std::int64_t> il0{1, 1}; return s.fftshift(pluss::msharp::RangeView::Int(il0)); });
   probe("fill_", "(double)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.fill_(0.5); });
@@ -382,6 +384,7 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("idct", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.idct(INT64_C(0)); });
   probe("idst", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.idst(); });
   probe("idst", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.idst(INT64_C(0)); });
+  probe("ifft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.ifft(INT64_C(-1), INT64_C(-1), std::string("backward")); });
   probe("ifftshift", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.ifftshift(); });
   probe("ifftshift", "(pluss::msharp::RangeView::Int)", [&]{ Series s = probe_input(); s.tracks_slope_(true); std::vector<std::int64_t> il0{1, 1}; return s.ifftshift(pluss::msharp::RangeView::Int(il0)); });
   probe("igamma", "(const Series&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.igamma(mate); });
@@ -409,6 +412,7 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("indices", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.indices(); });
   probe("inner", "(const Series&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.inner(mate); });
   probe("int_repr", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.int_repr(); });
+  probe("irfft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.irfft(INT64_C(-1), INT64_C(-1), std::string("backward")); });
   probe("isclose", "(const Series&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.isclose(mate); });
   probe("isclose", "(const Series&, double, double)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.isclose(mate, 0.5, 0.5); });
   probe("isclose", "(const Series&, double, double, bool)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.isclose(mate, 0.5, 0.5, false); });
@@ -600,6 +604,7 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("resize_as_sparse_", "(const Series&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.resize_as_sparse_(mate); });
   probe("resolve_conj", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.resolve_conj(); });
   probe("resolve_neg", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.resolve_neg(); });
+  probe("rfft", "(std::int64_t, std::int64_t, const std::string&)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.rfft(INT64_C(-1), INT64_C(-1), std::string("backward")); });
   probe("roll", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.roll(INT64_C(0)); });
   probe("roll", "(std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.roll(INT64_C(0), INT64_C(0)); });
   probe("roll", "(pluss::msharp::RangeView::Int)", [&]{ Series s = probe_input(); s.tracks_slope_(true); std::vector<std::int64_t> il0{1, 1}; return s.roll(pluss::msharp::RangeView::Int(il0)); });
@@ -695,6 +700,8 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("topk", "(std::int64_t, std::int64_t, bool)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.topk(INT64_C(0), INT64_C(0), false); });
   probe("topk", "(std::int64_t, std::int64_t, bool, bool)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.topk(INT64_C(0), INT64_C(0), false, false); });
   probe("trace", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.trace(); });
+  probe("trace", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.trace(INT64_C(0)); });
+  probe("trace", "(std::int64_t, std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.trace(INT64_C(0), INT64_C(0), INT64_C(1)); });
   probe("transpose_", "(std::int64_t, std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.transpose_(INT64_C(0), INT64_C(0)); });
   probe("tril", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.tril(); });
   probe("tril", "(std::int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.tril(INT64_C(0)); });
@@ -755,6 +762,9 @@ TEST_CASE("series backward manifest", "[backward-manifest][audit]") {
   probe("scatter_reduce_sum", "(int64_t, const Series&, const Series&, bool)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series idx2 = make_series(std::vector<std::int64_t>{0, 1, 2, 0, 1, 2}, {2, 3}).to(ScalarType::Int64); Series src = probe_input(); return s.scatter_reduce_sum(INT64_C(1), idx2, src, true); });
   probe("scatter_reduce_amax", "(int64_t, const Series&, const Series&, bool)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series idx2 = make_series(std::vector<std::int64_t>{0, 1, 2, 0, 1, 2}, {2, 3}).to(ScalarType::Int64); Series src = probe_input(); return s.scatter_reduce_amax(INT64_C(1), idx2, src, true); });
   probe("scatter_reduce_amin", "(int64_t, const Series&, const Series&, bool)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series idx2 = make_series(std::vector<std::int64_t>{0, 1, 2, 0, 1, 2}, {2, 3}).to(ScalarType::Int64); Series src = probe_input(); return s.scatter_reduce_amin(INT64_C(1), idx2, src, true); });
+  probe("tensordot", "(const Series&, int64_t)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.tensordot(mate, INT64_C(2)); });
+  probe("tensordot", "(const Series&, vector<int64_t>, vector<int64_t>)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return s.tensordot(mate, std::vector<std::int64_t>{1}, std::vector<std::int64_t>{1}); });
+  probe("einsum", "(string_view, vector<Series>)", [&]{ Series s = probe_input(); s.tracks_slope_(true); Series mate = probe_input(); mate.tracks_slope_(true); return Series::einsum("ij,kj->ik", {s, mate}); });
   probe("isnan", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.isnan(); });
   probe("isinf", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.isinf(); });
   probe("isfinite", "()", [&]{ Series s = probe_input(); s.tracks_slope_(true); return s.isfinite(); });

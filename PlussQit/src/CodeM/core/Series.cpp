@@ -902,8 +902,8 @@ Series Series::calc_malliavin_(const Series &receiver,
   const Series value = F(arg);
   PLUSS_CHECK(value.defined(), std::string(op) + ": functional returned an undefined Series");
   pluss::codem::series_tape::clear_sensitivity(leaf);
-  if (dd::detail::has_reverse_path_(value))
-    value.sum().reverse(true, false, false);
+  if (const Series objective = value.sum(); dd::detail::has_reverse_path_(objective))
+    objective.reverse(true, false, false);
   Series out = leaf.has_sensitivity()
                    ? leaf.sensitivity().detach()
                    : Series::zeros(shape_of(leaf), leaf.scalar_type(), leaf.platform());
@@ -931,10 +931,12 @@ Series Series::calc_skorokhod_(const Series &increments,
   Series correction = Series::zeros(shape_of(ito_part), ito_part.scalar_type(), ito_part.platform());
   for (std::int64_t i = 0; i < N; ++i) {
     pluss::codem::series_tape::clear_sensitivity(leaf);
-    const Series ui = uval.select(dim, i);
-    if (!dd::detail::has_reverse_path_(ui))
+    // the objective is the summed slice: a slice of an untracked process can carry a source link of its own
+    // while the sum of it has nothing to differentiate (a process that does not depend on the increments)
+    const Series objective = uval.select(dim, i).sum();
+    if (!dd::detail::has_reverse_path_(objective))
       continue;
-    ui.sum().reverse(true, false, false);
+    objective.reverse(true, false, false);
     if (leaf.has_sensitivity())
       correction = correction.add(leaf.sensitivity().select(dim, i));
   }

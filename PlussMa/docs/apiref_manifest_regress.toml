@@ -14,21 +14,42 @@ path = "regress/regression/regression_01_least_squares"
 page = "manual/regress/regression/regression_01_least_squares.md"
 title = "Least Squares"
 maxdepth = 2
-children = ["regression_01_least_squares/a_first_fit_checked_by_hand", "regression_01_least_squares/the_summary_and_prediction", "regression_01_least_squares/options_and_missing_data", "regression_01_least_squares/collinear_predictors"]
+children = ["regression_01_least_squares/a_first_fit_checked_by_hand", "regression_01_least_squares/shapes_and_inputs", "regression_01_least_squares/several_predictors", "regression_01_least_squares/every_number_in_the_result", "regression_01_least_squares/residual_diagnostics", "regression_01_least_squares/the_summary_report", "regression_01_least_squares/prediction_and_intervals", "regression_01_least_squares/options", "regression_01_least_squares/case_weights", "regression_01_least_squares/missing_data", "regression_01_least_squares/collinear_predictors", "regression_01_least_squares/errors"]
 
 [[family]]
-path = "regress/regression/regression_02_glm_quantile_polynomial"
-page = "manual/regress/regression/regression_02_glm_quantile_polynomial.md"
-title = "Generalised Linear, Quantile and Polynomial Regression"
+path = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models.md"
+title = "Generalised Linear Models"
 maxdepth = 2
-children = ["regression_02_glm_quantile_polynomial/logistic_and_poisson_regression", "regression_02_glm_quantile_polynomial/robust_and_conditional_quantile_fits", "regression_02_glm_quantile_polynomial/curves_and_cross_terms"]
+children = ["regression_02_generalised_linear_models/logistic_regression", "regression_02_generalised_linear_models/poisson_regression", "regression_02_generalised_linear_models/families_and_links", "regression_02_generalised_linear_models/the_normal_family_and_least_squares", "regression_02_generalised_linear_models/iteration_controls_and_separation", "regression_02_generalised_linear_models/deviance_and_model_comparison", "regression_02_generalised_linear_models/weights_and_offsets", "regression_02_generalised_linear_models/responses_summary_and_errors"]
+
+[[family]]
+path = "regress/regression/regression_03_quantile_regression"
+page = "manual/regress/regression/regression_03_quantile_regression.md"
+title = "Quantile Regression"
+maxdepth = 2
+children = ["regression_03_quantile_regression/median_regression_and_outliers", "regression_03_quantile_regression/several_quantiles", "regression_03_quantile_regression/covariance_choices", "regression_03_quantile_regression/optimiser_controls", "regression_03_quantile_regression/case_weights", "regression_03_quantile_regression/prediction_summary_and_options"]
+
+[[family]]
+path = "regress/regression/regression_04_polynomial_regression"
+page = "manual/regress/regression/regression_04_polynomial_regression.md"
+title = "Polynomial Regression"
+maxdepth = 2
+children = ["regression_04_polynomial_regression/fitting_a_curve", "regression_04_polynomial_regression/the_expanded_design", "regression_04_polynomial_regression/choosing_the_degree", "regression_04_polynomial_regression/prediction_summary_and_options"]
+
+[[family]]
+path = "regress/regression/regression_05_worked_problems"
+page = "manual/regress/regression/regression_05_worked_problems.md"
+title = "Worked Problems"
+maxdepth = 2
+children = ["regression_05_worked_problems/a_calibration_line_and_its_uncertainty", "regression_05_worked_problems/dose_response_and_the_median_effective_dose", "regression_05_worked_problems/comparing_two_event_rates", "regression_05_worked_problems/reference_curves_with_quantiles", "regression_05_worked_problems/the_same_data_four_ways"]
 
 [[family]]
 path = "regress/regression"
 page = "manual/regress/regression.md"
 title = "regression"
 maxdepth = 2
-children = ["regression/regression_01_least_squares", "regression/regression_02_glm_quantile_polynomial"]
+children = ["regression/regression_01_least_squares", "regression/regression_02_generalised_linear_models", "regression/regression_03_quantile_regression", "regression/regression_04_polynomial_regression", "regression/regression_05_worked_problems"]
 
 [[symbol]]
 qualname = "regress::regression_01_least_squares::A first fit, checked by hand"
@@ -38,18 +59,67 @@ page = "manual/regress/regression/regression_01_least_squares/a_first_fit_checke
 summary = "A first fit, checked by hand"
 
 [[symbol]]
-qualname = "regress::regression_01_least_squares::The summary, and prediction"
+qualname = "regress::regression_01_least_squares::Shapes and inputs"
 kind = "page"
 family = "regress/regression/regression_01_least_squares"
-page = "manual/regress/regression/regression_01_least_squares/the_summary_and_prediction.md"
-summary = "The summary, and prediction"
+page = "manual/regress/regression/regression_01_least_squares/shapes_and_inputs.md"
+summary = "Shapes and inputs"
 
 [[symbol]]
-qualname = "regress::regression_01_least_squares::Options and missing data"
+qualname = "regress::regression_01_least_squares::Several predictors"
 kind = "page"
 family = "regress/regression/regression_01_least_squares"
-page = "manual/regress/regression/regression_01_least_squares/options_and_missing_data.md"
-summary = "Options and missing data"
+page = "manual/regress/regression/regression_01_least_squares/several_predictors.md"
+summary = "Several predictors"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Every number in the result"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/every_number_in_the_result.md"
+summary = "Every number in the result"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Residual diagnostics"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/residual_diagnostics.md"
+summary = "Residual diagnostics"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::The summary report"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/the_summary_report.md"
+summary = "The summary report"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Prediction and intervals"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/prediction_and_intervals.md"
+summary = "Prediction and intervals"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Options"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/options.md"
+summary = "Options"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Case weights"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/case_weights.md"
+summary = "Case weights"
+
+[[symbol]]
+qualname = "regress::regression_01_least_squares::Missing data"
+kind = "page"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/missing_data.md"
+summary = "Missing data"
 
 [[symbol]]
 qualname = "regress::regression_01_least_squares::Collinear predictors"
@@ -59,22 +129,169 @@ page = "manual/regress/regression/regression_01_least_squares/collinear_predicto
 summary = "Collinear predictors"
 
 [[symbol]]
-qualname = "regress::regression_02_glm_quantile_polynomial::Logistic and Poisson regression"
+qualname = "regress::regression_01_least_squares::Errors"
 kind = "page"
-family = "regress/regression/regression_02_glm_quantile_polynomial"
-page = "manual/regress/regression/regression_02_glm_quantile_polynomial/logistic_and_poisson_regression.md"
-summary = "Logistic and Poisson regression"
+family = "regress/regression/regression_01_least_squares"
+page = "manual/regress/regression/regression_01_least_squares/errors.md"
+summary = "Errors"
 
 [[symbol]]
-qualname = "regress::regression_02_glm_quantile_polynomial::Robust and conditional-quantile fits"
+qualname = "regress::regression_02_generalised_linear_models::Logistic regression"
 kind = "page"
-family = "regress/regression/regression_02_glm_quantile_polynomial"
-page = "manual/regress/regression/regression_02_glm_quantile_polynomial/robust_and_conditional_quantile_fits.md"
-summary = "Robust and conditional-quantile fits"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/logistic_regression.md"
+summary = "Logistic regression"
 
 [[symbol]]
-qualname = "regress::regression_02_glm_quantile_polynomial::Curves and cross terms"
+qualname = "regress::regression_02_generalised_linear_models::Poisson regression"
 kind = "page"
-family = "regress/regression/regression_02_glm_quantile_polynomial"
-page = "manual/regress/regression/regression_02_glm_quantile_polynomial/curves_and_cross_terms.md"
-summary = "Curves and cross terms"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/poisson_regression.md"
+summary = "Poisson regression"
+
+[[symbol]]
+qualname = "regress::regression_02_generalised_linear_models::Families and links"
+kind = "page"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/families_and_links.md"
+summary = "Families and links"
+
+[[symbol]]
+qualname = "regress::regression_02_generalised_linear_models::The normal family and least squares"
+kind = "page"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/the_normal_family_and_least_squares.md"
+summary = "The normal family and least squares"
+
+[[symbol]]
+qualname = "regress::regression_02_generalised_linear_models::Iteration controls and separation"
+kind = "page"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/iteration_controls_and_separation.md"
+summary = "Iteration controls and separation"
+
+[[symbol]]
+qualname = "regress::regression_02_generalised_linear_models::Deviance and model comparison"
+kind = "page"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/deviance_and_model_comparison.md"
+summary = "Deviance and model comparison"
+
+[[symbol]]
+qualname = "regress::regression_02_generalised_linear_models::Weights and offsets"
+kind = "page"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/weights_and_offsets.md"
+summary = "Weights and offsets"
+
+[[symbol]]
+qualname = "regress::regression_02_generalised_linear_models::Responses, the summary and errors"
+kind = "page"
+family = "regress/regression/regression_02_generalised_linear_models"
+page = "manual/regress/regression/regression_02_generalised_linear_models/responses_summary_and_errors.md"
+summary = "Responses, the summary and errors"
+
+[[symbol]]
+qualname = "regress::regression_03_quantile_regression::Median regression and outliers"
+kind = "page"
+family = "regress/regression/regression_03_quantile_regression"
+page = "manual/regress/regression/regression_03_quantile_regression/median_regression_and_outliers.md"
+summary = "Median regression and outliers"
+
+[[symbol]]
+qualname = "regress::regression_03_quantile_regression::Several quantiles"
+kind = "page"
+family = "regress/regression/regression_03_quantile_regression"
+page = "manual/regress/regression/regression_03_quantile_regression/several_quantiles.md"
+summary = "Several quantiles"
+
+[[symbol]]
+qualname = "regress::regression_03_quantile_regression::Covariance choices"
+kind = "page"
+family = "regress/regression/regression_03_quantile_regression"
+page = "manual/regress/regression/regression_03_quantile_regression/covariance_choices.md"
+summary = "Covariance choices"
+
+[[symbol]]
+qualname = "regress::regression_03_quantile_regression::Optimiser controls"
+kind = "page"
+family = "regress/regression/regression_03_quantile_regression"
+page = "manual/regress/regression/regression_03_quantile_regression/optimiser_controls.md"
+summary = "Optimiser controls"
+
+[[symbol]]
+qualname = "regress::regression_03_quantile_regression::Case weights"
+kind = "page"
+family = "regress/regression/regression_03_quantile_regression"
+page = "manual/regress/regression/regression_03_quantile_regression/case_weights.md"
+summary = "Case weights"
+
+[[symbol]]
+qualname = "regress::regression_03_quantile_regression::Prediction, the summary and options"
+kind = "page"
+family = "regress/regression/regression_03_quantile_regression"
+page = "manual/regress/regression/regression_03_quantile_regression/prediction_summary_and_options.md"
+summary = "Prediction, the summary and options"
+
+[[symbol]]
+qualname = "regress::regression_04_polynomial_regression::Fitting a curve"
+kind = "page"
+family = "regress/regression/regression_04_polynomial_regression"
+page = "manual/regress/regression/regression_04_polynomial_regression/fitting_a_curve.md"
+summary = "Fitting a curve"
+
+[[symbol]]
+qualname = "regress::regression_04_polynomial_regression::The expanded design"
+kind = "page"
+family = "regress/regression/regression_04_polynomial_regression"
+page = "manual/regress/regression/regression_04_polynomial_regression/the_expanded_design.md"
+summary = "The expanded design"
+
+[[symbol]]
+qualname = "regress::regression_04_polynomial_regression::Choosing the degree"
+kind = "page"
+family = "regress/regression/regression_04_polynomial_regression"
+page = "manual/regress/regression/regression_04_polynomial_regression/choosing_the_degree.md"
+summary = "Choosing the degree"
+
+[[symbol]]
+qualname = "regress::regression_04_polynomial_regression::Prediction, the summary and options"
+kind = "page"
+family = "regress/regression/regression_04_polynomial_regression"
+page = "manual/regress/regression/regression_04_polynomial_regression/prediction_summary_and_options.md"
+summary = "Prediction, the summary and options"
+
+[[symbol]]
+qualname = "regress::regression_05_worked_problems::A calibration line and its uncertainty"
+kind = "page"
+family = "regress/regression/regression_05_worked_problems"
+page = "manual/regress/regression/regression_05_worked_problems/a_calibration_line_and_its_uncertainty.md"
+summary = "A calibration line and its uncertainty"
+
+[[symbol]]
+qualname = "regress::regression_05_worked_problems::Dose-response and the median effective dose"
+kind = "page"
+family = "regress/regression/regression_05_worked_problems"
+page = "manual/regress/regression/regression_05_worked_problems/dose_response_and_the_median_effective_dose.md"
+summary = "Dose-response and the median effective dose"
+
+[[symbol]]
+qualname = "regress::regression_05_worked_problems::Comparing two event rates"
+kind = "page"
+family = "regress/regression/regression_05_worked_problems"
+page = "manual/regress/regression/regression_05_worked_problems/comparing_two_event_rates.md"
+summary = "Comparing two event rates"
+
+[[symbol]]
+qualname = "regress::regression_05_worked_problems::Reference curves with quantiles"
+kind = "page"
+family = "regress/regression/regression_05_worked_problems"
+page = "manual/regress/regression/regression_05_worked_problems/reference_curves_with_quantiles.md"
+summary = "Reference curves with quantiles"
+
+[[symbol]]
+qualname = "regress::regression_05_worked_problems::The same data, four ways"
+kind = "page"
+family = "regress/regression/regression_05_worked_problems"
+page = "manual/regress/regression/regression_05_worked_problems/the_same_data_four_ways.md"
+summary = "The same data, four ways"

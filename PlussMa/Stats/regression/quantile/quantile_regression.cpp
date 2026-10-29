@@ -1,5 +1,9 @@
 #include "pluss/subsp/stats/regression.h"
 
+#include "../design_rank.h"
+#include "../predict_input.h"
+#include "../summary_labels.h"
+
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
@@ -160,12 +164,14 @@ std::string fmt_short_(double x) {
 struct CleanData {
   Series y = pluss::series::undefined();
   Series x = pluss::series::undefined();
+  Series w = pluss::series::undefined();
   std::int64_t n = 0;
   std::int64_t p = 0;
   std::int64_t dropped = 0;
 };
 
-CleanData sanitize_inputs_(const Series& y, const Series& x, bool drop_missing, Config cfg, const char* op) {
+CleanData sanitize_inputs_(const Series& y, const Series& x, const QuantileOptions& options, Config cfg, const char* op) {
+  const bool drop_missing = options.drop_missing;
   const auto out_cfg = f64_cfg_like_(x, cfg);
   const Series yv = as_vector_(y, op).to(out_cfg.platform, out_cfg.dtype).contiguous();
   const Series xm = as_matrix_(x, op).to(out_cfg.platform, out_cfg.dtype).contiguous();
@@ -175,16 +181,23 @@ CleanData sanitize_inputs_(const Series& y, const Series& x, bool drop_missing, 
   const std::int64_t p = xm.sizes()[1];
   PLUSS_CHECK(n > 0 && p >= 0, std::string(op) + ": empty y or X");
 
-  const Series row_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false));
+  const Series wv = options.weights.defined() ? as_vector_(options.weights, op).to(out_cfg.platform, out_cfg.dtype).contiguous()
+                                              : pluss::series::ones({n}, out_cfg);
+  PLUSS_CHECK(wv.numel() == n, std::string(op) + ": weights must have one value per row");
+  PLUSS_CHECK(scalar_(wv.lt(0.0).logical_and(wv.isfinite()).logical_not().all()) > 0.5, std::string(op) + ": weights must be non-negative");
+
+  const Series finite_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false)).logical_and(wv.isfinite());
+  const bool all_ok = scalar_(finite_ok.all()) > 0.5;
+  PLUSS_CHECK(all_ok || drop_missing, std::string(op) + ": non-finite values found and drop_missing=false");
+  const Series row_ok = finite_ok.logical_and(wv.gt(0.0));  // a row of weight zero does not take part in the fit
   const std::int64_t n_clean = static_cast<std::int64_t>(std::llround(scalar_(row_ok.to(ScalarType::Float64).sum())));
   PLUSS_CHECK(n_clean > 0, std::string(op) + ": no observations left after filtering missing values");
-  const bool all_ok = scalar_(row_ok.all()) > 0.5;
-  PLUSS_CHECK(all_ok || drop_missing, std::string(op) + ": non-finite values found and drop_missing=false");
 
   const Series idx = row_ok.nonzero().reshape({n_clean}).to(out_cfg.platform, ScalarType::Int64);
   return CleanData{
       .y = yv.index_select(0, idx),
       .x = xm.index_select(0, idx),
+      .w = wv.index_select(0, idx),
       .n = n_clean,
       .p = p,
       .dropped = n - n_clean,
@@ -222,54 +235,77 @@ std::vector<std::string> build_coef_names_(const std::vector<std::string>& predi
   return names;
 }
 
-double quantile_value_(const Series& values, double tau, Config cfg) {
+// The tau-quantile of `values` with case weights, by linear interpolation between order statistics of the sample in which each value is
+// repeated `weight` times; with unit weights this is the usual interpolated sample quantile.
+double quantile_value_(const Series& values, const Series& weights, double tau, Config cfg) {
   const std::int64_t n = values.numel();
   if (n <= 0) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  const Series sorted = values.reshape({n}).sort(0, false, false).to(f64_cfg_like_(values, cfg).platform, ScalarType::Float64);
+  const auto vh = values.reshape({n}).to(pluss::pCPU, ScalarType::Float64).host<double>();
+  const auto wh = weights.reshape({n}).to(pluss::pCPU, ScalarType::Float64).host<double>();
+  std::vector<std::pair<double, double>> pairs;
+  pairs.reserve(static_cast<std::size_t>(n));
+  double total = 0.0;
+  for (std::int64_t i = 0; i < n; ++i) {
+    pairs.emplace_back(vh[static_cast<std::size_t>(i)], wh[static_cast<std::size_t>(i)]);
+    total += wh[static_cast<std::size_t>(i)];
+  }
+  std::sort(pairs.begin(), pairs.end());
+  (void)cfg;
+  // the value at index j of the expanded sample: the first item whose cumulative weight exceeds j
+  auto value_at = [&](double index) {
+    double cumulative = 0.0;
+    for (const auto& pr : pairs) {
+      cumulative += pr.second;
+      if (cumulative > index + 1e-12) {
+        return pr.first;
+      }
+    }
+    return pairs.back().first;
+  };
   if (tau <= 0.0) {
-    return scalar_(sorted.select(0, 0).reshape({1}));
+    return pairs.front().first;
   }
   if (tau >= 1.0) {
-    return scalar_(sorted.select(0, n - 1).reshape({1}));
+    return pairs.back().first;
   }
-  const double pos = tau * static_cast<double>(n - 1);
-  const std::int64_t lo = static_cast<std::int64_t>(std::floor(pos));
-  const std::int64_t hi = static_cast<std::int64_t>(std::ceil(pos));
-  const double vlo = scalar_(sorted.select(0, lo).reshape({1}));
+  const double pos = tau * std::max(total - 1.0, 0.0);
+  const double lo = std::floor(pos);
+  const double hi = std::ceil(pos);
+  const double vlo = value_at(lo);
   if (lo == hi) {
     return vlo;
   }
-  const double vhi = scalar_(sorted.select(0, hi).reshape({1}));
-  const double w = pos - static_cast<double>(lo);
-  return (1.0 - w) * vlo + w * vhi;
+  const double w = pos - lo;
+  return (1.0 - w) * vlo + w * value_at(hi);
 }
 
-double quantile_loss_(const Series& resid, double tau, Config cfg) {
+double quantile_loss_(const Series& resid, const Series& weights, double tau, Config cfg) {
   const Series r = resid.reshape({resid.numel(), 1}).to(f64_cfg_like_(resid, cfg).platform, ScalarType::Float64);
   const Series pos = r.ge(0.0).where(r.mul(tau), r.mul(tau - 1.0));
-  return scalar_(pos.sum());
+  return scalar_(pos.mul(weights.reshape({resid.numel(), 1})).sum());
 }
 
 // Density of the residuals at zero, by an Epanechnikov kernel with the Hall-Sheather bandwidth (Koenker 2005; the estimator used by the
 // standard quantile-regression packages). The bandwidth is scaled by min(sd(y), IQR(residuals) / 1.34), so a few wild observations do not
 // inflate it and with it the standard errors, as a bandwidth based on the residual standard deviation would.
-double density_at_zero_(const Series& resid, const Series& endog, double tau, Config cfg) {
+double density_at_zero_(const Series& resid, const Series& endog, const Series& weights, double tau, Config cfg) {
   const std::int64_t n = resid.numel();
   if (n <= 0) {
     return std::numeric_limits<double>::quiet_NaN();
   }
   const Series r = resid.reshape({n}).to(f64_cfg_like_(resid, cfg).platform, ScalarType::Float64);
-  const double dn = static_cast<double>(n);
+  const Series w = weights.reshape({n}).to(r.platform(), ScalarType::Float64);
+  const double dn = scalar_(w.sum());  // the effective number of observations
   const double z = norm_quantile_(tau, cfg);
   const double phi = std::exp(-0.5 * z * z) / std::sqrt(2.0 * std::numbers::pi);
   const double hall_sheather = std::pow(dn, -1.0 / 3.0) * std::pow(norm_quantile_(0.975, cfg), 2.0 / 3.0) *
                                std::pow(1.5 * phi * phi / (2.0 * z * z + 1.0), 1.0 / 3.0);
-  const double iqr = quantile_value_(r, 0.75, cfg) - quantile_value_(r, 0.25, cfg);
+  const double iqr = quantile_value_(r, w, 0.75, cfg) - quantile_value_(r, w, 0.25, cfg);
   const Series y = endog.reshape({n}).to(r.platform(), ScalarType::Float64);
-  const double ymean = scalar_(y.mean());
-  const double ysd = std::sqrt(std::max(0.0, scalar_(y.sub(ymean).mul(y.sub(ymean)).mean())));
+  const double ymean = scalar_(y.mul(w).sum()) / dn;
+  const double ysd = std::sqrt(std::max(0.0, scalar_(y.sub(ymean).pow(2.0).mul(w).sum()) / dn));
   double bw = hall_sheather;
   while ((tau - bw <= 0.0 || tau + bw >= 1.0) && bw > 1e-12) {
     bw *= 0.5;  // keep tau +- bw inside (0, 1): for an extreme tau and a small sample the rule alone would leave the unit interval
@@ -281,7 +317,7 @@ double density_at_zero_(const Series& resid, const Series& endog, double tau, Co
   }
   const Series u = r.div(h);
   const Series kernel = u.abs().le(1.0).where(u.mul(u).mul(-1.0).add(1.0).mul(0.75), pluss::series::zeros_like(u));
-  return std::max(kMinInfo, scalar_(kernel.sum()) / (dn * h));
+  return std::max(kMinInfo, scalar_(kernel.mul(w).sum()) / (dn * h));
 }
 
 } // namespace
@@ -290,7 +326,7 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
   const char* op = "subsp::stats::regression::quantile_fit";
   check_options_(options, op);
 
-  const auto clean = sanitize_inputs_(y, x, options.drop_missing, cfg, op);
+  const auto clean = sanitize_inputs_(y, x, options, cfg, op);
   PLUSS_CHECK(clean.p > 0 || options.add_intercept, std::string(op) + ": a model needs at least one predictor or an intercept");
   const auto out_cfg = f64_cfg_like_(clean.x, cfg);
 
@@ -300,7 +336,15 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
   const std::int64_t k = X.sizes()[1];
   PLUSS_CHECK(n >= k, std::string(op) + ": requires n >= number of parameters");
 
-  Series beta = pluss::subsp::math::linalg::pinverse(X, options.rcond).matmul(ycol);
+  const Series pw = clean.w.reshape({n, 1});
+  const Series sqrt_pw = pw.sqrt();
+  const Series Xp = X.mul(sqrt_pw);
+
+  // One cutoff defines both the rank and the pseudoinverse that produces the coefficients.
+  const auto drank = detail::design_rank(Xp, options.rcond);
+  const std::int64_t rank = drank.rank;
+
+  Series beta = pluss::subsp::math::linalg::pinverse(Xp, drank.pinv_rcond).matmul(ycol.mul(sqrt_pw));
   Series fitted = X.matmul(beta);
   Series resid = ycol.sub(fitted);
 
@@ -314,11 +358,11 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
     const Series base = rcol.ge(0.0).where(
         pluss::series::full({n, 1}, options.tau, out_cfg),
         pluss::series::full({n, 1}, 1.0 - options.tau, out_cfg));
-    const Series wcol = base.div(rcol.abs().maximum(options.eps));
+    const Series wcol = base.div(rcol.abs().maximum(options.eps)).mul(pw);
     const Series sw = wcol.sqrt();
     const Series Xw = X.mul(sw);
     const Series yw = ycol.mul(sw);
-    const Series beta_new = pluss::subsp::math::linalg::pinverse(Xw, options.rcond).matmul(yw);
+    const Series beta_new = pluss::subsp::math::linalg::pinverse(Xw, drank.pinv_rcond).matmul(yw);
 
     const double max_abs_delta = scalar_(beta_new.sub(beta).abs().max());
     const double max_abs_beta = scalar_(beta_new.abs().max());
@@ -337,22 +381,16 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
   }
 
   const Series resid_vec = resid.reshape({n});
-  const double obj = quantile_loss_(resid_vec, options.tau, out_cfg);
-  const double q0 = quantile_value_(ycol.reshape({n}), options.tau, out_cfg);
-  const double obj0 = quantile_loss_(ycol.reshape({n}).sub(q0), options.tau, out_cfg);
+  const double obj = quantile_loss_(resid_vec, pw, options.tau, out_cfg);
+  const double q0 = quantile_value_(ycol.reshape({n}), pw, options.tau, out_cfg);
+  const double obj0 = quantile_loss_(ycol.reshape({n}).sub(q0), pw, options.tau, out_cfg);
   const double pseudo_r2 = (obj0 > kEps) ? (1.0 - obj / obj0) : std::numeric_limits<double>::quiet_NaN();
 
-  const auto svd_x = pluss::subsp::math::linalg::svd(X, false);
-  const Series sing = svd_x.S.reshape({svd_x.S.numel()}).to(out_cfg.platform, out_cfg.dtype);
-  const double smax = scalar_(sing.max());
-  const double smin = scalar_(sing.min());
-  const double rank_tol = options.rcond * std::max<std::int64_t>(n, k) * std::max(smax, 1.0);
-  const std::int64_t rank = static_cast<std::int64_t>(std::llround(scalar_(sing.gt(rank_tol).sum())));
   const std::int64_t df_resid = std::max<std::int64_t>(0, n - rank);
   const std::int64_t df_model = options.add_intercept ? std::max<std::int64_t>(0, rank - 1) : rank;
 
-  const double f0 = density_at_zero_(resid_vec, ycol, options.tau, out_cfg);
-  const Series pinv_x = pluss::subsp::math::linalg::pinverse(X, options.rcond);
+  const double f0 = density_at_zero_(resid_vec, ycol, pw, options.tau, out_cfg);
+  const Series pinv_x = pluss::subsp::math::linalg::pinverse(Xp, drank.pinv_rcond);  // (X'WX)^-1 = pinv_x pinv_x'
   const Series xtx_inv = pinv_x.matmul(pinv_x.transpose(0, 1));
   Series cov = xtx_inv.mul(options.tau * (1.0 - options.tau) / std::max(kMinInfo, f0 * f0));
   if (options.covariance == QuantileCovariance::Robust) {
@@ -362,7 +400,7 @@ QuantileFitResult quantile_fit(const Series& y, const Series& x, const QuantileO
     const Series d = resid.reshape({n, 1}).gt(0.0).where(
         pluss::series::full({n, 1}, up * up, out_cfg),
         pluss::series::full({n, 1}, down * down, out_cfg));
-    const Series xtdx = X.transpose(0, 1).matmul(X.mul(d));
+    const Series xtdx = X.transpose(0, 1).matmul(X.mul(d.mul(pw)));
     cov = xtx_inv.matmul(xtdx).matmul(xtx_inv);
   }
   const Series std_err = cov.diagonal().reshape({k}).maximum(0.0).sqrt();
@@ -427,7 +465,7 @@ Series quantile_predict(const QuantileFitResult& fit, const Series& x, Config cf
   const char* op = "subsp::stats::regression::quantile_predict";
   PLUSS_CHECK(fit.coefficients.defined(), std::string(op) + ": fit.coefficients is undefined");
 
-  const Series xm = as_matrix_(x, op).to(fit.coefficients.platform(), ScalarType::Float64);
+  const Series xm = detail::prediction_matrix(x, fit.num_predictors, fit.k_params, op).to(fit.coefficients.platform(), ScalarType::Float64);
   const auto out_cfg = f64_cfg_like_(fit.coefficients, cfg);
 
   Series design = xm;
@@ -479,8 +517,8 @@ std::ostream& print_quantile_summary(std::ostream& os, const QuantileFitResult& 
      << std::setw(12) << "std err"
      << std::setw(12) << "t"
      << std::setw(12) << "P>|t|"
-     << std::setw(12) << "[0.025"
-     << std::setw(12) << "0.975]"
+     << std::setw(12) << detail::ci_lower_label(fit.alpha)
+     << std::setw(12) << detail::ci_upper_label(fit.alpha)
      << '\n';
   os << "------------------------------------------------------------------------------\n";
 

@@ -55,7 +55,7 @@ struct SeriesCompareReport {
 }
 
 [[nodiscard]] inline double max_abs_diff(const Series& lhs, const Series& rhs) {
-  return compare_series(lhs, rhs).max_abs_diff.item<double>();
+  return compare_series(lhs, rhs).max_abs_diff.host<double>().front();
 }
 
 struct LinearParameters {
@@ -64,7 +64,7 @@ struct LinearParameters {
   bool fit_intercept = false;
 };
 
-[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
+[[nodiscard]] inline Series as_stratify_series(const pluss::table::Slate& slate);
 
 struct CrossValidationReport {
   CrossAssessReport report{};
@@ -284,7 +284,7 @@ namespace metrics::detail {
   // 1-element Series per metric.
   const std::size_t n = std::min(static_cast<std::size_t>(report.values.numel()), requested.size());
   for (std::size_t i = 0; i < n; ++i) {
-    const Series scalar = report.values.narrow_copy(0, static_cast<std::int64_t>(i), 1);
+    const Series scalar = report.values.narrow_copy(0, static_cast<std::int64_t>(i), 1).reshape(std::vector<std::int64_t>{});
     switch (requested[i]) {
       case MetricKind::Accuracy: report.accuracy = scalar; break;
       case MetricKind::BalancedAccuracy: report.balanced_accuracy = scalar; break;
@@ -500,8 +500,8 @@ namespace regression {
   mean_values.reserve(mean.requested.size());
   stdev_values.reserve(mean.requested.size());
 
-  const auto mean_vec = mean.values.to(pluss::pCPU, ScalarType::Float64).reshape({mean.values.numel()}).to_vec<double>();
-  const auto stdev_vec = stdev.values.to(pluss::pCPU, ScalarType::Float64).reshape({stdev.values.numel()}).to_vec<double>();
+  const auto mean_vec = mean.values.to(pluss::pCPU, ScalarType::Float64).reshape({mean.values.numel()}).host<double>().array().data;
+  const auto stdev_vec = stdev.values.to(pluss::pCPU, ScalarType::Float64).reshape({stdev.values.numel()}).host<double>().array().data;
   for (std::size_t i = 0; i < mean.requested.size(); ++i) {
     metric_names.push_back(metric_kind_name_(mean.requested[i]));
     mean_values.push_back(mean_vec[i]);
@@ -511,9 +511,9 @@ namespace regression {
   const Config f64_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const auto count = static_cast<std::int64_t>(metric_names.size());
   return pluss::table::DataFrame({
-      {"metric", pluss::table::Thread(pluss::make_note(metric_names))},
-      {"mean", pluss::table::Thread(pluss::make_series(mean_values, {count}, f64_cfg))},
-      {"stdev", pluss::table::Thread(pluss::make_series(stdev_values, {count}, f64_cfg))},
+      {"metric", pluss::table::Slate(pluss::make_note(metric_names))},
+      {"mean", pluss::table::Slate(pluss::make_series(mean_values, {count}, f64_cfg))},
+      {"stdev", pluss::table::Slate(pluss::make_series(stdev_values, {count}, f64_cfg))},
   }).title("Cross-Validation Results");
 }
 
@@ -538,7 +538,7 @@ namespace regression {
   DataFrameBatchOptions options{};
   options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
-  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
   return options;
 }
@@ -574,7 +574,7 @@ namespace regression {
 }
 
 [[nodiscard]] inline BalancePlan plan_balance(const pluss::table::DataFrame& x,
-                                              const pluss::table::Thread& y,
+                                              const pluss::table::Slate& y,
                                               const BalanceTarget& target,
                                               RandomState random = {}) {
   return plan_balance(x, as_stratify_series(y), target, random);
@@ -645,7 +645,7 @@ namespace metrics::detail {
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const ModelSpec& spec,
                                                           const pluss::table::DataFrame& x,
-                                                          const pluss::table::Thread& y,
+                                                          const pluss::table::Slate& y,
                                                           selection::CrossValOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
@@ -678,7 +678,7 @@ namespace metrics::detail {
 
 [[nodiscard]] inline Series cross_validate_scores(const ModelSpec& spec,
                                                   const pluss::table::DataFrame& x,
-                                                  const pluss::table::Thread& y,
+                                                  const pluss::table::Slate& y,
                                                   MetricKind metric,
                                                   selection::CrossValOptions cv = {},
                                                   TrainOptions train_options = {},
@@ -688,7 +688,7 @@ namespace metrics::detail {
 
 [[nodiscard]] inline double cross_validate_score(const ModelSpec& spec,
                                                  const pluss::table::DataFrame& x,
-                                                 const pluss::table::Thread& y,
+                                                 const pluss::table::Slate& y,
                                                  MetricKind metric,
                                                  selection::CrossValOptions cv = {},
                                                  TrainOptions train_options = {},
@@ -698,8 +698,8 @@ namespace metrics::detail {
 
 } // namespace metrics::detail
 
-[[nodiscard]] inline Series metrics::as_stratify_series(const pluss::table::Thread& thread) {
-  return ::pluss::ai::lymph::prep::as_stratify_series(thread);
+[[nodiscard]] inline Series metrics::as_stratify_series(const pluss::table::Slate& slate) {
+  return ::pluss::ai::lymph::prep::as_stratify_series(slate);
 }
 
 } // namespace pluss::ai::lymph

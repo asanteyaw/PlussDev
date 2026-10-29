@@ -1,0 +1,139 @@
+<!-- generated from parity_and_the_fundamental_theorem.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Parity and the fundamental theorem
+
+[Back to Integrals](../calculus_04_integrals.md)
+
+Two exact facts of calculus are built into the integral operators, and they make some integrals and some derivatives of integrals exact even when no primitive is available.
+
+## Odd integrands over a symmetric interval
+
+An odd function integrates to zero over an interval symmetric about 0. When the integrand is recognisably odd in the integrated variable, `integral(x, -c, c)` is zero exactly, with no quadrature and no rounding, and the result is the zero array with the shape of the remaining variables. Oddness is recognised structurally, by tracking parity through the formula: `x`, odd powers, `sin`, `tan`, `sinh` and `tanh` are odd; `cos`, `cosh`, `abs` and even powers are even; a product or quotient is odd when exactly one factor is odd; a sum is odd when every term is; and an odd function of an odd function, such as `sin(2x)` or `sin(x)³`, is odd. This covers integrands without any closed-form primitive, such as `tanh(x)` or `x exp(−x²)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *kind(const math::Function &f) { return f.provenance() == math::Provenance::Structural ? "exact" : "quadrature"; }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto y = pluss::make_series({0.25, 0.5, 1.0});
+
+  // x^2 sin(x y) exp(cos x) is odd in x: even * odd * even.
+  const math::Function odd = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.pow(2) * (x * y).sin() * x.cos().exp(); });
+  const math::Function symmetric = operators::integral("x", -2.0, 2.0)(odd);
+  out.writeln("odd integrand, [-2, 2]  (", kind(symmetric), ")", symmetric({y}).pull<double>());
+
+  // x^2 exp(cos x) is even: no shortcut, so it is integrated numerically.
+  const math::Function even = math::function({"x"}, [](math::Function x) { return x.pow(2) * x.cos().exp(); });
+  const math::Function even_integral = operators::integral("x", -2.0, 2.0)(even);
+  out.writeln("even integrand, [-2, 2] (", kind(even_integral), ")", even_integral().item<double>());
+
+  // An odd integrand over an interval that is not symmetric: the exact rules apply (sin has a primitive).
+  const math::Function sine = math::function({"x"}, [](math::Function x) { return x.sin(); });
+  const math::Function lopsided = operators::integral("x", -2.0, 3.0)(sine);
+  out.writeln("sin x over [-2, 3]      (", kind(lopsided), ")", lopsided().item<double>(), " cos(-2) - cos(3) = 0.57384566");
+}
+```
+
+Output
+
+```text
+odd integrand, [-2, 2]  ( exact ) [0.00000000, 0.00000000, 0.00000000]
+even integrand, [-2, 2] ( quadrature ) 6.04255169
+sin x over [-2, 3]      ( exact ) 0.57384566  cos(-2) - cos(3) = 0.57384566
+```
+
+The integrand `x² sin(xy) exp(cos x)` is a product of an even factor (`x²`), an odd one (`sin(xy)`, odd in `x` for each `y`) and an even one (`exp(cos x)`), so it is odd, and the integral over [−2, 2] is exactly zero for each of the three values of `y`, with the shape of `y`. No quadrature ran. The even integrand over the same interval has no parity shortcut and is integrated numerically; that integral is 6.0426, not zero. The last line is an integral over a symmetric-looking but not symmetric interval, [−2, 3]: parity does not apply, but `sin` has an exact primitive, so the value is exact and equals cos(−2) − cos(3).
+
+## The fundamental theorem
+
+Differentiating an anchored integral with respect to its upper limit returns the integrand, whether or not the integral is exact. The operator applies the theorem directly: `differential(x)` of `integral(x, a)(f)` is `f`, not a numerical derivative of a numerical integral. Higher orders follow, since the result is again a function: the second derivative is the derivative of `f`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function kernel = math::function({"x"}, [](math::Function x) { return (-x.pow(2)).exp(); });
+  const math::Function anchored = operators::integral("x", 0.0)(kernel);
+  const math::Function recovered = operators::differential("x")(anchored);
+  const math::Function slope = operators::differential("x", 2)(anchored);
+  const math::Function kernel_slope = operators::differential("x")(kernel);
+
+  const auto x = pluss::make_series({0.1, 0.25, 0.75, 1.0});
+  out.writeln("provenance of the integral:", anchored.provenance() == math::Provenance::Quadrature ? "quadrature" : "exact",
+              ", of its derivative:", recovered.provenance() == math::Provenance::Structural ? "exact" : "quadrature");
+  out.writeln("d/dx of the integral ", recovered({x}).pull<double>());
+  out.writeln("the integrand        ", kernel({x}).pull<double>());
+  out.writeln("second derivative    ", slope({x}).pull<double>());
+  out.writeln("integrand's slope    ", kernel_slope({x}).pull<double>());
+}
+```
+
+Output
+
+```text
+provenance of the integral: quadrature , of its derivative: exact
+d/dx of the integral  [0.9900498337, 0.9394130628, 0.5697828247, 0.3678794412]
+the integrand         [0.9900498337, 0.9394130628, 0.5697828247, 0.3678794412]
+second derivative     [-0.1980099667, -0.4697065314, -0.8546742371, -0.7357588823]
+integrand's slope     [-0.1980099667, -0.4697065314, -0.8546742371, -0.7357588823]
+```
+
+The derivative of the numerical integral is the integrand: the two rows coincide to all ten printed digits, and the derivative is `Structural` even though the integral it came from is not. The same holds for the second derivative, which is the integrand's own slope. No quadrature is differentiated; the fundamental theorem removes the integral entirely.
+
+## Differentiating under the integral sign
+
+For a definite integral with a parameter, the derivative with respect to the parameter is the integral of the derivative (Leibniz's rule), and the operator applies it. The derivative of ∫₀¹ exp(−(ax)²) dx with respect to `a` is ∫₀¹ −2a x² exp(−(ax)²) dx, which is still a numerical integral; its closed form, for comparison, is −(√π erf(a)/(2a²) − exp(−a²)/a).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function f = math::function({"x", "a"}, [](math::Function x, math::Function a) { return (-(x * a).pow(2)).exp(); });
+  const math::Function area = operators::integral("x", 0.0, 1.0)(f);
+  const math::Function sensitivity = operators::differential("a")(area);
+
+  const auto a = pluss::make_series({1.0, 2.0});
+  out.writeln("d(integral)/da   ", sensitivity({a}).pull<double>());
+  std::vector<double> closed;
+  for (const double value : a.pull<double>()) closed.push_back(-(std::sqrt(M_PI) * std::erf(value) / (2.0 * value * value) - std::exp(-value * value) / value));
+  out.writeln("closed form      ", closed);
+  out.writeln("provenance:", sensitivity.provenance() == math::Provenance::Quadrature ? "quadrature" : "exact");
+}
+```
+
+Output
+
+```text
+d(integral)/da    [-0.3789446916, -0.2113625282]
+closed form       [-0.3789446916, -0.2113625282]
+provenance: quadrature
+```
+
+The sensitivity of the integral to the parameter agrees with the closed form to all ten digits. It is itself a numerical integral (`Quadrature`), of the differentiated integrand ∂/∂a exp(−(ax)²), evaluated for both values of `a` in one call. This is the way to get a derivative of an integral-valued function when the integral has no closed form, and it makes such functions usable in anything that needs sensitivities.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

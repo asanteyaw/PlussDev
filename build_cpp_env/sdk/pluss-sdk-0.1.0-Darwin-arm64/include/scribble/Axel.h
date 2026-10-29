@@ -54,7 +54,7 @@ public:
   Axel fields(const NameRange& keys) const;
   AxelFieldAxisAccessor fieldaxis() const;
   AxelCastAccessor cast() const;
-  AxelCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  AxelCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
   AxelNoteAccessor nt() const;
   AxelTimelineAccessor tl() const;
   Registry registry(std::int64_t i) const;
@@ -85,7 +85,6 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Axel fillnull(const pluss::Timeline& value) const;
-  Axel fillnull(const pluss::TimeIndex& value) const;
   Axel dropnull() const;
   Axel distinct(pluss::kindle::DistinctOptions options = {}) const;
   Axel freq(pluss::kindle::FreqOptions options = {}) const;
@@ -118,7 +117,7 @@ public:
   Axel series() const;
   Axel note() const;
   Axel timeline() const;
-  Axel timeindex() const;
+  Axel duration() const;
   Axel mixed() const;
   Axel nulls() const;
   Axel empty() const;
@@ -131,17 +130,17 @@ class AxelCastAccessor {
 public:
   explicit AxelCastAccessor(Axel base,
                             std::vector<std::string> keys,
-                            pluss::table::ThreadCastOptions options = {});
+                            pluss::table::SlateCastOptions options = {});
 
   Axel series() const;
   Axel note() const;
   Axel timeline() const;
-  Axel timeindex() const;
+  Axel duration() const;
 
 private:
   Axel base_{};
   std::vector<std::string> keys_{};
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class AxelNoteAccessor {
@@ -221,7 +220,6 @@ public:
   Axel tz(std::string_view name) const;
   Axel localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Axel utc() const;
-  Axel index(bool require_sorted = true) const;
 
 private:
   Axel base_{};

@@ -85,6 +85,8 @@ skewed: skewness 2.4012, kurtosis 9.6191, JB 557.3073, p 0.0000 (reject)
 heavy-tailed: skewness -0.8449, kurtosis 6.3158, JB 115.4137, p 0.0000 (reject)
 ```
 
+The normal sample keeps the null (p 0.31) with skewness near 0 and kurtosis near 3, the values a normal distribution has. The skewed sample, a squared normal, has skewness 2.40 and kurtosis 9.62, and the heavy-tailed sample has kurtosis 6.32; both are rejected with p-values that print as 0.0000. The statistic is built from exactly these two numbers, `JB = n/6 * (skewness^2 + (kurtosis - 3)^2 / 4)`, so the result always says which departure drove the rejection.
+
 ### Example 2
 
 A small sample: the finite-sample critical value is not the chi-squared one.
@@ -112,6 +114,8 @@ Output
 n 8, JB 0.7251, p 0.4093, 5% critical value 2.0938 (the chi-squared limit would be 5.9915)
 ```
 
+With only 8 observations the large-sample chi-squared limit is not a safe guide: the library uses a finite-sample critical value, 2.09 here, where the chi-squared limit would be 5.99. The test statistic of 0.73 is far below it, so the null is kept, and the p-value 0.41 comes from the same finite-sample reference.
+
 ### Example 3
 
 A stricter level.
@@ -137,6 +141,8 @@ Output
 ```text
 JB 25.2657, critical 12.4959, p 0.0021 (reject)
 ```
+
+At a stricter level the critical value rises to 12.50. The statistic 25.27 still exceeds it, and the p-value 0.0021 agrees: the sample is not normal at the 1% level either.
 
 ## See Also
 

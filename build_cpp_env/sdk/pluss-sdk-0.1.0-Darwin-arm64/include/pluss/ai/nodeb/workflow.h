@@ -98,8 +98,19 @@ public:
   void clear();
 
 private:
+  struct StringHash {
+    using is_transparent = void;
+
+    [[nodiscard]] std::size_t operator()(std::string_view value) const noexcept {
+      return std::hash<std::string_view>{}(value);
+    }
+    [[nodiscard]] std::size_t operator()(const std::string& value) const noexcept {
+      return (*this)(std::string_view(value));
+    }
+  };
+
   std::vector<std::string> values_{};
-  std::unordered_map<std::string, StringId> text_to_id_{};
+  std::unordered_map<std::string, StringId, StringHash, std::equal_to<>> text_to_id_{};
   std::unordered_map<StringId, std::size_t> id_to_index_{};
 };
 
@@ -241,7 +252,7 @@ public:
     PLUSS_CALL_GUARD();
     if (!lines.empty()) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::IStage::load_state_lines: this stage does not accept persisted state.");
+          "nlp::IStage::load_state_lines: this stage does not accept persisted state.");
     }
   }
 };

@@ -1533,7 +1533,7 @@ Slate DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> featur
   for (const auto& name : names) {
     const auto it = src.name_to_idx_.find(name);
     PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + name + "'");
-    values.push_back(src.columns_[it->second].ndistinct(dropnull).as_series().item<std::int64_t>());
+    values.push_back(src.columns_[it->second].ndistinct(dropnull).as_series().host<std::int64_t>().front());
   }
 
   return make_i64_slate(values)
@@ -1582,7 +1582,7 @@ Slate DataFrame::freq(FreqOptions options) const {
     if (out.size() == 0) {
       out = make_f64_slate({}).label().set(labels);
     } else {
-      const auto total = out.sum().slate().as_series().item<double>();
+      const auto total = out.sum().slate().as_series().host<double>().front();
       out = out.div(total).label().set(labels);
     }
     return out.name("prop");
@@ -2545,9 +2545,9 @@ DataFrameView DataFrame::describe(bool render) const {
     if (observed_n > 0) {
       mean = observed_series.mean().item<double>();
       minv = observed_series.min().item<double>();
-      q25 = observed_series.quantile(0.25).item<double>();
-      q50 = observed_series.quantile(0.50).item<double>();
-      q75 = observed_series.quantile(0.75).item<double>();
+      q25 = observed_series.quantile(0.25).host<double>().front();
+      q50 = observed_series.quantile(0.50).host<double>().front();
+      q75 = observed_series.quantile(0.75).host<double>().front();
       maxv = observed_series.max().item<double>();
       if (observed_n > 1) {
         stdv = observed_series.std(true).item<double>();

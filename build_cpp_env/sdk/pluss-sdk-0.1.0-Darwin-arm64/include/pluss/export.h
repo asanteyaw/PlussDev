@@ -56,7 +56,7 @@
   #define CODEN_API PLUSS_IMPORT
 #endif
 
-// CodeH (time: Timeline/Duration/TimeIndex)
+// CodeH (time: Timeline/Duration and Timeline's index accessor)
 #ifdef CODEH_BUILD_MAIN_LIB
   #define CODEH_API PLUSS_EXPORT
 #else

@@ -1,0 +1,118 @@
+<!-- generated from precision_and_concurrency.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Worked problem: precision and concurrency
+
+Two properties of `Function` matter in production code: how the precision of the arguments carries through a derivative, and what happens when many threads use the same function. Both follow from a function being an immutable recorded graph.
+
+## Precision follows the arguments
+
+A function has no precision of its own. Evaluating it on `Float32` arguments computes in `Float32` and returns a `Float32` result, and `Float64` arguments give `Float64`. The same holds for a derivative function, so one definition serves both. The program differentiates a function to second order and compares the two precisions against the `Float64` value.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(3));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.pow(3) * x.sin() + x.cosh(); });
+  const math::Function second = operators::differential("x", 2)(f);
+
+  const auto x64 = pluss::make_series({0.25, 0.75, 1.25, 1.75});
+  const auto x32 = pluss::make_series({0.25F, 0.75F, 1.25F, 1.75F});
+
+  const auto r64 = second({x64});
+  const auto r32 = second({x32});
+  out.writeln("Float64 argument -> dtype is Float64:", r64.scalar_type() == pluss::ScalarType::Float64 ? "yes" : "no");
+  out.writeln("Float32 argument -> dtype is Float32:", r32.scalar_type() == pluss::ScalarType::Float32 ? "yes" : "no");
+
+  const auto reference = r64.pull<double>();
+  const auto single = r32.pull<float>();
+  std::vector<double> relative;
+  for (std::size_t i = 0; i < reference.size(); ++i) relative.push_back(std::abs(static_cast<double>(single[i]) - reference[i]) / std::abs(reference[i]));
+  out.writeln("second derivative (Float64):", reference);
+  out.writeln("relative error of Float32  :", relative);
+}
+```
+
+Output
+
+```text
+Float64 argument -> dtype is Float64: yes
+Float32 argument -> dtype is Float32: yes
+second derivative (Float64): [1.762e+00, 6.544e+00, 1.011e+01, 4.747e+00]
+relative error of Float32  : [2.493e-08, 3.247e-08, 8.227e-08, 2.523e-07]
+```
+
+The same derivative function evaluates in either precision and returns the precision it was given. The `Float32` results differ from the `Float64` reference by relative errors of 2.5e-8 to 2.5e-7, which is single-precision rounding (about 6e-8 per operation) accumulated over a few operations, and no more: the derivative graph does not lose accuracy of its own. If a `Float32` result needs to be a certain accuracy, check it against the `Float64` evaluation of the same function, which costs no extra code.
+
+## Concurrent evaluation
+
+A `Function` is immutable: building it records a graph, and evaluating it only reads the graph. Any number of threads can therefore evaluate the same function at the same time without locks, each with its own data, and derivative functions share that property. The program starts eight threads that each evaluate the same function and its derivative repeatedly at their own point, and checks every result against a direct computation.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <atomic>
+#include <cmath>
+#include <thread>
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sin() * x.exp(); });
+  const math::Function df = operators::differential("x")(f);
+
+  std::atomic<std::int64_t> checked{0};
+  std::atomic<bool> valid{true};
+  std::vector<std::thread> workers;
+  for (int worker = 0; worker < 8; ++worker) {
+    workers.emplace_back([&, worker] {
+      const double point = 0.1 * static_cast<double>(worker + 1);
+      const double value = std::sin(point) * std::exp(point);
+      const double slope = (std::cos(point) + std::sin(point)) * std::exp(point);
+      for (int repeat = 0; repeat < 100; ++repeat) {
+        if (std::abs(f(point).item<double>() - value) > 1e-12) valid.store(false);
+        if (std::abs(df(point).item<double>() - slope) > 1e-12) valid.store(false);
+        checked.fetch_add(2);
+      }
+    });
+  }
+  for (std::thread &worker : workers) worker.join();
+  out.writeln("evaluations checked:", checked.load(), " all correct:", valid.load() ? "yes" : "no");
+}
+```
+
+Output
+
+```text
+evaluations checked: 1600  all correct: yes
+```
+
+All 1600 evaluations (eight threads, 100 repeats, two functions) agree with the direct computation. No locking is involved, and the same holds for any functions built by the operators, since they are immutable functions too.
+
+The immutability is also why a function can be stored in a long-lived object, captured by value into a lambda, or handed to another component: a copy shares the same graph, and nothing a caller does with the results can change it.
+
+## What repeated evaluation reuses
+
+Sealing a `Function` compiles its DAG into one immutable topological execution plan. Repeated calls reuse that plan; they do not retrace the construction lambda, rebuild the graph, rediscover named arguments, or recompile an integral's integrand. Shared graph nodes are evaluated once per call. Scalar literals are cached for that invocation, and unary and binary primitives use fixed argument storage rather than allocating a child vector at every node.
+
+Each call still owns its result slots. This is intentional: a global mutable workspace would make concurrent calls contend, could retain autograd history between evaluations, and would pin memory to the largest graph ever evaluated. On CPU, the compiled plan records every node's final consumer and releases that intermediate immediately afterward. Peak temporary ownership therefore follows the graph's live width rather than its total number of nodes.
+
+MPS currently keeps intermediates until the call completes. Native MPS operations are asynchronous, and the buffer cache does not yet record completion of every submitted reader. Reclaiming graph inputs early would either require a host-side queue wait or risk recycling storage still being read by the GPU. The evaluator does neither. A future read-fence-aware MPS allocator can consume the same last-use metadata without changing `Function`, `Operator`, or user code.
+
+This boundary also explains why a modest graph may run faster on CPU than MPS despite being fully platform-native. A structural formula currently dispatches each Series primitive separately. Larger tensor work amortizes those submissions; small elementwise graphs need backend fusion or command-buffer batching to realize the GPU's throughput. There is no hidden CPU bridge in complex or real Function evaluation.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

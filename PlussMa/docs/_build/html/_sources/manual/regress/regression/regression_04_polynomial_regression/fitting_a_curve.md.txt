@@ -1,0 +1,123 @@
+<!-- generated from fitting_a_curve.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Fitting a curve
+
+[Back to Polynomial Regression](../regression_04_polynomial_regression.md)
+
+A polynomial regression fits a curve by least squares after replacing each predictor by its powers. The model is still linear in the coefficients, so it is the ordinary least-squares fit of the previous chapters on an expanded design matrix, and everything there applies: standard errors, intervals, diagnostics, warnings.
+
+```cpp
+reg::PolyFitResult reg::poly_fit(const Series &y, const Series &x, const reg::PolyOptions &options = {}, Config cfg = {});
+Series             reg::poly_expand(const Series &x, std::int64_t degree, bool include_cross = false, Config cfg = {});
+Series             reg::poly_predict(const reg::PolyFitResult &fit, const Series &x_new, Config cfg = {});
+```
+
+`PolyOptions::degree` is the highest power (it must be at least 1; the default is 2). The result `PolyFitResult` holds the underlying least-squares fit in `ols`, together with `degree`, `include_cross` and `base_predictor_names`. The coefficient names show the terms: `const`, `x1`, `x1^2`, ...
+
+## Recovering a known curve
+
+The data are y = 1 − 2x + 0.5x² with no noise, at nine points. A quadratic recovers the coefficients exactly, a straight line cannot, and a cubic finds the same quadratic and a cubic coefficient of zero. The program also confirms that `poly_fit` is the least-squares fit of the expanded design: fitting `ols_fit` to `poly_expand(x, 2)` gives the same coefficients.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  std::vector<double> xs, ys;
+  for (int i = 0; i < 9; ++i) {
+    xs.push_back(i * 0.5);
+    ys.push_back(1.0 - 2.0 * xs.back() + 0.5 * xs.back() * xs.back());
+  }
+  const auto x = pluss::make_series(xs, {9}, as_f64());
+  const auto y = pluss::make_series(ys, {9}, as_f64());
+
+  for (std::int64_t degree : {1, 2, 3}) {
+    reg::PolyOptions options;
+    options.degree = degree;
+    const auto fit = reg::poly_fit(y, x, options);
+    out.writeln("degree", degree, " names", fit.ols.coefficient_names);
+    out.writeln("   coefficients", fit.ols.coefficients.pull<double>(), " R2", fit.ols.rsquared, " rmse", fit.ols.rmse);
+  }
+
+  reg::PolyOptions quadratic;
+  const auto fit = reg::poly_fit(y, x, quadratic);
+  const auto by_hand = reg::ols_fit(y, reg::poly_expand(x, 2));
+  out.writeln("poly_fit versus ols_fit on poly_expand:", fit.ols.coefficients.sub(by_hand.coefficients).abs().max().item<double>());
+  out.writeln("degree", fit.degree, " include_cross", fit.include_cross, " base names", fit.base_predictor_names);
+}
+```
+
+Output
+
+```text
+degree 1  names [const, x1]
+   coefficients [-0.166667, -0.000000]  R2 0.000000  rmse 0.829156
+degree 2  names [const, x1, x1^2]
+   coefficients [1.000000, -2.000000, 0.500000]  R2 1.000000  rmse 0.000000
+degree 3  names [const, x1, x1^2, x1^3]
+   coefficients [1.000000, -2.000000, 0.500000, 0.000000]  R2 1.000000  rmse 0.000000
+poly_fit versus ols_fit on poly_expand: 0.000000
+degree 2  include_cross false  base names [x1]
+```
+
+The quadratic is recovered exactly, with an R² of 1 and a root mean square error of zero at the digits shown, and the cubic fit finds the same quadratic with a cubic coefficient of zero: a model that is too flexible does no harm when the data are exact. The straight line is poor in a particular way: its slope is zero and its R² is zero, because the parabola is symmetric about x = 2, the middle of the data, so the best line is flat. `poly_fit` and `ols_fit` on `poly_expand(x, 2)` agree to the digits shown, since they are the same fit, and the result records the degree, whether cross terms were used, and the base predictor name.
+
+## With noise
+
+Real data scatter about the curve. The program adds a fixed pattern of noise to the same quadratic and fits it at degree 2. The standard errors, intervals and diagnostics come from the underlying least-squares fit, so the coefficient of x² can be tested like any other. A confidence interval that excludes zero for the squared term is the evidence that the data are curved.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> xs, ys;
+  for (int i = 0; i < 24; ++i) {
+    const double x = i * 0.25;
+    const double noise = 0.6 * (2.0 * std::fmod(i * 0.6180339887498949, 1.0) - 1.0);  // a fixed low-discrepancy sequence in [-0.6, 0.6)
+    xs.push_back(x);
+    ys.push_back(1.0 - 2.0 * x + 0.5 * x * x + noise);
+  }
+  const auto x = pluss::make_series(xs, {24}, as_f64());
+  const auto y = pluss::make_series(ys, {24}, as_f64());
+
+  reg::PolyOptions options;
+  options.response_name = "height";
+  options.predictor_names = {"time"};
+  const auto fit = reg::poly_fit(y, x, options);
+  const auto ci = fit.ols.conf_int.host<double>().array().data;
+  out.writeln("true coefficients  [1.0000, -2.0000, 0.5000]");
+  out.writeln("estimated          ", fit.ols.coefficients.pull<double>(), " names", fit.ols.coefficient_names);
+  out.writeln("std errors         ", fit.ols.std_errors.pull<double>());
+  out.writeln("interval of time^2  [", ci[4], ",", ci[5], "]  p value", fit.ols.p_values.pull<double>()[2]);
+
+  reg::PolyOptions straight = options;
+  straight.degree = 1;
+  const auto line = reg::poly_fit(y, x, straight);
+  out.writeln("R2 degree 1 / 2     ", line.ols.rsquared, fit.ols.rsquared, " adjusted", line.ols.adj_rsquared, fit.ols.adj_rsquared);
+  out.writeln("Durbin-Watson of the straight line / the curve", line.ols.durbin_watson, fit.ols.durbin_watson, "(rows are in order of time)");
+}
+```
+
+Output
+
+```text
+true coefficients  [1.0000, -2.0000, 0.5000]
+estimated           [0.8278, -1.8909, 0.4856]  names [const, time, time^2]
+std errors          [0.2100, 0.1692, 0.0284]
+interval of time^2  [ 0.4265 , 0.5446 ]  p value 0.0000
+R2 degree 1 / 2      0.5741 0.9714  adjusted 0.5547 0.9687
+Durbin-Watson of the straight line / the curve 0.2424 2.7035 (rows are in order of time)
+```
+
+The estimates [0.8278, −1.8909, 0.4856] are near the generating values [1, −2, 0.5], within the standard errors [0.21, 0.17, 0.028], and the interval for the squared term, [0.4265, 0.5446], is far from zero (p < 10⁻⁴): the curvature is real. The straight line explains 57% of the variation and the curve 97%. The Durbin–Watson statistic tells the same story from the residuals: for the straight line it is 0.24, a strongly serial pattern because the line leaves a systematic arc in the residuals of data ordered by time, and for the curve it is 2.70, as for noise.

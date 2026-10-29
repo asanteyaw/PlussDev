@@ -1,0 +1,17 @@
+#pragma once
+
+#include "pluss/subsp/natsci/common/diagnostic.h"
+#include "pluss/subsp/natsci/physics/astro.h"
+#include "pluss/subsp/natsci/physics/fluids.h"
+#include "pluss/subsp/natsci/physics/fluids/les.h"
+#include "pluss/subsp/natsci/physics/fluids/compressible.h"
+#include "pluss/subsp/natsci/physics/fluids/compressible_boundary.h"
+#include "pluss/subsp/natsci/physics/fluids/compressible_reacting.h"
+#include "pluss/subsp/natsci/physics/fluids/compressible_species.h"
+#include "pluss/subsp/natsci/physics/mechanics.h"
+#include "pluss/subsp/natsci/physics/mechanics/hamiltonian.h"
+#include "pluss/subsp/natsci/physics/mechanics/lagrangian.h"
+#include "pluss/subsp/natsci/physics/mechanics/state.h"
+#include "pluss/subsp/natsci/physics/quantum.h"
+#include "pluss/subsp/natsci/physics/thermo.h"
+#include "pluss/subsp/natsci/physics/thermo/species.h"

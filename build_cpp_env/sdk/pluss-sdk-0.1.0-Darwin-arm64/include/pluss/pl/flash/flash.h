@@ -36,7 +36,7 @@
 namespace pluss::table {
 class Atlas;
 class DataFrame;
-class Thread;
+class Slate;
 }
 
 namespace pluss::pl::flash {
@@ -76,7 +76,7 @@ struct TableColumns {
 
 template <class T>
 concept TableBackedValue =
-    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Thread> ||
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Slate> ||
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::DataFrame> ||
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::Atlas>;
 
@@ -100,10 +100,6 @@ template <ArithmeticRange Range>
 
 [[nodiscard]] inline Series to_series(const Timeline& timeline) {
   return timeline.epoch_nanos().to(ScalarType::Float64).reshape({timeline.numel()});
-}
-
-[[nodiscard]] inline Series to_series(const TimeIndex& index) {
-  return index.timeline().epoch_nanos().to(ScalarType::Float64).reshape({index.size()});
 }
 
 inline void require_rank_at_most(const Series& values, std::int64_t max_rank, std::string_view where) {
@@ -158,7 +154,7 @@ template <std::ranges::input_range Range>
 }
 
 [[nodiscard]] inline std::vector<double> to_f64_vector(const Series& values) {
-  return values.to(ScalarType::Float64).to_vec<double>();
+  return values.to(ScalarType::Float64).host<double>().array().data;
 }
 
 [[nodiscard]] inline Series flatten_f64(const Series& values) {
@@ -756,7 +752,7 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
   if (scalar.numel() == 0) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  return scalar.item<double>();
+  return scalar.host<double>().front();
 }
 
 [[nodiscard]] inline double z_for_confidence_level(double level) {
@@ -831,7 +827,7 @@ inline void downsample_columns(
   const auto step = std::max<std::int64_t>(1, (nrows + max_points - 1) / max_points);
   const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
   if (labels != nullptr) {
-    const auto sampled_idx = idx.to_vec<std::int64_t>();
+    const auto sampled_idx = idx.host<std::int64_t>().array().data;
     std::vector<std::string> sampled_labels;
     sampled_labels.reserve(sampled_idx.size());
     std::transform(
@@ -896,7 +892,7 @@ inline void downsample_columns(
   const Series feature_major = feature_axis_is_columns
                                    ? matrix.transpose(0, 1).contiguous().to(ScalarType::Float64)
                                    : matrix.contiguous().to(ScalarType::Float64);
-  const auto flat = feature_major.reshape({feature_count * case_count}).to_vec<double>();
+  const auto flat = feature_major.reshape({feature_count * case_count}).host<double>().array().data;
 
   std::vector<Series> columns;
   columns.reserve(static_cast<std::size_t>(feature_count));
@@ -912,7 +908,7 @@ inline void downsample_columns(
 
 [[nodiscard]] inline Series matrix_from_columns(pluss::msharp::RangeView::Series columns, std::int64_t rows) {
   if (columns.empty()) {
-    return {};
+    return pluss::series::undefined();
   }
   std::vector<Series> normalized;
   normalized.reserve(columns.size());
@@ -933,7 +929,7 @@ inline void downsample_columns(
 [[nodiscard]] inline std::vector<double> row_major_values(
     pluss::msharp::RangeView::Series columns,
     std::int64_t rows) {
-  return matrix_from_columns(columns, rows).to(ScalarType::Float64).to_vec<double>();
+  return matrix_from_columns(columns, rows).to(ScalarType::Float64).host<double>().array().data;
 }
 
 [[nodiscard]] inline Series andrews_basis(const std::vector<double>& t_values, std::int64_t ncols) {
@@ -1004,7 +1000,7 @@ inline void downsample_columns(
 struct FieldmapGrid {
   std::vector<double> x{};
   std::vector<double> y{};
-  Series z{};
+  Series z = pluss::series::undefined();
 };
 
 [[nodiscard]] inline Series apply_heatmap_limits_and_mask(
@@ -1112,7 +1108,7 @@ struct FieldmapGrid {
     return out;
   }
 
-  std::vector<double> curr = out.to_vec<double>();
+  std::vector<double> curr = out.host<double>().array().data;
   std::vector<double> next(curr.size(), 0.0);
   constexpr std::array<double, 9> k{
       1.0, 2.0, 1.0,
@@ -1182,7 +1178,7 @@ struct FieldmapGrid {
 
   const std::vector<double> x = to_f64_vector(sx);
   const std::vector<double> y = to_f64_vector(sy);
-  const std::vector<double> flat = sz.to_vec<double>();
+  const std::vector<double> flat = sz.host<double>().array().data;
 
   std::vector<double> row_sum(static_cast<std::size_t>(rows), 0.0);
   std::vector<double> row_cnt(static_cast<std::size_t>(rows), 0.0);
@@ -1550,7 +1546,7 @@ namespace detail {
       continue;
     }
     const auto parsed = ::pluss::make_timeline(std::vector<std::string>{normalized[i]});
-    ticks[i] = parsed.epoch_nanos().to(Platform::CPU).to_vec<std::int64_t>()[0];
+    ticks[i] = parsed.epoch_nanos().to(Platform::CPU).host<std::int64_t>()[0];
   }
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(ticks.size())};
   return ::pluss::codeh::ops_internal::timeline_from_epoch_nanos(ticks, shape);
@@ -2585,19 +2581,19 @@ struct BarPlotOptions {
   bool horizontal{false};
 };
 
-Trace& lineplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& lineplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& lineplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& lineplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& scatterplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& scatterplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& scatterplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& scatterplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& stepplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& stepplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& stepplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& stepplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& areaplot(Pane& pane, const ::pluss::table::Thread& values, double base = 0.0);
+Trace& areaplot(Pane& pane, const ::pluss::table::Slate& values, double base = 0.0);
 Trace& areaplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2609,7 +2605,7 @@ Trace& areaplot(
     const TableColumns& columns = {},
     double base = 0.0);
 
-Trace& histplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& histplot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
 Trace& histplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2621,7 +2617,7 @@ Trace& histplot(
     const TableColumns& columns = {},
     int bins = 12);
 
-Trace& displot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& displot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
 Trace& displot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2633,7 +2629,7 @@ Trace& displot(
     const TableColumns& columns = {},
     int bins = 12);
 
-Trace& kdeplot(Pane& pane, const ::pluss::table::Thread& values, std::int64_t points = 128);
+Trace& kdeplot(Pane& pane, const ::pluss::table::Slate& values, std::int64_t points = 128);
 Trace& kdeplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2645,11 +2641,11 @@ Trace& kdeplot(
     const TableColumns& columns = {},
     std::int64_t points = 128);
 
-Trace& ecdfplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& ecdfplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& ecdfplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& rugplot(Pane& pane, const ::pluss::table::Thread& values, double height = 0.08);
+Trace& rugplot(Pane& pane, const ::pluss::table::Slate& values, double height = 0.08);
 Trace& rugplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2661,7 +2657,7 @@ Trace& rugplot(
     const TableColumns& columns = {},
     double height = 0.08);
 
-Trace& countplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& countplot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
 Trace& countplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2675,7 +2671,7 @@ Trace& countplot(
 
 Trace& barplot(
     Pane& pane,
-    const ::pluss::table::Thread& values,
+    const ::pluss::table::Slate& values,
     const BarPlotOptions& options = {});
 Trace& barplot(
     Pane& pane,
@@ -4464,9 +4460,9 @@ namespace detail {
     const Series& x,
     const Series& y,
     const Series& z) {
-  const auto xs = x.to_vec<double>();
-  const auto ys = y.to_vec<double>();
-  const auto zs = z.to_vec<double>();
+  const auto xs = x.host<double>().array().data;
+  const auto ys = y.host<double>().array().data;
+  const auto zs = z.host<double>().array().data;
   const auto n = static_cast<std::int64_t>(xs.size());
   const auto g = std::clamp<std::int64_t>(
       static_cast<std::int64_t>(std::ceil(std::sqrt(static_cast<double>(std::max<std::int64_t>(1, n))))),
@@ -5022,7 +5018,7 @@ inline Studio& andrews_curves(
   const auto basis = detail::andrews_basis(t_values, ncols);
   const auto values_matrix = detail::matrix_from_columns(prepared, plotted_rows);
   const auto curve_matrix = values_matrix.matmul(basis).to(ScalarType::Float64).contiguous();
-  const auto flat_curves = curve_matrix.to_vec<double>();
+  const auto flat_curves = curve_matrix.host<double>().array().data;
   const auto point_count = static_cast<std::size_t>(t_values.size());
 
   auto& pane = studio.pane2();
@@ -5071,7 +5067,7 @@ inline Studio& andrews_curves(
   const auto basis = detail::andrews_basis(t_values, ncols);
   const auto values_matrix = detail::matrix_from_columns(prepared, plotted_rows);
   const auto curve_matrix = values_matrix.matmul(basis).to(ScalarType::Float64).contiguous();
-  const auto flat_curves = curve_matrix.to_vec<double>();
+  const auto flat_curves = curve_matrix.host<double>().array().data;
   const auto point_count = static_cast<std::size_t>(t_values.size());
   std::unordered_map<std::string, std::size_t> color_index;
   std::vector<std::string> ordered_classes;

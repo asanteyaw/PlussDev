@@ -31,7 +31,7 @@ using pluss::ScalarType;
 
 [[nodiscard]] std::vector<double> vec_f64(const Series& x) {
   if (!x.defined()) return {};
-  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>();
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).host<double>().array().data;
 }
 
 [[nodiscard]] bool all_finite(const Series& x) {

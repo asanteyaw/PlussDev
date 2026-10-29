@@ -21,10 +21,11 @@ That makes it the better root method when you want your call site to state
 "read a diagonal" unambiguously, regardless of what rank the input happens to
 be.
 
-The current verified root surface is narrower than the name might suggest:
+It works on any input with at least two axes:
 
-- it is currently implemented for 2D inputs
-- the three-argument overload accepts only the two real matrix axes
+- the three-argument overload names which two axes form the "matrix" the
+  diagonal is read from; every other axis is carried along unchanged
+- the extracted diagonal becomes the **last** axis of the result
 - swapping `dim1` and `dim2` changes which direction the diagonal is read from
 
 ## Overload Map
@@ -53,36 +54,31 @@ The diagonal offset.
 
 **dim1** (`std::int64_t`)
 
-The first matrix axis.
+The first of the two axes the diagonal is read from.
 
 **dim2** (`std::int64_t`)
 
-The second matrix axis.
+The second of the two axes the diagonal is read from.
 
 Both dimension parameters accept negative indexing, but they must refer to two
 different axes after normalization.
 
-On the current verified root surface, the practical choices for a 2D matrix are
-just:
-
-- `(0, 1)`
-- `(1, 0)`
-
-The first reads the diagonal in the ordinary orientation. The second reads the
-diagonal after the matrix axes have been conceptually swapped.
+For a 2D matrix the choices are `(0, 1)` (the ordinary orientation) and
+`(1, 0)` (the diagonal after the two axes have been swapped). For higher-rank
+input any two distinct axes may be named; the offset is measured from `dim1`
+toward `dim2`.
 
 ## Returns
 
 `Series`
-    A 1D `Series` containing the extracted diagonal values.
+    For a 2D input, a 1D `Series` of the diagonal. For higher rank, the input
+    shape with `dim1` and `dim2` removed and the diagonal's length appended as
+    the last axis.
 
 ## Gradient
 
-`diagonal()` shares the same verified extraction route as matrix-extract
-[`diag()`](diag.md).
-
-That means reverse-mode sensitivity is scattered back onto the selected
-diagonal positions and leaves every non-participating position untouched.
+Reverse-mode sensitivity is scattered back onto the selected diagonal
+positions and leaves every non-participating position untouched, for any rank.
 
 ## Examples
 
@@ -127,6 +123,11 @@ Example 3. Swapping `dim1` and `dim2` changes which matrix orientation is used
 before the diagonal is read.
 
 ```cpp
+auto rectangular = pluss::make_series({
+    {1, 2, 3},
+    {4, 5, 6},
+}, pluss::ScalarType::Int64);
+
 std::cout << rectangular.diagonal(0, 1, 0);
 ```
 
@@ -143,6 +144,12 @@ from the ordinary `(0, 1)` orientation.
 Example 4. The named axes must differ.
 
 ```cpp
+auto square = pluss::make_series({
+    {1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9},
+}, pluss::ScalarType::Int64);
+
 try {
   std::cout << square.diagonal(0, 0, 0) << "\n";
 } catch (const std::exception& e) {
@@ -157,11 +164,56 @@ try {
 diagonal: dim1 and dim2 must differ
 ```
 
+Example 5. Higher-rank input: name the two axes, and the diagonal becomes the
+last axis.
+
+```cpp
+auto cube = pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}, {2, 3, 4});
+
+// the diagonal of each 3 x 4 slice, one row per slice
+std::cout << cube.diagonal(0, 1, 2);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 6, 11],
+  [13, 18, 23]]
+```
+
+Axis 0 is carried through, and the length-3 diagonal of every slice is the new
+last axis.
+
+Example 6. The offset and the axes combine; the offset is measured from `dim1`
+toward `dim2`.
+
+```cpp
+auto cube = pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}, {2, 3, 4});
+
+std::cout << cube.diagonal(1, 1, 2) << "\n";
+std::cout << cube.diagonal(0, 0, 2);
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,3], strides=[3,1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[[2, 7, 12],
+  [14, 19, 24]]
+pluss::Series(shape=[3,2], strides=[2,1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 14],
+  [5, 18],
+  [9, 22]]
+```
+
 ## Gotchas And Failure Modes
 
 - `diagonal()` always extracts. If you wanted a diagonal matrix, use
   [`diag_embed()`](diag_embed.md) or [`diagflat()`](diagflat.md) instead.
-- The current root surface is 2D-only.
+- Inputs need at least two axes; a 1D or scalar `Series` throws.
 - Swapping `dim1` and `dim2` is not cosmetic. It changes the extraction
   orientation.
 - Reverse-mode follows the same diagonal-scatter rule as matrix-extract

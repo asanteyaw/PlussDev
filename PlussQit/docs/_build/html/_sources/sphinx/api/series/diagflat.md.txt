@@ -16,14 +16,14 @@ Series::diagflat(std::int64_t diagonal) const -> Series
 `diagflat()` flattens the input and writes those flattened values onto a
 diagonal of a new square matrix.
 
-On the current verified root surface, that behavior is the same practical
-contract as [`diag_embed()`](diag_embed.md): flatten first, embed second, fill
-everything else with zero.
+Everything else in the matrix is zero.
 
-So the public difference between the two names is mainly one of intent:
+It differs from [`diag_embed()`](diag_embed.md) in what happens to the input's
+structure:
 
-- `diagflat()` advertises the flattening step right in the name
-- `diag_embed()` emphasizes the final diagonal-matrix result
+- `diagflat()` flattens first, so any input becomes **one** square matrix
+- `diag_embed()` keeps the leading axes as batch axes and embeds only the last
+  axis, producing a stack of matrices
 
 ## Parameters
 
@@ -45,10 +45,9 @@ If the flattened input has `n` elements, the output side length is
 
 ## Gradient
 
-`diagflat()` follows the same verified reverse-mode behavior as
-[`diag_embed()`](diag_embed.md): the forward pass flattens and writes values
+`diagflat()` is differentiable: the forward pass flattens and writes values
 onto one diagonal, and the reverse pass reads sensitivity back from that same
-diagonal.
+diagonal and restores the input's shape.
 
 ## Examples
 
@@ -105,8 +104,8 @@ is the wrong family entirely.
 
 ## See Also
 
-- [`Series::diag_embed`](diag_embed.md): same current value behavior under the
-  explicit embedding name.
+- [`Series::diag_embed`](diag_embed.md): embeds the last axis and keeps the
+  leading axes as a batch.
 - [`Series::diag`](diag.md): dual-mode extract-or-embed surface.
 - [`Series::diagonal`](diagonal.md): extraction-only diagonal surface.
 

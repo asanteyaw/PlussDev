@@ -16,7 +16,7 @@ namespace pluss::ai::nodeb::registry {
 // actual options and learned state on top of that default afterward.
 using StageFactory = std::function<Stage()>;
 
-// Thread-safe catalog mapping `IStage::name()` to a factory. The eight
+// Slate-safe catalog mapping `IStage::name()` to a factory. The eight
 // built-in stages (rule_tokenizer, sentencizer, lemmatizer, matcher,
 // tagger, syntax, ner, textcat) are registered lazily on first use.
 // Callers may register additional stage types so `Workflow::load` and

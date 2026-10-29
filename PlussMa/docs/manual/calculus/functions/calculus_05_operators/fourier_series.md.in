@@ -1,0 +1,97 @@
+# Fourier series operators
+
+[Back to Operators](../calculus_05_operators.md)
+
+A Fourier series writes a function on an interval as a sum of sines and cosines. The operators in `operators::fourier` build the coefficients and the partial sums as `Function`s: each coefficient is a definite integral of the function against a trigonometric function, built through the integral operator, and each series is the sum of those coefficients times the matching waves. As elsewhere, applying an operator evaluates nothing; the result is a formula that waits for values.
+
+| Operator | Result for `f` on `[a, b]` |
+|---|---|
+| `cosine_coefficients(x, a, b, n)` | `A_k = 2/(b−a) ∫ f cos(kπ(x−a)/(b−a)) dx`, `k = 0..n−1`, a vector `Function` |
+| `sine_coefficients(x, a, b, n)` | `B_k = 2/(b−a) ∫ f sin(kπ(x−a)/(b−a)) dx`, `k = 1..n` |
+| `cosine_series(x, a, b, n)` | `A₀/2 + Σ A_k cos(kπ(x−a)/(b−a))`, the even extension |
+| `sine_series(x, a, b, n)` | `Σ B_k sin(kπ(x−a)/(b−a))`, the odd extension |
+| `coefficients(x, L, n)`, `series(x, L, n)` | the full trigonometric series on `[−L, L]`: the cosine series of the even part plus the sine series of the odd part |
+
+Both half-range forms also take a *support* `[from, to]` inside `[a, b]`: the integral then runs over the support only, which is how a payoff that vanishes on part of the interval is expanded (the cosine expansion method of option pricing uses exactly this).
+
+```cpp
+operators::Operator operators::fourier::cosine_coefficients(std::string_view variable, double lower, double upper, std::int64_t terms);
+operators::Operator operators::fourier::cosine_coefficients(std::string_view variable, double lower, double upper, std::int64_t terms, double support_lower, double support_upper);
+operators::Operator operators::fourier::sine_coefficients(std::string_view variable, double lower, double upper, std::int64_t terms);
+operators::Operator operators::fourier::cosine_series(std::string_view variable, double lower, double upper, std::int64_t terms);
+operators::Operator operators::fourier::sine_series(std::string_view variable, double lower, double upper, std::int64_t terms);
+operators::Operator operators::fourier::coefficients(std::string_view variable, double half_period, std::int64_t terms);
+operators::Operator operators::fourier::series(std::string_view variable, double half_period, std::int64_t terms);
+```
+
+## Coefficients with a closed form
+
+For `f(x) = x` on `[0, π]` the sine coefficients are `B_k = 2(−1)^{k+1}/k` and the cosine coefficients are `A₀ = π` and `A_k = −4/(πk²)` for odd `k`, zero for even `k`. The operators recover them from the integral, and the sine series converges to `x` away from the end `x = π`, where its odd extension jumps.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+namespace fourier = pluss::operators::fourier;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double pi = std::acos(-1.0);
+  const math::Function identity = math::function({"x"}, [](math::Function x) { return x; });
+
+  // staged: build the operators once, apply them to the same function
+  const operators::Operator sine = fourier::sine_coefficients("x", 0.0, pi, 6);
+  const operators::Operator cosine = fourier::cosine_coefficients("x", 0.0, pi, 6);
+  out.writeln("B_1..B_6  ", sine(identity)().pull<double>());
+  out.writeln("closed    ", std::vector<double>{2.0, -1.0, 2.0 / 3, -0.5, 0.4, -1.0 / 3});
+  out.writeln("A_0..A_5  ", cosine(identity)().pull<double>());
+  out.writeln("closed    ", std::vector<double>{pi, -4.0 / pi, 0.0, -4.0 / (9 * pi), 0.0, -4.0 / (25 * pi)});
+
+  // compact: partial sums are Functions of x
+  for (const std::int64_t terms : {2, 8, 32})
+    out.writeln("sine series, ", terms, " terms   ", fourier::sine_series("x", 0.0, pi, terms)(identity)({pluss::make_series(1.0)}).item<double>());
+}
+```
+
+## The full series, and Parseval
+
+On `[−π, π]` the odd function `x` has only sine terms, and the even function `x²` only cosine terms. The `coefficients` operator returns `[a₀ … a_{n−1}, b₁ … b_{n−1}]`, so the two cases show up as zero blocks. Parseval's identity ties the coefficients to the energy of the function, `(1/π) ∫ f² dx = a₀²/2 + Σ (a_k² + b_k²)`; the program compares the two sides for `x²`, whose energy is `2π⁴/5`·`1/π`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace fourier = pluss::operators::fourier;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double pi = std::acos(-1.0);
+  const math::Function odd = math::function({"x"}, [](math::Function x) { return x; });
+  const math::Function even = math::function({"x"}, [](math::Function x) { return x * x; });
+
+  const std::vector<double> c = fourier::coefficients("x", pi, 8)(even)().pull<double>();  // a_0..a_7, b_1..b_7
+  out.writeln("x   : ", fourier::coefficients("x", pi, 8)(odd)().pull<double>());
+  out.writeln("x^2 : ", c);
+
+  double energy = 0.5 * c[0] * c[0];
+  for (std::size_t k = 1; k < c.size(); ++k) energy += c[k] * c[k];
+  out.writeln("Parseval: ", energy, "   (1/pi) int x^4 = ", 2.0 * std::pow(pi, 4) / 5.0);
+  out.writeln("series(2) = ", fourier::series("x", pi, 8)(even)({pluss::make_series(2.0)}).item<double>(), "   x^2 = 4");
+}
+```
+
+## What can be saved
+
+The six operators hold names and numbers and save with `math::io::save` ([Saving and loading](saving_and_loading.md)).
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

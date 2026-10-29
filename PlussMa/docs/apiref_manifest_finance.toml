@@ -1,0 +1,164 @@
+# apiref_manifest_finance.toml -- the `Finance` guides of PlussMa.
+
+[framework.finance]
+nav_title = "Finance guide"
+nav_prefix = "manual/finance/"
+root_page = "manual/finance.html"
+title = "Finance"
+summary = "Option pricing: Black-Scholes, implied volatility, stochastic-volatility models and Monte Carlo."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "finance/pricing/finance_01_black_scholes"
+page = "manual/finance/pricing/finance_01_black_scholes.md"
+title = "Black-Scholes"
+maxdepth = 2
+children = ["finance_01_black_scholes/prices_and_parity", "finance_01_black_scholes/the_greeks", "finance_01_black_scholes/batches_of_spots_and_maturities", "finance_01_black_scholes/edge_cases_and_errors"]
+
+[[family]]
+path = "finance/pricing/finance_02_implied_volatility"
+page = "manual/finance/pricing/finance_02_implied_volatility.md"
+title = "Implied Volatility"
+maxdepth = 2
+children = ["finance_02_implied_volatility/recovering_a_volatility", "finance_02_implied_volatility/controls_and_the_no_arbitrage_bounds"]
+
+[[family]]
+path = "finance/pricing/finance_03_heston_and_bates"
+page = "manual/finance/pricing/finance_03_heston_and_bates.md"
+title = "Heston and Bates"
+maxdepth = 2
+children = ["finance_03_heston_and_bates/generic_characteristic_functions", "finance_03_heston_and_bates/jumps_the_bates_model", "finance_03_heston_and_bates/smiles_from_heston", "finance_03_heston_and_bates/the_cos_pricer", "finance_03_heston_and_bates/the_fft_pricer", "finance_03_heston_and_bates/the_heston_model"]
+
+[[family]]
+path = "finance/pricing/finance_04_monte_carlo"
+page = "manual/finance/pricing/finance_04_monte_carlo.md"
+title = "Monte Carlo"
+maxdepth = 2
+children = ["finance_04_monte_carlo/options_and_errors", "finance_04_monte_carlo/pricing_by_simulation", "finance_04_monte_carlo/quasi_random_sequences", "finance_04_monte_carlo/simulated_paths", "finance_04_monte_carlo/variance_reduction"]
+
+[[family]]
+path = "finance/pricing"
+page = "manual/finance/pricing.md"
+title = "pricing"
+maxdepth = 2
+children = ["pricing/finance_01_black_scholes", "pricing/finance_02_implied_volatility", "pricing/finance_03_heston_and_bates", "pricing/finance_04_monte_carlo"]
+
+[[symbol]]
+qualname = "finance::finance_01_black_scholes::Prices and put-call parity"
+kind = "page"
+family = "finance/pricing/finance_01_black_scholes"
+page = "manual/finance/pricing/finance_01_black_scholes/prices_and_parity.md"
+summary = "Prices and put-call parity"
+
+[[symbol]]
+qualname = "finance::finance_01_black_scholes::The Greeks"
+kind = "page"
+family = "finance/pricing/finance_01_black_scholes"
+page = "manual/finance/pricing/finance_01_black_scholes/the_greeks.md"
+summary = "The Greeks"
+
+[[symbol]]
+qualname = "finance::finance_01_black_scholes::Batches of spots and maturities"
+kind = "page"
+family = "finance/pricing/finance_01_black_scholes"
+page = "manual/finance/pricing/finance_01_black_scholes/batches_of_spots_and_maturities.md"
+summary = "Batches of spots and maturities"
+
+[[symbol]]
+qualname = "finance::finance_01_black_scholes::Edge cases and errors"
+kind = "page"
+family = "finance/pricing/finance_01_black_scholes"
+page = "manual/finance/pricing/finance_01_black_scholes/edge_cases_and_errors.md"
+summary = "Edge cases and errors"
+
+[[symbol]]
+qualname = "finance::finance_02_implied_volatility::Recovering a volatility"
+kind = "page"
+family = "finance/pricing/finance_02_implied_volatility"
+page = "manual/finance/pricing/finance_02_implied_volatility/recovering_a_volatility.md"
+summary = "Recovering a volatility"
+
+[[symbol]]
+qualname = "finance::finance_02_implied_volatility::Controls and the no-arbitrage bounds"
+kind = "page"
+family = "finance/pricing/finance_02_implied_volatility"
+page = "manual/finance/pricing/finance_02_implied_volatility/controls_and_the_no_arbitrage_bounds.md"
+summary = "Controls and the no-arbitrage bounds"
+
+[[symbol]]
+qualname = "finance::finance_03_heston_and_bates::Generic characteristic functions"
+kind = "page"
+family = "finance/pricing/finance_03_heston_and_bates"
+page = "manual/finance/pricing/finance_03_heston_and_bates/generic_characteristic_functions.md"
+summary = "Generic characteristic functions"
+
+[[symbol]]
+qualname = "finance::finance_03_heston_and_bates::Jumps: the Bates model"
+kind = "page"
+family = "finance/pricing/finance_03_heston_and_bates"
+page = "manual/finance/pricing/finance_03_heston_and_bates/jumps_the_bates_model.md"
+summary = "Jumps: the Bates model"
+
+[[symbol]]
+qualname = "finance::finance_03_heston_and_bates::Smiles from Heston"
+kind = "page"
+family = "finance/pricing/finance_03_heston_and_bates"
+page = "manual/finance/pricing/finance_03_heston_and_bates/smiles_from_heston.md"
+summary = "Smiles from Heston"
+
+[[symbol]]
+qualname = "finance::finance_03_heston_and_bates::The COS pricer"
+kind = "page"
+family = "finance/pricing/finance_03_heston_and_bates"
+page = "manual/finance/pricing/finance_03_heston_and_bates/the_cos_pricer.md"
+summary = "The COS pricer"
+
+[[symbol]]
+qualname = "finance::finance_03_heston_and_bates::The FFT pricer"
+kind = "page"
+family = "finance/pricing/finance_03_heston_and_bates"
+page = "manual/finance/pricing/finance_03_heston_and_bates/the_fft_pricer.md"
+summary = "The FFT pricer"
+
+[[symbol]]
+qualname = "finance::finance_03_heston_and_bates::The Heston model"
+kind = "page"
+family = "finance/pricing/finance_03_heston_and_bates"
+page = "manual/finance/pricing/finance_03_heston_and_bates/the_heston_model.md"
+summary = "The Heston model"
+
+[[symbol]]
+qualname = "finance::finance_04_monte_carlo::Options and errors"
+kind = "page"
+family = "finance/pricing/finance_04_monte_carlo"
+page = "manual/finance/pricing/finance_04_monte_carlo/options_and_errors.md"
+summary = "Options and errors"
+
+[[symbol]]
+qualname = "finance::finance_04_monte_carlo::Pricing by simulation"
+kind = "page"
+family = "finance/pricing/finance_04_monte_carlo"
+page = "manual/finance/pricing/finance_04_monte_carlo/pricing_by_simulation.md"
+summary = "Pricing by simulation"
+
+[[symbol]]
+qualname = "finance::finance_04_monte_carlo::Quasi-random sequences"
+kind = "page"
+family = "finance/pricing/finance_04_monte_carlo"
+page = "manual/finance/pricing/finance_04_monte_carlo/quasi_random_sequences.md"
+summary = "Quasi-random sequences"
+
+[[symbol]]
+qualname = "finance::finance_04_monte_carlo::Simulated paths"
+kind = "page"
+family = "finance/pricing/finance_04_monte_carlo"
+page = "manual/finance/pricing/finance_04_monte_carlo/simulated_paths.md"
+summary = "Simulated paths"
+
+[[symbol]]
+qualname = "finance::finance_04_monte_carlo::Variance reduction"
+kind = "page"
+family = "finance/pricing/finance_04_monte_carlo"
+page = "manual/finance/pricing/finance_04_monte_carlo/variance_reduction.md"
+summary = "Variance reduction"

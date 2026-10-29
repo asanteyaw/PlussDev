@@ -16,6 +16,8 @@ struct LexiconMapOptions {
   bool binary = false;
   std::int64_t min_ngram = 1;
   std::int64_t max_ngram = 1;
+  // Keep punctuation marks as terms. Off by default: only word-like spans count.
+  bool keep_punct = false;
 };
 
 struct TfIdfMapOptions {
@@ -31,6 +33,8 @@ struct HashMapOptions {
   bool alternate_sign = false;
   std::int64_t min_ngram = 1;
   std::int64_t max_ngram = 1;
+  // Keep punctuation marks as terms. Off by default: only word-like spans count.
+  bool keep_punct = false;
 };
 
 struct LexiconMapperState {

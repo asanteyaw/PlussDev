@@ -12,9 +12,19 @@ enum class Tail : std::uint8_t {
   Right = 2,
 };
 
+// How a p-value is computed where both an exact and an asymptotic form exist (the rank tests and the Kolmogorov-Smirnov tests).
+// Auto uses the exact distribution for small samples and the normal / Kolmogorov approximation otherwise; Exact and Approximate force
+// one or the other. The thresholds for Auto are in the documentation of each test.
+enum class PValueMethod : std::uint8_t {
+  Auto = 0,
+  Exact = 1,
+  Approximate = 2,
+};
+
 struct TestOptions {
   double alpha = 0.05;
   Tail tail = Tail::Both;
+  PValueMethod method = PValueMethod::Auto;
 };
 
 struct TTest2Options {

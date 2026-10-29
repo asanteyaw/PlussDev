@@ -76,6 +76,8 @@ Output
 chi-squared 8.5930 on 2.0000 df, p 0.0136, critical 5.9915
 ```
 
+For the drink and age table of 89 people the chi-squared statistic 8.59 on 2 degrees of freedom exceeds the 5% critical value 5.99, and p 0.0136 rejects independence: the preferred drink depends on the age band.
+
 ### Example 2
 
 The expected counts show where the table departs from independence.
@@ -109,6 +111,8 @@ row 2 expected 19.4157, 20.0225, 14.5618
 table 2 x 3
 ```
 
+The expected counts under independence are the row total times the column total over the grand total; comparing them with the observed table shows which cells depart most. The table printed is 2 by 3, and the first row is expected 12.58, 12.98 and 9.44.
+
 ### Example 3
 
 A stricter level.
@@ -134,6 +138,8 @@ Output
 ```text
 p 0.0136, critical 9.2103 (keep)
 ```
+
+At the 1% level the critical value is 9.21, above the statistic 8.59, so the same table that was rejected at 5% is kept here (p is unchanged, 0.0136). The decision depends on the level, which is why the level is a parameter and the p-value is reported alongside.
 
 ## See Also
 

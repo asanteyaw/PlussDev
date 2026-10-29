@@ -1,0 +1,219 @@
+# Weights and offsets
+
+[Back to Generalised Linear Models](../regression_02_generalised_linear_models.md)
+
+Two options let each row carry information that is not in the predictors.
+
+| Option | Shape | Meaning |
+|---|---|---|
+| `GLMOptions::weights` | `[n]` | case weights: row *i* counts `weights[i]` times in the likelihood, the deviance, the score equations and the covariance. They must be finite and non-negative |
+| `GLMOptions::offset` | `[n]` | a known term added to the linear predictor, η = Xb + offset, with a coefficient fixed at 1 |
+
+Both are undefined by default, which means weight 1 and offset 0. A row of weight zero takes no part in the fit and is counted in `dropped_observations`. The fitted values and the linear predictor include the offset, and `glm_predict` accepts an offset for new rows:
+
+```cpp
+Series reg::glm_predict(const reg::GLMFitResult &fit, const Series &x_new, const Series &offset,
+                        reg::GLMPredictionType type = reg::GLMPredictionType::Mean, Config cfg = {});
+```
+
+## Weights: grouped data
+
+The commonest use of weights is data that arrive already grouped. Instead of 80 subjects, each with a 0/1 outcome, a dose-response study can report 8 doses with the proportion that responded and the number of subjects in each group. Fitting the 8 proportions with the group sizes as weights is the same fit as the 80 individual outcomes: the coefficients, the covariance and the log-likelihood must agree. The deviances do not, because the deviance is measured from a saturated model that fits every *row* exactly, and 80 rows and 8 rows have different saturated models; but they differ by the same constant for the model and the null model, so the drop in deviance, which is what a likelihood-ratio test uses, is the same.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  std::vector<double> dose, responded, level, share, size;
+  for (int l = 1; l <= 8; ++l) {
+    double count = 0.0;
+    for (int subject = 0; subject < 10; ++subject) {
+      const int i = (l - 1) * 10 + subject;
+      const double p = 1.0 / (1.0 + std::exp(-1.2 * (l - 3.0)));
+      const double outcome = std::fmod(i * 0.6180339887498949, 1.0) < p ? 1.0 : 0.0;
+      dose.push_back(l);
+      responded.push_back(outcome);
+      count += outcome;
+    }
+    level.push_back(l);
+    share.push_back(count / 10.0);
+    size.push_back(10.0);
+  }
+  reg::GLMOptions individual;
+  individual.family = reg::GLMFamily::Binomial;
+  const auto a = reg::glm_fit(pluss::make_series(responded, {80}, as_f64()), pluss::make_series(dose, {80}, as_f64()), individual);
+
+  reg::GLMOptions grouped = individual;
+  grouped.weights = pluss::make_series(size, {8}, as_f64());
+  const auto b = reg::glm_fit(pluss::make_series(share, {8}, as_f64()), pluss::make_series(level, {8}, as_f64()), grouped);
+
+  out.writeln("80 individual rows   coefficients", a.coefficients.pull<double>(), " deviance", a.deviance, " null", a.null_deviance, " log-lik", a.log_likelihood);
+  out.writeln(" 8 weighted groups   coefficients", b.coefficients.pull<double>(), " deviance", b.deviance, " null", b.null_deviance, " log-lik", b.log_likelihood);
+  out.writeln("largest difference in the covariance", a.covariance.sub(b.covariance).abs().max().item<double>(), " std errors", a.std_errors.sub(b.std_errors).abs().max().item<double>());
+  out.writeln("drop in deviance from the null model", a.null_deviance - a.deviance, "and", b.null_deviance - b.deviance);
+  out.writeln("rows used", a.nobs, "and", b.nobs, " residual degrees of freedom", a.df_resid, "and", b.df_resid);
+}
+```
+
+The coefficients (−2.9968 and 1.0235), the covariance, the standard errors and the log-likelihood are identical, to the digits shown, between the 80 individual rows and the 8 weighted groups. The deviances differ (56.87 against 1.28, and 99.37 against 43.78), but both models lose the same amount, and the drop from the null model is 42.50 in each. The degrees of freedom follow the rows (78 and 6), so a goodness-of-fit judgement from the residual deviance is only meaningful for the grouped form.
+
+## Zero, fractional and invalid weights
+
+A weight need not be a whole number: a weight of 0.5 counts a row for half as much as a weight of 1. A weight of zero removes the row. Weights that are negative, not finite where rows are kept, or of the wrong length are errors.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+#include <limits>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1.2, 1.9, 3.4, 3.8, 5.3, 5.9, 8.4, 7.8}, {8}, as_f64());
+  reg::GLMOptions options;
+
+  const auto plain = reg::glm_fit(y, x, options);
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 0.1, 1}, {8}, as_f64());
+  const auto down = reg::glm_fit(y, x, options);
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 0, 1}, {8}, as_f64());
+  const auto zero = reg::glm_fit(y, x, options);
+  out.writeln("equal weights                  coefficients", plain.coefficients.pull<double>());
+  out.writeln("the 7th row down-weighted to 0.1             ", down.coefficients.pull<double>());
+  out.writeln("the 7th row given weight 0      ", zero.coefficients.pull<double>(), " nobs", zero.nobs, " dropped", zero.dropped_observations);
+
+  auto attempt = [&](const char *label, const std::vector<double> &w) {
+    reg::GLMOptions o;
+    o.weights = pluss::make_series(w, {static_cast<std::int64_t>(w.size())}, as_f64());
+    try {
+      reg::glm_fit(y, x, o);
+      out.writeln(label, "-> fitted");
+    } catch (const std::exception &e) {
+      const std::string message = e.what();
+      out.writeln(label, "->", message.substr(0, message.find('\n')));
+    }
+  };
+  attempt("a negative weight         ", {1, 1, 1, -1, 1, 1, 1, 1});
+  attempt("seven weights for 8 rows  ", {1, 1, 1, 1, 1, 1, 1});
+  attempt("a NaN weight (row dropped)", {1, 1, 1, std::numeric_limits<double>::quiet_NaN(), 1, 1, 1, 1});
+  attempt("every weight zero         ", {0, 0, 0, 0, 0, 0, 0, 0});
+  reg::GLMOptions strict;
+  strict.drop_missing = false;
+  strict.weights = pluss::make_series(std::vector<double>{1, 1, 1, std::numeric_limits<double>::quiet_NaN(), 1, 1, 1, 1}, {8}, as_f64());
+  try {
+    reg::glm_fit(y, x, strict);
+  } catch (const std::exception &e) {
+    const std::string message = e.what();
+    out.writeln("a NaN weight with drop_missing = false ->", message.substr(0, message.find('\n')));
+  }
+}
+```
+
+Down-weighting the seventh observation to 0.1 moves the fit most of the way to the fit without it: the intercept goes from 0.0143 through 0.1981 to 0.2262 and the slope from 1.0440 through 0.9675 to 0.9557. A weight of zero removes the row (`nobs` 7, `dropped_observations` 1). A negative weight, a weight vector of the wrong length, and the case where no row has a positive weight are errors, and a `NaN` weight makes its row incomplete, so it is dropped by default and an error with `drop_missing = false`.
+
+## Offsets: counts over unequal exposures
+
+Events counted over different lengths of time, or in populations of different sizes, cannot be compared as raw counts: the expected count is the rate times the exposure. On the log scale that is log μ = log(exposure) + (log rate), so the log exposure enters the Poisson model as an offset with coefficient 1, and the coefficients describe the rate.
+
+The program records events for twelve sites with unequal exposures and two groups. With an intercept and a group indicator, the maximum-likelihood rate of each group is its total events over its total exposure, so exp(b₀) and exp(b₀ + b₁) must equal those two ratios, and the rate ratio is the ratio of the two. Fitting the raw counts without the offset gives a different, and wrong, answer.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<double> exposure{1, 2, 4, 1, 3, 5, 2, 6, 1, 4, 2, 3};
+  const std::vector<double> group{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+  const std::vector<double> events{2, 5, 7, 3, 4, 11, 6, 17, 4, 12, 5, 9};
+  std::vector<double> log_exposure;
+  double events_by_group[2] = {0, 0}, exposure_by_group[2] = {0, 0};
+  for (std::size_t i = 0; i < exposure.size(); ++i) {
+    log_exposure.push_back(std::log(exposure[i]));
+    events_by_group[static_cast<int>(group[i])] += events[i];
+    exposure_by_group[static_cast<int>(group[i])] += exposure[i];
+  }
+  const auto y = pluss::make_series(events, {12}, as_f64());
+  const auto x = pluss::make_series(group, {12}, as_f64());
+
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  options.offset = pluss::make_series(log_exposure, {12}, as_f64());
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto b = fit.coefficients.pull<double>();
+  const double rate0 = events_by_group[0] / exposure_by_group[0], rate1 = events_by_group[1] / exposure_by_group[1];
+  out.writeln("rate per unit of exposure: group 0", std::exp(b[0]), " group 1", std::exp(b[0] + b[1]), " rate ratio", std::exp(b[1]));
+  out.writeln("totals events / exposure : group 0", rate0, " group 1", rate1, " ratio", rate1 / rate0);
+  out.writeln("converged", fit.converged, " iterations", fit.iterations);
+
+  reg::GLMOptions naive;
+  naive.family = reg::GLMFamily::Poisson;
+  const auto raw = reg::glm_fit(y, x, naive);
+  out.writeln("without the offset, the 'rate ratio' of raw counts is", std::exp(raw.coefficients.pull<double>()[1]), "and its deviance is", raw.deviance, "against", fit.deviance, "with it");
+
+  // Predicting the expected count for a new site: the rate of its group times its own exposure.
+  const auto new_x = pluss::make_series(std::vector<double>{0, 1}, {2}, as_f64());
+  const auto new_offset = pluss::make_series(std::vector<double>{std::log(10.0), std::log(10.0)}, {2}, as_f64());
+  out.writeln("expected events for an exposure of 10, groups 0 and 1:", reg::glm_predict(fit, new_x, new_offset).pull<double>(), " by hand", 10.0 * rate0, 10.0 * rate1);
+  out.writeln("the linear predictor of the fit includes the offset:", fit.linear_predictor.sub(fit.fitted_values.log()).abs().max().item<double>());
+}
+```
+
+With the offset, the estimated rates are exactly the group totals of events over exposure, 2.0000 and 2.9444, and the rate ratio is 1.4722. The linear predictor of the fit includes the offset, so it equals the log of the fitted count. Without the offset the model treats the exposures as if they were equal, giving a rate ratio of 1.6563 and a deviance of 22.69 against 2.16, which is a poor fit to counts whose size is driven by exposure. A prediction needs the exposure of the new site, supplied as its log in the offset: ten units of exposure give 20.0 and 29.4 expected events in the two groups, as the hand calculation says.
+
+## The null model with an offset
+
+The null deviance is the deviance of the model with a constant mean. With an offset the constant mean is a constant *rate*, so the null model is the intercept-only fit with the same offset, and the pseudo R² measures what the predictors add beyond a common rate. The program checks that the null deviance is the deviance of an intercept-only model fitted with the offset.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> exposure{1, 2, 4, 1, 3, 5, 2, 6, 1, 4, 2, 3};
+  const std::vector<double> group{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+  const std::vector<double> events{2, 5, 7, 3, 4, 11, 6, 17, 4, 12, 5, 9};
+  std::vector<double> log_exposure;
+  for (double e : exposure) {
+    log_exposure.push_back(std::log(e));
+  }
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  options.offset = pluss::make_series(log_exposure, {12}, as_f64());
+  const auto fit = reg::glm_fit(pluss::make_series(events, {12}, as_f64()), pluss::make_series(group, {12}, as_f64()), options);
+  const auto constant_rate = reg::glm_fit(pluss::make_series(events, {12}, as_f64()), pluss::series::zeros({12, 0}, as_f64()), options);
+  out.writeln("null deviance", fit.null_deviance, " deviance of the intercept-only model with the offset", constant_rate.deviance);
+  out.writeln("deviance with the group indicator", fit.deviance, " pseudo R2", fit.pseudo_rsquared, " = 1 - deviance / null:", 1.0 - fit.deviance / fit.null_deviance);
+  double total_events = 0.0, total_exposure = 0.0;
+  for (std::size_t i = 0; i < events.size(); ++i) {
+    total_events += events[i];
+    total_exposure += exposure[i];
+  }
+  out.writeln("overall rate", std::exp(constant_rate.coefficients.pull<double>()[0]), " = total events / total exposure", total_events / total_exposure);
+}
+```
+
+The null deviance, 5.228, is the deviance of the intercept-only model fitted with the same offset, whose rate is the total events over the total exposure (2.5). The group indicator reduces the deviance to 2.164, a pseudo R² of 0.586 that measures what the groups add beyond a common rate.

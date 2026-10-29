@@ -1,0 +1,113 @@
+# Vector, variational and adjoint operators
+
+[Back to Operators](../calculus_05_operators.md)
+
+Three families that rebuild familiar identities from `differential`: the operators of vector calculus on a field whose components you list, the Euler–Lagrange form of a Lagrangian, and the formal adjoint of an operator. Every result is an analytic `Function`.
+
+| Entry point | Result |
+|---|---|
+| `divergence({x, y, z})`, `curl({x, y, z})`, `laplacian({x, y, z})` | `Σ ∂Fᵢ/∂xᵢ`; the curl (a scalar for two coordinates); `Σ ∂²f/∂xᵢ²` |
+| `directional(v, vars)`, `material(v, t, vars)` | `v·∇f`; the convective derivative `∂ₜf + v·∇f` |
+| `variational::euler_lagrange(x, {u, u1, u2, …})` | `δF/δu = Σₖ (−Dₓ)ᵏ ∂L/∂uₖ` for a Lagrangian over the jet variables |
+| `adjoint(op)` | the formal adjoint of an operator that knows it |
+
+```cpp
+operators::Operator operators::divergence(StackArray<std::string_view> variables, DiffOptions options = {});
+operators::Operator operators::curl(StackArray<std::string_view> variables, DiffOptions options = {});
+operators::Operator operators::laplacian(StackArray<std::string_view> variables, DiffOptions options = {});
+operators::Operator operators::directional(math::Function direction, StackArray<std::string_view> variables, DiffOptions options = {});
+operators::Operator operators::material(math::Function velocity, std::string_view time, StackArray<std::string_view> variables, DiffOptions options = {});
+operators::Operator operators::variational::euler_lagrange(std::string_view independent, StackArray<std::string_view> jets, DiffOptions options = {});
+operators::Operator operators::adjoint(const Operator &op);
+```
+
+## Vector identities
+
+`curl(grad f)` is zero and `div(curl G)` is zero, to rounding. The program checks both on arbitrary fields, then takes the divergence of `(x²y, yz, zx)`, which is `2xy + z + x`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto xyz = [](auto body) { return math::function({"x", "y", "z"}, body); };
+  const math::Function f = xyz([](math::Function x, math::Function y, math::Function z) { return x * x * y * z + (x * z).sin(); });
+  const math::Function G = xyz([](math::Function x, math::Function y, math::Function z) { return math::stack({y * z * z, x * x * z, x * y}); });
+  const math::Function F = xyz([](math::Function x, math::Function y, math::Function z) { return math::stack({x * x * y, y * z, z * x}); });
+  const std::vector<pluss::Series> p{pluss::make_series(0.3), pluss::make_series(0.9), pluss::make_series(-1.2)};
+
+  const operators::Operator curl = operators::curl({"x", "y", "z"});   // staged
+  out.writeln("curl grad f = ", curl(operators::gradient({"x", "y", "z"})(f))(p).pull<double>());
+  out.writeln("div curl G  = ", operators::divergence({"x", "y", "z"})(curl(G))(p).item<double>());
+  out.writeln("div F       = ", operators::divergence({"x", "y", "z"})(F)(p).item<double>(), "   2xy + z + x = ", 2 * 0.3 * 0.9 - 1.2 + 0.3);
+}
+```
+
+## Euler–Lagrange equations
+
+List the jet variables `u, u′, u″, …` as ordinary variables of the Lagrangian, with at least twice as many orders as it uses; asking for too few is an error rather than a silent truncation. For `L = ½u′² − ½ω²u²` the result is `−ω²u − u″`, which vanishes on `u = cos ωx`; for the area `L = √(1 + u′²)` it is `−u″/(1 + u′²)^{3/2}`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace variational = pluss::operators::variational;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const double w = 1.7;
+  const auto EL = variational::euler_lagrange("x", {"u", "u1", "u2", "u3", "u4"});
+  const math::Function oscillator = math::function({"x", "u", "u1", "u2", "u3", "u4"}, [w](math::Function, math::Function u, math::Function u1, math::Function, math::Function, math::Function) { return u1 * u1 * 0.5 - u * u * (w * w * 0.5); });
+  const math::Function area = math::function({"x", "u", "u1", "u2", "u3", "u4"}, [](math::Function, math::Function, math::Function u1, math::Function, math::Function, math::Function) { return (u1 * u1 + 1.0).sqrt(); });
+
+  const double x = 0.9, c = std::cos(w * x), s = std::sin(w * x);
+  const auto jet = [&](double u, double u1, double u2) { return std::vector<pluss::Series>{pluss::make_series(x), pluss::make_series(u), pluss::make_series(u1), pluss::make_series(u2), pluss::make_series(0.0), pluss::make_series(0.0)}; };
+  out.writeln("oscillator on cos(wx)  ", EL(oscillator)(jet(c, -w * s, -w * w * c)).item<double>());
+  out.writeln("area, u' = 0.8, u'' = 0.6  ", EL(area)(jet(0.0, 0.8, 0.6)).item<double>(), "   exact ", -0.6 / std::pow(1.64, 1.5));
+}
+```
+
+## Adjoints
+
+`adjoint` is defined for operators that declare it: `differential` of order `k` becomes `(−1)ᵏ` times itself, `multiply` and `scale` are self-adjoint (real coefficients), `shift(h)` becomes `shift(−h)`, a composition reverses its order and a linear combination combines the adjoints. It is the adjoint for fields that vanish at the ends of the domain. Asking for the adjoint of an operator without one is an error. The program checks `⟨Af, g⟩ = ⟨f, A*g⟩` by integrating over the whole line.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const double inf = std::numeric_limits<double>::infinity();
+  const math::Function f = math::function({"x"}, [](math::Function x) { return (-(x * x) * 0.5).exp(); });
+  const math::Function g = math::function({"x"}, [](math::Function x) { return (x + 0.4) * (-(x * x) * 0.3).exp(); });
+  const math::Function m = math::function({"x"}, [](math::Function x) { return x * x + 1.0; });
+  const auto inner = [&](const math::Function &a, const math::Function &b) {
+    return operators::integral("x", -inf, inf)(operators::multiply(b)(a))().item<double>();
+  };
+
+  const operators::Operator A = operators::compose(operators::multiply(m), operators::differential("x"));   // m * d/dx
+  const operators::Operator Astar = operators::adjoint(A);                                                    // -d/dx (m .)
+  out.writeln("<A f, g>   = ", inner(A(f), g));
+  out.writeln("<f, A* g>  = ", inner(f, Astar(g)));
+}
+```
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

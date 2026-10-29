@@ -16,12 +16,14 @@
 
 namespace pluss {
 using Note = coden::Note;
+using NoteDType = coden::NoteDType;
 using TextRef = coden::TextRef;
 using TokenBatch = coden::TokenBatch;
 using NotePrintOptions = coden::NotePrintOptions;
 using NotePrintMetadataMode = coden::NotePrintMetadataMode;
 using NotePrintContentMode = coden::NotePrintContentMode;
 using NotePrintBytesMode = coden::NotePrintBytesMode;
+using coden::dtype_name;
 using coden::to_string;
 using coden::operator<<;
 } // namespace pluss

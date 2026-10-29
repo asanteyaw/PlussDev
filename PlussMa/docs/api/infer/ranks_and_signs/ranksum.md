@@ -80,6 +80,8 @@ Output
 rank sum of A 96.5000, U 60.5000, z 2.3137, p 0.0164 (reject)
 ```
 
+The rank sum of A is 96.5 and the U statistic 60.5, giving z 2.31 and p 0.0164: the fill volumes of the two machines differ. The test uses only the ranks, so it does not depend on the shape of the distributions.
+
 ### Example 2
 
 Exact and approximate p-values for samples with ties.
@@ -113,6 +115,8 @@ exact       p 0.2658
 approximate p 0.2663
 ```
 
+With ties the default p-value 0.2663 uses the normal approximation with a tie correction, and the exact p-value is 0.2658: the two agree to three decimals, and the decision is the same.
+
 ### Example 3
 
 One-sided alternative: does A tend to be larger than B?
@@ -142,6 +146,8 @@ Output
 ```text
 p 0.0082, critical z 1.6449
 ```
+
+One-sided, the p-value halves to 0.0082 and is compared with the critical z 1.645.
 
 ## See Also
 

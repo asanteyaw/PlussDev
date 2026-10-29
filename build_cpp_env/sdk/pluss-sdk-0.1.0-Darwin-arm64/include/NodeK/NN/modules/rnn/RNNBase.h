@@ -12,16 +12,16 @@
 namespace pluss::ai::nn {
 
 struct PackedSequence {
-  Series data{};
-  Series batch_sizes{};
-  Series sorted_indices{};
-  Series unsorted_indices{};
+  Series data = pluss::series::undefined();
+  Series batch_sizes = pluss::series::undefined();
+  Series sorted_indices = pluss::series::undefined();
+  Series unsorted_indices = pluss::series::undefined();
 };
 
 inline PackedSequence pack_padded_sequence(const Series& input, const Series& lengths, bool batch_first = false) {
   ::pluss::detail::nn::require_rank_at_least_(input, 2, "nn::pack_padded_sequence");
   ::pluss::detail::nn::require_rank_at_least_(lengths, 1, "nn::pack_padded_sequence");
-  const auto lengths_vec = lengths.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto lengths_vec = lengths.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
   const auto sorted = ::pluss::detail::nn::sorted_batch_indices_(lengths_vec);
   const auto unsorted = ::pluss::detail::nn::inverse_permutation_(sorted);
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(input.platform());
@@ -44,7 +44,7 @@ inline PackedSequence pack_padded_sequence(const Series& input, const Series& le
   const Series batch_sizes =
       pluss::make_series(batch_sizes_vec, {static_cast<std::int64_t>(batch_sizes_vec.size())}, icfg);
   return PackedSequence{
-      chunks.empty() ? Series() : pluss::series::unite(chunks, 0),
+      chunks.empty() ? pluss::series::undefined() : pluss::series::unite(chunks, 0),
       batch_sizes,
       sorted_idx,
       unsorted_idx};
@@ -52,7 +52,7 @@ inline PackedSequence pack_padded_sequence(const Series& input, const Series& le
 
 inline std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& packed, bool batch_first = false) {
   ::pluss::detail::nn::require_rank_at_least_(packed.data, 1, "nn::pad_packed_sequence");
-  const auto batch_sizes_vec = packed.batch_sizes.to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  const auto batch_sizes_vec = packed.batch_sizes.to(pluss::pCPU, ScalarType::Int64).host<std::int64_t>();
   const std::int64_t max_seq = static_cast<std::int64_t>(batch_sizes_vec.size());
   const std::int64_t batch = packed.unsorted_indices.numel();
   std::vector<std::int64_t> tail_sizes(packed.data.sizes().begin() + 1, packed.data.sizes().end());
@@ -75,7 +75,7 @@ inline std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& pack
   }
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(packed.data.platform());
   const Series lengths_s = pluss::make_series(lengths, {static_cast<std::int64_t>(lengths.size())}, icfg);
-  Series padded = steps.empty() ? Series() : pluss::series::pile(steps, 0);
+  Series padded = steps.empty() ? pluss::series::undefined() : pluss::series::pile(steps, 0);
   if (batch_first) {
     padded = padded.transpose(0, 1);
   }
@@ -93,7 +93,8 @@ inline pluss::ai::rnn::NetWeight make_weight_block_(std::int64_t gate_size,
                                                     bool split_bias,
                                                     std::int64_t proj_size,
                                                     Config cfg,
-                                                    std::uint64_t seed) {
+                                                    std::uint64_t seed,
+                                                    std::int64_t raw_hidden_size = -1) {
   const Config fcfg = ::pluss::detail::nn::floating_cfg_(cfg);
   const double bound = 1.0 / std::sqrt(static_cast<double>(hidden_recurrent_size > 0 ? hidden_recurrent_size : 1));
   pluss::ai::rnn::NetWeight out;
@@ -108,7 +109,17 @@ inline pluss::ai::rnn::NetWeight make_weight_block_(std::int64_t gate_size,
     }
   }
   if (proj_size > 0) {
-    out.weight_hr = ::pluss::detail::nn::uniform_({proj_size, hidden_recurrent_size}, -bound, bound, fcfg, seed + 4ULL);
+    // weight_hr projects the *raw* gate-derived hidden state (width
+    // raw_hidden_size, i.e. gate_size / 4 for LSTM) down to proj_size --
+    // NOT hidden_recurrent_size, which is already proj_size-wide once a
+    // projection is active (weight_hh's recurrent connection runs on the
+    // already-projected state). Using hidden_recurrent_size here would
+    // build a [proj_size, proj_size] weight_hr instead of the required
+    // [proj_size, raw_hidden_size], breaking the actual projection matmul
+    // in lstm_layer (ff(hidden, weight_hr) where hidden is raw_hidden_size
+    // wide at that point).
+    const std::int64_t hr_cols = raw_hidden_size >= 0 ? raw_hidden_size : hidden_recurrent_size;
+    out.weight_hr = ::pluss::detail::nn::uniform_({proj_size, hr_cols}, -bound, bound, fcfg, seed + 4ULL);
   }
   return out;
 }

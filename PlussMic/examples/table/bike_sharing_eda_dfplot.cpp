@@ -456,7 +456,7 @@ int main(int argc, char** argv) {
 
   std::cout << "\n=== Missing values summary (per column) ===\n";
   for (const auto& feature : df.features()) {
-    const auto null_count = df.features(feature).isnull().count().as_series().item<std::int64_t>();
+    const auto null_count = df.features(feature).isnull().count().as_series().host<std::int64_t>().front();
     if (null_count > 0) {
       std::cout << feature << ": " << null_count << "\n";
     }

@@ -1,0 +1,35 @@
+# Calculus 7: Complex Functions
+
+A `Function` can take and return complex numbers, and the calculus operators follow. After this chapter you can build and evaluate complex functions with native scalars, take their Wirtinger derivatives, tell holomorphic from non-holomorphic functions, and use the ordinary operators on complex functions of a real parameter.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **One graph, real or complex.** The same traced body evaluates at real and complex points; a complex scalar is passed directly.
+- **Two derivatives.** `wirtinger` is ∂/∂z and `conjugate_wirtinger` is ∂/∂z̄; the function is holomorphic where the second is zero.
+- **Principal branches.** `log`, `sqrt` and fractional `pow` return the principal value, with the cut on the negative real axis.
+- **Real parameters use the ordinary operators.** `differential` and `integral` accept complex functions of a real variable.
+
+| Entry point | Purpose |
+|---|---|
+| `math::function(std::complex<double>)` | a complex constant |
+| `conj()`, `real()`, `imag()`, `abs()`, `angle()` | parts of a complex number |
+| `operators::wirtinger(z, order)` | ∂/∂z |
+| `operators::conjugate_wirtinger(z, order)` | ∂/∂z̄ |
+
+## Programs
+
+- [Complex values](calculus_07_complex_functions/complex_values.md)
+- [Wirtinger derivatives](calculus_07_complex_functions/wirtinger_derivatives.md)
+- [Real parameters and integrals](calculus_07_complex_functions/real_parameters_and_integrals.md)
+
+## Checklist
+
+1. A complex literal such as `2.0 + 1i` combines with a `Function` directly; `math::function(c)` makes a complex constant on its own.
+2. Read the conjugate derivative first: if it is zero the function is holomorphic and `wirtinger` is the usual derivative.
+3. Expect the principal branch from `log`, `sqrt` and fractional powers, and a jump across the negative real axis.
+4. `real`, `imag`, `abs` and `angle` return real values stored with a zero imaginary part.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

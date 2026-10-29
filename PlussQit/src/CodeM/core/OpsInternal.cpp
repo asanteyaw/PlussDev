@@ -7034,13 +7034,14 @@ Series nonzero(const Series& a) {
                          a.platform());
   }
 
-  const bool scalar_like = (a.dim() == 0) || (a.dim() == 1 && a.numel() == 1);
-  if (scalar_like) {
+  // Only a rank-0 tensor has no coordinates to report: its result is (1 x 0) when it is nonzero and (0 x 0) otherwise. A one-element
+  // vector still has one coordinate (its index 0), so it yields (1 x 1) holding 0 or (0 x 1), like every longer vector.
+  if (a.dim() == 0 || (a.dim() == 1 && a.numel() == 1)) {
     const bool present = a.ne(0.0).to(Platform::CPU).host<bool>().array().data.at(static_cast<std::size_t>(0));
-    const std::array<std::int64_t, 2> out_shape{{present ? 1 : 0, 0}};
-    return Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
-                         ScalarType::Int64,
-                         a.platform());
+    const std::array<std::int64_t, 2> out_shape{{present ? 1 : 0, a.dim()}};
+    const std::span<const std::int64_t> shape(out_shape.data(), out_shape.size());
+    return a.dim() == 0 ? Series::empty(shape, ScalarType::Int64, a.platform())
+                        : Series::zeros(shape, ScalarType::Int64, a.platform());
   }
 
   if (a.platform() == Platform::MPS) {

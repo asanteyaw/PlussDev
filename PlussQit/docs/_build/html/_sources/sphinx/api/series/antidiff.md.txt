@@ -33,7 +33,7 @@ the literal same formula, since it weights each term by the trapezoidal
 rule (approximating an integral) rather than replaying the raw differences.
 
 This is deliberately **not** a home for continuous integration of an
-arbitrary callable — `pluss::integ::quadra`, `pluss::integ::aleatoria`, and
+arbitrary callable — `pluss::subsp::math::integ::quadra`, `pluss::subsp::math::integ::aleatoria`, and
 the `Analytica` closed-form registry (PlussMa) cover that. Those need to
 re-invoke a function at points they choose themselves; a single
 already-computed `Series` cannot provide that, only its own already-sampled

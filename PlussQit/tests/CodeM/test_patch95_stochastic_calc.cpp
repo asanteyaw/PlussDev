@@ -447,3 +447,16 @@ TEST_CASE("a Malliavin weight reproduces the digital-option delta", "[stochastic
       [&](const Series& d) { return d.sum(0).mul(sg).add((r - 0.5 * sg * sg) * T).exp().mul(S0); }, 0);
   CHECK(at(ds, 0) == Approx(sg * at(st, 0)));
 }
+
+TEST_CASE("a process or functional that does not depend on the increments has zero Malliavin correction",
+          "[stochastic][malliavin]") {
+  // regression: a slice of an untracked process can carry a source link of its own, so the guard has to test the
+  // summed objective; `zeros_like(d) + 1` is such a process and used to throw "nothing to differentiate"
+  const Series dw = vec({0.3, -0.2, 0.5, 0.1});
+  const Series constant = dw.calc.diff.skorokhod(
+      [](const Series& d) { return pluss::series::zeros_like(d).add(1.0); }, 0.1, 0);
+  CHECK(at(constant, 0) == Approx(0.3 - 0.2 + 0.5 + 0.1));
+  const Series derivative = dw.calc.diff.malliavin(
+      [](const Series& d) { return pluss::series::zeros_like(d).sum(0).add(2.0); }, 0);
+  for (std::int64_t i = 0; i < 4; ++i) CHECK(at(derivative, i) == Approx(0.0));
+}

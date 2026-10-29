@@ -4,6 +4,7 @@
 #include "pluss/subsp/natsci/physics/astro.h"
 #include "pluss/subsp/natsci/physics/fluids.h"
 #include "pluss/subsp/natsci/physics/fluids/les.h"
+#include "pluss/subsp/natsci/physics/fluids/rans.h"
 #include "pluss/subsp/natsci/physics/fluids/compressible.h"
 #include "pluss/subsp/natsci/physics/fluids/compressible_boundary.h"
 #include "pluss/subsp/natsci/physics/fluids/compressible_reacting.h"

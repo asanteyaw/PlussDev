@@ -1,0 +1,28 @@
+<!-- generated from functions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Functions and operators
+
+Chapters, in reading order:
+
+- [Calculus 1: Functions](functions/calculus_01_functions.md)
+- [Calculus 2: Derivatives](functions/calculus_02_derivatives.md)
+- [Calculus 3: Vector Calculus](functions/calculus_03_vector_calculus.md)
+- [Calculus 4: Integrals](functions/calculus_04_integrals.md)
+- [Calculus 5: Operators](functions/calculus_05_operators.md)
+- [Calculus 6: Worked Problems](functions/calculus_06_worked_problems.md)
+- [Calculus 7: Complex Functions](functions/calculus_07_complex_functions.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+functions/calculus_01_functions
+functions/calculus_02_derivatives
+functions/calculus_03_vector_calculus
+functions/calculus_04_integrals
+functions/calculus_05_operators
+functions/calculus_06_worked_problems
+functions/calculus_07_complex_functions
+```
+<!-- apiref:toctree:end -->

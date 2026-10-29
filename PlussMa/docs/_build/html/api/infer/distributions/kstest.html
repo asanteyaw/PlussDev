@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -138,6 +138,7 @@
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>D 0.2257 (D+ 0.0808, D- 0.2257), p 0.7316, critical 0.4546
 </pre></div>
 </div>
+<p>The largest gap between the empirical distribution function and the normal one is D 0.2257, and it comes from the left gap <code class="docutils literal notranslate"><span class="pre">D-</span></code>; the right gap <code class="docutils literal notranslate"><span class="pre">D+</span></code> is only 0.0808. The p-value 0.73 and the critical value 0.4546 both say the fill volumes are consistent with a normal of mean 5.5 and standard deviation 0.5.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -166,6 +167,7 @@
 approximate p 0.7534
 </pre></div>
 </div>
+<p>For a small sample the exact p-value (0.7316) and the large-sample approximation (0.7534) differ in the second decimal. Both lead to the same decision; the exact one is the default for small samples, and the approximate one is available when it is wanted for comparison.</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -194,6 +196,7 @@ approximate p 0.7534
 Left  (D-) p 0.3852
 </pre></div>
 </div>
+<p>The one-sided tests look at one gap each: the right gap <code class="docutils literal notranslate"><span class="pre">D+</span></code> gives p 0.8609 and the left gap <code class="docutils literal notranslate"><span class="pre">D-</span></code> gives p 0.3852. The left gap is the larger, so its p-value is the smaller, and it is the one that carries the two-sided result of the previous examples.</p>
 </section>
 </section>
 <section id="see-also">
@@ -222,13 +225,16 @@ Left  (D-) p 0.3852
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

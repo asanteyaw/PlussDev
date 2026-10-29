@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Regression 5: Worked Problems &#8212; PlussMa  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
+    <script src="../../../_static/layout.js?v=ae31baf4"></script>
+    <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="A calibration line and its uncertainty" href="regression_05_worked_problems/a_calibration_line_and_its_uncertainty.html" />
+    <link rel="prev" title="Prediction, the summary and options" href="regression_04_polynomial_regression/prediction_summary_and_options.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- generated from regression_05_worked_problems.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+<section id="regression-5-worked-problems">
+<h1>Regression 5: Worked Problems<a class="headerlink" href="#regression-5-worked-problems" title="Link to this heading">¶</a></h1>
+<p>Five problems that combine the families of the guide with the quantities in their results. Each states the question, answers it with programs whose every step is checked, and shows where the first answer that comes to mind goes wrong.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="regression_05_worked_problems/a_calibration_line_and_its_uncertainty.html"><span class="std std-doc">A calibration line and its uncertainty</span></a> uses <code class="docutils literal notranslate"><span class="pre">ols_fit</span></code>, its covariance matrix and a <em>t</em> distribution to test a claimed sensitivity and to invert the line, with an interval from the delta method checked against the inversion of the prediction band.</p></li>
+<li><p><a class="reference internal" href="regression_05_worked_problems/dose_response_and_the_median_effective_dose.html"><span class="std std-doc">Dose-response and the median effective dose</span></a> uses <code class="docutils literal notranslate"><span class="pre">glm_fit</span></code> with the binomial family to estimate the dose at which half of the subjects respond, with a delta-method interval and Fieller’s interval, and shows when they disagree.</p></li>
+<li><p><a class="reference internal" href="regression_05_worked_problems/comparing_two_event_rates.html"><span class="std std-doc">Comparing two event rates</span></a> uses a Poisson regression on a group indicator, with a rate ratio, three tests of no difference, and a check on the dispersion.</p></li>
+<li><p><a class="reference internal" href="regression_05_worked_problems/reference_curves_with_quantiles.html"><span class="std std-doc">Reference curves with quantiles</span></a> combines <code class="docutils literal notranslate"><span class="pre">poly_expand</span></code> and <code class="docutils literal notranslate"><span class="pre">quantile_fit</span></code> to draw percentile curves for a measurement whose spread grows with age, and places new observations on them.</p></li>
+<li><p><a class="reference internal" href="regression_05_worked_problems/the_same_data_four_ways.html"><span class="std std-doc">The same data, four ways</span></a> fits one data set with a straight line, a quadratic, the normal family with a log link and a median line, and scores them against a known truth, inside and beyond the data, with and without an outlier.</p></li>
+</ul>
+<section id="checklist">
+<h2>Checklist<a class="headerlink" href="#checklist" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>A quantity built from several coefficients (a ratio, a sum, an inverse prediction) needs the <code class="docutils literal notranslate"><span class="pre">covariance</span></code> matrix, not just the standard errors.</p></li>
+<li><p>A ratio with an uncertain denominator is better described by Fieller’s interval than by a symmetric one.</p></li>
+<li><p>Test a hypothesis about a coefficient with the value in the hypothesis, <code class="docutils literal notranslate"><span class="pre">(b</span> <span class="pre">−</span> <span class="pre">b₀)</span> <span class="pre">/</span> <span class="pre">se</span></code>, and the right reference distribution: Student’s <em>t</em> for least squares and quantile regression, the normal distribution for a GLM.</p></li>
+<li><p>Check the dispersion before trusting a Poisson test.</p></li>
+<li><p>Choose the family for what is wrong with the data, and the form of the model for how the response behaves: an outlier calls for a quantile fit, curvature for a polynomial or a link, a bounded or count response for a GLM.</p></li>
+<li><p>Predictions beyond the range of the data depend entirely on the form of the model.</p></li>
+</ol>
+<!-- apiref:toctree:start -->
+<div class="toctree-wrapper compound">
+</div>
+<!-- apiref:toctree:end -->
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+
+<div class="pluss-api-sidebar-fallback">
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Guides</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../ts/guide.html">Time series guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../distr.html">Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../infer.html">Inference</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../regress.html">Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../calculus.html">Calculus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../numerics.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../finance.html">Finance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/plussma_infer.html">Inference API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/manual/regress/regression/regression_05_worked_problems.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

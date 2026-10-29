@@ -65,7 +65,7 @@ Series i64_range_(std::int64_t start, std::int64_t end, Config cfg) {
 }
 
 double scalar_(const Series& x) {
-  return x.to(ScalarType::Float64).reshape({1}).item<double>();
+  return x.to(ScalarType::Float64).reshape({1}).host<double>().front();
 }
 
 double clamp01_(double p) {

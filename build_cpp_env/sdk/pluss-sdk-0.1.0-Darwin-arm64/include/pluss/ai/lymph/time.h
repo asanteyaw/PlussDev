@@ -10,7 +10,7 @@
 // The current implementation uses row-step offsets because NodeJ's
 // TSCrossVal kernel is sample-index based today. The value type is explicit
 // so Workflow/Payload/Validate can share one contract now and NodeJ can later
-// upgrade it to calendar-aware Timeline/TimeIndex semantics without changing
+// upgrade it to calendar-aware Timeline index semantics without changing
 // the public family split.
 
 namespace pluss::ai::lymph::workflow::time {

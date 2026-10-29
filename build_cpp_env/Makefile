@@ -17964,6 +17964,19 @@ black_scholes_test/fast:
 .PHONY : black_scholes_test/fast
 
 #=============================================================================
+# Target rules for targets named cos_benchmark_catch2
+
+# Build rule for target.
+cos_benchmark_catch2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cos_benchmark_catch2
+.PHONY : cos_benchmark_catch2
+
+# fast build rule for target.
+cos_benchmark_catch2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_benchmark_catch2.dir/build
+.PHONY : cos_benchmark_catch2/fast
+
+#=============================================================================
 # Target rules for targets named cos_fft_greeks_catch2
 
 # Build rule for target.
@@ -17988,6 +18001,32 @@ heston_sv_pricing_test: cmake_check_build_system
 heston_sv_pricing_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build
 .PHONY : heston_sv_pricing_test/fast
+
+#=============================================================================
+# Target rules for targets named implied_vol_test
+
+# Build rule for target.
+implied_vol_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 implied_vol_test
+.PHONY : implied_vol_test
+
+# fast build rule for target.
+implied_vol_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/implied_vol_test.dir/build
+.PHONY : implied_vol_test/fast
+
+#=============================================================================
+# Target rules for targets named mc_consistency_test
+
+# Build rule for target.
+mc_consistency_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mc_consistency_test
+.PHONY : mc_consistency_test
+
+# fast build rule for target.
+mc_consistency_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/mc_consistency_test.dir/build
+.PHONY : mc_consistency_test/fast
 
 #=============================================================================
 # Target rules for targets named object_pricing_test
@@ -18131,6 +18170,19 @@ integ_test: cmake_check_build_system
 integ_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/build
 .PHONY : integ_test/fast
+
+#=============================================================================
+# Target rules for targets named lebesgue_test
+
+# Build rule for target.
+lebesgue_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lebesgue_test
+.PHONY : lebesgue_test
+
+# fast build rule for target.
+lebesgue_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/lebesgue_test.dir/build
+.PHONY : lebesgue_test/fast
 
 #=============================================================================
 # Target rules for targets named interp_test
@@ -18846,6 +18898,32 @@ plussma_simple_septima_functional_multiblock_demo: cmake_check_build_system
 plussma_simple_septima_functional_multiblock_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build.make PlussMa/Math/examples/Numerical/optimization/CMakeFiles/plussma_simple_septima_functional_multiblock_demo.dir/build
 .PHONY : plussma_simple_septima_functional_multiblock_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_calculus_calculus_demo
+
+# Build rule for target.
+plussma_calculus_calculus_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_calculus_calculus_demo
+.PHONY : plussma_calculus_calculus_demo
+
+# fast build rule for target.
+plussma_calculus_calculus_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Calculus/CMakeFiles/plussma_calculus_calculus_demo.dir/build.make PlussMa/Math/examples/Calculus/CMakeFiles/plussma_calculus_calculus_demo.dir/build
+.PHONY : plussma_calculus_calculus_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_calculus_calculus_benchmark
+
+# Build rule for target.
+plussma_calculus_calculus_benchmark: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_calculus_calculus_benchmark
+.PHONY : plussma_calculus_calculus_benchmark
+
+# fast build rule for target.
+plussma_calculus_calculus_benchmark/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/examples/Calculus/CMakeFiles/plussma_calculus_calculus_benchmark.dir/build.make PlussMa/Math/examples/Calculus/CMakeFiles/plussma_calculus_calculus_benchmark.dir/build
+.PHONY : plussma_calculus_calculus_benchmark/fast
 
 #=============================================================================
 # Target rules for targets named plussma_math_finance_finance_filtering_demo
@@ -24403,6 +24481,30 @@ PlussMa/Math/Calculus/Operator.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Calculus/Operator.cpp.s
 .PHONY : PlussMa/Math/Calculus/Operator.cpp.s
 
+PlussMa/Math/Calculus/Persistence.o: PlussMa/Math/Calculus/Persistence.cpp.o
+.PHONY : PlussMa/Math/Calculus/Persistence.o
+
+# target to build an object file
+PlussMa/Math/Calculus/Persistence.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Calculus/Persistence.cpp.o
+.PHONY : PlussMa/Math/Calculus/Persistence.cpp.o
+
+PlussMa/Math/Calculus/Persistence.i: PlussMa/Math/Calculus/Persistence.cpp.i
+.PHONY : PlussMa/Math/Calculus/Persistence.i
+
+# target to preprocess a source file
+PlussMa/Math/Calculus/Persistence.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Calculus/Persistence.cpp.i
+.PHONY : PlussMa/Math/Calculus/Persistence.cpp.i
+
+PlussMa/Math/Calculus/Persistence.s: PlussMa/Math/Calculus/Persistence.cpp.s
+.PHONY : PlussMa/Math/Calculus/Persistence.s
+
+# target to generate assembly for a file
+PlussMa/Math/Calculus/Persistence.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Calculus/Persistence.cpp.s
+.PHONY : PlussMa/Math/Calculus/Persistence.cpp.s
+
 PlussMa/Math/Calculus/PrimitiveRegistry.o: PlussMa/Math/Calculus/PrimitiveRegistry.cpp.o
 .PHONY : PlussMa/Math/Calculus/PrimitiveRegistry.o
 
@@ -26101,6 +26203,7 @@ help:
 	@echo "... continuation_test"
 	@echo "... control_test"
 	@echo "... conv_test"
+	@echo "... cos_benchmark_catch2"
 	@echo "... cos_fft_greeks_catch2"
 	@echo "... count_pva_test"
 	@echo "... crystallization_test"
@@ -26176,6 +26279,7 @@ help:
 	@echo "... ice_tft_test"
 	@echo "... ice_time_series_dataset_test"
 	@echo "... ideal_gas_test"
+	@echo "... implied_vol_test"
 	@echo "... incompressible_test"
 	@echo "... inference_reference_values_test"
 	@echo "... inplace_batch_a"
@@ -26190,6 +26294,7 @@ help:
 	@echo "... ipm_test"
 	@echo "... kinetics_test"
 	@echo "... lag_features_test"
+	@echo "... lebesgue_test"
 	@echo "... les_test"
 	@echo "... life_contingencies_foundation_test"
 	@echo "... linkage_test"
@@ -26222,6 +26327,7 @@ help:
 	@echo "... mads_nomad_parity_test"
 	@echo "... maps_test"
 	@echo "... math_state_test"
+	@echo "... mc_consistency_test"
 	@echo "... mechanics_test"
 	@echo "... metabolism_test"
 	@echo "... millard_test"
@@ -27329,6 +27435,8 @@ help:
 	@echo "... plussai_toy_workflow_regression"
 	@echo "... plussma_adam_functional_demo"
 	@echo "... plussma_bike_sharing_regression_notebook_demo"
+	@echo "... plussma_calculus_calculus_benchmark"
+	@echo "... plussma_calculus_calculus_demo"
 	@echo "... plussma_calculus_contract_test"
 	@echo "... plussma_dfo_suite_demo"
 	@echo "... plussma_dfo_unified_demo"
@@ -28008,6 +28116,9 @@ help:
 	@echo "... PlussMa/Math/Calculus/Operator.o"
 	@echo "... PlussMa/Math/Calculus/Operator.i"
 	@echo "... PlussMa/Math/Calculus/Operator.s"
+	@echo "... PlussMa/Math/Calculus/Persistence.o"
+	@echo "... PlussMa/Math/Calculus/Persistence.i"
+	@echo "... PlussMa/Math/Calculus/Persistence.s"
 	@echo "... PlussMa/Math/Calculus/PrimitiveRegistry.o"
 	@echo "... PlussMa/Math/Calculus/PrimitiveRegistry.i"
 	@echo "... PlussMa/Math/Calculus/PrimitiveRegistry.s"

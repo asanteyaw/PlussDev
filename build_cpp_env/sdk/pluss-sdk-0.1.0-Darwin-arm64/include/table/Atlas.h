@@ -35,7 +35,7 @@ class AtlasLabelAccessor;
 class Atlas {
 public:
   Atlas();
-  explicit Atlas(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels = std::nullopt);
+  explicit Atlas(std::vector<DataFrame> frames, std::optional<Slate> axis0_labels = std::nullopt);
   Atlas(const Atlas& other);
   Atlas(Atlas&& other) noexcept;
   Atlas& operator=(const Atlas& other);
@@ -51,7 +51,7 @@ public:
   std::int64_t nfeatures() const;
 
   const std::vector<std::string>& column_names() const;
-  const std::optional<Thread>& axis0_labels() const;
+  const std::optional<Slate>& axis0_labels() const;
   const std::vector<DataFrame>& frames() const;
 
   DataFrame frame(std::int64_t index) const;
@@ -78,12 +78,12 @@ public:
   Atlas tail(std::int64_t n = 5) const;
   Atlas slice_frames(std::int64_t start, std::int64_t stop) const;
   Atlas sort_depth(bool ascending = true, bool nulls_last = true) const;
-  Atlas relabel_depth(const Thread& labels) const;
-  Atlas align_depth(const Thread& labels) const;
+  Atlas relabel_depth(const Slate& labels) const;
+  Atlas align_depth(const Slate& labels) const;
 
   Atlas map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const;
   Atlas map(
-      const std::function<ThreadValue(const ThreadValue&)>& fn) const;
+      const std::function<SlateValue(const SlateValue&)>& fn) const;
   Atlas flow(const std::function<Atlas(const Atlas&)>& fn) const;
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
   pluss::kindle::Archive kindelize() const;
@@ -111,27 +111,27 @@ class AtlasLabelAccessor {
 public:
   explicit AtlasLabelAccessor(Atlas atlas);
 
-  Thread values() const;
+  Slate values() const;
   bool has() const;
-  Atlas set(const Thread& labels) const;
+  Atlas set(const Slate& labels) const;
   Atlas range() const;
   Atlas reset() const;
   Atlas sort(bool ascending = true, bool nulls_last = true) const;
-  Atlas align(const Thread& labels) const;
-  Thread unite(const Thread& other) const;
-  Thread intersect(const Thread& other) const;
-  Thread diff(const Thread& other) const;
-  Thread symdiff(const Thread& other) const;
-  Thread find(const Thread& targets) const;
-  Thread pos(double value) const;
-  Thread pos(std::string_view value) const;
-  Thread pos(const char* value) const {
+  Atlas align(const Slate& labels) const;
+  Slate unite(const Slate& other) const;
+  Slate intersect(const Slate& other) const;
+  Slate diff(const Slate& other) const;
+  Slate symdiff(const Slate& other) const;
+  Slate find(const Slate& targets) const;
+  Slate pos(double value) const;
+  Slate pos(std::string_view value) const;
+  Slate pos(const char* value) const {
     return pos(std::string_view{value != nullptr ? value : ""});
   }
-  Thread slice(std::string_view start, std::string_view stop) const;
+  Slate slice(std::string_view start, std::string_view stop) const;
 
 private:
-  Thread label_index_() const;
+  Slate label_index_() const;
 
   Atlas atlas_{};
 };
@@ -161,8 +161,8 @@ public:
   Atlas fmt(std::string_view pattern) const;
   Atlas iso() const;
   Atlas epoch(TimeUnit unit = TimeUnit::Nanos) const;
-  Atlas span(const Thread& other, const TimelineSpanOptions& options = {}) const;
-  Atlas span(const Thread& other, TimeUnit unit) const;
+  Atlas span(const Slate& other, const TimelineSpanOptions& options = {}) const;
+  Atlas span(const Slate& other, TimeUnit unit) const;
   Atlas span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const;
   Atlas span(const pluss::Timeline& other, TimeUnit unit) const;
   Atlas floor(std::string_view unit) const;
@@ -174,7 +174,6 @@ public:
   Atlas tz(std::string_view name) const;
   Atlas localize(const TimelineLocalizeOptions& options = {}) const;
   Atlas utc() const;
-  Atlas index(bool require_sorted = true) const;
 
 private:
   Atlas map_(const std::function<DataFrame(const DataFrame&)>& fn, std::string_view op) const;

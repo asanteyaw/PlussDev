@@ -1,0 +1,49 @@
+# Worked problem: Newton's method on a batch of starts
+
+[Back to Vector Calculus](../calculus_03_vector_calculus.md)
+
+Newton's method for minimising a function repeats x ← x − H⁻¹ g, where g is the gradient and H the Hessian at the current point. Both come directly from the operators, and because they are functions of arrays, one call advances any number of starting points together.
+
+The function is the Rosenbrock valley, f(x, y) = (1 − x)² + 100 (y − x²)², whose minimum is at (1, 1) and whose curved floor is a standard stress test. The program starts from three points at once, solves the 2 × 2 Newton system for each by Cramer's rule, and prints the function value and the iterate at every step.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/aux/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function rosenbrock = math::function({"x", "y"}, [](math::Function x, math::Function y) {
+    return (1.0 - x).pow(2) + 100.0 * (y - x.pow(2)).pow(2);
+  });
+  const math::Function gradient = operators::gradient()(rosenbrock);
+  const math::Function hessian = operators::hessian()(rosenbrock);
+
+  auto x = pluss::make_series({-1.2, 0.5, 2.0});
+  auto y = pluss::make_series({1.0, 0.5, 3.0});
+  for (int step = 0; step <= 6; ++step) {
+    const auto g = gradient({x, y});   // shape [3, 2]
+    const auto h = hessian({x, y});    // shape [3, 2, 2]
+    const auto gx = g.select(1, 0), gy = g.select(1, 1);
+    const auto a = h.select(1, 0).select(1, 0), b = h.select(1, 0).select(1, 1), d = h.select(1, 1).select(1, 1);
+    const auto det = a.mul(d).sub(b.mul(b));
+    const auto dx = d.mul(gx).sub(b.mul(gy)).div(det);   // H^{-1} g, by Cramer's rule
+    const auto dy = a.mul(gy).sub(b.mul(gx)).div(det);
+    out.writeln("step", step, " f", rosenbrock({x, y}).pull<double>(), " x", x.pull<double>(), " y", y.pull<double>());
+    x = x.sub(dx);
+    y = y.sub(dy);
+  }
+}
+```
+
+All three starts reach (1, 1) in six steps or fewer, and the printed values show the same pattern for each: a large first reduction in `f`, a rise at the second step, when the unsafeguarded step overshoots (from 4.73 to 1411.8 for the classic start (−1.2, 1), from 0.26 to 6.24 and from 0.99 to 96.1 for the others), and then the quadratic convergence of Newton's method, where the number of correct digits roughly doubles with each step. The gradient and Hessian calls evaluate all three starts in a single call each, and the arithmetic that follows is ordinary `Series` arithmetic on the three-element columns.
+
+The derivatives are exact because they were derived from the formula, not estimated, which is what makes a method that needs second derivatives practical here. This Newton iteration is not safeguarded, and the first start shows it: f jumps from 4.73 to 1411.8 before the method recovers. A production solver adds a line search or a trust region; the optimization guides document the library's safeguarded solvers.
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

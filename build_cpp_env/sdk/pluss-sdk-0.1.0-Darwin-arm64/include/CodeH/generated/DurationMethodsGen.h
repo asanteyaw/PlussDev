@@ -8,8 +8,6 @@
 // ---- Core predicates / masks ----
 pluss::codem::Series isnat() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("isnat", *this); }
 pluss::codem::Series isvalid() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("isvalid", *this); }
-pluss::codem::Series isfinite() const { return isvalid(); }
-pluss::codem::Series isnan() const { return isnat(); }
 
 // ---- Comparisons (elementwise; return Series[bool]) ----
 pluss::codem::Series eq(const Duration& other) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("eq", *this, {other}); }
@@ -58,76 +56,24 @@ pluss::codem::Series milliseconds() const { return ::pluss::codeh::_compat::invo
 pluss::codem::Series microseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"microseconds"}); }
 pluss::codem::Series nanoseconds() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("component", *this, {"nanoseconds"}); }
 
-// Component aliases (camelCase)
-pluss::codem::Series milliSeconds() const { return milliseconds(); }
-pluss::codem::Series microSeconds() const { return microseconds(); }
-pluss::codem::Series nanoSeconds() const { return nanoseconds(); }
-pluss::codem::Series dayOfDuration() const { return days(); }
-pluss::codem::Series hourOfDuration() const { return hours(); }
-pluss::codem::Series minuteOfDuration() const { return minutes(); }
-pluss::codem::Series secondOfDuration() const { return seconds(); }
-
-// More aliases (MATLAB-ish)
-pluss::codem::Series day() const { return days(); }
-pluss::codem::Series hour() const { return hours(); }
-pluss::codem::Series minute() const { return minutes(); }
-pluss::codem::Series second() const { return seconds(); }
-pluss::codem::Series millisecond() const { return milliseconds(); }
-pluss::codem::Series microsecond() const { return microseconds(); }
-pluss::codem::Series nanosecond() const { return nanoseconds(); }
-
 // ---- Rounding ----
 Duration floor(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("floor", *this, {unit}); }
 Duration ceil(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("ceil", *this, {unit}); }
 Duration round(std::string_view unit) const { return ::pluss::codeh::_compat::invoke<Duration>("round", *this, {unit}); }
 
-// Unit-specific wrappers (lots of discoverability)
-#define CODEH_DURATION_ROUNDING_WRAPPERS(U, TOK) \
-  Duration floor_##U() const { return floor(TOK); } \
-  Duration ceil_##U() const { return ceil(TOK); } \
-  Duration round_##U() const { return round(TOK); }
-
-CODEH_DURATION_ROUNDING_WRAPPERS(ns, "ns")
-CODEH_DURATION_ROUNDING_WRAPPERS(us, "us")
-CODEH_DURATION_ROUNDING_WRAPPERS(ms, "ms")
-CODEH_DURATION_ROUNDING_WRAPPERS(s,  "s")
-CODEH_DURATION_ROUNDING_WRAPPERS(min, "min")
-CODEH_DURATION_ROUNDING_WRAPPERS(h,  "h")
-CODEH_DURATION_ROUNDING_WRAPPERS(D,  "D")
-CODEH_DURATION_ROUNDING_WRAPPERS(W,  "W")
-
-#undef CODEH_DURATION_ROUNDING_WRAPPERS
-
-// ---- Reductions (ignoring NaT) ----
-Duration min() const { return ::pluss::codeh::_compat::invoke<Duration>("min", *this); }
-Duration max() const { return ::pluss::codeh::_compat::invoke<Duration>("max", *this); }
+// ---- Reductions (configurable NaT policy) ----
+Duration min(bool skipna = true) const { return ::pluss::codeh::_compat::invoke<Duration>("min", *this, {skipna}); }
+Duration max(bool skipna = true) const { return ::pluss::codeh::_compat::invoke<Duration>("max", *this, {skipna}); }
 
 // ---- Sorting / uniqueness ----
 Duration sort() const { return ::pluss::codeh::_compat::invoke<Duration>("sort", *this); }
 Duration unique() const { return ::pluss::codeh::_compat::invoke<Duration>("unique", *this); }
 pluss::codem::Series argsort() const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("argsort", *this); }
 
-// More ordering helpers
-Duration sort_values() const { return sort(); }
-Duration sort_stable() const { return sort(); }
-Duration order() const { return sort(); }
-
 // ---- Conversions (safe explicit extraction; no underlying Series exposure) ----
-std::vector<std::int64_t> to_nanos_flat() const { return ::pluss::codeh::_compat::invoke<std::vector<std::int64_t>>("to_nanos_flat", *this); }
+std::vector<std::int64_t> host() const { return ::pluss::codeh::_compat::invoke<std::vector<std::int64_t>>("to_nanos_flat", *this); }
 
 // ---- Formatting ----
 pluss::coden::Note to_note() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("to_note", *this); }
-pluss::coden::Note to_note_compact() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("to_note_compact", *this); }
 pluss::coden::Note to_note_iso() const { return ::pluss::codeh::_compat::invoke<pluss::coden::Note>("to_note_iso", *this); }
-
-// Pretty-print variations
-pluss::coden::Note to_note_full() const { return to_note(); }
-pluss::coden::Note to_note_short() const { return to_note_compact(); }
-pluss::coden::Note format() const { return to_note(); }
-pluss::coden::Note format_compact() const { return to_note_compact(); }
-pluss::coden::Note format_iso() const { return to_note_iso(); }
-
-// Additional aliases to bump discoverability (these are real, routed methods)
-pluss::coden::Note tostring() const { return to_note(); }
-pluss::coden::Note to_string() const { return to_note(); }
 

@@ -41,8 +41,9 @@ struct SoftplusOptions {
 
 class PLUSS_API SoftplusImpl final : public Module {
 public:
-  using Module::Module;
-  explicit SoftplusImpl(SoftplusOptions options = {}) : options_(options) {}
+  explicit SoftplusImpl(SoftplusOptions options) : options_(options) {}
+  explicit SoftplusImpl(double beta = 1.0, double threshold = 20.0)
+      : options_(SoftplusOptions{beta, threshold}) {}
 
   Series forward(const Series& input) const { return input.softplus(options_.beta, options_.threshold); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -63,8 +64,8 @@ struct LeakyReLUOptions {
 
 class PLUSS_API LeakyReLUImpl final : public Module {
 public:
-  using Module::Module;
-  explicit LeakyReLUImpl(LeakyReLUOptions options = {}) : options_(options) {}
+  explicit LeakyReLUImpl(LeakyReLUOptions options) : options_(options) {}
+  explicit LeakyReLUImpl(double negative_slope = 0.01) : options_(LeakyReLUOptions{negative_slope}) {}
 
   Series forward(const Series& input) const { return input.leaky_relu(options_.negative_slope); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -83,27 +84,18 @@ struct EluOptions {
   double alpha = 1.0;
 };
 
-// ELU, applied elementwise: x > 0 ? x : alpha * (exp(x) - 1). No
-// Series::elu() exists in the engine, so built here from primitives that
-// do. Written as a branch-free identity rather than Series::where():
-// elu(x) = relu(x) + alpha * (exp(min(x, 0)) - 1). Check: x > 0 ->
-// relu(x)=x, min(x,0)=0 -> exp(0)-1=0, total=x. x <= 0 -> relu(x)=0,
-// min(x,0)=x -> total=alpha*(exp(x)-1). Both match ELU exactly.
-// (Series::where() itself does propagate gradients correctly -- verified
-// directly against OpsInternal.cpp's dispatch -- this formula was kept
-// because it was already validated and is no more complex than a
-// where()-based version.) Promoted out of
+// ELU, applied elementwise: x > 0 ? x : alpha * (exp(x) - 1). Runs through
+// Series::elu's single fused reverse node rather than a hand-composed
+// relu/clamp_max/exp/sub/mul chain. Promoted out of
 // ice::models::TemporalFusionTransformer's originally-private building
 // blocks (Ice/models/ts/tft_blocks.h) once a second consumer needed it --
 // see ICE_BLUEPRINT.md's centralization note.
 class PLUSS_API EluImpl final : public Module {
 public:
-  using Module::Module;
-  explicit EluImpl(EluOptions options = {}) : options_(options) {}
+  explicit EluImpl(EluOptions options) : options_(options) {}
+  explicit EluImpl(double alpha = 1.0) : options_(EluOptions{alpha}) {}
 
-  Series forward(const Series& input) const {
-    return input.relu().add(input.clamp_max(0.0).exp().sub(1.0).mul(options_.alpha));
-  }
+  Series forward(const Series& input) const { return input.elu(options_.alpha); }
   Series operator()(const Series& input) const { return forward(input); }
   EluImpl* operator->() noexcept { return this; }
   const EluImpl* operator->() const noexcept { return this; }
@@ -118,9 +110,7 @@ PLUSS_MODULE(Elu);
 
 // Free-function form, for callers (e.g. a GRN's own forward()) that want
 // ELU inline without constructing/holding a Module.
-[[nodiscard]] inline Series elu(const Series& x, double alpha = 1.0) {
-  return x.relu().add(x.clamp_max(0.0).exp().sub(1.0).mul(alpha));
-}
+[[nodiscard]] inline Series elu(const Series& x, double alpha = 1.0) { return x.elu(alpha); }
 
 class PLUSS_API IdentityImpl final : public Module {
 public:
@@ -131,5 +121,149 @@ public:
   const IdentityImpl* operator->() const noexcept { return this; }
 };
 PLUSS_MODULE(Identity);
+
+class PLUSS_API SiLUImpl final : public Module {
+public:
+  using Module::Module;
+  Series forward(const Series& input) const { return input.silu(); }
+  Series operator()(const Series& input) const { return forward(input); }
+  SiLUImpl* operator->() noexcept { return this; }
+  const SiLUImpl* operator->() const noexcept { return this; }
+};
+PLUSS_MODULE(SiLU);
+
+struct GELUOptions {
+  bool approximate = false;
+};
+
+class PLUSS_API GELUImpl final : public Module {
+public:
+  explicit GELUImpl(GELUOptions options) : options_(options) {}
+  explicit GELUImpl(bool approximate = false) : options_(GELUOptions{approximate}) {}
+
+  Series forward(const Series& input) const { return input.gelu(options_.approximate); }
+  Series operator()(const Series& input) const { return forward(input); }
+  GELUImpl* operator->() noexcept { return this; }
+  const GELUImpl* operator->() const noexcept { return this; }
+
+  GELUOptions& options() noexcept { return options_; }
+  const GELUOptions& options() const noexcept { return options_; }
+
+private:
+  GELUOptions options_{};
+};
+PLUSS_MODULE(GELU);
+
+struct HardshrinkOptions {
+  double lambd = 0.5;
+};
+
+class PLUSS_API HardshrinkImpl final : public Module {
+public:
+  explicit HardshrinkImpl(HardshrinkOptions options) : options_(options) {}
+  explicit HardshrinkImpl(double lambd = 0.5) : options_(HardshrinkOptions{lambd}) {}
+
+  Series forward(const Series& input) const { return input.hardshrink(options_.lambd); }
+  Series operator()(const Series& input) const { return forward(input); }
+  HardshrinkImpl* operator->() noexcept { return this; }
+  const HardshrinkImpl* operator->() const noexcept { return this; }
+
+  HardshrinkOptions& options() noexcept { return options_; }
+  const HardshrinkOptions& options() const noexcept { return options_; }
+
+private:
+  HardshrinkOptions options_{};
+};
+PLUSS_MODULE(Hardshrink);
+
+struct SoftmaxOptions {
+  std::int64_t dim = -1;
+};
+
+class PLUSS_API SoftmaxImpl final : public Module {
+public:
+  explicit SoftmaxImpl(SoftmaxOptions options) : options_(options) {}
+  explicit SoftmaxImpl(std::int64_t dim = -1) : options_(SoftmaxOptions{dim}) {}
+
+  Series forward(const Series& input) const { return input.softmax(options_.dim); }
+  Series operator()(const Series& input) const { return forward(input); }
+  SoftmaxImpl* operator->() noexcept { return this; }
+  const SoftmaxImpl* operator->() const noexcept { return this; }
+
+  SoftmaxOptions& options() noexcept { return options_; }
+  const SoftmaxOptions& options() const noexcept { return options_; }
+
+private:
+  SoftmaxOptions options_{};
+};
+PLUSS_MODULE(Softmax);
+
+struct LogSoftmaxOptions {
+  std::int64_t dim = -1;
+};
+
+class PLUSS_API LogSoftmaxImpl final : public Module {
+public:
+  explicit LogSoftmaxImpl(LogSoftmaxOptions options) : options_(options) {}
+  explicit LogSoftmaxImpl(std::int64_t dim = -1) : options_(LogSoftmaxOptions{dim}) {}
+
+  Series forward(const Series& input) const { return input.log_softmax(options_.dim); }
+  Series operator()(const Series& input) const { return forward(input); }
+  LogSoftmaxImpl* operator->() noexcept { return this; }
+  const LogSoftmaxImpl* operator->() const noexcept { return this; }
+
+  LogSoftmaxOptions& options() noexcept { return options_; }
+  const LogSoftmaxOptions& options() const noexcept { return options_; }
+
+private:
+  LogSoftmaxOptions options_{};
+};
+PLUSS_MODULE(LogSoftmax);
+
+struct PReLUOptions {
+  std::int64_t num_parameters = 1;
+  double init = 0.25;
+  Config cfg = ::pluss::detail::nn::default_cfg_();
+};
+
+// The one activation in this file with a learnable parameter -- follows the
+// same allocate-then-register-then-fill-in-place construction pattern as
+// the engine's other parameterized modules (Fusion, Conv, Embedding, ...):
+// weight_ is allocated via Series::empty() and registered atomically, then
+// reset_parameters() only ever mutates it in place via copy_(), so it can
+// never end up registered-but-untracked.
+class PLUSS_API PReLUImpl final : public Module {
+public:
+  explicit PReLUImpl(PReLUOptions options) : Module(true), options_(std::move(options)) {
+    register_parameters_();
+    reset_parameters();
+  }
+  explicit PReLUImpl(std::int64_t num_parameters = 1, double init = 0.25, Config cfg = ::pluss::detail::nn::default_cfg_())
+      : PReLUImpl(PReLUOptions{num_parameters, init, std::move(cfg)}) {}
+
+  void reset_parameters() {
+    weight_.copy_(Series::full({options_.num_parameters}, options_.init, options_.cfg.dtype, options_.cfg.platform));
+  }
+
+  Series forward(const Series& input) const { return input.prelu(weight_); }
+  Series operator()(const Series& input) const { return forward(input); }
+  PReLUImpl* operator->() noexcept { return this; }
+  const PReLUImpl* operator->() const noexcept { return this; }
+
+  Series& weight() noexcept { return weight_; }
+  const Series& weight() const noexcept { return weight_; }
+  PReLUOptions& options() noexcept { return options_; }
+  const PReLUOptions& options() const noexcept { return options_; }
+
+private:
+  void register_parameters_() {
+    weight_ = Series::empty({options_.num_parameters}, options_.cfg.dtype, options_.cfg.platform);
+    this->parameter_record("weight", weight_);
+  }
+
+  PReLUOptions options_;
+  Series weight_ = pluss::series::undefined();
+};
+PLUSS_MODULE(PReLU);
 
 } // namespace pluss::ai::nn

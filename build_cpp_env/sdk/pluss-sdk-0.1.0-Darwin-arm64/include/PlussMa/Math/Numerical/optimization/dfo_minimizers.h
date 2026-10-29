@@ -3,6 +3,7 @@
 #include <pluss/codem/series_factory.h>
 
 #include <cstdint>
+#include <limits>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -16,6 +17,18 @@ enum class PopulationSolverStatus {
   ReachedIterationBudget,
   ReachedEvaluationBudget,
 };
+
+inline std::string to_string(PopulationSolverStatus status) {
+  switch (status) {
+    case PopulationSolverStatus::Converged:
+      return "Converged";
+    case PopulationSolverStatus::ReachedIterationBudget:
+      return "ReachedIterationBudget";
+    case PopulationSolverStatus::ReachedEvaluationBudget:
+      return "ReachedEvaluationBudget";
+  }
+  return "Unknown";
+}
 
 enum class PopulationSolverDisplay {
   None,
@@ -51,7 +64,7 @@ struct DifferentialEvolutionConfig {
   double crossover_rate{0.9};
   double best_mix{0.0};
 
-  double initial_radius{0.5};
+  double initial_radius{std::numeric_limits<double>::infinity()};  // infinity: the whole box if bounded, else start +- 0.5
   Series lower_bounds{pluss::series::undefined()};
   Series upper_bounds{pluss::series::undefined()};
 
@@ -80,7 +93,7 @@ struct DifferentialEvolutionPrmmConfig {
   double random_main_strategy_probability{0.75};
   double diversity_epsilon{0.5};
 
-  double initial_radius{0.5};
+  double initial_radius{std::numeric_limits<double>::infinity()};  // infinity: the whole box if bounded, else start +- 0.5
   Series lower_bounds{pluss::series::undefined()};
   Series upper_bounds{pluss::series::undefined()};
 
@@ -110,7 +123,7 @@ struct ParticleSwarmConfig {
   double final_social{2.5};
   double velocity_clamp_ratio{0.0};
 
-  double initial_radius{0.5};
+  double initial_radius{std::numeric_limits<double>::infinity()};  // infinity: the whole box if bounded, else start +- 0.5
   Series lower_bounds{pluss::series::undefined()};
   Series upper_bounds{pluss::series::undefined()};
 
@@ -134,7 +147,7 @@ struct ParticleSwarmDvConfig {
   double crossover_rate{0.7};
   std::int64_t stagnation_limit{50};
 
-  double initial_radius{0.5};
+  double initial_radius{std::numeric_limits<double>::infinity()};  // infinity: the whole box if bounded, else start +- 0.5
   Series lower_bounds{pluss::series::undefined()};
   Series upper_bounds{pluss::series::undefined()};
 

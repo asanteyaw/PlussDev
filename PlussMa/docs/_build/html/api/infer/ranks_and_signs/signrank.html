@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -132,6 +132,7 @@
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>W+ 0.0000, W- 36.0000, z -2.5361, p 0.0078, pairs used 8
 </pre></div>
 </div>
+<p>Every second reading is higher, so all the signed ranks are negative: W+ is 0 and W- is 36, z -2.54, p 0.0078 with 8 pairs used. The smallest possible p-value for 8 pairs is reached.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -156,6 +157,7 @@
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>W+ 34.5000, W- 1.5000, p 0.0234
 </pre></div>
 </div>
+<p>Against a hypothesised median the signed ranks are W+ 34.5 and W- 1.5, with p 0.0234: the median differs from the hypothesised value.</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -184,6 +186,7 @@
 approximate p 0.4461
 </pre></div>
 </div>
+<p>One of the eight values equals the hypothesised median 5.5 and is dropped; the other seven split into 4 above and 3 below, so the exact two-sided p-value is 0.5 and the normal approximation 0.446. Both keep the null; for a sample this small the exact value is the one to report.</p>
 </section>
 </section>
 <section id="see-also">
@@ -213,13 +216,16 @@ approximate p 0.4461
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

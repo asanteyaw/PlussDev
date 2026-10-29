@@ -5610,6 +5610,30 @@ src/CodeM/core/SeriesBase.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/core/SeriesBase.cpp.s
 .PHONY : src/CodeM/core/SeriesBase.cpp.s
 
+src/CodeM/core/SeriesContraction.o: src/CodeM/core/SeriesContraction.cpp.o
+.PHONY : src/CodeM/core/SeriesContraction.o
+
+# target to build an object file
+src/CodeM/core/SeriesContraction.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/core/SeriesContraction.cpp.o
+.PHONY : src/CodeM/core/SeriesContraction.cpp.o
+
+src/CodeM/core/SeriesContraction.i: src/CodeM/core/SeriesContraction.cpp.i
+.PHONY : src/CodeM/core/SeriesContraction.i
+
+# target to preprocess a source file
+src/CodeM/core/SeriesContraction.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/core/SeriesContraction.cpp.i
+.PHONY : src/CodeM/core/SeriesContraction.cpp.i
+
+src/CodeM/core/SeriesContraction.s: src/CodeM/core/SeriesContraction.cpp.s
+.PHONY : src/CodeM/core/SeriesContraction.s
+
+# target to generate assembly for a file
+src/CodeM/core/SeriesContraction.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/core/SeriesContraction.cpp.s
+.PHONY : src/CodeM/core/SeriesContraction.cpp.s
+
 src/CodeM/core/SeriesImpl.o: src/CodeM/core/SeriesImpl.cpp.o
 .PHONY : src/CodeM/core/SeriesImpl.o
 
@@ -12600,6 +12624,30 @@ tests/CodeM/test_series_backward_manifest.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_backward_manifest.cpp.s
 .PHONY : tests/CodeM/test_series_backward_manifest.cpp.s
 
+tests/CodeM/test_series_contraction.o: tests/CodeM/test_series_contraction.cpp.o
+.PHONY : tests/CodeM/test_series_contraction.o
+
+# target to build an object file
+tests/CodeM/test_series_contraction.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_contraction.cpp.o
+.PHONY : tests/CodeM/test_series_contraction.cpp.o
+
+tests/CodeM/test_series_contraction.i: tests/CodeM/test_series_contraction.cpp.i
+.PHONY : tests/CodeM/test_series_contraction.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_contraction.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_contraction.cpp.i
+.PHONY : tests/CodeM/test_series_contraction.cpp.i
+
+tests/CodeM/test_series_contraction.s: tests/CodeM/test_series_contraction.cpp.s
+.PHONY : tests/CodeM/test_series_contraction.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_contraction.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_contraction.cpp.s
+.PHONY : tests/CodeM/test_series_contraction.cpp.s
+
 tests/CodeM/test_series_default_undefined.o: tests/CodeM/test_series_default_undefined.cpp.o
 .PHONY : tests/CodeM/test_series_default_undefined.o
 
@@ -12719,6 +12767,30 @@ tests/CodeM/test_series_source_public_api.s: tests/CodeM/test_series_source_publ
 tests/CodeM/test_series_source_public_api.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_source_public_api.cpp.s
 .PHONY : tests/CodeM/test_series_source_public_api.cpp.s
+
+tests/CodeM/test_series_strided_copy_and_int_matmul.o: tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.o
+.PHONY : tests/CodeM/test_series_strided_copy_and_int_matmul.o
+
+# target to build an object file
+tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.o
+.PHONY : tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.o
+
+tests/CodeM/test_series_strided_copy_and_int_matmul.i: tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.i
+.PHONY : tests/CodeM/test_series_strided_copy_and_int_matmul.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.i
+.PHONY : tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.i
+
+tests/CodeM/test_series_strided_copy_and_int_matmul.s: tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.s
+.PHONY : tests/CodeM/test_series_strided_copy_and_int_matmul.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.s
+.PHONY : tests/CodeM/test_series_strided_copy_and_int_matmul.cpp.s
 
 tests/CodeM/test_series_transform_activation_ii.o: tests/CodeM/test_series_transform_activation_ii.cpp.o
 .PHONY : tests/CodeM/test_series_transform_activation_ii.o
@@ -14103,6 +14175,9 @@ help:
 	@echo "... src/CodeM/core/SeriesBase.o"
 	@echo "... src/CodeM/core/SeriesBase.i"
 	@echo "... src/CodeM/core/SeriesBase.s"
+	@echo "... src/CodeM/core/SeriesContraction.o"
+	@echo "... src/CodeM/core/SeriesContraction.i"
+	@echo "... src/CodeM/core/SeriesContraction.s"
 	@echo "... src/CodeM/core/SeriesImpl.o"
 	@echo "... src/CodeM/core/SeriesImpl.i"
 	@echo "... src/CodeM/core/SeriesImpl.s"
@@ -14940,6 +15015,9 @@ help:
 	@echo "... tests/CodeM/test_series_backward_manifest.o"
 	@echo "... tests/CodeM/test_series_backward_manifest.i"
 	@echo "... tests/CodeM/test_series_backward_manifest.s"
+	@echo "... tests/CodeM/test_series_contraction.o"
+	@echo "... tests/CodeM/test_series_contraction.i"
+	@echo "... tests/CodeM/test_series_contraction.s"
 	@echo "... tests/CodeM/test_series_default_undefined.o"
 	@echo "... tests/CodeM/test_series_default_undefined.i"
 	@echo "... tests/CodeM/test_series_default_undefined.s"
@@ -14955,6 +15033,9 @@ help:
 	@echo "... tests/CodeM/test_series_source_public_api.o"
 	@echo "... tests/CodeM/test_series_source_public_api.i"
 	@echo "... tests/CodeM/test_series_source_public_api.s"
+	@echo "... tests/CodeM/test_series_strided_copy_and_int_matmul.o"
+	@echo "... tests/CodeM/test_series_strided_copy_and_int_matmul.i"
+	@echo "... tests/CodeM/test_series_strided_copy_and_int_matmul.s"
 	@echo "... tests/CodeM/test_series_transform_activation_ii.o"
 	@echo "... tests/CodeM/test_series_transform_activation_ii.i"
 	@echo "... tests/CodeM/test_series_transform_activation_ii.s"

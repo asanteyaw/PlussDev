@@ -1,6 +1,7 @@
 #include "pluss/subsp/stats/regression.h"
 
 #include "CodeM/core/Errors.h"
+#include "../predict_input.h"
 #include "pluss/codem/series_factory.h"
 
 #include <algorithm>
@@ -119,10 +120,12 @@ PolyBasis build_poly_basis_(const Series& x,
                             bool include_cross,
                             const std::vector<std::string>& predictor_names,
                             Config cfg,
-                            const char* op) {
+                            const char* op,
+                            bool prediction = false) {
   PLUSS_CHECK(degree >= 1, std::string(op) + ": degree must be >= 1");
   const auto out_cfg = f64_cfg_like_(x, cfg);
-  const Series xm = as_matrix_(x, op).to(out_cfg.platform, out_cfg.dtype).contiguous();
+  const auto predictors = static_cast<std::int64_t>(predictor_names.size());
+  const Series xm = (prediction ? detail::prediction_matrix(x, predictors, predictors, op) : as_matrix_(x, op)).to(out_cfg.platform, out_cfg.dtype).contiguous();
   const std::int64_t n = xm.sizes()[0];
   const std::int64_t p = xm.sizes()[1];
   PLUSS_CHECK(n > 0 && p > 0, std::string(op) + ": empty design matrix");
@@ -186,6 +189,7 @@ PolyFitResult poly_fit(const Series& y, const Series& x, const PolyOptions& opti
   ols_opt.add_intercept = options.add_intercept;
   ols_opt.drop_missing = options.drop_missing;
   ols_opt.rcond = options.rcond;
+  ols_opt.weights = options.weights;
   ols_opt.response_name = options.response_name;
   ols_opt.predictor_names = basis.names;
 
@@ -201,8 +205,11 @@ Series poly_predict(const PolyFitResult& fit, const Series& x, Config cfg) {
   const char* op = "subsp::stats::regression::poly_predict";
   PLUSS_CHECK(fit.ols.coefficients.defined(), std::string(op) + ": fit.ols.coefficients is undefined");
   PLUSS_CHECK(fit.degree >= 1, std::string(op) + ": fit.degree must be >= 1");
+  const std::int64_t fitted_columns = static_cast<std::int64_t>(fit.base_predictor_names.size());
+  PLUSS_CHECK(detail::prediction_matrix(x, fitted_columns, fitted_columns, op).sizes()[1] == fitted_columns,
+              std::string(op) + ": expected X with " + std::to_string(fitted_columns) + " columns, the predictors the fit used");
 
-  const auto basis = build_poly_basis_(x, fit.degree, fit.include_cross, fit.base_predictor_names, cfg, op);
+  const auto basis = build_poly_basis_(x, fit.degree, fit.include_cross, fit.base_predictor_names, cfg, op, /*prediction=*/true);
   PLUSS_CHECK(basis.design.sizes()[1] == fit.ols.num_predictors,
               std::string(op) + ": expanded predictor count mismatch");
   return ols_predict(fit.ols, basis.design, cfg);

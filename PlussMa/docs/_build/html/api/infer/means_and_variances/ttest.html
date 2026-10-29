@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=751f7c18"></script>
+    <script src="../../../_static/api_nav.js?v=5c998847"></script>
     <script src="../../../_static/layout.js?v=ae31baf4"></script>
     <script src="../../../_static/prevnext_labels.js?v=8a2bd667"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -146,6 +146,7 @@ standard error 0.1716, critical value 2.3646, observations 8
 95% interval [5.2068, 6.0182]
 </pre></div>
 </div>
+<p>The mean 5.61 is 3.57 standard errors (0.172) from the target, with 7 degrees of freedom: p 0.0091 rejects, and the 95% interval [5.21, 6.02] does not contain the target. The interval and the test always agree at the same level.</p>
 </section>
 <section id="example-2">
 <h3>Example 2<a class="headerlink" href="#example-2" title="Link to this heading">¶</a></h3>
@@ -177,6 +178,7 @@ standard error 0.1716, critical value 2.3646, observations 8
 99% one-sided interval [5.0981, inf]
 </pre></div>
 </div>
+<p>One-sided at the 1% level: p halves to 0.0046 and the critical value is 3.00, still below the statistic 3.57. The one-sided interval is open on the right, <code class="docutils literal notranslate"><span class="pre">[5.10,</span> <span class="pre">inf]</span></code>: it states only a lower bound for the mean.</p>
 </section>
 <section id="example-3">
 <h3>Example 3<a class="headerlink" href="#example-3" title="Link to this heading">¶</a></h3>
@@ -202,6 +204,7 @@ standard error 0.1716, critical value 2.3646, observations 8
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>observations used 6, mean 5.7500, t 4.0775 on 5.0000 df, p 0.0096
 </pre></div>
 </div>
+<p>Missing values are dropped, and <code class="docutils literal notranslate"><span class="pre">effective_n</span></code> reports the 6 observations used; the degrees of freedom, 5, follow from that count, not from the length of the input.</p>
 </section>
 </section>
 <section id="see-also">
@@ -232,13 +235,16 @@ standard error 0.1716, critical value 2.3646, observations 8
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/infer.html">Inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/regress.html">Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/optim.html">Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/calculus.html">Calculus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/numerics.html">Numerical methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../manual/stochastic.html">Stochastic processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/finance.html">Finance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_ts.html">PlussMa <code class="docutils literal notranslate"><span class="pre">ts</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plussma_distr.html">Distributions API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../plussma_infer.html">Inference API Reference</a></li>
 </ul>
 </li>
 </ul>

@@ -1,5 +1,9 @@
 #include "pluss/subsp/stats/regression.h"
 
+#include "../design_rank.h"
+#include "../predict_input.h"
+#include "../summary_labels.h"
+
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
@@ -138,6 +142,7 @@ std::string fmt_short_(double x) {
 struct CleanData {
   Series y = pluss::series::undefined();
   Series x = pluss::series::undefined();
+  Series w = pluss::series::undefined();
   std::int64_t n = 0;
   std::int64_t p = 0;
   std::int64_t dropped = 0;
@@ -155,16 +160,23 @@ CleanData sanitize_inputs_(const Series& y, const Series& x, const OLSOptions& o
   const std::int64_t p = xm.sizes()[1];
   PLUSS_CHECK(n > 0 && p >= 0, std::string(op) + ": empty y or X");
 
-  const Series row_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false));
+  const Series wv = options.weights.defined() ? as_vector_(options.weights, op).to(out_cfg.platform, out_cfg.dtype).contiguous()
+                                              : pluss::series::ones({n}, out_cfg);
+  PLUSS_CHECK(wv.numel() == n, std::string(op) + ": weights must have one value per row");
+  PLUSS_CHECK(scalar_(wv.lt(0.0).logical_and(wv.isfinite()).logical_not().all()) > 0.5, std::string(op) + ": weights must be non-negative");
+
+  const Series finite_ok = yv.isfinite().logical_and(xm.isfinite().all(1, false)).logical_and(wv.isfinite());
+  const bool all_ok = scalar_(finite_ok.all()) > 0.5;
+  PLUSS_CHECK(all_ok || options.drop_missing, std::string(op) + ": non-finite values found and drop_missing=false");
+  const Series row_ok = finite_ok.logical_and(wv.gt(0.0));  // a row of weight zero does not take part in the fit
   const std::int64_t n_clean = static_cast<std::int64_t>(std::llround(scalar_(row_ok.to(ScalarType::Float64).sum())));
   PLUSS_CHECK(n_clean > 0, std::string(op) + ": no observations left after filtering missing values");
-  const bool all_ok = scalar_(row_ok.all()) > 0.5;
-  PLUSS_CHECK(all_ok || options.drop_missing, std::string(op) + ": non-finite values found and drop_missing=false");
 
   const Series idx = row_ok.nonzero().reshape({n_clean}).to(out_cfg.platform, ScalarType::Int64);
   return CleanData{
       .y = yv.index_select(0, idx),
       .x = xm.index_select(0, idx),
+      .w = wv.index_select(0, idx),
       .n = n_clean,
       .p = p,
       .dropped = n - n_clean,
@@ -211,7 +223,7 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
   PLUSS_CHECK(std::isfinite(options.rcond) && options.rcond > 0.0, std::string(op) + ": rcond must be > 0");
 
   const auto clean = sanitize_inputs_(y, x, options, cfg);
-  PLUSS_CHECK(clean.p > 0 || options.add_intercept, "ols_fit: a model needs at least one predictor or an intercept");
+  PLUSS_CHECK(clean.p > 0 || options.add_intercept, std::string(op) + ": a model needs at least one predictor or an intercept");
   const auto out_cfg = f64_cfg_like_(clean.x, cfg);
 
   const Series X = build_design_(clean.x, options.add_intercept, out_cfg);
@@ -221,21 +233,31 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
   const std::int64_t k = X.sizes()[1];
   PLUSS_CHECK(n >= k, std::string(op) + ": requires n >= number of parameters");
 
-  const auto svd_x = pluss::subsp::math::linalg::svd(X, false);
-  const Series sing = svd_x.S.reshape({svd_x.S.numel()}).to(out_cfg.platform, out_cfg.dtype);
-  const double smax = scalar_(sing.max());
-  const double smin = scalar_(sing.min());
-  const double rank_tol = options.rcond * std::max<std::int64_t>(n, k) * std::max(smax, 1.0);
-  const std::int64_t rank = static_cast<std::int64_t>(std::llround(scalar_(sing.gt(rank_tol).sum())));
+  // Weighted least squares is ordinary least squares on the rows scaled by the square roots of the weights.
+  const Series weights = clean.w.reshape({n, 1});
+  const Series sw = weights.sqrt();
+  const Series Xs = X.mul(sw);
+  const Series ys = ycol.mul(sw);
+  const double total_weight = scalar_(weights.sum());
 
-  const Series pinv_x = pluss::subsp::math::linalg::pinverse(X, options.rcond);
-  const Series beta_col = pinv_x.matmul(ycol);
+  // One cutoff defines both the rank and the pseudoinverse that produces the coefficients.
+  const auto drank = detail::design_rank(Xs, options.rcond);
+  const double smax = drank.largest;
+  const double smin = drank.smallest;
+  const std::int64_t rank = drank.rank;
+
+
+  const Series pinv_x = pluss::subsp::math::linalg::pinverse(Xs, drank.pinv_rcond);
+  const Series beta_col = pinv_x.matmul(ys);
   const Series fitted_col = X.matmul(beta_col);
   const Series resid_col = ycol.sub(fitted_col);
+  const Series resid_w = resid_col.mul(sw);  // the weighted residuals, whose sum of squares is minimised
 
-  const double sse = scalar_(resid_col.mul(resid_col).sum());
-  const double y_mean = scalar_(ycol.mean());
-  const double sst = scalar_(ycol.sub(y_mean).mul(ycol.sub(y_mean)).sum());
+  const double sse = scalar_(resid_w.mul(resid_w).sum());
+  // The total sum of squares is taken about the mean when the model has an intercept and about zero when it has none; the model degrees
+  // of freedom, the adjusted R-squared and the F statistic below all follow the same convention.
+  const double y_mean = options.add_intercept ? scalar_(ycol.mul(weights).sum()) / total_weight : 0.0;
+  const double sst = scalar_(ycol.sub(y_mean).pow(2.0).mul(weights).sum());
   const double ssr = std::max(0.0, sst - sse);
 
   const std::int64_t df_resid = std::max<std::int64_t>(0, n - rank);
@@ -274,7 +296,7 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
       bic = -std::numeric_limits<double>::infinity();
     } else {
       const double sigma2_mle = sse / static_cast<double>(n);
-      llf = -0.5 * static_cast<double>(n) * (std::log(2.0 * std::numbers::pi * sigma2_mle) + 1.0);
+      llf = -0.5 * (static_cast<double>(n) * (std::log(2.0 * std::numbers::pi * sigma2_mle) + 1.0) - scalar_(weights.log().sum()));
       const double k_eff = static_cast<double>(std::max<std::int64_t>(1, rank));
       aic = -2.0 * llf + 2.0 * k_eff;
       bic = -2.0 * llf + std::log(static_cast<double>(n)) * k_eff;
@@ -309,17 +331,18 @@ OLSFitResult ols_fit(const Series& y, const Series& x, const OLSOptions& options
   }
   const Series ci = ci_lo.reshape({k, 1}).unite({ci_hi.reshape({k, 1})}, 1);
 
-  const Series resid_vec = resid_col.reshape({n});
+  const Series resid_vec = resid_col.reshape({n});  // reported: y minus the fitted value, in the units of y
+  const Series resid_diag = resid_w.reshape({n});  // the diagnostics below use the weighted residuals
 
   double durbin_watson = std::numeric_limits<double>::quiet_NaN();
   if (n > 1 && sse > kEps) {
     const Series idx0 = Series::arange(0, n - 1, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
     const Series idx1 = Series::arange(1, n, 1, ScalarType::Int64).to(out_cfg.platform, ScalarType::Int64);
-    const Series d = resid_vec.take(idx1).sub(resid_vec.take(idx0));
+    const Series d = resid_diag.take(idx1).sub(resid_diag.take(idx0));
     durbin_watson = scalar_(d.mul(d).sum()) / sse;
   }
 
-  const Series resid_center = resid_vec.sub(resid_vec.mean());
+  const Series resid_center = resid_diag.sub(resid_diag.mean());
   const double m2 = scalar_(resid_center.mul(resid_center).mean());
   const double m3 = scalar_(resid_center.mul(resid_center).mul(resid_center).mean());
   const double m4 = scalar_(resid_center.mul(resid_center).mul(resid_center).mul(resid_center).mean());
@@ -446,7 +469,7 @@ Series ols_predict(const OLSFitResult& fit, const Series& x, Config cfg) {
   const char* op = "subsp::stats::regression::ols_predict";
   PLUSS_CHECK(fit.coefficients.defined(), std::string(op) + ": fit.coefficients is undefined");
 
-  const Series xm = as_matrix_(x, op).to(fit.coefficients.platform(), ScalarType::Float64);
+  const Series xm = detail::prediction_matrix(x, fit.num_predictors, fit.k_params, op).to(fit.coefficients.platform(), ScalarType::Float64);
   const auto out_cfg = f64_cfg_like_(fit.coefficients, cfg);
 
   Series design = xm;
@@ -500,8 +523,8 @@ std::ostream& print_ols_summary(std::ostream& os, const OLSFitResult& fit) {
      << std::setw(12) << "std err"
      << std::setw(12) << "t"
      << std::setw(12) << "P>|t|"
-     << std::setw(12) << "[0.025"
-     << std::setw(12) << "0.975]"
+     << std::setw(12) << detail::ci_lower_label(fit.alpha)
+     << std::setw(12) << detail::ci_upper_label(fit.alpha)
      << '\n';
   os << "------------------------------------------------------------------------------\n";
 

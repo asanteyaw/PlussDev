@@ -4,11 +4,13 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <array>
 #include <string_view>
 #include <vector>
 
 namespace math = pluss::math;
+namespace operators = pluss::operators;
 
 namespace {
 
@@ -36,6 +38,26 @@ TEST_CASE("function evaluates the motivating multivariable formula",
   CHECK(close(named, expected));
   CHECK(close(ordered, expected));
   CHECK(named.platform() == x.platform());
+}
+
+TEST_CASE("univariate functions accept native scalar arguments",
+          "[calculus][function][evaluation][scalar]") {
+  const math::Function twice = math::function(
+      {"x"}, [](math::Function x) { return x + x; });
+
+  const pluss::Series f64 = twice(3.0);
+  const pluss::Series f32 = twice(3.0F);
+  const pluss::Series integer = twice(3);
+  const pluss::Series i64 = twice(std::int64_t{3});
+
+  CHECK(f64.scalar_type() == pluss::ScalarType::Float64);
+  CHECK(f32.scalar_type() == pluss::ScalarType::Float32);
+  CHECK(integer.scalar_type() == pluss::ScalarType::Int64);
+  CHECK(i64.scalar_type() == pluss::ScalarType::Int64);
+  CHECK(f64.item<double>() == 6.0);
+  CHECK(f32.item<float>() == 6.0F);
+  CHECK(integer.item<std::int64_t>() == 6);
+  CHECK(i64.item<std::int64_t>() == 6);
 }
 
 TEST_CASE("function primitive methods delegate to Series operations",
@@ -121,8 +143,29 @@ TEST_CASE("function plan preserves shared expression nodes",
   const auto &impl = pluss::subsp::math::detail::FunctionAccess::get(function);
 
   REQUIRE(impl.plan().size() == 3);
+  REQUIRE(impl.plan()[1].releases == std::vector<std::size_t>{0});
+  REQUIRE(impl.plan()[2].releases == std::vector<std::size_t>{1});
   const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0});
   CHECK(close(function({x}), x.mul(x).add(x.mul(x))));
+}
+
+TEST_CASE("integral execution plans cache their integrand subplan",
+          "[calculus][function][plan][integral]") {
+  const math::Function function = math::function(
+      {"x"}, [](math::Function x) { return x.pow(3).exp(); });
+  const math::Function integrated = operators::integral("x", 0.0)(function);
+  const auto &impl =
+      pluss::subsp::math::detail::FunctionAccess::get(integrated);
+
+  const auto integral_step = std::ranges::find_if(
+      impl.plan(), [](const auto &step) {
+        return step.node->kind() ==
+               pluss::subsp::math::detail::NodeKind::Integral;
+      });
+  REQUIRE(integral_step != impl.plan().end());
+  REQUIRE_FALSE(integral_step->integral_plan.empty());
+  CHECK(integral_step->integral_plan.size() ==
+        pluss::subsp::math::detail::FunctionAccess::get(function).plan().size());
 }
 
 TEST_CASE("function validates named and ordered evaluation bindings",

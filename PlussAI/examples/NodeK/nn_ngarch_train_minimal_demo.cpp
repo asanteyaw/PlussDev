@@ -15,10 +15,6 @@ using pluss::Series;
 
 constexpr double kPi = 3.141592653589793238462643383279502884;
 
-double as_f64(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
-}
-
 Series scalar_like(const Series& like, double v) {
   return pluss::make_series(v, Config{}.with_dtype(like.scalar_type()).with_platform(like.platform()));
 }
@@ -140,7 +136,8 @@ int main() {
     });
 
     if (epoch == 1 || epoch % 70 == 0) {
-      std::cout << "epoch=" << epoch << " nll=" << as_f64(loss) << "\n";
+      std::cout << "epoch=" << epoch
+                << " nll=" << pluss::tils::as_f64(loss) << "\n";
     }
   }
 
@@ -149,8 +146,11 @@ int main() {
             << " dtype="
             << (dtype == ScalarType::Float32 ? "f32" : "other")
             << "\n";
-  std::cout << "estimated omega=" << as_f64(omega) << " alpha=" << as_f64(alpha) << " phi=" << as_f64(phi)
-            << " lambda=" << as_f64(lambda) << " gamma=" << as_f64(gamma) << "\n";
+  std::cout << "estimated omega=" << pluss::tils::as_f64(omega)
+            << " alpha=" << pluss::tils::as_f64(alpha)
+            << " phi=" << pluss::tils::as_f64(phi)
+            << " lambda=" << pluss::tils::as_f64(lambda)
+            << " gamma=" << pluss::tils::as_f64(gamma) << "\n";
   std::cout << "target    omega=0.06 alpha=0.18 phi=0.76 lambda=0.12 gamma=-0.25\n";
   return 0;
 }

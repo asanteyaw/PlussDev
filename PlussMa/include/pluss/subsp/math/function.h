@@ -4,6 +4,7 @@
 #include "pluss/codem/stack_array.h"
 
 #include <concepts>
+#include <complex>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
@@ -37,10 +38,25 @@ enum class NonSmooth : std::uint8_t {
   Autodiff,
 };
 
+enum class Fallback : std::uint8_t {
+  Reject,
+  Autodiff,
+};
+
+enum class Provenance : std::uint8_t {
+  Structural,
+  Opaque,
+  Quadrature,
+  Autodiff,
+};
+
 namespace detail {
 class FunctionImpl;
 struct FunctionAccess;
 class TraceState;
+[[nodiscard]] Function
+opaque(pluss::StackArray<std::string_view> variables,
+       std::function<pluss::Series(const pluss::Series &)> callable);
 } // namespace detail
 
 class Function final {
@@ -59,12 +75,19 @@ public:
   [[nodiscard]] pluss::RangeView<std::string_view> variables() const;
   [[nodiscard]] std::int64_t rank() const;
   [[nodiscard]] pluss::RangeView<std::int64_t> shape() const;
+  [[nodiscard]] Provenance provenance() const;
   [[nodiscard]] Function arg(std::string_view variable) const;
   [[nodiscard]] Function assume(std::string_view variable,
                                 Assumption assumption) const;
   [[nodiscard]] Assumption assumption(std::string_view variable) const;
 
   [[nodiscard]] pluss::Series operator()() const;
+  [[nodiscard]] pluss::Series operator()(double argument) const;
+  [[nodiscard]] pluss::Series operator()(float argument) const;
+  [[nodiscard]] pluss::Series operator()(int argument) const;
+  [[nodiscard]] pluss::Series operator()(std::int64_t argument) const;
+  [[nodiscard]] pluss::Series operator()(std::complex<double> argument) const;
+  [[nodiscard]] pluss::Series operator()(std::complex<float> argument) const;
   [[nodiscard]] pluss::Series
   operator()(pluss::RangeView<Binding> bindings) const;
   [[nodiscard]] pluss::Series
@@ -97,7 +120,32 @@ public:
   [[nodiscard]] Function cosh() const;
   [[nodiscard]] Function tanh() const;
   [[nodiscard]] Function abs() const;
+  [[nodiscard]] Function conj() const;
+  [[nodiscard]] Function real() const;
+  [[nodiscard]] Function imag() const;
+  [[nodiscard]] Function angle() const;
   [[nodiscard]] Function operator-() const;
+
+  // Tensor operations. A Function's output axes are the trailing axes of its
+  // value (batch axes lead); axis arguments count output axes from zero.
+  [[nodiscard]] Function matmul(const Function &rhs) const; // contract last axis of *this with first of rhs
+  [[nodiscard]] Function contract(const Function &rhs,
+                                  pluss::RangeView<std::int64_t> lhs_axes,
+                                  pluss::RangeView<std::int64_t> rhs_axes) const;
+  [[nodiscard]] Function contract(const Function &rhs,
+                                  std::initializer_list<std::int64_t> lhs_axes,
+                                  std::initializer_list<std::int64_t> rhs_axes) const;
+  [[nodiscard]] Function transpose() const; // last two output axes
+  [[nodiscard]] Function transpose(std::int64_t axis0, std::int64_t axis1) const;
+  [[nodiscard]] Function select(std::int64_t axis, std::int64_t index) const;
+  // f.compose({g0, g1, ...}) is f(g0, g1, ...): each variable of f, in order,
+  // is replaced by the corresponding Function. The arguments must come from
+  // one variable trace (or be constants); the result depends on that trace.
+  [[nodiscard]] Function compose(pluss::RangeView<Function> arguments) const;
+  [[nodiscard]] Function compose(std::initializer_list<Function> arguments) const;
+  [[nodiscard]] Function inverse() const; // square matrix output
+  [[nodiscard]] Function det() const;     // square matrix output -> scalar
+  [[nodiscard]] Function trace() const;   // square matrix output -> scalar
 
 private:
   explicit Function(
@@ -108,7 +156,15 @@ private:
   friend struct detail::FunctionAccess;
 };
 
+// Assembles a Function whose output gains a new trailing axis of length
+// `components.size()` (stacking scalars gives a vector; stacking vectors gives
+// the matrix whose columns they are, as jacobian does).
+[[nodiscard]] Function stack(pluss::RangeView<Function> components);
+[[nodiscard]] Function stack(std::initializer_list<Function> components);
+
 [[nodiscard]] Function function(double constant);
+[[nodiscard]] Function function(std::complex<float> constant);
+[[nodiscard]] Function function(std::complex<double> constant);
 [[nodiscard]] Function function(const pluss::Series &constant);
 
 [[nodiscard]] Function operator+(const Function &lhs, const Function &rhs);
@@ -123,6 +179,14 @@ private:
 [[nodiscard]] Function operator/(const Function &lhs, const Function &rhs);
 [[nodiscard]] Function operator/(const Function &lhs, double rhs);
 [[nodiscard]] Function operator/(double lhs, const Function &rhs);
+[[nodiscard]] Function operator+(const Function &lhs, std::complex<double> rhs);
+[[nodiscard]] Function operator+(std::complex<double> lhs, const Function &rhs);
+[[nodiscard]] Function operator-(const Function &lhs, std::complex<double> rhs);
+[[nodiscard]] Function operator-(std::complex<double> lhs, const Function &rhs);
+[[nodiscard]] Function operator*(const Function &lhs, std::complex<double> rhs);
+[[nodiscard]] Function operator*(std::complex<double> lhs, const Function &rhs);
+[[nodiscard]] Function operator/(const Function &lhs, std::complex<double> rhs);
+[[nodiscard]] Function operator/(std::complex<double> lhs, const Function &rhs);
 
 namespace detail {
 
@@ -266,6 +330,19 @@ inline constexpr bool takes_runtime_span_v = [] {
   }
 }();
 
+template <class Traits>
+inline constexpr bool takes_unary_series_v = [] {
+  if constexpr (!Traits::available || Traits::arity != 1) {
+    return false;
+  } else {
+    using Argument = std::remove_cvref_t<
+        std::tuple_element_t<0, typename Traits::arguments_type>>;
+    return std::same_as<Argument, pluss::Series> &&
+           std::same_as<std::remove_cvref_t<typename Traits::result_type>,
+                        pluss::Series>;
+  }
+}();
+
 } // namespace detail
 
 // StackArray is the public owning adapter: brace lists and lvalue ranges are
@@ -276,19 +353,29 @@ template <class Callable>
   using Traits = detail::callable_traits<std::remove_cvref_t<Callable>>;
   static_assert(Traits::available,
                 "math::function: use a non-overloaded fixed-arity callable or "
-                "an explicitly typed std::span<const Function> callable");
+                "an explicitly typed Function or Series callable");
 
-  detail::Trace trace(std::move(variables));
-  const std::span<const Function> arguments = trace.arguments();
-
-  if constexpr (detail::takes_runtime_span_v<Traits>) {
-    return std::move(trace).finish(detail::normalize_trace_result(
-        std::invoke(std::forward<Callable>(callable), arguments)));
+  if constexpr (detail::takes_unary_series_v<Traits>) {
+    using Value = std::remove_cvref_t<Callable>;
+    auto stored = std::make_shared<Value>(std::forward<Callable>(callable));
+    return detail::opaque(
+        std::move(variables),
+        [stored = std::move(stored)](const pluss::Series &value) {
+          return std::invoke(*stored, value);
+        });
   } else {
-    trace.require_arity(Traits::arity);
-    return std::move(trace).finish(
-        detail::invoke_fixed(std::forward<Callable>(callable), arguments,
-                             std::make_index_sequence<Traits::arity>{}));
+    detail::Trace trace(std::move(variables));
+    const std::span<const Function> arguments = trace.arguments();
+
+    if constexpr (detail::takes_runtime_span_v<Traits>) {
+      return std::move(trace).finish(detail::normalize_trace_result(
+          std::invoke(std::forward<Callable>(callable), arguments)));
+    } else {
+      trace.require_arity(Traits::arity);
+      return std::move(trace).finish(
+          detail::invoke_fixed(std::forward<Callable>(callable), arguments,
+                               std::make_index_sequence<Traits::arity>{}));
+    }
   }
 }
 

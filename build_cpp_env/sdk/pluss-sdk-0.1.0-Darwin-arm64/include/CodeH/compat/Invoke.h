@@ -18,7 +18,7 @@ namespace pluss::codeh::_compat {
 // Lightweight invoke layer for CodeH, mirroring the design philosophy of
 // CodeM/CodeN generated methods.
 //
-// Public methods on Timeline/Duration/TimeIndex call invoke<Return>(op, self, ...)
+// Public methods on Timeline/Duration/TimelineIndexAccessor call invoke<Return>(op, self, ...)
 // which funnels through a single dispatcher.
 //------------------------------------------------------------------------------
 
@@ -53,8 +53,8 @@ inline R invoke(std::string_view op, const Self& self, ArgView args_view) {
         return call_bool_timeline(op, self, args);
       } else if constexpr (std::is_same_v<R, std::vector<std::int64_t>>) {
         return call_i64vec_timeline(op, self, args);
-      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex>) {
-        return call_timeindex_from_timeline(op, self, args);
+      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimelineIndexAccessor>) {
+        return call_index_accessor_from_timeline(op, self, args);
       } else {
         static_assert(always_false_v<R>, "Unsupported (Timeline -> R) in CodeH invoke");
       }
@@ -70,27 +70,27 @@ inline R invoke(std::string_view op, const Self& self, ArgView args_view) {
       } else {
         static_assert(always_false_v<R>, "Unsupported (Duration -> R) in CodeH invoke");
       }
-    } else if constexpr (std::is_same_v<Self, ::pluss::codeh::TimeIndex>) {
+    } else if constexpr (std::is_same_v<Self, ::pluss::codeh::TimelineIndexAccessor>) {
       if constexpr (std::is_same_v<R, ::pluss::codem::Series>) {
-        return call_series_timeindex(op, self, args);
+        return call_series_index_accessor(op, self, args);
       } else if constexpr (std::is_same_v<R, std::int64_t>) {
-        return call_i64_timeindex(op, self, args);
+        return call_i64_index_accessor(op, self, args);
       } else if constexpr (std::is_same_v<R, bool>) {
-        return call_bool_timeindex(op, self, args);
+        return call_bool_index_accessor(op, self, args);
       } else if constexpr (std::is_same_v<R, std::string>) {
-        return call_string_timeindex(op, self, args);
+        return call_string_index_accessor(op, self, args);
       } else if constexpr (std::is_same_v<R, ::pluss::coden::Note>) {
-        return call_note_timeindex(op, self, args);
+        return call_note_index_accessor(op, self, args);
       } else if constexpr (std::is_same_v<R, ::pluss::codeh::Timeline>) {
-        return call_timeline_from_timeindex(op, self, args);
-      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex>) {
-        return call_timeindex(op, self, args);
-      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex::ResampleBins>) {
-        return call_resamplebins_timeindex(op, self, args);
-      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex::AlignUnion>) {
-        return call_alignunion_timeindex(op, self, args);
+        return call_timeline_from_index_accessor(op, self, args);
+      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimelineIndexAccessor>) {
+        return call_index_accessor(op, self, args);
+      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimelineIndexAccessor::ResampleBins>) {
+        return call_resample_bins_index_accessor(op, self, args);
+      } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimelineIndexAccessor::AlignUnion>) {
+        return call_align_union_index_accessor(op, self, args);
       } else {
-        static_assert(always_false_v<R>, "Unsupported (TimeIndex -> R) in CodeH invoke");
+        static_assert(always_false_v<R>, "Unsupported (TimelineIndexAccessor -> R) in CodeH invoke");
       }
     } else {
       static_assert(always_false_v<Self>, "Unsupported self type for CodeH invoke");

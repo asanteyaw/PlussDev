@@ -8,7 +8,7 @@
 //
 // Phase 2.5: `Model` becomes the public Lymph handle instead of a plain
 // detail::ModelCore alias. It follows the same cheap-copy shape as table
-// DataFrame/Thread: an intrusive ref-counted implementation pointer and
+// DataFrame/Slate: an intrusive ref-counted implementation pointer and
 // copy-on-write detachment before mutating operations. Copying an untrained
 // or trained Model is therefore cheap and ergonomic at the call site; the
 // first mutator on a shared handle pays the explicit detail::ModelCore::clone()
@@ -258,7 +258,7 @@ class Model final {
   }
 
   Model& learn_(const pluss::table::DataFrame& x,
-                 const pluss::table::Thread& y,
+                 const pluss::table::Slate& y,
                  const TrainOptions& options = {}) {
     mut_core_().learn_(x, y, options);
     return *this;
@@ -287,7 +287,7 @@ class Model final {
   }
 
   [[nodiscard]] Model learn(const pluss::table::DataFrame& x,
-                            const pluss::table::Thread& y,
+                            const pluss::table::Slate& y,
                             const TrainOptions& options = {}) const {
     Model out(*this);
     out.learn_(x, y, options);
@@ -380,7 +380,7 @@ class Model final {
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
-                                     const pluss::table::Thread& y,
+                                     const pluss::table::Slate& y,
                                      const AssessOptions& options = {}) const {
     return core_().assess_series(x, y, options);
   }
@@ -402,7 +402,7 @@ class Model final {
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
-                                    const pluss::table::Thread& y,
+                                    const pluss::table::Slate& y,
                                     const AssessOptions& options = {}) const {
     return core_().assess(x, y, options);
   }
@@ -465,7 +465,7 @@ class Model final {
 
   void save(const std::string& path,
             const pluss::table::DataFrame& x_train,
-            const pluss::table::Thread& y_train,
+            const pluss::table::Slate& y_train,
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
     core_().save(path, x_train, y_train, train_options, std::move(metadata));

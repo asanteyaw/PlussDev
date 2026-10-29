@@ -579,6 +579,8 @@
 
   Series diag_embed(std::int64_t diagonal) const { return pluss::codem::_compat::invoke("diag_embed", *this, {diagonal}); }
 
+  Series diag_embed(std::int64_t diagonal, std::int64_t dim1, std::int64_t dim2) const { return pluss::codem::_compat::invoke("diag_embed", *this, {diagonal, dim1, dim2}); }
+
   // Typed wrappers for `diagflat` (staged migration off variadic surface).
   Series diagflat() const { return pluss::codem::_compat::invoke("diagflat", *this); }
 
@@ -1981,6 +1983,10 @@
 
   // Typed wrappers for `trace` (staged migration off variadic surface).
   Series trace() const { return pluss::codem::_compat::invoke("trace", *this); }
+
+  Series trace(std::int64_t offset) const { return pluss::codem::_compat::invoke("trace", *this, {offset}); }
+
+  Series trace(std::int64_t offset, std::int64_t dim1, std::int64_t dim2) const { return pluss::codem::_compat::invoke("trace", *this, {offset, dim1, dim2}); }
 
   // Typed wrappers for `tracks_slope_` (staged migration off variadic surface).
   Series& tracks_slope_() const { return pluss::codem::_compat::invoke_("tracks_slope_", *this); }

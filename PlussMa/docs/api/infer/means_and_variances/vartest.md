@@ -83,6 +83,8 @@ sample variance 0.2355, chi-squared 6.5950 on 7.0000 df, p 0.9445
 95% interval [0.1030, 0.9757]
 ```
 
+The sample variance 0.2355 gives a chi-squared statistic 6.60 on 7 degrees of freedom and p 0.94, so the specified variance is not contradicted; the 95% interval for the variance, [0.103, 0.976], contains it.
+
 ### Example 2
 
 One-sided: is the variance larger than specified?
@@ -111,6 +113,8 @@ Output
 ```text
 p 0.4722, critical 14.0671 (keep)
 ```
+
+One-sided, the question is whether the variance exceeds the specified value: p 0.47 and the critical value 14.07 against the statistic 6.60 keep the null.
 
 ## See Also
 

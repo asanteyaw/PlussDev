@@ -284,7 +284,7 @@ namespace metrics::detail {
   // 1-element Series per metric.
   const std::size_t n = std::min(static_cast<std::size_t>(report.values.numel()), requested.size());
   for (std::size_t i = 0; i < n; ++i) {
-    const Series scalar = report.values.narrow_copy(0, static_cast<std::int64_t>(i), 1);
+    const Series scalar = report.values.narrow_copy(0, static_cast<std::int64_t>(i), 1).reshape(std::vector<std::int64_t>{});
     switch (requested[i]) {
       case MetricKind::Accuracy: report.accuracy = scalar; break;
       case MetricKind::BalancedAccuracy: report.balanced_accuracy = scalar; break;
@@ -500,8 +500,8 @@ namespace regression {
   mean_values.reserve(mean.requested.size());
   stdev_values.reserve(mean.requested.size());
 
-  const auto mean_vec = mean.values.to(pluss::pCPU, ScalarType::Float64).reshape({mean.values.numel()}).host<double>();
-  const auto stdev_vec = stdev.values.to(pluss::pCPU, ScalarType::Float64).reshape({stdev.values.numel()}).host<double>();
+  const auto mean_vec = mean.values.to(pluss::pCPU, ScalarType::Float64).reshape({mean.values.numel()}).host<double>().array().data;
+  const auto stdev_vec = stdev.values.to(pluss::pCPU, ScalarType::Float64).reshape({stdev.values.numel()}).host<double>().array().data;
   for (std::size_t i = 0; i < mean.requested.size(); ++i) {
     metric_names.push_back(metric_kind_name_(mean.requested[i]));
     mean_values.push_back(mean_vec[i]);

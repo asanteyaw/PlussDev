@@ -15,7 +15,7 @@ class DataFrame;
 
 namespace pluss::ai::nodej {
 
-enum class DataThreadPolicy : std::uint8_t {
+enum class DataSlatePolicy : std::uint8_t {
   SeriesOnly = 0,
   CastTemporalToSeries = 1,
 };
@@ -49,7 +49,7 @@ struct DataFrameBatchOptions {
   std::optional<std::string> label_feature{std::nullopt};
   std::optional<std::string> sample_weight_feature{std::nullopt};
   ObservationLayout layout{ObservationLayout::Rows};
-  DataThreadPolicy thread_policy{DataThreadPolicy::CastTemporalToSeries};
+  DataSlatePolicy slate_policy{DataSlatePolicy::CastTemporalToSeries};
   DataNotePolicy note_policy{DataNotePolicy::Reject};
   std::uint64_t note_hash_seed{1469598103934665603ULL};
   // Only consulted for DataNotePolicy::Factorize, and only when a category

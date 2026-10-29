@@ -130,7 +130,7 @@ class Artifact final {
                              ::pluss::Series,
                              pluss::table::DataFrame,
                              pluss::Note,
-                             pluss::table::Thread,
+                             pluss::table::Slate,
                              lymph::FeatureBatch,
                              lymph::LabeledBatch,
                              lymph::workflow::Payload,
@@ -582,7 +582,7 @@ class Procedure final {
     if (artifact.is<::pluss::Series>()) return "Series";
     if (artifact.is<pluss::table::DataFrame>()) return "DataFrame";
     if (artifact.is<pluss::Note>()) return "Note";
-    if (artifact.is<pluss::table::Thread>()) return "Thread";
+    if (artifact.is<pluss::table::Slate>()) return "Slate";
     if (artifact.is<lymph::FeatureBatch>()) return "lymph::FeatureBatch";
     if (artifact.is<lymph::LabeledBatch>()) return "lymph::LabeledBatch";
     if (artifact.is<lymph::workflow::Payload>()) return "lymph::workflow::Payload";
@@ -620,10 +620,10 @@ class Procedure final {
       out.rows = frame.defined() ? frame.ncases() : 0;
       out.columns = frame.defined() ? frame.nfeatures() : 0;
       out.elements = out.rows >= 0 && out.columns >= 0 ? out.rows * out.columns : -1;
-    } else if (artifact.is<pluss::table::Thread>()) {
-      const pluss::table::Thread& thread = artifact.get<pluss::table::Thread>();
-      out.rows = thread.ncases();
-      out.elements = thread.size();
+    } else if (artifact.is<pluss::table::Slate>()) {
+      const pluss::table::Slate& slate = artifact.get<pluss::table::Slate>();
+      out.rows = slate.ncases();
+      out.elements = slate.size();
     } else if (artifact.is<lymph::FeatureBatch>()) {
       const lymph::FeatureBatch& batch = artifact.get<lymph::FeatureBatch>();
       out.defined = batch.defined();

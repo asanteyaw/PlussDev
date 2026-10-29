@@ -5,6 +5,7 @@
 #include <concepts>
 #include <cctype>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <iomanip>
@@ -53,6 +54,29 @@
 // This collapses what was previously 12 make_note overloads (and 7
 // bytes_content + 3 make_bytes_note overloads) down to 3 each.
 namespace pluss::note {
+
+// Reconstruct a Note produced by Note::pack(). The decoder validates the
+// complete envelope and rejects unsupported versions and trailing bytes.
+CODEN_API pluss::Note unpack(std::span<const std::byte> encoded);
+
+namespace typed_detail {
+
+template <class T>
+inline ::std::vector<::std::int64_t> vector_shape(const ::std::vector<T> &values) {
+  return {static_cast<::std::int64_t>(values.size())};
+}
+
+template <::std::signed_integral Int>
+inline ::std::vector<::std::int64_t> to_int64(const ::std::vector<Int> &values) {
+  return {values.begin(), values.end()};
+}
+
+template <::std::floating_point Float>
+inline ::std::vector<double> to_float64(const ::std::vector<Float> &values) {
+  return {values.begin(), values.end()};
+}
+
+} // namespace typed_detail
 
 class FormatValue {
 public:
@@ -1090,6 +1114,121 @@ inline pluss::Note make(pluss::msharp::RangeView::Of<std::string> flat,
   return make(pluss::coden::detail::NoteTextReader(flat, sizes));
 }
 
+// ---- Native typed factories ----
+
+template <class Bool>
+  requires ::std::same_as<::std::remove_cvref_t<Bool>, bool>
+inline pluss::Note make(Bool value) {
+  const ::std::array<::std::uint8_t, 1> lane{
+      static_cast<::std::uint8_t>(value)};
+  return pluss::coden::ops_internal::note_from_bool(lane, {});
+}
+
+template <::std::signed_integral Int>
+  requires (!::std::same_as<::std::remove_cv_t<Int>, bool> &&
+            !::std::same_as<::std::remove_cv_t<Int>, char>)
+inline pluss::Note make(Int value) {
+  const ::std::array<::std::int64_t, 1> lane{
+      static_cast<::std::int64_t>(value)};
+  return pluss::coden::ops_internal::note_from_int64(lane, {});
+}
+
+template <::std::floating_point Float>
+inline pluss::Note make(Float value) {
+  const ::std::array<double, 1> lane{static_cast<double>(value)};
+  return pluss::coden::ops_internal::note_from_float64(lane, {});
+}
+
+inline pluss::Note make(::std::span<const ::std::uint8_t> values,
+                        ::std::span<const ::std::int64_t> sizes) {
+  return pluss::coden::ops_internal::note_from_bool(values, sizes);
+}
+
+inline pluss::Note make(::std::span<const ::std::int64_t> values,
+                        ::std::span<const ::std::int64_t> sizes) {
+  return pluss::coden::ops_internal::note_from_int64(values, sizes);
+}
+
+inline pluss::Note make(::std::span<const double> values,
+                        ::std::span<const ::std::int64_t> sizes) {
+  return pluss::coden::ops_internal::note_from_float64(values, sizes);
+}
+
+template <class Bool>
+  requires ::std::same_as<::std::remove_cv_t<Bool>, bool>
+inline pluss::Note make(const ::std::vector<Bool> &values) {
+  ::std::vector<::std::uint8_t> lanes;
+  lanes.reserve(values.size());
+  for (const bool value : values)
+    lanes.push_back(static_cast<::std::uint8_t>(value));
+  const ::std::array<::std::int64_t, 1> shape{
+      static_cast<::std::int64_t>(lanes.size())};
+  return pluss::coden::ops_internal::note_from_bool(lanes, shape);
+}
+
+template <class Bool>
+  requires ::std::same_as<::std::remove_cv_t<Bool>, bool>
+inline pluss::Note make(const ::std::vector<Bool> &values,
+                        ::std::span<const ::std::int64_t> sizes) {
+  ::std::vector<::std::uint8_t> lanes;
+  lanes.reserve(values.size());
+  for (const bool value : values)
+    lanes.push_back(static_cast<::std::uint8_t>(value));
+  return pluss::coden::ops_internal::note_from_bool(lanes, sizes);
+}
+
+template <::std::signed_integral Int>
+  requires (!::std::same_as<::std::remove_cv_t<Int>, bool> &&
+            !::std::same_as<::std::remove_cv_t<Int>, char>)
+inline pluss::Note make(const ::std::vector<Int> &values) {
+  const auto lanes = typed_detail::to_int64(values);
+  const ::std::array<::std::int64_t, 1> shape{
+      static_cast<::std::int64_t>(lanes.size())};
+  return pluss::coden::ops_internal::note_from_int64(lanes, shape);
+}
+
+template <::std::signed_integral Int>
+  requires (!::std::same_as<::std::remove_cv_t<Int>, bool> &&
+            !::std::same_as<::std::remove_cv_t<Int>, char>)
+inline pluss::Note make(const ::std::vector<Int> &values,
+                        ::std::span<const ::std::int64_t> sizes) {
+  const auto lanes = typed_detail::to_int64(values);
+  return pluss::coden::ops_internal::note_from_int64(lanes, sizes);
+}
+
+template <::std::floating_point Float>
+inline pluss::Note make(const ::std::vector<Float> &values) {
+  const auto lanes = typed_detail::to_float64(values);
+  const ::std::array<::std::int64_t, 1> shape{
+      static_cast<::std::int64_t>(lanes.size())};
+  return pluss::coden::ops_internal::note_from_float64(lanes, shape);
+}
+
+template <::std::floating_point Float>
+inline pluss::Note make(const ::std::vector<Float> &values,
+                        ::std::span<const ::std::int64_t> sizes) {
+  const auto lanes = typed_detail::to_float64(values);
+  return pluss::coden::ops_internal::note_from_float64(lanes, sizes);
+}
+
+template <class Bool>
+  requires ::std::same_as<::std::remove_cv_t<Bool>, bool>
+inline pluss::Note make(::std::initializer_list<Bool> values) {
+  return make(::std::vector<bool>(values.begin(), values.end()));
+}
+
+template <::std::signed_integral Int>
+  requires (!::std::same_as<::std::remove_cv_t<Int>, bool> &&
+            !::std::same_as<::std::remove_cv_t<Int>, char>)
+inline pluss::Note make(::std::initializer_list<Int> values) {
+  return make(::std::vector<Int>(values));
+}
+
+template <::std::floating_point Float>
+inline pluss::Note make(::std::initializer_list<Float> values) {
+  return make(::std::vector<Float>(values));
+}
+
 // ---- Bytes-mode factories ----
 
 inline pluss::Note bytes(pluss::coden::detail::NoteTextReader data) {
@@ -1341,7 +1480,7 @@ inline pluss::Note select_note_impl(std::string_view where,
     const bool cond_scalar = select_scalar_like(cond);
     const bool choice_scalar = select_scalar_like(choice);
     const auto choice_flat = choice.vector();
-    const auto mask_flat = cond.reshape({cond.numel()}).to_vec<bool>();
+    const auto mask_flat = cond.reshape({cond.numel()}).host<bool>();
 
     for (std::int64_t linear = 0; linear < target_numel; ++linear) {
       const bool take_choice = mask_flat[cond_scalar ? 0 : static_cast<std::size_t>(linear)];

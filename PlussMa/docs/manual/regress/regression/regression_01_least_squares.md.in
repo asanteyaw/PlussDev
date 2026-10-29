@@ -1,53 +1,68 @@
 # Regression 1: Least Squares
 
-Least squares fits a line (or a plane) to data by making the sum of squared residuals as small as possible. It is the foundation of regression, and Pluss reports with it everything needed to judge the fit: uncertainty of each coefficient, goodness of fit, and diagnostics. After this chapter you can fit a model, read the result, predict, control the options, deal with missing values, and recognise collinear predictors.
+Least squares fits a line, a plane or a hyperplane to data by making the sum of squared residuals as small as possible. It is the foundation of regression, and `ols_fit` reports with it everything needed to judge the fit: the uncertainty of each coefficient, the goodness of fit, diagnostics of the residuals, and warnings when the design is unreliable. After this chapter you can fit a model, read every field of the result and check it by hand, predict with intervals, control the options, deal with missing values and collinear predictors, and know which inputs are rejected.
 
-Every program is complete and its output is the output of that program.
+Every program is complete, and its output is the output of that program.
 
-## The call
+## The calls
 
 ```cpp
-reg::OLSFitResult reg::ols_fit(const Series& y, const Series& x, const reg::OLSOptions& options = {}, Config cfg = {});
-Series            reg::ols_predict(const reg::OLSFitResult& fit, const Series& x_new, Config cfg = {});
+reg::OLSFitResult reg::ols_fit(const Series &y, const Series &x, const reg::OLSOptions &options = {}, Config cfg = {});
+Series            reg::ols_predict(const reg::OLSFitResult &fit, const Series &x_new, Config cfg = {});
+std::string       reg::ols_summary(const reg::OLSFitResult &fit);
+std::ostream     &reg::print_ols_summary(std::ostream &os, const reg::OLSFitResult &fit);
 ```
 
-`y` has shape `[n]`; the predictors `x` have shape `[n, p]` (a vector `[n]` is one predictor). By default an intercept column is added, and its coefficient comes first, named `const`; the others are named `x1`, `x2`, ... or by `predictor_names`. A model with no predictors and an intercept (`x` of shape `[n, 0]`) fits the sample mean.
+`y` has shape `[n]` and the predictors `x` have shape `[n, p]`; [Shapes and inputs](regression_01_least_squares/shapes_and_inputs.md) lists the accepted shorthand. By default an intercept column is added, and its coefficient comes first, named `const`. A model with no predictors and an intercept (`x` of shape `[n, 0]`) fits the sample mean.
 
 | `OLSOptions` | Meaning | Default |
 |---|---|---|
-| `alpha` | confidence level: intervals have coverage `1 - alpha` | 0.05 |
+| `alpha` | the intervals have coverage `1 − alpha` | 0.05 |
 | `add_intercept` | add a column of ones | true |
-| `drop_missing` | drop rows with a non-finite value in `y` or `x` (false makes them an error) | true |
-| `rcond` | relative cutoff for treating a direction of the design as rank deficient | 1e-12 |
-| `response_name`, `predictor_names` | labels used by the summary | `"y"`, none |
+| `drop_missing` | drop rows with a non-finite value; `false` makes them an error | true |
+| `weights` | precision weights (finite, non-negative; zero removes the row) | none |
+| `rcond` | relative cutoff below which a direction of the design counts as lost | 1e-12 |
+| `response_name`, `predictor_names` | labels used by the summary and `coefficient_names` | `"y"`, none |
+| `covariance` | the covariance estimator; `Nonrobust` is the only one | `Nonrobust` |
 
 | `OLSFitResult` | Meaning |
 |---|---|
 | `coefficients`, `std_errors`, `t_values`, `p_values` | one per parameter |
 | `conf_int` | `[k, 2]` lower and upper limits |
 | `covariance` | the `[k, k]` covariance matrix of the coefficients |
-| `fitted_values`, `residuals` | `[n]` |
-| `nobs`, `rank`, `k_params`, `df_model`, `df_resid`, `dropped_observations` | counts |
+| `fitted_values`, `residuals` | `[n]`, for the rows used |
+| `nobs`, `rank`, `k_params`, `num_predictors`, `df_model`, `df_resid`, `dropped_observations` | counts |
 | `rsquared`, `adj_rsquared`, `f_stat`, `f_pvalue` | goodness of fit |
-| `sse`, `ssr`, `sst`, `mse`, `rmse` | sums of squares and residual scale |
+| `sse`, `ssr`, `sst`, `mse`, `rmse` | sums of squares and the residual scale |
 | `log_likelihood`, `aic`, `bic` | information criteria |
-| `durbin_watson`, `jarque_bera` (+ `_pvalue`), `skewness`, `kurtosis` | residual diagnostics |
+| `durbin_watson`, `jarque_bera`, `omnibus` (each with a p-value where defined), `skewness`, `kurtosis` | residual diagnostics |
 | `condition_number`, `smallest_eig`, `warnings` | conditioning of the design |
+| `has_intercept`, `covariance_type`, `response_name`, `coefficient_names`, `alpha` | what the fit was made with |
 
 ## Programs
 
 - [A first fit, checked by hand](regression_01_least_squares/a_first_fit_checked_by_hand.md)
-- [The summary, and prediction](regression_01_least_squares/the_summary_and_prediction.md)
-- [Options and missing data](regression_01_least_squares/options_and_missing_data.md)
+- [Shapes and inputs](regression_01_least_squares/shapes_and_inputs.md)
+- [Several predictors](regression_01_least_squares/several_predictors.md)
+- [Every number in the result](regression_01_least_squares/every_number_in_the_result.md)
+- [Residual diagnostics](regression_01_least_squares/residual_diagnostics.md)
+- [The summary report](regression_01_least_squares/the_summary_report.md)
+- [Prediction and intervals](regression_01_least_squares/prediction_and_intervals.md)
+- [Options](regression_01_least_squares/options.md)
+- [Case weights](regression_01_least_squares/case_weights.md)
+- [Missing data](regression_01_least_squares/missing_data.md)
 - [Collinear predictors](regression_01_least_squares/collinear_predictors.md)
+- [Errors](regression_01_least_squares/errors.md)
 
 ## Checklist
 
-1. `y` is `[n]`, `x` is `[n, p]`; the intercept is added and listed first.
-2. Read the standard errors and intervals, not just the coefficients.
-3. Check `warnings` and `condition_number` before trusting a coefficient.
-4. Keep predictions inside the range of the data.
-5. Missing values are dropped by default; read `dropped_observations`.
+1. `y` is `[n]`, `x` is `[n, p]`; the intercept is added and listed first. A row vector `[1, p]` is read as a column.
+2. Read the standard errors and intervals, not just the coefficients; combine coefficients through `covariance`.
+3. Check `warnings`, `rank` and `condition_number` before trusting a coefficient.
+4. Without an intercept, R² and F are measured about zero and cannot be compared with an intercept model's.
+5. Durbin–Watson is meaningful only when the rows are in time order.
+6. Predict inside the range of the data; the intervals cannot warn of extrapolation.
+7. Incomplete rows are dropped by default; read `dropped_observations`.
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->

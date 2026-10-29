@@ -54,8 +54,14 @@ struct GLMOptions {
   std::vector<std::string> predictor_names{};
 };
 
+enum class QuantileCovariance : std::uint8_t {
+  Robust = 0,  // heteroskedasticity-robust sandwich (default)
+  Iid = 1,     // errors assumed independent of the predictors
+};
+
 struct QuantileOptions {
   double tau = 0.5;
+  QuantileCovariance covariance = QuantileCovariance::Robust;
   double alpha = 0.05;
   bool add_intercept = true;
   bool drop_missing = true;

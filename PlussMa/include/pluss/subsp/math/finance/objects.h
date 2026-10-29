@@ -334,8 +334,8 @@ struct MonteCarlo {
 struct Fft {
   double vol_risk_premium = 0.0;
   pricing::HestonCfMode mode = pricing::HestonCfMode::LittleTrap;
-  std::int64_t num_fft = 4096;
-  double du = 0.01;
+  std::int64_t num_fft = 16384;
+  double du = 0.1;
   double dk = std::numeric_limits<double>::quiet_NaN();
   double alpha = 1.5;
   pricing::HestonFftQuadrature quadrature = pricing::HestonFftQuadrature::Simpson;
