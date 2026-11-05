@@ -110,6 +110,9 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CTest)
 
+set(PLUSS_INSTALL_DOCDIR "${CMAKE_INSTALL_DATAROOTDIR}/doc/plussii-cpp"
+    CACHE PATH "Documentation directory for the PlussII C++ distribution")
+
 # Conda clang toolchains can fail to link Objective-C/Apple frameworks
 # (Foundation/Cocoa/Metal/Accelerate) even when compile succeeds. Keep
 # compilation toolchain unchanged, but force Apple clang as the link driver.
@@ -330,6 +333,7 @@ endif()
 # Use together with `#include <pluss/pluss.h>`.
 add_library(pluss_sdk INTERFACE)
 add_library(Pluss::SDK ALIAS pluss_sdk)
+add_library(Pluss::PlussII ALIAS pluss_sdk)
 
 if(TARGET PlussQit)
     target_link_libraries(pluss_sdk INTERFACE PlussQit)
@@ -496,7 +500,20 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMa/Math/Numerical/optimization/
 
 install(FILES
     ${CMAKE_SOURCE_DIR}/docs/sdk_install.md
-    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    DESTINATION ${PLUSS_INSTALL_DOCDIR}
+    RENAME installation.md
+)
+
+install(FILES
+    ${CMAKE_SOURCE_DIR}/LICENSE
+    ${CMAKE_SOURCE_DIR}/LICENSE_PYTORCH
+    ${CMAKE_SOURCE_DIR}/NOTICE.md
+    DESTINATION ${PLUSS_INSTALL_DOCDIR}
+)
+
+install(FILES
+    ${CMAKE_SOURCE_DIR}/ExLibs/fmt/LICENSE
+    DESTINATION ${PLUSS_INSTALL_DOCDIR}/third_party/fmt
 )
 
 configure_package_config_file(
@@ -522,10 +539,10 @@ install(FILES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Pluss
 )
 
-set(CPACK_PACKAGE_NAME "pluss-sdk")
-set(CPACK_PACKAGE_VENDOR "Pluss")
+set(CPACK_PACKAGE_NAME "plussii-cpp")
+set(CPACK_PACKAGE_VENDOR "PlussII")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-set(CPACK_PACKAGE_FILE_NAME "pluss-sdk-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_PACKAGE_FILE_NAME "plussii-cpp-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 set(CPACK_GENERATOR "TGZ;ZIP")
 
 set(PLUSS_SDK_STAGING_DIR

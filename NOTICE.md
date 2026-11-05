@@ -1,9 +1,9 @@
 # NOTICE
 
-This project is intended to be released under the BSD 3-Clause License.
+PlussII is open source software distributed under the BSD 3-Clause License.
+See `LICENSE` for the license terms.
 
-However, until its official open-source release date, all source code, designs, and concepts in this repository are **proprietary to Dr. Yaw Asante**.
+Third-party components included in a distribution retain their own license
+terms. See the accompanying third-party license files for details.
 
-Unauthorized use, copying, or public redistribution is prohibited before the formal BSD license announcement.
-
-© 2024–2025 PlussMa. All rights reserved.
+Copyright (c) 2026 asanteyaw.

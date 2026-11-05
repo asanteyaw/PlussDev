@@ -91,7 +91,7 @@
 <h2>What to read first</h2>
 <p class="section-sub">If you are new to Pluss, read these in order. After that, use the package cards above and the topic guides as reference material.</p>
 <ol class="pluss-start-steps">
-<li><a href="installation.html">Installation and CMake</a><p>Build the SDK and consume it from another project.</p></li>
+<li><a href="installation.html">Installation and CMake</a><p>Download PlussII C++ and use it from another project.</p></li>
 <li><a href="quickstart.html">Quickstart</a><p>Build a first program and meet the main objects.</p></li>
 <li><a href="user_guide.html">User Guide</a><p>The conceptual map of the ecosystem.</p></li>
 <li><a href="data_workflows.html">Data Workflows</a><p>Loading, inspecting, filtering, deriving, grouping, plotting, saving.</p></li>
@@ -104,7 +104,7 @@ The most common CMake target for downstream projects:
 
 ```cmake
 find_package(Pluss CONFIG REQUIRED)
-target_link_libraries(my_app PRIVATE Pluss::SDK)
+target_link_libraries(my_app PRIVATE Pluss::PlussII)
 ```
 
 ```{toctree}

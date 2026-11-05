@@ -6,7 +6,7 @@ modules, the core data model, and the workflow style used across the library.
 ## The ecosystem
 
 Pluss is split into modules, but user applications usually experience it through
-one umbrella include and one SDK target.
+one umbrella include and one CMake target.
 
 | Module | Main purpose | Common objects |
 | --- | --- | --- |

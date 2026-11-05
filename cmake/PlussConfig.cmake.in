@@ -143,4 +143,12 @@ if(NOT TARGET Pluss::SDK AND TARGET Pluss::pluss)
   )
 endif()
 
+# Public full-stack target. Retain Pluss::SDK for existing consumers.
+if(NOT TARGET Pluss::PlussII AND TARGET Pluss::SDK)
+  add_library(Pluss::PlussII INTERFACE IMPORTED)
+  set_target_properties(Pluss::PlussII PROPERTIES
+    INTERFACE_LINK_LIBRARIES "Pluss::SDK"
+  )
+endif()
+
 check_required_components(Pluss)

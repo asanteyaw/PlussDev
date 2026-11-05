@@ -1,5 +1,13 @@
-# Plusses
-Next-generation technical computing and AI Ecosystem for C++.
+# PlussII
+Next-generation technical computing Ecosystem for C++.
+
+## Download PlussII C++
+
+For published versions, download the matching archive from the
+[releases page](https://github.com/asanteyaw/PlussDev/releases), extract it,
+and use `find_package(Pluss CONFIG REQUIRED)` with `Pluss::PlussII` in your
+CMake project. See the [installation guide](docs/sphinx/installation.md) for
+download and source build instructions.
 
 ## Quick Start
 
@@ -62,7 +70,7 @@ for (const auto& name : wb.sheet_names()) {
 
 ## Documentation
 
-- `docs/PLUSS_FOUNDATIONS.md`
+- `PLUSS_FOUNDATIONS.md`
 - `docs/DATAFRAME_ATLAS_USER_GUIDE.md`
 - `docs/SLATE_API_GUIDE.md`
 - `PlussMic/examples/table/`
@@ -86,7 +94,7 @@ cmake --build build -j
 ## Requirements
 
 - C++20 compiler
-- CMake 3.21+
+- CMake 3.28+
 - LibTorch (for CodeM/CodeH paths)
 - Optional: libzip for Excel I/O
 

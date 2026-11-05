@@ -1,13 +1,19 @@
-# Pluss SDK Install Guide
+# PlussII C++ Distribution
 
-`pluss` can now be consumed as an installed CMake package in the same style as LibTorch:
+For published versions, download the matching ZIP or tar archive from the
+[PlussII releases page](https://github.com/asanteyaw/PlussDev/releases).
+Extract it and set `CMAKE_PREFIX_PATH` to the extracted folder. Each archive
+contains public headers, compiled libraries, and CMake package files.
 
-1. build the SDK,
-2. stage or archive it,
-3. point your downstream project at the SDK folder,
+This document also describes how maintainers build the distribution from source.
+The source build flow is:
+
+1. build PlussII,
+2. stage or archive the distribution,
+3. point a downstream project at the extracted folder,
 4. use `find_package(Pluss CONFIG REQUIRED)`.
 
-## Build The SDK
+## Build The Distribution From Source
 
 From the `PlussDev` repo root:
 
@@ -22,40 +28,40 @@ Default behavior (new build directories):
 - `PLUSS_TRACE_FRIENDLY_RELEASE=ON` keeps frame pointers and minimal line tables in `Release` builds for better stack traces.
 - This is meant to give meaningful errors without requiring users to manually switch to full debug workflows.
 
-# Build the codebase
+### Maintainer preset
+
 From the root folder run:
+
 ```bash
-rm -rf build && mkdir build && cmake --workflow --preset cpp_env_build 
+cmake --workflow --preset cpp_env_build
 ```
 
-## Build A Torch-Enabled SDK
+## Build A Torch-Enabled Distribution
 
 If you want `pluss` <-> LibTorch interop (`PLUSS_ENABLE_TORCH=ON`), configure a separate build tree for Torch:
 
 
 ```bash
-rm -rf build-torch-sdk
-
 cmake -S . -B build-torch-sdk \
   -DPLUSS_ENABLE_TORCH=ON \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \ 
+  -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python3" \
   -DPKG_CONFIG_EXECUTABLE="$CONDA_PREFIX/bin/pkg-config"
-  
+
 cmake --build build-torch-sdk --target pluss_sdk_stage --parallel "$(sysctl -n hw.logicalcpu)"
 ```
 
 
 
-Torch-enabled staged SDK path:
+Torch-enabled staged distribution path:
 
 ```text
-build-torch-sdk/sdk/pluss-sdk-<version>-<os>-<arch>/
+build-torch-sdk/sdk/plussii-cpp-<version>-<os>-<arch>/
 ```
 
 Notes:
 
-- Build Torch and non-Torch SDKs in separate build directories (for example `build/` and `build-torch-sdk/`).
+- Build Torch and non-Torch distributions in separate build directories (for example `build/` and `build-torch-sdk/`).
 - For strongest file:line call traces in downstream apps, build downstream in `RelWithDebInfo` too (or at least with symbols).
 - Ensure your env is activated first (so `CONDA_PREFIX` is exported). Example: `conda activate cpp_env`.
 - In multiline shell commands, ensure `\` is the last character on the line (no trailing spaces), otherwise zsh may execute `-D...` lines as separate commands.
@@ -66,27 +72,27 @@ Notes:
 - URL loader support (`load_csv/load_txt/load_excel` on `http(s)`) now wires curl automatically:
   - uses system curl when available;
   - falls back to CMake FetchContent curl when needed (`PLUSSMIC_FETCH_CURL=ON`, default);
-  - staged SDK export now carries a curl link artifact, so downstream projects do not need to install curl in their env separately.
+  - the staged distribution carries a curl link artifact when needed.
 - If Torch is installed in a non-default location, pass:
   - `-DTorch_DIR=/path/to/torch/share/cmake/Torch`
   - optionally `-DCMAKE_PREFIX_PATH="/extra/prefix;/another/prefix"`
-- In a Torch-enabled SDK build, `PLUSS_ENABLE_TORCH` is exported by CMake targets. Consumers linking `Pluss::SDK`/`PlussQit::CodeM` automatically get `pluss::series::from_torch(...)` and the `Series::tensor()` method from `<pluss/pluss.h>` / `<pluss/core.h>`.
-- `Pluss::SDK` now propagates traceback-friendly compile flags to consumers (`-fno-omit-frame-pointer` and minimal line tables in Release), so downstream call stacks are meaningful by default.
+- In a Torch-enabled build, `PLUSS_ENABLE_TORCH` is exported by CMake targets. Consumers linking `Pluss::PlussII`/`PlussQit::CodeM` get `pluss::series::from_torch(...)` and `Series::tensor()` from `<pluss/pluss.h>` / `<pluss/core.h>`.
+- `Pluss::PlussII` propagates traceback-friendly compile flags to consumers (`-fno-omit-frame-pointer` and minimal line tables in Release).
 - Unified core serialization is available via `pluss::io::save/load` and top-level aliases `pluss::save/load` for `Series/Note/Timeline/TimeIndex` and supported STL containers. See `docs/IO_SAVE_LOAD_GUIDE.md`.
 - If your app also uses `torch::Tensor` directly, keep `find_package(Torch REQUIRED)` in your consumer CMake for clarity.
 
-## Produce A Downloadable SDK Folder
+## Produce A Downloadable Distribution Folder
 
-To create a self-contained SDK folder:
+To stage the distribution:
 
 ```bash
 cmake --build build --target pluss_sdk_stage --parallel "$(sysctl -n hw.logicalcpu)"
 ```
 
-That stages the SDK at:
+That stages PlussII at:
 
 ```text
-build/sdk/pluss-sdk-<version>-<os>-<arch>/
+build/sdk/plussii-cpp-<version>-<os>-<arch>/
 ```
 
 The staged folder contains:
@@ -107,7 +113,7 @@ cmake --build build --target pluss_sdk_archive --parallel "$(sysctl -n hw.logica
 
 That emits `.zip` and `.tar.gz` archives in the build directory.
 
-## Consume The SDK In Another Project
+## Consume PlussII In Another Project
 
 Minimal consumer `CMakeLists.txt`:
 
@@ -125,13 +131,14 @@ endif()
 find_package(Pluss CONFIG REQUIRED)
 
 add_executable(pluss_consumer main.cpp)
-target_link_libraries(pluss_consumer PRIVATE Pluss::SDK)
+target_link_libraries(pluss_consumer PRIVATE Pluss::PlussII)
 ```
 
 Minimal `main.cpp`:
 
 ```cpp
 #include <pluss/pluss.h>
+#include <pluss/ma.h>
 #include <iostream>
 
 int main() {
@@ -162,27 +169,29 @@ std::cout << meta.rank() << '\n';
 std::cout << meta.values << '\n';   // host payload preview
 ```
 
-Configure the consumer project against the staged SDK folder:
+Set `PLUSSII_DIR` to the extracted distribution folder, then configure:
 
 ```bash
-cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/pluss-sdk-<version>-<os>-<arch>
+PLUSSII_DIR="/absolute/path/to/plussii-cpp-0.1.0-Darwin-arm64"
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$PLUSSII_DIR"
 cmake --build build
 ./build/pluss_consumer
 ```
 
-If your staged SDK includes PlussMic parquet support (Arrow/Parquet found during SDK build), include the Arrow/Parquet prefix too:
+If the distribution includes PlussMic parquet support, include the Arrow/Parquet prefix too:
 
 ```bash
 cmake -S . -B build \
-  -DCMAKE_PREFIX_PATH="/path/to/pluss-sdk-<version>-<os>-<arch>;/Users/yawasante/software/miniconda3/envs/cpp_env"
+  -DCMAKE_PREFIX_PATH="$PLUSSII_DIR;/path/to/dependencies"
 ```
 
 ## Package Targets
 
 - `Pluss::pluss`: installed core static library target
-- `Pluss::SDK`: consumer-friendly top-level alias for the SDK entrypoint
+- `Pluss::PlussII`: full stack target for applications
+- `Pluss::SDK`: compatibility target for existing applications
 
 ## Notes
 
-- `pluss` currently ships as a source-built SDK folder plus archives, not yet via Conda.
-- The installed SDK intentionally carries only the public header trees needed by the exported API, rather than mirroring the entire monorepo.
+- Release archives are published from version tags by the macOS GitHub Actions release workflow.
+- The distribution carries the public header trees needed by the exported API.

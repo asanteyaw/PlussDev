@@ -8,4 +8,4 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Pluss CONFIG REQUIRED)
 
 add_executable(pluss_sdk_consumer main.cpp)
-target_link_libraries(pluss_sdk_consumer PRIVATE Pluss::SDK)
+target_link_libraries(pluss_sdk_consumer PRIVATE Pluss::PlussII)

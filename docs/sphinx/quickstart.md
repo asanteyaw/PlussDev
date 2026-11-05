@@ -12,27 +12,20 @@ Most user programs start with:
 ```
 
 That exports the core `Series`, `Note`, `Timeline`, `TimeIndex`, table, and
-plotting surfaces that are available in the built SDK.
+plotting surfaces available in the selected PlussII C++ distribution.
 
-## 2. Build or install the SDK
+## 2. Download PlussII C++
 
-If you already have a staged Pluss SDK, skip to the next section.
+Download the matching archive from the
+[PlussII releases page](https://github.com/asanteyaw/PlussDev/releases) and
+extract it. The [installation guide](installation.md) also explains how to
+build a distribution from source.
 
-From the Pluss repository root:
-
-```bash
-cmake -S . -B build
-cmake --build build --target pluss_sdk_stage -j
-```
-
-The SDK will be staged under:
+The extracted folder is named like:
 
 ```text
-build/sdk/pluss-sdk-<version>-<os>-<arch>/
+plussii-cpp-<version>-<os>-<arch>/
 ```
-
-For more build variants, including Torch-enabled builds, see
-[Installation and CMake](installation.md).
 
 ## 3. Create a consumer project
 
@@ -49,7 +42,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Pluss CONFIG REQUIRED)
 
 add_executable(pluss_quickstart main.cpp)
-target_link_libraries(pluss_quickstart PRIVATE Pluss::SDK)
+target_link_libraries(pluss_quickstart PRIVATE Pluss::PlussII)
 ```
 
 Create `main.cpp`:
@@ -74,11 +67,11 @@ int main() {
 }
 ```
 
-Configure and run:
+Set `PLUSSII_DIR` to the extracted distribution folder, then configure and run:
 
 ```bash
-cmake -S . -B build \
-  -DCMAKE_PREFIX_PATH=/path/to/pluss-sdk-<version>-<os>-<arch>
+PLUSSII_DIR="/absolute/path/to/plussii-cpp-0.1.0-Darwin-arm64"
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$PLUSSII_DIR"
 
 cmake --build build
 ./build/pluss_quickstart
