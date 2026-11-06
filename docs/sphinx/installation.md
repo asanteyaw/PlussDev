@@ -1,8 +1,8 @@
 # Installation and CMake
 
 The PlussII C++ distribution contains headers, compiled libraries, and CMake
-package files. Download a release archive, extract it, and point your C++
-project at the extracted folder.
+package files. Download the archive directly from the [PlussII download page](https://plussible.org/download),
+extract it, and point your C++ project at the extracted folder.
 
 ## Requirements
 
@@ -16,22 +16,21 @@ required; the package configuration reports a missing dependency.
 
 ## Download a release
 
-For published versions, download an archive from the
-[PlussII releases page](https://github.com/asanteyaw/PlussDev/releases). Choose
-the `plussii-cpp-<version>-<os>-<arch>.zip` file matching your machine, then
-extract it. The folder inside contains `include/`, `lib/`, and
-`lib/cmake/Pluss/`.
-
-The release also provides `SHA256SUMS.txt`. Set `PLUSSII_ARCHIVE` to the file
-you downloaded and compare its checksum with the entry in that file:
+The current published binary is for macOS Apple Silicon. Click
+[Download PlussII ZIP](https://plussible.org/downloads/plussii-cpp-0.1.0-Darwin-arm64.zip) or use the
+terminal from the folder where you want the distribution:
 
 ```bash
-PLUSSII_ARCHIVE="plussii-cpp-0.1.0-Darwin-arm64.zip"
-shasum -a 256 "$PLUSSII_ARCHIVE"
+curl -fL -O https://plussible.org/downloads/plussii-cpp-0.1.0-Darwin-arm64.zip
+curl -fL -O https://plussible.org/downloads/SHA256SUMS.txt
+shasum -a 256 -c SHA256SUMS.txt
+unzip plussii-cpp-0.1.0-Darwin-arm64.zip
 ```
 
-The release page is the download source. Before the first release, or for a
-different configuration, build the distribution from the repository.
+The extracted `plussii-cpp-0.1.0-Darwin-arm64/` folder contains `include/`,
+`lib/`, and `lib/cmake/Pluss/`. Keep that folder in any stable location and use
+its path as `CMAKE_PREFIX_PATH`. For other platforms or configurations, build
+from source below.
 
 ## Consume PlussII from another project
 
@@ -63,12 +62,13 @@ int main() {
 }
 ```
 
-Set `PLUSSII_DIR` to the extracted distribution folder, then configure:
+Set `PLUSSII_DIR` to the extracted distribution folder, then configure. This
+example assumes the archive was extracted in your Downloads folder:
 
 ```bash
-PLUSSII_DIR="/absolute/path/to/plussii-cpp-0.1.0-Darwin-arm64"
+PLUSSII_DIR="$HOME/Downloads/plussii-cpp-0.1.0-Darwin-arm64"
 cmake -S . -B build -DCMAKE_PREFIX_PATH="$PLUSSII_DIR"
-cmake --build build
+cmake --build build --config Release
 ./build/pluss_consumer
 ```
 
@@ -85,12 +85,19 @@ For a source build you need:
 - Optional libzip for Excel I/O.
 - Optional Arrow/Parquet dependencies if you build Parquet support.
 
-From the repository root:
+Fetch the public source, configure it, and stage a local distribution folder:
 
 ```bash
-cmake -S . -B build
-cmake --build build -j
+git clone https://github.com/asanteyaw/PlussDev.git
+cd PlussDev
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF
+cmake --build build --target pluss_sdk_stage --parallel 4
 ```
+
+The result is `build/sdk/plussii-cpp-0.1.0-<system>-<architecture>/`. That
+folder has the same layout as the extracted binary archive and can be passed
+to another project's `CMAKE_PREFIX_PATH`.
 
 The maintainer's Conda preset is available when `cpp_env` is configured:
 
@@ -98,24 +105,16 @@ The maintainer's Conda preset is available when `cpp_env` is configured:
 cmake --workflow --preset cpp_env_build
 ```
 
-## Create a local distribution
+## Make ZIP and tar archives
 
 The existing `pluss_sdk_stage` and `pluss_sdk_archive` target names remain for
 build script compatibility. The resulting archive is named PlussII C++.
 
 ```bash
-cmake -S . -B build
-cmake --build build --target pluss_sdk_stage -j
-cmake --build build --target pluss_sdk_archive -j1
+cmake --build build --target pluss_sdk_archive --parallel 1
 ```
 
-The staged distribution is written under:
-
-```text
-build/sdk/plussii-cpp-<version>-<os>-<arch>/
-```
-
-That folder contains public headers, libraries, CMake package files, and docs.
+The archives are written to `build/`. The staged folder remains under `build/sdk/`.
 
 ## Build a Torch-enabled distribution
 
