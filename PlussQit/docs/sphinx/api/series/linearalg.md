@@ -102,12 +102,11 @@ on its own page:
 
 ## Returns
 
-`Series::LinearAlgAccessor` or `SeriesLinearAlgProxy`
-    A lightweight method-selection object bound to the owning `Series`, and
-    optionally to a peer `Series`.
+`Series::LinearAlgAccessor` or `SeriesLinearAlgProxy` is a lightweight
+method-selection object bound to the owning `Series`, and optionally to a
+peer `Series`.
 
-    Accessing `linearalg` does not copy numeric data and does not mutate the
-    owner.
+Accessing `linearalg` does not copy numeric data or mutate the owner.
 
 ## Example
 
