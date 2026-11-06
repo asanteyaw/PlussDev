@@ -633,12 +633,12 @@ def write_dataset(spec: DatasetSpec) -> None:
     schema_path = OUT_DIR / f"{spec.name}.schema.csv"
 
     with csv_path.open("w", newline="", encoding="utf-8") as f:
-      writer = csv.writer(f)
+      writer = csv.writer(f, lineterminator="\n")
       writer.writerow([name for name, _ in spec.schema])
       writer.writerows(spec.rows)
 
     with schema_path.open("w", newline="", encoding="utf-8") as f:
-      writer = csv.writer(f)
+      writer = csv.writer(f, lineterminator="\n")
       writer.writerow(["name", "type"])
       writer.writerows(spec.schema)
 
@@ -646,7 +646,7 @@ def write_dataset(spec: DatasetSpec) -> None:
 def write_manifest(specs: list[DatasetSpec]) -> None:
     manifest_path = OUT_DIR / "manifest.csv"
     with manifest_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, lineterminator="\n")
         writer.writerow(["name", "rows", "columns", "purpose"])
         for spec in specs:
             writer.writerow([spec.name, len(spec.rows), len(spec.schema), spec.purpose])

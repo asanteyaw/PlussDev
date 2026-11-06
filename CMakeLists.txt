@@ -137,12 +137,15 @@ set(PLUSSQIT_BUILD_CODEH ON CACHE BOOL "Build CodeH (required by PlussMa libs)" 
 
 # Provide a top-level 'pluss' library so subdirectories can attach sources
 add_library(pluss STATIC)
+target_include_directories(pluss PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/generated>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/PlussMic/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 if(EXISTS "${CMAKE_SOURCE_DIR}/include")
     target_include_directories(pluss PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/generated>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 endif()
 set_target_properties(pluss PROPERTIES CXX_STANDARD 20)

@@ -1433,6 +1433,11 @@ endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  # These compatibility shims point back into the source tree. PlussMa
+  # installs the real headers at the same public paths.
+  PATTERN "optim.h" EXCLUDE
+  PATTERN "optim_fwd.h" EXCLUDE
+  PATTERN "parameter_pack.h" EXCLUDE
   PATTERN ".DS_Store" EXCLUDE
 )
 

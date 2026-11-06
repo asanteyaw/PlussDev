@@ -1,0 +1,13 @@
+name,type
+timestamp,temporal
+temp_c,numeric
+dew_point_c,numeric
+humidity,numeric
+wind_kph,numeric
+pressure_hpa,numeric
+rain_mm,numeric
+solar_wm2,numeric
+demand_mw,numeric
+station,note
+season,note
+condition,note

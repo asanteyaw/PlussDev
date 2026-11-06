@@ -72,12 +72,17 @@ compile_commands.json
 # Research / calibration artifacts
 # ===================================
 data/
-# Not a research/calibration dump -- the nn API reference's "data" family
-# doc source tree (pluss::loader). A bare `data/` above matches this
-# directory name at any depth, so it needs an explicit exception.
+# Keep source directories named "data" available to Git.
+!/PlussAI/Ice/data/
+!/PlussAI/NodeJ/data/
+!/PlussAI/include/pluss/ai/ice/data/
+!/PlussPl/data/
+!/PlussPl/data/flash_datasets/
+# The nn API reference also uses "data" for its pluss::loader pages.
 !/PlussAI/docs/sphinx/api/nn/data/
 datasets/
 *.csv
+!/PlussPl/data/flash_datasets/*.csv
 *.parquet
 *.h5
 *.hdf5

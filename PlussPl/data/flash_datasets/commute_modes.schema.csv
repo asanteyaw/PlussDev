@@ -1,0 +1,12 @@
+name,type
+survey_date,temporal
+distance_km,numeric
+duration_min,numeric
+cost,numeric
+transfers,numeric
+satisfaction,numeric
+delay_min,numeric
+city,note
+mode,note
+commuter_type,note
+weather_bucket,note

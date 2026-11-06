@@ -1,0 +1,11 @@
+name,type
+timestamp,temporal
+signal,numeric
+trend,numeric
+seasonality,numeric
+volatility,numeric
+drawdown,numeric
+turnover,numeric
+regime,note
+asset,note
+cycle_phase,note

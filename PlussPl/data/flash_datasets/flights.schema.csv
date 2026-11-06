@@ -1,0 +1,9 @@
+name,type
+month_start,temporal
+passengers,numeric
+fare_index,numeric
+fuel_index,numeric
+load_factor,numeric
+delay_minutes,numeric
+route,note
+season,note

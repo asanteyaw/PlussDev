@@ -1,0 +1,10 @@
+name,type
+total_bill,numeric
+tip,numeric
+size,numeric
+service_score,numeric
+wait_minutes,numeric
+day,note
+meal,note
+smoker,note
+section,note

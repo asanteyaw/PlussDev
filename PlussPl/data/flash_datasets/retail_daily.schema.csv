@@ -1,0 +1,12 @@
+name,type
+date,temporal
+revenue,numeric
+orders,numeric
+avg_ticket,numeric
+promo_spend,numeric
+footfall,numeric
+web_sessions,numeric
+conversion_rate,numeric
+store,note
+region,note
+channel,note

@@ -1,0 +1,14 @@
+name,type
+batch_time,temporal
+thickness,numeric
+density,numeric
+moisture,numeric
+tensile,numeric
+impurity_ppm,numeric
+defect_rate,numeric
+temperature,numeric
+line_speed,numeric
+plant,note
+line,note
+material,note
+shift,note

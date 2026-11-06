@@ -1,0 +1,11 @@
+name,type
+exam_date,temporal
+assignment,numeric
+midterm_1,numeric
+midterm_2,numeric
+final_exam,numeric
+attendance_rate,numeric
+lab_score,numeric
+cohort,note
+instructor,note
+section,note

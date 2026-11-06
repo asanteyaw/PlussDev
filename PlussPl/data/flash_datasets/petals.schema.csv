@@ -1,0 +1,9 @@
+name,type
+sepal_length,numeric
+sepal_width,numeric
+petal_length,numeric
+petal_width,numeric
+color_score,numeric
+species,note
+habitat,note
+band,note

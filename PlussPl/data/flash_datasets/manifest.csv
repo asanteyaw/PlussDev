@@ -1,0 +1,14 @@
+name,rows,columns,purpose
+tips,240,9,"Mixed numeric/categorical restaurant data for bar, box, regression, and hue demos."
+flights,144,8,"Monthly airline time series for seasonality, joint, and lag-style analysis."
+petals,150,8,Compact classification-friendly flower measurements for pairplot and class overlays.
+exams,180,10,"Assessment data for grouped bars, grade distributions, and policy demonstrations."
+retail_daily,3650,11,"Long daily retail panel for time series, promotions, seasonality, and grouped summaries."
+weather_hourly,120000,12,"Large hourly temporal dataset for performance, lag, resample, and long-run flash demos."
+factor_blocks,5000,14,"Correlated numeric blocks for correlation heatmaps, clustering, and pairwise structure."
+sensor64,1024,64,"High-dimensional sensor frame for parallel coordinates, radviz, and dimensional analysis."
+options_chain,4000,17,"Options-surface sample data with temporals, smiles, and Greeks for 2D/3D views."
+customer_funnel,5000,11,"Lifecycle-style customer data for count, bar, and class-conditioned plots."
+commute_modes,3000,11,"Urban mobility data for grouped comparisons, categorical plots, and continuous-vs-temporal views."
+regimes,3000,10,"Regime-labelled time series for diagnostics, lag structure, and state-conditioned plots."
+quality_batches,2000,13,"Industrial quality-control data for box, violin, outlier, and process comparisons."

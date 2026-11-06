@@ -1,0 +1,12 @@
+name,type
+signup_date,temporal
+sessions_7d,numeric
+pages_7d,numeric
+emails_30d,numeric
+support_tickets,numeric
+revenue_90d,numeric
+segment,note
+acquisition,note
+country,note
+plan,note
+outcome,note
