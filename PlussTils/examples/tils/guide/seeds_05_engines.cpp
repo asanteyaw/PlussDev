@@ -1,4 +1,4 @@
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <cstdint>
 #include <iostream>

@@ -55,7 +55,7 @@ The default budget is 500 evaluations per variable, so this two-variable run sto
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <utility>
@@ -113,7 +113,7 @@ Both schemes follow the curved Rosenbrock valley to about 1e-15 within the itera
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <utility>
@@ -238,7 +238,7 @@ Without a search step the method creeps from its start into the nearest local mi
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <utility>

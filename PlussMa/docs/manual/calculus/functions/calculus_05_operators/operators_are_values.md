@@ -33,7 +33,7 @@ Besides the derivative and integral operators already seen, four simple operator
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -96,7 +96,7 @@ The program prints the key, version and capabilities of every built-in operator.
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

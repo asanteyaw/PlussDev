@@ -544,7 +544,7 @@ single coherent pathing style across both sources
 
 ## 7. Tensor DataLoader APIs under `pluss::loader`
 
-These are documented in detail in [Aux User Guide](auxiliary.md).
+These are documented in detail in [Aux User Guide](kit.md).
 
 Quick reminder signature:
 

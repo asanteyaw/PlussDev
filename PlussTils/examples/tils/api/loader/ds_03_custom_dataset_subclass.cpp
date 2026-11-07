@@ -1,6 +1,6 @@
 // A custom Dataset computes each sample on demand, rather than storing a table. The loader
 // materializes it once, by calling get() for every index, when no faster path is overridden.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

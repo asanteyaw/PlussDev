@@ -68,7 +68,7 @@ When the residuals fail, their autocorrelations show *which* term is missing, wi
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 

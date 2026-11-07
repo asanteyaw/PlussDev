@@ -53,7 +53,7 @@ The accuracy is about 1e-5 in the variables: a function value of 1e-9 and a tole
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>

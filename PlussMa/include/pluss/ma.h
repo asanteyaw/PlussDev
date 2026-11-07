@@ -8,6 +8,6 @@
 #include "pluss/ma/actuarial.h"
 
 // Unqualified scalar helpers (as_f64(series), as_i32(series), ...) and the f64_t / i64_t typedefs, as in the full SDK.
-#if __has_include("pluss/tils/auxiliary/scalar_cast_compat.h")
-#include "pluss/tils/auxiliary/scalar_cast_compat.h"
+#if __has_include("pluss/tils/kit/scalar_cast_compat.h")
+#include "pluss/tils/kit/scalar_cast_compat.h"
 #endif

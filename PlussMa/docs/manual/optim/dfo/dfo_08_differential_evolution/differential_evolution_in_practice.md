@@ -57,7 +57,7 @@ The search is global, so it is run in a box. The start (3, 3, 3) lies in a local
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <utility>
@@ -228,7 +228,7 @@ On this problem the starting region has no consistent effect, because the popula
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <utility>

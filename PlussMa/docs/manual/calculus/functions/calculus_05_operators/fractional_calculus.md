@@ -24,7 +24,7 @@ An integer order is the ordinary derivative. The kinds differ on constants: the 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace fractional = pluss::operators::fractional;
@@ -64,7 +64,7 @@ For `eˣ` the Riemann–Liouville integral is the Mittag-Leffler series `Σ x^{k
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace fractional = pluss::operators::fractional;

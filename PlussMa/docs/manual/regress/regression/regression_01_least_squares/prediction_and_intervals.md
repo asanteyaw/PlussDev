@@ -16,7 +16,7 @@ The program predicts at new points in each accepted form and confirms that the p
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -79,7 +79,7 @@ The mean-response interval widens as x₀ moves away from the centre of the data
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

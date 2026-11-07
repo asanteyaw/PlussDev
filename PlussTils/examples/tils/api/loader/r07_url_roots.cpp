@@ -1,6 +1,6 @@
 // Remote data lives under a URL instead of a folder. A URL context keeps the base address and adds a
 // relative path to it, so a loader can name a remote file the same way it names a local one.
-#include <pluss/tils/auxiliary/pathing.h>
+#include <pluss/tils/kit/pathing.h>
 
 #include <iostream>
 

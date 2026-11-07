@@ -11,7 +11,7 @@ An odd function integrates to zero over an interval symmetric about 0. When the 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -50,7 +50,7 @@ Differentiating an anchored integral with respect to its upper limit returns the
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -84,7 +84,7 @@ For a definite integral with a parameter, the derivative with respect to the par
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 

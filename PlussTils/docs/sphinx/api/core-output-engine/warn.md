@@ -30,7 +30,7 @@ None. A line below the minimum is dropped silently.
 Example 1 writes a warn line with a value.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -59,7 +59,7 @@ The line carries the WARN tag.
 Example 2 sets a minimum level of error and writes a warn line.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -92,7 +92,7 @@ Nothing reaches the sink, so the captured length is zero.
 Example 3 gives the warn level its own prefix.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

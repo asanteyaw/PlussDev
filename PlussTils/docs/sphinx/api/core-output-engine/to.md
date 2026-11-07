@@ -29,7 +29,7 @@ None. The call does not check the stream's state.
 Example 1 redirects the engine to a second stream and back.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -64,7 +64,7 @@ Each line lands in the stream that was current when it was written.
 Example 2 shows that `to` returns the engine itself, so it chains.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -98,7 +98,7 @@ The returned reference is the same engine, and the next write goes to the new si
 Example 3 returns the engine to standard output after capturing.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

@@ -25,7 +25,7 @@
 #include "CodeM/native/cuda/MatmulOps.h"
 #include "CodeM/native/cuda/StochasticOps.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
-#include "pluss/tils/auxiliary/rng_seed.h"
+#include "pluss/tils/kit/rng_seed.h"
 
 #include <sstream>
 #include <array>

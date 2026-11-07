@@ -1,7 +1,7 @@
 // Working with text. A grid of region names is cut into rows, and each row is a note of its own, so a
 // function can count or join the names that belong together.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <string>

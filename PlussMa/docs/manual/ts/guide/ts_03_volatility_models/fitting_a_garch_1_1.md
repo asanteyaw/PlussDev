@@ -66,7 +66,7 @@ A single fit cannot show estimation error, but repetition can. The program fits 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>

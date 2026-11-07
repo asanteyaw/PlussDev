@@ -27,7 +27,7 @@ Composition flattens: composing a composition produces one chain, not nested wra
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -84,7 +84,7 @@ A differential operator written this way reads like the equation it stands for. 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 
@@ -135,7 +135,7 @@ The operator `L` is linear, as the capabilities report. It maps x² to 2 − 4x�
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

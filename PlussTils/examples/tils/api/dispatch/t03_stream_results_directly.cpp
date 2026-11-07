@@ -1,6 +1,6 @@
 // Writing results straight to an output iterator, so no intermediate vector is built. A report that
 // may be very long can stream its lines to a file, a socket, or the terminal as it computes them.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iostream>
 #include <iterator>

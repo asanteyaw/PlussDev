@@ -18,7 +18,7 @@
 
 #include "pluss/subsp/linearalg/linearalg.h"
 #include "pluss/subsp/natsci/biology/population/demography.h"
-#include "pluss/tils/auxiliary/rng_seed.h"
+#include "pluss/tils/kit/rng_seed.h"
 
 #include <cmath>
 #include <functional>

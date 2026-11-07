@@ -7,7 +7,7 @@
 //   crossover_rate     probability that a coordinate comes from the trial, CR (default 0.9)
 //   best_mix           0 = trial built around a random member; toward 1 = built around the best member (default 0)
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <utility>

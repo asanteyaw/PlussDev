@@ -39,7 +39,7 @@ The program computes all ten values from these formulas and prints them beside t
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace distr = pluss::subsp::stats::distr;
@@ -102,7 +102,7 @@ Each Greek can be recovered from prices alone, by bumping one input. The program
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -153,7 +153,7 @@ The program checks both for several spots and for a call and a put.
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -205,7 +205,7 @@ At zero maturity the price is the intrinsic value, delta is the indicator that t
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;

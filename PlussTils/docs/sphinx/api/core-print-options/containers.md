@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 changes the item separator and the key-value separator.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -62,7 +62,7 @@ The list items are joined with a semicolon, and the map uses an arrow between it
 Example 2 sets custom brackets for a list, a map, and a tuple.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -99,7 +99,7 @@ Each container kind uses its own bracket pair instead of the default square or c
 Example 3 shows all four pair styles.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -138,7 +138,7 @@ The same pair is written as a tuple, with a colon, with an arrow, or with an equ
 Example 4 caps a list and compares the plain and the verbose ellipsis.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -174,7 +174,7 @@ The capped list ends with an ellipsis, and the verbose form also says how many i
 Example 5 limits how deep a nested value is shown.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -210,7 +210,7 @@ At the default depth the nested lists print in full, and at depth one each inner
 Example 6 sorts a map by its key.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -244,7 +244,7 @@ The entries come out in key order.
 Example 7 numbers the items of a list.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -277,7 +277,7 @@ Each item is shown with its position.
 Example 8 shows the multiline layout, a custom indent, and a trailing comma.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>

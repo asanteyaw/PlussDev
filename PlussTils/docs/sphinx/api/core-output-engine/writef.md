@@ -31,7 +31,7 @@ A pattern whose placeholder count disagrees with the arguments is refused in str
 Example 1 fills two placeholders.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -61,7 +61,7 @@ The arguments fill the placeholders in order.
 Example 2 uses format specifications for width, alignment, and zero padding.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -91,7 +91,7 @@ Each placeholder carries its own alignment and width.
 Example 3 passes a trailing options value with the argument.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

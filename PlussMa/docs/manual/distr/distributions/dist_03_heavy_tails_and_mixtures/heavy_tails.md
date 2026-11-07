@@ -20,7 +20,7 @@ The first program draws 2000 observations from a skewed NIG (`alpha 1.5`, `beta 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -80,7 +80,7 @@ A flexible family should not invent heavy tails. If the data really are normal, 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -119,7 +119,7 @@ Tail weight and skew are summarised by the standardised cumulants: skewness `Îºâ
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -167,7 +167,7 @@ The generalised hyperbolic family `Gh{lambda, alpha, beta, location, scale}` has
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 

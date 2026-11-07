@@ -1,6 +1,6 @@
 // Pairing two lists element by element. A price list and a quantity list are combined into line
 // totals. When the lists differ in length, the result stops at the shorter one.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iostream>
 #include <vector>

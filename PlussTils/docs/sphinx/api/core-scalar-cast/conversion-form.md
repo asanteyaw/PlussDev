@@ -3,7 +3,7 @@
 [Back to Scalar casts](../core-scalar-cast.md) · [Core Utilities API Reference](../../api_reference.md)
 
 ```cpp
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 ```
 
 `Series as_<dtype>(const Series& x, Config cfg = {})` converts every element of `x` to `<dtype>` and returns a new series. Converting a float to an integer dtype truncates toward zero. The input series is not modified.
@@ -33,7 +33,7 @@ Example 1 converts a floating-point column to a 64-bit integer column.
 // Converting a whole column to a different element type. Sensor counts arrive as floats, and the
 // database wants integers. The conversion truncates toward zero, so 2.9 becomes 2.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 #include <vector>
@@ -68,7 +68,7 @@ Example 2 converts a column of numbers to a boolean mask.
 // Turning a Series of numbers into a mask of true and false values. The mask marks the readings that
 // passed a limit, and the conversion to boolean keeps every reading that is not zero as true.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 #include <vector>
@@ -102,7 +102,7 @@ Example 3 converts to a narrower floating-point type.
 ```cpp
 // Converting down to a narrower float type. The values are the same numbers, stored in a smaller type.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 

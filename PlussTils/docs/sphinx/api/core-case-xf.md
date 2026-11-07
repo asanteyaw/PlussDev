@@ -29,7 +29,7 @@ None.
 Example 1 shows all four transforms.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>

@@ -35,7 +35,7 @@ None.
 Example 1 checks emptiness and equality.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -75,7 +75,7 @@ A default style is empty, a style with fields set is not, and the two compare un
 Example 2 sets a 24-bit foreground, which overrides a named one on the same style.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -114,7 +114,7 @@ The RGB value is what reaches the escape sequence, not the named color set on th
 Example 3 applies a style through PrintOptions.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>

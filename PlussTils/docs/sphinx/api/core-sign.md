@@ -29,7 +29,7 @@ None.
 Example 1 shows all three styles on a positive and a negative number.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>

@@ -1,6 +1,6 @@
 // Building several paths at once from a list and from a name map. A run that reads three inputs can
 // name them once and look them up by name, and a duplicate name is refused instead of overwritten.
-#include <pluss/tils/auxiliary/pathing.h>
+#include <pluss/tils/kit/pathing.h>
 
 #include <exception>
 #include <filesystem>

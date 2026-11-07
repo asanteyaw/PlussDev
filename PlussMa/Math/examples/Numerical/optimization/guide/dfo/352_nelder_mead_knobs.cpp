@@ -5,7 +5,7 @@
 //   reflection / expansion / contraction / shrink   the four step coefficients (defaults 1, 2, 0.5, 0.5)
 //   max_evaluations                       budget
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>

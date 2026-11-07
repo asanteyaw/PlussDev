@@ -28,7 +28,7 @@ The estimate of one run is a single number; the number of paths and steps should
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <limits>
 

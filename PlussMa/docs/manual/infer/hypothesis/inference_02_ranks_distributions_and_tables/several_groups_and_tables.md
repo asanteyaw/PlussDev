@@ -12,7 +12,7 @@ With three or more groups, comparing every pair with a t-test multiplies the cha
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -58,7 +58,7 @@ The group means are 5.0429, 5.9556 and 6.6375, from groups of 7, 9 and 8 parts. 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -106,7 +106,7 @@ Of 120 rolls the faces came up 13, 17, 24, 22, 19 and 25 times, against 20 expec
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;

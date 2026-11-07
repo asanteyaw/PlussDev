@@ -1,7 +1,7 @@
 // Converting a whole column to a different element type. Sensor counts arrive as floats, and the
 // database wants integers. The conversion truncates toward zero, so 2.9 becomes 2.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 #include <vector>

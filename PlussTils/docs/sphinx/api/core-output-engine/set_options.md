@@ -29,7 +29,7 @@ None.
 Example 1 applies an options value with a minimum level of error.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -62,7 +62,7 @@ The info line is dropped, and the error line is kept.
 Example 2 applies a separator through the options value.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -94,7 +94,7 @@ The values are joined with the new separator.
 Example 3 chains a write after applying options.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

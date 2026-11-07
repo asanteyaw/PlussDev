@@ -29,7 +29,7 @@ None.
 Example 1 turns the tags off and writes an info line.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -59,7 +59,7 @@ The info line is written without its tag.
 Example 2 turns the tags off, then on again.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -92,7 +92,7 @@ The first warning has no tag, and the second has its tag again.
 Example 3 shows that plain writes never carry a level.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

@@ -1,7 +1,7 @@
 // Running a slow transformation across all cores. The parallel result must match the sequential one
 // exactly, so the program checks that before trusting the speedup. The sum uses integers, so the
 // comparison is exact.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <cstdint>
 #include <iostream>

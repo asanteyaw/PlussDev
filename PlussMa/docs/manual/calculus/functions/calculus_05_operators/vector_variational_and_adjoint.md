@@ -29,7 +29,7 @@ operators::Operator operators::adjoint(const Operator &op);
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -65,7 +65,7 @@ List the jet variables `u, u′, u″, …` as ordinary variables of the Lagrang
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace variational = pluss::operators::variational;
@@ -99,7 +99,7 @@ area, u' = 0.8, u'' = 0.6   -0.2856837108    exact  -0.2856837108
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

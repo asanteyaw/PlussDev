@@ -20,7 +20,7 @@ where `n` is the number of selected variables. The arguments need not have equal
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -76,7 +76,7 @@ The precision and platform of the arguments carry through the derivative functio
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

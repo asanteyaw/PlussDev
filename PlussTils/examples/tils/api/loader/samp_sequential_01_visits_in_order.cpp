@@ -1,6 +1,6 @@
 // SequentialSampler visits every index in order, ignoring the seed entirely. It is the sampler a
 // loader with shuffle left off would behave like, if you wanted one as an explicit object.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

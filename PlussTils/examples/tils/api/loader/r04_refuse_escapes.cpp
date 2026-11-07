@@ -1,6 +1,6 @@
 // Keeping a run inside its root. A path that climbs out of the root is refused before anything is
 // opened, which stops a bad configuration value from reading a file it should never see.
-#include <pluss/tils/auxiliary/pathing.h>
+#include <pluss/tils/kit/pathing.h>
 
 #include <exception>
 #include <filesystem>

@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 sets the separator and the end text with builders.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -62,7 +62,7 @@ Each builder sets the one field it names.
 Example 2 sets fixed and scientific notation with their precision in one call each.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -97,7 +97,7 @@ Both the notation and the precision come from the one builder call.
 Example 3 turns the base prefix on and off for hexadecimal.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -132,7 +132,7 @@ The prefix appears only when the builder's argument is true, which is also the d
 Example 4 sets a percentage with zero decimals.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -165,7 +165,7 @@ Half becomes 50 percent, with no fraction shown.
 Example 5 pads a value with a chosen width, alignment, and fill character in one call.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -198,7 +198,7 @@ All three settings come from the one builder.
 Example 6 groups digits with the default separator and with a custom one.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -233,7 +233,7 @@ The default groups by comma in threes, and the custom call groups by underscore 
 Example 7 combines three single-field builders: a color, quoting, and uppercase.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -274,7 +274,7 @@ Each builder changes only the field it is named for.
 Example 8 switches a list to the multiline layout with an indent.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -311,7 +311,7 @@ The list prints one item per line, indented by the given string.
 Example 9 caps a list to a maximum number of items.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>

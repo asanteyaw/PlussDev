@@ -33,7 +33,7 @@ The program simulates a Heston path set and checks it against what the model imp
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace vol = pluss::subsp::math::finance::volatility;
 using namespace pluss::tils;
@@ -82,7 +82,7 @@ A risk-neutral generator must reproduce the forward: E[S_T] = S₀ e^(μT). This
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace vol = pluss::subsp::math::finance::volatility;
 using namespace pluss::tils;
@@ -133,7 +133,7 @@ Every generator reproduces the forward within about one standard error: the z-va
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace vol = pluss::subsp::math::finance::volatility;
 using namespace pluss::tils;

@@ -12,7 +12,7 @@ A test of a mean answers one of three questions: is the mean of one sample equal
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -54,7 +54,7 @@ Machine B's mean is 5.0222, a distance of only 0.2114 standard errors from the t
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -97,7 +97,7 @@ When the two readings are on the same units (the same cups weighed on two scales
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 #include <limits>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;

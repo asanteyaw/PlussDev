@@ -22,7 +22,7 @@ The first program prints the windows of each constructor for 100 observations an
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace ts = pluss::subsp::stats::ts;
 using namespace pluss::tils;
@@ -70,7 +70,7 @@ The second program shows how the options change the windows. A **gap** leaves th
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace ts = pluss::subsp::stats::ts;
 using namespace pluss::tils;

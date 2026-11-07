@@ -62,7 +62,7 @@ iterations      : 80
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>
@@ -119,7 +119,7 @@ The thresholds (10 and 40) live in `DfoOptions::auto_policy`. `selection_reason`
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 

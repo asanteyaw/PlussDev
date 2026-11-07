@@ -34,7 +34,7 @@ The expansion of `exp` about 0 converges quickly, and the Lagrange factor bounds
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace expansion = pluss::operators::expansion;
@@ -72,7 +72,7 @@ The multivariate form expands in every variable you list; anything else stays an
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace expansion = pluss::operators::expansion;
@@ -107,7 +107,7 @@ a =  5.00000000   T3 =  0.94833333   f =  0.94898030
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace expansion = pluss::operators::expansion;

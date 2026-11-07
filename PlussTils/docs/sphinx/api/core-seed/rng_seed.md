@@ -33,7 +33,7 @@ engines or third-party generators.
 ## Example 1: Set and inspect the base
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -57,7 +57,7 @@ base after draws: 12345
 ## Example 2: Reset and replay
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -85,7 +85,7 @@ reset replays second: true
 ## Example 3: Zero is a valid base
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 

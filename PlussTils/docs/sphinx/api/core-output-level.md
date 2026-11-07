@@ -33,7 +33,7 @@ None.
 Example 1 prints the number of each level.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -69,7 +69,7 @@ The numbers run from zero for trace to four for error.
 Example 2 compares levels to show how filtering is decided.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -100,7 +100,7 @@ A warning ranks above info, and a debug line does not reach error.
 Example 3 prints the default prefix each level uses.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

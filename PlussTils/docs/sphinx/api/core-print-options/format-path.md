@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 sets the text for a missing argument.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -60,7 +60,7 @@ The missing third value is shown as the marker instead of being left out.
 Example 2 sets strict argument checking on a call with too many arguments.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>
@@ -98,7 +98,7 @@ The call is refused, instead of silently dropping the extra value.
 Example 3 bundles two values with pack and reuses the bundle in two patterns.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 #include <iostream>

@@ -28,7 +28,7 @@ The second moment of a standard normal is 1. A mixture `½·Lebesgue[0,1] + 2·�
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -72,7 +72,7 @@ The Lebesgue integral partitions the range of the integrand instead of the domai
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace integ = pluss::subsp::math::integ;
 using namespace pluss::tils;

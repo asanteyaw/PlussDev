@@ -31,7 +31,7 @@ A pattern whose placeholder count disagrees with the arguments is refused in str
 Example 1 writes a formatted debug line.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -60,7 +60,7 @@ The placeholders fill in order, and the line carries the tag.
 Example 2 sets a minimum level of error and writes a formatted debug line.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -93,7 +93,7 @@ The line is dropped, so the captured length is zero.
 Example 3 gives the debug level its own prefix and writes a formatted line.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

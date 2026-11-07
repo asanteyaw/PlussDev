@@ -13,7 +13,7 @@ appropriate only when the APIs genuinely compose.
 | Family | Canonical public namespace | Canonical header | Role |
 |---|---|---|---|
 | Core | `pluss::tils` | `<pluss/tils.h>` | Small language, environment, output, conversion, and dispatch conveniences |
-| Loaders | `pluss::loader` | `<pluss/tils/auxiliary/data_loader.h>` and neighboring loader headers | Batching, sampling, splitting, and filesystem-backed input support |
+| Loaders | `pluss::loader` | `<pluss/tils/kit/data_loader.h>` and neighboring loader headers | Batching, sampling, splitting, and filesystem-backed input support |
 | PlussBI | `pluss::bi` | `<pluss/bi/bi.h>` | Declarative analytical boards, controls, views, sessions, and browser serving |
 | PlussView | `pluss::view` and `pluss::view::window` | `<pluss/tils/view.h>` | Standalone window, scene, rendering, interaction, and export utilities |
 

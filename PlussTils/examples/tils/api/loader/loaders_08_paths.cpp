@@ -1,6 +1,6 @@
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
-#include <pluss/tils/auxiliary/pathing.h>
+#include <pluss/tils/kit/pathing.h>
 
 #include <filesystem>
 #include <fstream>

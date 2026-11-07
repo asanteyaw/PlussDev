@@ -1,6 +1,6 @@
 // gap leaves a buffer of untouched indices between the end of the training window and the start of
 // the test window, so a value right at the boundary never leaks between the two.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

@@ -12,7 +12,7 @@ The t-tests of Chapter 1 compare means and assume the data are roughly normal. R
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -56,7 +56,7 @@ The rank sum of machine A is 96.5 (the fractional part is a tie shared between t
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -97,7 +97,7 @@ A rank statistic takes finitely many values, so its null distribution can be lis
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -149,7 +149,7 @@ The simulation compares the t-test and the rank-sum test on two groups of 12 who
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;

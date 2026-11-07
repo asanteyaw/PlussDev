@@ -1,6 +1,6 @@
 // A log of sensor readings. Small and large measurements switch to scientific notation, a general
 // notation keeps significant digits, and missing or invalid readings print as named text.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>

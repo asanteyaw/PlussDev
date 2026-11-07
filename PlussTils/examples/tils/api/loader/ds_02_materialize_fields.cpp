@@ -1,6 +1,6 @@
 // materialize_fields returns the whole dataset as its original fields, which is what a DataLoader
 // built from this dataset reads in one shot, rather than calling get() once per sample.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

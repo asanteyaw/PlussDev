@@ -1,6 +1,6 @@
 // A user profile record. Optional fields show a placeholder when they are empty, flags print as
 // words that a reader understands, and a tag marks which values are present.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <optional>

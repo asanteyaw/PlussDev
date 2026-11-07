@@ -3,7 +3,7 @@
 [Back to Scalar casts](../core-scalar-cast.md) · [Core Utilities API Reference](../../api_reference.md)
 
 ```cpp
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 Config as_dtype(Config cfg, ScalarType dtype);
 Series as_dtype(const Series& x, ScalarType dtype, Config cfg = {});
@@ -39,7 +39,7 @@ Example 1 tags a configuration with a dtype chosen at runtime.
 // as_dtype(Config, ScalarType) is the generic form the named helpers (as_f64, as_i32, ...) call
 // internally. Use it when the dtype is chosen at runtime, not known at the call site.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 
@@ -69,7 +69,7 @@ Example 2 converts a series to a dtype named at runtime.
 // as_dtype(const Series&, ScalarType, Config) converts an existing series, the same job as_i64(x, cfg)
 // does, but with the target type given as a value instead of named in the function.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 
@@ -101,7 +101,7 @@ Example 3 builds a one-element series from a host double, with the dtype named a
 // as_dtype(double, ScalarType, Config) builds a one-element series from a host double, the same job
 // as_f32(value, cfg) does for a chosen type, but the type is a value here, not part of the name.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 

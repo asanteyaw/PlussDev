@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 shows the three alignments at the same width.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -61,7 +61,7 @@ Left pads on the right, right pads on the left, and center splits the padding.
 Example 2 sets a minimum width on a short and a long value.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -93,7 +93,7 @@ The short value is padded to the width, and the long value is left as it is, bec
 Example 3 changes the pad character.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -123,7 +123,7 @@ Dots fill the space instead of blanks.
 Example 4 cuts a long value to a maximum width.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -153,7 +153,7 @@ The text is cut and ends with the default ellipsis mark.
 Example 5 sets a custom cut marker.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>

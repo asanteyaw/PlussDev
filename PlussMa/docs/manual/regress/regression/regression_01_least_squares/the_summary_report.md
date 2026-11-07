@@ -19,7 +19,7 @@ The header lists the model (`Dep. Variable`, `Rank`, `Alpha`, the observation co
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -69,7 +69,7 @@ The header values are the fit fields printed to four significant digits. For a s
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <sstream>
 
@@ -121,7 +121,7 @@ A fit that succeeds numerically can still be unreliable, and the report ends wit
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

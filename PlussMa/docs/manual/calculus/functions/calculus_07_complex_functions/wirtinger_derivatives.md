@@ -19,7 +19,7 @@ For a function built from polynomials, `exp`, `sin` and the other analytic primi
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -64,7 +64,7 @@ The program evaluates each at z = 3 + 4i and prints the table value beside it.
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -108,7 +108,7 @@ For f = u + iv, the two derivatives combine the partial derivatives in x and y: 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -147,7 +147,7 @@ The Wirtinger derivatives of z z̄ + z² are 2z + z̄ and z, and both agree with
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

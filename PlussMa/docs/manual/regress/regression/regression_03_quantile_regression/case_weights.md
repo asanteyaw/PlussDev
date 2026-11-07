@@ -23,7 +23,7 @@ The program fits the median and the 0.8-quantile lines to twelve rows with weigh
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -86,7 +86,7 @@ A typical use is data in which rows stand for different numbers of units: group 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

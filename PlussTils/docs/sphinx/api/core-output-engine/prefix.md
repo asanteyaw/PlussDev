@@ -30,7 +30,7 @@ None.
 Example 1 replaces the warning tag and leaves the info tag alone.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -62,7 +62,7 @@ The warning carries the custom tag, and the info line keeps its default.
 Example 2 replaces the error tag and writes a debug line, which keeps its default.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -96,7 +96,7 @@ Only the error tag changed.
 Example 3 applies a custom prefix to a formatted log line.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

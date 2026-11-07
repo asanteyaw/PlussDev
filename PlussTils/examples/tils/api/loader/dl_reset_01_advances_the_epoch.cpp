@@ -1,6 +1,6 @@
 // reset() moves to the next epoch and rewinds the cursor, the same way begin() does automatically
 // when reshuffle_each_epoch is on. set_epoch jumps to a chosen epoch instead of the next one.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

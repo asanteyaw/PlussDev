@@ -12,7 +12,7 @@
 
 #include "pluss/subsp/natsci/biology/population/ipm.h"
 #include "pluss/subsp/stats/regression.h"
-#include "pluss/tils/auxiliary/rng_seed.h"
+#include "pluss/tils/kit/rng_seed.h"
 
 #include <algorithm>
 #include <cmath>

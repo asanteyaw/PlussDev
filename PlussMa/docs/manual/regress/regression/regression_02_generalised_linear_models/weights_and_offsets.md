@@ -24,7 +24,7 @@ The commonest use of weights is data that arrive already grouped. Instead of 80 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -81,7 +81,7 @@ A weight need not be a whole number: a weight of 0.5 counts a row for half as mu
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <limits>
 
@@ -154,7 +154,7 @@ The program records events for twelve sites with unequal exposures and two group
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -217,7 +217,7 @@ The null deviance is the deviance of the model with a constant mean. With an off
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

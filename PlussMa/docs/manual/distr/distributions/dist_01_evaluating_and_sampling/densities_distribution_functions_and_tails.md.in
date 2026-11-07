@@ -13,7 +13,7 @@ The first program evaluates a normal distribution at five points, and a Poisson 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -58,7 +58,7 @@ The program shows the cut-off, and then a typical casualty: the likelihood of a 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -93,7 +93,7 @@ A parameter can be a `Series`. The points and the parameters are then paired ele
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -134,7 +134,7 @@ Two further methods give the moments of a family without drawing from it: `cgf(t
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 

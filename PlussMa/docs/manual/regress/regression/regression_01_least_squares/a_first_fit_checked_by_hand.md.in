@@ -17,7 +17,7 @@ The program fits eight points that lie close to a line, then computes the same q
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace distr = pluss::subsp::stats::distr;

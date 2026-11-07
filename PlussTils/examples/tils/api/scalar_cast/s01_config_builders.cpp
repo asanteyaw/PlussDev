@@ -1,7 +1,7 @@
 // Choosing the element type of a new Series. Each as_ function with a Config argument returns that
 // configuration with the element type set, so it can be passed straight to a factory call.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 #include <vector>

@@ -37,7 +37,7 @@ header = ["PlussAI", "PlussTils/include/pluss/tils/aux"]
 # (covered by "PlussAI") and PlussTils/include/pluss/tils/aux (nn/data's
 # pluss::loader -- Dataset/SeriesDataset/DataLoader/Sampler and its
 # subclasses -- physically defined in data_loader.h/sampler.h there).
-# <pluss/ai/nn.h> itself #includes "pluss/tils/auxiliary/data_loader.h" (see that
+# <pluss/ai/nn.h> itself #includes "pluss/tils/kit/data_loader.h" (see that
 # header) so this second path matches nn.h's own real dependency, not an
 # approximation of it.
 

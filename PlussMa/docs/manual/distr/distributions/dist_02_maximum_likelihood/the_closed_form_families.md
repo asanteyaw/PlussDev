@@ -25,7 +25,7 @@ The first program fits a normal distribution to 500 draws from `N(1.5, 2Â²)`, an
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -71,7 +71,7 @@ The estimates are close to the truth (1.4956 and 1.9274 for 1.5 and 2.0) and the
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -125,7 +125,7 @@ The standard error of an estimate shrinks as the sample grows, at the rate `1/âˆ
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -166,7 +166,7 @@ Often the question is not the parameters but the family. The log-likelihood comp
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 

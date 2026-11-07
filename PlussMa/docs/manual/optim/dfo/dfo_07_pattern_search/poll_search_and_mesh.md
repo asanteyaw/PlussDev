@@ -57,7 +57,7 @@ The default budget is 100 iterations per variable, so this two-variable run stop
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>
@@ -165,7 +165,7 @@ Searching earns its evaluations on smooth functions: along a successful directio
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>

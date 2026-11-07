@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 
 std::vector<Series> fields;
 
@@ -45,7 +45,7 @@ Example 1 reads fields by position with at and operator[].
 ```cpp
 // A batch holds one Series per field, in the order the dataset or the loader produced them. at()
 // and operator[] read a field by position, with the same bounds check either way.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -81,7 +81,7 @@ Example 2 reads the first two fields through x and y, and checks has_y.
 ```cpp
 // x() is the first field, and y() is the second. has_y() tells you whether a second field exists
 // before you reach for it, since a batch with only one field has no y() to call.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -122,7 +122,7 @@ Example 3 checks an empty batch and the refusal reading x gives.
 ```cpp
 // A default-constructed batch has no fields. empty() and size() agree about that, and x() refuses
 // to read a field that is not there.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <exception>

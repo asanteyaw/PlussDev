@@ -1,6 +1,6 @@
 // set_options replaces the whole configuration after construction and rebuilds the batch plan, the
 // same validation and ordering the constructor runs.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

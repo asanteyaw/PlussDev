@@ -26,7 +26,7 @@ base is zero.
 ## Example 1: Preserve an explicit seed
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -44,7 +44,7 @@ explicit seed: 99
 ## Example 2: An explicit seed does not consume the stream
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -69,7 +69,7 @@ explicit preserves stream: true
 ## Example 3: Zero consumes the next position
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 

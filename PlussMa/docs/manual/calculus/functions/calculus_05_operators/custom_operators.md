@@ -19,7 +19,7 @@ The logarithmic derivative f′/f is not a built-in operator but is one line to 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -64,7 +64,7 @@ A callable can capture parameters, including move-only values such as a `unique_
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <memory>
 
@@ -131,7 +131,7 @@ Declare `linear = true` only if the operator really is linear, because combinati
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <functional>
 #include <string>

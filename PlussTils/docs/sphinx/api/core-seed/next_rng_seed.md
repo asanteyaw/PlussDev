@@ -29,7 +29,7 @@ is not a practical application limit, but it defines the arithmetic contract.
 ## Example 1: Allocate successive seeds
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -50,7 +50,7 @@ second: 5886303152054975053
 ## Example 2: Initialize independent engines
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 #include <random>
@@ -77,7 +77,7 @@ standard engine's numeric output, which can distract from the seed contract.
 ## Example 3: Allocate from several threads
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <algorithm>
 #include <iostream>

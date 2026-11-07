@@ -1,7 +1,7 @@
 // SeriesDataset wraps a list of fields as a map-style Dataset, the same way the loader's own
 // constructor does internally when you pass it a plain vector of fields. Building one directly
 // gives access to the fields and the batch dimension on their own.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

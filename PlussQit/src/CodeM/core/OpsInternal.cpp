@@ -78,7 +78,7 @@
 #include "CodeM/core/Half.h"
 #include "pluss/codem/stack_array.h"
 #include "pluss/codem/series_factory.h"
-#include "pluss/tils/auxiliary/rng_seed.h"
+#include "pluss/tils/kit/rng_seed.h"
 
 #ifdef PLUSS_ENABLE_TORCH
 #include "pluss/codem/torch_interop.h"

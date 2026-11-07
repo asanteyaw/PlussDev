@@ -1,7 +1,7 @@
 // in_order set to false allows a worker to deliver a batch as soon as it finishes, rather than
 // waiting for strict index order. Every batch still arrives exactly once; only the arrival order
 // may differ from a run with in_order left at its default of true.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>

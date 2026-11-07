@@ -20,7 +20,7 @@ With no predictors the maximum-likelihood estimate of a probability is the fract
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -53,7 +53,7 @@ Ten students, the hours each studied and whether they passed. The program fits t
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace linalg = pluss::subsp::math::linalg;
@@ -123,7 +123,7 @@ A coefficient of a logistic model is a change in log-odds, so exp(b) is a multip
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -164,7 +164,7 @@ The interval for the slope, [−0.2063, 2.9132], extends 1.96 standard errors ei
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

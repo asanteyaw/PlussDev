@@ -14,7 +14,7 @@ Every solve ends in one state. The budgets are checked between steps, so a metho
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>

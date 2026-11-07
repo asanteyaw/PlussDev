@@ -11,7 +11,7 @@
 //        -I <repo>/PlussTils/include -I <repo>/PlussQit/include \
 //        output_engine_full_tour.cpp -o tour && ./tour
 // ─────────────────────────────────────────────────────────────────────────────
-#include "pluss/tils/auxiliary/output.h"
+#include "pluss/tils/kit/output.h"
 
 #include <array>
 #include <cstdint>

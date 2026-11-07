@@ -1,7 +1,7 @@
 #include "pluss/subsp/stats/inference/hypothesis_testing.h"
 
 #include "CodeM/core/Errors.h"
-#include "pluss/tils/auxiliary/scalar_cast.h"
+#include "pluss/tils/kit/scalar_cast.h"
 #include "pluss/subsp/stats/tails.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/stats/distr.h"

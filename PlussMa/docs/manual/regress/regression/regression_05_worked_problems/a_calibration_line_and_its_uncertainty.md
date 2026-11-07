@@ -14,7 +14,7 @@ The maker claims a sensitivity of 0.50 readings per unit. The test statistic for
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace distr = pluss::subsp::stats::distr;
@@ -71,7 +71,7 @@ A second interval comes from inverting the 95% prediction band of the line itsel
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

@@ -1,6 +1,6 @@
 // RandomSampler without replacement visits every index exactly once, in a shuffled order. The
 // same seed, passed through DataLoaderOptions, gives the same order every time.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>

@@ -1,6 +1,6 @@
 // Sizes and durations for a storage report. Raw counts are hard to read, so the output options
 // turn them into IEC bytes, SI bytes, metric counts, and durations.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 

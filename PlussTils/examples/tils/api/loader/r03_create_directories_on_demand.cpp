@@ -1,6 +1,6 @@
 // Making the output folder that a run needs. Asking for a directory with create_dirs makes it at the
 // moment of the call, so the later writes do not have to check for it first.
-#include <pluss/tils/auxiliary/pathing.h>
+#include <pluss/tils/kit/pathing.h>
 
 #include <filesystem>
 #include <iostream>

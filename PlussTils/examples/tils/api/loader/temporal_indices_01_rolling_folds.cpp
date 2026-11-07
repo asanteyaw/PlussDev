@@ -1,7 +1,7 @@
 // temporal_split_indices produces several train/test folds that each move forward in time: the
 // train indices for a later fold include everything an earlier fold's train and test together
 // covered, and the test window always comes immediately after the training window.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

@@ -11,7 +11,7 @@ The program builds the density as a function of `x` and `sigma`, integrates it o
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 

@@ -2,7 +2,7 @@
 // stopped improving relatively and the swarm has collapsed; `max_generations` and `max_evaluations` are the budgets. The
 // sequential execution mode updates particles one at a time and gives a different (equally valid) random path.
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <utility>

@@ -20,7 +20,7 @@ For P(x, y) = x³ + xy + y² the Hessian is [[6x, 1], [1, 2]]. The program evalu
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -70,7 +70,7 @@ from three constant basis vectors, so that the output has length 3. The Jacobian
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -122,7 +122,7 @@ The Jacobian of the gradient is the Hessian. This is not a coincidence but a def
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

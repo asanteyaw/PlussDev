@@ -1,7 +1,7 @@
 // The same table can be cut two ways. Along the last axis each slice is a row, and along the first
 // axis each slice is a column. A negative axis counts from the end, so -1 is the last axis.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <vector>

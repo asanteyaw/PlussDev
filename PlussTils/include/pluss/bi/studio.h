@@ -6,7 +6,7 @@
 #include "pluss/bi/dashboard_assets.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/pl.h"
-#include "pluss/tils/auxiliary/scalar_cast.h"
+#include "pluss/tils/kit/scalar_cast.h"
 #include "pluss/tils/view/html_window.h"
 
 #include <algorithm>

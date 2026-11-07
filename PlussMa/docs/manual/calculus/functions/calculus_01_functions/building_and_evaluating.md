@@ -12,7 +12,7 @@ A `Function` is a formula that you write once and evaluate on any data. You desc
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -70,7 +70,7 @@ Both forms also accept a `RangeView` of `Series` or of `Binding` (a `pair<string
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <functional>
 #include <string>
@@ -130,7 +130,7 @@ When the number of variables is only known at run time, take a single `std::span
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <functional>
 #include <span>

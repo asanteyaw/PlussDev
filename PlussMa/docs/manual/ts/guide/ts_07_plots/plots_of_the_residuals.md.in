@@ -21,7 +21,7 @@ The first program fits an AR(1) to three series and draws the residuals of each.
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/pl/studio.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cstdlib>
 #include <string>

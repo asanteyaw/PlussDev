@@ -67,7 +67,7 @@ The program prints the interval half-widths for a stationary ARMA(1,1) and for a
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <algorithm>
 #include <cmath>

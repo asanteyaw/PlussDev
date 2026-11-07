@@ -33,7 +33,7 @@ The transform of `e^{−x²/2}` is `√(2π) e^{−w²/2}`, and the Laplace tran
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace fourier = pluss::operators::fourier;
@@ -74,7 +74,7 @@ Laplace of 1/(1+x)       0.59634736   exact 0.59634736   lazy integral
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

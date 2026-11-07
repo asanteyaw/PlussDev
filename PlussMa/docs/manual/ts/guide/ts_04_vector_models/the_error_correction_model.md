@@ -20,7 +20,7 @@ The program lets the library choose the rank (`rank = −1`) and prints the long
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iomanip>
 #include <iostream>

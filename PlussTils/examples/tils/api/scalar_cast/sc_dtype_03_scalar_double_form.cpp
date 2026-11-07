@@ -1,7 +1,7 @@
 // as_dtype(double, ScalarType, Config) builds a one-element series from a host double, the same job
 // as_f32(value, cfg) does for a chosen type, but the type is a value here, not part of the name.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 

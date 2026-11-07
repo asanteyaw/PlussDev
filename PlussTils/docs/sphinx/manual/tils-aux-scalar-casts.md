@@ -26,7 +26,7 @@ A factory call needs an element type. Each `as_` function that takes a configura
 // Choosing the element type of a new Series. Each as_ function with a Config argument returns that
 // configuration with the element type set, so it can be passed straight to a factory call.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 #include <vector>
@@ -61,7 +61,7 @@ A count can be too large for a double, so it should be stored as an integer from
 // Creating a one-element Series from a host value of a chosen type. The scalar form keeps the value's
 // type exact, so a count stored as int64 stays an integer on the way in and out.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>
@@ -96,7 +96,7 @@ A column of sensor counts arrives as floats and must be stored as integers. This
 // Converting a whole column to a different element type. Sensor counts arrive as floats, and the
 // database wants integers. The conversion truncates toward zero, so 2.9 becomes 2.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 #include <vector>
@@ -132,7 +132,7 @@ A pipeline often ends with a one-element series, such as an average. This progra
 // and the extraction reads it back as a plain number. A Series with more than one element cannot be
 // read as one number, and the extraction refuses it.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <exception>
 #include <iostream>
@@ -171,7 +171,7 @@ A complex gain has a real and an imaginary part, and both must survive the trip 
 // Complex numbers keep both parts through a Series and back out. A signal's gain is a complex value,
 // and the program stores it, reads it back, and checks both parts survived unchanged.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 
@@ -203,7 +203,7 @@ A mask marks which readings passed a test. This program converts a column of num
 // Turning a Series of numbers into a mask of true and false values. The mask marks the readings that
 // passed a limit, and the conversion to boolean keeps every reading that is not zero as true.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 #include <vector>
@@ -238,7 +238,7 @@ Not every type can be extracted, and a trait says which can. This program asks t
 // to_scalar is the general form of the extraction. It names the type you want, and a trait tells you
 // which types can be extracted at all. Here the program checks the traits before it asks.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>
@@ -274,7 +274,7 @@ Readings are rounded to whole degrees before they are stored. This program adds 
 // reports a count and an average. Each conversion is one scalar call, so the types are visible at
 // each step.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>

@@ -28,7 +28,7 @@ None.
 Example 1 ends a line that was started with write.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -60,7 +60,7 @@ The partial line is finished by endln.
 Example 2 writes a newline on its own.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -91,7 +91,7 @@ A call with nothing else writes exactly one byte, the newline.
 Example 3 ends a chained line and starts the next.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

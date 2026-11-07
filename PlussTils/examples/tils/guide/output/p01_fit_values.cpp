@@ -1,6 +1,6 @@
 // Fitting values into fixed-width places. A status board pads labels with a fill character, cuts a
 // long service name with an ellipsis, and right-aligns a latency so its digits line up.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <string>

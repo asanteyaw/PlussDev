@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/auxiliary/sampler.h>
+#include <pluss/tils/kit/sampler.h>
 
 virtual std::vector<std::int64_t> Sampler::sample(std::int64_t size, std::uint64_t epoch_seed) const = 0;
 
@@ -53,7 +53,7 @@ Example 1 visits every index in order with SequentialSampler.
 ```cpp
 // SequentialSampler visits every index in order, ignoring the seed entirely. It is the sampler a
 // loader with shuffle left off would behave like, if you wanted one as an explicit object.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -87,7 +87,7 @@ Example 2 shuffles without replacement with RandomSampler.
 ```cpp
 // RandomSampler without replacement visits every index exactly once, in a shuffled order. The
 // same seed, passed through DataLoaderOptions, gives the same order every time.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -124,7 +124,7 @@ Example 3 shuffles with replacement and more samples than the dataset size.
 ```cpp
 // With replacement, num_samples may exceed the dataset size, and the same index can appear more
 // than once.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -157,7 +157,7 @@ Example 4 uses SubsetRandomSampler, and WeightedRandomSampler favoring one index
 ```cpp
 // WeightedRandomSampler picks indices with probability proportional to their weight. A weight of
 // zero is never picked, and the sample count is independent of the dataset size.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -191,7 +191,7 @@ Example 5 uses WeightedRandomSampler without replacement.
 ```cpp
 // Without replacement, the sampler cannot deliver more samples than there are indices to draw, and
 // each index is picked at most once.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -224,7 +224,7 @@ Exactly as many samples as indices are produced, and each index is picked at mos
 Example 6 sets a sampler on a loader directly, and shows it rejected alongside shuffle.
 
 ```cpp
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>

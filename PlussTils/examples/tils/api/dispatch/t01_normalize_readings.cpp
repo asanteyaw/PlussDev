@@ -1,6 +1,6 @@
 // Scaling sensor readings to a share of the largest one. The same callable runs over every reading,
 // and transmit returns a new vector of the results, so the original readings are untouched.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <algorithm>
 #include <iostream>

@@ -1,6 +1,6 @@
 // Format strings in a configuration file can drift from the values they are given. Strict mode
 // turns a mismatch into an error, and a missing argument can be shown as a visible marker instead.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <stdexcept>

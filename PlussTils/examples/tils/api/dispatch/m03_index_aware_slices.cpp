@@ -1,7 +1,7 @@
 // Labelling each slice by its position. When the function takes a second argument, map_axis passes the
 // position of the slice, so the output can say which row it describes.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <sstream>

@@ -14,7 +14,7 @@ The program applies all of them to a short price series. Look at the `NaN` patte
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iomanip>
 #include <iostream>
@@ -101,7 +101,7 @@ A rolling statistic summarises the trailing `window` observations: `rolling_mean
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iomanip>
 #include <iostream>
@@ -150,7 +150,7 @@ The program feeds a step (a series that jumps from 0 to 1 and stays there) throu
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iomanip>
 #include <iostream>
@@ -189,7 +189,7 @@ Real series have missing values and arrive at the wrong frequency. `fill_gaps(x,
 ```cpp
 #include <pluss/pluss.h>
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <iomanip>

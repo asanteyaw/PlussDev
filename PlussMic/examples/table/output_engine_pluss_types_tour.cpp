@@ -28,7 +28,7 @@
 //        ../libPlussMic.a ../libpluss.a ... && ./tour
 // ─────────────────────────────────────────────────────────────────────────────
 #include "table/DataFrame.h"
-#include "pluss/tils/auxiliary/output.h"
+#include "pluss/tils/kit/output.h"
 
 #include <cstdint>
 #include <iostream>

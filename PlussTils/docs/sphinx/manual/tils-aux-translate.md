@@ -26,7 +26,7 @@ A table of weekly sales has one row per store. This program cuts the table along
 // Summing each row of a small table. The table holds three weeks of sales for two stores. map_axis
 // hands the function one row at a time, so the function sees a single store's week as a vector.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <vector>
@@ -67,7 +67,7 @@ The same table can be cut by rows or by columns. This program sums the rows with
 // The same table can be cut two ways. Along the last axis each slice is a row, and along the first
 // axis each slice is a column. A negative axis counts from the end, so -1 is the last axis.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <vector>
@@ -112,7 +112,7 @@ Sensor readings are arranged one sensor per row. When the function takes a secon
 // Labelling each slice by its position. When the function takes a second argument, map_axis passes the
 // position of the slice, so the output can say which row it describes.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <sstream>
@@ -156,7 +156,7 @@ A grid of region names is cut into rows, and each row is a note. This program co
 // Working with text. A grid of region names is cut into rows, and each row is a note of its own, so a
 // function can count or join the names that belong together.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <string>
@@ -193,7 +193,7 @@ A one-dimensional timeline has a single axis, so the only slice holds every time
 // A one-dimensional timeline has a single slice along its only axis, which holds every tick. The
 // function receives all the timestamps at once, so it can find the span they cover.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <iostream>
 #include <vector>
@@ -227,7 +227,7 @@ Summing sixty-four columns of two thousand rows is a good job for several thread
 // Summing many columns at once across threads. The parallel result must match the sequential one,
 // so the program compares the two before trusting the parallel answer.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <cstddef>
 #include <iostream>
@@ -275,7 +275,7 @@ A table with two axes has no axis two. This program asks for one, and the error 
 // Asking for an axis the table does not have. The table is two-dimensional, so axis 2 is refused, and
 // the error names the operation so the caller can find the bad call.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <exception>
 #include <iostream>
@@ -311,7 +311,7 @@ Before regions are compared, each month should be turned into shares of that mon
 // Turning each column of a region-by-month table into shares of that month's total. This is a
 // common step before comparing regions fairly, because a big month would otherwise dominate.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/translate.h>
+#include <pluss/tils/kit/translate.h>
 
 #include <cstddef>
 #include <iostream>

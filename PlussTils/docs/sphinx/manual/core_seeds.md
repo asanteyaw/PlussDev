@@ -50,7 +50,7 @@ Read it for two points. Reading the base changes nothing. Drawing advances the
 stream but leaves the base where it was.
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -92,7 +92,7 @@ three positions of the second run match the first run exactly. The last check
 shows that a different base gives a different sequence at the first position.
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -143,7 +143,7 @@ and draws a derived seed. The derived seed is not zero, and it replays after a
 reset.
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -184,7 +184,7 @@ stream does not move. Zero means the caller has no seed to offer, so the
 function allocates the next derived one, and that consumes a position.
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 
@@ -230,7 +230,7 @@ by a thousand draws leaves the other exactly where it was, because each engine
 owns its state.
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <cstdint>
 #include <iostream>
@@ -287,7 +287,7 @@ allocated seeds are distinct, and a replay after a reset produces the same
 sorted set.
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -354,7 +354,7 @@ differs even though the code looks identical. Resetting before the second run
 restores the match.
 
 ```cpp
-#include <pluss/tils/auxiliary/rng_seed.h>
+#include <pluss/tils/kit/rng_seed.h>
 
 #include <iostream>
 

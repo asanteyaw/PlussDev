@@ -2,7 +2,7 @@
 
 // PlussTils umbrella: utility-oriented APIs spanning aux helpers and view tooling.
 
-#include "pluss/tils/auxiliary.h"
+#include "pluss/tils/kit.h"
 #include "pluss/tils/env.h"
 #include "pluss/tils/view.h"
 

@@ -3,7 +3,7 @@
 [Back to Scalar casts](../core-scalar-cast.md) · [Core Utilities API Reference](../../api_reference.md)
 
 ```cpp
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 ```
 
 `T as_<dtype>(const Series& x)` reads `x` back as a single host value of type `T`. The series must hold exactly one element; a series with more is refused. This overload is the typed shortcut for `to_scalar<T>(x)`.
@@ -33,7 +33,7 @@ Example 1 reads a one-element series back as a double, and shows the refusal for
 // and the extraction reads it back as a plain number. A Series with more than one element cannot be
 // read as one number, and the extraction refuses it.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <exception>
 #include <iostream>
@@ -72,7 +72,7 @@ Example 2 reads a complex value back.
 // Complex numbers keep both parts through a Series and back out. A signal's gain is a complex value,
 // and the program stores it, reads it back, and checks both parts survived unchanged.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 
@@ -104,7 +104,7 @@ Example 3 reads an integer value back, not a float.
 // Extracting a plain integer, not a float. The extraction form takes the type from the call, as_i64
 // here, and requires the series to hold exactly one element.
 #include <pluss/mic.h>
-#include <pluss/tils/auxiliary/scalar_cast.h>
+#include <pluss/tils/kit/scalar_cast.h>
 
 #include <iostream>
 

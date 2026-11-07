@@ -25,7 +25,7 @@ Sensor readings are easier to compare as a share of the peak. This program finds
 ```cpp
 // Scaling sensor readings to a share of the largest one. The same callable runs over every reading,
 // and transmit returns a new vector of the results, so the original readings are untouched.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <algorithm>
 #include <iostream>
@@ -64,7 +64,7 @@ A checklist needs numbers that depend on where each step sits. When the function
 ```cpp
 // Numbering the entries of a checklist. When the callable takes a second argument, transmit passes the
 // position of each element, so the label can depend on where the entry sits in the list.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iostream>
 #include <string>
@@ -102,7 +102,7 @@ A long report should not be built in memory when it can be written as it goes. `
 ```cpp
 // Writing results straight to an output iterator, so no intermediate vector is built. A report that
 // may be very long can stream its lines to a file, a socket, or the terminal as it computes them.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iostream>
 #include <iterator>
@@ -139,7 +139,7 @@ A price list and a quantity list are combined into line totals. This program pas
 ```cpp
 // Pairing two lists element by element. A price list and a quantity list are combined into line
 // totals. When the lists differ in length, the result stops at the shorter one.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iostream>
 #include <vector>
@@ -175,7 +175,7 @@ Sometimes only a middle section of a list needs to change. This program passes t
 ```cpp
 // Transforming a part of a container. Two iterators mark the start and the end, so only the middle
 // of a list is changed. The rest of the list is not visited at all.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iostream>
 #include <string>
@@ -217,7 +217,7 @@ A parallel run is only useful if it gives the same answer. This program runs the
 // Running a slow transformation across all cores. The parallel result must match the sequential one
 // exactly, so the program checks that before trusting the speedup. The sum uses integers, so the
 // comparison is exact.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <cstdint>
 #include <iostream>
@@ -257,7 +257,7 @@ A single value can go through the same call as a list. This program transforms a
 // transmit also works on one value that is not a range. It calls the function on the value and
 // returns the result, so the same call reads the same whether the input is one value or many.
 // A string is a range of characters, so it takes the range form instead; see the pitfalls.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iostream>
 
@@ -294,7 +294,7 @@ A batch of order lines is read as text. This program parses each line into a qua
 ```cpp
 // A small pipeline for a batch of order lines. Each line is parsed into a quantity and a unit price,
 // the lines are priced in one pass, and the totals are summed. Each stage is one transmit call.
-#include <pluss/tils/auxiliary/transmit.h>
+#include <pluss/tils/kit/transmit.h>
 
 #include <iomanip>
 #include <iostream>

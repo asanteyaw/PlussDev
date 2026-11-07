@@ -1,6 +1,6 @@
 // x() is the first field, and y() is the second. has_y() tells you whether a second field exists
 // before you reach for it, since a batch with only one field has no y() to call.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 
 virtual std::int64_t Dataset::size() const = 0;
 virtual DataBatch Dataset::get(std::int64_t index) const = 0;
@@ -53,7 +53,7 @@ Example 1 builds a SeriesDataset directly and reads its size, fields, and one sa
 // SeriesDataset wraps a list of fields as a map-style Dataset, the same way the loader's own
 // constructor does internally when you pass it a plain vector of fields. Building one directly
 // gives access to the fields and the batch dimension on their own.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -95,7 +95,7 @@ Example 2 reads the whole dataset back through materialize_fields.
 ```cpp
 // materialize_fields returns the whole dataset as its original fields, which is what a DataLoader
 // built from this dataset reads in one shot, rather than calling get() once per sample.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -128,7 +128,7 @@ Example 3 writes a custom Dataset that computes each sample on demand, instead o
 ```cpp
 // A custom Dataset computes each sample on demand, rather than storing a table. The loader
 // materializes it once, by calling get() for every index, when no faster path is overridden.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

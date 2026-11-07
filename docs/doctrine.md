@@ -105,7 +105,7 @@ This section applies to all changes to `OutputEngine` and printing behavior.
 - Do not add case-by-case branches in `OutputEngine` for each new product type unless strictly necessary.
 
 3. Public docs requirement
-- Whenever rendering behavior changes, update end-user docs in `docs/sphinx/auxiliary.md` (and tutorial pages when relevant).
+- Whenever rendering behavior changes, update end-user docs in `docs/sphinx/kit.md` (and tutorial pages when relevant).
 - Include at least one custom-type extension example and expected output.
 - Include at least one real product example (for example `out.writeln(imputer.summary())`).
 

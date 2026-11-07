@@ -20,7 +20,7 @@ The median fit of the fan data needs 26 iterations at the defaults. Cutting the 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -79,7 +79,7 @@ The exact minimiser of the loss for τ = 0.5 passes through as many observations
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <algorithm>
 
@@ -128,7 +128,7 @@ Two residuals shrink toward zero as `eps` shrinks (0.0025 and 0.0027 at 10⁻²,
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

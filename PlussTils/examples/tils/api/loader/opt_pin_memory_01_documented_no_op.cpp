@@ -1,7 +1,7 @@
 // pin_memory is accepted and calls pin_memory() on every field of every batch, but the header
 // itself documents this as a no-op today: the underlying engine's pin_memory() returns its input
 // unchanged, and is_pinned() always reports false. This example confirms that is still the case.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

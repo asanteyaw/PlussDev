@@ -1,6 +1,6 @@
 // A team sets one policy for every path in a run: whether directories are created on demand and
 // whether the root is canonicalized. The policy is read back so a run can log what it is using.
-#include <pluss/tils/auxiliary/pathing.h>
+#include <pluss/tils/kit/pathing.h>
 
 #include <filesystem>
 #include <iostream>

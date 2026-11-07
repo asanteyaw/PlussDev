@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 scales byte counts in binary units.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -59,7 +59,7 @@ Output
 Example 2 scales byte counts in decimal units.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -91,7 +91,7 @@ Output
 Example 3 scales a plain count with metric prefixes.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -123,7 +123,7 @@ Output
 Example 4 scales a duration given in nanoseconds.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -157,7 +157,7 @@ The duration scales from nanoseconds up through microseconds, milliseconds, and 
 Example 5 compares the default precision with a wider one.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -189,7 +189,7 @@ The default shows one decimal, and setting precision to two shows two.
 Example 6 compares the notation and the humanize forms of the metric scale.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>

@@ -1,6 +1,6 @@
 // A dashboard of money and rates. Revenue has grouping and two decimals, a conversion rate is a
 // percentage, and a change from the last period always shows its sign.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 

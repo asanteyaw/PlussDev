@@ -1,6 +1,6 @@
 // A monthly sales report whose columns line up. Each row is written with the format path, so the
 // widths and alignments are part of the pattern, and the totals use grouping and fixed decimals.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <string>

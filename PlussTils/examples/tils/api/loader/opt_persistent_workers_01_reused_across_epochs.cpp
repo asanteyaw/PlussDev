@@ -1,7 +1,7 @@
 // persistent_workers keeps worker threads alive between epochs instead of joining and respawning
 // them. Both epochs still deliver every batch; the option changes how the threads are managed, not
 // what is delivered.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

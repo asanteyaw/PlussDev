@@ -1,6 +1,6 @@
 // Dumping a configuration and a lookup table for a support ticket. Containers print in a readable
 // form, maps can be sorted by key, long lists can be capped, and multiline output is indented.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <map>

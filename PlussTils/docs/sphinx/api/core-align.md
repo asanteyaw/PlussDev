@@ -29,7 +29,7 @@ None.
 Example 1 shows the three distinct alignments at one width.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -63,7 +63,7 @@ Left, right, and center each pad differently.
 Example 2 leaves alignment at Inherit and only sets a width.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -94,7 +94,7 @@ The value still pads, using the built-in default of left.
 Example 3 compares right alignment with numeric alignment on the same negative value.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 

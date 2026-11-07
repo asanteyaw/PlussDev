@@ -24,7 +24,7 @@ Whether the result is exact is decided by the same rule table as for antiderivat
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -76,7 +76,7 @@ When the integrand has parameters, the definite integral is a function of the pa
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 
@@ -130,7 +130,7 @@ Quadrature evaluates the integrand at the endpoints, so an integrand that is sin
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <functional>

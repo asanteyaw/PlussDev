@@ -70,7 +70,7 @@ The same two plots identify other processes. The program draws an MA(2) (autocor
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/pl/studio.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cstdlib>
 #include <string>

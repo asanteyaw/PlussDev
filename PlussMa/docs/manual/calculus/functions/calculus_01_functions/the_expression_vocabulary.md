@@ -21,7 +21,7 @@ The program applies each unary method to the same four points. The values can be
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <array>
 
@@ -78,7 +78,7 @@ A `double` is a constant that takes the shape of the other operand, and it may s
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -120,7 +120,7 @@ The first line checks the arithmetic by hand at the first point: (2 + 1 − 1)(1
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -194,7 +194,7 @@ The arguments to a `Function` are `Series` of any shape. Operations broadcast ex
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -234,7 +234,7 @@ Here the arguments have shapes `[2, 1]` and `[1, 3]`, and the result is the `[2,
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;

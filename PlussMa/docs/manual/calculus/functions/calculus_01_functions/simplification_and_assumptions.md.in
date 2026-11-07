@@ -23,7 +23,7 @@ The rewrites that always apply are the ones that are exact for every real value 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <cmath>
 #include <limits>
@@ -86,7 +86,7 @@ Assumptions accumulate: stating a second one combines it with the first, and the
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <string>
 
@@ -141,7 +141,7 @@ The next program applies the two examples. Without information `sqrt(x²)` is `|
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <string>
 

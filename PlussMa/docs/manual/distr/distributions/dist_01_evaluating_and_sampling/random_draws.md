@@ -16,7 +16,7 @@ The first program shows the contract: the same seed gives identical draws, a dif
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -61,7 +61,7 @@ The law of large numbers says the sample mean approaches the true mean, at a rat
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 
@@ -119,7 +119,7 @@ Draws are most useful for quantities with no formula. To learn the method, estim
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <vector>
 

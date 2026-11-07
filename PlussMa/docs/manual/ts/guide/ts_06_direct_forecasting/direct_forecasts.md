@@ -29,7 +29,7 @@ The first program fits a direct forecaster for the horizons 1, 2 and 3 using two
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iomanip>
 #include <iostream>

@@ -1,6 +1,6 @@
 // A default-constructed batch has no fields. empty() and size() agree about that, and x() refuses
 // to read a field that is not there.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <exception>

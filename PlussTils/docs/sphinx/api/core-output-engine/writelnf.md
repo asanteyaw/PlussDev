@@ -31,7 +31,7 @@ A pattern whose placeholder count disagrees with the arguments is refused in str
 Example 1 writes two aligned rows.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -62,7 +62,7 @@ The first column is left-aligned, and the second is right-aligned.
 Example 2 uses explicit indexes to reorder and repeat arguments.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -93,7 +93,7 @@ The index picks the argument, so the order in the pattern can differ from the or
 Example 3 leaves a placeholder without an argument.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -120,7 +120,7 @@ only one and <?>
 Example 4 passes one more argument than the pattern uses. Without strict checking, the extra value is not written.
 
 ```cpp
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <string>

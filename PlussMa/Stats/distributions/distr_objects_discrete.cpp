@@ -1,5 +1,5 @@
 #include "distr_fit_common.h"
-#include "pluss/tils/auxiliary/scalar_cast.h"
+#include "pluss/tils/kit/scalar_cast.h"
 
 #include <algorithm>
 #include <array>

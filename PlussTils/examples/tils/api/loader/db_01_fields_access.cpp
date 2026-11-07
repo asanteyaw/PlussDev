@@ -1,6 +1,6 @@
 // A batch holds one Series per field, in the order the dataset or the loader produced them. at()
 // and operator[] read a field by position, with the same bounds check either way.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

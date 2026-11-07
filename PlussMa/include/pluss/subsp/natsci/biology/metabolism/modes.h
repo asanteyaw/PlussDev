@@ -16,7 +16,7 @@
 
 #include "pluss/subsp/linearalg/linearalg.h"
 #include "pluss/subsp/natsci/biology/metabolism/fba.h"
-#include "pluss/tils/auxiliary/rng_seed.h"
+#include "pluss/tils/kit/rng_seed.h"
 
 #include <algorithm>
 #include <cmath>

@@ -1,7 +1,7 @@
 // Colored status lines for a terminal tool. Color is forced on here so the escape sequences show
 // up in the captured output. In a real terminal, color_mode Auto colors only when the output is a
 // TTY, which is the usual choice.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <sstream>

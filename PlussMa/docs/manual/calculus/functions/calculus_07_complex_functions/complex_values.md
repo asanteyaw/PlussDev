@@ -24,7 +24,7 @@ A polynomial and an exponential are written once. At a complex point the same gr
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -62,7 +62,7 @@ The real argument 0.5 gives a real result, 1.898721. The complex argument gives 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -106,7 +106,7 @@ abs * exp(i angle)  (3,4)
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;

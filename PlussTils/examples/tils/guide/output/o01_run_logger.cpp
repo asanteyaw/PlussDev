@@ -1,6 +1,6 @@
 // A run logger for a batch job. It writes levelled lines to standard output, filters out debug
 // lines below its minimum level, and shows how a custom prefix changes the look of one level.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 
 TemporalIndexSplit temporal_split_indices(std::int64_t sample_count, TemporalSplitOptions options = {});
 
@@ -67,7 +67,7 @@ Example 1 computes four rolling folds over twenty samples.
 // temporal_split_indices produces several train/test folds that each move forward in time: the
 // train indices for a later fold include everything an earlier fold's train and test together
 // covered, and the test window always comes immediately after the training window.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -108,7 +108,7 @@ Example 2 adds a gap between training and testing.
 ```cpp
 // gap leaves a buffer of untouched indices between the end of the training window and the start of
 // the test window, so a value right at the boundary never leaks between the two.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -149,7 +149,7 @@ Example 3 caps the training window with max_train_size.
 ```cpp
 // Without max_train_size, each later fold's training window grows to include everything before it.
 // With it set, the window is capped to a fixed size, so it slides forward instead of growing.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -194,7 +194,7 @@ Example 4 applies the same fold plan to real Series fields.
 ```cpp
 // temporal_split_fields applies the same fold plan to real Series fields, so each fold's train and
 // test are ready-to-use data, in time order, with no shuffling anywhere in the process.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -240,7 +240,7 @@ Example 5 wraps each fold's fields in train and test loaders.
 ```cpp
 // temporal_split_loaders wraps each fold's train and test fields in their own DataLoader, ready to
 // iterate, the temporal counterpart to split_loaders.
-#include <pluss/tils/auxiliary/data_loader.h>
+#include <pluss/tils/kit/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

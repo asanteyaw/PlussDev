@@ -25,7 +25,7 @@ A status board needs its values to line up and fit. This program pads a label wi
 ```cpp
 // Fitting values into fixed-width places. A status board pads labels with a fill character, cuts a
 // long service name with an ellipsis, and right-aligns a latency so its digits line up.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <string>
@@ -73,7 +73,7 @@ A revenue dashboard shows money with grouping and decimals, a rate as a percenta
 ```cpp
 // A dashboard of money and rates. Revenue has grouping and two decimals, a conversion rate is a
 // percentage, and a change from the last period always shows its sign.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 
@@ -113,7 +113,7 @@ A sensor log mixes very small and very large numbers, and it has missing reading
 ```cpp
 // A log of sensor readings. Small and large measurements switch to scientific notation, a general
 // notation keeps significant digits, and missing or invalid readings print as named text.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <limits>
@@ -150,7 +150,7 @@ A profile record has optional fields and yes-or-no flags. This program shows an 
 ```cpp
 // A user profile record. Optional fields show a placeholder when they are empty, flags print as
 // words that a reader understands, and a tag marks which values are present.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <optional>
@@ -193,7 +193,7 @@ A badge run lists attendee names and prints headings in a chosen case. Quoting k
 ```cpp
 // A list of attendee names for a badge run. Names are title-cased, and inside a list each name is
 // quoted so a name with a space or a comma is still clear.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <string>
@@ -231,7 +231,7 @@ A feature-flag report prints a map of rollout percentages, and a comparison of b
 ```cpp
 // A feature-flag report. Each flag is a key and a value, shown as a map with a chosen key-value
 // separator and brackets, and a pair shows the same shape for one comparison.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <map>
@@ -269,7 +269,7 @@ A log that prints a long history must stay short enough to read. This program ca
 ```cpp
 // A log line that quotes a long history. Lists are capped with a count of what was left out, and
 // nested lists are cut at a depth so one value cannot fill the terminal.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <vector>
@@ -307,7 +307,7 @@ Some outputs want a standard shape: plain for a message, a debug form for a valu
 ```cpp
 // The same value shown three ways: as a plain value, as a debug representation, and as a table
 // cell. Presets are named starting points, and builder calls adjust them in a chain.
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <iostream>
 #include <optional>

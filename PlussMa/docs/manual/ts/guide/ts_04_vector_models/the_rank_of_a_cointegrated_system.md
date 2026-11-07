@@ -20,7 +20,7 @@ Before the formal test, look at the idea. The first system has three series: `x`
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/auxiliary/output.h>
+#include <pluss/tils/kit/output.h>
 
 #include <utility>
 #include <vector>
