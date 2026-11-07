@@ -141,12 +141,20 @@ static std::string strip_image_tag_from_resolved_(const std::string& line) {
 static std::string run_command_capture_(const std::string& cmd) {
   std::array<char, 512> buf{};
   std::string out;
+#if defined(_WIN32)
+  FILE* pipe = ::_popen(cmd.c_str(), "r");
+#else
   FILE* pipe = ::popen(cmd.c_str(), "r");
+#endif
   if (!pipe) return out;
   while (std::fgets(buf.data(), static_cast<int>(buf.size()), pipe) != nullptr) {
     out.append(buf.data());
   }
+#if defined(_WIN32)
+  (void)::_pclose(pipe);
+#else
   (void)::pclose(pipe);
+#endif
   while (!out.empty() && (out.back() == '\n' || out.back() == '\r')) out.pop_back();
   return out;
 }

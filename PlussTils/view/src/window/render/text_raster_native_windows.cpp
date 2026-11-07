@@ -145,8 +145,8 @@ bool render_text_command_native(PixelCanvas& canvas, const TextCommand& command,
   }
 
   const int padding = 2;
-  const int bitmap_width = std::max(1, extent.cx + padding * 2);
-  const int bitmap_height = std::max(1, metrics.tmHeight + padding * 2);
+  const int bitmap_width = std::max(1, static_cast<int>(extent.cx) + padding * 2);
+  const int bitmap_height = std::max(1, static_cast<int>(metrics.tmHeight) + padding * 2);
   BITMAPINFO bitmap_info{};
   bitmap_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
   bitmap_info.bmiHeader.biWidth = bitmap_width;

@@ -89,7 +89,7 @@ LRESULT CALLBACK pluss_window_proc(HWND hwnd, UINT message, WPARAM wparam, LPARA
     window_class.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     window_class.lpfnWndProc = pluss_window_proc;
     window_class.hInstance = GetModuleHandleW(nullptr);
-    window_class.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    window_class.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(OCR_NORMAL));
     window_class.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     window_class.lpszClassName = kWindowClassName;
     registered = RegisterClassExW(&window_class) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
@@ -471,8 +471,8 @@ class Win32WindowShell final : public IWindowShell {
         note,
         0.0,
         0.0,
-        static_cast<double>(std::clamp(point.x, 0, size_.width)),
-        static_cast<double>(std::clamp(point.y, 0, size_.height)),
+        std::clamp(static_cast<double>(point.x), 0.0, static_cast<double>(size_.width)),
+        std::clamp(static_cast<double>(point.y), 0.0, static_cast<double>(size_.height)),
     });
   }
 
