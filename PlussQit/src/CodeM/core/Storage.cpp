@@ -9,6 +9,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(_WIN32)
+#include <malloc.h>
+#endif
+
 namespace pluss::codem {
 
 namespace {
@@ -92,6 +96,22 @@ inline ThreadLocalPool& tls_pool_() {
 constexpr std::size_t kPerThreadBytesCap = std::size_t{128} * 1024 * 1024;
 constexpr std::size_t kPerKeyBlockCap = 16;
 
+static void* aligned_allocate_(std::size_t size, std::size_t alignment) {
+#if defined(_WIN32)
+  return ::_aligned_malloc(size, alignment);
+#else
+  return std::aligned_alloc(alignment, size);
+#endif
+}
+
+static void aligned_free_(void* p) noexcept {
+#if defined(_WIN32)
+  ::_aligned_free(p);
+#else
+  std::free(p);
+#endif
+}
+
 static void* pool_take_(std::size_t alloc_size, std::size_t alignment) {
   if (!storage_pool_enabled_()) return nullptr;
   auto& pool = tls_pool_();
@@ -108,22 +128,22 @@ static void* pool_take_(std::size_t alloc_size, std::size_t alignment) {
 static void pool_put_(void* p, std::size_t alloc_size, std::size_t alignment) noexcept {
   if (!p) return;
   if (!storage_pool_enabled_()) {
-    std::free(p);
+    aligned_free_(p);
     return;
   }
   if (alloc_size == 0 || alignment == 0) {
-    std::free(p);
+    aligned_free_(p);
     return;
   }
   if (alloc_size > kPerThreadBytesCap / 2) {
-    std::free(p);
+    aligned_free_(p);
     return;
   }
   auto& pool = tls_pool_();
   const CacheKey key{alloc_size, alignment};
   auto& bucket = pool.blocks[key];
   if (bucket.size() >= kPerKeyBlockCap || pool.cached_bytes + alloc_size > kPerThreadBytesCap) {
-    std::free(p);
+    aligned_free_(p);
     return;
   }
   bucket.push_back(p);
@@ -148,7 +168,7 @@ Storage::Storage(std::size_t nbytes, std::size_t alignment)
   const std::size_t alloc_size = round_up(nbytes, alignment);
 
   void* p = pool_take_(alloc_size, alignment);
-  if (!p) p = std::aligned_alloc(alignment, alloc_size);
+  if (!p) p = aligned_allocate_(alloc_size, alignment);
   if (!p) throw_error("Storage: aligned_alloc failed");
   data_ = std::shared_ptr<std::byte>(reinterpret_cast<std::byte*>(p), AlignedDeleter{alloc_size, alignment});
 }
