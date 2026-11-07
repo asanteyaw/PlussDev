@@ -166,7 +166,7 @@ def generated_records() -> list[dict[str, object]]:
         current_return, name, parameters = match.groups()
         current_return = compact(current_return)
         record: dict[str, object] = {
-            "source": str(GENERATED_DECLS.relative_to(ROOT)),
+            "source": GENERATED_DECLS.relative_to(ROOT).as_posix(),
             "scope": "Note",
             "line": line_number,
             "name": name,
@@ -219,7 +219,7 @@ def accessor_records(path: Path, class_name: str, public_scope: str) -> list[dic
         if name == "operator":
             continue
         record: dict[str, object] = {
-            "source": str(path.relative_to(ROOT)),
+            "source": path.relative_to(ROOT).as_posix(),
             "scope": public_scope,
             "line": statement_line,
             "name": name,
