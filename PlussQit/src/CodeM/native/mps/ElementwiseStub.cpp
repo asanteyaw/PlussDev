@@ -36,11 +36,35 @@ void where(const Series&, const Series&, const Series&, Series&) {
   throw_error("MPS backend is unavailable on this platform/build");
 }
 
+bool supports_complex_from_parts(ScalarType, ScalarType, ScalarType) noexcept {
+  return false;
+}
+
+void complex_from_parts(const Series&, const Series&, Series&) {
+  throw_error("MPS backend is unavailable on this platform/build");
+}
+
 bool supports_unary(cpu::UnaryOpId, ScalarType) noexcept {
   return false;
 }
 
 void unary(cpu::UnaryOpId, const Series&, Series&) {
+  throw_error("MPS backend is unavailable on this platform/build");
+}
+
+bool supports_complex_conj(ScalarType) noexcept {
+  return false;
+}
+
+void complex_conj(const Series&, Series&) {
+  throw_error("MPS backend is unavailable on this platform/build");
+}
+
+bool supports_complex_component(ScalarType, ScalarType) noexcept {
+  return false;
+}
+
+void complex_component(ComplexComponentOp, const Series&, Series&) {
   throw_error("MPS backend is unavailable on this platform/build");
 }
 
