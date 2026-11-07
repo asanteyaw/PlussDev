@@ -269,6 +269,28 @@ template <class Real> struct BluesteinPlan final {
   std::vector<std::complex<Real>> kernel_spectrum{};
 };
 
+inline std::uint64_t square_mod(std::uint64_t x, std::uint64_t modulus) {
+#if defined(__SIZEOF_INT128__)
+  return static_cast<std::uint64_t>(
+      (static_cast<unsigned __int128>(x) * x) % modulus);
+#else
+  // The transform-length guard below keeps modulus below 2^62, so adding
+  // two reduced operands fits in uint64_t without overflow.
+  auto add_mod = [modulus](std::uint64_t a, std::uint64_t b) {
+    const auto sum = a + b;
+    return sum >= modulus ? sum - modulus : sum;
+  };
+  std::uint64_t result = 0;
+  std::uint64_t factor = x;
+  while (x != 0) {
+    if ((x & 1U) != 0) result = add_mod(result, factor);
+    x >>= 1;
+    if (x != 0) factor = add_mod(factor, factor);
+  }
+  return result;
+#endif
+}
+
 template <class Real>
 std::shared_ptr<const BluesteinPlan<Real>> bluestein_plan(std::int64_t n,
                                                           bool inverse) {
@@ -284,13 +306,11 @@ std::shared_ptr<const BluesteinPlan<Real>> bluestein_plan(std::int64_t n,
     plan->table = stockham_plan<Real>(plan->convolution_length);
     plan->chirp.resize(static_cast<std::size_t>(n));
     const std::int64_t m = plan->convolution_length;
-    const unsigned __int128 modulus =
-        static_cast<unsigned __int128>(2) * static_cast<unsigned __int128>(n);
+    const auto modulus = static_cast<std::uint64_t>(n) * 2;
     pluss::msharp::parallel_for(
         0, n, 4096, [&](std::int64_t begin, std::int64_t end) {
           for (std::int64_t lane = begin; lane < end; ++lane) {
-            const unsigned __int128 x = static_cast<unsigned __int128>(lane);
-            const auto reduced = static_cast<std::uint64_t>((x * x) % modulus);
+            const auto reduced = square_mod(static_cast<std::uint64_t>(lane), modulus);
             plan->chirp[static_cast<std::size_t>(lane)] = unit_root<Real>(
                 reduced, static_cast<std::uint64_t>(n), !inverse);
           }
