@@ -625,7 +625,9 @@ static ::std::regex make_findall_regex(::std::string_view pattern, ::std::int64_
   auto syntax = ::std::regex::ECMAScript;
   if (flags > 0) {
     if (flags & 1) syntax |= ::std::regex::icase;
+#if !defined(_MSC_VER) || defined(_REGEX_LEGACY_MULTILINE_MODE)
     if (flags & 2) syntax |= ::std::regex_constants::multiline;
+#endif
   }
   return ::std::regex(::std::string(pattern), syntax);
 }
