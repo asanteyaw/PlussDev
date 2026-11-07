@@ -6,9 +6,10 @@ extract it, and point your C++ project at the extracted folder.
 
 ## Requirements
 
-You need a C++20 compiler and CMake 3.28 or newer. Download the archive for
-your operating system and architecture. Currently the release workflow builds
-macOS Apple Silicon archives; build from source on other systems.
+You need a C++20 compiler and CMake 3.28 or newer. The only published binary
+is for macOS Apple Silicon (arm64). There is no prebuilt archive for Intel Macs,
+Linux, or Windows. The source-build recipe below is intended for macOS and Linux;
+it has not been verified on Windows.
 
 Some builds enable optional features that need external dependencies such as
 LibTorch or Arrow/Parquet. Make those dependencies visible to CMake when
@@ -16,7 +17,7 @@ required; the package configuration reports a missing dependency.
 
 ## Download a release
 
-The current published binary is for macOS Apple Silicon. Click
+The current published binary is for macOS Apple Silicon (arm64) only. Click
 [Download PlussII ZIP](https://plussible.org/downloads/plussii-cpp-0.1.0-Darwin-arm64.zip) or use the
 terminal from the folder where you want the distribution:
 
@@ -29,8 +30,8 @@ unzip plussii-cpp-0.1.0-Darwin-arm64.zip
 
 The extracted `plussii-cpp-0.1.0-Darwin-arm64/` folder contains `include/`,
 `lib/`, and `lib/cmake/Pluss/`. Keep that folder in any stable location and use
-its path as `CMAKE_PREFIX_PATH`. For other platforms or configurations, build
-from source below.
+its path as `CMAKE_PREFIX_PATH`. For Intel Macs, Linux, or custom configurations,
+see the source-build steps below.
 
 ## Consume PlussII from another project
 
@@ -85,7 +86,8 @@ For a source build you need:
 - Optional libzip for Excel I/O.
 - Optional Arrow/Parquet dependencies if you build Parquet support.
 
-Fetch the public source, configure it, and stage a local distribution folder:
+On macOS or Linux, fetch the public source, configure it, and stage a local
+distribution folder. This recipe has not been verified on Windows:
 
 ```bash
 git clone https://github.com/asanteyaw/PlussDev.git
