@@ -7,9 +7,8 @@ extract it, and point your C++ project at the extracted folder.
 ## Requirements
 
 You need a C++20 compiler and CMake 3.28 or newer. The only published binary
-is for macOS Apple Silicon (arm64). There is no prebuilt archive for Intel Macs,
-Linux, or Windows. The source-build recipe below is intended for macOS and Linux;
-it has not been verified on Windows.
+is for macOS Apple Silicon (arm64). For Intel Macs, Linux, and Windows, use
+the source-build steps below.
 
 Some builds enable optional features that need external dependencies such as
 LibTorch or Arrow/Parquet. Make those dependencies visible to CMake when
@@ -86,15 +85,15 @@ For a source build you need:
 - Optional libzip for Excel I/O.
 - Optional Arrow/Parquet dependencies if you build Parquet support.
 
-On macOS or Linux, fetch the public source, configure it, and stage a local
-distribution folder. This recipe has not been verified on Windows:
+Fetch the public source, configure it, and stage a local distribution folder.
+Run these commands in a terminal or PowerShell:
 
 ```bash
 git clone https://github.com/asanteyaw/PlussDev.git
 cd PlussDev
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF
-cmake --build build --target pluss_sdk_stage --parallel 4
+cmake --build build --config Release --target pluss_sdk_stage --parallel 4
 ```
 
 The result is `build/sdk/plussii-cpp-0.1.0-<system>-<architecture>/`. That
