@@ -48,6 +48,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        env:
+          # Generated build_cpp_env artifacts still contain Windows-reserved
+          # names. Sparse checkout omits them; disable Git's whole-tree path
+          # rejection so it can materialize the selected source directories.
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: core.protectNTFS
+          GIT_CONFIG_VALUE_0: 'false'
         with:
           sparse-checkout: |
             PlussAI

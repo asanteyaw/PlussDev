@@ -917,9 +917,9 @@ inline Series lu_solve(const Series& b, const Series& lu) {
   return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
 #else
   if (complex) {
-    const auto rr = rhs.host<std::complex<double>>();
+    const auto rr = rhs.host<std::complex<double>>().array().data;
     const auto inv =
-        detail::inverse_gauss_t_(a.host<std::complex<double>>(), n);
+        detail::inverse_gauss_t_(a.host<std::complex<double>>().array().data, n);
     return detail::complex_matrix_from_row_major_(
         detail::matmul_t_(inv, n, n, rr, rhs.sizes()[1]), n, rhs.sizes()[1],
         complex_dtype);
