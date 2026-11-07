@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cmath>
+#include <functional>
 #include <iomanip>
 #include <limits>
 #include <random>
@@ -624,7 +625,7 @@ static ::std::regex make_findall_regex(::std::string_view pattern, ::std::int64_
   auto syntax = ::std::regex::ECMAScript;
   if (flags > 0) {
     if (flags & 1) syntax |= ::std::regex::icase;
-    if (flags & 2) syntax |= ::std::regex::multiline;
+    if (flags & 2) syntax |= ::std::regex_constants::multiline;
   }
   return ::std::regex(::std::string(pattern), syntax);
 }
