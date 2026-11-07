@@ -91,6 +91,10 @@ endif()
 
 project(plussma VERSION 0.1.0 LANGUAGES CXX)
 
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 # Keep the explicitly selected Conda compiler usable with the active Xcode SDK.
 # This is a compile-toolchain repair, not a public header requirement.
 if(_pluss_is_conda_clang)
