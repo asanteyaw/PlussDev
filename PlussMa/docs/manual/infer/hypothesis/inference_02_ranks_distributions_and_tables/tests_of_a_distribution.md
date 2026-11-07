@@ -173,7 +173,7 @@ int main() {
     jb_limit += jb.stat > 5.991464547107979;
     ks_true += hyp::kstest(x, 0.0, 1.0).reject;
     const auto fit = hyp::ttest(x, 0.0);
-    const double sd = fit.stderr * std::sqrt(static_cast<double>(n));
+    const double sd = fit.std_err * std::sqrt(static_cast<double>(n));
     ks_fitted += hyp::kstest(x, fit.mean, sd).reject;
   }
   out.writeln("Jarque-Bera, finite-sample p-value: share rejected", static_cast<double>(jb_finite) / reps);

@@ -219,7 +219,7 @@ All result structs include at least:
 - `reject`
 
 Examples of additional fields:
-- `TTestResult`: `dof`, `mean`, `stderr`, `ci`, `effective_n`
+- `TTestResult`: `dof`, `mean`, `std_err`, `ci`, `effective_n`
 - `TTest2Result`: `equal_variance`, `effective_nx`, `effective_ny`, CI of mean difference
 - `VarTest2Result`: `dof1`, `dof2`, CI of variance ratio
 - `KSTestResult`: `d_plus`, `d_minus`

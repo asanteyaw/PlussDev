@@ -44,7 +44,7 @@ struct TTestResult : TestDecision {
   double dof = 0.0;
   double mean = 0.0;
   double null_mean = 0.0;
-  double stderr = 0.0;
+  double std_err = 0.0;
   pluss::codem::Series ci = pluss::series::undefined(); // [2]
   std::int64_t effective_n = 0;
 };
@@ -53,7 +53,7 @@ struct TTest2Result : TestDecision {
   double dof = 0.0;
   double mean_x = 0.0;
   double mean_y = 0.0;
-  double stderr = 0.0;
+  double std_err = 0.0;
   bool equal_variance = true;
   pluss::codem::Series ci = pluss::series::undefined(); // [2], CI of mean_x - mean_y
   std::int64_t effective_nx = 0;
@@ -64,7 +64,7 @@ struct ZTestResult : TestDecision {
   double mean = 0.0;
   double null_mean = 0.0;
   double sigma = 1.0;
-  double stderr = 0.0;
+  double std_err = 0.0;
   pluss::codem::Series ci = pluss::series::undefined(); // [2]
   std::int64_t effective_n = 0;
 };

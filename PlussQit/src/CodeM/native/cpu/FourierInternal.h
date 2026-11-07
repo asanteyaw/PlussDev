@@ -270,7 +270,9 @@ template <class Real> struct BluesteinPlan final {
 };
 
 inline std::uint64_t square_mod(std::uint64_t x, std::uint64_t modulus) {
-#if defined(__SIZEOF_INT128__)
+  // ClangCL supports __int128 but can emit __umodti3, which is not supplied by
+  // the Windows runtime linked by consumers of the static distribution.
+#if defined(__SIZEOF_INT128__) && !defined(_WIN32)
   return static_cast<std::uint64_t>(
       (static_cast<unsigned __int128>(x) * x) % modulus);
 #else

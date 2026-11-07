@@ -285,7 +285,7 @@ Fit result methods (shared pattern):
 - `fisher_inf(x) -> Series`
 - `observed_inf(x) -> Series`
 - `vcov(x) -> Series`
-- `stderr(x) -> Series`
+- `std_err(x) -> Series`
 - `confint(x, level = 0.95) -> Series`
 - `confint_view(x, level = 0.95) -> MSharp::RangeView::Double` (flat host view of `confint`)
 

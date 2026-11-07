@@ -43,7 +43,7 @@ A `TTest2Result`. Its fields:
 | `dof` | degrees of freedom (pooled: `nx + ny − 2`; Welch: approximate) |
 | `mean_x` | the mean of `x` |
 | `mean_y` | the mean of `y` |
-| `stderr` | the standard error of the difference of the means |
+| `std_err` | the standard error of the difference of the means |
 | `equal_variance` | whether the pooled test was used |
 | `ci` | the confidence interval for `mean_x − mean_y` |
 | `effective_nx` | finite observations used from `x` |
@@ -110,7 +110,7 @@ int main() {
   hyp::TTest2Options options;
   options.equal_variance = false;
   const auto r = hyp::ttest2(a, b, options);
-  std::cout << "t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << ", standard error " << r.stderr << "\n";
+  std::cout << "t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << ", standard error " << r.std_err << "\n";
   const auto ci = r.ci.pull<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }

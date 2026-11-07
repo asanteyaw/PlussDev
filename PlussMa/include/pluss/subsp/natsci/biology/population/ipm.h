@@ -23,6 +23,7 @@
 #include "pluss/subsp/natsci/biology/population/structured.h"
 
 #include <cmath>
+#include <numbers>
 #include <functional>
 
 namespace pluss::subsp::natsci::biology::population::ipm {
@@ -49,7 +50,7 @@ inline Series discretize(const Kernel &k, const Mesh &m) {
 
 inline Series gaussian_density(const Series &x, const Series &mean, const Series &sd) {
   const Series z = x.sub(mean).div(sd);
-  return z.square().mul(-0.5).exp().div(sd.mul(std::sqrt(2.0 * M_PI)));
+  return z.square().mul(-0.5).exp().div(sd.mul(std::sqrt(2.0 * std::numbers::pi_v<double>)));
 }
 
 struct Analysis final {

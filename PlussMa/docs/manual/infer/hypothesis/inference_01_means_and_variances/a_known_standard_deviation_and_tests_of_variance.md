@@ -25,10 +25,10 @@ int main() {
 
   // The scale of the machine is known from its specification: sigma = 0.5 cl. ztest uses it; ttest estimates it.
   const auto z = hyp::ztest(a, 5.0, 0.5);
-  out.writeln("ztest (sigma = 0.5): z", z.stat, " p", z.pvalue, " standard error", z.stderr, " 95% interval", z.ci.pull<double>());
+  out.writeln("ztest (sigma = 0.5): z", z.stat, " p", z.pvalue, " standard error", z.std_err, " 95% interval", z.ci.pull<double>());
 
   const auto t = hyp::ttest(a, 5.0);
-  out.writeln("ttest (estimated):   t", t.stat, " p", t.pvalue, " standard error", t.stderr, " 95% interval", t.ci.pull<double>());
+  out.writeln("ttest (estimated):   t", t.stat, " p", t.pvalue, " standard error", t.std_err, " 95% interval", t.ci.pull<double>());
 
   // Same data, a wrong 'known' sigma: the answer moves with it.
   for (double sigma : {0.3, 0.5, 0.8, 1.2}) {

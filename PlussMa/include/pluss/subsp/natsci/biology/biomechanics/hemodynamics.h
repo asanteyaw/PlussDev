@@ -24,6 +24,7 @@
 #include "pluss/subsp/natsci/biology/dynamics.h"
 
 #include <cmath>
+#include <numbers>
 
 namespace pluss::subsp::natsci::biology::biomechanics::hemodynamics {
 
@@ -116,7 +117,7 @@ inline Series windkessel3_pressure(const Series &pc, const Series &flow, const C
 
 // ---- Poiseuille and Womersley ----------------------------------------------------------------------------------------------------
 inline Series poiseuille_resistance(const Coeff &viscosity, const Coeff &length, const Series &radius) {
-  return radius.pow(4.0).mul(M_PI).reciprocal().mul(8.0).mul(viscosity.on(radius)).mul(length.on(radius));
+  return radius.pow(4.0).mul(std::numbers::pi_v<double>).reciprocal().mul(8.0).mul(viscosity.on(radius)).mul(length.on(radius));
 }
 inline Series womersley_number(const Series &radius, const Series &omega, const Coeff &density, const Coeff &viscosity) {
   return radius.mul(omega.mul(density.on(omega)).div(viscosity.on(omega)).sqrt());
@@ -140,7 +141,7 @@ inline Complex womersley_flow(const Series &radius, const Series &alpha, const S
   const J01 b = bessel_j01(lam);
   const Complex term = cscale(cdiv(b.j1, cmul(lam, b.j0)), alpha.mul(0.0).add(2.0));
   const Complex bracket{term.re.neg().add(1.0), term.im.neg()};
-  const Series scale = radius.square().mul(M_PI).mul(gradient).div(omega.mul(density.on(omega)));
+  const Series scale = radius.square().mul(std::numbers::pi_v<double>).mul(gradient).div(omega.mul(density.on(omega)));
   return {bracket.im.mul(scale), bracket.re.neg().mul(scale)};
 }
 inline Complex womersley_wall_shear(const Series &radius, const Series &alpha, const Series &omega, const Coeff &density, const Coeff &viscosity, const Series &gradient) {

@@ -27,11 +27,11 @@ int main() {
 
   const auto ta = hyp::ttest(a, 5.0);
   out.writeln("machine A: mean", ta.mean, " t", ta.stat, " df", ta.dof, " p", ta.pvalue, ta.reject ? " -> reject" : " -> keep");
-  out.writeln("           standard error", ta.stderr, " 95% interval", ta.ci.pull<double>(), " critical", ta.critical);
+  out.writeln("           standard error", ta.std_err, " 95% interval", ta.ci.pull<double>(), " critical", ta.critical);
 
   const auto tb = hyp::ttest(b, 5.0);
   out.writeln("machine B: mean", tb.mean, " t", tb.stat, " df", tb.dof, " p", tb.pvalue, tb.reject ? " -> reject" : " -> keep");
-  out.writeln("           standard error", tb.stderr, " 95% interval", tb.ci.pull<double>());
+  out.writeln("           standard error", tb.std_err, " 95% interval", tb.ci.pull<double>());
 }
 ```
 
@@ -75,7 +75,7 @@ int main() {
   hyp::TTest2Options unequal;
   unequal.equal_variance = false;
   const auto welch = hyp::ttest2(a, b, unequal);
-  out.writeln("Welch:  t", welch.stat, " df", welch.dof, " p", welch.pvalue, " standard error", welch.stderr);
+  out.writeln("Welch:  t", welch.stat, " df", welch.dof, " p", welch.pvalue, " standard error", welch.std_err);
   out.writeln("        95% interval for the difference", welch.ci.pull<double>());
 }
 ```
@@ -116,7 +116,7 @@ int main() {
 
   const auto paired = hyp::ttest_paired(first, second);
   out.writeln("treated as pairs:       t", paired.stat, " p", paired.pvalue, " 95% interval", paired.ci.pull<double>());
-  out.writeln("mean difference", paired.mean, " standard error", paired.stderr, " pairs used", paired.effective_n);
+  out.writeln("mean difference", paired.mean, " standard error", paired.std_err, " pairs used", paired.effective_n);
 
   // Missing values are dropped; the effective sample size says how many observations were used.
   const double nan = std::numeric_limits<double>::quiet_NaN();

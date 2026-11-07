@@ -47,7 +47,7 @@ The object has no `Series`-parameter form: the kind-based functions of this fami
 
 ## Returns
 
-`pdf`, `logpdf`, `cdf`, `logcdf` and `cgf` return a `Series` of the shape of their argument, `sample` and `sample_like` the drawn `Series`, and `cumulant` a one-element `Series`. `MLE` returns a `BurrFit` with the fields `c`, `k`, `converged` and `iterations`, and the methods `model()`, `loglik(x)`, `vcov(x)`, `stderr(x)` and `confint(x, level)`.
+`pdf`, `logpdf`, `cdf`, `logcdf` and `cgf` return a `Series` of the shape of their argument, `sample` and `sample_like` the drawn `Series`, and `cumulant` a one-element `Series`. `MLE` returns a `BurrFit` with the fields `c`, `k`, `converged` and `iterations`, and the methods `model()`, `loglik(x)`, `vcov(x)`, `std_err(x)` and `confint(x, level)`.
 
 ## Errors
 
@@ -166,7 +166,7 @@ int main() {
   const auto x = distr::Burr{4.0, 2.0}.sample({20000}, f64, 3ULL);
   const auto fit = distr::Burr{4.0, 2.0}.MLE(x, {2.0, 1.0});
 
-  const auto se = fit.stderr(x).pull<double>();
+  const auto se = fit.std_err(x).pull<double>();
   const auto ci = fit.confint(x, 0.95).host<double>().array().data;
   std::cout << "c: " << fit.c << "  stderr " << se[0] << "  95% [" << ci[0] << ", " << ci[1] << "]\n";
   std::cout << "k: " << fit.k << "  stderr " << se[1] << "  95% [" << ci[2] << ", " << ci[3] << "]\n";

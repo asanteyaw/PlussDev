@@ -41,7 +41,7 @@ A `TTestResult`. Its fields:
 | `dof` | degrees of freedom, `n − 1` for `n` pairs |
 | `mean` | the mean of `x − y` |
 | `null_mean` | zero |
-| `stderr` | the standard error of the mean difference |
+| `std_err` | the standard error of the mean difference |
 | `ci` | the confidence interval for the mean difference |
 | `effective_n` | the number of pairs used |
 

@@ -39,7 +39,7 @@ int main() {
   std::cout << "fisher_inf=" << nfit.fisher_inf(xn) << "\n";
   std::cout << "observed_inf=" << nfit.observed_inf(xn) << "\n";
   std::cout << "vcov=" << nfit.vcov(xn) << "\n";
-  std::cout << "stderr=" << nfit.stderr(xn) << "\n";
+  std::cout << "stderr=" << nfit.std_err(xn) << "\n";
   std::cout << "confint=" << nfit.confint(xn) << "\n";
 
   const auto efit = Exponential{1.0}.MLE(xe);
@@ -52,7 +52,7 @@ int main() {
   std::cout << "fisher_inf=" << efit.fisher_inf(xe) << "\n";
   std::cout << "observed_inf=" << efit.observed_inf(xe) << "\n";
   std::cout << "vcov=" << efit.vcov(xe) << "\n";
-  std::cout << "stderr=" << efit.stderr(xe) << "\n";
+  std::cout << "stderr=" << efit.std_err(xe) << "\n";
   std::cout << "confint=" << efit.confint(xe) << "\n";
 
   const auto pfit = Poisson{1.0}.MLE(xp);
@@ -65,7 +65,7 @@ int main() {
   std::cout << "fisher_inf=" << pfit.fisher_inf(xp) << "\n";
   std::cout << "observed_inf=" << pfit.observed_inf(xp) << "\n";
   std::cout << "vcov=" << pfit.vcov(xp) << "\n";
-  std::cout << "stderr=" << pfit.stderr(xp) << "\n";
+  std::cout << "stderr=" << pfit.std_err(xp) << "\n";
   std::cout << "confint=" << pfit.confint(xp) << "\n";
 
   const auto bfit = Bernoulli{0.5}.MLE(xb);
@@ -78,7 +78,7 @@ int main() {
   std::cout << "fisher_inf=" << bfit.fisher_inf(xb) << "\n";
   std::cout << "observed_inf=" << bfit.observed_inf(xb) << "\n";
   std::cout << "vcov=" << bfit.vcov(xb) << "\n";
-  std::cout << "stderr=" << bfit.stderr(xb) << "\n";
+  std::cout << "stderr=" << bfit.std_err(xb) << "\n";
   std::cout << "confint=" << bfit.confint(xb) << "\n";
 
   const auto binfit = Binomial{4, 0.5}.MLE(xbin);
@@ -91,7 +91,7 @@ int main() {
   std::cout << "fisher_inf=" << binfit.fisher_inf(xbin) << "\n";
   std::cout << "observed_inf=" << binfit.observed_inf(xbin) << "\n";
   std::cout << "vcov=" << binfit.vcov(xbin) << "\n";
-  std::cout << "stderr=" << binfit.stderr(xbin) << "\n";
+  std::cout << "stderr=" << binfit.std_err(xbin) << "\n";
   std::cout << "confint=" << binfit.confint(xbin) << "\n";
 
   const auto gmf = Geometric{0.5}.MLE(xg);
@@ -104,7 +104,7 @@ int main() {
   std::cout << "fisher_inf=" << gmf.fisher_inf(xg) << "\n";
   std::cout << "observed_inf=" << gmf.observed_inf(xg) << "\n";
   std::cout << "vcov=" << gmf.vcov(xg) << "\n";
-  std::cout << "stderr=" << gmf.stderr(xg) << "\n";
+  std::cout << "stderr=" << gmf.std_err(xg) << "\n";
   std::cout << "confint=" << gmf.confint(xg) << "\n";
 
   const auto lfit = Lognormal{0.0, 1.0}.MLE(xl);
@@ -117,7 +117,7 @@ int main() {
   std::cout << "fisher_inf=" << lfit.fisher_inf(xl) << "\n";
   std::cout << "observed_inf=" << lfit.observed_inf(xl) << "\n";
   std::cout << "vcov=" << lfit.vcov(xl) << "\n";
-  std::cout << "stderr=" << lfit.stderr(xl) << "\n";
+  std::cout << "stderr=" << lfit.std_err(xl) << "\n";
   std::cout << "confint=" << lfit.confint(xl) << "\n";
 
   const auto ufit = Uniform{0.0, 1.0}.MLE(xu);
@@ -130,7 +130,7 @@ int main() {
   std::cout << "fisher_inf=" << ufit.fisher_inf(xu) << "\n";
   std::cout << "observed_inf=" << ufit.observed_inf(xu) << "\n";
   std::cout << "vcov=" << ufit.vcov(xu) << "\n";
-  std::cout << "stderr=" << ufit.stderr(xu) << "\n";
+  std::cout << "stderr=" << ufit.std_err(xu) << "\n";
   std::cout << "confint=" << ufit.confint(xu) << "\n";
 
   const auto rfit = Rayleigh{1.0}.MLE(xr);
@@ -143,7 +143,7 @@ int main() {
   std::cout << "fisher_inf=" << rfit.fisher_inf(xr) << "\n";
   std::cout << "observed_inf=" << rfit.observed_inf(xr) << "\n";
   std::cout << "vcov=" << rfit.vcov(xr) << "\n";
-  std::cout << "stderr=" << rfit.stderr(xr) << "\n";
+  std::cout << "stderr=" << rfit.std_err(xr) << "\n";
   std::cout << "confint=" << rfit.confint(xr) << "\n";
 
   const auto gfit = Gamma{2.0, 1.0, 0.0}.MLE(xgamma);
@@ -156,7 +156,7 @@ int main() {
   std::cout << "fisher_inf=" << gfit.fisher_inf(xgamma) << "\n";
   std::cout << "observed_inf=" << gfit.observed_inf(xgamma) << "\n";
   std::cout << "vcov=" << gfit.vcov(xgamma) << "\n";
-  std::cout << "stderr=" << gfit.stderr(xgamma) << "\n";
+  std::cout << "stderr=" << gfit.std_err(xgamma) << "\n";
   std::cout << "confint=" << gfit.confint(xgamma) << "\n";
 
   const auto betafit = Beta{0.0, 1.0, 2.0, 3.0}.MLE(xbeta);
@@ -170,7 +170,7 @@ int main() {
   std::cout << "fisher_inf=" << betafit.fisher_inf(xbeta) << "\n";
   std::cout << "observed_inf=" << betafit.observed_inf(xbeta) << "\n";
   std::cout << "vcov=" << betafit.vcov(xbeta) << "\n";
-  std::cout << "stderr=" << betafit.stderr(xbeta) << "\n";
+  std::cout << "stderr=" << betafit.std_err(xbeta) << "\n";
   std::cout << "confint=" << betafit.confint(xbeta) << "\n";
 
   const auto nbfit = NegativeBinomial{3.0, 0.5}.MLE(xnb);
@@ -183,7 +183,7 @@ int main() {
   std::cout << "fisher_inf=" << nbfit.fisher_inf(xnb) << "\n";
   std::cout << "observed_inf=" << nbfit.observed_inf(xnb) << "\n";
   std::cout << "vcov=" << nbfit.vcov(xnb) << "\n";
-  std::cout << "stderr=" << nbfit.stderr(xnb) << "\n";
+  std::cout << "stderr=" << nbfit.std_err(xnb) << "\n";
   std::cout << "confint=" << nbfit.confint(xnb) << "\n";
 
   const auto nigfit = Nig{1.5, 0.1, 0.0, 1.0}.MLE(xheavy);
@@ -197,7 +197,7 @@ int main() {
   std::cout << "fisher_inf=" << nigfit.fisher_inf(xheavy) << "\n";
   std::cout << "observed_inf=" << nigfit.observed_inf(xheavy) << "\n";
   std::cout << "vcov=" << nigfit.vcov(xheavy) << "\n";
-  std::cout << "stderr=" << nigfit.stderr(xheavy) << "\n";
+  std::cout << "stderr=" << nigfit.std_err(xheavy) << "\n";
   std::cout << "confint=" << nigfit.confint(xheavy) << "\n";
 
   const auto ghfit = Gh{1.0, 2.0, 0.1, 0.0, 1.0}.MLE(xheavy);
@@ -211,7 +211,7 @@ int main() {
   std::cout << "fisher_inf=" << ghfit.fisher_inf(xheavy) << "\n";
   std::cout << "observed_inf=" << ghfit.observed_inf(xheavy) << "\n";
   std::cout << "vcov=" << ghfit.vcov(xheavy) << "\n";
-  std::cout << "stderr=" << ghfit.stderr(xheavy) << "\n";
+  std::cout << "stderr=" << ghfit.std_err(xheavy) << "\n";
   std::cout << "confint=" << ghfit.confint(xheavy) << "\n";
 
   const Series w0 = pluss::make_series({0.5, 0.5}, f64);
@@ -229,7 +229,7 @@ int main() {
   std::cout << "fisher_inf=" << gmfit.fisher_inf(xmix) << "\n";
   std::cout << "observed_inf=" << gmfit.observed_inf(xmix) << "\n";
   std::cout << "vcov=" << gmfit.vcov(xmix) << "\n";
-  std::cout << "stderr=" << gmfit.stderr(xmix) << "\n";
+  std::cout << "stderr=" << gmfit.std_err(xmix) << "\n";
   std::cout << "confint=" << gmfit.confint(xmix) << "\n";
 
   return 0;

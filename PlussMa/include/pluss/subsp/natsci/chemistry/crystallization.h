@@ -22,6 +22,7 @@
 #include "pluss/subsp/natsci/common/population_balance.h"
 
 #include <cmath>
+#include <numbers>
 
 namespace pluss::subsp::natsci::chemistry::crystallization {
 
@@ -37,7 +38,7 @@ inline Series critical_radius(const Series &supersaturation, const Coeff &gamma,
 }
 inline Series nucleation_barrier(const Series &supersaturation, const Coeff &gamma, const Coeff &molecular_volume, const Coeff &temperature) {
   const Series kt_ln_s = temperature.on(supersaturation).mul(boltzmann()).mul(supersaturation.log());
-  return gamma.on(supersaturation).pow(3.0).mul(molecular_volume.on(supersaturation).square()).mul(16.0 * M_PI / 3.0).div(kt_ln_s.square());
+  return gamma.on(supersaturation).pow(3.0).mul(molecular_volume.on(supersaturation).square()).mul(16.0 * std::numbers::pi_v<double> / 3.0).div(kt_ln_s.square());
 }
 inline Series nucleation_rate(const Series &supersaturation, const Coeff &prefactor, const Coeff &gamma, const Coeff &molecular_volume, const Coeff &temperature) {
   return nucleation_barrier(supersaturation, gamma, molecular_volume, temperature).div(temperature.on(supersaturation).mul(boltzmann())).neg().exp().mul(prefactor.on(supersaturation));
@@ -45,7 +46,7 @@ inline Series nucleation_rate(const Series &supersaturation, const Coeff &prefac
 
 // ---- JMAK -----------------------------------------------------------------------------------------------------------------------------
 inline Series jmak_fraction(const Series &t, const Coeff &k, const Coeff &n) { return t.pow(n.on(t)).mul(k.on(t)).neg().exp().neg().add(1.0); }
-inline double jmak_constant_nucleation_3d(double nucleation_rate, double growth_speed) { return M_PI * nucleation_rate * growth_speed * growth_speed * growth_speed / 3.0; }
+inline double jmak_constant_nucleation_3d(double nucleation_rate, double growth_speed) { return std::numbers::pi_v<double> * nucleation_rate * growth_speed * growth_speed * growth_speed / 3.0; }
 struct AvramiFit final {
   Series exponent = pluss::series::undefined(), rate = pluss::series::undefined();
 };

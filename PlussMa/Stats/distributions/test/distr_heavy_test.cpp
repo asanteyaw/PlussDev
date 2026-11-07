@@ -94,7 +94,7 @@ int main() {
     const auto fit = distr::Pareto{1.0, 1.0}.MLE(data);
     near(fit.xm, 2.0, 1e-3, "Pareto MLE minimum");
     near(fit.alpha, 3.0, 0.05, "Pareto MLE tail index");
-    const auto se = fit.stderr(data).pull<double>();
+    const auto se = fit.std_err(data).pull<double>();
     expect(se.size() == 2 && se[1] > 0.0, "Pareto MLE standard error of the tail index");
     expect(fit.model().alpha == fit.alpha, "model() returns the fitted object");
 

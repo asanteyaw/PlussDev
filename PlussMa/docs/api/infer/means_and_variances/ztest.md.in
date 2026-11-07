@@ -42,7 +42,7 @@ A `ZTestResult`. Its fields:
 | `mean` | the sample mean |
 | `null_mean` | `mean0` |
 | `sigma` | the standard deviation used |
-| `stderr` | `sigma / √n` |
+| `std_err` | `sigma / √n` |
 | `ci` | the confidence interval for the mean |
 | `effective_n` | the number of finite observations used |
 
@@ -72,7 +72,7 @@ int main() {
   const auto a = pluss::make_series(std::vector<double>{5.1, 4.9, 6.2, 5.8, 6.0, 5.5, 5.3, 6.1}, {8}, as_f64());
 
   const auto r = hyp::ztest(a, 5.0, 0.5);
-  std::cout << "mean " << r.mean << ", z " << r.stat << ", p " << r.pvalue << ", standard error " << r.stderr << "\n";
+  std::cout << "mean " << r.mean << ", z " << r.stat << ", p " << r.pvalue << ", standard error " << r.std_err << "\n";
   const auto ci = r.ci.pull<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }

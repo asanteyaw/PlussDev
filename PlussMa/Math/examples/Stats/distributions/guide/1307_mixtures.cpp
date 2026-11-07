@@ -1,7 +1,7 @@
 // Mixtures of normals. `GaussianMixture{weights, means, stddevs}` (each a Series with one entry per component) is the distribution of a draw from component j with probability weights[j].
 // It has the usual `pdf`, `logpdf`, `cdf`, `sample`, and `MLE(x)` fits the weights, means and standard deviations by the EM algorithm, started from the values stored in the object (the
 // number of components is its length) and run until the log-likelihood stops changing, so the result does not depend on the starting values unless they sit in different local maxima. The fit has
-// `weights`, `means`, `stddevs`, `loglik` and the statistics of every fit: `stderr`, `vcov` and `confint` are for the natural parameters in the order weights (k), means (k), standard deviations (k)
+// `weights`, `means`, `stddevs`, `loglik` and the statistics of every fit: `std_err`, `vcov` and `confint` are for the natural parameters in the order weights (k), means (k), standard deviations (k)
 // (by the delta method: the weights sum to one, so their covariance matrix is singular), while `score` and `observed_inf` use the unconstrained coordinates (logits of the first k - 1
 // weights, means, logarithms of the standard deviations).
 #include <pluss/ma.h>
@@ -40,7 +40,7 @@ int main() {
 
   const auto fit = distr::GaussianMixture{vec({0.5, 0.5}), vec({-1.0, 1.0}), vec({1.0, 1.0})}.MLE(x);
   std::cout << "\nstandard errors of (w1, w2, m1, m2, s1, s2)\n";
-  row("  stderr", fit.stderr(x));
+  row("  stderr", fit.std_err(x));
   const auto ci = fit.confint(x).host<double>();
   std::cout << "  95% interval of the first mean   " << ci[4] << "  to  " << ci[5] << "\n";
 

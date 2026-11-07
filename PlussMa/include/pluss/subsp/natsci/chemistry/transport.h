@@ -27,6 +27,7 @@
 #include "pluss/subsp/natsci/common/dynamics.h"
 
 #include <cmath>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -150,8 +151,8 @@ public:
     const Series tstar_pair = temp.div(eps_pair_);
     const Series kt = temp.mul(kb);
     return kt.pow(1.5)
-        .mul(reduced_mass_.reciprocal().mul(2.0 * M_PI).sqrt())
-        .div(omega11(tstar_pair).mul(sigma_pair_.square().mul(M_PI)))
+        .mul(reduced_mass_.reciprocal().mul(2.0 * std::numbers::pi_v<double>).sqrt())
+        .div(omega11(tstar_pair).mul(sigma_pair_.square().mul(std::numbers::pi_v<double>)))
         .mul(3.0 / 16.0);
   }
 
@@ -170,32 +171,32 @@ public:
     const Series tstar = temp.div(eps_);    // [..., S]
     const Series m = mass_.div(avogadro()); // kg per molecule [S]
     const Series kt = temp.mul(kb);
-    const Series pi_sigma2 = sigma_.square().mul(M_PI);
+    const Series pi_sigma2 = sigma_.square().mul(std::numbers::pi_v<double>);
     const Series eta = m.mul(kt)
-                           .mul(M_PI)
+                           .mul(std::numbers::pi_v<double>)
                            .sqrt()
                            .div(omega22(tstar).mul(pi_sigma2))
                            .mul(5.0 / 16.0);
     // self diffusion D_kk p and the internal-energy factors
     const Series d_self =
         kt.pow(1.5)
-            .mul(m.mul(0.5).reciprocal().mul(2.0 * M_PI).sqrt())
+            .mul(m.mul(0.5).reciprocal().mul(2.0 * std::numbers::pi_v<double>).sqrt())
             .div(omega11(tstar).mul(pi_sigma2))
             .mul(3.0 / 16.0);
     const Series f_int = mass_.div(temp.mul(r)).mul(d_self).div(eta);
     const auto fz = [](const Series &ts) {
       return ts.sqrt()
           .reciprocal()
-          .mul(std::pow(M_PI, 1.5))
+          .mul(std::pow(std::numbers::pi_v<double>, 1.5))
           .mul(ts.reciprocal().add(0.5))
           .add(1.0)
-          .add(ts.reciprocal().mul(M_PI * M_PI / 4.0 + 2.0));
+          .add(ts.reciprocal().mul(std::numbers::pi_v<double> * std::numbers::pi_v<double> / 4.0 + 2.0));
     };
     const Series fz298 = fz(eps_.reciprocal().mul(298.0));
     const Series a = f_int.neg().add(2.5);
     const Series b = zrot_.mul(fz298).div(fz(tstar)).add(
-        f_int.add(crot_.mul(5.0 / 3.0)).mul(2.0 / M_PI));
-    const Series c1 = a.div(b).mul(2.0 / M_PI);
+        f_int.add(crot_.mul(5.0 / 3.0)).mul(2.0 / std::numbers::pi_v<double>));
+    const Series c1 = a.div(b).mul(2.0 / std::numbers::pi_v<double>);
     const Series cv_int = cp_over_r.sub(2.5).sub(crot_);
     const Series f_rot = f_int.mul(c1.add(1.0));
     const Series f_trans = c1.mul(crot_).div(1.5).neg().add(1.0).mul(2.5);

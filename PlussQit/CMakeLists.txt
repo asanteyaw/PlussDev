@@ -302,6 +302,8 @@ file(GLOB_RECURSE PLUSSQIT_CODEM_CORE_CPP CONFIGURE_DEPENDS
 list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/SeriesTorchAlignedStubs.cpp") # optional stub file remains explicit below
 # Duplicate compare implementation; keep CompareOps.cpp as canonical kernel entry.
 list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/cpu/Compare.cpp")
+# Arithmetic.cpp owns the add kernel; BinaryOps.cpp still defines a legacy copy.
+list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/cpu/BinaryOps.cpp")
 
 if(APPLE)
   set(PLUSSQIT_CODEM_MPS_SRC

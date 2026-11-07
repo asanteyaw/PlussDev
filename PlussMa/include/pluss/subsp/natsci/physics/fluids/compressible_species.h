@@ -278,6 +278,8 @@ inline Series species_fraction(const Series &low, const Series &high,
 
 } // namespace detail
 
+struct Access;
+
 class State final {
 public:
   [[nodiscard]] const gas::State &flow() const noexcept { return flow_; }

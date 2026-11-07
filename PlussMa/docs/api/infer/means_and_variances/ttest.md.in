@@ -41,7 +41,7 @@ A `TTestResult`. Its fields:
 | `dof` | degrees of freedom, `n − 1` |
 | `mean` | the sample mean |
 | `null_mean` | `mean0` |
-| `stderr` | the standard error of the mean |
+| `std_err` | the standard error of the mean |
 | `ci` | a two-element Series: the confidence interval for the mean |
 | `effective_n` | the number of finite observations used |
 
@@ -74,7 +74,7 @@ int main() {
 
   const auto r = hyp::ttest(a, 5.0);
   std::cout << "mean " << r.mean << ", t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << (r.reject ? " (reject)" : " (keep)") << "\n";
-  std::cout << "standard error " << r.stderr << ", critical value " << r.critical << ", observations " << r.effective_n << "\n";
+  std::cout << "standard error " << r.std_err << ", critical value " << r.critical << ", observations " << r.effective_n << "\n";
   const auto ci = r.ci.pull<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }

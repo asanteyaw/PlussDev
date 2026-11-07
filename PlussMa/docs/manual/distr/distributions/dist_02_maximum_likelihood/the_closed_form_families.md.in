@@ -12,7 +12,7 @@ A fit is only half an answer. The other half is how *uncertain* it is, and the f
 | `loglik(x)`, `loglik_per_obs(x)`, `nll(x)` | total and per-observation log-likelihood, and its negative |
 | `score(x)` | the gradient of the log-likelihood; zero at an interior maximum |
 | `observed_inf(x)`, `fisher_inf(x)` | the observed information (minus the Hessian) and the information matrix |
-| `vcov(x)`, `stderr(x)` | the estimated covariance of the estimates, and its square-rooted diagonal |
+| `vcov(x)`, `std_err(x)` | the estimated covariance of the estimates, and its square-rooted diagonal |
 | `confint(x, level)` | Wald intervals `estimate ± z · stderr` (default level 0.95): a matrix with one row per parameter and columns lower, upper |
 
 The Hessian is the full matrix, so each standard error is the one that holds with the *other* parameters estimated too. The programs use `namespace distr = pluss::subsp::stats::distr;` and fit samples drawn from known distributions, so the truth is always at hand.
@@ -41,7 +41,7 @@ int main() {
   const auto x = distr::Normal{1.5, 2.0}.sample({500}, f64, 20261022ULL);
   const auto fit = distr::Normal{}.MLE(x);
   out.writeln("estimates        mean", fit.mean, "  stddev", fit.stddev, "  (true 1.5 and 2.0)");
-  out.writeln("stderr           ", fit.stderr(x).host<double>());
+  out.writeln("stderr           ", fit.std_err(x).host<double>());
   out.writeln("exact formula    ", std::vector<double>{fit.stddev / std::sqrt(n), fit.stddev / std::sqrt(2 * n)});
   out.writeln("95% interval     ", fit.confint(x).host<double>());
   out.writeln("score            ", fit.score(x).host<double>());
@@ -120,7 +120,7 @@ int main() {
   for (int n : {25, 100, 400, 1600}) {
     const auto x = distr::Exponential{0.7}.sample({n}, f64, 99ULL);
     const auto fit = distr::Exponential{}.MLE(x);
-    const double se = fit.stderr(x).item<double>();
+    const double se = fit.std_err(x).item<double>();
     const auto ci = fit.confint(x).host<double>();
     out.writeln(n, "  ", fit.rate, "  ", se, "  ", se * std::sqrt(static_cast<double>(n)), "  ", ci[1] - ci[0]);
   }

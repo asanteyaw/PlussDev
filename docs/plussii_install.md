@@ -1,7 +1,7 @@
 # PlussII C++ Distribution
 
-For published versions, download the matching ZIP or tar archive from the
-[PlussII releases page](https://github.com/asanteyaw/PlussDev/releases).
+For published versions, select your operating system and download the matching
+ZIP from the [PlussII download page](https://plussible.org/download).
 Extract it and set `CMAKE_PREFIX_PATH` to the extracted folder. Each archive
 contains public headers, compiled libraries, and CMake package files.
 
@@ -15,11 +15,26 @@ The source build flow is:
 
 ## Build The Distribution From Source
 
+Install CMake 3.28 or newer, a C++20 compiler, and Python 3.11 or newer.
 From the `PlussDev` repo root:
 
 ```bash
-cmake -S . -B build
-cmake --build build --target pluss -j
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF
+cmake --build build --config Release --target plussii_distribution_stage --parallel 4
+```
+
+On Windows x64, use Visual Studio 2022 with its Clang tools and set
+`VCPKG_ROOT` to your vcpkg installation. Install the static SQLite dependency,
+then configure with the matching toolset and triplet in PowerShell:
+
+```powershell
+& "$env:VCPKG_ROOT\vcpkg.exe" install sqlite3:x64-windows-static
+cmake -S . -B build -G "Visual Studio 17 2022" -T ClangCL `
+  -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF `
+  -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+  "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+cmake --build build --config Release --target plussii_distribution_stage --parallel 4
 ```
 
 Default behavior (new build directories):
@@ -86,7 +101,7 @@ Notes:
 To stage the distribution:
 
 ```bash
-cmake --build build --target plussii_distribution_stage --parallel "$(sysctl -n hw.logicalcpu)"
+cmake --build build --config Release --target plussii_distribution_stage --parallel 4
 ```
 
 That stages PlussII at:
@@ -172,7 +187,7 @@ std::cout << meta.values << '\n';   // host payload preview
 Set `PLUSSII_DIR` to the extracted distribution folder, then configure:
 
 ```bash
-PLUSSII_DIR="/absolute/path/to/plussii-cpp-0.1.0-Darwin-arm64"
+PLUSSII_DIR="/absolute/path/to/plussii-cpp-0.1.1-Darwin-arm64"
 cmake -S . -B build -DCMAKE_PREFIX_PATH="$PLUSSII_DIR"
 cmake --build build
 ./build/pluss_consumer
@@ -192,5 +207,6 @@ cmake -S . -B build \
 
 ## Notes
 
-- Release archives are published from version tags by the macOS GitHub Actions release workflow.
+- Release ZIPs for macOS arm64, Linux x64, and Windows x64 are published together
+  after all three archive and consumer checks pass.
 - The distribution carries the public header trees needed by the exported API.

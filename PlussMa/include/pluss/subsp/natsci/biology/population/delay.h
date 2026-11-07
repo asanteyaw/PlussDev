@@ -16,6 +16,7 @@
 #include "pluss/subsp/natsci/biology/dynamics.h"
 
 #include <cmath>
+#include <numbers>
 #include <functional>
 
 namespace pluss::subsp::natsci::biology::population::delay {
@@ -29,7 +30,7 @@ inline Series hutchinson_rate(const Series &n, const Series &n_delayed, const Co
 inline Series nicholson_rate(const Series &n, const Series &n_delayed, const Coeff &death, const Coeff &production, const Coeff &scale) {
   return n.mul(death.on(n)).neg().add(n_delayed.mul(production.on(n)).mul(n_delayed.div(scale.on(n)).neg().exp()));
 }
-inline double hutchinson_critical_delay(double r) { return M_PI / (2.0 * r); }
+inline double hutchinson_critical_delay(double r) { return std::numbers::pi_v<double> / (2.0 * r); }
 inline double nicholson_equilibrium(double death, double production, double scale) { return scale * std::log(production / death); }
 
 // ---- complex Lambert W (principal branch) ------------------------------------------------------------------------------------------
@@ -43,7 +44,7 @@ inline Complex lambert_w0_complex(const Series &z_re, const Series &z_im, int pa
   Series wr = z_re.mul(0.0), wi = z_re.mul(0.0);
   for (int j = 1; j <= path_steps; ++j) {
     const double t = static_cast<double>(j) / path_steps;
-    const Series tr = z_re.mul(t), ti = z_im.mul(t).add(height.mul(std::sin(M_PI * t)));
+    const Series tr = z_re.mul(t), ti = z_im.mul(t).add(height.mul(std::sin(std::numbers::pi_v<double> * t)));
     for (int i = 0; i < newton_per_step; ++i) {
       const Series e = wr.exp(), c = wi.cos(), s = wi.sin();
       const Series er = e.mul(c), ei = e.mul(s);                                                       // e^w

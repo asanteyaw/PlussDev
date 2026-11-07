@@ -59,7 +59,7 @@ bool distr::Distribution::is_discrete() const noexcept;
 
 ## Returns
 
-The evaluation methods return a `Series` of the shape of their argument, `sample` and `sample_like` the drawn `Series`, and `cumulant` a one-element `Series`. `MLE` returns a `DistributionFit` with the fields `kind`, `params`, `loglik`, `converged` and `iterations`, the covariance `vcov` (empty when the observed information is not positive definite at the estimate), and the methods `model()`, `stderr()` and `confint(level)`.
+The evaluation methods return a `Series` of the shape of their argument, `sample` and `sample_like` the drawn `Series`, and `cumulant` a one-element `Series`. `MLE` returns a `DistributionFit` with the fields `kind`, `params`, `loglik`, `converged` and `iterations`, the covariance `vcov` (empty when the observed information is not positive definite at the estimate), and the methods `model()`, `std_err()` and `confint(level)`.
 
 ## Errors
 
@@ -272,7 +272,7 @@ int main() {
   const auto x = distr::Distribution(dst::Gompertz, {0.8, 2.0}).sample({4000}, f64, 9ULL);
   const auto fit = distr::Distribution(dst::Gompertz).MLE(x, {0.5, 1.5});
 
-  const auto se = fit.stderr();
+  const auto se = fit.std_err();
   const auto ci = fit.confint(0.95);
   std::cout << "b: " << fit.params[0] << "  stderr " << se[0] << "  95% [" << ci[0].first << ", " << ci[0].second << "]\n";
   std::cout << "c: " << fit.params[1] << "  stderr " << se[1] << "  95% [" << ci[1].first << ", " << ci[1].second << "]\n";

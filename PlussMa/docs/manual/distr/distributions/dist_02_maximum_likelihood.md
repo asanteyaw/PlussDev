@@ -20,10 +20,10 @@ Every program is complete and its output is the output of that program.
 | `observed_inf(x)` | the observed information: minus the Hessian of the log-likelihood at the estimate |
 | `fisher_inf(x)` | the information matrix (the observed one for the families fitted numerically) |
 | `vcov(x)` | the estimated covariance of the estimates: the inverse of the information |
-| `stderr(x)` | the standard errors: the square roots of the diagonal of `vcov` |
+| `std_err(x)` | the standard errors: the square roots of the diagonal of `vcov` |
 | `confint(x, level)` | Wald intervals `estimate ± z · stderr` (default level 0.95): a matrix with one row per parameter and columns lower, upper |
 
-For a family with `k` parameters the information and covariance are `k × k` matrices and `stderr` has `k` entries. The Hessian is the full matrix: the correlation between the parameters is accounted for, not only the diagonal, so the standard error of each parameter is the one that holds with the other parameters estimated too. The covariance is that of the *free* parameters: a parameter the family holds fixed has zero standard error, a zero row and column in `vcov`, and an interval of zero width.
+For a family with `k` parameters the information and covariance are `k × k` matrices and `std_err` has `k` entries. The Hessian is the full matrix: the correlation between the parameters is accounted for, not only the diagonal, so the standard error of each parameter is the one that holds with the other parameters estimated too. The covariance is that of the *free* parameters: a parameter the family holds fixed has zero standard error, a zero row and column in `vcov`, and an interval of zero width.
 
 ## Which parameters are estimated
 
@@ -60,7 +60,7 @@ For the negative binomial, counts whose variance does not exceed their mean have
 
 1. Check that `x` lies inside the support of the family; a value outside is an error, not a silent zero.
 2. Read the log-likelihood to compare families fitted to the same data (the larger, the better; correct for the number of parameters with Akaike's criterion `2k − 2 loglik`).
-3. Report intervals from `confint`, and use `vcov` rather than `stderr` when you need the correlation of the estimates.
+3. Report intervals from `confint`, and use `vcov` rather than `std_err` when you need the correlation of the estimates.
 4. Remember which parameters are fixed: set them on the object you call `MLE` on.
 5. Treat the uniform's and the boundary cases' intervals as approximate.
 

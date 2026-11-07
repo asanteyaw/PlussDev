@@ -256,7 +256,7 @@ int main() {
 
   std::cout << "p: " << fit.p << '\n';
   std::cout << "stderr:";
-  for (double v : fit.stderr(x).host<double>()) std::cout << ' ' << v;
+  for (double v : fit.std_err(x).host<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "95% bounds:";
   for (double v : fit.confint(x).host<double>()) std::cout << ' ' << v;

@@ -26,7 +26,7 @@ int main() {
   const auto gf = distr::Gamma{1.0, 1.0, 0.0}.MLE(xg);
   std::cout << "Gamma sample (true shape 2.5, scale 1.3, location 0)\n";
   std::cout << "  shape " << gf.shape << "   scale " << gf.scale << "   location (fixed) " << gf.location << "\n";
-  row("  stderr", gf.stderr(xg));
+  row("  stderr", gf.std_err(xg));
   row("  95% intervals", gf.confint(xg));
   const auto v = gf.vcov(xg).host<double>();
   std::cout << "  correlation of shape and scale " << v[1] / std::sqrt(v[0] * v[4]) << "   (vcov is 3 x 3, the location row and column are zero)\n";
@@ -35,7 +35,7 @@ int main() {
   const Series xb = distr::Beta{0.0, 1.0, 2.5, 4.0}.sample({500}, cfg, 7ULL);
   const auto bf = distr::Beta{0.0, 1.0, 1.0, 1.0}.MLE(xb);
   std::cout << "\nBeta sample on [0, 1] (true alpha 2.5, beta 4)\n  alpha " << bf.alpha << "   beta " << bf.beta << "   (low " << bf.low << ", high " << bf.high << " fixed)\n";
-  row("  stderr", bf.stderr(xb));
+  row("  stderr", bf.std_err(xb));
   // The same data on [-1, 3]: telling the object the support is how the family is fitted there.
   std::vector<double> shifted;
   for (double a : xb.host<double>()) shifted.push_back(-1.0 + 4.0 * a);
@@ -45,7 +45,7 @@ int main() {
   const Series xn = distr::NegativeBinomial{3.5, 0.4}.sample({500}, cfg, 11ULL);
   const auto nf = distr::NegativeBinomial{1.0, 0.5}.MLE(xn);
   std::cout << "\nNegative binomial sample (true r 3.5, p 0.4)\n  r " << nf.r << "   p " << nf.p << "\n";
-  row("  stderr", nf.stderr(xn));
+  row("  stderr", nf.std_err(xn));
   row("  95% intervals", nf.confint(xn));
   const auto nv = nf.vcov(xn).host<double>();
   std::cout << "  correlation of r and p " << nv[1] / std::sqrt(nv[0] * nv[3]) << "\n";

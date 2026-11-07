@@ -17,6 +17,7 @@
 #include "pluss/subsp/natsci/common/dynamics.h"
 
 #include <cmath>
+#include <numbers>
 #include <vector>
 
 namespace pluss::subsp::natsci::chemistry::polymer_dynamics {
@@ -43,7 +44,7 @@ inline Series rouse_matrix(std::int64_t n_beads, pluss::ScalarType dtype = pluss
 inline Series rouse_eigenvalues(std::int64_t n_beads, pluss::ScalarType dtype = pluss::ScalarType::Float64) {
   std::vector<double> a(static_cast<std::size_t>(n_beads));
   for (std::int64_t p = 0; p < n_beads; ++p) {
-    const double s = std::sin(static_cast<double>(p) * M_PI / (2.0 * static_cast<double>(n_beads)));
+    const double s = std::sin(static_cast<double>(p) * std::numbers::pi_v<double> / (2.0 * static_cast<double>(n_beads)));
     a[static_cast<std::size_t>(p)] = 4.0 * s * s;
   }
   return pluss::make_series(a, {n_beads}).to(dtype);

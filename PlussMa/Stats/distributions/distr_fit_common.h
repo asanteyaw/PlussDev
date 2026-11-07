@@ -439,8 +439,8 @@ inline LogLikFn gh_loglik(const std::vector<double>& v) {  // {lambda, alpha, be
     const auto st = fit_detail::fit_stats(params_expr, free_expr, make_ll(values));                                         \
     return fit_detail::matrix_series(st.vcov, st.k, x);                                                                     \
   }                                                                                                                         \
-  Series FitType::stderr(const Series& x) const {                                                                           \
-    const auto values = fit_detail::data_f64(x, #FitType "::stderr");                                                       \
+  Series FitType::std_err(const Series& x) const {                                                                           \
+    const auto values = fit_detail::data_f64(x, #FitType "::std_err");                                                       \
     const auto st = fit_detail::fit_stats(params_expr, free_expr, make_ll(values));                                         \
     return fit_detail::vec_series(st.se, {static_cast<std::int64_t>(st.k)}, x);                                             \
   }                                                                                                                         \

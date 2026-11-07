@@ -18,6 +18,7 @@
 #include "pluss/subsp/natsci/common/dynamics.h"
 
 #include <cmath>
+#include <numbers>
 #include <complex>
 #include <vector>
 
@@ -41,11 +42,11 @@ inline Series transmittance(const Series &a) { return a.mul(-std::log(10.0)).exp
 // ---- Line shapes -------------------------------------------------------------------------------------
 inline Series gaussian(const Series &x, const Series &x0, const Series &sigma) {
   const Series u = x.sub(x0).div(sigma);
-  return u.square().mul(-0.5).exp().div(sigma.mul(std::sqrt(2.0 * M_PI)));
+  return u.square().mul(-0.5).exp().div(sigma.mul(std::sqrt(2.0 * std::numbers::pi_v<double>)));
 }
 inline Series lorentzian(const Series &x, const Series &x0, const Series &gamma) {
   const Series d = x.sub(x0);
-  return gamma.div(d.square().add(gamma.square())).mul(1.0 / M_PI);
+  return gamma.div(d.square().add(gamma.square())).mul(1.0 / std::numbers::pi_v<double>);
 }
 
 namespace detail {
@@ -59,7 +60,7 @@ struct Weideman final {
     std::vector<double> f(static_cast<std::size_t>(m2), 0.0); // f(0) = 0 prepended to the 2M-1 samples
     for (int idx = 0; idx < 2 * m - 1; ++idx) {
       const int k = -m + 1 + idx;
-      const double theta = static_cast<double>(k) * M_PI / m;
+      const double theta = static_cast<double>(k) * std::numbers::pi_v<double> / m;
       const double t = l * std::tan(theta / 2.0);
       f[static_cast<std::size_t>(idx + 1)] = std::exp(-t * t) * (l * l + t * t);
     }
@@ -71,7 +72,7 @@ struct Weideman final {
     for (int nn = 1; nn <= n; ++nn) {
       double acc = 0.0;
       for (int j = 0; j < m2; ++j)
-        acc += fs[static_cast<std::size_t>(j)] * std::cos(2.0 * M_PI * nn * j / m2);
+        acc += fs[static_cast<std::size_t>(j)] * std::cos(2.0 * std::numbers::pi_v<double> * nn * j / m2);
       a[static_cast<std::size_t>(nn - 1)] = acc / m2;
     }
   }
@@ -108,7 +109,7 @@ inline Faddeeva faddeeva(const Series &x, const Series &y) {
   const Series d2 = d.square();
   const Series inv1r = u.div(d), inv1i = x.div(d);
   const Series inv2r = u.square().sub(x.square()).div(d2), inv2i = u.mul(x).mul(2.0).div(d2);
-  const double c = 1.0 / std::sqrt(M_PI);
+  const double c = 1.0 / std::sqrt(std::numbers::pi_v<double>);
   return {pr.mul(inv2r).sub(pi.mul(inv2i)).mul(2.0).add(inv1r.mul(c)),
           pr.mul(inv2i).add(pi.mul(inv2r)).mul(2.0).add(inv1i.mul(c))};
 }
@@ -119,7 +120,7 @@ inline Series voigt(const Series &x, const Series &x0, const Series &sigma, cons
   dynamics::require_nonnegative(gamma, "voigt: gamma");
   const double s2 = std::sqrt(2.0);
   const Series xr = x.sub(x0).div(sigma.mul(s2)), yr = gamma.div(sigma.mul(s2));
-  return faddeeva(xr, yr).real.div(sigma.mul(std::sqrt(2.0 * M_PI)));
+  return faddeeva(xr, yr).real.div(sigma.mul(std::sqrt(2.0 * std::numbers::pi_v<double>)));
 }
 
 // Olivero & Longbothum (1977) approximation of the Voigt FWHM from the component FWHMs.

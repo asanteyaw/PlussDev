@@ -21,6 +21,7 @@
 #include "pluss/subsp/natsci/common/dynamics.h"
 
 #include <cmath>
+#include <numbers>
 #include <functional>
 #include <vector>
 
@@ -207,7 +208,7 @@ inline BreakageOperator build_breakage_operator(const Grid &g, const std::functi
   // Gauss-Legendre nodes / weights on [-1, 1] by Newton iteration on P_n
   std::vector<double> xi(static_cast<std::size_t>(quad_points)), wi(static_cast<std::size_t>(quad_points));
   for (int i = 0; i < quad_points; ++i) {
-    double z = std::cos(M_PI * (i + 0.75) / (quad_points + 0.5)), pp = 0.0;
+    double z = std::cos(std::numbers::pi_v<double> * (i + 0.75) / (quad_points + 0.5)), pp = 0.0;
     for (int it = 0; it < 100; ++it) {
       double p1 = 1.0, p2 = 0.0;
       for (int j = 0; j < quad_points; ++j) {

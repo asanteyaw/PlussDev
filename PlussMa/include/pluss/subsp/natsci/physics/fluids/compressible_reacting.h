@@ -139,6 +139,8 @@ inline void require_valid(const Raw &state, const spatial::PeriodicGrid &grid,
 
 } // namespace detail
 
+struct Access;
+
 class State final {
 public:
   [[nodiscard]] const common::SeriesQuantity<Density> &density() const {

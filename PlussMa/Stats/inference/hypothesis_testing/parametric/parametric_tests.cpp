@@ -263,7 +263,7 @@ TTestResult ttest(const Series& x, double mean0, const TestOptions& options, Con
   out.dof = dof;
   out.mean = st.mean;
   out.null_mean = mean0;
-  out.stderr = se;
+  out.std_err = se;
   out.ci = ci_series_(ci_lo, ci_hi, out_cfg);
   out.effective_n = st.n;
   return out;
@@ -335,7 +335,7 @@ TTest2Result ttest2(const Series& x, const Series& y, const TTest2Options& optio
   out.dof = dof;
   out.mean_x = sx.mean;
   out.mean_y = sy.mean;
-  out.stderr = se;
+  out.std_err = se;
   out.equal_variance = options.equal_variance;
   out.ci = ci_series_(ci_lo, ci_hi, out_cfg);
   out.effective_nx = sx.n;
@@ -386,7 +386,7 @@ ZTestResult ztest(const Series& x,
   out.mean = st.mean;
   out.null_mean = mean0;
   out.sigma = sigma;
-  out.stderr = se;
+  out.std_err = se;
   out.ci = ci_series_(ci_lo, ci_hi, out_cfg);
   out.effective_n = st.n;
   return out;
