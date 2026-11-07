@@ -10,12 +10,22 @@ permissions:
   contents: write
 
 jobs:
-  cpp-release:
-    runs-on: macos-15
+  build-archive:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        env:
+          # Sparse checkout omits generated build files with Windows-reserved names.
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: core.protectNTFS
+          GIT_CONFIG_VALUE_0: 'false'
         with:
           sparse-checkout: |
             PlussAI
@@ -37,50 +47,66 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Configure
+      - name: Install Windows SQLite3
+        if: runner.os == 'Windows'
+        run: vcpkg install sqlite3:x64-windows-static
+
+      - name: Configure Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DVCPKG_TARGET_TRIPLET=x64-windows-static "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Configure macOS and Ubuntu
+        if: runner.os != 'Windows'
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF
 
-      - name: Check Release Version
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Stage distribution
+        run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2
+
+      - name: Package and validate downloadable ZIP
+        run: cmake "-DDISTRIBUTION_BUILD_DIR=${{ github.workspace }}/build" "-DDISTRIBUTION_SOURCE_DIR=${{ github.workspace }}" -P cmake/VerifyStagedDistribution.cmake
+
+      - name: Upload validated ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: plussii-cpp-${{ matrix.os }}
+          path: build/plussii-cpp-*.zip
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-archive
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout version
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: CMakeLists.txt
+
+      - name: Check release version
         shell: bash
         run: |
-          version="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' build/CMakeCache.txt)"
-          if [[ "${GITHUB_REF_NAME}" != "v${version}" ]]; then
+          version="$(sed -n 's/^project(plussma VERSION \([0-9][0-9.]*\) LANGUAGES CXX)/\1/p' CMakeLists.txt)"
+          if [[ -z "$version" || "${GITHUB_REF_NAME}" != "v${version}" ]]; then
             echo "Release tag ${GITHUB_REF_NAME} does not match CMake version v${version}."
             exit 1
           fi
 
-      - name: Build PlussII C++ Archives
-        run: cmake --build build --target plussii_distribution_archive -j1
-
-      - name: Validate Downloadable Archive
-        run: |
-          cmake \
-            -DDISTRIBUTION_ARCHIVE="$(pwd)/$(find build -maxdepth 1 -name 'plussii-cpp-*.zip' -print -quit)" \
-            -DCONSUMER_SOURCE_DIR="$(pwd)/examples/sdk_consumer" \
-            -DVALIDATION_WORK_DIR="$(pwd)/build/distribution-validation" \
-            -P cmake/ValidateDistribution.cmake
-
-      - name: Generate Checksums
-        working-directory: build
-        run: shasum -a 256 plussii-cpp-*.zip plussii-cpp-*.tar.gz > SHA256SUMS.txt
-
-      - name: Upload Workflow Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Download validated ZIPs
+        uses: actions/download-artifact@v4
         with:
-          name: plussii-cpp-${{ github.ref_name || 'manual' }}
-          path: |
-            build/plussii-cpp-*.zip
-            build/plussii-cpp-*.tar.gz
-            build/SHA256SUMS.txt
-          if-no-files-found: error
+          pattern: plussii-cpp-*
+          path: release-assets
+          merge-multiple: true
 
-      - name: Publish GitHub Release Assets
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Generate checksums
+        working-directory: release-assets
+        run: sha256sum plussii-cpp-*.zip > SHA256SUMS.txt
+
+      - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/plussii-cpp-*.zip
-            build/plussii-cpp-*.tar.gz
-            build/SHA256SUMS.txt
+            release-assets/plussii-cpp-*.zip
+            release-assets/SHA256SUMS.txt
           generate_release_notes: true

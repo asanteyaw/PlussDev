@@ -7,7 +7,7 @@ For the gamma, the beta and the negative binomial the likelihood equations have 
 Two conventions run through this page.
 
 - **The fit object is the starting point and the specification.** `distr::Gamma{1.0, 1.0, 0.0}.MLE(x)` estimates the shape and scale and takes the location, 0, from the object. The shape and scale in the object are only starting values.
-- **Fixed parameters have zero uncertainty.** They appear in `vcov` as a zero row and column, in `stderr` as 0, and in `confint` as an interval of zero width, so a covariance matrix always has one row per parameter of the family.
+- **Fixed parameters have zero uncertainty.** They appear in `vcov` as a zero row and column, in `std_err` as 0, and in `confint` as an interval of zero width, so a covariance matrix always has one row per parameter of the family.
 
 The programs use `namespace distr = pluss::subsp::stats::distr;` and `using pluss::Series;`.
 
@@ -34,7 +34,7 @@ int main() {
   const auto x = distr::Gamma{2.5, 1.3, 0.0}.sample({500}, f64, 20261022ULL);
   const auto fit = distr::Gamma{1.0, 1.0, 0.0}.MLE(x);
   out.writeln("shape", fit.shape, "  scale", fit.scale, "  location (fixed)", fit.location, "   (true 2.5, 1.3, 0)");
-  out.writeln("stderr        ", fit.stderr(x).host<double>());
+  out.writeln("stderr        ", fit.std_err(x).host<double>());
   out.writeln("95% intervals ", fit.confint(x).host<double>());
 
   const auto v = fit.vcov(x).host<double>();  // 3 x 3, in the order shape, scale, location
@@ -48,7 +48,7 @@ int main() {
 }
 ```
 
-The estimates (2.44 and 1.38 for a true 2.5 and 1.3) are within one standard error of the truth, with relative standard errors of about 6% each, and their correlation is strongly negative, −0.90: data that look slightly more skewed than average push the shape down and the scale up together. The mean `shape × scale` is estimated as 3.36 with a standard error of 0.096, or 2.9% relative, about half the relative uncertainty of either parameter. The delta-method standard error uses the covariance, and the strong negative correlation makes the two errors partly cancel in the product. This is why the covariance matters: **the standard errors of the individual parameters alone would overstate the uncertainty of any combination of them**, and a function of the parameters (a mean, a quantile, a tail probability) should be computed with `vcov`, not with `stderr`.
+The estimates (2.44 and 1.38 for a true 2.5 and 1.3) are within one standard error of the truth, with relative standard errors of about 6% each, and their correlation is strongly negative, −0.90: data that look slightly more skewed than average push the shape down and the scale up together. The mean `shape × scale` is estimated as 3.36 with a standard error of 0.096, or 2.9% relative, about half the relative uncertainty of either parameter. The delta-method standard error uses the covariance, and the strong negative correlation makes the two errors partly cancel in the product. This is why the covariance matters: **the standard errors of the individual parameters alone would overstate the uncertainty of any combination of them**, and a function of the parameters (a mean, a quantile, a tail probability) should be computed with `vcov`, not with `std_err`.
 
 ## Fixed parameters are part of the model
 
@@ -105,7 +105,7 @@ int main() {
   const auto xb = distr::Beta{0.0, 1.0, 2.5, 4.0}.sample({500}, f64, 7ULL);
   const auto bf = distr::Beta{0.0, 1.0, 1.0, 1.0}.MLE(xb);
   out.writeln("Beta sample on [0, 1] (true alpha 2.5, beta 4):  alpha", bf.alpha, " beta", bf.beta, " (support", bf.low, "to", bf.high, "is fixed)");
-  out.writeln("  stderr  ", bf.stderr(xb).host<double>());
+  out.writeln("  stderr  ", bf.std_err(xb).host<double>());
   const auto moved = xb * 4.0 - 1.0;  // the same data on [-1, 3]
   const auto bf2 = distr::Beta{-1.0, 3.0, 1.0, 1.0}.MLE(moved);
   out.writeln("  the same data on [-1, 3], told so:  alpha", bf2.alpha, " beta", bf2.beta);
@@ -114,7 +114,7 @@ int main() {
   const auto nf = distr::NegativeBinomial{1.0, 0.5}.MLE(xn);
   const auto nv = nf.vcov(xn).host<double>();
   out.writeln("\nNegative binomial sample (true r 3.5, p 0.4):  r", nf.r, " p", nf.p);
-  out.writeln("  stderr        ", nf.stderr(xn).host<double>());
+  out.writeln("  stderr        ", nf.std_err(xn).host<double>());
   out.writeln("  95% intervals ", nf.confint(xn).host<double>());
   out.writeln("  correlation of r and p:", nv[1] / std::sqrt(nv[0] * nv[3]));
 
@@ -124,7 +124,7 @@ int main() {
 }
 ```
 
-The beta recovers its parameters (2.48 and 4.06 for a true 2.5 and 4, well within the standard errors of 0.15 and 0.25) and gives identical shape parameters on the stretched support, as it should; the first two entries of the `stderr` row are the fixed `low` and `high`, with zero uncertainty. For the negative binomial, `r` and `p` are almost perfectly correlated (0.97), so the interval for either alone is wide (`r` from 2.84 to 4.45 for a true 3.5) while the combination that fixes the mean is tight. The last line is the boundary case: a binomial sample has *less* spread than a Poisson with the same mean, and the negative binomial can only add spread. The likelihood therefore increases without limit as `r` grows (the family tends to the Poisson), and the fit stops at the largest value it searches, `r = 10⁸`. When you see an enormous `r`, the data are not over-dispersed, and a Poisson (or a binomial) is the right model.
+The beta recovers its parameters (2.48 and 4.06 for a true 2.5 and 4, well within the standard errors of 0.15 and 0.25) and gives identical shape parameters on the stretched support, as it should; the first two entries of the `std_err` row are the fixed `low` and `high`, with zero uncertainty. For the negative binomial, `r` and `p` are almost perfectly correlated (0.97), so the interval for either alone is wide (`r` from 2.84 to 4.45 for a true 3.5) while the combination that fixes the mean is tight. The last line is the boundary case: a binomial sample has *less* spread than a Poisson with the same mean, and the negative binomial can only add spread. The likelihood therefore increases without limit as `r` grows (the family tends to the Poisson), and the fit stops at the largest value it searches, `r = 10⁸`. When you see an enormous `r`, the data are not over-dispersed, and a Poisson (or a binomial) is the right model.
 
 ## How much does the shape estimate vary?
 
@@ -155,7 +155,7 @@ int main() {
       const auto fit = distr::Gamma{1.0, 1.0, 0.0}.MLE(x);
       sum += fit.shape;
       sum_sq += fit.shape * fit.shape;
-      se_sum += fit.stderr(x).host<double>()[0];
+      se_sum += fit.std_err(x).host<double>()[0];
       const auto ci = fit.confint(x).host<double>();  // rows: shape, scale, location
       covered += ci[0] <= 2.5 && 2.5 <= ci[1];
     }
@@ -170,7 +170,7 @@ Three things to read. The mean estimate sits above the true 2.5 at 40 observatio
 ## Decisions and pitfalls
 
 - **Set the fixed parameters deliberately.** They come from the object you call `MLE` on, not from the data; a wrong location, support or trial count gives a confidently wrong fit.
-- **Use `vcov`, not `stderr`, for combinations.** Estimates are correlated; the uncertainty of a mean, quantile or probability depends on the covariance.
+- **Use `vcov`, not `std_err`, for combinations.** Estimates are correlated; the uncertainty of a mean, quantile or probability depends on the covariance.
 - **Expect small-sample bias.** The shape of a gamma and the dispersion of a negative binomial are biased in small samples; treat the interval as approximate.
 - **An enormous `r` means no over-dispersion.** The negative binomial returns its upper limit for under- or equi-dispersed counts; use the Poisson or the binomial.
 - **The log-likelihood is the test of a fixed value.** If changing a fixed parameter raises it a lot, the first choice was wrong.

@@ -781,8 +781,8 @@ Series GaussianMixtureFit::vcov(const Series& x) const {
   return fit_detail::matrix_series(st.vcov, st.natural.size(), x);
 }
 
-Series GaussianMixtureFit::stderr(const Series& x) const {
-  const auto st = gm_stats_(*this, fit_data_f64_(x, "GaussianMixtureFit::stderr"));
+Series GaussianMixtureFit::std_err(const Series& x) const {
+  const auto st = gm_stats_(*this, fit_data_f64_(x, "GaussianMixtureFit::std_err"));
   return fit_detail::vec_series(st.se, {static_cast<std::int64_t>(st.se.size())}, x);
 }
 

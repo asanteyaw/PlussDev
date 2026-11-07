@@ -772,7 +772,7 @@ TEST_CASE("maximum likelihood fits reach the exact optimum", "[distr][mle][refer
   REQUIRE(gfit.shape == Catch::Approx(2.791118015).epsilon(1e-8));
   REQUIRE(gfit.scale == Catch::Approx(0.798962992).epsilon(1e-8));
   REQUIRE(gfit.loglik(g).item<double>() == Catch::Approx(-15.772395065).epsilon(1e-9));
-  const auto gse = gfit.stderr(g).host<double>();
+  const auto gse = gfit.std_err(g).host<double>();
   REQUIRE(gse[2] == 0.0);  // the location is held fixed
   const auto gv = gfit.vcov(g).host<double>();
   REQUIRE(gv[1] != 0.0);   // the shape and the scale are correlated: the full covariance, not only its diagonal
@@ -789,7 +789,7 @@ TEST_CASE("maximum likelihood fits reach the exact optimum", "[distr][mle][refer
 
   // Laplace: the location has the standard error scale / sqrt(n), not a placeholder
   const auto lfit = Laplace{0.0, 1.0}.MLE(g);
-  REQUIRE(lfit.stderr(g).host<double>()[0] == Catch::Approx(lfit.scale / std::sqrt(10.0)).epsilon(1e-12));
+  REQUIRE(lfit.std_err(g).host<double>()[0] == Catch::Approx(lfit.scale / std::sqrt(10.0)).epsilon(1e-12));
 
   // Gaussian mixture: EM converges to the same optimum from different starts
   std::vector<double> mix;

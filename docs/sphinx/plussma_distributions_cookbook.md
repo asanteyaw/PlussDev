@@ -397,7 +397,7 @@ const Series dens = gm.pdf(make_series(std::vector<double>{-2.0, 0.0, 2.0}, {3})
 ### API Signature
 
 - `<Distribution>::MLE(x) -> <Distribution>Fit`
-- `<Distribution>Fit::{loglik, score, fisher_inf, vcov, stderr, confint, confint_view, ...}`
+- `<Distribution>Fit::{loglik, score, fisher_inf, vcov, std_err, confint, confint_view, ...}`
 
 ### Notes
 
@@ -425,7 +425,7 @@ const double mu = nfit.mean;
 const double sigma = nfit.stddev;
 const Series ll = nfit.loglik(xn);
 const Series score = nfit.score(xn);
-const Series se = nfit.stderr(xn);
+const Series se = nfit.std_err(xn);
 const Series ci95 = nfit.confint(xn, 0.95);
 const auto ci95_view = nfit.confint_view(xn, 0.95); // MSharp::RangeView::Double
 // read ci95_view immediately (lightweight host view)

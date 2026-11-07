@@ -103,8 +103,8 @@ int main() {
     expect(fit.converged, "Normal MLE converged");
     near(fit.params[0], ref.mean, 1e-6, "Normal MLE mean");
     near(fit.params[1], ref.stddev, 1e-6, "Normal MLE stddev");
-    const auto se = fit.stderr();
-    const auto ref_se = ref.stderr(data).host<double>().array().data;
+    const auto se = fit.std_err();
+    const auto ref_se = ref.std_err(data).host<double>().array().data;
     near(se[0], ref_se[0], 1e-4, "Normal MLE stderr of the mean");
     near(se[1], ref_se[1], 1e-4, "Normal MLE stderr of the stddev");
     const auto ci = fit.confint(0.95);

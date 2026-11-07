@@ -4,6 +4,12 @@
 
 #include <cstdint>
 
+// The Windows C runtime defines stderr as an object-like macro. Keep the
+// result-field name available to callers on that platform.
+#if defined(_WIN32) && defined(stderr)
+#undef stderr
+#endif
+
 namespace pluss::subsp::stats::inference::hypothesis {
 
 enum class Tail : std::uint8_t {

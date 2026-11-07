@@ -235,7 +235,7 @@ std::vector<double> pareto_vcov_(const ParetoFit& f, const Series& x) {
   return {sx * sx, 0.0, 0.0, f.alpha * f.alpha / n};
 }
 Series ParetoFit::vcov(const Series& x) const { return vcov_series_(pareto_vcov_(*this, x), 2); }
-Series ParetoFit::stderr(const Series& x) const { return stderr_series_(pareto_vcov_(*this, x), 2); }
+Series ParetoFit::std_err(const Series& x) const { return stderr_series_(pareto_vcov_(*this, x), 2); }
 Series ParetoFit::confint(const Series& x, double level) const { return confint_series_({xm, alpha}, pareto_vcov_(*this, x), level, "ParetoFit::confint"); }
 
 // ---- Lomax ---------------------------------------------------------------------------------------------------
@@ -255,7 +255,7 @@ LomaxFit Lomax::MLE(const Series& x, std::vector<double> start) const {
 Lomax LomaxFit::model() const { return Lomax{scale, alpha}; }
 Series LomaxFit::loglik(const Series& x) const { return loglik_<LomaxFit>(dst::Kind::Lomax, {scale, alpha}, x); }
 Series LomaxFit::vcov(const Series& x) const { return vcov_series_(vcov_checked_(dst::Kind::Lomax, {scale, alpha}, x, "LomaxFit::vcov"), 2); }
-Series LomaxFit::stderr(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Lomax, {scale, alpha}, x, "LomaxFit::stderr"), 2); }
+Series LomaxFit::std_err(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Lomax, {scale, alpha}, x, "LomaxFit::std_err"), 2); }
 Series LomaxFit::confint(const Series& x, double level) const { return confint_series_({scale, alpha}, vcov_checked_(dst::Kind::Lomax, {scale, alpha}, x, "LomaxFit::confint"), level, "LomaxFit::confint"); }
 
 // ---- Burr ----------------------------------------------------------------------------------------------------
@@ -275,7 +275,7 @@ BurrFit Burr::MLE(const Series& x, std::vector<double> start) const {
 Burr BurrFit::model() const { return Burr{c, k}; }
 Series BurrFit::loglik(const Series& x) const { return loglik_<BurrFit>(dst::Kind::Burr, {c, k}, x); }
 Series BurrFit::vcov(const Series& x) const { return vcov_series_(vcov_checked_(dst::Kind::Burr, {c, k}, x, "BurrFit::vcov"), 2); }
-Series BurrFit::stderr(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Burr, {c, k}, x, "BurrFit::stderr"), 2); }
+Series BurrFit::std_err(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Burr, {c, k}, x, "BurrFit::std_err"), 2); }
 Series BurrFit::confint(const Series& x, double level) const { return confint_series_({c, k}, vcov_checked_(dst::Kind::Burr, {c, k}, x, "BurrFit::confint"), level, "BurrFit::confint"); }
 
 // ---- Zeta ----------------------------------------------------------------------------------------------------
@@ -295,7 +295,7 @@ ZetaFit Zeta::MLE(const Series& x, std::vector<double> start) const {
 Zeta ZetaFit::model() const { return Zeta{s}; }
 Series ZetaFit::loglik(const Series& x) const { return loglik_<ZetaFit>(dst::Kind::Zeta, {s}, x); }
 Series ZetaFit::vcov(const Series& x) const { return vcov_series_(vcov_checked_(dst::Kind::Zeta, {s}, x, "ZetaFit::vcov"), 1); }
-Series ZetaFit::stderr(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Zeta, {s}, x, "ZetaFit::stderr"), 1); }
+Series ZetaFit::std_err(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Zeta, {s}, x, "ZetaFit::std_err"), 1); }
 Series ZetaFit::confint(const Series& x, double level) const { return confint_series_({s}, vcov_checked_(dst::Kind::Zeta, {s}, x, "ZetaFit::confint"), level, "ZetaFit::confint"); }
 
 // ---- Yule ----------------------------------------------------------------------------------------------------
@@ -315,7 +315,7 @@ YuleFit Yule::MLE(const Series& x, std::vector<double> start) const {
 Yule YuleFit::model() const { return Yule{p}; }
 Series YuleFit::loglik(const Series& x) const { return loglik_<YuleFit>(dst::Kind::Yule, {p}, x); }
 Series YuleFit::vcov(const Series& x) const { return vcov_series_(vcov_checked_(dst::Kind::Yule, {p}, x, "YuleFit::vcov"), 1); }
-Series YuleFit::stderr(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Yule, {p}, x, "YuleFit::stderr"), 1); }
+Series YuleFit::std_err(const Series& x) const { return stderr_series_(vcov_checked_(dst::Kind::Yule, {p}, x, "YuleFit::std_err"), 1); }
 Series YuleFit::confint(const Series& x, double level) const { return confint_series_({p}, vcov_checked_(dst::Kind::Yule, {p}, x, "YuleFit::confint"), level, "YuleFit::confint"); }
 
 }  // namespace pluss::subsp::stats::distr

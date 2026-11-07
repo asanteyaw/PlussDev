@@ -38,7 +38,7 @@ int main() {
   const auto nig = distr::Nig{}.MLE(x);
   out.writeln("true NIG(1.5, -0.4, 0.1, 0.8)");
   out.writeln("fitted NIG   alpha", nig.alpha, " beta", nig.beta, " location", nig.location, " scale", nig.scale);
-  out.writeln("std errors  ", nig.stderr(x).host<double>());
+  out.writeln("std errors  ", nig.std_err(x).host<double>());
 
   const double ll_n = normal.loglik(x).item<double>(), ll_g = nig.loglik(x).item<double>();
   out.writeln("\nmodel      loglik      AIC");

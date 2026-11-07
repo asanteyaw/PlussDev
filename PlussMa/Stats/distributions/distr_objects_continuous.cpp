@@ -477,15 +477,15 @@ Series NormalFit::vcov(const Series& x) const {
   return matrix_2x2_inverse_(fisher_inf(x), "NormalFit::vcov").to(x.platform(), ScalarType::Float64);
 }
 
-Series NormalFit::stderr(const Series& x) const {
-  return stderr_from_cov_2x2_(vcov(x), "NormalFit::stderr").to(x.platform(), ScalarType::Float64);
+Series NormalFit::std_err(const Series& x) const {
+  return stderr_from_cov_2x2_(vcov(x), "NormalFit::std_err").to(x.platform(), ScalarType::Float64);
 }
 
 Series NormalFit::confint(const Series& x, double level) const {
   const Series params = fit_detail::vec_series(std::vector<double>{mean, stddev}, {2}, x);
   return confint_from_params_se_2_(
              params,
-             stderr(x),
+             std_err(x),
              level,
              "NormalFit::confint",
              true)
@@ -966,8 +966,8 @@ Series LognormalFit::vcov(const Series& x) const {
   return matrix_2x2_inverse_(fisher_inf(x), "LognormalFit::vcov").to(x.platform(), ScalarType::Float64);
 }
 
-Series LognormalFit::stderr(const Series& x) const {
-  return stderr_from_cov_2x2_(vcov(x), "LognormalFit::stderr").to(x.platform(), ScalarType::Float64);
+Series LognormalFit::std_err(const Series& x) const {
+  return stderr_from_cov_2x2_(vcov(x), "LognormalFit::std_err").to(x.platform(), ScalarType::Float64);
 }
 
 Series LognormalFit::confint(const Series& x, double level) const {
@@ -977,7 +977,7 @@ Series LognormalFit::confint(const Series& x, double level) const {
       x);
   return confint_from_params_se_2_(
              params,
-             stderr(x),
+             std_err(x),
              level,
              "LognormalFit::confint",
              true)
@@ -1134,15 +1134,15 @@ Series UniformFit::vcov(const Series& x) const {
       .to(x.platform(), ScalarType::Float64);
 }
 
-Series UniformFit::stderr(const Series& x) const {
-  return stderr_from_cov_2x2_(vcov(x), "UniformFit::stderr").to(x.platform(), ScalarType::Float64);
+Series UniformFit::std_err(const Series& x) const {
+  return stderr_from_cov_2x2_(vcov(x), "UniformFit::std_err").to(x.platform(), ScalarType::Float64);
 }
 
 Series UniformFit::confint(const Series& x, double level) const {
   const Series params = fit_detail::vec_series(std::vector<double>{low, high}, {2}, x);
   return confint_from_params_se_2_(
              params,
-             stderr(x),
+             std_err(x),
              level,
              "UniformFit::confint")
       .to(x.platform(), ScalarType::Float64);
@@ -1264,13 +1264,13 @@ Series ExponentialFit::vcov(const Series& x) const {
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
 
-Series ExponentialFit::stderr(const Series& x) const {
+Series ExponentialFit::std_err(const Series& x) const {
   return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
 }
 
 Series ExponentialFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "ExponentialFit::confint");
-  const double se = pluss::tils::to_scalar<double>(stderr(x));
+  const double se = pluss::tils::to_scalar<double>(std_err(x));
   const std::array<double, 2> ci = {std::max(0.0, rate - z * se), rate + z * se};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -1553,13 +1553,13 @@ Series RayleighFit::vcov(const Series& x) const {
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
 
-Series RayleighFit::stderr(const Series& x) const {
+Series RayleighFit::std_err(const Series& x) const {
   return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
 }
 
 Series RayleighFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "RayleighFit::confint");
-  const double se = pluss::tils::to_scalar<double>(stderr(x));
+  const double se = pluss::tils::to_scalar<double>(std_err(x));
   const std::array<double, 2> ci = {std::max(0.0, sigma - z * se), sigma + z * se};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -1683,8 +1683,8 @@ Series InverseGaussianFit::vcov(const Series& x) const {
   return vcov_diag_matrix_series_(info_diag_from_loglik_({theta, chi}, fn), x, "InverseGaussianFit::vcov");
 }
 
-Series InverseGaussianFit::stderr(const Series& x) const {
-  const auto values = fit_data_f64_(x, "InverseGaussianFit::stderr");
+Series InverseGaussianFit::std_err(const Series& x) const {
+  const auto values = fit_data_f64_(x, "InverseGaussianFit::std_err");
   const auto fn = [&values](const std::vector<double>& p) -> double {
     if (p.size() != 2 || !(p[0] > 0.0) || !(p[1] > 0.0)) return kFitPenalty;
     const auto all_pos = std::all_of(values.begin(), values.end(), [](double v) { return v > 0.0; });
@@ -1771,8 +1771,8 @@ Series LaplaceFit::vcov(const Series& x) const {
   return fit_detail::matrix_series({v, 0.0, 0.0, v}, 2, x);
 }
 
-Series LaplaceFit::stderr(const Series& x) const {
-  const auto values = fit_data_f64_(x, "LaplaceFit::stderr");
+Series LaplaceFit::std_err(const Series& x) const {
+  const auto values = fit_data_f64_(x, "LaplaceFit::std_err");
   const double se = scale / std::sqrt(static_cast<double>(values.size()));
   return fit_detail::vec_series({se, se}, {2}, x);
 }

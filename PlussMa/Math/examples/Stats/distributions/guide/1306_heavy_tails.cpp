@@ -22,7 +22,7 @@ int main() {
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "true NIG(1.5, -0.4, 0.1, 0.8)\n";
   std::cout << "fitted NIG   alpha " << nig.alpha << "  beta " << nig.beta << "  location " << nig.location << "  scale " << nig.scale << "\n";
-  const auto se = nig.stderr(x).host<double>();
+  const auto se = nig.std_err(x).host<double>();
   std::cout << "std errors        " << std::setw(6) << se[0] << "       " << std::setw(6) << se[1] << "            " << std::setw(6) << se[2] << "         " << std::setw(6) << se[3] << "\n\n";
 
   const double ll_n = normal.loglik(x).item<double>(), ll_g = nig.loglik(x).item<double>();

@@ -400,7 +400,7 @@ void cleanup_stale_fallback_html_(const std::filesystem::path& root) {
     return;
   }
 
-  const auto now = std::chrono::system_clock::now();
+  const auto now = std::filesystem::file_time_type::clock::now();
   for (const auto& entry : std::filesystem::directory_iterator(root, ec)) {
     if (ec || !entry.is_regular_file()) {
       continue;
@@ -413,7 +413,7 @@ void cleanup_stale_fallback_html_(const std::filesystem::path& root) {
     if (ec) {
       continue;
     }
-    const auto age = now - std::chrono::file_clock::to_sys(stamp);
+    const auto age = now - stamp;
     if (age > std::chrono::hours(36)) {
       std::filesystem::remove(path, ec);
     }

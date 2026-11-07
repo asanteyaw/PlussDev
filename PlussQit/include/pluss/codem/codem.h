@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pluss/msharp/msharp.h"
-#include "CodeM/CodeM.h"
+#include <CodeM/CodeM.h>
 #include "CodeM/core/Printing.h"
 #include "CodeM/core/SeriesTape.h"
 #include "pluss/error.h"

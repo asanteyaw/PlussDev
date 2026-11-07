@@ -46,7 +46,7 @@ int main() {
 
   const auto fit = distr::GaussianMixture{pluss::make_series({0.5, 0.5}, f64), pluss::make_series({-1.0, 1.0}, f64), pluss::make_series({1.0, 1.0}, f64)}.MLE(x);
   const auto ci = fit.confint(x).host<double>();  // one row per parameter: lower, upper
-  out.writeln("\nstandard errors of (w1, w2, m1, m2, s1, s2)", fit.stderr(x).host<double>());
+  out.writeln("\nstandard errors of (w1, w2, m1, m2, s1, s2)", fit.std_err(x).host<double>());
   out.writeln("95% interval of the first mean", ci[4], "to", ci[5]);
 }
 ```

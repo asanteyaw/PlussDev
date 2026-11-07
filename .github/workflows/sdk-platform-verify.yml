@@ -32,6 +32,14 @@ on:
       - pluss/**
       - examples/sdk_consumer/**
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platforms to verify
+        type: choice
+        default: all
+        options:
+          - all
+          - windows
 
 permissions:
   contents: read
@@ -41,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2022]
+        os: ${{ fromJSON(inputs.platform == 'windows' && '["windows-2022"]' || '["ubuntu-24.04","windows-2022"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
@@ -92,3 +100,10 @@ jobs:
 
       - name: Package and validate downloadable ZIP
         run: cmake "-DDISTRIBUTION_BUILD_DIR=${{ github.workspace }}/build" "-DDISTRIBUTION_SOURCE_DIR=${{ github.workspace }}" -P cmake/VerifyStagedDistribution.cmake
+
+      - name: Upload validated ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: plussii-cpp-${{ matrix.os }}-verify
+          path: build/plussii-cpp-*.zip
+          if-no-files-found: error

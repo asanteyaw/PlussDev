@@ -361,13 +361,13 @@ Series BernoulliFit::vcov(const Series& x) const {
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
 
-Series BernoulliFit::stderr(const Series& x) const {
+Series BernoulliFit::std_err(const Series& x) const {
   return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
 }
 
 Series BernoulliFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "BernoulliFit::confint");
-  const double se = pluss::tils::to_scalar<double>(stderr(x));
+  const double se = pluss::tils::to_scalar<double>(std_err(x));
   const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -517,13 +517,13 @@ Series BinomialFit::vcov(const Series& x) const {
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
 
-Series BinomialFit::stderr(const Series& x) const {
+Series BinomialFit::std_err(const Series& x) const {
   return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
 }
 
 Series BinomialFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "BinomialFit::confint");
-  const double se = pluss::tils::to_scalar<double>(stderr(x));
+  const double se = pluss::tils::to_scalar<double>(std_err(x));
   const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -649,13 +649,13 @@ Series PoissonFit::vcov(const Series& x) const {
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
 
-Series PoissonFit::stderr(const Series& x) const {
+Series PoissonFit::std_err(const Series& x) const {
   return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
 }
 
 Series PoissonFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "PoissonFit::confint");
-  const double se = pluss::tils::to_scalar<double>(stderr(x));
+  const double se = pluss::tils::to_scalar<double>(std_err(x));
   const std::array<double, 2> ci = {std::max(0.0, lambda - z * se), lambda + z * se};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},
@@ -799,13 +799,13 @@ Series GeometricFit::vcov(const Series& x) const {
   return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
 }
 
-Series GeometricFit::stderr(const Series& x) const {
+Series GeometricFit::std_err(const Series& x) const {
   return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
 }
 
 Series GeometricFit::confint(const Series& x, double level) const {
   const double z = wald_z_value_(level, "GeometricFit::confint");
-  const double se = pluss::tils::to_scalar<double>(stderr(x));
+  const double se = pluss::tils::to_scalar<double>(std_err(x));
   const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
   return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
                                    {2},

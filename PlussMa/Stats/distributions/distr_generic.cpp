@@ -459,7 +459,7 @@ DistributionFit Distribution::MLE(const Series& x, std::vector<double> start) co
 
 Distribution DistributionFit::model() const { return Distribution(kind, params); }
 
-std::vector<double> DistributionFit::stderr() const {
+std::vector<double> DistributionFit::std_err() const {
   std::vector<double> se;
   const std::size_t n = params.size();
   for (std::size_t i = 0; i < n; ++i)
@@ -470,7 +470,7 @@ std::vector<double> DistributionFit::stderr() const {
 std::vector<std::pair<double, double>> DistributionFit::confint(double level) const {
   if (!(level > 0.0 && level < 1.0)) throw std::invalid_argument("distr::DistributionFit::confint: level must be in (0, 1)");
   const double z = normal_quantile_(0.5 + 0.5 * level);
-  const auto se = stderr();
+  const auto se = std_err();
   std::vector<std::pair<double, double>> out;
   for (std::size_t i = 0; i < params.size(); ++i) out.emplace_back(params[i] - z * se[i], params[i] + z * se[i]);
   return out;

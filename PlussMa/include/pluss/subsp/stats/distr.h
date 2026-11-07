@@ -52,7 +52,7 @@ struct CODEM_API NormalFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -68,7 +68,7 @@ struct CODEM_API ExponentialFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -84,7 +84,7 @@ struct CODEM_API PoissonFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -100,7 +100,7 @@ struct CODEM_API BernoulliFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -117,7 +117,7 @@ struct CODEM_API BinomialFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -133,7 +133,7 @@ struct CODEM_API GeometricFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -150,7 +150,7 @@ struct CODEM_API LognormalFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -167,7 +167,7 @@ struct CODEM_API UniformFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -183,7 +183,7 @@ struct CODEM_API RayleighFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -200,7 +200,7 @@ struct CODEM_API LaplaceFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -217,7 +217,7 @@ struct CODEM_API InverseGaussianFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -235,7 +235,7 @@ struct CODEM_API GammaFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -254,7 +254,7 @@ struct CODEM_API BetaFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -271,7 +271,7 @@ struct CODEM_API NegativeBinomialFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -290,7 +290,7 @@ struct CODEM_API NigFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -310,7 +310,7 @@ struct CODEM_API GhFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -328,7 +328,7 @@ struct CODEM_API GaussianMixtureFit {
   pluss::Series fisher_inf(const pluss::Series& x) const;
   pluss::Series observed_inf(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
   PLUSS_DISTR_CONFINT_VIEW_METHOD()
 };
@@ -1004,7 +1004,7 @@ struct CODEM_API DistributionFit {
   std::vector<double> vcov{};
 
   Distribution model() const;
-  std::vector<double> stderr() const;
+  std::vector<double> std_err() const;
   // One row per parameter: lower and upper bound of the interval at `level`.
   std::vector<std::pair<double, double>> confint(double level = 0.95) const;
 };
@@ -1056,7 +1056,7 @@ struct CODEM_API ParetoFit {
   Pareto model() const;
   pluss::Series loglik(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   // One row per parameter: the lower and the upper bound at `level`.
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
 };
@@ -1095,7 +1095,7 @@ struct CODEM_API LomaxFit {
   Lomax model() const;
   pluss::Series loglik(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   // One row per parameter: the lower and the upper bound at `level`.
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
 };
@@ -1134,7 +1134,7 @@ struct CODEM_API BurrFit {
   Burr model() const;
   pluss::Series loglik(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   // One row per parameter: the lower and the upper bound at `level`.
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
 };
@@ -1172,7 +1172,7 @@ struct CODEM_API ZetaFit {
   Zeta model() const;
   pluss::Series loglik(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   // One row per parameter: the lower and the upper bound at `level`.
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
 };
@@ -1209,7 +1209,7 @@ struct CODEM_API YuleFit {
   Yule model() const;
   pluss::Series loglik(const pluss::Series& x) const;
   pluss::Series vcov(const pluss::Series& x) const;
-  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series std_err(const pluss::Series& x) const;
   // One row per parameter: the lower and the upper bound at `level`.
   pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
 };

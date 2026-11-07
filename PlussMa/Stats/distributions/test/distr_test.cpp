@@ -264,7 +264,7 @@ int main() {
              approx(normal_vcov[3], 0.15625, 1e-12),
          "Normal MLE vcov",
          &failures);
-  const auto normal_stderr = as_f64_vec(normal_fit.stderr(normal_fit_x));
+  const auto normal_stderr = as_f64_vec(normal_fit.std_err(normal_fit_x));
   expect(normal_stderr.size() == 2 &&
              approx(normal_stderr[0], std::sqrt(0.3125), 1e-12) &&
              approx(normal_stderr[1], std::sqrt(0.15625), 1e-12),
@@ -302,7 +302,7 @@ int main() {
   expect(approx(as_f64_scalar(exponential_fit.vcov(exponential_fit_x)), 0.16, 1e-12),
          "Exponential MLE vcov",
          &failures);
-  expect(approx(as_f64_scalar(exponential_fit.stderr(exponential_fit_x)), 0.4, 1e-12),
+  expect(approx(as_f64_scalar(exponential_fit.std_err(exponential_fit_x)), 0.4, 1e-12),
          "Exponential MLE stderr",
          &failures);
   expect(as_f64_vec(exponential_fit.loglik_per_obs(exponential_fit_x)).size() == 4,
@@ -329,7 +329,7 @@ int main() {
   expect(approx(as_f64_scalar(poisson_fit.vcov(poisson_fit_x)), 0.4, 1e-12),
          "Poisson MLE vcov",
          &failures);
-  expect(approx(as_f64_scalar(poisson_fit.stderr(poisson_fit_x)), std::sqrt(0.4), 1e-12),
+  expect(approx(as_f64_scalar(poisson_fit.std_err(poisson_fit_x)), std::sqrt(0.4), 1e-12),
          "Poisson MLE stderr",
          &failures);
   expect(as_f64_vec(poisson_fit.loglik_per_obs(poisson_fit_x)).size() == 5,

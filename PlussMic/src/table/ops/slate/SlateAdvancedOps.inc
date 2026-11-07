@@ -1806,8 +1806,8 @@ DataFrame Slate::extract(
     mask.reserve(static_cast<std::size_t>(size()));
   }
   for (std::int64_t row = 0; row < size(); ++row) {
-    std::cmatch match;
     const auto text = as_note().at(row);
+    std::match_results<decltype(text.begin())> match;
     const bool matched =
         is_valid(row) &&
         std::regex_search(text.begin(), text.end(), match, expression);

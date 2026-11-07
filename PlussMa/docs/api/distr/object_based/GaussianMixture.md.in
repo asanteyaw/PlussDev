@@ -49,7 +49,7 @@ Support: all real numbers.
 
 ## Returns
 
-`pdf` and `cdf` return a `Series` of the shape of `x`; `sample` a `Series` of the requested shape; `MLE` a `GaussianMixtureFit` with the fields `weights`, `means` and `stddevs` and the methods of a fit (`loglik`, `stderr`, `confint`, `vcov`, `score`, `observed_inf`).
+`pdf` and `cdf` return a `Series` of the shape of `x`; `sample` a `Series` of the requested shape; `MLE` a `GaussianMixtureFit` with the fields `weights`, `means` and `stddevs` and the methods of a fit (`loglik`, `std_err`, `confint`, `vcov`, `score`, `observed_inf`).
 
 ## Errors
 
@@ -172,7 +172,7 @@ int main() {
   }
   const auto fit = distr::GaussianMixture{pluss::make_series({0.5, 0.5}, f64), pluss::make_series({-1.0, 1.0}, f64), pluss::make_series({1.0, 1.0}, f64)}.MLE(x);
   std::cout << "stderr of (w1, w2, m1, m2, s1, s2):";
-  for (double v : fit.stderr(x).host<double>()) std::cout << ' ' << v;
+  for (double v : fit.std_err(x).host<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```

@@ -26,4 +26,17 @@ endif()
 
 set(CONSUMER_SOURCE_DIR "${DISTRIBUTION_SOURCE_DIR}/examples/sdk_consumer")
 set(VALIDATION_WORK_DIR "${DISTRIBUTION_BUILD_DIR}/distribution-validation")
+
+# Reuse the toolset and dependency toolchain that built the archive. This is
+# essential for Windows ClangCL archives and their static vcpkg dependencies.
+set(build_cache "${DISTRIBUTION_BUILD_DIR}/CMakeCache.txt")
+foreach(cache_name IN ITEMS CMAKE_GENERATOR CMAKE_GENERATOR_TOOLSET
+                            CMAKE_TOOLCHAIN_FILE VCPKG_TARGET_TRIPLET)
+  file(STRINGS "${build_cache}" cache_entry REGEX "^${cache_name}:")
+  if(cache_entry)
+    string(REGEX REPLACE "^[^=]*=" "" cache_value "${cache_entry}")
+    set("DISTRIBUTION_CONSUMER_${cache_name}" "${cache_value}")
+  endif()
+endforeach()
+
 include("${CMAKE_CURRENT_LIST_DIR}/ValidateDistribution.cmake")
